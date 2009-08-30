@@ -1,0 +1,77 @@
+# Copyright (c) 2009 Satoshi Nakamoto
+# Distributed under the MIT/X11 software license, see the accompanying
+# file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+
+!IF "$(BUILD)" != "debug" && "$(BUILD)" != "release"
+BUILD=debug
+!ENDIF
+!IF "$(BUILD)" == "debug"
+D=d
+DEBUGFLAGS=/Zi /Od /D__WXDEBUG__
+!ENDIF
+
+
+
+INCLUDEPATHS=/I"/boost" /I"/DB/build_windows" /I"/OpenSSL/include" /I"/wxWidgets/lib/vc_lib/mswd" /I"/wxWidgets/include"
+LIBPATHS=/LIBPATH:"/DB/build_windows/$(BUILD)" /LIBPATH:"/OpenSSL/out" /LIBPATH:"/wxWidgets/lib/vc_lib"
+LIBS= \
+    libdb47s$(D).lib \
+    libeay32.lib \
+    wxmsw28$(D)_richtext.lib wxmsw28$(D)_html.lib wxmsw28$(D)_core.lib wxbase28$(D).lib wxtiff$(D).lib wxjpeg$(D).lib wxpng$(D).lib wxzlib$(D).lib wxregex$(D).lib wxexpat$(D).lib \
+    kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib ws2_32.lib
+WXDEFS=/DWIN32 /D__WXMSW__ /D_WINDOWS /DNOPCH
+CFLAGS=/c /nologo /Ob0 /MD$(D) /EHsc /GR /Zm300 /YX /Fpobj/headers.pch $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+HEADERS=headers.h util.h main.h serialize.h uint256.h key.h bignum.h script.h db.h base58.h
+
+
+
+all: bitcoin.exe
+
+
+obj\util.obj: util.cpp        $(HEADERS)
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\script.obj: script.cpp    $(HEADERS)
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\db.obj: db.cpp            $(HEADERS) market.h
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\net.obj: net.cpp          $(HEADERS) net.h
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\main.obj: main.cpp        $(HEADERS) net.h market.h
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\market.obj: market.cpp    $(HEADERS) market.h
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\ui.obj: ui.cpp            $(HEADERS) net.h uibase.h ui.h market.h
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\uibase.obj: uibase.cpp    uibase.h
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\sha.obj: sha.cpp sha.h
+    cl $(CFLAGS) /O2 /Fo$@ %s
+
+obj\irc.obj:  irc.cpp         $(HEADERS)
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\ui.res: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
+    rc $(INCLUDEPATHS) $(WXDEFS) /Fo$@ %s
+
+
+
+OBJS=obj\util.obj obj\script.obj obj\db.obj obj\net.obj obj\main.obj obj\market.obj \
+  obj\ui.obj obj\uibase.obj obj\sha.obj obj\irc.obj obj\ui.res
+
+bitcoin.exe: $(OBJS)
+    -kill /f bitcoin.exe & sleep 1
+    link /nologo /DEBUG /SUBSYSTEM:WINDOWS /OUT:$@ $(LIBPATHS) $** $(LIBS)
+
+clean:
+    -del /Q obj\*
+    -del *.ilk
+    -del *.pdb
