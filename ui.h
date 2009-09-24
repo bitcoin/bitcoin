@@ -27,9 +27,14 @@ extern string FormatTxStatus(const CWalletTx& wtx);
 extern void CrossThreadCall(int nID, void* pdata);
 extern void MainFrameRepaint();
 extern void Shutdown(void* parg);
+void ApplyUISettings();
 
-
-
+// UI settings
+extern int minimizeToTray;
+extern int closeToTray;
+extern int startOnSysBoot;
+extern int askBeforeClosing;
+extern int alwaysShowTrayIcon;
 
 
 
@@ -38,6 +43,7 @@ class CMainFrame : public CMainFrameBase
 protected:
     // Event handlers
     void OnClose(wxCloseEvent& event);
+    void OnIconize( wxIconizeEvent& event );
     void OnMouseEvents(wxMouseEvent& event);
     void OnKeyDown(wxKeyEvent& event) { HandleCtrlA(event); }
     void OnIdle(wxIdleEvent& event);
@@ -59,6 +65,7 @@ protected:
     void OnListItemActivatedProductsSent(wxListEvent& event);
     void OnListItemActivatedOrdersSent(wxListEvent& event);
     void OnListItemActivatedOrdersReceived(wxListEvent& event);
+    void OnUpdateMenuGenerate( wxUpdateUIEvent& event );
 	
 public:
     /** Constructor */
@@ -77,6 +84,7 @@ public:
     void InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex=-1);
     void RefreshListCtrl();
     void RefreshStatus();
+    void SendToTray();
 };
 
 
@@ -98,14 +106,44 @@ public:
 
 
 
+class COptionsPanelBitcoin : public COptionsPanelBitcoinBase
+{
+protected:
+    // Event handlers
+	void OnKillFocusTransactionFee( wxFocusEvent& event );
+
+public:
+    /** Constructor */
+    COptionsPanelBitcoin(wxWindow* parent);
+};
+
+
+
+class COptionsPanelUI : public COptionsPanelUIBase
+{
+protected:
+    // Event handlers
+	void OnOptionsChanged( wxCommandEvent& event );
+
+public:
+    /** Constructor */
+    COptionsPanelUI(wxWindow* parent);
+};
+
+
+
 class COptionsDialog : public COptionsDialogBase
 {
 protected:
     // Event handlers
-    void OnKillFocusTransactionFee(wxFocusEvent& event);
+	void MenuSelChanged( wxTreeEvent& event );
     void OnButtonOK(wxCommandEvent& event);
     void OnButtonCancel(wxCommandEvent& event);
 
+    // Panels
+    COptionsPanelBitcoin* panelBitcoin;
+    COptionsPanelUI* panelUI;
+    wxPanel* currentPanel;
 public:
     /** Constructor */
     COptionsDialog(wxWindow* parent);
@@ -416,5 +454,22 @@ public:
 
 
 
+class CBitcoinTBIcon : public wxTaskBarIcon
+{
+protected:
+	void Restore();
 
+	// Event handlers
+	void OnLeftButtonDClick(wxTaskBarIconEvent&);
+	void OnMenuExit(wxCommandEvent&);
+	void OnMenuGenerate(wxCommandEvent&);
+	void OnMenuRestore(wxCommandEvent&);
 
+public:
+	void Show();
+	void Hide();
+	void UpdateTooltip();
+	virtual wxMenu *CreatePopupMenu();
+
+DECLARE_EVENT_TABLE()
+};

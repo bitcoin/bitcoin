@@ -7,8 +7,6 @@
 #include <crtdbg.h>
 #endif
 
-
-
 DEFINE_EVENT_TYPE(wxEVT_CROSSTHREADCALL)
 DEFINE_EVENT_TYPE(wxEVT_REPLY1)
 DEFINE_EVENT_TYPE(wxEVT_REPLY2)
@@ -19,6 +17,7 @@ DEFINE_EVENT_TYPE(wxEVT_TABLEDELETED)
 
 CMainFrame* pframeMain = NULL;
 map<string, string> mapAddressBook;
+CBitcoinTBIcon* taskBarIcon = NULL; // Tray icon
 
 
 void ThreadRequestProductDetails(void* parg);
@@ -27,8 +26,12 @@ bool fRandSendTest = false;
 void RandSend();
 extern int g_isPainting;
 
-
-
+// UI settings and their default values
+int minimizeToTray = 1;
+int closeToTray = 1;
+int startOnSysBoot = 1;
+int askBeforeClosing = 1;
+int alwaysShowTrayIcon = 1;
 
 
 
@@ -359,8 +362,28 @@ void Shutdown(void* parg)
 
 void CMainFrame::OnClose(wxCloseEvent& event)
 {
-    Destroy();
-    _beginthread(Shutdown, 0, NULL);
+	if (closeToTray && event.CanVeto()) {
+		event.Veto();
+		SendToTray();
+	}
+	else if (!event.CanVeto() || !askBeforeClosing || wxMessageBox("Quit program?", "Confirm", wxYES_NO, this) == wxYES) {
+		delete taskBarIcon;
+	    Destroy();
+	    _beginthread(Shutdown, 0, NULL);
+	}
+}
+
+void CMainFrame::OnIconize(wxIconizeEvent& event)
+{
+	if (minimizeToTray) {
+		SendToTray();
+	}
+}
+
+void CMainFrame::SendToTray()
+{
+	Hide();
+	taskBarIcon->Show();
 }
 
 void CMainFrame::OnMouseEvents(wxMouseEvent& event)
@@ -836,15 +859,21 @@ void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
     Close(true);
 }
 
-void CMainFrame::OnMenuOptionsGenerate(wxCommandEvent& event)
+void GenerateBitcoins(bool flag)
 {
-    fGenerateBitcoins = event.IsChecked();
+	fGenerateBitcoins = flag;
     nTransactionsUpdated++;
     CWalletDB().WriteSetting("fGenerateBitcoins", fGenerateBitcoins);
-
     if (fGenerateBitcoins)
         if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
             printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
+
+    taskBarIcon->UpdateTooltip();
+}
+
+void CMainFrame::OnMenuOptionsGenerate(wxCommandEvent& event)
+{
+    GenerateBitcoins(event.IsChecked());
 
     Refresh();
     wxPaintEvent eventPaint;
@@ -866,6 +895,10 @@ void CMainFrame::OnMenuHelpAbout(wxCommandEvent& event)
 {
     CAboutDialog dialog(this);
     dialog.ShowModal();
+}
+
+void CMainFrame::OnUpdateMenuGenerate( wxUpdateUIEvent& event ) {
+	event.Check(fGenerateBitcoins);
 }
 
 void CMainFrame::OnButtonSend(wxCommandEvent& event)
@@ -1231,23 +1264,57 @@ void CTxDetailsDialog::OnButtonOK(wxCommandEvent& event)
 
 COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 {
-    m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
     m_buttonOK->SetFocus();
+    m_treeCtrl->AddRoot(wxT("Settings"));
+    m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), wxT("Bitcoin"));
+    m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), wxT("UI"));
+
+    panelUI = new COptionsPanelUI(this);
+    panelBitcoin = new COptionsPanelBitcoin(this);
+    currentPanel = panelBitcoin;
+
+    panelSizer->Add(panelUI);
+    panelSizer->Hide(panelUI);
+    panelSizer->Add(panelBitcoin);
+    panelSizer->Layout();
+
 }
 
-void COptionsDialog::OnKillFocusTransactionFee(wxFocusEvent& event)
+void COptionsDialog::MenuSelChanged( wxTreeEvent& event )
 {
-    int64 nTmp = nTransactionFee;
-    ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
-    m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
+	panelSizer->Hide(currentPanel);
+	wxString text = m_treeCtrl->GetItemText(event.GetItem());
+	if (text == "Bitcoin") {
+		panelSizer->Show(panelBitcoin);
+		currentPanel = panelBitcoin;
+	}
+	else {
+		panelSizer->Show(panelUI);
+		currentPanel = panelUI;
+	}
+	panelSizer->Layout();
 }
 
 void COptionsDialog::OnButtonOK(wxCommandEvent& event)
 {
     // nTransactionFee
     int64 nPrevTransactionFee = nTransactionFee;
-    if (ParseMoney(m_textCtrlTransactionFee->GetValue(), nTransactionFee) && nTransactionFee != nPrevTransactionFee)
-        CWalletDB().WriteSetting("nTransactionFee", nTransactionFee);
+    if (ParseMoney(panelBitcoin->m_textCtrlTransactionFee->GetValue(), nTransactionFee) && nTransactionFee != nPrevTransactionFee)
+    	CWalletDB().WriteSetting("transactionFee", nTransactionFee);
+
+    minimizeToTray = panelUI->m_checkMinToTray->IsChecked();
+    closeToTray = panelUI->m_checkCloseToTray->IsChecked();
+    startOnSysBoot = panelUI->m_checkStartOnSysBoot->IsChecked();
+    askBeforeClosing = panelUI->m_checkAskBeforeClosing->IsChecked();
+    alwaysShowTrayIcon = panelUI->m_checkAlwaysShowTray->IsChecked();
+
+	CWalletDB().WriteSetting("minimizeToTray", minimizeToTray);
+	CWalletDB().WriteSetting("closeToTray", closeToTray);
+	CWalletDB().WriteSetting("startOnSysBoot", startOnSysBoot);
+	CWalletDB().WriteSetting("askBeforeClosing", askBeforeClosing);
+	CWalletDB().WriteSetting("alwaysShowTrayIcon", alwaysShowTrayIcon);
+
+	ApplyUISettings();
 
     Close();
 }
@@ -1257,6 +1324,39 @@ void COptionsDialog::OnButtonCancel(wxCommandEvent& event)
     Close();
 }
 
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// COptionsPanelBitcoin
+//
+
+COptionsPanelBitcoin::COptionsPanelBitcoin(wxWindow* parent) : COptionsPanelBitcoinBase(parent)
+{
+	m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
+}
+
+void COptionsPanelBitcoin::OnKillFocusTransactionFee(wxFocusEvent& event)
+{
+    int64 nTmp = nTransactionFee;
+    ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
+    m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// COptionsPanelUI
+//
+
+COptionsPanelUI::COptionsPanelUI(wxWindow* parent) : COptionsPanelUIBase(parent)
+{
+	m_checkMinToTray->SetValue(minimizeToTray);
+	m_checkCloseToTray->SetValue(closeToTray);
+	m_checkStartOnSysBoot->SetValue(startOnSysBoot);
+	m_checkAskBeforeClosing->SetValue(askBeforeClosing);
+	m_checkAlwaysShowTray->SetValue(alwaysShowTrayIcon);
+}
 
 
 
@@ -2862,10 +2962,79 @@ void CEditReviewDialog::GetReview(CReview& review)
 
 
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BitcoinTBIcon
+//
 
+enum {
+    PU_RESTORE = 10001,
+    PU_GENERATE,
+    PU_EXIT,
+};
 
+BEGIN_EVENT_TABLE(CBitcoinTBIcon, wxTaskBarIcon)
+	EVT_TASKBAR_LEFT_DCLICK  (CBitcoinTBIcon::OnLeftButtonDClick)
+	EVT_MENU(PU_RESTORE,    CBitcoinTBIcon::OnMenuRestore)
+	EVT_MENU(PU_GENERATE,    CBitcoinTBIcon::OnMenuGenerate)
+	EVT_MENU(PU_EXIT,    CBitcoinTBIcon::OnMenuExit)
+END_EVENT_TABLE()
 
+void CBitcoinTBIcon::Show()
+{
+	string tooltip = "Bitcoin";
+	tooltip += fGenerateBitcoins ? " - Generating" : "";
+	SetIcon(wxICON(bitcoin), tooltip);
+}
 
+void CBitcoinTBIcon::Hide()
+{
+	RemoveIcon();
+}
+
+void CBitcoinTBIcon::OnLeftButtonDClick(wxTaskBarIconEvent&)
+{
+	Restore();
+}
+
+void CBitcoinTBIcon::OnMenuExit(wxCommandEvent&)
+{
+	pframeMain->Close(true);
+}
+
+void CBitcoinTBIcon::OnMenuGenerate(wxCommandEvent& event)
+{
+	GenerateBitcoins(event.IsChecked());
+	pframeMain->Refresh();
+}
+
+void CBitcoinTBIcon::OnMenuRestore(wxCommandEvent&) {
+	Restore();
+}
+
+void CBitcoinTBIcon::Restore() {
+    pframeMain->Show();
+    pframeMain->Raise();
+    if (!alwaysShowTrayIcon)
+    	Hide();
+}
+
+void CBitcoinTBIcon::UpdateTooltip() {
+	if (IsIconInstalled())
+		Show();
+}
+
+wxMenu *CBitcoinTBIcon::CreatePopupMenu()
+{
+    wxMenu *menu = new wxMenu;
+    wxMenuItem* generateCheck = menu->AppendCheckItem(PU_GENERATE, _T("Generate Coins"));
+    menu->Append(PU_RESTORE, _T("Open Bitcoin"));
+    menu->Append(PU_EXIT,    _T("Exit"));
+
+    generateCheck->Check(fGenerateBitcoins);
+
+    return menu;
+}
 
 
 
@@ -3137,6 +3306,9 @@ bool CMyApp::OnInit2()
         }
     }
 
+    taskBarIcon = new CBitcoinTBIcon();
+    ApplyUISettings();
+
     return true;
 }
 
@@ -3211,6 +3383,31 @@ void MainFrameRepaint()
     }
 }
 
+
+
+
+void ApplyUISettings() {
+	// Show the tray icon?
+	if (alwaysShowTrayIcon)
+		taskBarIcon->Show();
+	else
+		taskBarIcon->Hide();
+
+	// Autostart on system startup?
+	if (startOnSysBoot) {
+		// Get the startup folder path
+		char targetPath[ MAX_PATH ];
+		SHGetSpecialFolderPath(0, targetPath, CSIDL_STARTUP, 0);
+		strcat(targetPath, "\\bitcoin.lnk");
+
+		// And the current executable path
+		char currentPath[ MAX_PATH ];
+		GetModuleFileName(NULL, currentPath, _MAX_PATH + 1);
+
+		// Create the shortcut
+		CreateHardLink(targetPath, currentPath, NULL);
+	}
+}
 
 
 
