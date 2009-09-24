@@ -12,7 +12,7 @@ ifeq "$(BUILD)" "debug"
 D=d
 # note: gcc 3.x profile doesn't work
 #DEBUGFLAGS=-O0 -g -pg -D__WXDEBUG__
-DEBUGFLAGS=-g -D__WXDEBUG__
+DEBUGFLAGS=-g -D__WXDEBUG__ -Wall -Wextra
 endif
 
 
@@ -22,7 +22,7 @@ LIBPATHS=-L"/DB/build_unix" -L"/OpenSSL/out" -L"/wxWidgets/lib/gcc_lib"
 LIBS= \
  -l db_cxx \
  -l eay32 \
- -l wxmsw28$(D)_richtext -l wxmsw28$(D)_html -l wxmsw28$(D)_core -l wxbase28$(D) -l wxtiff$(D) -l wxjpeg$(D) -l wxpng$(D) -l wxzlib$(D) -l wxregex$(D) -l wxexpat$(D) \
+ -l wxmsw28$(D)_richtext -l wxmsw28$(D)_html -l wxmsw28$(D)_core -l wxmsw28$(D)_adv -l wxbase28$(D) -l wxtiff$(D) -l wxjpeg$(D) -l wxpng$(D) -l wxzlib$(D) -l wxregex$(D) -l wxexpat$(D) \
  -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32
 WXDEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH
 CFLAGS=-mthreads -O0 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)

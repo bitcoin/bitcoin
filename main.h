@@ -47,7 +47,6 @@ extern CAddress addrIncoming;
 
 
 
-
 string GetAppDir();
 bool CheckDiskSpace(int64 nAdditionalBytes=0);
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");

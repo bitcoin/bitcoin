@@ -575,6 +575,11 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
                 if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
                 if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;
                 if (strKey == "addrIncoming")       ssValue >> addrIncoming;
+                if (strKey == "minimizeToTray")       ssValue >> minimizeToTray;
+                if (strKey == "closeToTray")       ssValue >> closeToTray;
+                if (strKey == "startOnSysBoot")       ssValue >> startOnSysBoot;
+                if (strKey == "askBeforeClosing")       ssValue >> askBeforeClosing;
+                if (strKey == "alwaysShowTrayIcon")       ssValue >> alwaysShowTrayIcon;
             }
         }
     }
