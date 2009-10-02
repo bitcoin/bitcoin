@@ -1,4 +1,3 @@
 Known bugs:
-- For some reason, CreateHardLink doesn't add a shortcut to the startup folder
 - When the program is minimized to tray, double clicking the icon only restores it to the task bar
 - Window flickers when blocks are added (problem with repainting?)

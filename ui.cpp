@@ -859,18 +859,6 @@ void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
     Close(true);
 }
 
-void GenerateBitcoins(bool flag)
-{
-	fGenerateBitcoins = flag;
-    nTransactionsUpdated++;
-    CWalletDB().WriteSetting("fGenerateBitcoins", fGenerateBitcoins);
-    if (fGenerateBitcoins)
-        if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
-            printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
-
-    taskBarIcon->UpdateTooltip();
-}
-
 void CMainFrame::OnMenuOptionsGenerate(wxCommandEvent& event)
 {
     GenerateBitcoins(event.IsChecked());
@@ -3394,23 +3382,66 @@ void ApplyUISettings() {
 		taskBarIcon->Hide();
 
 	// Autostart on system startup?
+	// Get the startup folder shortcut path
+	char linkPath[ MAX_PATH ];
+	SHGetSpecialFolderPath(0, linkPath, CSIDL_STARTUP, 0);
+	strcat(linkPath, "\\Bitcoin.lnk");
+
+	// If the shortcut exists already, remove it for updating
+	remove(linkPath);
+
 	if (startOnSysBoot) {
-		// Get the startup folder path
-		char targetPath[ MAX_PATH ];
-		SHGetSpecialFolderPath(0, targetPath, CSIDL_STARTUP, 0);
-		strcat(targetPath, "\\bitcoin.lnk");
+		CoInitialize(NULL);
+		// Get the current executable path
+		char exePath[ MAX_PATH ];
+		GetModuleFileName(NULL, exePath, _MAX_PATH + 1);
 
-		// And the current executable path
-		char currentPath[ MAX_PATH ];
-		GetModuleFileName(NULL, currentPath, _MAX_PATH + 1);
+		HRESULT hres = NULL;
+		IShellLink* psl = NULL;
+		// Get a pointer to the IShellLink interface.
+		hres = CoCreateInstance(CLSID_ShellLink, NULL,
+				CLSCTX_INPROC_SERVER, IID_IShellLink,
+				reinterpret_cast<void**>(&psl));
 
-		// Create the shortcut
-		CreateHardLink(targetPath, currentPath, NULL);
+		if (SUCCEEDED(hres))
+		{
+			IPersistFile* ppf = NULL;
+			// Set the path to the shortcut target
+			psl->SetPath(exePath);
+			// Query IShellLink for the IPersistFile interface for
+			// saving the shortcut in persistent storage.
+			hres = psl->QueryInterface(IID_IPersistFile,
+					reinterpret_cast<void**>(&ppf));
+			if (SUCCEEDED(hres))
+			{
+				WCHAR wsz[MAX_PATH];
+				// Ensure that the string is ANSI.
+				MultiByteToWideChar(CP_ACP, 0, linkPath, -1,
+						wsz, MAX_PATH);
+				// Save the link by calling IPersistFile::Save.
+				hres = ppf->Save(wsz, TRUE);
+				ppf->Release();
+			}
+			psl->Release();
+		}
+		CoUninitialize();
 	}
 }
 
 
 
+
+void GenerateBitcoins(bool flag)
+{
+	fGenerateBitcoins = flag;
+    nTransactionsUpdated++;
+    CWalletDB().WriteSetting("fGenerateBitcoins", fGenerateBitcoins);
+    if (fGenerateBitcoins)
+        if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
+            printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
+
+    taskBarIcon->UpdateTooltip();
+}
 
 
 
