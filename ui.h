@@ -28,6 +28,7 @@ extern void CrossThreadCall(int nID, void* pdata);
 extern void MainFrameRepaint();
 extern void Shutdown(void* parg);
 void ApplyUISettings();
+void GenerateBitcoins(bool flag);
 
 // UI settings
 extern int minimizeToTray;
