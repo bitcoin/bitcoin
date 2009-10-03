@@ -3002,6 +3002,7 @@ void CBitcoinTBIcon::OnMenuRestore(wxCommandEvent&) {
 
 void CBitcoinTBIcon::Restore() {
     pframeMain->Show();
+    pframeMain->Iconize(false);
     pframeMain->Raise();
     if (!alwaysShowTrayIcon)
     	Hide();
@@ -3296,6 +3297,9 @@ bool CMyApp::OnInit2()
 
     taskBarIcon = new CBitcoinTBIcon();
     ApplyUISettings();
+    if (mapArgs.count("/min") && minimizeToTray) {
+    	pframeMain->Iconize(true);
+    }
 
     return true;
 }
@@ -3408,6 +3412,7 @@ void ApplyUISettings() {
 			IPersistFile* ppf = NULL;
 			// Set the path to the shortcut target
 			psl->SetPath(exePath);
+			psl->SetArguments("/min");
 			// Query IShellLink for the IPersistFile interface for
 			// saving the shortcut in persistent storage.
 			hres = psl->QueryInterface(IID_IPersistFile,
