@@ -1,3 +1,2 @@
 Known bugs:
-- When the program is minimized to tray, double clicking the icon only restores it to the task bar
 - Window flickers when blocks are added (problem with repainting?)
