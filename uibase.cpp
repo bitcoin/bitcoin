@@ -1870,7 +1870,7 @@ COptionsPanelUIBase::COptionsPanelUIBase( wxWindow* parent, wxWindowID id, const
 	
 	bSizer57->Add( m_checkCloseToTray, 0, wxALL, 5 );
 	
-	m_checkStartOnSysBoot = new wxCheckBox( this, wxID_ANY, wxT("Start on system boot"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_checkStartOnSysBoot = new wxCheckBox( this, wxID_ANY, wxT("Start with Windows"), wxDefaultPosition, wxDefaultSize, 0 );
 	
 	bSizer57->Add( m_checkStartOnSysBoot, 0, wxALL, 5 );
 	
