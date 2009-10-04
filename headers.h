@@ -37,7 +37,6 @@
 #include <assert.h>
 #include <process.h>
 #include <malloc.h>
-#include <shlobj.h>
 #include <memory>
 #define BOUNDSCHECK 1
 #include <sstream>

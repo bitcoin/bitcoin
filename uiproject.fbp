@@ -11849,7 +11849,7 @@
                 </object>
             </object>
         </object>
-        <object class="Panel" expanded="1">
+        <object class="Panel" expanded="0">
             <property name="bg"></property>
             <property name="context_help"></property>
             <property name="enabled">1</property>
@@ -12076,7 +12076,7 @@
                 </object>
             </object>
         </object>
-        <object class="Panel" expanded="1">
+        <object class="Panel" expanded="0">
             <property name="bg"></property>
             <property name="context_help"></property>
             <property name="enabled">1</property>
@@ -12250,7 +12250,7 @@
                         <property name="font"></property>
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>
-                        <property name="label">Start on system boot</property>
+                        <property name="label">Start with Windows</property>
                         <property name="maximum_size"></property>
                         <property name="minimum_size"></property>
                         <property name="name">m_checkStartOnSysBoot</property>

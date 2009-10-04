@@ -3016,8 +3016,9 @@ void CBitcoinTBIcon::UpdateTooltip() {
 wxMenu *CBitcoinTBIcon::CreatePopupMenu()
 {
     wxMenu *menu = new wxMenu;
-    wxMenuItem* generateCheck = menu->AppendCheckItem(PU_GENERATE, _T("Generate Coins"));
     menu->Append(PU_RESTORE, _T("Open Bitcoin"));
+    wxMenuItem* generateCheck = menu->AppendCheckItem(PU_GENERATE, _T("Generate Coins"));
+    menu->InsertSeparator(2);
     menu->Append(PU_EXIT,    _T("Exit"));
 
     generateCheck->Check(fGenerateBitcoins);
@@ -3386,51 +3387,39 @@ void ApplyUISettings() {
 		taskBarIcon->Hide();
 
 	// Autostart on system startup?
-	// Get the startup folder shortcut path
-	char linkPath[ MAX_PATH ];
-	SHGetSpecialFolderPath(0, linkPath, CSIDL_STARTUP, 0);
-	strcat(linkPath, "\\Bitcoin.lnk");
+	// Open the startup registry key
+	HKEY hKey;
+	LONG lnRes = RegOpenKeyEx(
+			HKEY_CURRENT_USER,
+			"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+			0,
+			KEY_ALL_ACCESS,
+			&hKey
+	);
 
-	// If the shortcut exists already, remove it for updating
-	remove(linkPath);
+	if ( ERROR_SUCCESS == lnRes )
+	{
+		if (startOnSysBoot) {
+			// Get the current executable path
+			char exePath[ MAX_PATH ];
+			GetModuleFileName(NULL, exePath, _MAX_PATH + 1);
+			char runCmd[ MAX_PATH + 5 ];
+			strcat(runCmd, exePath);
+			strcat(runCmd," /min");
 
-	if (startOnSysBoot) {
-		CoInitialize(NULL);
-		// Get the current executable path
-		char exePath[ MAX_PATH ];
-		GetModuleFileName(NULL, exePath, _MAX_PATH + 1);
-
-		HRESULT hres = NULL;
-		IShellLink* psl = NULL;
-		// Get a pointer to the IShellLink interface.
-		hres = CoCreateInstance(CLSID_ShellLink, NULL,
-				CLSCTX_INPROC_SERVER, IID_IShellLink,
-				reinterpret_cast<void**>(&psl));
-
-		if (SUCCEEDED(hres))
-		{
-			IPersistFile* ppf = NULL;
-			// Set the path to the shortcut target
-			psl->SetPath(exePath);
-			psl->SetArguments("/min");
-			// Query IShellLink for the IPersistFile interface for
-			// saving the shortcut in persistent storage.
-			hres = psl->QueryInterface(IID_IPersistFile,
-					reinterpret_cast<void**>(&ppf));
-			if (SUCCEEDED(hres))
-			{
-				WCHAR wsz[MAX_PATH];
-				// Ensure that the string is ANSI.
-				MultiByteToWideChar(CP_ACP, 0, linkPath, -1,
-						wsz, MAX_PATH);
-				// Save the link by calling IPersistFile::Save.
-				hres = ppf->Save(wsz, TRUE);
-				ppf->Release();
-			}
-			psl->Release();
+			RegSetValueEx(hKey,
+					"Bitcoin",
+					0,
+					REG_SZ,
+					(BYTE*)runCmd,
+					sizeof(runCmd)
+					);
 		}
-		CoUninitialize();
+		else {
+			RegDeleteValue(hKey, "Bitcoin");
+		}
 	}
+	RegCloseKey(hKey);
 }
 
 
