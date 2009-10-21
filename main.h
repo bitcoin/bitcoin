@@ -41,6 +41,9 @@ extern int nDropMessagesTest;
 extern int fGenerateBitcoins;
 extern int64 nTransactionFee;
 extern CAddress addrIncoming;
+extern int fLimitProcessors;
+extern int nLimitProcessors;
+
 
 
 
@@ -58,14 +61,17 @@ void ReacceptWalletTransactions();
 void RelayWalletTransactions();
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
-bool BitcoinMiner();
 bool ProcessMessages(CNode* pfrom);
 bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv);
 bool SendMessages(CNode* pto);
 int64 GetBalance();
-bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& txNew, int64& nFeeRequiredRet);
-bool CommitTransactionSpent(const CWalletTx& wtxNew);
+bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CKey& keyRet, int64& nFeeRequiredRet);
+bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key);
 bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew);
+void GenerateBitcoins(bool fGenerate);
+void ThreadBitcoinMiner(void* parg);
+bool BitcoinMiner();
+
 
 
 
@@ -1320,7 +1326,7 @@ public:
 
 extern map<uint256, CTransaction> mapTransactions;
 extern map<uint256, CWalletTx> mapWallet;
-extern vector<pair<uint256, bool> > vWalletUpdated;
+extern vector<uint256> vWalletUpdated;
 extern CCriticalSection cs_mapWallet;
 extern map<vector<unsigned char>, CPrivKey> mapKeys;
 extern map<uint160, vector<unsigned char> > mapPubKeys;

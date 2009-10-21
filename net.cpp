@@ -23,7 +23,8 @@ CAddress addrLocalHost(0, DEFAULT_PORT, nLocalServices);
 CNode nodeLocalHost(INVALID_SOCKET, CAddress("127.0.0.1", nLocalServices));
 CNode* pnodeLocalHost = &nodeLocalHost;
 bool fShutdown = false;
-array<bool, 10> vfThreadRunning;
+array<int, 10> vnThreadsRunning;
+
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
 map<vector<unsigned char>, CAddress> mapAddresses;
@@ -57,7 +58,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
 
     if (fProxy)
     {
-        printf("Proxy connecting to %s\n", addrConnect.ToString().c_str());
+        printf("Proxy connecting %s\n", addrConnect.ToStringLog().c_str());
         char pszSocks4IP[] = "\4\1\0\0\0\0\0\0user";
         memcpy(pszSocks4IP + 2, &addrConnect.port, 2);
         memcpy(pszSocks4IP + 4, &addrConnect.ip, 4);
@@ -81,7 +82,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
             closesocket(hSocket);
             return error("Proxy returned error %d\n", pchRet[1]);
         }
-        printf("Proxy connection established %s\n", addrConnect.ToString().c_str());
+        printf("Proxy connection established %s\n", addrConnect.ToStringLog().c_str());
     }
 
     hSocketRet = hSocket;
@@ -218,6 +219,13 @@ bool AddAddress(CAddrDB& addrdb, const CAddress& addr)
                 addrFound.nServices |= addr.nServices;
                 addrdb.WriteAddress(addrFound);
                 return true;
+            }
+            else if (addrFound.nTime < GetAdjustedTime() - 24 * 60 * 60)
+            {
+                // Periodically update most recently seen time
+                addrFound.nTime = GetAdjustedTime();
+                addrdb.WriteAddress(addrFound);
+                return false;
             }
         }
     }
@@ -373,14 +381,14 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
     }
 
     /// debug print
-    printf("trying %s\n", addrConnect.ToString().c_str());
+    printf("trying connection %s\n", addrConnect.ToStringLog().c_str());
 
     // Connect
     SOCKET hSocket;
     if (ConnectSocket(addrConnect, hSocket))
     {
         /// debug print
-        printf("connected %s\n", addrConnect.ToString().c_str());
+        printf("connected %s\n", addrConnect.ToStringLog().c_str());
 
         // Set to nonblocking
         u_long nOne = 1;
@@ -410,7 +418,7 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
 
 void CNode::Disconnect()
 {
-    printf("disconnecting node %s\n", addr.ToString().c_str());
+    printf("disconnecting node %s\n", addr.ToStringLog().c_str());
 
     closesocket(hSocket);
 
@@ -450,14 +458,20 @@ void ThreadSocketHandler(void* parg)
 
     loop
     {
-        vfThreadRunning[0] = true;
+        vnThreadsRunning[0] = true;
         CheckForShutdown(0);
         try
         {
             ThreadSocketHandler2(parg);
+            vnThreadsRunning[0] = false;
         }
-        CATCH_PRINT_EXCEPTION("ThreadSocketHandler()")
-        vfThreadRunning[0] = false;
+        catch (std::exception& e) {
+            vnThreadsRunning[0] = false;
+            PrintException(&e, "ThreadSocketHandler()");
+        } catch (...) {
+            vnThreadsRunning[0] = false;
+            PrintException(NULL, "ThreadSocketHandler()");
+        }
         Sleep(5000);
     }
 }
@@ -548,9 +562,9 @@ void ThreadSocketHandler2(void* parg)
             }
         }
 
-        vfThreadRunning[0] = false;
+        vnThreadsRunning[0] = false;
         int nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, NULL, &timeout);
-        vfThreadRunning[0] = true;
+        vnThreadsRunning[0] = true;
         CheckForShutdown(0);
         if (nSelect == SOCKET_ERROR)
         {
@@ -590,7 +604,7 @@ void ThreadSocketHandler2(void* parg)
             }
             else
             {
-                printf("accepted connection from %s\n", addr.ToString().c_str());
+                printf("accepted connection %s\n", addr.ToStringLog().c_str());
                 CNode* pnode = new CNode(hSocket, addr, true);
                 pnode->AddRef();
                 CRITICAL_BLOCK(cs_vNodes)
@@ -697,14 +711,20 @@ void ThreadOpenConnections(void* parg)
 
     loop
     {
-        vfThreadRunning[1] = true;
+        vnThreadsRunning[1] = true;
         CheckForShutdown(1);
         try
         {
             ThreadOpenConnections2(parg);
+            vnThreadsRunning[1] = false;
         }
-        CATCH_PRINT_EXCEPTION("ThreadOpenConnections()")
-        vfThreadRunning[1] = false;
+        catch (std::exception& e) {
+            vnThreadsRunning[1] = false;
+            PrintException(&e, "ThreadOpenConnections()");
+        } catch (...) {
+            vnThreadsRunning[1] = false;
+            PrintException(NULL, "ThreadOpenConnections()");
+        }
         Sleep(5000);
     }
 }
@@ -720,14 +740,14 @@ void ThreadOpenConnections2(void* parg)
     loop
     {
         // Wait
-        vfThreadRunning[1] = false;
+        vnThreadsRunning[1] = false;
         Sleep(500);
         while (vNodes.size() >= nMaxConnections || vNodes.size() >= mapAddresses.size())
         {
             CheckForShutdown(1);
             Sleep(2000);
         }
-        vfThreadRunning[1] = true;
+        vnThreadsRunning[1] = true;
         CheckForShutdown(1);
 
 
@@ -823,9 +843,9 @@ void ThreadOpenConnections2(void* parg)
             if (addrConnect.ip == addrLocalHost.ip || !addrConnect.IsIPv4() || FindNode(addrConnect.ip))
                 continue;
 
-            vfThreadRunning[1] = false;
+            vnThreadsRunning[1] = false;
             CNode* pnode = ConnectNode(addrConnect);
-            vfThreadRunning[1] = true;
+            vnThreadsRunning[1] = true;
             CheckForShutdown(1);
             if (!pnode)
                 continue;
@@ -867,14 +887,20 @@ void ThreadMessageHandler(void* parg)
 
     loop
     {
-        vfThreadRunning[2] = true;
+        vnThreadsRunning[2] = true;
         CheckForShutdown(2);
         try
         {
             ThreadMessageHandler2(parg);
+            vnThreadsRunning[2] = false;
         }
-        CATCH_PRINT_EXCEPTION("ThreadMessageHandler()")
-        vfThreadRunning[2] = false;
+        catch (std::exception& e) {
+            vnThreadsRunning[2] = false;
+            PrintException(&e, "ThreadMessageHandler()");
+        } catch (...) {
+            vnThreadsRunning[2] = false;
+            PrintException(NULL, "ThreadMessageHandler()");
+        }
         Sleep(5000);
     }
 }
@@ -905,35 +931,12 @@ void ThreadMessageHandler2(void* parg)
         }
 
         // Wait and allow messages to bunch up
-        vfThreadRunning[2] = false;
+        vnThreadsRunning[2] = false;
         Sleep(100);
-        vfThreadRunning[2] = true;
+        vnThreadsRunning[2] = true;
         CheckForShutdown(2);
     }
 }
-
-
-
-
-
-
-
-
-
-//// todo: start one thread per processor, use getenv("NUMBER_OF_PROCESSORS")
-void ThreadBitcoinMiner(void* parg)
-{
-    vfThreadRunning[3] = true;
-    CheckForShutdown(3);
-    try
-    {
-        bool fRet = BitcoinMiner();
-        printf("BitcoinMiner returned %s\n\n\n", fRet ? "true" : "false");
-    }
-    CATCH_PRINT_EXCEPTION("BitcoinMiner()")
-    vfThreadRunning[3] = false;
-}
-
 
 
 
@@ -1067,17 +1070,17 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
-    while (vfThreadRunning[0] || vfThreadRunning[2] || vfThreadRunning[3])
+    while (vnThreadsRunning[0] || vnThreadsRunning[2] || vnThreadsRunning[3])
     {
         if (GetTime() - nStart > 15)
             break;
         Sleep(20);
     }
-    if (vfThreadRunning[0]) printf("ThreadSocketHandler still running\n");
-    if (vfThreadRunning[1]) printf("ThreadOpenConnections still running\n");
-    if (vfThreadRunning[2]) printf("ThreadMessageHandler still running\n");
-    if (vfThreadRunning[3]) printf("ThreadBitcoinMiner still running\n");
-    while (vfThreadRunning[2])
+    if (vnThreadsRunning[0]) printf("ThreadSocketHandler still running\n");
+    if (vnThreadsRunning[1]) printf("ThreadOpenConnections still running\n");
+    if (vnThreadsRunning[2]) printf("ThreadMessageHandler still running\n");
+    if (vnThreadsRunning[3]) printf("ThreadBitcoinMiner still running\n");
+    while (vnThreadsRunning[2])
         Sleep(20);
     Sleep(50);
 
@@ -1091,7 +1094,7 @@ void CheckForShutdown(int n)
     if (fShutdown)
     {
         if (n != -1)
-            vfThreadRunning[n] = false;
+            vnThreadsRunning[n] = false;
         if (n == 0)
             foreach(CNode* pnode, vNodes)
                 closesocket(pnode->hSocket);

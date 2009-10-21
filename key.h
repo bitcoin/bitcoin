@@ -44,6 +44,7 @@ class CKey
 {
 protected:
     EC_KEY* pkey;
+    bool fSet;
 
 public:
     CKey()
@@ -51,6 +52,7 @@ public:
         pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
         if (pkey == NULL)
             throw key_error("CKey::CKey() : EC_KEY_new_by_curve_name failed");
+        fSet = false;
     }
 
     CKey(const CKey& b)
@@ -58,12 +60,14 @@ public:
         pkey = EC_KEY_dup(b.pkey);
         if (pkey == NULL)
             throw key_error("CKey::CKey(const CKey&) : EC_KEY_dup failed");
+        fSet = b.fSet;
     }
 
     CKey& operator=(const CKey& b)
     {
         if (!EC_KEY_copy(pkey, b.pkey))
             throw key_error("CKey::operator=(const CKey&) : EC_KEY_copy failed");
+        fSet = b.fSet;
         return (*this);
     }
 
@@ -72,10 +76,16 @@ public:
         EC_KEY_free(pkey);
     }
 
+    bool IsNull() const
+    {
+        return !fSet;
+    }
+
     void MakeNewKey()
     {
         if (!EC_KEY_generate_key(pkey))
             throw key_error("CKey::MakeNewKey() : EC_KEY_generate_key failed");
+        fSet = true;
     }
 
     bool SetPrivKey(const CPrivKey& vchPrivKey)
@@ -83,6 +93,7 @@ public:
         const unsigned char* pbegin = &vchPrivKey[0];
         if (!d2i_ECPrivateKey(&pkey, &pbegin, vchPrivKey.size()))
             return false;
+        fSet = true;
         return true;
     }
 
@@ -103,6 +114,7 @@ public:
         const unsigned char* pbegin = &vchPubKey[0];
         if (!o2i_ECPublicKey(&pkey, &pbegin, vchPubKey.size()))
             return false;
+        fSet = true;
         return true;
     }
 

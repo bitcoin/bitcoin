@@ -338,6 +338,7 @@ class CWalletDB : public CDB
 {
 public:
     CWalletDB(const char* pszMode="r+", bool fTxn=false) : CDB("wallet.dat", pszMode, fTxn) { }
+    ~CWalletDB();
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
@@ -412,7 +413,7 @@ public:
     bool LoadWallet(vector<unsigned char>& vchDefaultKeyRet);
 };
 
-bool LoadWallet();
+bool LoadWallet(bool& fFirstRunRet);
 
 inline bool SetAddressBookName(const string& strAddress, const string& strName)
 {

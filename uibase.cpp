@@ -24,14 +24,21 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	
 	m_menubar->Append( m_menuFile, wxT("&File") );
 	
+	m_menuView = new wxMenu();
+	wxMenuItem* m_menuViewShowGenerated;
+	m_menuViewShowGenerated = new wxMenuItem( m_menuView, wxID_VIEWSHOWGENERATED, wxString( wxT("&Show Generated Coins") ) , wxEmptyString, wxITEM_CHECK );
+	m_menuView->Append( m_menuViewShowGenerated );
+	
+	m_menubar->Append( m_menuView, wxT("&View") );
+	
 	m_menuOptions = new wxMenu();
 	wxMenuItem* m_menuOptionsGenerateBitcoins;
 	m_menuOptionsGenerateBitcoins = new wxMenuItem( m_menuOptions, wxID_OPTIONSGENERATEBITCOINS, wxString( wxT("&Generate Coins") ) , wxEmptyString, wxITEM_CHECK );
 	m_menuOptions->Append( m_menuOptionsGenerateBitcoins );
 	
-	wxMenuItem* m_menuChangeYourAddress;
-	m_menuChangeYourAddress = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( wxT("&Change Your Address...") ) , wxEmptyString, wxITEM_NORMAL );
-	m_menuOptions->Append( m_menuChangeYourAddress );
+	wxMenuItem* m_menuOptionsChangeYourAddress;
+	m_menuOptionsChangeYourAddress = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( wxT("&Change Your Address...") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuOptions->Append( m_menuOptionsChangeYourAddress );
 	
 	wxMenuItem* m_menuOptionsOptions;
 	m_menuOptionsOptions = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( wxT("&Options...") ) , wxEmptyString, wxITEM_NORMAL );
@@ -225,9 +232,11 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	this->Connect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEvents ) );
 	this->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaint ) );
 	this->Connect( m_menuFileExit->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuFileExit ) );
+	this->Connect( m_menuViewShowGenerated->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuViewShowGenerated ) );
+	this->Connect( m_menuViewShowGenerated->GetId(), wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIViewShowGenerated ) );
 	this->Connect( m_menuOptionsGenerateBitcoins->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsGenerate ) );
-	this->Connect( m_menuOptionsGenerateBitcoins->GetId(), wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateMenuGenerate ) );
-	this->Connect( m_menuChangeYourAddress->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsChangeYourAddress ) );
+	this->Connect( m_menuOptionsGenerateBitcoins->GetId(), wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIOptionsGenerate ) );
+	this->Connect( m_menuOptionsChangeYourAddress->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsChangeYourAddress ) );
 	this->Connect( m_menuOptionsOptions->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsOptions ) );
 	this->Connect( m_menuHelpAbout->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuHelpAbout ) );
 	this->Connect( wxID_BUTTONSEND, wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonSend ) );
@@ -278,8 +287,10 @@ CMainFrameBase::~CMainFrameBase()
 	this->Disconnect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEvents ) );
 	this->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaint ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuFileExit ) );
+	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuViewShowGenerated ) );
+	this->Disconnect( wxID_ANY, wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIViewShowGenerated ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsGenerate ) );
-	this->Disconnect( wxID_ANY, wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateMenuGenerate ) );
+	this->Disconnect( wxID_ANY, wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIOptionsGenerate ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsChangeYourAddress ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsOptions ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuHelpAbout ) );
@@ -353,15 +364,121 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	wxBoxSizer* bSizer55;
 	bSizer55 = new wxBoxSizer( wxVERTICAL );
 	
-	panelSizer = new wxBoxSizer( wxHORIZONTAL );
+	wxBoxSizer* bSizer66;
+	bSizer66 = new wxBoxSizer( wxHORIZONTAL );
 	
-	m_treeCtrl = new wxTreeCtrl( this, wxID_ANY, wxDefaultPosition, wxSize( 100,-1 ), wxTR_HAS_BUTTONS|wxTR_HIDE_ROOT|wxTR_LINES_AT_ROOT );
-	panelSizer->Add( m_treeCtrl, 0, wxALL|wxEXPAND, 5 );
+	m_listBox = new wxListBox( this, wxID_ANY, wxDefaultPosition, wxSize( 110,-1 ), 0, NULL, wxLB_NEEDED_SB|wxLB_SINGLE ); 
+	bSizer66->Add( m_listBox, 0, wxEXPAND|wxRIGHT, 5 );
 	
-	bSizer55->Add( panelSizer, 1, wxEXPAND, 5 );
+	m_scrolledWindow = new wxScrolledWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
+	m_scrolledWindow->SetScrollRate( 5, 5 );
+	wxBoxSizer* bSizer63;
+	bSizer63 = new wxBoxSizer( wxVERTICAL );
 	
-	m_staticline1 = new wxStaticLine( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
-	bSizer55->Add( m_staticline1, 0, wxEXPAND | wxALL, 5 );
+	m_panelMain = new wxPanel( m_scrolledWindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer69;
+	bSizer69 = new wxBoxSizer( wxVERTICAL );
+	
+	
+	bSizer69->Add( 0, 14, 0, wxEXPAND, 5 );
+	
+	m_staticText32 = new wxStaticText( m_panelMain, wxID_ANY, wxT("Optional transaction fee you give to the nodes that process your transactions."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText32->Wrap( -1 );
+	m_staticText32->Hide();
+	
+	bSizer69->Add( m_staticText32, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	wxBoxSizer* bSizer56;
+	bSizer56 = new wxBoxSizer( wxHORIZONTAL );
+	
+	m_staticText31 = new wxStaticText( m_panelMain, wxID_ANY, wxT("Transaction fee:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText31->Wrap( -1 );
+	m_staticText31->Hide();
+	
+	bSizer56->Add( m_staticText31, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
+	
+	m_textCtrlTransactionFee = new wxTextCtrl( m_panelMain, wxID_TRANSACTIONFEE, wxEmptyString, wxDefaultPosition, wxSize( 70,-1 ), 0 );
+	m_textCtrlTransactionFee->Hide();
+	
+	bSizer56->Add( m_textCtrlTransactionFee, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+	
+	bSizer69->Add( bSizer56, 0, wxEXPAND, 5 );
+	
+	wxBoxSizer* bSizer71;
+	bSizer71 = new wxBoxSizer( wxHORIZONTAL );
+	
+	m_checkBoxLimitProcessors = new wxCheckBox( m_panelMain, wxID_ANY, wxT("&Limit coin generation to"), wxDefaultPosition, wxDefaultSize, 0 );
+	
+	bSizer71->Add( m_checkBoxLimitProcessors, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	m_spinCtrlLimitProcessors = new wxSpinCtrl( m_panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 48,-1 ), wxSP_ARROW_KEYS, 1, 999, 1 );
+	bSizer71->Add( m_spinCtrlLimitProcessors, 0, wxTOP|wxBOTTOM, 5 );
+	
+	m_staticText35 = new wxStaticText( m_panelMain, wxID_ANY, wxT("processors"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText35->Wrap( -1 );
+	bSizer71->Add( m_staticText35, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	bSizer69->Add( bSizer71, 0, 0, 5 );
+	
+	m_checkBoxStartOnSystemStartup = new wxCheckBox( m_panelMain, wxID_ANY, wxT("&Start Bitcoin on system startup"), wxDefaultPosition, wxDefaultSize, 0 );
+	
+	bSizer69->Add( m_checkBoxStartOnSystemStartup, 0, wxALL, 5 );
+	
+	m_checkBoxMinimizeToTray = new wxCheckBox( m_panelMain, wxID_ANY, wxT("&Minimize to the system tray instead of the taskbar"), wxDefaultPosition, wxDefaultSize, 0 );
+	
+	bSizer69->Add( m_checkBoxMinimizeToTray, 0, wxALL, 5 );
+	
+	wxBoxSizer* bSizer101;
+	bSizer101 = new wxBoxSizer( wxHORIZONTAL );
+	
+	
+	bSizer101->Add( 16, 0, 0, 0, 5 );
+	
+	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, wxT("M&inimize to system tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
+	
+	bSizer101->Add( m_checkBoxMinimizeOnClose, 0, wxALL, 5 );
+	
+	bSizer69->Add( bSizer101, 1, wxEXPAND, 5 );
+	
+	m_panelMain->SetSizer( bSizer69 );
+	m_panelMain->Layout();
+	bSizer69->Fit( m_panelMain );
+	bSizer63->Add( m_panelMain, 0, wxEXPAND, 5 );
+	
+	m_panelTest2 = new wxPanel( m_scrolledWindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer64;
+	bSizer64 = new wxBoxSizer( wxVERTICAL );
+	
+	
+	bSizer64->Add( 0, 14, 0, wxEXPAND, 5 );
+	
+	m_staticText321 = new wxStaticText( m_panelTest2, wxID_ANY, wxT("Test panel 2 for future expansion"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText321->Wrap( -1 );
+	bSizer64->Add( m_staticText321, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	m_staticText69 = new wxStaticText( m_panelTest2, wxID_ANY, wxT("MyLabel"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText69->Wrap( -1 );
+	bSizer64->Add( m_staticText69, 0, wxALL, 5 );
+	
+	m_staticText70 = new wxStaticText( m_panelTest2, wxID_ANY, wxT("MyLabel"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText70->Wrap( -1 );
+	bSizer64->Add( m_staticText70, 0, wxALL, 5 );
+	
+	m_staticText71 = new wxStaticText( m_panelTest2, wxID_ANY, wxT("MyLabel"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText71->Wrap( -1 );
+	bSizer64->Add( m_staticText71, 0, wxALL, 5 );
+	
+	m_panelTest2->SetSizer( bSizer64 );
+	m_panelTest2->Layout();
+	bSizer64->Fit( m_panelTest2 );
+	bSizer63->Add( m_panelTest2, 0, wxEXPAND, 5 );
+	
+	m_scrolledWindow->SetSizer( bSizer63 );
+	m_scrolledWindow->Layout();
+	bSizer63->Fit( m_scrolledWindow );
+	bSizer66->Add( m_scrolledWindow, 1, wxEXPAND|wxLEFT, 5 );
+	
+	bSizer55->Add( bSizer66, 1, wxEXPAND|wxALL, 9 );
 	
 	wxBoxSizer* bSizer58;
 	bSizer58 = new wxBoxSizer( wxHORIZONTAL );
@@ -374,9 +491,8 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	bSizer58->Add( m_buttonCancel, 0, wxALL, 5 );
 	
-	m_buttonApply = new wxButton( this, wxID_ANY, wxT("Apply"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonApply->Enable( false );
-	m_buttonApply->Hide();
+	m_buttonApply = new wxButton( this, wxID_APPLY, wxT("&Apply"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
+	m_buttonApply->SetMinSize( wxSize( 85,25 ) );
 	
 	bSizer58->Add( m_buttonApply, 0, wxALL, 5 );
 	
@@ -386,17 +502,25 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	this->Layout();
 	
 	// Connect Events
-	m_treeCtrl->Connect( wxEVT_COMMAND_TREE_SEL_CHANGED, wxTreeEventHandler( COptionsDialogBase::MenuSelChanged ), NULL, this );
+	m_listBox->Connect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
+	m_textCtrlTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
+	m_checkBoxLimitProcessors->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
+	m_checkBoxMinimizeToTray->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_buttonOK->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
+	m_buttonApply->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );
 }
 
 COptionsDialogBase::~COptionsDialogBase()
 {
 	// Disconnect Events
-	m_treeCtrl->Disconnect( wxEVT_COMMAND_TREE_SEL_CHANGED, wxTreeEventHandler( COptionsDialogBase::MenuSelChanged ), NULL, this );
+	m_listBox->Disconnect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
+	m_textCtrlTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
+	m_checkBoxLimitProcessors->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
+	m_checkBoxMinimizeToTray->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_buttonOK->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
+	m_buttonApply->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );
 }
 
 CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
@@ -1814,79 +1938,4 @@ CGetTextFromUserDialogBase::~CGetTextFromUserDialogBase()
 	m_textCtrl2->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( CGetTextFromUserDialogBase::OnKeyDown ), NULL, this );
 	m_buttonOK->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CGetTextFromUserDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CGetTextFromUserDialogBase::OnButtonCancel ), NULL, this );
-}
-
-COptionsPanelBitcoinBase::COptionsPanelBitcoinBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style ) : wxPanel( parent, id, pos, size, style )
-{
-	wxBoxSizer* bSizer62;
-	bSizer62 = new wxBoxSizer( wxVERTICAL );
-	
-	
-	bSizer62->Add( 0, 20, 0, wxEXPAND, 5 );
-	
-	m_staticText32 = new wxStaticText( this, wxID_ANY, wxT("Optional transaction fee you give to the nodes that process your transactions."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText32->Wrap( -1 );
-	bSizer62->Add( m_staticText32, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	wxBoxSizer* bSizer56;
-	bSizer56 = new wxBoxSizer( wxHORIZONTAL );
-	
-	m_staticText31 = new wxStaticText( this, wxID_ANY, wxT("Transaction fee:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText31->Wrap( -1 );
-	bSizer56->Add( m_staticText31, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
-	
-	m_textCtrlTransactionFee = new wxTextCtrl( this, wxID_TRANSACTIONFEE, wxEmptyString, wxDefaultPosition, wxSize( 70,-1 ), 0 );
-	bSizer56->Add( m_textCtrlTransactionFee, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
-	
-	bSizer62->Add( bSizer56, 0, wxEXPAND, 5 );
-	
-	this->SetSizer( bSizer62 );
-	this->Layout();
-	bSizer62->Fit( this );
-	
-	// Connect Events
-	m_textCtrlTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsPanelBitcoinBase::OnKillFocusTransactionFee ), NULL, this );
-}
-
-COptionsPanelBitcoinBase::~COptionsPanelBitcoinBase()
-{
-	// Disconnect Events
-	m_textCtrlTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsPanelBitcoinBase::OnKillFocusTransactionFee ), NULL, this );
-}
-
-COptionsPanelUIBase::COptionsPanelUIBase( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style ) : wxPanel( parent, id, pos, size, style )
-{
-	wxBoxSizer* bSizer57;
-	bSizer57 = new wxBoxSizer( wxVERTICAL );
-	
-	
-	bSizer57->Add( 0, 20, 1, wxEXPAND, 5 );
-	
-	m_checkMinToTray = new wxCheckBox( this, wxID_MINTOTRAY, wxT("Minimize to tray"), wxDefaultPosition, wxDefaultSize, 0 );
-	
-	bSizer57->Add( m_checkMinToTray, 0, wxALL, 5 );
-	
-	m_checkCloseToTray = new wxCheckBox( this, wxID_ANY, wxT("Close to tray"), wxDefaultPosition, wxDefaultSize, 0 );
-	
-	bSizer57->Add( m_checkCloseToTray, 0, wxALL, 5 );
-	
-	m_checkStartOnSysBoot = new wxCheckBox( this, wxID_ANY, wxT("Start with Windows"), wxDefaultPosition, wxDefaultSize, 0 );
-	
-	bSizer57->Add( m_checkStartOnSysBoot, 0, wxALL, 5 );
-	
-	m_checkAskBeforeClosing = new wxCheckBox( this, wxID_ANY, wxT("Ask before closing"), wxDefaultPosition, wxDefaultSize, 0 );
-	
-	bSizer57->Add( m_checkAskBeforeClosing, 0, wxALL, 5 );
-	
-	m_checkAlwaysShowTray = new wxCheckBox( this, wxID_ANY, wxT("Always show tray icon"), wxDefaultPosition, wxDefaultSize, 0 );
-	
-	bSizer57->Add( m_checkAlwaysShowTray, 0, wxALL, 5 );
-	
-	this->SetSizer( bSizer57 );
-	this->Layout();
-	bSizer57->Fit( this );
-}
-
-COptionsPanelUIBase::~COptionsPanelUIBase()
-{
 }
