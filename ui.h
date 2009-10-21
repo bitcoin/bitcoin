@@ -21,21 +21,25 @@ enum
 
 
 
+
+extern map<string, string> mapArgs;
+
+// Settings
+extern int fShowGenerated;
+extern int fMinimizeToTray;
+extern int fMinimizeOnClose;
+
+
+
 extern void HandleCtrlA(wxKeyEvent& event);
 extern string DateTimeStr(int64 nTime);
 extern string FormatTxStatus(const CWalletTx& wtx);
 extern void CrossThreadCall(int nID, void* pdata);
 extern void MainFrameRepaint();
 extern void Shutdown(void* parg);
-void ApplyUISettings();
-void GenerateBitcoins(bool flag);
 
-// UI settings
-extern int minimizeToTray;
-extern int closeToTray;
-extern int startOnSysBoot;
-extern int askBeforeClosing;
-extern int alwaysShowTrayIcon;
+
+
 
 
 
@@ -44,14 +48,17 @@ class CMainFrame : public CMainFrameBase
 protected:
     // Event handlers
     void OnClose(wxCloseEvent& event);
-    void OnIconize( wxIconizeEvent& event );
+    void OnIconize(wxIconizeEvent& event);
     void OnMouseEvents(wxMouseEvent& event);
     void OnKeyDown(wxKeyEvent& event) { HandleCtrlA(event); }
     void OnIdle(wxIdleEvent& event);
     void OnPaint(wxPaintEvent& event);
     void OnPaintListCtrl(wxPaintEvent& event);
     void OnMenuFileExit(wxCommandEvent& event);
+    void OnMenuViewShowGenerated(wxCommandEvent& event);
+    void OnUpdateUIViewShowGenerated(wxUpdateUIEvent& event);
     void OnMenuOptionsGenerate(wxCommandEvent& event);
+    void OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event);
     void OnMenuOptionsChangeYourAddress(wxCommandEvent& event);
     void OnMenuOptionsOptions(wxCommandEvent& event);
     void OnMenuHelpAbout(wxCommandEvent& event);
@@ -66,7 +73,6 @@ protected:
     void OnListItemActivatedProductsSent(wxListEvent& event);
     void OnListItemActivatedOrdersSent(wxListEvent& event);
     void OnListItemActivatedOrdersReceived(wxListEvent& event);
-    void OnUpdateMenuGenerate( wxUpdateUIEvent& event );
 	
 public:
     /** Constructor */
@@ -85,7 +91,6 @@ public:
     void InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex=-1);
     void RefreshListCtrl();
     void RefreshStatus();
-    void SendToTray();
 };
 
 
@@ -107,47 +112,26 @@ public:
 
 
 
-class COptionsPanelBitcoin : public COptionsPanelBitcoinBase
-{
-protected:
-    // Event handlers
-	void OnKillFocusTransactionFee( wxFocusEvent& event );
-
-public:
-    /** Constructor */
-    COptionsPanelBitcoin(wxWindow* parent);
-};
-
-
-
-class COptionsPanelUI : public COptionsPanelUIBase
-{
-protected:
-    // Event handlers
-	void OnOptionsChanged( wxCommandEvent& event );
-
-public:
-    /** Constructor */
-    COptionsPanelUI(wxWindow* parent);
-};
-
-
-
 class COptionsDialog : public COptionsDialogBase
 {
 protected:
     // Event handlers
-	void MenuSelChanged( wxTreeEvent& event );
+    void OnListBox(wxCommandEvent& event);
+    void OnKillFocusTransactionFee(wxFocusEvent& event);
+    void OnCheckBoxLimitProcessors(wxCommandEvent& event);
+    void OnCheckBoxMinimizeToTray(wxCommandEvent& event);
     void OnButtonOK(wxCommandEvent& event);
     void OnButtonCancel(wxCommandEvent& event);
+    void OnButtonApply(wxCommandEvent& event);
 
-    // Panels
-    COptionsPanelBitcoin* panelBitcoin;
-    COptionsPanelUI* panelUI;
-    wxPanel* currentPanel;
 public:
     /** Constructor */
     COptionsDialog(wxWindow* parent);
+
+    // Custom
+    bool fTmpStartOnSystemStartup;
+    bool fTmpMinimizeOnClose;
+    void SelectPage(int nPage);
 };
 
 
@@ -180,6 +164,11 @@ protected:
 public:
     /** Constructor */
     CSendDialog(wxWindow* parent, const wxString& strAddress="");
+
+    // Custom
+    bool fEnabledPrev;
+    string strFromSave;
+    string strMessageSave;
 };
 
 
@@ -455,22 +444,33 @@ public:
 
 
 
-class CBitcoinTBIcon : public wxTaskBarIcon
+class CMyTaskBarIcon : public wxTaskBarIcon
 {
 protected:
-	void Restore();
-
-	// Event handlers
-	void OnLeftButtonDClick(wxTaskBarIconEvent&);
-	void OnMenuExit(wxCommandEvent&);
-	void OnMenuGenerate(wxCommandEvent&);
-	void OnMenuRestore(wxCommandEvent&);
+    // Event handlers
+    void OnLeftButtonDClick(wxTaskBarIconEvent& event);
+    void OnMenuRestore(wxCommandEvent& event);
+    void OnUpdateUIGenerate(wxUpdateUIEvent& event);
+    void OnMenuGenerate(wxCommandEvent& event);
+    void OnMenuExit(wxCommandEvent& event);
 
 public:
-	void Show();
-	void Hide();
-	void UpdateTooltip();
-	virtual wxMenu *CreatePopupMenu();
+    CMyTaskBarIcon() : wxTaskBarIcon()
+    {
+        Show(true);
+    }
+
+    void Show(bool fShow=true);
+    void Hide();
+    void Restore();
+    void UpdateTooltip();
+    virtual wxMenu* CreatePopupMenu();
 
 DECLARE_EVENT_TABLE()
 };
+
+
+
+
+
+

@@ -453,11 +453,7 @@ bool CAddrDB::LoadAddresses()
             }
         }
 
-        //// debug print
-        printf("mapAddresses:\n");
-        foreach(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
-            item.second.print();
-        printf("-----\n");
+        printf("Loaded %d addresses\n", mapAddresses.size());
 
         // Fix for possible bug that manifests in mapAddresses.count in irc.cpp,
         // just need to call count here and it doesn't happen there.  The bug was the
@@ -500,6 +496,26 @@ bool CReviewDB::WriteReviews(uint256 hash, const vector<CReview>& vReviews)
 //
 // CWalletDB
 //
+
+CWalletDB::~CWalletDB()
+{
+    // Flush whenever all handles to wallet.dat are closed
+    Close();
+    CRITICAL_BLOCK(cs_db)
+    {
+        map<string, int>::iterator mi = mapFileUseCount.find(strFile);
+        if (mi != mapFileUseCount.end())
+        {
+            int nRefCount = (*mi).second;
+            if (nRefCount == 0)
+            {
+                dbenv.txn_checkpoint(0, 0, 0);
+                dbenv.lsn_reset(strFile.c_str(), 0);
+                mapFileUseCount.erase(mi++);
+            }
+        }
+    }
+}
 
 bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
 {
@@ -568,34 +584,51 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
             {
                 ssValue >> vchDefaultKeyRet;
             }
-            else if (strType == "setting")  /// or settings or option or options or config?
+            else if (strType == "setting")
             {
                 string strKey;
                 ssKey >> strKey;
+
+                // Menu state
+                if (strKey == "fShowGenerated")     ssValue >> fShowGenerated;
                 if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
+
+                // Options
                 if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;
                 if (strKey == "addrIncoming")       ssValue >> addrIncoming;
-                if (strKey == "minimizeToTray")       ssValue >> minimizeToTray;
-                if (strKey == "closeToTray")       ssValue >> closeToTray;
-                if (strKey == "startOnSysBoot")       ssValue >> startOnSysBoot;
-                if (strKey == "askBeforeClosing")       ssValue >> askBeforeClosing;
-                if (strKey == "alwaysShowTrayIcon")       ssValue >> alwaysShowTrayIcon;
+                if (strKey == "fLimitProcessors")   ssValue >> fLimitProcessors;
+                if (strKey == "nLimitProcessors")   ssValue >> nLimitProcessors;
+                if (strKey == "fMinimizeToTray")    ssValue >> fMinimizeToTray;
+                if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
             }
         }
     }
 
+    printf("fShowGenerated = %d\n", fShowGenerated);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
     printf("nTransactionFee = %I64d\n", nTransactionFee);
     printf("addrIncoming = %s\n", addrIncoming.ToString().c_str());
+    printf("fMinimizeToTray = %d\n", fMinimizeToTray);
+    printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);
+
+    // The transaction fee setting won't be needed for many years to come.
+    // Setting it to zero here in case they set it to something in an earlier version.
+    if (nTransactionFee != 0)
+    {
+        nTransactionFee = 0;
+        WriteSetting("nTransactionFee", nTransactionFee);
+    }
 
     return true;
 }
 
-bool LoadWallet()
+bool LoadWallet(bool& fFirstRunRet)
 {
+    fFirstRunRet = false;
     vector<unsigned char> vchDefaultKey;
     if (!CWalletDB("cr").LoadWallet(vchDefaultKey))
         return false;
+    fFirstRunRet = vchDefaultKey.empty();
 
     if (mapKeys.count(vchDefaultKey))
     {

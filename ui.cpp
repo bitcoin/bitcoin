@@ -7,6 +7,13 @@
 #include <crtdbg.h>
 #endif
 
+void ThreadRequestProductDetails(void* parg);
+void ThreadRandSendTest(void* parg);
+bool GetStartOnSystemStartup();
+void SetStartOnSystemStartup(bool fAutoStart);
+
+
+
 DEFINE_EVENT_TYPE(wxEVT_CROSSTHREADCALL)
 DEFINE_EVENT_TYPE(wxEVT_REPLY1)
 DEFINE_EVENT_TYPE(wxEVT_REPLY2)
@@ -16,22 +23,21 @@ DEFINE_EVENT_TYPE(wxEVT_TABLEUPDATED)
 DEFINE_EVENT_TYPE(wxEVT_TABLEDELETED)
 
 CMainFrame* pframeMain = NULL;
+CMyTaskBarIcon* ptaskbaricon = NULL;
 map<string, string> mapAddressBook;
-CBitcoinTBIcon* taskBarIcon = NULL; // Tray icon
-
-
-void ThreadRequestProductDetails(void* parg);
-void ThreadRandSendTest(void* parg);
+map<string, string> mapArgs;
 bool fRandSendTest = false;
 void RandSend();
 extern int g_isPainting;
 
-// UI settings and their default values
-int minimizeToTray = 1;
-int closeToTray = 1;
-int startOnSysBoot = 1;
-int askBeforeClosing = 1;
-int alwaysShowTrayIcon = 1;
+// Settings
+int fShowGenerated = true;
+int fMinimizeToTray = true;
+int fMinimizeOnClose = true;
+
+
+
+
 
 
 
@@ -282,7 +288,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
     SetIcon(wxICON(bitcoin));
-    m_menuOptions->Check(wxID_OPTIONSGENERATEBITCOINS, fGenerateBitcoins);
+    ptaskbaricon = new CMyTaskBarIcon();
 
     // Init toolbar with transparency masked bitmaps
     m_toolBar->ClearTools();
@@ -327,7 +333,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     //m_listCtrlOrdersReceived->InsertColumn(4, "",                wxLIST_FORMAT_LEFT,  100);
 
     // Init status bar
-    int pnWidths[3] = { -100, 81, 286 };
+    int pnWidths[3] = { -100, 88, 290 };
     m_statusBar->SetFieldsCount(3, pnWidths);
 
     // Fill your address text box
@@ -342,6 +348,8 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
 CMainFrame::~CMainFrame()
 {
     pframeMain = NULL;
+    delete ptaskbaricon;
+    ptaskbaricon = NULL;
 }
 
 void Shutdown(void* parg)
@@ -362,28 +370,24 @@ void Shutdown(void* parg)
 
 void CMainFrame::OnClose(wxCloseEvent& event)
 {
-	if (closeToTray && event.CanVeto()) {
-		event.Veto();
-		SendToTray();
-	}
-	else if (!event.CanVeto() || !askBeforeClosing || wxMessageBox("Quit program?", "Confirm", wxYES_NO, this) == wxYES) {
-		delete taskBarIcon;
-	    Destroy();
-	    _beginthread(Shutdown, 0, NULL);
-	}
+    if (fMinimizeToTray && fMinimizeOnClose && event.CanVeto() && !IsIconized())
+    {
+        // Divert close to minimize
+        event.Veto();
+        Iconize(true);
+    }
+    else
+    {
+        Destroy();
+        _beginthread(Shutdown, 0, NULL);
+    }
 }
 
 void CMainFrame::OnIconize(wxIconizeEvent& event)
 {
-	if (minimizeToTray) {
-		SendToTray();
-	}
-}
-
-void CMainFrame::SendToTray()
-{
-	Hide();
-	taskBarIcon->Show();
+    // Hide the task bar button when minimized.
+    // Event is sent when the frame is minimized or restored.
+    Show(!fMinimizeToTray || !event.Iconized());
 }
 
 void CMainFrame::OnMouseEvents(wxMouseEvent& event)
@@ -405,25 +409,21 @@ void CMainFrame::InsertLine(bool fNew, int nIndex, uint256 hashKey, string strSo
     string str0 = strSort;
     long nData = *(long*)&hashKey;
 
-    if (fNew)
+    // Find item
+    if (!fNew && nIndex == -1)
+    {
+        while ((nIndex = m_listCtrl->FindItem(nIndex, nData)) != -1)
+            if (GetItemText(m_listCtrl, nIndex, 1) == hashKey.ToString())
+                break;
+    }
+
+    // fNew is for blind insert, only use if you're sure it's new
+    if (fNew || nIndex == -1)
     {
         nIndex = m_listCtrl->InsertItem(0, str0);
     }
     else
     {
-        if (nIndex == -1)
-        {
-            // Find item
-            while ((nIndex = m_listCtrl->FindItem(nIndex, nData)) != -1)
-                if (GetItemText(m_listCtrl, nIndex, 1) == hashKey.ToString())
-                    break;
-            if (nIndex == -1)
-            {
-                printf("CMainFrame::InsertLine : Couldn't find item to be updated\n");
-                return;
-            }
-        }
-
         // If sort key changed, must delete and reinsert to make it relocate
         if (GetItemText(m_listCtrl, nIndex, 0) != str0)
         {
@@ -483,6 +483,28 @@ void CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
     uint256 hash = wtx.GetHash();
     string strStatus = FormatTxStatus(wtx);
     map<string, string> mapValue = wtx.mapValue;
+
+    // Filter
+    if (wtx.IsCoinBase())
+    {
+        // View->Show Generated
+        if (!fShowGenerated)
+            return;
+
+        // Don't show generated coin until confirmed by at least one block after it
+        // so we don't get the user's hopes up until it looks like it's probably accepted.
+        //
+        // It is not an error when generated blocks are not accepted.  By design,
+        // some percentage of blocks, like 10% or more, will end up not accepted.
+        // This is the normal mechanism by which the network copes with latency.
+        //
+        // We display regular transactions right away before any confirmation
+        // because they can always get into some block eventually.  Generated coins
+        // are special because if their block is not accepted, they are not valid.
+        //
+        if (wtx.GetDepthInMainChain() < 2)
+            return;
+    }
 
     // Find the block the tx is in
     CBlockIndex* pindex = NULL;
@@ -785,16 +807,11 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     {
         TRY_CRITICAL_BLOCK(cs_mapWallet)
         {
-            pair<uint256, bool> item;
-            foreach(item, vWalletUpdated)
+            foreach(uint256 hash, vWalletUpdated)
             {
-                bool fNew = item.second;
-                map<uint256, CWalletTx>::iterator mi = mapWallet.find(item.first);
+                map<uint256, CWalletTx>::iterator mi = mapWallet.find(hash);
                 if (mi != mapWallet.end())
-                {
-                    printf("vWalletUpdated: %s %s\n", (*mi).second.GetHash().ToString().substr(0,6).c_str(), fNew ? "new" : "");
-                    InsertTransaction((*mi).second, fNew);
-                }
+                    InsertTransaction((*mi).second, false);
             }
             m_listCtrl->ScrollList(0, INT_MAX);
             vWalletUpdated.clear();
@@ -807,7 +824,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     // Update status bar
     string strGen = "";
     if (fGenerateBitcoins)
-        strGen = "    Generating";
+        strGen = "     Generating";
     if (fGenerateBitcoins && vNodes.empty())
         strGen = "(not connected)";
     m_statusBar->SetStatusText(strGen, 1);
@@ -856,37 +873,52 @@ void CMainFrame::OnCrossThreadCall(wxCommandEvent& event)
 
 void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
 {
+    // File->Exit
     Close(true);
+}
+
+void CMainFrame::OnMenuViewShowGenerated(wxCommandEvent& event)
+{
+    // View->Show Generated
+    fShowGenerated = event.IsChecked();
+    CWalletDB().WriteSetting("fShowGenerated", fShowGenerated);
+    RefreshListCtrl();
+}
+
+void CMainFrame::OnUpdateUIViewShowGenerated(wxUpdateUIEvent& event)
+{
+    event.Check(fShowGenerated);
 }
 
 void CMainFrame::OnMenuOptionsGenerate(wxCommandEvent& event)
 {
+    // Options->Generate Coins
     GenerateBitcoins(event.IsChecked());
+}
 
-    Refresh();
-    wxPaintEvent eventPaint;
-    AddPendingEvent(eventPaint);
+void CMainFrame::OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event)
+{
+    event.Check(fGenerateBitcoins);
 }
 
 void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
 {
+    // Options->Change Your Address
     OnButtonChange(event);
 }
 
 void CMainFrame::OnMenuOptionsOptions(wxCommandEvent& event)
 {
+    // Options->Options
     COptionsDialog dialog(this);
     dialog.ShowModal();
 }
 
 void CMainFrame::OnMenuHelpAbout(wxCommandEvent& event)
 {
+    // Help->About
     CAboutDialog dialog(this);
     dialog.ShowModal();
-}
-
-void CMainFrame::OnUpdateMenuGenerate( wxUpdateUIEvent& event ) {
-	event.Check(fGenerateBitcoins);
 }
 
 void CMainFrame::OnButtonSend(wxCommandEvent& event)
@@ -1252,58 +1284,74 @@ void CTxDetailsDialog::OnButtonOK(wxCommandEvent& event)
 
 COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 {
+    // Set up list box of page choices
+    m_listBox->Append("Main");
+    //m_listBox->Append("Test 2");
+    m_listBox->SetSelection(0);
+    SelectPage(0);
+
+    // Init values
+    m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
+    m_checkBoxLimitProcessors->SetValue(fLimitProcessors);
+    m_spinCtrlLimitProcessors->Enable(fLimitProcessors);
+    m_spinCtrlLimitProcessors->SetValue(nLimitProcessors);
+    int nProcessors = atoi(getenv("NUMBER_OF_PROCESSORS"));
+    if (nProcessors < 1)
+        nProcessors = 999;
+    m_spinCtrlLimitProcessors->SetRange(1, nProcessors);
+    m_checkBoxStartOnSystemStartup->SetValue(fTmpStartOnSystemStartup = GetStartOnSystemStartup());
+    m_checkBoxMinimizeToTray->SetValue(fMinimizeToTray);
+    m_checkBoxMinimizeOnClose->Enable(fMinimizeToTray);
+    m_checkBoxMinimizeOnClose->SetValue(fMinimizeToTray && fMinimizeOnClose);
+    fTmpMinimizeOnClose = fMinimizeOnClose;
     m_buttonOK->SetFocus();
-    m_treeCtrl->AddRoot(wxT("Settings"));
-    m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), wxT("Bitcoin"));
-    m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), wxT("UI"));
-
-    panelUI = new COptionsPanelUI(this);
-    panelBitcoin = new COptionsPanelBitcoin(this);
-    currentPanel = panelBitcoin;
-
-    panelSizer->Add(panelUI);
-    panelSizer->Hide(panelUI);
-    panelSizer->Add(panelBitcoin);
-    panelSizer->Layout();
-
 }
 
-void COptionsDialog::MenuSelChanged( wxTreeEvent& event )
+void COptionsDialog::SelectPage(int nPage)
 {
-	panelSizer->Hide(currentPanel);
-	wxString text = m_treeCtrl->GetItemText(event.GetItem());
-	if (text == "Bitcoin") {
-		panelSizer->Show(panelBitcoin);
-		currentPanel = panelBitcoin;
-	}
-	else {
-		panelSizer->Show(panelUI);
-		currentPanel = panelUI;
-	}
-	panelSizer->Layout();
+    m_panelMain->Show(nPage == 0);
+    m_panelTest2->Show(nPage == 1);
+
+    m_scrolledWindow->Layout();
+    m_scrolledWindow->SetScrollbars(0, 0, 0, 0, 0, 0);
+}
+
+void COptionsDialog::OnListBox(wxCommandEvent& event)
+{
+    SelectPage(event.GetSelection());
+}
+
+void COptionsDialog::OnKillFocusTransactionFee(wxFocusEvent& event)
+{
+    int64 nTmp = nTransactionFee;
+    ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
+    m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
+}
+
+void COptionsDialog::OnCheckBoxLimitProcessors(wxCommandEvent& event)
+{
+    m_spinCtrlLimitProcessors->Enable(event.IsChecked());
+}
+
+void COptionsDialog::OnCheckBoxMinimizeToTray(wxCommandEvent& event)
+{
+    m_checkBoxMinimizeOnClose->Enable(event.IsChecked());
+
+    // Save the value in fTmpMinimizeOnClose so we can
+    // show the checkbox unchecked when its parent is unchecked
+    if (event.IsChecked())
+        m_checkBoxMinimizeOnClose->SetValue(fTmpMinimizeOnClose);
+    else
+    {
+        fTmpMinimizeOnClose = m_checkBoxMinimizeOnClose->GetValue();
+        m_checkBoxMinimizeOnClose->SetValue(false);
+    }
+
 }
 
 void COptionsDialog::OnButtonOK(wxCommandEvent& event)
 {
-    // nTransactionFee
-    int64 nPrevTransactionFee = nTransactionFee;
-    if (ParseMoney(panelBitcoin->m_textCtrlTransactionFee->GetValue(), nTransactionFee) && nTransactionFee != nPrevTransactionFee)
-    	CWalletDB().WriteSetting("transactionFee", nTransactionFee);
-
-    minimizeToTray = panelUI->m_checkMinToTray->IsChecked();
-    closeToTray = panelUI->m_checkCloseToTray->IsChecked();
-    startOnSysBoot = panelUI->m_checkStartOnSysBoot->IsChecked();
-    askBeforeClosing = panelUI->m_checkAskBeforeClosing->IsChecked();
-    alwaysShowTrayIcon = panelUI->m_checkAlwaysShowTray->IsChecked();
-
-	CWalletDB().WriteSetting("minimizeToTray", minimizeToTray);
-	CWalletDB().WriteSetting("closeToTray", closeToTray);
-	CWalletDB().WriteSetting("startOnSysBoot", startOnSysBoot);
-	CWalletDB().WriteSetting("askBeforeClosing", askBeforeClosing);
-	CWalletDB().WriteSetting("alwaysShowTrayIcon", alwaysShowTrayIcon);
-
-	ApplyUISettings();
-
+    OnButtonApply(event);
     Close();
 }
 
@@ -1312,39 +1360,48 @@ void COptionsDialog::OnButtonCancel(wxCommandEvent& event)
     Close();
 }
 
-
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// COptionsPanelBitcoin
-//
-
-COptionsPanelBitcoin::COptionsPanelBitcoin(wxWindow* parent) : COptionsPanelBitcoinBase(parent)
+void COptionsDialog::OnButtonApply(wxCommandEvent& event)
 {
-	m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
+    CWalletDB walletdb;
+
+    int64 nPrevTransactionFee = nTransactionFee;
+    if (ParseMoney(m_textCtrlTransactionFee->GetValue(), nTransactionFee) && nTransactionFee != nPrevTransactionFee)
+        walletdb.WriteSetting("nTransactionFee", nTransactionFee);
+
+    int nPrevMaxProc = (fLimitProcessors ? nLimitProcessors : INT_MAX);
+    if (fLimitProcessors != m_checkBoxLimitProcessors->GetValue())
+    {
+        fLimitProcessors = m_checkBoxLimitProcessors->GetValue();
+        walletdb.WriteSetting("fLimitProcessors", fLimitProcessors);
+    }
+    if (nLimitProcessors != m_spinCtrlLimitProcessors->GetValue())
+    {
+        nLimitProcessors = m_spinCtrlLimitProcessors->GetValue();
+        walletdb.WriteSetting("nLimitProcessors", nLimitProcessors);
+    }
+    if (fGenerateBitcoins && (fLimitProcessors ? nLimitProcessors : INT_MAX) > nPrevMaxProc)
+        GenerateBitcoins(fGenerateBitcoins);
+
+    if (fTmpStartOnSystemStartup != m_checkBoxStartOnSystemStartup->GetValue())
+    {
+        fTmpStartOnSystemStartup = m_checkBoxStartOnSystemStartup->GetValue();
+        SetStartOnSystemStartup(fTmpStartOnSystemStartup);
+    }
+
+    if (fMinimizeToTray != m_checkBoxMinimizeToTray->GetValue())
+    {
+        fMinimizeToTray = m_checkBoxMinimizeToTray->GetValue();
+        walletdb.WriteSetting("fMinimizeToTray", fMinimizeToTray);
+        ptaskbaricon->Show(fMinimizeToTray);
+    }
+
+    if (fMinimizeOnClose != (fMinimizeToTray ? m_checkBoxMinimizeOnClose->GetValue() : fTmpMinimizeOnClose))
+    {
+        fMinimizeOnClose = (fMinimizeToTray ? m_checkBoxMinimizeOnClose->GetValue() : fTmpMinimizeOnClose);
+        walletdb.WriteSetting("fMinimizeOnClose", fMinimizeOnClose);
+    }
 }
 
-void COptionsPanelBitcoin::OnKillFocusTransactionFee(wxFocusEvent& event)
-{
-    int64 nTmp = nTransactionFee;
-    ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
-    m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// COptionsPanelUI
-//
-
-COptionsPanelUI::COptionsPanelUI(wxWindow* parent) : COptionsPanelUIBase(parent)
-{
-	m_checkMinToTray->SetValue(minimizeToTray);
-	m_checkCloseToTray->SetValue(closeToTray);
-	m_checkStartOnSysBoot->SetValue(startOnSysBoot);
-	m_checkAskBeforeClosing->SetValue(askBeforeClosing);
-	m_checkAlwaysShowTray->SetValue(alwaysShowTrayIcon);
-}
 
 
 
@@ -1387,6 +1444,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     m_textCtrlAddress->SetValue(strAddress);
     m_choiceTransferType->SetSelection(0);
     m_bitmapCheckMark->Show(false);
+    fEnabledPrev = true;
     //// todo: should add a display of your balance for convenience
 
     // Set Icon
@@ -1418,6 +1476,19 @@ void CSendDialog::OnTextAddress(wxCommandEvent& event)
     m_staticTextMessage->Enable(fEnable);
     m_textCtrlMessage->Enable(fEnable);
     m_textCtrlMessage->SetBackgroundColour(wxSystemSettings::GetColour(fEnable ? wxSYS_COLOUR_WINDOW : wxSYS_COLOUR_BTNFACE));
+    if (!fEnable && fEnabledPrev)
+    {
+        strFromSave    = m_textCtrlFrom->GetValue();
+        strMessageSave = m_textCtrlMessage->GetValue();
+        m_textCtrlFrom->SetValue("Will appear as \"From: Unknown\"");
+        m_textCtrlMessage->SetValue("Can't include a message when sending to a Bitcoin address");
+    }
+    else if (fEnable && !fEnabledPrev)
+    {
+        m_textCtrlFrom->SetValue(strFromSave);
+        m_textCtrlMessage->SetValue(strMessageSave);
+    }
+    fEnabledPrev = fEnable;
 }
 
 void CSendDialog::OnKillFocusAmount(wxFocusEvent& event)
@@ -1773,8 +1844,9 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             Error("You don't have enough money");
             return;
         }
+        CKey key;
         int64 nFeeRequired;
-        if (!CreateTransaction(scriptPubKey, nPrice, wtx, nFeeRequired))
+        if (!CreateTransaction(scriptPubKey, nPrice, wtx, key, nFeeRequired))
         {
             if (nPrice + nFeeRequired > GetBalance())
                 Error(strprintf("This is an oversized transaction that requires a transaction fee of %s", FormatMoney(nFeeRequired).c_str()));
@@ -1799,7 +1871,7 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             return;
 
         // Commit
-        if (!CommitTransactionSpent(wtx))
+        if (!CommitTransactionSpent(wtx, key))
         {
             Error("Error finalizing payment");
             return;
@@ -2950,81 +3022,109 @@ void CEditReviewDialog::GetReview(CReview& review)
 
 
 
+
+
 //////////////////////////////////////////////////////////////////////////////
 //
-// BitcoinTBIcon
+// CMyTaskBarIcon
 //
 
-enum {
-    PU_RESTORE = 10001,
-    PU_GENERATE,
-    PU_EXIT,
+enum
+{
+    ID_TASKBAR_RESTORE = 10001,
+    ID_TASKBAR_GENERATE,
+    ID_TASKBAR_EXIT,
 };
 
-BEGIN_EVENT_TABLE(CBitcoinTBIcon, wxTaskBarIcon)
-	EVT_TASKBAR_LEFT_DCLICK  (CBitcoinTBIcon::OnLeftButtonDClick)
-	EVT_MENU(PU_RESTORE,    CBitcoinTBIcon::OnMenuRestore)
-	EVT_MENU(PU_GENERATE,    CBitcoinTBIcon::OnMenuGenerate)
-	EVT_MENU(PU_EXIT,    CBitcoinTBIcon::OnMenuExit)
+BEGIN_EVENT_TABLE(CMyTaskBarIcon, wxTaskBarIcon)
+    EVT_TASKBAR_LEFT_DCLICK(CMyTaskBarIcon::OnLeftButtonDClick)
+    EVT_MENU(ID_TASKBAR_RESTORE, CMyTaskBarIcon::OnMenuRestore)
+    EVT_MENU(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnMenuGenerate)
+    EVT_UPDATE_UI(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnUpdateUIGenerate)
+    EVT_MENU(ID_TASKBAR_EXIT, CMyTaskBarIcon::OnMenuExit)
 END_EVENT_TABLE()
 
-void CBitcoinTBIcon::Show()
+void CMyTaskBarIcon::Show(bool fShow)
 {
-	string tooltip = "Bitcoin";
-	tooltip += fGenerateBitcoins ? " - Generating" : "";
-	SetIcon(wxICON(bitcoin), tooltip);
+    if (fShow)
+    {
+        string strTooltip = "Bitcoin";
+        if (fGenerateBitcoins)
+            strTooltip = "Bitcoin - Generating";
+        if (fGenerateBitcoins && vNodes.empty())
+            strTooltip = "Bitcoin - (not connected)";
+        SetIcon(wxICON(bitcoin), strTooltip);
+    }
+    else
+    {
+        RemoveIcon();
+    }
 }
 
-void CBitcoinTBIcon::Hide()
+void CMyTaskBarIcon::Hide()
 {
-	RemoveIcon();
+    Show(false);
 }
 
-void CBitcoinTBIcon::OnLeftButtonDClick(wxTaskBarIconEvent&)
+void CMyTaskBarIcon::OnLeftButtonDClick(wxTaskBarIconEvent& event)
 {
-	Restore();
+    Restore();
 }
 
-void CBitcoinTBIcon::OnMenuExit(wxCommandEvent&)
+void CMyTaskBarIcon::OnMenuRestore(wxCommandEvent& event)
 {
-	pframeMain->Close(true);
+    Restore();
 }
 
-void CBitcoinTBIcon::OnMenuGenerate(wxCommandEvent& event)
+void CMyTaskBarIcon::Restore()
 {
-	GenerateBitcoins(event.IsChecked());
-	pframeMain->Refresh();
-}
-
-void CBitcoinTBIcon::OnMenuRestore(wxCommandEvent&) {
-	Restore();
-}
-
-void CBitcoinTBIcon::Restore() {
     pframeMain->Show();
     pframeMain->Iconize(false);
     pframeMain->Raise();
-    if (!alwaysShowTrayIcon)
-    	Hide();
 }
 
-void CBitcoinTBIcon::UpdateTooltip() {
-	if (IsIconInstalled())
-		Show();
-}
-
-wxMenu *CBitcoinTBIcon::CreatePopupMenu()
+void CMyTaskBarIcon::OnMenuGenerate(wxCommandEvent& event)
 {
-    wxMenu *menu = new wxMenu;
-    menu->Append(PU_RESTORE, _T("Open Bitcoin"));
-    wxMenuItem* generateCheck = menu->AppendCheckItem(PU_GENERATE, _T("Generate Coins"));
-    menu->InsertSeparator(2);
-    menu->Append(PU_EXIT,    _T("Exit"));
-
-    generateCheck->Check(fGenerateBitcoins);
-
-    return menu;
+    GenerateBitcoins(event.IsChecked());
 }
+
+void CMyTaskBarIcon::OnUpdateUIGenerate(wxUpdateUIEvent& event)
+{
+    event.Check(fGenerateBitcoins);
+}
+
+void CMyTaskBarIcon::OnMenuExit(wxCommandEvent& event)
+{
+    pframeMain->Close(true);
+}
+
+void CMyTaskBarIcon::UpdateTooltip()
+{
+    if (IsIconInstalled())
+        Show(true);
+}
+
+wxMenu* CMyTaskBarIcon::CreatePopupMenu()
+{
+    wxMenu* pmenu = new wxMenu;
+    pmenu->Append(ID_TASKBAR_RESTORE, "&Open Bitcoin");
+    pmenu->AppendCheckItem(ID_TASKBAR_GENERATE, "&Generate Coins")->Check(fGenerateBitcoins);
+#ifndef __WXMAC_OSX__ // Mac has built-in quit menu
+    pmenu->AppendSeparator();
+    pmenu->Append(ID_TASKBAR_EXIT, "E&xit");
+#endif
+    return pmenu;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3150,7 +3250,7 @@ bool CMyApp::OnInit2()
     // Parameters
     //
     wxImage::AddHandler(new wxPNGHandler);
-    map<string, string> mapArgs = ParseParameters(argc, argv);
+    mapArgs = ParseParameters(argc, argv);
 
     if (mapArgs.count("/datadir"))
         strSetDataDir = mapArgs["/datadir"];
@@ -3179,6 +3279,7 @@ bool CMyApp::OnInit2()
     //
     // Load data files
     //
+    bool fFirstRun;
     string strErrors;
     int64 nStart, nEnd;
 
@@ -3198,7 +3299,7 @@ bool CMyApp::OnInit2()
 
     printf("Loading wallet...\n");
     QueryPerformanceCounter((LARGE_INTEGER*)&nStart);
-    if (!LoadWallet())
+    if (!LoadWallet(fFirstRun))
         strErrors += "Error loading wallet.dat      \n";
     QueryPerformanceCounter((LARGE_INTEGER*)&nEnd);
     printf(" wallet      %20I64d\n", nEnd - nStart);
@@ -3244,62 +3345,60 @@ bool CMyApp::OnInit2()
     //
     // Create the main frame window
     //
+    pframeMain = new CMainFrame(NULL);
+    if (mapArgs.count("/min"))
+        pframeMain->Iconize(true);
+    pframeMain->Show(true);  // have to show first to get taskbar button to hide
+    pframeMain->Show(!fMinimizeToTray || !pframeMain->IsIconized());
+    ptaskbaricon->Show(fMinimizeToTray);
+
+    if (!CheckDiskSpace())
     {
-        pframeMain = new CMainFrame(NULL);
-        pframeMain->Show();
-
-        if (!CheckDiskSpace())
-        {
-            OnExit();
-            return false;
-        }
-
-        if (!StartNode(strErrors))
-            wxMessageBox(strErrors, "Bitcoin");
-
-        if (fGenerateBitcoins)
-            if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
-                printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
-
-        //
-        // Tests
-        //
-        if (argc >= 2 && stricmp(argv[1], "/send") == 0)
-        {
-            int64 nValue = 1;
-            if (argc >= 3)
-                ParseMoney(argv[2], nValue);
-
-            string strAddress;
-            if (argc >= 4)
-                strAddress = argv[3];
-            CAddress addr(strAddress.c_str());
-
-            CWalletTx wtx;
-            wtx.mapValue["to"] = strAddress;
-            wtx.mapValue["from"] = addrLocalHost.ToString();
-            wtx.mapValue["message"] = "command line send";
-
-            // Send to IP address
-            CSendingDialog* pdialog = new CSendingDialog(pframeMain, addr, nValue, wtx);
-            if (!pdialog->ShowModal())
-                return false;
-        }
-
-        if (mapArgs.count("/randsendtest"))
-        {
-            if (!mapArgs["/randsendtest"].empty())
-                _beginthread(ThreadRandSendTest, 0, new string(mapArgs["/randsendtest"]));
-            else
-                fRandSendTest = true;
-            fDebug = true;
-        }
+        OnExit();
+        return false;
     }
 
-    taskBarIcon = new CBitcoinTBIcon();
-    ApplyUISettings();
-    if (mapArgs.count("/min") && minimizeToTray) {
-    	pframeMain->Iconize(true);
+    if (!StartNode(strErrors))
+        wxMessageBox(strErrors, "Bitcoin");
+
+    GenerateBitcoins(fGenerateBitcoins);
+
+    if (fFirstRun)
+        SetStartOnSystemStartup(true);
+
+
+    //
+    // Tests
+    //
+    if (argc >= 2 && stricmp(argv[1], "/send") == 0)
+    {
+        int64 nValue = 1;
+        if (argc >= 3)
+            ParseMoney(argv[2], nValue);
+
+        string strAddress;
+        if (argc >= 4)
+            strAddress = argv[3];
+        CAddress addr(strAddress.c_str());
+
+        CWalletTx wtx;
+        wtx.mapValue["to"] = strAddress;
+        wtx.mapValue["from"] = addrLocalHost.ToString();
+        wtx.mapValue["message"] = "command line send";
+
+        // Send to IP address
+        CSendingDialog* pdialog = new CSendingDialog(pframeMain, addr, nValue, wtx);
+        if (!pdialog->ShowModal())
+            return false;
+    }
+
+    if (mapArgs.count("/randsendtest"))
+    {
+        if (!mapArgs["/randsendtest"].empty())
+            _beginthread(ThreadRandSendTest, 0, new string(mapArgs["/randsendtest"]));
+        else
+            fRandSendTest = true;
+        fDebug = true;
     }
 
     return true;
@@ -3320,14 +3419,14 @@ bool CMyApp::OnExceptionInMainLoop()
     catch (std::exception& e)
     {
         PrintException(&e, "CMyApp::OnExceptionInMainLoop()");
-        wxLogWarning(_T("Exception %s %s"), typeid(e).name(), e.what());
+        wxLogWarning("Exception %s %s", typeid(e).name(), e.what());
         Sleep(1000);
         throw;
     }
     catch (...)
     {
         PrintException(NULL, "CMyApp::OnExceptionInMainLoop()");
-        wxLogWarning(_T("Unknown exception"));
+        wxLogWarning("Unknown exception");
         Sleep(1000);
         throw;
     }
@@ -3345,14 +3444,14 @@ void CMyApp::OnUnhandledException()
     catch (std::exception& e)
     {
         PrintException(&e, "CMyApp::OnUnhandledException()");
-        wxLogWarning(_T("Exception %s %s"), typeid(e).name(), e.what());
+        wxLogWarning("Exception %s %s", typeid(e).name(), e.what());
         Sleep(1000);
         throw;
     }
     catch (...)
     {
         PrintException(NULL, "CMyApp::OnUnhandledException()");
-        wxLogWarning(_T("Unknown exception"));
+        wxLogWarning("Unknown exception");
         Sleep(1000);
         throw;
     }
@@ -3367,6 +3466,8 @@ void CMyApp::OnFatalException()
 
 void MainFrameRepaint()
 {
+    // This is called by network code that shouldn't access pframeMain and ptaskbaricon
+    // directly because it could still be running after the UI is closed.
     if (pframeMain)
     {
         printf("MainFrameRepaint()\n");
@@ -3374,68 +3475,84 @@ void MainFrameRepaint()
         pframeMain->Refresh();
         pframeMain->AddPendingEvent(event);
     }
+    if (ptaskbaricon)
+        ptaskbaricon->UpdateTooltip();
 }
 
 
 
-
-void ApplyUISettings() {
-	// Show the tray icon?
-	if (alwaysShowTrayIcon)
-		taskBarIcon->Show();
-	else
-		taskBarIcon->Hide();
-
-	// Autostart on system startup?
-	// Open the startup registry key
-	HKEY hKey;
-	LONG lnRes = RegOpenKeyEx(
-			HKEY_CURRENT_USER,
-			"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
-			0,
-			KEY_ALL_ACCESS,
-			&hKey
-	);
-
-	if ( ERROR_SUCCESS == lnRes )
-	{
-		if (startOnSysBoot) {
-			// Get the current executable path
-			char exePath[ MAX_PATH ];
-			GetModuleFileName(NULL, exePath, _MAX_PATH + 1);
-			char runCmd[ MAX_PATH + 5 ];
-			strcat(runCmd, exePath);
-			strcat(runCmd," /min");
-
-			RegSetValueEx(hKey,
-					"Bitcoin",
-					0,
-					REG_SZ,
-					(BYTE*)runCmd,
-					sizeof(runCmd)
-					);
-		}
-		else {
-			RegDeleteValue(hKey, "Bitcoin");
-		}
-	}
-	RegCloseKey(hKey);
-}
-
-
-
-
-void GenerateBitcoins(bool flag)
+string StartupShortcutPath()
 {
-	fGenerateBitcoins = flag;
-    nTransactionsUpdated++;
-    CWalletDB().WriteSetting("fGenerateBitcoins", fGenerateBitcoins);
-    if (fGenerateBitcoins)
-        if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
-            printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
-
-    taskBarIcon->UpdateTooltip();
+    // Get the startup folder shortcut path
+    char pszLinkPath[MAX_PATH+100];
+    pszLinkPath[0] = '\0';
+    SHGetSpecialFolderPath(0, pszLinkPath, CSIDL_STARTUP, 0);
+    strcat(pszLinkPath, "\\Bitcoin.lnk");
+    return pszLinkPath;
 }
+
+bool GetStartOnSystemStartup()
+{
+    return FileExists(StartupShortcutPath().c_str());
+}
+
+void SetStartOnSystemStartup(bool fAutoStart)
+{
+    // If the shortcut exists already, remove it for updating
+    remove(StartupShortcutPath().c_str());
+
+    if (fAutoStart)
+    {
+        CoInitialize(NULL);
+
+        // Get a pointer to the IShellLink interface.
+        HRESULT hres = NULL;
+        IShellLink* psl = NULL;
+        hres = CoCreateInstance(CLSID_ShellLink, NULL,
+                                CLSCTX_INPROC_SERVER, IID_IShellLink,
+                                reinterpret_cast<void**>(&psl));
+
+        if (SUCCEEDED(hres))
+        {
+            // Get the current executable path
+            char pszExePath[MAX_PATH];
+            GetModuleFileName(NULL, pszExePath, sizeof(pszExePath));
+            _strlwr(pszExePath);
+
+            // Set the path to the shortcut target
+            psl->SetPath(pszExePath);
+            PathRemoveFileSpec(pszExePath);
+            psl->SetWorkingDirectory(pszExePath);
+            psl->SetShowCmd(SW_SHOWMINNOACTIVE);
+
+            // Query IShellLink for the IPersistFile interface for
+            // saving the shortcut in persistent storage.
+            IPersistFile* ppf = NULL;
+            hres = psl->QueryInterface(IID_IPersistFile,
+                                       reinterpret_cast<void**>(&ppf));
+            if (SUCCEEDED(hres))
+            {
+                WCHAR pwsz[MAX_PATH];
+                // Ensure that the string is ANSI.
+                MultiByteToWideChar(CP_ACP, 0, StartupShortcutPath().c_str(), -1, pwsz, MAX_PATH);
+                // Save the link by calling IPersistFile::Save.
+                hres = ppf->Save(pwsz, TRUE);
+                ppf->Release();
+            }
+            psl->Release();
+        }
+        CoUninitialize();
+    }
+}
+
+
+
+
+
+
+
+
+
 
 
 

@@ -34,7 +34,7 @@ map<uint256, CDataStream*> mapOrphanTransactions;
 multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
 
 map<uint256, CWalletTx> mapWallet;
-vector<pair<uint256, bool> > vWalletUpdated;
+vector<uint256> vWalletUpdated;
 CCriticalSection cs_mapWallet;
 
 map<vector<unsigned char>, CPrivKey> mapKeys;
@@ -46,9 +46,12 @@ string strSetDataDir;
 int nDropMessagesTest = 0;
 
 // Settings
-int fGenerateBitcoins;
+int fGenerateBitcoins = false;
 int64 nTransactionFee = 0;
 CAddress addrIncoming;
+int fLimitProcessors = false;
+int nLimitProcessors = 1;
+
 
 
 
@@ -135,7 +138,7 @@ bool AddToWallet(const CWalletTx& wtxIn)
             return false;
 
         // Notify UI
-        vWalletUpdated.push_back(make_pair(hash, fInsertedNew));
+        vWalletUpdated.push_back(hash);
     }
 
     // Refresh UI
@@ -1126,6 +1129,9 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
             }
         }
 
+        // Notify UI to update prev block coinbase if it was ours
+        vWalletUpdated.push_back(hashBestChain);
+
         // New best link
         hashBestChain = hash;
         pindexBest = pindexNew;
@@ -1702,7 +1708,7 @@ bool ProcessMessages(CNode* pfrom)
         }
         CATCH_PRINT_EXCEPTION("ProcessMessage()")
         if (!fRet)
-            printf("ProcessMessage(%s, %d bytes) from %s to %s FAILED\n", strCommand.c_str(), nMessageSize, pfrom->addr.ToString().c_str(), addrLocalHost.ToString().c_str());
+            printf("ProcessMessage(%s, %d bytes) FAILED\n", strCommand.c_str(), nMessageSize);
     }
 
     vRecv.Compact();
@@ -1715,10 +1721,7 @@ bool ProcessMessages(CNode* pfrom)
 bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     static map<unsigned int, vector<unsigned char> > mapReuseKey;
-    printf("received: %-12s (%d bytes)  ", strCommand.c_str(), vRecv.size());
-    for (int i = 0; i < min(vRecv.size(), (unsigned int)20); i++)
-        printf("%02x ", vRecv[i] & 0xff);
-    printf("\n");
+    printf("received: %-12s (%d bytes)\n", strCommand.c_str(), vRecv.size());
     if (nDropMessagesTest > 0 && GetRand(nDropMessagesTest) == 0)
     {
         printf("dropmessages DROPPING RECV MESSAGE\n");
@@ -1759,7 +1762,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->PushMessage("getblocks", CBlockLocator(pindexBest), uint256(0));
         }
 
-        printf("version message: %s has version %d, addrMe=%s\n", pfrom->addr.ToString().c_str(), pfrom->nVersion, addrMe.ToString().c_str());
+        printf("version message: version %d\n", pfrom->nVersion);
     }
 
 
@@ -1775,13 +1778,24 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vector<CAddress> vAddr;
         vRecv >> vAddr;
 
+        // Clear addrknown lists periodically to allow refresh broadcasts
+        static int64 nLastClearedAddrKnown;
+        if (nLastClearedAddrKnown < GetAdjustedTime() - 24 * 60 * 60)
+        {
+            nLastClearedAddrKnown = GetAdjustedTime();
+            CRITICAL_BLOCK(cs_vNodes)
+                foreach(CNode* pnode, vNodes)
+                    pnode->setAddrKnown.clear();
+        }
+
         // Store the new addresses
         CAddrDB addrdb;
         foreach(const CAddress& addr, vAddr)
         {
             if (fShutdown)
                 return true;
-            if (AddAddress(addrdb, addr))
+            AddAddress(addrdb, addr);
+            if (addr.IsRoutable() && addr.ip != addrLocalHost.ip)
             {
                 // Put on lists to send to other nodes
                 pfrom->setAddrKnown.insert(addr);
@@ -1989,8 +2003,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 if (fShutdown)
                     return true;
                 const CAddress& addr = item.second;
-                //// will need this if we lose IRC
-                //if (addr.nTime > nSince || (rand() % nSize) < 500)
                 if (addr.nTime > nSince)
                     pfrom->vAddrToSend.push_back(addr);
             }
@@ -2132,9 +2144,11 @@ bool SendMessages(CNode* pto)
         while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
-            printf("sending getdata: %s\n", inv.ToString().c_str());
             if (!AlreadyHave(txdb, inv))
+            {
+                printf("sending getdata: %s\n", inv.ToString().c_str());
                 vAskFor.push_back(inv);
+            }
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
         if (!vAskFor.empty())
@@ -2161,6 +2175,49 @@ bool SendMessages(CNode* pto)
 //
 // BitcoinMiner
 //
+
+void GenerateBitcoins(bool fGenerate)
+{
+    if (fGenerateBitcoins != fGenerate)
+    {
+        fGenerateBitcoins = fGenerate;
+        CWalletDB().WriteSetting("fGenerateBitcoins", fGenerateBitcoins);
+        MainFrameRepaint();
+    }
+    if (fGenerateBitcoins)
+    {
+        int nProcessors = atoi(getenv("NUMBER_OF_PROCESSORS"));
+        printf("%d processors\n", nProcessors);
+        if (nProcessors < 1)
+            nProcessors = 1;
+        if (fLimitProcessors && nProcessors > nLimitProcessors)
+            nProcessors = nLimitProcessors;
+        int nAddThreads = nProcessors - vnThreadsRunning[3];
+        printf("starting %d bitcoinminer threads\n", nAddThreads);
+        for (int i = 0; i < nAddThreads; i++)
+            if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
+                printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
+    }
+}
+
+void ThreadBitcoinMiner(void* parg)
+{
+    vnThreadsRunning[3]++;
+    CheckForShutdown(3);
+    try
+    {
+        bool fRet = BitcoinMiner();
+        printf("BitcoinMiner returned %s\n\n\n", fRet ? "true" : "false");
+        vnThreadsRunning[3]--;
+    }
+    catch (std::exception& e) {
+        vnThreadsRunning[3]--;
+        PrintException(&e, "ThreadBitcoinMiner()");
+    } catch (...) {
+        vnThreadsRunning[3]--;
+        PrintException(NULL, "ThreadBitcoinMiner()");
+    }
+}
 
 int FormatHashBlocks(void* pbuffer, unsigned int len)
 {
@@ -2210,13 +2267,13 @@ void BlockSHA256(const void* pin, unsigned int nBlocks, void* pout)
 bool BitcoinMiner()
 {
     printf("BitcoinMiner started\n");
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 
     CKey key;
     key.MakeNewKey();
     CBigNum bnExtraNonce = 0;
     while (fGenerateBitcoins)
     {
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
         Sleep(50);
         CheckForShutdown(3);
         while (vNodes.empty())
@@ -2338,7 +2395,6 @@ bool BitcoinMiner()
             BlockSHA256(&tmp.block, nBlocks0, &tmp.hash1);
             BlockSHA256(&tmp.hash1, nBlocks1, &hash);
 
-
             if (hash <= hashTarget)
             {
                 pblock->nNonce = tmp.block.nNonce;
@@ -2352,6 +2408,12 @@ bool BitcoinMiner()
                 SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
                 CRITICAL_BLOCK(cs_main)
                 {
+                    if (pindexPrev != pindexBest)
+                    {
+                        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+                        break;
+                    }
+
                     // Save key
                     if (!AddKey(key))
                         return false;
@@ -2368,7 +2430,7 @@ bool BitcoinMiner()
             }
 
             // Update nTime every few seconds
-            if ((++tmp.block.nNonce & 0x3ffff) == 0)
+            if ((++tmp.block.nNonce & 0xffff) == 0)
             {
                 CheckForShutdown(3);
                 if (tmp.block.nNonce == 0)
@@ -2379,6 +2441,8 @@ bool BitcoinMiner()
                     break;
                 if (!fGenerateBitcoins)
                     break;
+                if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
+                    return true;
                 tmp.block.nTime = pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
             }
         }
@@ -2538,7 +2602,7 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
 
 
 
-bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, int64& nFeeRequiredRet)
+bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CKey& keyRet, int64& nFeeRequiredRet)
 {
     nFeeRequiredRet = 0;
     CRITICAL_BLOCK(cs_main)
@@ -2565,29 +2629,27 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, in
                 foreach(CWalletTx* pcoin, setCoins)
                     nValueIn += pcoin->GetCredit();
 
-                // Fill vout[0] to the payee
-                wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
+                // Fill a vout to the payee
+                bool fChangeFirst = GetRand(2);
+                if (!fChangeFirst)
+                    wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
 
-                // Fill vout[1] back to self with any change
+                // Fill a vout back to self with any change
                 if (nValueIn > nValue)
                 {
-                    /// todo: for privacy, should randomize the order of outputs,
-                    //        would also have to use a new key for the change.
-                    // Use the same key as one of the coins
-                    vector<unsigned char> vchPubKey;
-                    CTransaction& txFirst = *(*setCoins.begin());
-                    foreach(const CTxOut& txout, txFirst.vout)
-                        if (txout.IsMine())
-                            if (ExtractPubKey(txout.scriptPubKey, true, vchPubKey))
-                                break;
-                    if (vchPubKey.empty())
-                        return false;
+                    // New private key
+                    if (keyRet.IsNull())
+                        keyRet.MakeNewKey();
 
-                    // Fill vout[1] to ourself
+                    // Fill a vout to ourself
                     CScript scriptPubKey;
-                    scriptPubKey << vchPubKey << OP_CHECKSIG;
+                    scriptPubKey << keyRet.GetPubKey() << OP_CHECKSIG;
                     wtxNew.vout.push_back(CTxOut(nValueIn - nValue, scriptPubKey));
                 }
+
+                // Fill a vout to the payee
+                if (fChangeFirst)
+                    wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
 
                 // Fill vin
                 foreach(CWalletTx* pcoin, setCoins)
@@ -2621,13 +2683,24 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, in
 }
 
 // Call after CreateTransaction unless you want to abort
-bool CommitTransactionSpent(const CWalletTx& wtxNew)
+bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key)
 {
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
     {
-        //// todo: make this transactional, never want to add a transaction
-        ////  without marking spent transactions
+        //// todo: eventually should make this transactional, never want to add a
+        ////  transaction without marking spent transactions, although the risk of
+        ////  interruption during this step is remote.
+
+        // This is only to keep the database open to defeat the auto-flush for the
+        // duration of this scope.  This is the only place where this optimization
+        // maybe makes sense; please don't do it anywhere else.  Keeping databases
+        // open longer than necessary can create deadlocks.
+        CWalletDB walletdb("r");
+
+        // Add the change's private key to wallet
+        if (!key.IsNull() && !AddKey(key))
+            throw runtime_error("CommitTransactionSpent() : AddKey failed\n");
 
         // Add tx to wallet, because if it has change it's also ours,
         // otherwise just for transaction history.
@@ -2641,7 +2714,7 @@ bool CommitTransactionSpent(const CWalletTx& wtxNew)
         {
             pcoin->fSpent = true;
             pcoin->WriteToDisk();
-            vWalletUpdated.push_back(make_pair(pcoin->GetHash(), false));
+            vWalletUpdated.push_back(pcoin->GetHash());
         }
     }
     MainFrameRepaint();
@@ -2655,8 +2728,9 @@ bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
 {
     CRITICAL_BLOCK(cs_main)
     {
+        CKey key;
         int64 nFeeRequired;
-        if (!CreateTransaction(scriptPubKey, nValue, wtxNew, nFeeRequired))
+        if (!CreateTransaction(scriptPubKey, nValue, wtxNew, key, nFeeRequired))
         {
             string strError;
             if (nValue + nFeeRequired > GetBalance())
@@ -2666,7 +2740,7 @@ bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
             wxMessageBox(strError, "Sending...");
             return error("SendMoney() : %s\n", strError.c_str());
         }
-        if (!CommitTransactionSpent(wtxNew))
+        if (!CommitTransactionSpent(wtxNew, key))
         {
             wxMessageBox("Error finalizing transaction  ", "Sending...");
             return error("SendMoney() : Error finalizing transaction");

@@ -1,4 +1,4 @@
-BitCoin v0.1.5 ALPHA
+BitCoin v0.1.6 ALPHA
 
 Copyright (c) 2009 Satoshi Nakamoto
 Distributed under the MIT/X11 software license, see the accompanying
@@ -10,7 +10,7 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 Compilers Supported
 -------------------
-MinGW GCC (v3.4.5)
+MinGW GCC (currently v3.4.5)
 Microsoft Visual C++ 6.0 SP6
 
 
@@ -31,6 +31,16 @@ Berkeley DB    New BSD license with additional requirement that linked software 
 Boost          MIT-like license
 
 
+Notes
+-----
+The UI layout is edited with wxFormBuilder.  Open the project file
+uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
+classes that do the rote work of constructing all the UI elements.
+
+The release is built with GCC and then "strip bitcoin.exe" to strip the debug
+symbols, which reduces the executable size by about 90%.
+
+
 OpenSSL
 -------
 Bitcoin does not use any encryption.  If you want to do a no-everything
@@ -47,7 +57,7 @@ Add this to crypto\err\err_all.c before the ERR_load_crypto_strings line:
 
 Edit ms\mingw32.bat and replace the Configure line's parameters with this
 no-everything list.  You have to put this in the batch file because batch
-files can't handle more than 9 parameters.
+files can't take more than 9 command line parameters.
   perl Configure mingw threads no-rc2 no-rc4 no-rc5 no-idea no-des no-bf no-cast no-aes no-camellia no-seed no-rsa no-dh
 
 Also REM out the following line in ms\mingw32.bat.  The build fails after it's
@@ -64,7 +74,7 @@ If you want to use it with MSVC, generate the .lib file
 
 Berkeley DB
 -----------
-MinGW with MSYS:
+Using MinGW and MSYS:
 cd \DB\build_unix
 sh ../dist/configure --enable-mingw --enable-cxx
 make
@@ -72,5 +82,6 @@ make
 
 Boost
 -----
-You may need Boost version 1.35 to build with MSVC 6.0.  I couldn't get
-version 1.37 to compile with MSVC 6.0.
+If you have trouble compiling Boost with Microsoft Visual C++ 6.0, try going
+back to Boost version 1.35.  It looks like they may be starting to reduce
+support for MSVC 6.0.

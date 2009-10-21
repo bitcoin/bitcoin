@@ -20,8 +20,6 @@ enum
 
 
 
-
-
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet);
 bool GetMyExternalIP(unsigned int& ipRet);
 bool AddAddress(CAddrDB& addrdb, const CAddress& addr);
@@ -29,7 +27,6 @@ CNode* FindNode(unsigned int ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
 void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
-void ThreadBitcoinMiner(void* parg);
 bool StartNode(string& strError=REF(string()));
 bool StopNode();
 void CheckForShutdown(int n);
@@ -206,7 +203,7 @@ public:
             READWRITE(nTime);
         }
         READWRITE(nServices);
-        READWRITE(FLATDATA(pchReserved));
+        READWRITE(FLATDATA(pchReserved)); // for IPv6
         READWRITE(ip);
         READWRITE(port);
     )
@@ -280,10 +277,14 @@ public:
         return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
     }
 
+    string ToStringLog() const
+    {
+        return "";
+    }
+
     string ToString() const
     {
         return strprintf("%u.%u.%u.%u:%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0), ntohs(port));
-        //return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
     }
 
     void print() const
@@ -416,7 +417,7 @@ extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
 extern CNode* pnodeLocalHost;
 extern bool fShutdown;
-extern array<bool, 10> vfThreadRunning;
+extern array<int, 10> vnThreadsRunning;
 extern vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
 extern map<vector<unsigned char>, CAddress> mapAddresses;
@@ -599,9 +600,7 @@ public:
         unsigned int nSize = vSend.size() - nPushPos - sizeof(CMessageHeader);
         memcpy((char*)&vSend[nPushPos] + offsetof(CMessageHeader, nMessageSize), &nSize, sizeof(nSize));
 
-        printf("(%d bytes)  ", nSize);
-        //for (int i = nPushPos+sizeof(CMessageHeader); i < min(vSend.size(), nPushPos+sizeof(CMessageHeader)+20U); i++)
-        //    printf("%02x ", vSend[i] & 0xff);
+        printf("(%d bytes) ", nSize);
         printf("\n");
 
         nPushPos = -1;

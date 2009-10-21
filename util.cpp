@@ -86,7 +86,7 @@ void RandAddSeed(bool fPerfmon)
             struct tm* ptmTime = gmtime(&nTime);
             char pszTime[200];
             strftime(pszTime, sizeof(pszTime), "%x %H:%M:%S", ptmTime);
-            printf("%s  RandAddSeed() got %d bytes of performance data\n", pszTime, nSize);
+            printf("%s RandAddSeed() %d bytes\n", pszTime, nSize);
         }
     }
 }
@@ -174,7 +174,7 @@ bool error(const char* format, ...)
 
 void PrintException(std::exception* pex, const char* pszThread)
 {
-    char pszModule[260];
+    char pszModule[MAX_PATH];
     pszModule[0] = '\0';
     GetModuleFileName(NULL, pszModule, sizeof(pszModule));
     _strlwr(pszModule);
