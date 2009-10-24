@@ -64,7 +64,6 @@ Section -Main SEC0000
     File libeay32.dll
     File mingwm10.dll
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
-    WriteRegStr HKCU SOFTWARE\Microsoft\Windows\CurrentVersion\Run Bitcoin "$INSTDIR\bitcoin.exe /min"
 SectionEnd
 
 Section -post SEC0001
@@ -105,7 +104,6 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\libeay32.dll
     Delete /REBOOTOK $INSTDIR\bitcoin.exe
     DeleteRegValue HKCU "${REGKEY}\Components" Main
-    DeleteRegValue HKCU SOFTWARE\Microsoft\Windows\CurrentVersion\Run Bitcoin
 SectionEnd
 
 Section -un.post UNSEC0001
