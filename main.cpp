@@ -1129,9 +1129,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
             }
         }
 
-        // Notify UI to update prev block coinbase if it was ours
-        vWalletUpdated.push_back(hashBestChain);
-
         // New best link
         hashBestChain = hash;
         pindexBest = pindexNew;
@@ -1143,9 +1140,17 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     txdb.TxnCommit();
     txdb.Close();
 
-    // Relay wallet transactions that haven't gotten in yet
     if (pindexNew == pindexBest)
+    {
+        // Relay wallet transactions that haven't gotten in yet
         RelayWalletTransactions();
+
+        // Notify UI to display prev block's coinbase if it was ours
+        static uint256 hashPrevBestCoinBase;
+        CRITICAL_BLOCK(cs_mapWallet)
+            vWalletUpdated.push_back(hashPrevBestCoinBase);
+        hashPrevBestCoinBase = vtx[0].GetHash();
+    }
 
     MainFrameRepaint();
     return true;
@@ -2074,12 +2079,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     else
     {
         // Ignore unknown commands for extensibility
-        printf("ProcessMessage(%s) : Ignored unknown message\n", strCommand.c_str());
     }
-
-
-    if (!vRecv.empty())
-        printf("ProcessMessage(%s) : %d extra bytes\n", strCommand.c_str(), vRecv.size());
 
     return true;
 }
@@ -2349,7 +2349,7 @@ bool BitcoinMiner()
         }
         pblock->nBits = nBits;
         pblock->vtx[0].vout[0].nValue = pblock->GetBlockValue(nFees);
-        printf("\n\nRunning BitcoinMiner with %d transactions in block\n", pblock->vtx.size());
+        printf("Running BitcoinMiner with %d transactions in block\n", pblock->vtx.size());
 
 
         //
@@ -2408,20 +2408,17 @@ bool BitcoinMiner()
                 SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
                 CRITICAL_BLOCK(cs_main)
                 {
-                    if (pindexPrev != pindexBest)
+                    if (pindexPrev == pindexBest)
                     {
-                        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
-                        break;
+                        // Save key
+                        if (!AddKey(key))
+                            return false;
+                        key.MakeNewKey();
+
+                        // Process this block the same as if we had received it from another node
+                        if (!ProcessBlock(NULL, pblock.release()))
+                            printf("ERROR in BitcoinMiner, ProcessBlock, block not accepted\n");
                     }
-
-                    // Save key
-                    if (!AddKey(key))
-                        return false;
-                    key.MakeNewKey();
-
-                    // Process this block the same as if we had received it from another node
-                    if (!ProcessBlock(NULL, pblock.release()))
-                        printf("ERROR in BitcoinMiner, ProcessBlock, block not accepted\n");
                 }
                 SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 
@@ -2439,8 +2436,10 @@ bool BitcoinMiner()
                     break;
                 if (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
-                if (!fGenerateBitcoins)
+                if (vNodes.empty())
                     break;
+                if (!fGenerateBitcoins)
+                    return true;
                 if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
                     return true;
                 tmp.block.nTime = pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
