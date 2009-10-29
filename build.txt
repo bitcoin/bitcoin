@@ -10,7 +10,7 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 Compilers Supported
 -------------------
-MinGW GCC (currently v3.4.5)
+MinGW GCC
 Microsoft Visual C++ 6.0 SP6
 
 
@@ -20,6 +20,7 @@ Libraries you need to obtain separately to build:
 
               default path   download
 wxWidgets      \wxwidgets     http://www.wxwidgets.org/downloads/
+                                or prebuilt: http://wxpack.sourceforge.net
 OpenSSL        \openssl       http://www.openssl.org/source/
 Berkeley DB    \db            http://www.oracle.com/technology/software/products/berkeley-db/index.html
 Boost          \boost         http://www.boost.org/users/download/

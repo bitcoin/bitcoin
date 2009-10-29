@@ -4,7 +4,10 @@
 
 #include "headers.h"
 
+void ThreadFlushWalletDB(void* parg);
 
+
+unsigned int nWalletDBUpdated;
 
 
 
@@ -56,6 +59,8 @@ CDB::CDB(const char* pszFile, const char* pszMode, bool fTxn) : pdb(NULL)
     {
         if (!fDbEnvInit)
         {
+            if (fShutdown)
+                return;
             string strAppDir = GetAppDir();
             string strLogDir = strAppDir + "\\database";
             _mkdir(strLogDir.c_str());
@@ -121,12 +126,10 @@ void CDB::Close()
     pdb->close(0);
     delete pdb;
     pdb = NULL;
+    dbenv.txn_checkpoint(0, 0, 0);
 
     CRITICAL_BLOCK(cs_db)
-    {
-        dbenv.txn_checkpoint(0, 0, 0);
         --mapFileUseCount[strFile];
-    }
 
     RandAddSeed();
 }
@@ -499,25 +502,6 @@ bool CReviewDB::WriteReviews(uint256 hash, const vector<CReview>& vReviews)
 // CWalletDB
 //
 
-CWalletDB::~CWalletDB()
-{
-    // Flush whenever all handles to wallet.dat are closed
-    CRITICAL_BLOCK(cs_db)
-    {
-        Close(); // close includes a txn_checkpoint
-        map<string, int>::iterator mi = mapFileUseCount.find(strFile);
-        if (mi != mapFileUseCount.end())
-        {
-            int nRefCount = (*mi).second;
-            if (nRefCount == 0)
-            {
-                dbenv.lsn_reset(strFile.c_str(), 0);
-                mapFileUseCount.erase(mi++);
-            }
-        }
-    }
-}
-
 bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
 {
     vchDefaultKeyRet.clear();
@@ -610,7 +594,7 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
 
     printf("fShowGenerated = %d\n", fShowGenerated);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
-    printf("nTransactionFee = %I64d\n", nTransactionFee);
+    printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
     printf("addrIncoming = %s\n", addrIncoming.ToString().c_str());
     printf("fMinimizeToTray = %d\n", fMinimizeToTray);
     printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);
@@ -655,5 +639,51 @@ bool LoadWallet(bool& fFirstRunRet)
         CWalletDB().WriteDefaultKey(keyUser.GetPubKey());
     }
 
+    _beginthread(ThreadFlushWalletDB, 0, NULL);
     return true;
+}
+
+void ThreadFlushWalletDB(void* parg)
+{
+    static bool fOneThread;
+    if (fOneThread)
+        return;
+    fOneThread = true;
+
+    unsigned int nLastSeen = nWalletDBUpdated;
+    unsigned int nLastFlushed = nWalletDBUpdated;
+    int64 nLastWalletUpdate = GetTime();
+    while (!fShutdown)
+    {
+        Sleep(500);
+
+        if (nLastSeen != nWalletDBUpdated)
+        {
+            nLastSeen = nWalletDBUpdated;
+            nLastWalletUpdate = GetTime();
+        }
+
+        if (nLastFlushed != nWalletDBUpdated && nLastWalletUpdate < GetTime() - 1)
+        {
+            TRY_CRITICAL_BLOCK(cs_db)
+            {
+                string strFile = "wallet.dat";
+                map<string, int>::iterator mi = mapFileUseCount.find(strFile);
+                if (mi != mapFileUseCount.end())
+                {
+                    int nRefCount = (*mi).second;
+                    if (nRefCount == 0 && !fShutdown)
+                    {
+                        // Flush wallet.dat so it's self contained
+                        nLastFlushed == nWalletDBUpdated;
+                        int64 nStart = PerformanceCounter();
+                        dbenv.txn_checkpoint(0, 0, 0);
+                        dbenv.lsn_reset(strFile.c_str(), 0);
+                        printf("Flushed wallet.dat %15"PRI64d"\n", PerformanceCounter() - nStart);
+                        mapFileUseCount.erase(mi++);
+                    }
+                }
+            }
+        }
+    }
 }

@@ -2518,8 +2518,7 @@ bool BitcoinMiner()
 
 int64 GetBalance()
 {
-    int64 nStart, nEnd;
-    QueryPerformanceCounter((LARGE_INTEGER*)&nStart);
+    int64 nStart = PerformanceCounter();
 
     int64 nTotal = 0;
     CRITICAL_BLOCK(cs_mapWallet)
@@ -2533,8 +2532,7 @@ int64 GetBalance()
         }
     }
 
-    QueryPerformanceCounter((LARGE_INTEGER*)&nEnd);
-    ///printf(" GetBalance() time = %16I64d\n", nEnd - nStart);
+    ///printf(" GetBalance() time = %15"PRI64d"\n", PerformanceCounter() - nStart);
     return nTotal;
 }
 

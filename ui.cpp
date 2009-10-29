@@ -3414,28 +3414,25 @@ bool CMyApp::OnInit2()
     //
     bool fFirstRun;
     string strErrors;
-    int64 nStart, nEnd;
+    int64 nStart;
 
     printf("Loading addresses...\n");
-    QueryPerformanceCounter((LARGE_INTEGER*)&nStart);
+    nStart = PerformanceCounter();
     if (!LoadAddresses())
         strErrors += "Error loading addr.dat      \n";
-    QueryPerformanceCounter((LARGE_INTEGER*)&nEnd);
-    printf(" addresses   %20I64d\n", nEnd - nStart);
+    printf(" addresses   %15"PRI64d"\n", PerformanceCounter() - nStart);
 
     printf("Loading block index...\n");
-    QueryPerformanceCounter((LARGE_INTEGER*)&nStart);
+    nStart = PerformanceCounter();
     if (!LoadBlockIndex())
         strErrors += "Error loading blkindex.dat      \n";
-    QueryPerformanceCounter((LARGE_INTEGER*)&nEnd);
-    printf(" block index %20I64d\n", nEnd - nStart);
+    printf(" block index %15"PRI64d"\n", PerformanceCounter() - nStart);
 
     printf("Loading wallet...\n");
-    QueryPerformanceCounter((LARGE_INTEGER*)&nStart);
+    nStart = PerformanceCounter();
     if (!LoadWallet(fFirstRun))
         strErrors += "Error loading wallet.dat      \n";
-    QueryPerformanceCounter((LARGE_INTEGER*)&nEnd);
-    printf(" wallet      %20I64d\n", nEnd - nStart);
+    printf(" wallet      %15"PRI64d"\n", PerformanceCounter() - nStart);
 
     printf("Done loading\n");
 
@@ -3742,7 +3739,7 @@ void ThreadRandSendTest(void* parg)
         return;
     }
 
-    loop
+    while (!fShutdown)
     {
         Sleep(GetRand(30) * 1000 + 100);
 
@@ -3767,6 +3764,8 @@ void ThreadRandSendTest(void* parg)
         CScript scriptPubKey;
         scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
 
+        if (fShutdown)
+            return;
         if (!SendMoney(scriptPubKey, nValue, wtx))
             return;
     }
@@ -3776,8 +3775,6 @@ void ThreadRandSendTest(void* parg)
 // randsendtest to any connected node
 void RandSend()
 {
-    CWalletTx wtx;
-
     while (vNodes.empty())
         Sleep(1000);
     CAddress addr;
@@ -3785,6 +3782,7 @@ void RandSend()
         addr = vNodes[GetRand(vNodes.size())]->addr;
 
     // Message
+    CWalletTx wtx;
     wtx.mapValue["to"] = addr.ToString();
     wtx.mapValue["from"] = addrLocalHost.ToString();
     static int nRep;
@@ -3799,6 +3797,8 @@ void RandSend()
     }
 
     // Send to IP address
+    if (fShutdown)
+        return;
     CSendingDialog* pdialog = new CSendingDialog(pframeMain, addr, nValue, wtx);
     if (!pdialog->Show())
         wxMessageBox("ShowModal Failed  ");
