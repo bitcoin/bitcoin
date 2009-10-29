@@ -366,7 +366,7 @@ public:
     int nVersion;
     vector<CTxIn> vin;
     vector<CTxOut> vout;
-    int nLockTime;
+    unsigned int nLockTime;
 
 
     CTransaction()
@@ -401,9 +401,15 @@ public:
         return SerializeHash(*this);
     }
 
-    bool IsFinal() const
+    bool IsFinal(int64 nBlockTime=0) const
     {
-        if (nLockTime == 0 || nLockTime < nBestHeight)
+        // Time based nLockTime implemented in 0.1.6,
+        // do not use time based until most 0.1.5 nodes have upgraded.
+        if (nBlockTime == 0)
+            nBlockTime = GetAdjustedTime();
+        if (nLockTime == 0)
+            return true;
+        if (nLockTime < (nLockTime < 500000000 ? nBestHeight : nBlockTime))
             return true;
         foreach(const CTxIn& txin, vin)
             if (!txin.IsFinal())
@@ -686,8 +692,9 @@ public:
     char fSpent;
     //// probably need to sign the order info so know it came from payer
 
-    // memory only
+    // memory only UI hints
     mutable unsigned int nTimeDisplayed;
+    mutable int nLinesDisplayed;
 
 
     CWalletTx()
@@ -712,6 +719,7 @@ public:
         fFromMe = false;
         fSpent = false;
         nTimeDisplayed = 0;
+        nLinesDisplayed = 0;
     }
 
     IMPLEMENT_SERIALIZE

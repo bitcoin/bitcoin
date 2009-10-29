@@ -67,21 +67,29 @@ inline T& REF(const T& val)
 
 
 extern bool fDebug;
+extern bool fPrintToDebugger;
+extern bool fPrintToConsole;
+extern map<string, string> mapArgs;
 
-void RandAddSeed(bool fPerfmon=false);
+void RandAddSeed();
+void RandAddSeedPerfmon();
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
 string strprintf(const char* format, ...);
 bool error(const char* format, ...);
 void PrintException(std::exception* pex, const char* pszThread);
+void LogException(std::exception* pex, const char* pszThread);
 void ParseString(const string& str, char c, vector<string>& v);
 string FormatMoney(int64 n, bool fPlus=false);
 bool ParseMoney(const char* pszIn, int64& nRet);
+vector<unsigned char> ParseHex(const char* psz);
+vector<unsigned char> ParseHex(const std::string& str);
 bool FileExists(const char* psz);
 int GetFilesize(FILE* file);
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
+
 
 
 
@@ -156,6 +164,85 @@ public:
 
 
 
+inline int OutputDebugStringF(const char* pszFormat, ...)
+{
+    int ret = 0;
+#ifdef __WXDEBUG__
+    if (!fPrintToConsole)
+    {
+        // print to debug.log
+        FILE* fileout = fopen("debug.log", "a");
+        if (fileout)
+        {
+            va_list arg_ptr;
+            va_start(arg_ptr, pszFormat);
+            ret = vfprintf(fileout, pszFormat, arg_ptr);
+            va_end(arg_ptr);
+            fclose(fileout);
+        }
+    }
+
+    if (fPrintToDebugger)
+    {
+        // accumulate a line at a time
+        static CCriticalSection cs_OutputDebugStringF;
+        CRITICAL_BLOCK(cs_OutputDebugStringF)
+        {
+            static char pszBuffer[50000];
+            static char* pend;
+            if (pend == NULL)
+                pend = pszBuffer;
+            va_list arg_ptr;
+            va_start(arg_ptr, pszFormat);
+            int limit = END(pszBuffer) - pend - 2;
+            int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
+            va_end(arg_ptr);
+            if (ret < 0 || ret >= limit)
+            {
+                pend = END(pszBuffer) - 2;
+                *pend++ = '\n';
+            }
+            else
+                pend += ret;
+            *pend = '\0';
+            char* p1 = pszBuffer;
+            char* p2;
+            while (p2 = strchr(p1, '\n'))
+            {
+                p2++;
+                char c = *p2;
+                *p2 = '\0';
+                OutputDebugString(p1);
+                *p2 = c;
+                p1 = p2;
+            }
+            if (p1 != pszBuffer)
+                memmove(pszBuffer, p1, pend - p1 + 1);
+            pend -= (p1 - pszBuffer);
+        }
+    }
+#endif
+
+    if (fPrintToConsole)
+    {
+        // print to console
+        va_list arg_ptr;
+        va_start(arg_ptr, pszFormat);
+        ret = vprintf(pszFormat, arg_ptr);
+        va_end(arg_ptr);
+    }
+    return ret;
+}
+
+
+
+
+
+
+
+
+
+
 inline string i64tostr(int64 n)
 {
     return strprintf("%"PRId64, n);
@@ -205,6 +292,11 @@ string HexStr(const T itbegin, const T itend, bool fSpaces=true)
     return str;
 }
 
+inline string HexStr(vector<unsigned char> vch, bool fSpaces=true)
+{
+    return HexStr(vch.begin(), vch.end(), fSpaces);
+}
+
 template<typename T>
 string HexNumStr(const T itbegin, const T itend, bool f0x=true)
 {
@@ -222,75 +314,9 @@ void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSp
     printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
 }
 
-
-
-
-
-
-
-
-inline int OutputDebugStringF(const char* pszFormat, ...)
+inline void PrintHex(vector<unsigned char> vch, const char* pszFormat="%s", bool fSpaces=true)
 {
-#ifdef __WXDEBUG__
-    // log file
-    FILE* fileout = fopen("debug.log", "a");
-    if (fileout)
-    {
-        va_list arg_ptr;
-        va_start(arg_ptr, pszFormat);
-        vfprintf(fileout, pszFormat, arg_ptr);
-        va_end(arg_ptr);
-        fclose(fileout);
-    }
-
-    // accumulate a line at a time
-    static CCriticalSection cs_OutputDebugStringF;
-    CRITICAL_BLOCK(cs_OutputDebugStringF)
-    {
-        static char pszBuffer[50000];
-        static char* pend;
-        if (pend == NULL)
-            pend = pszBuffer;
-        va_list arg_ptr;
-        va_start(arg_ptr, pszFormat);
-        int limit = END(pszBuffer) - pend - 2;
-        int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
-        va_end(arg_ptr);
-        if (ret < 0 || ret >= limit)
-        {
-            pend = END(pszBuffer) - 2;
-            *pend++ = '\n';
-        }
-        else
-            pend += ret;
-        *pend = '\0';
-        char* p1 = pszBuffer;
-        char* p2;
-        while (p2 = strchr(p1, '\n'))
-        {
-            p2++;
-            char c = *p2;
-            *p2 = '\0';
-            OutputDebugString(p1);
-            *p2 = c;
-            p1 = p2;
-        }
-        if (p1 != pszBuffer)
-            memmove(pszBuffer, p1, pend - p1 + 1);
-        pend -= (p1 - pszBuffer);
-        return ret;
-    }
-#endif
-
-    if (!wxTheApp)
-    {
-        // print to console
-        va_list arg_ptr;
-        va_start(arg_ptr, pszFormat);
-        vprintf(pszFormat, arg_ptr);
-        va_end(arg_ptr);
-    }
-    return 0;
+    printf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
 

@@ -415,6 +415,10 @@ bool CTransaction::AcceptTransaction(CTxDB& txdb, bool fCheckInputs, bool* pfMis
     if (!CheckTransaction())
         return error("AcceptTransaction() : CheckTransaction failed");
 
+    // To help v0.1.5 clients who would see it as negative number. please delete this later.
+    if (nLockTime > INT_MAX)
+        return error("AcceptTransaction() : not accepting nLockTime beyond 2038");
+
     // Do we already have it?
     uint256 hash = GetHash();
     CRITICAL_BLOCK(cs_mapTransactions)
@@ -1214,6 +1218,12 @@ bool CBlock::AcceptBlock()
     if (nTime <= pindexPrev->GetMedianTimePast())
         return error("AcceptBlock() : block's timestamp is too early");
 
+    // Check that all transactions are finalized (starting around 30 Nov 2009)
+    if (nBestHeight > 31000) // 25620 + 5320
+        foreach(const CTransaction& tx, vtx)
+            if (!tx.IsFinal(nTime))
+                return error("AcceptBlock() : contains a non-final transaction");
+
     // Check proof of work
     if (nBits != GetNextWorkRequired(pindexPrev))
         return error("AcceptBlock() : incorrect proof of work");
@@ -1649,7 +1659,7 @@ bool ProcessMessages(CNode* pfrom)
     CDataStream& vRecv = pfrom->vRecv;
     if (vRecv.empty())
         return true;
-    printf("ProcessMessages(%d bytes)\n", vRecv.size());
+    //printf("ProcessMessages(%d bytes)\n", vRecv.size());
 
     //
     // Message format
@@ -1692,7 +1702,7 @@ bool ProcessMessages(CNode* pfrom)
         {
             // Rewind and wait for rest of message
             ///// need a mechanism to give up waiting for overlong message size error
-            printf("MESSAGE-BREAK\n");
+            //printf("message-break\n");
             vRecv.insert(vRecv.begin(), BEGIN(hdr), END(hdr));
             Sleep(100);
             break;
@@ -1711,7 +1721,20 @@ bool ProcessMessages(CNode* pfrom)
                 fRet = ProcessMessage(pfrom, strCommand, vMsg);
             CheckForShutdown(2);
         }
-        CATCH_PRINT_EXCEPTION("ProcessMessage()")
+        catch (std::ios_base::failure& e) {
+            if (strstr(e.what(), "CDataStream::read() : end of data"))
+            {
+                // Allow exceptions from underlength message on vRecv
+                LogException(&e, "ProcessMessage()");
+            }
+            else
+                PrintException(&e, "ProcessMessage()");
+        } catch (std::exception& e) {
+            PrintException(&e, "ProcessMessage()");
+        } catch (...) {
+            PrintException(NULL, "ProcessMessage()");
+        }
+
         if (!fRet)
             printf("ProcessMessage(%s, %d bytes) FAILED\n", strCommand.c_str(), nMessageSize);
     }
@@ -1726,7 +1749,8 @@ bool ProcessMessages(CNode* pfrom)
 bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     static map<unsigned int, vector<unsigned char> > mapReuseKey;
-    printf("received: %-12s (%d bytes)\n", strCommand.c_str(), vRecv.size());
+    RandAddSeedPerfmon();
+    printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
     if (nDropMessagesTest > 0 && GetRand(nDropMessagesTest) == 0)
     {
         printf("dropmessages DROPPING RECV MESSAGE\n");
@@ -1735,17 +1759,31 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 
 
+
     if (strCommand == "version")
     {
-        // Can only do this once
+        // Each connection can only send one version message
         if (pfrom->nVersion != 0)
             return false;
 
         int64 nTime;
         CAddress addrMe;
+        CAddress addrFrom;
+        uint64 nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
+        if (pfrom->nVersion >= 106 && !vRecv.empty())
+            vRecv >> addrFrom >> nNonce;
         if (pfrom->nVersion == 0)
             return false;
+
+        // Disconnect if we connected to ourself
+        if (nNonce == nLocalHostNonce)
+        {
+            pfrom->fDisconnect = true;
+            pfrom->vRecv.clear();
+            pfrom->vSend.clear();
+            return true;
+        }
 
         pfrom->vSend.SetVersion(min(pfrom->nVersion, VERSION));
         pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
@@ -1766,6 +1804,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             fAskedForBlocks = true;
             pfrom->PushMessage("getblocks", CBlockLocator(pindexBest), uint256(0));
         }
+
+        pfrom->fSuccessfullyConnected = true;
 
         printf("version message: version %d\n", pfrom->nVersion);
     }
@@ -1800,16 +1840,16 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (fShutdown)
                 return true;
             AddAddress(addrdb, addr);
-            if (addr.IsRoutable() && addr.ip != addrLocalHost.ip)
+            pfrom->AddAddressKnown(addr);
+            if (!pfrom->fGetAddr && addr.IsRoutable())
             {
                 // Put on lists to send to other nodes
-                pfrom->setAddrKnown.insert(addr);
                 CRITICAL_BLOCK(cs_vNodes)
                     foreach(CNode* pnode, vNodes)
-                        if (!pnode->setAddrKnown.count(addr))
-                            pnode->vAddrToSend.push_back(addr);
+                        pnode->PushAddress(addr);
             }
         }
+        pfrom->fGetAddr = false;
     }
 
 
@@ -2009,7 +2049,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     return true;
                 const CAddress& addr = item.second;
                 if (addr.nTime > nSince)
-                    pfrom->vAddrToSend.push_back(addr);
+                    pfrom->PushAddress(addr);
             }
         }
     }
@@ -2108,8 +2148,11 @@ bool SendMessages(CNode* pto)
         vector<CAddress> vAddrToSend;
         vAddrToSend.reserve(pto->vAddrToSend.size());
         foreach(const CAddress& addr, pto->vAddrToSend)
-            if (!pto->setAddrKnown.count(addr))
+        {
+            // returns true if wasn't already contained in the set
+            if (pto->setAddrKnown.insert(addr).second)
                 vAddrToSend.push_back(addr);
+        }
         pto->vAddrToSend.clear();
         if (!vAddrToSend.empty())
             pto->PushMessage("addr", vAddrToSend);
@@ -2193,7 +2236,7 @@ void GenerateBitcoins(bool fGenerate)
         if (fLimitProcessors && nProcessors > nLimitProcessors)
             nProcessors = nLimitProcessors;
         int nAddThreads = nProcessors - vnThreadsRunning[3];
-        printf("starting %d bitcoinminer threads\n", nAddThreads);
+        printf("Starting %d BitcoinMiner threads\n", nAddThreads);
         for (int i = 0; i < nAddThreads; i++)
             if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
                 printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
@@ -2207,7 +2250,7 @@ void ThreadBitcoinMiner(void* parg)
     try
     {
         bool fRet = BitcoinMiner();
-        printf("BitcoinMiner returned %s\n\n\n", fRet ? "true" : "false");
+        printf("BitcoinMiner returned %s\n", fRet ? "true" : "false");
         vnThreadsRunning[3]--;
     }
     catch (std::exception& e) {
@@ -2737,7 +2780,7 @@ bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
             else
                 strError = "Error: Transaction creation failed  ";
             wxMessageBox(strError, "Sending...");
-            return error("SendMoney() : %s\n", strError.c_str());
+            return error("SendMoney() : %s", strError.c_str());
         }
         if (!CommitTransactionSpent(wtxNew, key))
         {

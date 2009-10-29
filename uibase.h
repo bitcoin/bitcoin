@@ -50,50 +50,52 @@
 #define wxID_BUTTONCOPY 1006
 #define wxID_BUTTONCHANGE 1007
 #define wxID_TRANSACTIONFEE 1008
-#define wxID_TEXTCTRLPAYTO 1009
-#define wxID_BUTTONPASTE 1010
-#define wxID_BUTTONADDRESSBOOK 1011
-#define wxID_TEXTCTRLAMOUNT 1012
-#define wxID_CHOICETRANSFERTYPE 1013
-#define wxID_LISTCTRL 1014
-#define wxID_BUTTONRENAME 1015
-#define wxID_BUTTONNEW 1016
-#define wxID_BUTTONEDIT 1017
-#define wxID_BUTTONDELETE 1018
-#define wxID_DEL0 1019
-#define wxID_DEL1 1020
-#define wxID_DEL2 1021
-#define wxID_DEL3 1022
-#define wxID_DEL4 1023
-#define wxID_DEL5 1024
-#define wxID_DEL6 1025
-#define wxID_DEL7 1026
-#define wxID_DEL8 1027
-#define wxID_DEL9 1028
-#define wxID_DEL10 1029
-#define wxID_DEL11 1030
-#define wxID_DEL12 1031
-#define wxID_DEL13 1032
-#define wxID_DEL14 1033
-#define wxID_DEL15 1034
-#define wxID_DEL16 1035
-#define wxID_DEL17 1036
-#define wxID_DEL18 1037
-#define wxID_DEL19 1038
-#define wxID_BUTTONPREVIEW 1039
-#define wxID_BUTTONSAMPLE 1040
-#define wxID_CANCEL2 1041
-#define wxID_BUTTONBACK 1042
-#define wxID_BUTTONNEXT 1043
-#define wxID_SUBMIT 1044
-#define wxID_OPENNEWTABLE 1045
-#define wxID_DEALHAND 1046
-#define wxID_FOLD 1047
-#define wxID_CALL 1048
-#define wxID_RAISE 1049
-#define wxID_LEAVETABLE 1050
-#define wxID_DITCHPLAYER 1051
-#define wxID_TEXTCTRL 1052
+#define wxID_PROXYIP 1009
+#define wxID_PROXYPORT 1010
+#define wxID_TEXTCTRLPAYTO 1011
+#define wxID_BUTTONPASTE 1012
+#define wxID_BUTTONADDRESSBOOK 1013
+#define wxID_TEXTCTRLAMOUNT 1014
+#define wxID_CHOICETRANSFERTYPE 1015
+#define wxID_LISTCTRL 1016
+#define wxID_BUTTONRENAME 1017
+#define wxID_BUTTONNEW 1018
+#define wxID_BUTTONEDIT 1019
+#define wxID_BUTTONDELETE 1020
+#define wxID_DEL0 1021
+#define wxID_DEL1 1022
+#define wxID_DEL2 1023
+#define wxID_DEL3 1024
+#define wxID_DEL4 1025
+#define wxID_DEL5 1026
+#define wxID_DEL6 1027
+#define wxID_DEL7 1028
+#define wxID_DEL8 1029
+#define wxID_DEL9 1030
+#define wxID_DEL10 1031
+#define wxID_DEL11 1032
+#define wxID_DEL12 1033
+#define wxID_DEL13 1034
+#define wxID_DEL14 1035
+#define wxID_DEL15 1036
+#define wxID_DEL16 1037
+#define wxID_DEL17 1038
+#define wxID_DEL18 1039
+#define wxID_DEL19 1040
+#define wxID_BUTTONPREVIEW 1041
+#define wxID_BUTTONSAMPLE 1042
+#define wxID_CANCEL2 1043
+#define wxID_BUTTONBACK 1044
+#define wxID_BUTTONNEXT 1045
+#define wxID_SUBMIT 1046
+#define wxID_OPENNEWTABLE 1047
+#define wxID_DEALHAND 1048
+#define wxID_FOLD 1049
+#define wxID_CALL 1050
+#define wxID_RAISE 1051
+#define wxID_LEAVETABLE 1052
+#define wxID_DITCHPLAYER 1053
+#define wxID_TEXTCTRL 1054
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class CMainFrameBase
@@ -211,6 +213,12 @@ class COptionsDialogBase : public wxDialog
 		wxCheckBox* m_checkBoxMinimizeToTray;
 		
 		wxCheckBox* m_checkBoxMinimizeOnClose;
+		wxCheckBox* m_checkBoxUseProxy;
+		
+		wxStaticText* m_staticTextProxyIP;
+		wxTextCtrl* m_textCtrlProxyIP;
+		wxStaticText* m_staticTextProxyPort;
+		wxTextCtrl* m_textCtrlProxyPort;
 		wxPanel* m_panelTest2;
 		
 		wxStaticText* m_staticText321;
@@ -226,6 +234,8 @@ class COptionsDialogBase : public wxDialog
 		virtual void OnKillFocusTransactionFee( wxFocusEvent& event ){ event.Skip(); }
 		virtual void OnCheckBoxLimitProcessors( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnCheckBoxMinimizeToTray( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnCheckBoxUseProxy( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnKillFocusProxy( wxFocusEvent& event ){ event.Skip(); }
 		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonApply( wxCommandEvent& event ){ event.Skip(); }

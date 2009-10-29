@@ -380,7 +380,7 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	bSizer69 = new wxBoxSizer( wxVERTICAL );
 	
 	
-	bSizer69->Add( 0, 14, 0, wxEXPAND, 5 );
+	bSizer69->Add( 0, 16, 0, wxEXPAND, 5 );
 	
 	m_staticText32 = new wxStaticText( m_panelMain, wxID_ANY, wxT("Optional transaction fee you give to the nodes that process your transactions."), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText32->Wrap( -1 );
@@ -412,7 +412,7 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	bSizer71->Add( m_checkBoxLimitProcessors, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	m_spinCtrlLimitProcessors = new wxSpinCtrl( m_panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 48,-1 ), wxSP_ARROW_KEYS, 1, 999, 1 );
-	bSizer71->Add( m_spinCtrlLimitProcessors, 0, wxTOP|wxBOTTOM, 5 );
+	bSizer71->Add( m_spinCtrlLimitProcessors, 0, wxALIGN_CENTER_VERTICAL, 5 );
 	
 	m_staticText35 = new wxStaticText( m_panelMain, wxID_ANY, wxT("processors"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText35->Wrap( -1 );
@@ -434,11 +434,44 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	bSizer101->Add( 16, 0, 0, 0, 5 );
 	
-	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, wxT("M&inimize to system tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, wxT("Mi&nimize to system tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
 	
-	bSizer101->Add( m_checkBoxMinimizeOnClose, 0, wxALL, 5 );
+	bSizer101->Add( m_checkBoxMinimizeOnClose, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 	
 	bSizer69->Add( bSizer101, 1, wxEXPAND, 5 );
+	
+	wxBoxSizer* bSizer102;
+	bSizer102 = new wxBoxSizer( wxHORIZONTAL );
+	
+	m_checkBoxUseProxy = new wxCheckBox( m_panelMain, wxID_ANY, wxT("&Connect through socks4 proxy: "), wxDefaultPosition, wxDefaultSize, 0 );
+	
+	bSizer102->Add( m_checkBoxUseProxy, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+	
+	bSizer69->Add( bSizer102, 1, wxEXPAND, 5 );
+	
+	wxBoxSizer* bSizer103;
+	bSizer103 = new wxBoxSizer( wxHORIZONTAL );
+	
+	
+	bSizer103->Add( 18, 0, 0, 0, 5 );
+	
+	m_staticTextProxyIP = new wxStaticText( m_panelMain, wxID_ANY, wxT("Proxy &IP:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextProxyIP->Wrap( -1 );
+	bSizer103->Add( m_staticTextProxyIP, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+	
+	m_textCtrlProxyIP = new wxTextCtrl( m_panelMain, wxID_PROXYIP, wxEmptyString, wxDefaultPosition, wxSize( 140,-1 ), 0 );
+	m_textCtrlProxyIP->SetMaxLength( 15 ); 
+	bSizer103->Add( m_textCtrlProxyIP, 0, wxALIGN_CENTER_VERTICAL, 5 );
+	
+	m_staticTextProxyPort = new wxStaticText( m_panelMain, wxID_ANY, wxT(" &Port:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextProxyPort->Wrap( -1 );
+	bSizer103->Add( m_staticTextProxyPort, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+	
+	m_textCtrlProxyPort = new wxTextCtrl( m_panelMain, wxID_PROXYPORT, wxEmptyString, wxDefaultPosition, wxSize( 55,-1 ), 0 );
+	m_textCtrlProxyPort->SetMaxLength( 5 ); 
+	bSizer103->Add( m_textCtrlProxyPort, 0, wxALIGN_CENTER_VERTICAL, 5 );
+	
+	bSizer69->Add( bSizer103, 1, wxEXPAND, 5 );
 	
 	m_panelMain->SetSizer( bSizer69 );
 	m_panelMain->Layout();
@@ -450,13 +483,13 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	bSizer64 = new wxBoxSizer( wxVERTICAL );
 	
 	
-	bSizer64->Add( 0, 14, 0, wxEXPAND, 5 );
+	bSizer64->Add( 0, 16, 0, wxEXPAND, 5 );
 	
 	m_staticText321 = new wxStaticText( m_panelTest2, wxID_ANY, wxT("Test panel 2 for future expansion"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText321->Wrap( -1 );
 	bSizer64->Add( m_staticText321, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	m_staticText69 = new wxStaticText( m_panelTest2, wxID_ANY, wxT("MyLabel"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText69 = new wxStaticText( m_panelTest2, wxID_ANY, wxT("Let's not start multiple pages until the first page is filled up"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText69->Wrap( -1 );
 	bSizer64->Add( m_staticText69, 0, wxALL, 5 );
 	
@@ -506,6 +539,9 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	m_textCtrlTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_checkBoxLimitProcessors->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
 	m_checkBoxMinimizeToTray->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
+	m_checkBoxUseProxy->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
+	m_textCtrlProxyIP->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
+	m_textCtrlProxyPort->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
 	m_buttonOK->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
 	m_buttonApply->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );
@@ -518,6 +554,9 @@ COptionsDialogBase::~COptionsDialogBase()
 	m_textCtrlTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_checkBoxLimitProcessors->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
 	m_checkBoxMinimizeToTray->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
+	m_checkBoxUseProxy->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
+	m_textCtrlProxyIP->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
+	m_textCtrlProxyPort->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
 	m_buttonOK->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
 	m_buttonApply->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );

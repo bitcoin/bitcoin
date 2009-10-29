@@ -121,10 +121,12 @@ void CDB::Close()
     pdb->close(0);
     delete pdb;
     pdb = NULL;
-    dbenv.txn_checkpoint(0, 0, 0);
 
     CRITICAL_BLOCK(cs_db)
+    {
+        dbenv.txn_checkpoint(0, 0, 0);
         --mapFileUseCount[strFile];
+    }
 
     RandAddSeed();
 }
@@ -376,11 +378,11 @@ bool CTxDB::LoadBlockIndex()
     {
         if (pindexGenesisBlock == NULL)
             return true;
-        return error("CTxDB::LoadBlockIndex() : hashBestChain not found\n");
+        return error("CTxDB::LoadBlockIndex() : hashBestChain not found");
     }
 
     if (!mapBlockIndex.count(hashBestChain))
-        return error("CTxDB::LoadBlockIndex() : blockindex for hashBestChain not found\n");
+        return error("CTxDB::LoadBlockIndex() : blockindex for hashBestChain not found");
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,14).c_str(), nBestHeight);
@@ -500,16 +502,15 @@ bool CReviewDB::WriteReviews(uint256 hash, const vector<CReview>& vReviews)
 CWalletDB::~CWalletDB()
 {
     // Flush whenever all handles to wallet.dat are closed
-    Close();
     CRITICAL_BLOCK(cs_db)
     {
+        Close(); // close includes a txn_checkpoint
         map<string, int>::iterator mi = mapFileUseCount.find(strFile);
         if (mi != mapFileUseCount.end())
         {
             int nRefCount = (*mi).second;
             if (nRefCount == 0)
             {
-                dbenv.txn_checkpoint(0, 0, 0);
                 dbenv.lsn_reset(strFile.c_str(), 0);
                 mapFileUseCount.erase(mi++);
             }
@@ -600,6 +601,9 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
                 if (strKey == "nLimitProcessors")   ssValue >> nLimitProcessors;
                 if (strKey == "fMinimizeToTray")    ssValue >> fMinimizeToTray;
                 if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
+                if (strKey == "fUseProxy")          ssValue >> fUseProxy;
+                if (strKey == "addrProxy")          ssValue >> addrProxy;
+
             }
         }
     }
@@ -610,6 +614,9 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
     printf("addrIncoming = %s\n", addrIncoming.ToString().c_str());
     printf("fMinimizeToTray = %d\n", fMinimizeToTray);
     printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);
+    printf("fUseProxy = %d\n", fUseProxy);
+    printf("addrProxy = %s\n", addrProxy.ToString().c_str());
+
 
     // The transaction fee setting won't be needed for many years to come.
     // Setting it to zero here in case they set it to something in an earlier version.
@@ -639,7 +646,7 @@ bool LoadWallet(bool& fFirstRunRet)
     else
     {
         // Create new keyUser and set as default key
-        RandAddSeed(true);
+        RandAddSeedPerfmon();
         keyUser.MakeNewKey();
         if (!AddKey(keyUser))
             return false;

@@ -17,8 +17,8 @@ endif
 
 
 
-INCLUDEPATHS=-I"/boost" -I"/DB/build_unix" -I"/OpenSSL/include" -I"/wxWidgets/lib/vc_lib/mswd" -I"/wxWidgets/include"
-LIBPATHS=-L"/DB/build_unix" -L"/OpenSSL/out" -L"/wxWidgets/lib/gcc_lib"
+INCLUDEPATHS=-I"/boost" -I"/db/build_unix" -I"/openssl/include" -I"/wxwidgets/lib/vc_lib/mswd" -I"/wxwidgets/include"
+LIBPATHS=-L"/db/build_unix" -L"/openssl/out" -L"/wxwidgets/lib/gcc_lib"
 LIBS= \
  -l db_cxx \
  -l eay32 \

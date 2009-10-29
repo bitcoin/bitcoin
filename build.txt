@@ -1,4 +1,4 @@
-BitCoin v0.1.6 ALPHA
+BitCoin v0.1.6 BETA
 
 Copyright (c) 2009 Satoshi Nakamoto
 Distributed under the MIT/X11 software license, see the accompanying
@@ -19,10 +19,10 @@ Dependencies
 Libraries you need to obtain separately to build:
 
               default path   download
-wxWidgets      \wxWidgets     http://www.wxwidgets.org/downloads/
-OpenSSL        \OpenSSL       http://www.openssl.org/source/
-Berkeley DB    \DB            http://www.oracle.com/technology/software/products/berkeley-db/index.html
-Boost          \Boost         http://www.boost.org/users/download/
+wxWidgets      \wxwidgets     http://www.wxwidgets.org/downloads/
+OpenSSL        \openssl       http://www.openssl.org/source/
+Berkeley DB    \db            http://www.oracle.com/technology/software/products/berkeley-db/index.html
+Boost          \boost         http://www.boost.org/users/download/
 
 Their licenses:
 wxWidgets      LGPL 2.1 with very liberal exceptions
@@ -75,7 +75,7 @@ If you want to use it with MSVC, generate the .lib file
 Berkeley DB
 -----------
 Using MinGW and MSYS:
-cd \DB\build_unix
+cd \db\build_unix
 sh ../dist/configure --enable-mingw --enable-cxx
 make
 
