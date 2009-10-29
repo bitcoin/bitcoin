@@ -14,8 +14,7 @@ bool fPrintToConsole = false;
 
 // Init openssl library multithreading support
 static wxMutex** ppmutexOpenSSL;
-
-void win32_locking_callback(int mode, int i, const char* file, int line)
+void locking_callback(int mode, int i, const char* file, int line)
 {
     if (mode & CRYPTO_LOCK)
         ppmutexOpenSSL[i]->Lock();
@@ -33,7 +32,7 @@ public:
         ppmutexOpenSSL = (wxMutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(wxMutex*));
         for (int i = 0; i < CRYPTO_num_locks(); i++)
             ppmutexOpenSSL[i] = new wxMutex();
-        CRYPTO_set_locking_callback(win32_locking_callback);
+        CRYPTO_set_locking_callback(locking_callback);
 
         // Seed random number generator with screen scrape and other hardware sources
         RAND_screen();
@@ -45,7 +44,7 @@ public:
     {
         // Shutdown openssl library multithreading support
         CRYPTO_set_locking_callback(NULL);
-        for (int i =0 ; i < CRYPTO_num_locks(); i++)
+        for (int i = 0; i < CRYPTO_num_locks(); i++)
             delete ppmutexOpenSSL[i];
         OPENSSL_free(ppmutexOpenSSL);
     }
@@ -62,10 +61,9 @@ instance_of_cinit;
 void RandAddSeed()
 {
     // Seed with CPU performance counter
-    LARGE_INTEGER PerformanceCount;
-    QueryPerformanceCounter(&PerformanceCount);
-    RAND_add(&PerformanceCount, sizeof(PerformanceCount), 1.5);
-    memset(&PerformanceCount, 0, sizeof(PerformanceCount));
+    int64 nCounter = PerformanceCounter();
+    RAND_add(&nCounter, sizeof(nCounter), 1.5);
+    memset(&nCounter, 0, sizeof(nCounter));
 }
 
 void RandAddSeedPerfmon()
@@ -196,7 +194,7 @@ void ParseString(const string& str, char c, vector<string>& v)
 string FormatMoney(int64 n, bool fPlus)
 {
     n /= CENT;
-    string str = strprintf("%I64d.%02I64d", (n > 0 ? n : -n)/100, (n > 0 ? n : -n)%100);
+    string str = strprintf("%"PRI64d".%02"PRI64d, (n > 0 ? n : -n)/100, (n > 0 ? n : -n)%100);
     for (int i = 6; i < str.size(); i += 4)
         if (isdigit(str[str.size() - i - 1]))
             str.insert(str.size() - i, 1, ',');
@@ -435,7 +433,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
     if (vTimeOffsets.empty())
         vTimeOffsets.push_back(0);
     vTimeOffsets.push_back(nOffsetSample);
-    printf("Added time data, samples %d, offset %+I64d (%+I64d minutes)\n", vTimeOffsets.size(), vTimeOffsets.back(), vTimeOffsets.back()/60);
+    printf("Added time data, samples %d, offset %+"PRI64d" (%+"PRI64d" minutes)\n", vTimeOffsets.size(), vTimeOffsets.back(), vTimeOffsets.back()/60);
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
     {
         sort(vTimeOffsets.begin(), vTimeOffsets.end());
@@ -449,7 +447,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
             ///    to make sure it doesn't get changed again
         }
         foreach(int64 n, vTimeOffsets)
-            printf("%+I64d  ", n);
-        printf("|  nTimeOffset = %+I64d  (%+I64d minutes)\n", nTimeOffset, nTimeOffset/60);
+            printf("%+"PRI64d"  ", n);
+        printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
     }
 }

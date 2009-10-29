@@ -13,8 +13,8 @@ DEBUGFLAGS=/Zi /Od /D__WXDEBUG__
 
 
 
-INCLUDEPATHS=/I"/boost" /I"/DB/build_windows" /I"/OpenSSL/include" /I"/wxWidgets/lib/vc_lib/mswd" /I"/wxWidgets/include"
-LIBPATHS=/LIBPATH:"/DB/build_windows/$(BUILD)" /LIBPATH:"/OpenSSL/out" /LIBPATH:"/wxWidgets/lib/vc_lib"
+INCLUDEPATHS=/I"/boost" /I"/db/build_windows" /I"/openssl/include" /I"/wxwidgets/lib/vc_lib/mswd" /I"/wxwidgets/include"
+LIBPATHS=/LIBPATH:"/db/build_windows/$(BUILD)" /LIBPATH:"/openssl/out" /LIBPATH:"/wxwidgets/lib/vc_lib"
 LIBS= \
     libdb47s$(D).lib \
     libeay32.lib \

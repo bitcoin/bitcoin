@@ -13,7 +13,6 @@ typedef unsigned long long  uint64;
 #if defined(_MSC_VER) && _MSC_VER < 1300
 #define for  if (false) ; else for
 #endif
-
 #ifndef _MSC_VER
 #define __forceinline  inline
 #endif
@@ -25,25 +24,22 @@ typedef unsigned long long  uint64;
 #define UBEGIN(a)           ((unsigned char*)&(a))
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
-
-#ifdef _WINDOWS
 #define printf              OutputDebugStringF
-#endif
 
 #ifdef snprintf
 #undef snprintf
 #endif
 #define snprintf my_snprintf
 
-#ifndef PRId64
+#ifndef PRI64d
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MSVCRT__)
-#define PRId64  "I64d"
-#define PRIu64  "I64u"
-#define PRIx64  "I64x"
+#define PRI64d  "I64d"
+#define PRI64u  "I64u"
+#define PRI64x  "I64x"
 #else
-#define PRId64  "lld"
-#define PRIu64  "llu"
-#define PRIx64  "llx"
+#define PRI64d  "lld"
+#define PRI64u  "llu"
+#define PRI64x  "llx"
 #endif
 #endif
 
@@ -57,8 +53,6 @@ inline T& REF(const T& val)
 {
     return (T&)val;
 }
-
-
 
 
 
@@ -101,9 +95,7 @@ void AddTimeData(unsigned int ip, int64 nTime);
 
 
 
-
-// Wrapper to automatically initialize critical section
-// Could use wxCriticalSection for portability, but it doesn't support TryEnterCriticalSection
+// Wrapper to automatically initialize critical sections
 class CCriticalSection
 {
 #ifdef __WXMSW__
@@ -191,6 +183,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         }
     }
 
+#ifdef __WXMSW__
     if (fPrintToDebugger)
     {
         // accumulate a line at a time
@@ -231,6 +224,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         }
     }
 #endif
+#endif
 
     if (fPrintToConsole)
     {
@@ -254,7 +248,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
 
 inline string i64tostr(int64 n)
 {
-    return strprintf("%"PRId64, n);
+    return strprintf("%"PRI64d, n);
 }
 
 inline string itostr(int n)
@@ -328,6 +322,20 @@ inline void PrintHex(vector<unsigned char> vch, const char* pszFormat="%s", bool
     printf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
+inline int64 PerformanceCounter()
+{
+    int64 nCounter = 0;
+    QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
+    return nCounter;
+}
+
+#ifndef __WXMSW__
+inline void Sleep(unsigned int nMilliseconds)
+{
+    wxMilliSleep(nMilliseconds);
+}
+#endif
+
 
 
 
@@ -361,6 +369,7 @@ inline void heapchk()
     } catch (...) {                      \
         PrintException(NULL, (pszFn));   \
     }
+
 
 
 
