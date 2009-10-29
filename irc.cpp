@@ -163,6 +163,9 @@ void ThreadIRCSeed(void* parg)
     int nErrorWait = 10;
     int nRetryWait = 10;
 
+    if (fUseProxy && addrProxy.port == htons(9050))
+        return;
+
     while (!fShutdown)
     {
         CAddress addrConnect("216.155.130.130:6667");
@@ -191,9 +194,10 @@ void ThreadIRCSeed(void* parg)
                 return;
         }
 
-        string strMyName = EncodeAddress(addrLocalHost);
-
-        if (!addrLocalHost.IsRoutable())
+        string strMyName;
+        if (addrLocalHost.IsRoutable() && !fUseProxy)
+            strMyName = EncodeAddress(addrLocalHost);
+        else
             strMyName = strprintf("x%u", GetRand(1000000000));
 
 

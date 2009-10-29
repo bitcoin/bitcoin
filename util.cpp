@@ -5,8 +5,9 @@
 #include "headers.h"
 
 
-
 bool fDebug = false;
+bool fPrintToDebugger = false;
+bool fPrintToConsole = false;
 
 
 
@@ -37,8 +38,8 @@ public:
         // Seed random number generator with screen scrape and other hardware sources
         RAND_screen();
 
-        // Seed random number generator with perfmon data
-        RandAddSeed(true);
+        // Seed random number generator with performance counter
+        RandAddSeed();
     }
     ~CInit()
     {
@@ -54,43 +55,45 @@ instance_of_cinit;
 
 
 
-void RandAddSeed(bool fPerfmon)
+void RandAddSeed()
 {
     // Seed with CPU performance counter
     LARGE_INTEGER PerformanceCount;
     QueryPerformanceCounter(&PerformanceCount);
     RAND_add(&PerformanceCount, sizeof(PerformanceCount), 1.5);
     memset(&PerformanceCount, 0, sizeof(PerformanceCount));
-
-    static int64 nLastPerfmon;
-    if (fPerfmon || GetTime() > nLastPerfmon + 5 * 60)
-    {
-        nLastPerfmon = GetTime();
-
-        // Seed with the entire set of perfmon data
-        unsigned char pdata[250000];
-        memset(pdata, 0, sizeof(pdata));
-        unsigned long nSize = sizeof(pdata);
-        long ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, pdata, &nSize);
-        RegCloseKey(HKEY_PERFORMANCE_DATA);
-        if (ret == ERROR_SUCCESS)
-        {
-            uint256 hash;
-            SHA256(pdata, nSize, (unsigned char*)&hash);
-            RAND_add(&hash, sizeof(hash), min(nSize/500.0, (double)sizeof(hash)));
-            hash = 0;
-            memset(pdata, 0, nSize);
-
-            time_t nTime;
-            time(&nTime);
-            struct tm* ptmTime = gmtime(&nTime);
-            char pszTime[200];
-            strftime(pszTime, sizeof(pszTime), "%x %H:%M:%S", ptmTime);
-            printf("%s RandAddSeed() %d bytes\n", pszTime, nSize);
-        }
-    }
 }
 
+void RandAddSeedPerfmon()
+{
+    // This can take up to 2 seconds, so only do it every 10 minutes
+    static int64 nLastPerfmon;
+    if (GetTime() < nLastPerfmon + 10 * 60)
+        return;
+    nLastPerfmon = GetTime();
+
+    // Seed with the entire set of perfmon data
+    unsigned char pdata[250000];
+    memset(pdata, 0, sizeof(pdata));
+    unsigned long nSize = sizeof(pdata);
+    long ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, pdata, &nSize);
+    RegCloseKey(HKEY_PERFORMANCE_DATA);
+    if (ret == ERROR_SUCCESS)
+    {
+        uint256 hash;
+        SHA256(pdata, nSize, (unsigned char*)&hash);
+        RAND_add(&hash, sizeof(hash), min(nSize/500.0, (double)sizeof(hash)));
+        hash = 0;
+        memset(pdata, 0, nSize);
+
+        time_t nTime;
+        time(&nTime);
+        struct tm* ptmTime = gmtime(&nTime);
+        char pszTime[200];
+        strftime(pszTime, sizeof(pszTime), "%x %H:%M:%S", ptmTime);
+        printf("%s RandAddSeed() %d bytes\n", pszTime, nSize);
+    }
+}
 
 
 
@@ -172,27 +175,6 @@ bool error(const char* format, ...)
 }
 
 
-void PrintException(std::exception* pex, const char* pszThread)
-{
-    char pszModule[MAX_PATH];
-    pszModule[0] = '\0';
-    GetModuleFileName(NULL, pszModule, sizeof(pszModule));
-    _strlwr(pszModule);
-    char pszMessage[1000];
-    if (pex)
-        snprintf(pszMessage, sizeof(pszMessage),
-            "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
-    else
-        snprintf(pszMessage, sizeof(pszMessage),
-            "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
-    printf("\n\n************************\n%s", pszMessage);
-    if (wxTheApp)
-        wxMessageBox(pszMessage, "Error", wxOK | wxICON_ERROR);
-    throw;
-    //DebugBreak();
-}
-
-
 void ParseString(const string& str, char c, vector<string>& v)
 {
     unsigned int i1 = 0;
@@ -268,6 +250,92 @@ bool ParseMoney(const char* pszIn, int64& nRet)
 }
 
 
+vector<unsigned char> ParseHex(const char* psz)
+{
+    vector<unsigned char> vch;
+    while (isspace(*psz))
+        psz++;
+    vch.reserve((strlen(psz)+1)/3);
+
+    static char phexdigit[256] =
+    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,
+      -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, };
+
+    while (*psz)
+    {
+        char c = phexdigit[(unsigned char)*psz++];
+        if (c == -1)
+            break;
+        unsigned char n = (c << 4);
+        if (*psz)
+        {
+            char c = phexdigit[(unsigned char)*psz++];
+            if (c == -1)
+                break;
+            n |= c;
+            vch.push_back(n);
+        }
+        while (isspace(*psz))
+            psz++;
+    }
+
+    return vch;
+}
+
+vector<unsigned char> ParseHex(const std::string& str)
+{
+    return ParseHex(str.c_str());
+}
+
+
+
+
+
+
+void FormatException(char* pszMessage, std::exception* pex, const char* pszThread)
+{
+    char pszModule[MAX_PATH];
+    pszModule[0] = '\0';
+    GetModuleFileName(NULL, pszModule, sizeof(pszModule));
+    if (pex)
+        snprintf(pszMessage, 1000,
+            "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
+    else
+        snprintf(pszMessage, 1000,
+            "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
+}
+
+void LogException(std::exception* pex, const char* pszThread)
+{
+    char pszMessage[1000];
+    FormatException(pszMessage, pex, pszThread);
+    printf("\n%s", pszMessage);
+}
+
+void PrintException(std::exception* pex, const char* pszThread)
+{
+    char pszMessage[1000];
+    FormatException(pszMessage, pex, pszThread);
+    printf("\n\n************************\n%s\n", pszMessage);
+    if (wxTheApp)
+        wxMessageBox(pszMessage, "Error", wxOK | wxICON_ERROR);
+    throw;
+    //DebugBreak();
+}
 
 
 
@@ -363,7 +431,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
     if (vTimeOffsets.empty())
         vTimeOffsets.push_back(0);
     vTimeOffsets.push_back(nOffsetSample);
-    printf("Added time data, samples %d, ip %08x, offset %+I64d (%+I64d minutes)\n", vTimeOffsets.size(), ip, vTimeOffsets.back(), vTimeOffsets.back()/60);
+    printf("Added time data, samples %d, offset %+I64d (%+I64d minutes)\n", vTimeOffsets.size(), vTimeOffsets.back(), vTimeOffsets.back()/60);
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
     {
         sort(vTimeOffsets.begin(), vTimeOffsets.end());

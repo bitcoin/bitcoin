@@ -174,7 +174,7 @@ public:
     {
         nServices = nServicesIn;
         memcpy(pchReserved, pchIPv4, sizeof(pchReserved));
-        ip = 0;
+        ip = INADDR_NONE;
         port = DEFAULT_PORT;
         nTime = GetAdjustedTime();
         nLastFailed = 0;
@@ -183,7 +183,7 @@ public:
         if (strlen(pszIn) > ARRAYLEN(psz)-1)
             return;
         strcpy(psz, pszIn);
-        unsigned int a, b, c, d, e;
+        unsigned int a=0, b=0, c=0, d=0, e=0;
         if (sscanf(psz, "%u.%u.%u.%u:%u", &a, &b, &c, &d, &e) < 4)
             return;
         char* pszPort = strchr(psz, ':');
@@ -191,6 +191,10 @@ public:
         {
             *pszPort++ = '\0';
             port = htons(atoi(pszPort));
+            if (atoi(pszPort) > USHRT_MAX)
+                port = htons(USHRT_MAX);
+            if (atoi(pszPort) < 0)
+                port = htons(0);
         }
         ip = inet_addr(psz);
     }
@@ -213,6 +217,11 @@ public:
         return (memcmp(a.pchReserved, b.pchReserved, sizeof(a.pchReserved)) == 0 &&
                 a.ip   == b.ip &&
                 a.port == b.port);
+    }
+
+    friend inline bool operator!=(const CAddress& a, const CAddress& b)
+    {
+        return (!(a == b));
     }
 
     friend inline bool operator<(const CAddress& a, const CAddress& b)
@@ -275,6 +284,11 @@ public:
     string ToStringIP() const
     {
         return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
+    }
+
+    string ToStringPort() const
+    {
+        return strprintf("%u", ntohs(port));
     }
 
     string ToStringLog() const
@@ -416,6 +430,7 @@ extern bool fClient;
 extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
 extern CNode* pnodeLocalHost;
+extern uint64 nLocalHostNonce;
 extern bool fShutdown;
 extern array<int, 10> vnThreadsRunning;
 extern vector<CNode*> vNodes;
@@ -426,6 +441,9 @@ extern map<CInv, CDataStream> mapRelay;
 extern deque<pair<int64, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
 extern map<CInv, int64> mapAlreadyAskedFor;
+
+// Settings
+extern int fUseProxy;
 extern CAddress addrProxy;
 
 
@@ -448,6 +466,7 @@ public:
     bool fClient;
     bool fInbound;
     bool fNetworkNode;
+    bool fSuccessfullyConnected;
     bool fDisconnect;
 protected:
     int nRefCount;
@@ -459,6 +478,7 @@ public:
     // flood
     vector<CAddress> vAddrToSend;
     set<CAddress> setAddrKnown;
+    bool fGetAddr;
 
     // inventory based relay
     set<CInv> setInventoryKnown;
@@ -483,15 +503,20 @@ public:
         fClient = false; // set by version message
         fInbound = fInboundIn;
         fNetworkNode = false;
+        fSuccessfullyConnected = false;
         fDisconnect = false;
         nRefCount = 0;
         nReleaseTime = 0;
+        fGetAddr = false;
         vfSubscribe.assign(256, false);
 
         // Push a version message
         /// when NTP implemented, change to just nTime = GetAdjustedTime()
         int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
-        PushMessage("version", VERSION, nLocalServices, nTime, addr);
+        CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
+        CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
+        RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
+        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce);
     }
 
     ~CNode()
@@ -531,6 +556,21 @@ public:
 
 
 
+    void AddAddressKnown(const CAddress& addr)
+    {
+        setAddrKnown.insert(addr);
+    }
+
+    void PushAddress(const CAddress& addr)
+    {
+        // Known checking here is only to save space from duplicates.
+        // SendMessages will filter it again for knowns that were added
+        // after addresses were pushed.
+        if (!setAddrKnown.count(addr))
+            vAddrToSend.push_back(addr);
+    }
+
+
     void AddInventoryKnown(const CInv& inv)
     {
         CRITICAL_BLOCK(cs_inventory)
@@ -562,7 +602,6 @@ public:
     }
 
 
-
     void BeginMessage(const char* pszCommand)
     {
         EnterCriticalSection(&cs_vSend);
@@ -570,7 +609,7 @@ public:
             AbortMessage();
         nPushPos = vSend.size();
         vSend << CMessageHeader(pszCommand, 0);
-        printf("sending: %-12s ", pszCommand);
+        printf("sending: %s ", pszCommand);
     }
 
     void AbortMessage()
@@ -706,6 +745,86 @@ public:
         }
     }
 
+    template<typename T1, typename T2, typename T3, typename T4, typename T5>
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            vSend << a1 << a2 << a3 << a4 << a5;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            vSend << a1 << a2 << a3 << a4 << a5 << a6;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8, const T9& a9)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
 
     void PushRequest(const char* pszCommand,
                      void (*fn)(void*, CDataStream&), void* param1)
@@ -750,7 +869,7 @@ public:
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);
-    void Disconnect();
+    void DoDisconnect();
 };
 
 
