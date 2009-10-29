@@ -604,7 +604,7 @@ public:
 
     void BeginMessage(const char* pszCommand)
     {
-        EnterCriticalSection(&cs_vSend);
+        cs_vSend.Enter();
         if (nPushPos != -1)
             AbortMessage();
         nPushPos = vSend.size();
@@ -618,7 +618,7 @@ public:
             return;
         vSend.resize(nPushPos);
         nPushPos = -1;
-        LeaveCriticalSection(&cs_vSend);
+        cs_vSend.Leave();
         printf("(aborted)\n");
     }
 
@@ -643,7 +643,7 @@ public:
         printf("\n");
 
         nPushPos = -1;
-        LeaveCriticalSection(&cs_vSend);
+        cs_vSend.Leave();
     }
 
     void EndMessageAbortIfEmpty()

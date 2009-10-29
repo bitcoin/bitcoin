@@ -106,28 +106,38 @@ void AddTimeData(unsigned int ip, int64 nTime);
 // Could use wxCriticalSection for portability, but it doesn't support TryEnterCriticalSection
 class CCriticalSection
 {
+#ifdef __WXMSW__
 protected:
     CRITICAL_SECTION cs;
 public:
-    char* pszFile;
-    int nLine;
     explicit CCriticalSection() { InitializeCriticalSection(&cs); }
     ~CCriticalSection() { DeleteCriticalSection(&cs); }
     void Enter() { EnterCriticalSection(&cs); }
     void Leave() { LeaveCriticalSection(&cs); }
     bool TryEnter() { return TryEnterCriticalSection(&cs); }
-    CRITICAL_SECTION* operator&() { return &cs; }
+#else
+protected:
+    wxMutex mutex;
+public:
+    explicit CCriticalSection() { }
+    ~CCriticalSection() { }
+    void Enter() { mutex.Lock(); }
+    void Leave() { mutex.Unlock(); }
+    bool TryEnter() { return mutex.TryLock() == wxMUTEX_NO_ERROR; }
+#endif
+public:
+    char* pszFile;
+    int nLine;
 };
 
 // Automatically leave critical section when leaving block, needed for exception safety
 class CCriticalBlock
 {
 protected:
-    CRITICAL_SECTION* pcs;
+    CCriticalSection* pcs;
 public:
-    CCriticalBlock(CRITICAL_SECTION& csIn) { pcs = &csIn; EnterCriticalSection(pcs); }
-    CCriticalBlock(CCriticalSection& csIn) { pcs = &csIn; EnterCriticalSection(pcs); }
-    ~CCriticalBlock() { LeaveCriticalSection(pcs); }
+    CCriticalBlock(CCriticalSection& csIn) { pcs = &csIn; pcs->Enter(); }
+    ~CCriticalBlock() { pcs->Leave(); }
 };
 
 // WARNING: This will catch continue and break!
@@ -141,11 +151,10 @@ public:
 class CTryCriticalBlock
 {
 protected:
-    CRITICAL_SECTION* pcs;
+    CCriticalSection* pcs;
 public:
-    CTryCriticalBlock(CRITICAL_SECTION& csIn) { pcs = (TryEnterCriticalSection(&csIn) ? &csIn : NULL); }
-    CTryCriticalBlock(CCriticalSection& csIn) { pcs = (TryEnterCriticalSection(&csIn) ? &csIn : NULL); }
-    ~CTryCriticalBlock() { if (pcs) LeaveCriticalSection(pcs); }
+    CTryCriticalBlock(CCriticalSection& csIn) { pcs = (csIn.TryEnter() ? &csIn : NULL); }
+    ~CTryCriticalBlock() { if (pcs) pcs->Leave(); }
     bool Entered() { return pcs != NULL; }
 };
 

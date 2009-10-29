@@ -13,14 +13,14 @@ bool fPrintToConsole = false;
 
 
 // Init openssl library multithreading support
-static HANDLE* lock_cs;
+static wxMutex** ppmutexOpenSSL;
 
-void win32_locking_callback(int mode, int type, const char* file, int line)
+void win32_locking_callback(int mode, int i, const char* file, int line)
 {
     if (mode & CRYPTO_LOCK)
-        WaitForSingleObject(lock_cs[type], INFINITE);
+        ppmutexOpenSSL[i]->Lock();
     else
-        ReleaseMutex(lock_cs[type]);
+        ppmutexOpenSSL[i]->Unlock();
 }
 
 // Init
@@ -30,9 +30,9 @@ public:
     CInit()
     {
         // Init openssl library multithreading support
-        lock_cs = (HANDLE*)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(HANDLE));
+        ppmutexOpenSSL = (wxMutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(wxMutex*));
         for (int i = 0; i < CRYPTO_num_locks(); i++)
-            lock_cs[i] = CreateMutex(NULL,FALSE,NULL);
+            ppmutexOpenSSL[i] = new wxMutex();
         CRYPTO_set_locking_callback(win32_locking_callback);
 
         // Seed random number generator with screen scrape and other hardware sources
@@ -46,11 +46,15 @@ public:
         // Shutdown openssl library multithreading support
         CRYPTO_set_locking_callback(NULL);
         for (int i =0 ; i < CRYPTO_num_locks(); i++)
-            CloseHandle(lock_cs[i]);
-        OPENSSL_free(lock_cs);
+            delete ppmutexOpenSSL[i];
+        OPENSSL_free(ppmutexOpenSSL);
     }
 }
 instance_of_cinit;
+
+
+
+
 
 
 
