@@ -1398,21 +1398,15 @@ string GetAppDir()
 
 bool CheckDiskSpace(int64 nAdditionalBytes)
 {
-    uint64 nFreeBytesAvailable = 0;     // bytes available to caller
-    uint64 nTotalNumberOfBytes = 0;     // bytes on disk
-    uint64 nTotalNumberOfFreeBytes = 0; // free bytes on disk
-
-    if (!GetDiskFreeSpaceEx(GetAppDir().c_str(),
-            (PULARGE_INTEGER)&nFreeBytesAvailable,
-            (PULARGE_INTEGER)&nTotalNumberOfBytes,
-            (PULARGE_INTEGER)&nTotalNumberOfFreeBytes))
+    wxLongLong nFreeBytesAvailable = 0;
+    if (!wxGetDiskSpace(GetDataDir(), NULL, &nFreeBytesAvailable))
     {
-        printf("ERROR: GetDiskFreeSpaceEx() failed\n");
+        printf("ERROR: wxGetDiskSpace() failed\n");
         return true;
     }
 
     // Check for 15MB because database could create another 10MB log file at any time
-    if ((int64)nFreeBytesAvailable < 15000000 + nAdditionalBytes)
+    if (nFreeBytesAvailable < (int64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
         wxMessageBox("Warning: Your disk space is low  ", "Bitcoin", wxICON_EXCLAMATION);
