@@ -3,6 +3,8 @@
 
 Name Bitcoin
 
+RequestExecutionLevel highest
+
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION 0.1.6
@@ -110,6 +112,7 @@ Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall Bitcoin.lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Bitcoin.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\Bitcoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\db.log
     DeleteRegValue HKCU "${REGKEY}" StartMenuGroup
