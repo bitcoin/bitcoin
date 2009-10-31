@@ -1399,7 +1399,7 @@ string GetAppDir()
 bool CheckDiskSpace(int64 nAdditionalBytes)
 {
     wxLongLong nFreeBytesAvailable = 0;
-    if (!wxGetDiskSpace(GetDataDir(), NULL, &nFreeBytesAvailable))
+    if (!wxGetDiskSpace(wxStandardPaths::Get().GetDataDir(), NULL, &nFreeBytesAvailable))
     {
         printf("ERROR: wxGetDiskSpace() failed\n");
         return true;
