@@ -26,19 +26,12 @@
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
-#include <windows.h>
-#include <winsock2.h>
-#include <mswsock.h>
-#include <shlobj.h>
-#include <shlwapi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <io.h>
 #include <math.h>
 #include <limits.h>
 #include <float.h>
 #include <assert.h>
-#include <process.h>
 #include <malloc.h>
 #include <memory>
 #define BOUNDSCHECK 1
@@ -57,6 +50,22 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 #include <boost/array.hpp>
+
+#ifdef __WXMSW__
+#include <windows.h>
+#include <winsock2.h>
+#include <mswsock.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+#include <io.h>
+#include <process.h>
+#else
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#endif
+
 #pragma hdrstop
 using namespace std;
 using namespace boost;

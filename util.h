@@ -322,10 +322,18 @@ inline void PrintHex(vector<unsigned char> vch, const char* pszFormat="%s", bool
     printf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
+
 inline int64 PerformanceCounter()
 {
     int64 nCounter = 0;
+#ifdef __WXMSW__
     QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
+#else
+	// this could be changed to reading /dev/urandom
+	timeval t;
+	gettimeofday(&t, NULL);
+	nCounter += t.tv_sec * 1000000 + t.tv_usec;
+#endif
     return nCounter;
 }
 
