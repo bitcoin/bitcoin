@@ -5,9 +5,13 @@
 #include "headers.h"
 
 
+map<string, string> mapArgs;
+map<string, vector<string> > mapMultiArgs;
 bool fDebug = false;
 bool fPrintToDebugger = false;
 bool fPrintToConsole = false;
+char pszSetDataDir[MAX_PATH] = "";
+
 
 
 
@@ -68,6 +72,8 @@ void RandAddSeed()
 
 void RandAddSeedPerfmon()
 {
+#ifdef __WXMSW__
+    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
     // This can take up to 2 seconds, so only do it every 10 minutes
     static int64 nLastPerfmon;
     if (GetTime() < nLastPerfmon + 10 * 60)
@@ -95,6 +101,7 @@ void RandAddSeedPerfmon()
         strftime(pszTime, sizeof(pszTime), "%x %H:%M:%S", ptmTime);
         printf("%s RandAddSeed() %d bytes\n", pszTime, nSize);
     }
+#endif
 }
 
 
@@ -304,6 +311,32 @@ vector<unsigned char> ParseHex(const std::string& str)
 }
 
 
+void ParseParameters(int argc, char* argv[])
+{
+    mapArgs.clear();
+    mapMultiArgs.clear();
+    for (int i = 0; i < argc; i++)
+    {
+        char psz[10000];
+        strlcpy(psz, argv[i], sizeof(psz));
+        char* pszValue = "";
+        if (strchr(psz, '='))
+        {
+            pszValue = strchr(psz, '=');
+            *pszValue++ = '\0';
+        }
+        strlwr(psz);
+        #ifdef __WXMSW__
+        if (psz[0] == '/')
+            psz[0] = '-';
+        #endif
+        mapArgs[psz] = pszValue;
+        mapMultiArgs[psz].push_back(pszValue);
+    }
+}
+
+
+
 
 
 
@@ -346,15 +379,6 @@ void PrintException(std::exception* pex, const char* pszThread)
 
 
 
-bool FileExists(const char* psz)
-{
-#ifdef WIN32
-    return GetFileAttributes(psz) != -1;
-#else
-    return access(psz, 0) != -1;
-#endif
-}
-
 int GetFilesize(FILE* file)
 {
     int nSavePos = ftell(file);
@@ -363,6 +387,46 @@ int GetFilesize(FILE* file)
         nFilesize = ftell(file);
     fseek(file, nSavePos, SEEK_SET);
     return nFilesize;
+}
+
+void GetDataDir(char* pszDir)
+{
+    // pszDir must be at least MAX_PATH length.
+    if (pszSetDataDir[0] != 0)
+    {
+        strlcpy(pszDir, pszSetDataDir, MAX_PATH);
+        static bool fMkdirDone;
+        if (!fMkdirDone)
+        {
+            fMkdirDone = true;
+            _mkdir(pszDir);
+        }
+    }
+    else
+    {
+        // This can be called during exceptions by printf, so we cache the
+        // value so we don't have to do memory allocations after that.
+        // wxStandardPaths::GetUserDataDir
+        //  Return the directory for the user-dependent application data files:
+        //  Unix: ~/.appname
+        //  Windows: C:\Documents and Settings\username\Application Data\appname
+        //  Mac: ~/Library/Application Support/appname
+        static char pszCachedDir[MAX_PATH];
+        if (pszCachedDir[0] == 0)
+        {
+            strlcpy(pszCachedDir, wxStandardPaths::Get().GetUserDataDir().c_str(), sizeof(pszCachedDir));
+            _mkdir(pszCachedDir);
+        }
+        strlcpy(pszDir, pszCachedDir, MAX_PATH);
+    }
+
+}
+
+string GetDataDir()
+{
+    char pszDir[MAX_PATH];
+    GetDataDir(pszDir);
+    return pszDir;
 }
 
 

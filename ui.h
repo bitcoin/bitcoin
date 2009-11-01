@@ -83,15 +83,14 @@ public:
     bool fRefreshListCtrl;
     bool fRefreshListCtrlRunning;
     bool fOnSetFocusAddress;
-    CBlockIndex* pindexBestLast;
-    set<uint256> setUnmaturedDisplayed;
+    unsigned int nListViewUpdated;
 
     void OnCrossThreadCall(wxCommandEvent& event);
     void InsertLine(bool fNew, int nIndex, uint256 hashKey, string strSort, const wxString& str1, const wxString& str2, const wxString& str3, const wxString& str4, const wxString& str5);
     bool DeleteLine(uint256 hashKey);
     bool InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex=-1);
     void RefreshListCtrl();
-    void RefreshStatus();
+    void RefreshStatusColumn();
 };
 
 
