@@ -42,7 +42,6 @@ map<uint160, vector<unsigned char> > mapPubKeys;
 CCriticalSection cs_mapKeys;
 CKey keyUser;
 
-string strSetDataDir;
 int nDropMessagesTest = 0;
 
 // Settings
@@ -1361,52 +1360,17 @@ bool ScanMessageStart(Stream& s)
     }
 }
 
-string GetAppDir()
-{
-    string strDir;
-    if (!strSetDataDir.empty())
-    {
-        strDir = strSetDataDir;
-    }
-    else if (getenv("APPDATA"))
-    {
-        strDir = strprintf("%s\\Bitcoin", getenv("APPDATA"));
-    }
-    else if (getenv("USERPROFILE"))
-    {
-        string strAppData = strprintf("%s\\Application Data", getenv("USERPROFILE"));
-        static bool fMkdirDone;
-        if (!fMkdirDone)
-        {
-            fMkdirDone = true;
-            _mkdir(strAppData.c_str());
-        }
-        strDir = strprintf("%s\\Bitcoin", strAppData.c_str());
-    }
-    else
-    {
-        return ".";
-    }
-    static bool fMkdirDone;
-    if (!fMkdirDone)
-    {
-        fMkdirDone = true;
-        _mkdir(strDir.c_str());
-    }
-    return strDir;
-}
-
 bool CheckDiskSpace(int64 nAdditionalBytes)
 {
     wxLongLong nFreeBytesAvailable = 0;
-    if (!wxGetDiskSpace(wxStandardPaths::Get().GetDataDir(), NULL, &nFreeBytesAvailable))
+    if (!wxGetDiskSpace(GetDataDir(), NULL, &nFreeBytesAvailable))
     {
         printf("ERROR: wxGetDiskSpace() failed\n");
         return true;
     }
 
     // Check for 15MB because database could create another 10MB log file at any time
-    if (nFreeBytesAvailable < (int64)15000000 + nAdditionalBytes)
+    if (nFreeBytesAvailable.GetValue() < (int64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
         wxMessageBox("Warning: Your disk space is low  ", "Bitcoin", wxICON_EXCLAMATION);
@@ -1420,7 +1384,7 @@ FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszM
 {
     if (nFile == -1)
         return NULL;
-    FILE* file = fopen(strprintf("%s\\blk%04d.dat", GetAppDir().c_str(), nFile).c_str(), pszMode);
+    FILE* file = fopen(strprintf("%s\\blk%04d.dat", GetDataDir().c_str(), nFile).c_str(), pszMode);
     if (!file)
         return NULL;
     if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))
@@ -1719,7 +1683,7 @@ bool ProcessMessages(CNode* pfrom)
             if (strstr(e.what(), "CDataStream::read() : end of data"))
             {
                 // Allow exceptions from underlength message on vRecv
-                LogException(&e, "ProcessMessage()");
+                printf("ProcessMessage(%s, %d bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
             }
             else
                 PrintException(&e, "ProcessMessage()");
@@ -2512,7 +2476,7 @@ bool BitcoinMiner()
 
 int64 GetBalance()
 {
-    int64 nStart = PerformanceCounter();
+    int64 nStart = GetTimeMillis();
 
     int64 nTotal = 0;
     CRITICAL_BLOCK(cs_mapWallet)
@@ -2522,11 +2486,11 @@ int64 GetBalance()
             CWalletTx* pcoin = &(*it).second;
             if (!pcoin->IsFinal() || pcoin->fSpent)
                 continue;
-            nTotal += pcoin->GetCredit();
+            nTotal += pcoin->GetCredit(true);
         }
     }
 
-    ///printf(" GetBalance() time = %15"PRI64d"\n", PerformanceCounter() - nStart);
+    //printf("GetBalance() %"PRI64d"ms\n", GetTimeMillis() - nStart);
     return nTotal;
 }
 

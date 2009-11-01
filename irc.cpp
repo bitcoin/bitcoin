@@ -40,7 +40,7 @@ bool DecodeAddress(string str, CAddress& addr)
         return false;
     memcpy(&tmp, &vch[0], sizeof(tmp));
 
-    addr  = CAddress(tmp.ip, tmp.port);
+    addr = CAddress(tmp.ip, tmp.port, NODE_NETWORK);
     return true;
 }
 
@@ -163,6 +163,7 @@ void ThreadIRCSeed(void* parg)
     int nErrorWait = 10;
     int nRetryWait = 10;
 
+    // IRC server blocks TOR users
     if (fUseProxy && addrProxy.port == htons(9050))
         return;
 
@@ -237,14 +238,14 @@ void ThreadIRCSeed(void* parg)
             {
                 // index 7 is limited to 16 characters
                 // could get full length name at index 10, but would be different from join messages
-                strcpy(pszName, vWords[7].c_str());
+                strlcpy(pszName, vWords[7].c_str(), sizeof(pszName));
                 printf("IRC got who\n");
             }
 
             if (vWords[1] == "JOIN" && vWords[0].size() > 1)
             {
                 // :username!username@50000007.F000000B.90000002.IP JOIN :#channelname
-                strcpy(pszName, vWords[0].c_str() + 1);
+                strlcpy(pszName, vWords[0].c_str() + 1, sizeof(pszName));
                 if (strchr(pszName, '!'))
                     *strchr(pszName, '!') = '\0';
                 printf("IRC got join\n");

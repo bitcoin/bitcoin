@@ -21,8 +21,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect);
 bool fClient = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
 CAddress addrLocalHost(0, DEFAULT_PORT, nLocalServices);
-CNode nodeLocalHost(INVALID_SOCKET, CAddress("127.0.0.1", nLocalServices));
-CNode* pnodeLocalHost = &nodeLocalHost;
+CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 bool fShutdown = false;
 array<int, 10> vnThreadsRunning;
@@ -129,7 +128,7 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
             strLine = wxString(strLine).Trim();
             CAddress addr(strLine.c_str());
             printf("GetMyExternalIP() received [%s] %s\n", strLine.c_str(), addr.ToString().c_str());
-            if (addr.ip == 0 || !addr.IsRoutable())
+            if (addr.ip == 0 || addr.ip == INADDR_NONE || !addr.IsRoutable())
                 return false;
             ipRet = addr.ip;
             return true;
@@ -740,10 +739,29 @@ void ThreadOpenConnections2(void* parg)
     printf("ThreadOpenConnections started\n");
 
     // Connect to one specified address
-    while (mapArgs.count("/connect"))
+    while (mapArgs.count("-connect"))
     {
-        OpenNetworkConnection(CAddress(mapArgs["/connect"].c_str()));
-        Sleep(10000);
+        OpenNetworkConnection(CAddress(mapArgs["-connect"]));
+        for (int i = 0; i < 10; i++)
+        {
+            Sleep(1000);
+            CheckForShutdown(1);
+        }
+    }
+
+    // Connect to manually added nodes first
+    if (mapArgs.count("-addnode"))
+    {
+        foreach(string strAddr, mapMultiArgs["-addnode"])
+        {
+            CAddress addr(strAddr, NODE_NETWORK);
+            if (addr.IsValid())
+            {
+                OpenNetworkConnection(addr);
+                Sleep(1000);
+                CheckForShutdown(1);
+            }
+        }
     }
 
     // Initiate network connections
@@ -967,6 +985,8 @@ void ThreadMessageHandler2(void* parg)
 
 bool StartNode(string& strError)
 {
+    if (pnodeLocalHost == NULL)
+        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress("127.0.0.1", nLocalServices));
     strError = "";
 
     // Sockets startup
@@ -1031,7 +1051,7 @@ bool StartNode(string& strError)
         printf("%s\n", strError.c_str());
         return false;
     }
-    printf("bound to addrLocalHost = %s\n\n", addrLocalHost.ToString().c_str());
+    printf("bound to addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
     // Listen for incoming connections
     if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)

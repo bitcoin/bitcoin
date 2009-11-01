@@ -54,16 +54,23 @@ inline T& REF(const T& val)
     return (T&)val;
 }
 
+#ifndef __WXMSW__
+#define closesocket(s)  close(s)
+#define INVALID_SOCKET  (SOCKET)(~0)
+typedef u_int SOCKET;
+#endif
 
 
 
 
 
 
+extern map<string, string> mapArgs;
+extern map<string, vector<string> > mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToDebugger;
 extern bool fPrintToConsole;
-extern map<string, string> mapArgs;
+extern char pszSetDataDir[MAX_PATH];
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
@@ -77,8 +84,10 @@ string FormatMoney(int64 n, bool fPlus=false);
 bool ParseMoney(const char* pszIn, int64& nRet);
 vector<unsigned char> ParseHex(const char* psz);
 vector<unsigned char> ParseHex(const std::string& str);
-bool FileExists(const char* psz);
+void ParseParameters(int argc, char* argv[]);
 int GetFilesize(FILE* file);
+void GetDataDir(char* pszDirRet);
+string GetDataDir();
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
 int64 GetAdjustedTime();
@@ -172,9 +181,14 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     if (!fPrintToConsole)
     {
         // print to debug.log
-        FILE* fileout = fopen("debug.log", "a");
+        char pszFile[MAX_PATH+100];
+        GetDataDir(pszFile);
+        strlcat(pszFile, "\\debug.log", sizeof(pszFile));
+        FILE* fileout = fopen(pszFile, "a");
         if (fileout)
         {
+            //// Debug print useful for profiling
+            //fprintf(fileout, " %"PRI64d" ", wxGetLocalTimeMillis().GetValue());
             va_list arg_ptr;
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);
@@ -322,19 +336,22 @@ inline void PrintHex(vector<unsigned char> vch, const char* pszFormat="%s", bool
     printf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
-
 inline int64 PerformanceCounter()
 {
     int64 nCounter = 0;
 #ifdef __WXMSW__
     QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
 #else
-	// this could be changed to reading /dev/urandom
-	timeval t;
-	gettimeofday(&t, NULL);
-	nCounter += t.tv_sec * 1000000 + t.tv_usec;
+    timeval t;
+    gettimeofday(&t, NULL);
+    nCounter = t.tv_sec * 1000000 + t.tv_usec;
 #endif
     return nCounter;
+}
+
+inline int64 GetTimeMillis()
+{
+    return wxGetLocalTimeMillis().GetValue();
 }
 
 #ifndef __WXMSW__
@@ -354,8 +371,10 @@ inline void Sleep(unsigned int nMilliseconds)
 
 inline void heapchk()
 {
+#ifdef __WXMSW__
     if (_heapchk() != _HEAPOK)
         DebugBreak();
+#endif
 }
 
 // Randomize the stack to help protect against buffer overrun exploits

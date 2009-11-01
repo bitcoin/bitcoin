@@ -10,7 +10,7 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 Compilers Supported
 -------------------
-MinGW GCC
+MinGW GCC (v3.4.5)
 Microsoft Visual C++ 6.0 SP6
 
 
