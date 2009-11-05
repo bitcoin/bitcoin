@@ -17,11 +17,13 @@
 #endif
 #define _WIN32_IE 0x0400
 #define WIN32_LEAN_AND_MEAN 1
+#define __STDC_LIMIT_MACROS // to enable UINT64_MAX from stdint.h
 #include <wx/wx.h>
 #include <wx/clipbrd.h>
 #include <wx/snglinst.h>
 #include <wx/taskbar.h>
 #include <wx/stdpaths.h>
+#include <wx/utils.h>
 #include <openssl/ecdsa.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -62,9 +64,15 @@
 #include <process.h>
 #else
 #include <sys/time.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <unistd.h>
+#include <errno.h>
+#include <boost/filesystem.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/algorithm/string.hpp>
 #endif
 
 #pragma hdrstop
@@ -88,3 +96,11 @@ using namespace boost;
 #include "market.h"
 #include "uibase.h"
 #include "ui.h"
+
+#include "xpm/addressbook16.xpm"
+#include "xpm/addressbook20.xpm"
+#include "xpm/bitcoin.xpm"
+#include "xpm/check.xpm"
+#include "xpm/send16.xpm"
+#include "xpm/send16noshadow.xpm"
+#include "xpm/send20.xpm"

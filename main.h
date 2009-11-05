@@ -968,6 +968,14 @@ public:
             return error("CBlock::WriteToDisk() : ftell failed");
         fileout << *this;
 
+        // Flush stdio buffers and commit to disk before returning
+        fflush(fileout);
+#ifdef __WXMSW__
+        _commit(_fileno(fileout));
+#else
+        fsync(fileno(fileout));
+#endif
+
         return true;
     }
 

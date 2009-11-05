@@ -4,10 +4,7 @@
 
 #include "headers.h"
 
-
-map<vector<unsigned char>, CAddress> mapIRCAddresses;
-CCriticalSection cs_mapIRCAddresses;
-
+int nGotIRCAddresses = 0;
 
 
 
@@ -259,16 +256,7 @@ void ThreadIRCSeed(void* parg)
                     CAddrDB addrdb;
                     if (AddAddress(addrdb, addr))
                         printf("IRC got new address\n");
-                    else
-                    {
-                        // make it try connecting again
-                        CRITICAL_BLOCK(cs_mapAddresses)
-                            if (mapAddresses.count(addr.GetKey()))
-                                mapAddresses[addr.GetKey()].nLastFailed = 0;
-                    }
-
-                    CRITICAL_BLOCK(cs_mapIRCAddresses)
-                        mapIRCAddresses.insert(make_pair(addr.GetKey(), addr));
+                    nGotIRCAddresses++;
                 }
                 else
                 {

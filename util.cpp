@@ -38,8 +38,10 @@ public:
             ppmutexOpenSSL[i] = new wxMutex();
         CRYPTO_set_locking_callback(locking_callback);
 
+#ifdef __WXMSW__
         // Seed random number generator with screen scrape and other hardware sources
         RAND_screen();
+#endif
 
         // Seed random number generator with performance counter
         RandAddSeed();
@@ -325,8 +327,8 @@ void ParseParameters(int argc, char* argv[])
             pszValue = strchr(psz, '=');
             *pszValue++ = '\0';
         }
-        strlwr(psz);
         #ifdef __WXMSW__
+        _strlwr(psz);
         if (psz[0] == '/')
             psz[0] = '-';
         #endif
@@ -343,9 +345,13 @@ void ParseParameters(int argc, char* argv[])
 
 void FormatException(char* pszMessage, std::exception* pex, const char* pszThread)
 {
+#ifdef __WXMSW__
     char pszModule[MAX_PATH];
     pszModule[0] = '\0';
     GetModuleFileName(NULL, pszModule, sizeof(pszModule));
+#else
+    const char* pszModule = wxStandardPaths::Get().GetExecutablePath().mb_str();
+#endif
     if (pex)
         snprintf(pszMessage, 1000,
             "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);

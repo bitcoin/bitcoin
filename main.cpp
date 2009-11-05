@@ -100,13 +100,10 @@ bool AddToWallet(const CWalletTx& wtxIn)
         if (fInsertedNew)
             wtx.nTimeReceived = GetAdjustedTime();
 
-        //// debug print
-        printf("AddToWallet %s  %s\n", wtxIn.GetHash().ToString().substr(0,6).c_str(), fInsertedNew ? "new" : "update");
-
+        bool fUpdated = false;
         if (!fInsertedNew)
         {
             // Merge
-            bool fUpdated = false;
             if (wtxIn.hashBlock != 0 && wtxIn.hashBlock != wtx.hashBlock)
             {
                 wtx.hashBlock = wtxIn.hashBlock;
@@ -128,13 +125,15 @@ bool AddToWallet(const CWalletTx& wtxIn)
                 wtx.fSpent = wtxIn.fSpent;
                 fUpdated = true;
             }
-            if (!fUpdated)
-                return true;
         }
 
+        //// debug print
+        printf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString().substr(0,6).c_str(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+
         // Write to disk
-        if (!wtx.WriteToDisk())
-            return false;
+        if (fInsertedNew || fUpdated)
+            if (!wtx.WriteToDisk())
+                return false;
 
         // Notify UI
         vWalletUpdated.push_back(hash);
@@ -820,7 +819,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             }
 
             if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
-                return error("ConnectInputs() : %s prevout.n out of range %d %d %d", GetHash().ToString().substr(0,6).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size());
+                return error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,6).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,6).c_str(), txPrev.ToString().c_str());
 
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
@@ -1217,7 +1216,7 @@ bool CBlock::AcceptBlock()
     if (nTime <= pindexPrev->GetMedianTimePast())
         return error("AcceptBlock() : block's timestamp is too early");
 
-    // Check that all transactions are finalized (starting around 30 Nov 2009)
+    // Check that all transactions are finalized (starting around Dec 2009)
     if (nBestHeight > 31000) // 25620 + 5320
         foreach(const CTransaction& tx, vtx)
             if (!tx.IsFinal(nTime))
@@ -1384,7 +1383,7 @@ FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszM
 {
     if (nFile == -1)
         return NULL;
-    FILE* file = fopen(strprintf("%s\\blk%04d.dat", GetDataDir().c_str(), nFile).c_str(), pszMode);
+    FILE* file = fopen(strprintf("%s/blk%04d.dat", GetDataDir().c_str(), nFile).c_str(), pszMode);
     if (!file)
         return NULL;
     if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))
@@ -1718,6 +1717,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 
 
+
     if (strCommand == "version")
     {
         // Each connection can only send one version message
@@ -1765,6 +1765,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         pfrom->fSuccessfullyConnected = true;
 
+        // Update the last seen time
+        if (pfrom->fNetworkNode)
+            AddressCurrentlyConnected(pfrom->addr);
+
         printf("version message: version %d\n", pfrom->nVersion);
     }
 
@@ -1781,23 +1785,16 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vector<CAddress> vAddr;
         vRecv >> vAddr;
 
-        // Clear addrknown lists periodically to allow refresh broadcasts
-        static int64 nLastClearedAddrKnown;
-        if (nLastClearedAddrKnown < GetAdjustedTime() - 24 * 60 * 60)
-        {
-            nLastClearedAddrKnown = GetAdjustedTime();
-            CRITICAL_BLOCK(cs_vNodes)
-                foreach(CNode* pnode, vNodes)
-                    pnode->setAddrKnown.clear();
-        }
-
         // Store the new addresses
         CAddrDB addrdb;
-        foreach(const CAddress& addr, vAddr)
+        foreach(CAddress& addr, vAddr)
         {
             if (fShutdown)
                 return true;
-            AddAddress(addrdb, addr);
+            addr.nTime = GetAdjustedTime();
+            if (pfrom->fGetAddr)
+                addr.nTime -= 5 * 24 * 60 * 60;
+            AddAddress(addrdb, addr, false);
             pfrom->AddAddressKnown(addr);
             if (!pfrom->fGetAddr && addr.IsRoutable())
             {
@@ -1815,6 +1812,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
+
+        // Update the last seen time for this node's address
+        if (pfrom->fNetworkNode)
+            AddressCurrentlyConnected(pfrom->addr);
 
         CTxDB txdb("r");
         foreach(const CInv& inv, vInv)
@@ -2099,6 +2100,25 @@ bool SendMessages(CNode* pto)
         if (pto->nVersion == 0)
             return true;
 
+        // Address refresh broadcast
+        static int64 nLastRebroadcast;
+        if (nLastRebroadcast < GetTime() - 24 * 60 * 60) // every 24 hours
+        {
+            nLastRebroadcast = GetTime();
+            CRITICAL_BLOCK(cs_vNodes)
+            {
+                foreach(CNode* pnode, vNodes)
+                {
+                    // Periodically clear setAddrKnown to allow refresh broadcasts
+                    pnode->setAddrKnown.clear();
+
+                    // Rebroadcast our address
+                    if (addrLocalHost.IsRoutable() && !fUseProxy)
+                        pnode->PushAddress(addrLocalHost);
+                }
+            }
+        }
+
 
         //
         // Message: addr
@@ -2187,7 +2207,7 @@ void GenerateBitcoins(bool fGenerate)
     }
     if (fGenerateBitcoins)
     {
-        int nProcessors = atoi(getenv("NUMBER_OF_PROCESSORS"));
+        int nProcessors = wxThread::GetCPUCount();
         printf("%d processors\n", nProcessors);
         if (nProcessors < 1)
             nProcessors = 1;

@@ -55,9 +55,34 @@ inline T& REF(const T& val)
 }
 
 #ifndef __WXMSW__
-#define closesocket(s)  close(s)
-#define INVALID_SOCKET  (SOCKET)(~0)
+#define _UI64_MAX           UINT64_MAX
+#define _I64_MAX            INT64_MAX
+#define WSAGetLastError()   errno
+#define WSAEWOULDBLOCK      EWOULDBLOCK
+#define WSAEMSGSIZE         EMSGSIZE
+#define WSAEINTR            EINTR
+#define WSAEINPROGRESS      EINPROGRESS
+#define WSAEADDRINUSE       EADDRINUSE
+#define closesocket(s)      close(s)
+#define INVALID_SOCKET      (SOCKET)(~0)
+#define SOCKET_ERROR        -1
 typedef u_int SOCKET;
+#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
+#define strlwr(psz)         to_lower(psz)
+#define _strlwr(psz)        to_lower(psz)
+#define _mkdir(psz)         filesystem::create_directory(psz)
+#define MAX_PATH            1024
+#define Sleep(n)            wxMilliSleep(n)
+#define Beep(n1,n2)         (0)
+inline int _beginthread(void(*pfn)(void*), unsigned nStack, void* parg) { thread(bind(pfn, parg)); return 0; }
+inline void _endthread() { pthread_exit(NULL); }
+inline int GetCurrentThread() { return 0; }
+// threads are processes on linux, so setpriority affects just the one thread
+inline void SetThreadPriority(int nThread, int nPriority) { setpriority(PRIO_PROCESS, getpid(), nPriority); }
+#define THREAD_PRIORITY_LOWEST          PRIO_MIN
+#define THREAD_PRIORITY_BELOW_NORMAL    2
+#define THREAD_PRIORITY_NORMAL          0
+#define THREAD_PRIORITY_ABOVE_NORMAL    0
 #endif
 
 
@@ -120,7 +145,7 @@ public:
 protected:
     wxMutex mutex;
 public:
-    explicit CCriticalSection() { }
+    explicit CCriticalSection() : mutex(wxMUTEX_RECURSIVE) { }
     ~CCriticalSection() { }
     void Enter() { mutex.Lock(); }
     void Leave() { mutex.Unlock(); }
@@ -183,7 +208,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         // print to debug.log
         char pszFile[MAX_PATH+100];
         GetDataDir(pszFile);
-        strlcat(pszFile, "\\debug.log", sizeof(pszFile));
+        strlcat(pszFile, "/debug.log", sizeof(pszFile));
         FILE* fileout = fopen(pszFile, "a");
         if (fileout)
         {
@@ -353,13 +378,6 @@ inline int64 GetTimeMillis()
 {
     return wxGetLocalTimeMillis().GetValue();
 }
-
-#ifndef __WXMSW__
-inline void Sleep(unsigned int nMilliseconds)
-{
-    wxMilliSleep(nMilliseconds);
-}
-#endif
 
 
 

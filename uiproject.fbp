@@ -225,7 +225,7 @@
                     </object>
                 </object>
             </object>
-            <object class="wxToolBar" expanded="0">
+            <object class="wxToolBar" expanded="1">
                 <property name="bg"></property>
                 <property name="bitmapsize">20,20</property>
                 <property name="context_help"></property>
@@ -273,7 +273,7 @@
                 <event name="OnSize"></event>
                 <event name="OnUpdateUI"></event>
                 <object class="tool" expanded="1">
-                    <property name="bitmap">send20; Load From Resource</property>
+                    <property name="bitmap">xpm/send20.xpm; Load From File</property>
                     <property name="id">wxID_BUTTONSEND</property>
                     <property name="kind">wxITEM_NORMAL</property>
                     <property name="label">&amp;Send Coins</property>
@@ -287,7 +287,7 @@
                     <event name="OnUpdateUI"></event>
                 </object>
                 <object class="tool" expanded="1">
-                    <property name="bitmap">addressbook20; Load From Resource</property>
+                    <property name="bitmap">xpm/addressbook20.xpm; Load From File</property>
                     <property name="id">wxID_BUTTONRECEIVE</property>
                     <property name="kind">wxITEM_NORMAL</property>
                     <property name="label">&amp;Address Book</property>
@@ -1685,7 +1685,7 @@
                 </object>
             </object>
         </object>
-        <object class="Dialog" expanded="1">
+        <object class="Dialog" expanded="0">
             <property name="bg"></property>
             <property name="center"></property>
             <property name="context_help"></property>
@@ -3699,7 +3699,7 @@
                                     <property name="proportion">0</property>
                                     <object class="wxStaticBitmap" expanded="1">
                                         <property name="bg"></property>
-                                        <property name="bitmap">check; Load From Icon Resource [-1; -1]</property>
+                                        <property name="bitmap">xpm/check.xpm; Load From File</property>
                                         <property name="context_help"></property>
                                         <property name="enabled">1</property>
                                         <property name="fg"></property>
