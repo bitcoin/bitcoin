@@ -3,7 +3,6 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
-#include <winsock2.h>
 
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
@@ -201,12 +200,14 @@ bool GetMyExternalIP(unsigned int& ipRet)
 
 
 
-bool AddAddress(CAddrDB& addrdb, const CAddress& addr)
+bool AddAddress(CAddrDB& addrdb, CAddress addr, bool fCurrentlyOnline)
 {
     if (!addr.IsRoutable())
         return false;
     if (addr.ip == addrLocalHost.ip)
         return false;
+    if (fCurrentlyOnline)
+        addr.nTime = GetAdjustedTime();
     CRITICAL_BLOCK(cs_mapAddresses)
     {
         map<vector<unsigned char>, CAddress>::iterator it = mapAddresses.find(addr.GetKey());
@@ -219,24 +220,47 @@ bool AddAddress(CAddrDB& addrdb, const CAddress& addr)
         }
         else
         {
+            bool fUpdated = false;
             CAddress& addrFound = (*it).second;
             if ((addrFound.nServices | addr.nServices) != addrFound.nServices)
             {
                 // Services have been added
                 addrFound.nServices |= addr.nServices;
-                addrdb.WriteAddress(addrFound);
-                return true;
+                fUpdated = true;
             }
-            else if (addrFound.nTime < GetAdjustedTime() - 24 * 60 * 60)
+            int64 nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
+            if (addrFound.nTime < addr.nTime - nUpdateInterval)
             {
                 // Periodically update most recently seen time
-                addrFound.nTime = GetAdjustedTime();
-                addrdb.WriteAddress(addrFound);
-                return false;
+                addrFound.nTime = addr.nTime;
+                fUpdated = true;
             }
+            if (fUpdated)
+                addrdb.WriteAddress(addrFound);
         }
     }
     return false;
+}
+
+void AddressCurrentlyConnected(const CAddress& addr)
+{
+    CRITICAL_BLOCK(cs_mapAddresses)
+    {
+        // Only if it's been published already
+        map<vector<unsigned char>, CAddress>::iterator it = mapAddresses.find(addr.GetKey());
+        if (it != mapAddresses.end())
+        {
+            CAddress& addrFound = (*it).second;
+            int64 nUpdateInterval = 60 * 60;
+            if (addrFound.nTime < GetAdjustedTime() - nUpdateInterval)
+            {
+                // Periodically update most recently seen time
+                addrFound.nTime = GetAdjustedTime();
+                CAddrDB addrdb;
+                addrdb.WriteAddress(addrFound);
+            }
+        }
+    }
 }
 
 
@@ -398,9 +422,14 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
         printf("connected %s\n", addrConnect.ToStringLog().c_str());
 
         // Set to nonblocking
-        u_long nOne = 1;
+#ifdef __WXMSW__
+		u_long nOne = 1;
         if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR)
             printf("ConnectSocket() : ioctlsocket nonblocking setting failed, error %d\n", WSAGetLastError());
+#else
+        if (fcntl(hSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+            printf("ConnectSocket() : fcntl nonblocking setting failed, error %d\n", errno);
+#endif
 
         // Add node
         CNode* pnode = new CNode(hSocket, addrConnect, false);
@@ -418,7 +447,7 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
     else
     {
         CRITICAL_BLOCK(cs_mapAddresses)
-            mapAddresses[addrConnect.GetKey()].nLastFailed = GetTime();
+            mapAddresses[addrConnect.GetKey()].nLastFailed = GetAdjustedTime();
         return NULL;
     }
 }
@@ -432,7 +461,7 @@ void CNode::DoDisconnect()
     // If outbound and never got version message, mark address as failed
     if (!fInbound && !fSuccessfullyConnected)
         CRITICAL_BLOCK(cs_mapAddresses)
-            mapAddresses[addr.GetKey()].nLastFailed = GetTime();
+            mapAddresses[addr.GetKey()].nLastFailed = GetAdjustedTime();
 
     // All of a nodes broadcasts and subscriptions are automatically torn down
     // when it goes down, so a node has to stay up to keep its broadcast going.
@@ -549,8 +578,8 @@ void ThreadSocketHandler2(void* parg)
         timeout.tv_sec  = 0;
         timeout.tv_usec = 50000; // frequency to poll pnode->vSend
 
-        struct fd_set fdsetRecv;
-        struct fd_set fdsetSend;
+        fd_set fdsetRecv;
+        fd_set fdsetSend;
         FD_ZERO(&fdsetRecv);
         FD_ZERO(&fdsetSend);
         SOCKET hSocketMax = 0;
@@ -599,7 +628,11 @@ void ThreadSocketHandler2(void* parg)
         if (FD_ISSET(hListenSocket, &fdsetRecv))
         {
             struct sockaddr_in sockaddr;
+#ifdef __WXMSW__
             int len = sizeof(sockaddr);
+#else
+            socklen_t len = sizeof(sockaddr);
+#endif
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
             CAddress addr(sockaddr);
             if (hSocket == INVALID_SOCKET)
@@ -765,14 +798,12 @@ void ThreadOpenConnections2(void* parg)
     }
 
     // Initiate network connections
-    int nTry = 0;
-    bool fIRCOnly = false;
-    const int nMaxConnections = 15;
     loop
     {
         // Wait
         vnThreadsRunning[1]--;
         Sleep(500);
+        const int nMaxConnections = 15;
         while (vNodes.size() >= nMaxConnections || vNodes.size() >= mapAddresses.size())
         {
             CheckForShutdown(1);
@@ -781,93 +812,55 @@ void ThreadOpenConnections2(void* parg)
         vnThreadsRunning[1]++;
         CheckForShutdown(1);
 
-
         //
-        // The IP selection process is designed to limit vulnerability to address flooding.
-        // Any class C (a.b.c.?) has an equal chance of being chosen, then an IP is
-        // chosen within the class C.  An attacker may be able to allocate many IPs, but
-        // they would normally be concentrated in blocks of class C's.  They can hog the
-        // attention within their class C, but not the whole IP address space overall.
-        // A lone node in a class C will get as much attention as someone holding all 255
-        // IPs in another class C.
+        // Choose an address to connect to based on most recently seen
         //
+        CAddress addrConnect;
+        int64 nBestTime = 0;
+        int64 nDelay = ((60 * 60) << vNodes.size());
+        if (vNodes.size() >= 3)
+            nDelay *= 4;
+        if (nGotIRCAddresses > 0)
+            nDelay *= 100;
 
-        // Every other try is with IRC addresses only
-        fIRCOnly = !fIRCOnly;
-        if (mapIRCAddresses.empty())
-            fIRCOnly = false;
-        else if (nTry++ < 30 && vNodes.size() < nMaxConnections/2)
-            fIRCOnly = true;
+        // Do this here so we don't have to critsect vNodes inside mapAddresses critsect
+        set<unsigned int> setConnected;
+        CRITICAL_BLOCK(cs_vNodes)
+            foreach(CNode* pnode, vNodes)
+                setConnected.insert(pnode->addr.ip);
 
-        // Make a list of unique class C's
-        unsigned char pchIPCMask[4] = { 0xff, 0xff, 0xff, 0x00 };
-        unsigned int nIPCMask = *(unsigned int*)pchIPCMask;
-        vector<unsigned int> vIPC;
-        CRITICAL_BLOCK(cs_mapIRCAddresses)
         CRITICAL_BLOCK(cs_mapAddresses)
         {
-            vIPC.reserve(mapAddresses.size());
-            unsigned int nPrev = 0;
             foreach(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
             {
                 const CAddress& addr = item.second;
-                if (!addr.IsIPv4())
-                    continue;
-                if (fIRCOnly && !mapIRCAddresses.count(item.first))
+                if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip))
                     continue;
 
-                // Taking advantage of mapAddresses being in sorted order,
-                // with IPs of the same class C grouped together.
-                unsigned int ipC = addr.ip & nIPCMask;
-                if (ipC != nPrev)
-                    vIPC.push_back(nPrev = ipC);
+                // Limit retry frequency
+                if (GetAdjustedTime() < addr.nLastFailed + nDelay)
+                    continue;
+
+                // Try again only after all addresses had a first attempt
+                int64 nTime = addr.nTime;
+                if (addr.nLastFailed > addr.nTime)
+                    nTime -= 365 * 24 * 60 * 60;
+
+                // Randomize the order a little, putting the standard port first
+                nTime += GetRand(1 * 60 * 60);
+                if (addr.port != DEFAULT_PORT)
+                    nTime -= 1 * 60 * 60;
+
+                if (nTime > nBestTime)
+                {
+                    nBestTime = nTime;
+                    addrConnect = addr;
+                }
             }
         }
-        if (vIPC.empty())
-            continue;
 
-        // Choose a random class C
-        unsigned int ipC = vIPC[GetRand(vIPC.size())];
-
-        // Organize all addresses in the class C by IP
-        map<unsigned int, vector<CAddress> > mapIP;
-        CRITICAL_BLOCK(cs_mapIRCAddresses)
-        CRITICAL_BLOCK(cs_mapAddresses)
-        {
-            int64 nDelay = ((30 * 60) << vNodes.size());
-            if (!fIRCOnly)
-            {
-                nDelay *= 2;
-                if (vNodes.size() >= 3)
-                    nDelay *= 4;
-                if (!mapIRCAddresses.empty())
-                    nDelay *= 100;
-            }
-
-            for (map<vector<unsigned char>, CAddress>::iterator mi = mapAddresses.lower_bound(CAddress(ipC, 0).GetKey());
-                 mi != mapAddresses.upper_bound(CAddress(ipC | ~nIPCMask, 0xffff).GetKey());
-                 ++mi)
-            {
-                const CAddress& addr = (*mi).second;
-                if (fIRCOnly && !mapIRCAddresses.count((*mi).first))
-                    continue;
-
-                int64 nRandomizer = (addr.nLastFailed * addr.ip * 7777U) % 20000;
-                if (GetTime() - addr.nLastFailed > nDelay * nRandomizer / 10000)
-                    mapIP[addr.ip].push_back(addr);
-            }
-        }
-        if (mapIP.empty())
-            continue;
-
-        // Choose a random IP in the class C
-        map<unsigned int, vector<CAddress> >::iterator mi = mapIP.begin();
-        advance(mi, GetRand(mapIP.size()));
-
-        // Once we've chosen an IP, we'll try every given port before moving on
-        foreach(const CAddress& addrConnect, (*mi).second)
-            if (OpenNetworkConnection(addrConnect))
-                break;
+        if (addrConnect.IsValid())
+            OpenNetworkConnection(addrConnect);
     }
 }
 
@@ -989,6 +982,7 @@ bool StartNode(string& strError)
         pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress("127.0.0.1", nLocalServices));
     strError = "";
 
+#ifdef __WXMSW__
     // Sockets startup
     WSADATA wsadata;
     int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
@@ -998,6 +992,7 @@ bool StartNode(string& strError)
         printf("%s\n", strError.c_str());
         return false;
     }
+#endif
 
     // Get local host ip
     char pszHostName[255];
@@ -1029,10 +1024,14 @@ bool StartNode(string& strError)
     }
 
     // Set to nonblocking, incoming connections will also inherit this
+#ifdef __WXMSW__
     u_long nOne = 1;
     if (ioctlsocket(hListenSocket, FIONBIO, &nOne) == SOCKET_ERROR)
+#else
+    if (fcntl(hListenSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+#endif
     {
-        strError = strprintf("Error: Couldn't set properties on socket for incoming connections (ioctlsocket returned error %d)", WSAGetLastError());
+        strError = strprintf("Error: Couldn't set properties on socket for incoming connections (error %d)", WSAGetLastError());
         printf("%s\n", strError.c_str());
         return false;
     }
@@ -1041,7 +1040,7 @@ bool StartNode(string& strError)
     // IP address, and port for the socket that is being bound
     int nRetryLimit = 15;
     struct sockaddr_in sockaddr = addrLocalHost.GetSockAddr();
-    if (bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
+    if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
@@ -1131,7 +1130,9 @@ bool StopNode()
     Sleep(50);
 
     // Sockets shutdown
+#ifdef __WXMSW__
     WSACleanup();
+#endif
     return true;
 }
 

@@ -62,9 +62,9 @@ CDB::CDB(const char* pszFile, const char* pszMode, bool fTxn) : pdb(NULL)
             if (fShutdown)
                 return;
             string strDataDir = GetDataDir();
-            string strLogDir = strDataDir + "\\database";
+            string strLogDir = strDataDir + "/database";
             _mkdir(strLogDir.c_str());
-            string strErrorFile = strDataDir + "\\db.log";
+            string strErrorFile = strDataDir + "/db.log";
             printf("dbenv.open strLogDir=%s strErrorFile=%s\n", strLogDir.c_str(), strErrorFile.c_str());
 
             dbenv.set_lg_dir(strLogDir.c_str());
@@ -411,7 +411,6 @@ bool CAddrDB::WriteAddress(const CAddress& addr)
 
 bool CAddrDB::LoadAddresses()
 {
-    CRITICAL_BLOCK(cs_mapIRCAddresses)
     CRITICAL_BLOCK(cs_mapAddresses)
     {
         // Load user provided addresses
@@ -425,10 +424,7 @@ bool CAddrDB::LoadAddresses()
                 {
                     CAddress addr(psz, NODE_NETWORK);
                     if (addr.IsValid())
-                    {
                         AddAddress(*this, addr);
-                        mapIRCAddresses.insert(make_pair(addr.GetKey(), addr));
-                    }
                 }
             }
             catch (...) { }
@@ -678,7 +674,7 @@ void ThreadFlushWalletDB(void* parg)
                     if (nRefCount == 0 && !fShutdown)
                     {
                         // Flush wallet.dat so it's self contained
-                        nLastFlushed == nWalletDBUpdated;
+                        nLastFlushed = nWalletDBUpdated;
                         int64 nStart = GetTimeMillis();
                         dbenv.txn_checkpoint(0, 0, 0);
                         dbenv.lsn_reset(strFile.c_str(), 0);

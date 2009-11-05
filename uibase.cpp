@@ -7,6 +7,10 @@
 
 #include "uibase.h"
 
+#include "xpm/addressbook20.xpm"
+#include "xpm/check.xpm"
+#include "xpm/send20.xpm"
+
 ///////////////////////////////////////////////////////////////////////////
 
 CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
@@ -60,8 +64,8 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_toolBar->SetToolSeparation( 1 );
 	m_toolBar->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), 70, 90, 90, false, wxEmptyString ) );
 	
-	m_toolBar->AddTool( wxID_BUTTONSEND, wxT("&Send Coins"), wxBitmap( wxT("send20"), wxBITMAP_TYPE_RESOURCE ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
-	m_toolBar->AddTool( wxID_BUTTONRECEIVE, wxT("&Address Book"), wxBitmap( wxT("addressbook20"), wxBITMAP_TYPE_RESOURCE ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
+	m_toolBar->AddTool( wxID_BUTTONSEND, wxT("&Send Coins"), wxBitmap( send20_xpm ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
+	m_toolBar->AddTool( wxID_BUTTONRECEIVE, wxT("&Address Book"), wxBitmap( addressbook20_xpm ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
 	m_toolBar->Realize();
 	
 	m_statusBar = this->CreateStatusBar( 1, wxST_SIZEGRIP, wxID_ANY );
@@ -666,7 +670,7 @@ CSendDialogBase::CSendDialogBase( wxWindow* parent, wxWindowID id, const wxStrin
 	
 	bSizer47->Add( 0, 0, 1, wxEXPAND, 5 );
 	
-	m_bitmapCheckMark = new wxStaticBitmap( this, wxID_ANY, wxICON( check ), wxDefaultPosition, wxSize( 16,16 ), 0 );
+	m_bitmapCheckMark = new wxStaticBitmap( this, wxID_ANY, wxBitmap( check_xpm ), wxDefaultPosition, wxSize( 16,16 ), 0 );
 	bSizer47->Add( m_bitmapCheckMark, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 	
 	m_staticText36 = new wxStaticText( this, wxID_ANY, wxT("Pay &To:"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_RIGHT );

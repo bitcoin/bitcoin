@@ -260,7 +260,8 @@ void AddPendingReplyEvent3(void* pevthandler, CDataStream& vRecv)
 CDataStream GetStreamFromEvent(const wxCommandEvent& event)
 {
     wxString strData = event.GetString();
-    return CDataStream(strData.begin(), strData.begin() + event.GetInt(), SER_NETWORK);
+    const char* pszBegin = strData.c_str();
+    return CDataStream(pszBegin, pszBegin + event.GetInt(), SER_NETWORK);
 }
 
 
@@ -287,20 +288,6 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_listCtrl->SetFocus();
     SetIcon(wxICON(bitcoin));
     ptaskbaricon = new CMyTaskBarIcon();
-
-    // Init toolbar with transparency masked bitmaps
-    m_toolBar->ClearTools();
-
-    //// shouldn't have to do mask separately anymore, bitmap alpha support added in wx 2.8.9,
-    wxBitmap bmpSend(wxT("send20"), wxBITMAP_TYPE_RESOURCE);
-    bmpSend.SetMask(new wxMask(wxBitmap(wxT("send20mask"), wxBITMAP_TYPE_RESOURCE)));
-    m_toolBar->AddTool(wxID_BUTTONSEND, wxT("&Send Coins"), bmpSend, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
-
-    wxBitmap bmpAddressBook(wxT("addressbook20"), wxBITMAP_TYPE_RESOURCE);
-    bmpAddressBook.SetMask(new wxMask(wxBitmap(wxT("addressbook20mask"), wxBITMAP_TYPE_RESOURCE)));
-    m_toolBar->AddTool(wxID_BUTTONRECEIVE, wxT("&Address Book"), bmpAddressBook, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
-
-    m_toolBar->Realize();
 
     // Init column headers
     int nDateWidth = DateTimeStr(1229413914).size() * 6 + 8;
@@ -909,15 +896,17 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
         {
             TRY_CRITICAL_BLOCK(cs_mapWallet)
             {
-                bool fInserted = false;
+                string strTop;
+                if (m_listCtrl->GetItemCount())
+                    strTop = (string)m_listCtrl->GetItemText(0);
                 foreach(uint256 hash, vWalletUpdated)
                 {
                     map<uint256, CWalletTx>::iterator mi = mapWallet.find(hash);
                     if (mi != mapWallet.end())
-                        fInserted |= InsertTransaction((*mi).second, false);
+                        InsertTransaction((*mi).second, false);
                 }
                 vWalletUpdated.clear();
-                if (fInserted)
+                if (m_listCtrl->GetItemCount() && strTop != (string)m_listCtrl->GetItemText(0))
                     m_listCtrl->ScrollList(0, INT_MAX);
             }
         }
@@ -954,7 +943,9 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     string strStatus = strprintf("     %d connections     %d blocks     %d transactions", vNodes.size(), nBestHeight + 1, nTransactionCount);
     m_statusBar->SetStatusText(strStatus, 2);
 
+#ifdef __WXMSW__
     m_listCtrl->OnPaint(event);
+#endif
 }
 
 
@@ -1407,7 +1398,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     m_checkBoxLimitProcessors->SetValue(fLimitProcessors);
     m_spinCtrlLimitProcessors->Enable(fLimitProcessors);
     m_spinCtrlLimitProcessors->SetValue(nLimitProcessors);
-    int nProcessors = atoi(getenv("NUMBER_OF_PROCESSORS"));
+    int nProcessors = wxThread::GetCPUCount();
     if (nProcessors < 1)
         nProcessors = 999;
     m_spinCtrlLimitProcessors->SetRange(1, nProcessors);
@@ -1549,17 +1540,11 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
         walletdb.WriteSetting("fMinimizeOnClose", fMinimizeOnClose);
     }
 
-    if (fUseProxy != m_checkBoxUseProxy->GetValue())
-    {
-        fUseProxy = m_checkBoxUseProxy->GetValue();
-        walletdb.WriteSetting("fUseProxy", fUseProxy);
-    }
+    fUseProxy = m_checkBoxUseProxy->GetValue();
+    walletdb.WriteSetting("fUseProxy", fUseProxy);
 
-    if (addrProxy != GetProxyAddr())
-    {
-        addrProxy = GetProxyAddr();
-        walletdb.WriteSetting("addrProxy", addrProxy);
-    }
+    addrProxy = GetProxyAddr();
+    walletdb.WriteSetting("addrProxy", addrProxy);
 }
 
 
@@ -1608,10 +1593,8 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     //// todo: should add a display of your balance for convenience
 
     // Set Icon
-    wxBitmap bmpSend(wxT("send16"), wxBITMAP_TYPE_RESOURCE);
-    bmpSend.SetMask(new wxMask(wxBitmap(wxT("send16masknoshadow"), wxBITMAP_TYPE_RESOURCE)));
     wxIcon iconSend;
-    iconSend.CopyFromBitmap(bmpSend);
+    iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
     SetIcon(iconSend);
 
     wxCommandEvent event;
@@ -2231,10 +2214,8 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
     m_listCtrl->SetFocus();
 
     // Set Icon
-    wxBitmap bmpAddressBook(wxT("addressbook16"), wxBITMAP_TYPE_RESOURCE);
-    bmpAddressBook.SetMask(new wxMask(wxBitmap(wxT("addressbook16mask"), wxBITMAP_TYPE_RESOURCE)));
     wxIcon iconAddressBook;
-    iconAddressBook.CopyFromBitmap(bmpAddressBook);
+    iconAddressBook.CopyFromBitmap(wxBitmap(addressbook16_xpm));
     SetIcon(iconAddressBook);
 
     // Fill listctrl with address book data
@@ -3345,7 +3326,7 @@ bool CMyApp::OnInit2()
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_WARN, CreateFile("NUL", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0));
 #endif
-#ifdef __WXDEBUG__
+#if defined(__WXMSW__) && defined(__WXDEBUG__)
     // Disable malfunctioning wxWidgets debug assertion
     g_isPainting = 10000;
 #endif
@@ -3362,8 +3343,7 @@ bool CMyApp::OnInit2()
             "  -gen=0\t\t  Don't generate coins\n"
             "  -min\t\t  Start minimized\n"
             "  -datadir=<dir>\t  Specify data directory\n"
-            "  -proxy=<ip:port>\t  Connect through socks4 proxy,\n"
-            "  \t\t     e.g. -proxy=127.0.0.1:9050 to use TOR\n"
+            "  -proxy=<ip:port>\t  Connect through socks4 proxy\n"
             "  -addnode=<ip>\t  Add a node to connect to\n"
             "  -connect=<ip>\t  Connect only to the specified node\n"
             "  -?\t\t  This help message\n";
@@ -3386,6 +3366,8 @@ bool CMyApp::OnInit2()
         unsigned int nStart = GetTime();
         loop
         {
+            // TODO: find out how to do this in Linux, or replace with wxWidgets commands
+#ifdef __WXMSW__
             // Show the previous instance and exit
             HWND hwndPrev = FindWindow("wxWindowClassNR", "Bitcoin");
             if (hwndPrev)
@@ -3395,6 +3377,7 @@ bool CMyApp::OnInit2()
                 SetForegroundWindow(hwndPrev);
                 return false;
             }
+#endif
 
             if (GetTime() > nStart + 60)
                 return false;
@@ -3421,7 +3404,7 @@ bool CMyApp::OnInit2()
         fPrintToDebugger = true;
 
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %d, Windows version %08x\n", VERSION, GetVersion());
+    printf("Bitcoin version %d, OS version %s\n", VERSION, wxGetOsDescription().mb_str());
 
     if (mapArgs.count("-dropmessages"))
     {
@@ -3493,12 +3476,36 @@ bool CMyApp::OnInit2()
         return false;
     }
 
+    if (mapArgs.count("-printblock"))
+    {
+        string strMatch = mapArgs["-printblock"];
+        int nFound = 0;
+        for (map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.begin(); mi != mapBlockIndex.end(); ++mi)
+        {
+            uint256 hash = (*mi).first;
+            if (strncmp(hash.ToString().c_str(), strMatch.c_str(), strMatch.size()) == 0)
+            {
+                CBlockIndex* pindex = (*mi).second;
+                CBlock block;
+                block.ReadFromDisk(pindex, true);
+                block.BuildMerkleTree();
+                block.print();
+                printf("\n");
+                nFound++;
+            }
+        }
+        if (nFound == 0)
+            printf("No blocks matching %s were found\n", strMatch.c_str());
+        OnExit();
+        return false;
+    }
+
     if (mapArgs.count("-gen"))
     {
         if (mapArgs["-gen"].empty())
             fGenerateBitcoins = true;
         else
-            fGenerateBitcoins = atoi(mapArgs["-gen"].c_str());
+            fGenerateBitcoins = (atoi(mapArgs["-gen"].c_str()) != 0);
     }
 
     if (mapArgs.count("-proxy"))
@@ -3511,9 +3518,6 @@ bool CMyApp::OnInit2()
             OnExit();
             return false;
         }
-        CWalletDB walletdb;
-        walletdb.WriteSetting("fUseProxy", fUseProxy);
-        walletdb.WriteSetting("addrProxy", addrProxy);
     }
 
     if (mapArgs.count("-addnode"))
@@ -3522,6 +3526,7 @@ bool CMyApp::OnInit2()
         foreach(string strAddr, mapMultiArgs["-addnode"])
         {
             CAddress addr(strAddr, NODE_NETWORK);
+            addr.nTime = 0; // so it won't relay unless successfully connected
             if (addr.IsValid())
                 AddAddress(addrdb, addr);
         }
@@ -3559,7 +3564,11 @@ bool CMyApp::OnInit2()
     //
     // Tests
     //
+#ifdef __WXMSW__
     if (argc >= 2 && stricmp(argv[1], "-send") == 0)
+#else
+    if (argc >= 2 && strcmp(argv[1], "-send") == 0)
+#endif
     {
         int64 nValue = 1;
         if (argc >= 3)
@@ -3646,7 +3655,8 @@ void CMyApp::OnFatalException()
 
 
 
-typedef WINSHELLAPI BOOL WINAPI (*PSHGETSPECIALFOLDERPATHA)(HWND hwndOwner, LPSTR lpszPath, int nFolder, BOOL fCreate);
+#ifdef __WXMSW__
+typedef WINSHELLAPI BOOL (WINAPI *PSHGETSPECIALFOLDERPATHA)(HWND hwndOwner, LPSTR lpszPath, int nFolder, BOOL fCreate);
 
 string MyGetSpecialFolderPath(int nFolder, bool fCreate)
 {
@@ -3737,7 +3747,10 @@ void SetStartOnSystemStartup(bool fAutoStart)
         CoUninitialize();
     }
 }
-
+#else
+bool GetStartOnSystemStartup() { return false; }
+void SetStartOnSystemStartup(bool fAutoStart) { }
+#endif
 
 
 

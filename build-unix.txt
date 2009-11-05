@@ -1,0 +1,73 @@
+Bitcoin v0.2.0 BETA
+
+Copyright (c) 2009 Satoshi Nakamoto
+Distributed under the MIT/X11 software license, see the accompanying
+file license.txt or http://www.opensource.org/licenses/mit-license.php.
+This product includes software developed by the OpenSSL Project for use in
+the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
+cryptographic software written by Eric Young (eay@cryptsoft.com).
+
+
+UNIX BUILD NOTES
+
+
+Dependencies
+------------
+apt-get install build-essential
+apt-get install libgtk2.0-dev
+apt-get install libssl-dev
+
+Libraries you need to obtain separately and build:
+              default path   download
+wxWidgets      \wxwidgets     http://www.wxwidgets.org/downloads/
+Berkeley DB    \db            http://www.oracle.com/technology/software/products/berkeley-db/index.html
+Boost          \boost         http://www.boost.org/users/download/
+
+Their licenses:
+wxWidgets      LGPL 2.1 with very liberal exceptions
+Berkeley DB    New BSD license with additional requirement that linked software must be free open source
+Boost          MIT-like license
+
+Versions used in this release:
+GCC          4.3.3
+OpenSSL      0.9.8k
+wxWidgets    2.8.9
+Berkeley DB  4.7.25.NC
+Boost        1.40.0
+
+
+Notes
+-----
+The UI layout is edited with wxFormBuilder.  Open the project file
+uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
+classes that do the rote work of constructing all the UI elements.
+
+The release is built with GCC and then "strip bitcoin" to strip the debug
+symbols, which reduces the executable size by about 90%.
+
+
+wxWidgets
+---------
+cd /usr/local/wxWidgets-2.8.9
+mkdir buildgtk
+cd buildgtk
+../configure --with-gtk --enable-debug --disable-shared --enable-monolithic
+make
+su
+make install
+ldconfig
+
+
+Berkeley DB
+-----------
+cd /usr/local/db-4.7.25.NC/build_unix
+../dist/configure --enable-cxx
+make
+
+
+Boost
+-----
+cd /usr/local/boost_1_40_0
+su
+./bootstrap.sh
+./bjam install
