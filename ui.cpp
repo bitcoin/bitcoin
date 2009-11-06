@@ -14,13 +14,10 @@ void SetStartOnSystemStartup(bool fAutoStart);
 
 
 
-DEFINE_EVENT_TYPE(wxEVT_CROSSTHREADCALL)
+DEFINE_EVENT_TYPE(wxEVT_UITHREADCALL)
 DEFINE_EVENT_TYPE(wxEVT_REPLY1)
 DEFINE_EVENT_TYPE(wxEVT_REPLY2)
 DEFINE_EVENT_TYPE(wxEVT_REPLY3)
-DEFINE_EVENT_TYPE(wxEVT_TABLEADDED)
-DEFINE_EVENT_TYPE(wxEVT_TABLEUPDATED)
-DEFINE_EVENT_TYPE(wxEVT_TABLEDELETED)
 
 CMainFrame* pframeMain = NULL;
 CMyTaskBarIcon* ptaskbaricon = NULL;
@@ -184,6 +181,24 @@ void AddToMyProducts(CProduct product)
                 "");
 }
 
+void StringMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
+{
+    wxMessageBox(message, caption, style, parent, x, y);
+}
+
+int ThreadSafeMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
+{
+#ifdef __WXMSW__
+    wxMessageBox(message, caption, style, parent, x, y);
+#else
+    UIThreadCall(bind(StringMessageBox, message, caption, style, parent, x, y));
+#endif
+}
+
+
+
+
+
 
 
 
@@ -193,6 +208,7 @@ void AddToMyProducts(CProduct product)
 //
 // Custom events
 //
+// If this code gets used again, it should be replaced with something like UIThreadCall
 
 set<void*> setCallbackAvailable;
 CCriticalSection cs_setCallbackAvailable;
@@ -279,7 +295,7 @@ CDataStream GetStreamFromEvent(const wxCommandEvent& event)
 
 CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
 {
-    Connect(wxEVT_CROSSTHREADCALL, wxCommandEventHandler(CMainFrame::OnCrossThreadCall), NULL, this);
+    Connect(wxEVT_UITHREADCALL, wxCommandEventHandler(CMainFrame::OnUIThreadCall), NULL, this);
 
     // Init
     fRefreshListCtrl = false;
@@ -982,36 +998,27 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
 }
 
 
-void CrossThreadCall(wxCommandEvent& event)
+void UIThreadCall(boost::function<void ()> fn)
 {
+    // Call this with a function object created with bind.
+    // bind needs all parameters to match the function's expected types
+    // and all default parameters specified.  Some examples:
+    //  UIThreadCall(bind(wxBell));
+    //  UIThreadCall(bind(wxMessageBox, wxT("Message"), wxT("Title"), wxOK, (wxWindow*)NULL, -1, -1));
+    //  UIThreadCall(bind(&CMainFrame::OnMenuHelpAbout, pframeMain, event));
     if (pframeMain)
-        pframeMain->GetEventHandler()->AddPendingEvent(event);
-}
-
-void CrossThreadCall(int nID, void* pdata)
-{
-    wxCommandEvent event;
-    event.SetInt(nID);
-    event.SetClientData(pdata);
-    if (pframeMain)
-        pframeMain->GetEventHandler()->AddPendingEvent(event);
-}
-
-void CMainFrame::OnCrossThreadCall(wxCommandEvent& event)
-{
-    void* pdata = event.GetClientData();
-    switch (event.GetInt())
     {
-        case UICALL_ADDORDER:
-        {
-            break;
-        }
-
-        case UICALL_UPDATEORDER:
-        {
-            break;
-        }
+        wxCommandEvent event(wxEVT_UITHREADCALL);
+        event.SetClientData((void*)new boost::function<void ()>(fn));
+        pframeMain->GetEventHandler()->AddPendingEvent(event);
     }
+}
+
+void CMainFrame::OnUIThreadCall(wxCommandEvent& event)
+{
+    boost::function<void ()>* pfn = (boost::function<void ()>*)event.GetClientData();
+    (*pfn)();
+    delete pfn;
 }
 
 void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
@@ -3295,9 +3302,6 @@ wxMenu* CMyTaskBarIcon::CreatePopupMenu()
 #endif
     return pmenu;
 }
-
-
-
 
 
 
