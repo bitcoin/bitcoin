@@ -84,6 +84,10 @@ inline void SetThreadPriority(int nThread, int nPriority) { setpriority(PRIO_PRO
 #define THREAD_PRIORITY_NORMAL          0
 #define THREAD_PRIORITY_ABOVE_NORMAL    0
 #endif
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL        0
+#endif
+
 
 
 
@@ -379,6 +383,14 @@ inline int64 GetTimeMillis()
     return wxGetLocalTimeMillis().GetValue();
 }
 
+inline string DateTimeStrFormat(const char* pszFormat, int64 nTime)
+{
+    time_t n = nTime;
+    struct tm* ptmTime = gmtime(&n);
+    char pszTime[200];
+    strftime(pszTime, sizeof(pszTime), pszFormat, ptmTime);
+    return pszTime;
+}
 
 
 
@@ -400,7 +412,7 @@ inline void heapchk()
     {                                                               \
         static char nLoops;                                         \
         if (nLoops <= 0)                                            \
-            nLoops = GetRand(50) + 1;                               \
+            nLoops = GetRand(20) + 1;                               \
         if (nLoops-- > 1)                                           \
         {                                                           \
             ThreadFn;                                               \

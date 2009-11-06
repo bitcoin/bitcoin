@@ -1361,15 +1361,24 @@ bool ScanMessageStart(Stream& s)
 
 bool CheckDiskSpace(int64 nAdditionalBytes)
 {
-    wxLongLong nFreeBytesAvailable = 0;
-    if (!wxGetDiskSpace(GetDataDir(), NULL, &nFreeBytesAvailable))
+#ifdef __WXMSW__
+    uint64 nFreeBytesAvailable = 0;     // bytes available to caller
+    uint64 nTotalNumberOfBytes = 0;     // bytes on disk
+    uint64 nTotalNumberOfFreeBytes = 0; // free bytes on disk
+    if (!GetDiskFreeSpaceEx(GetDataDir().c_str(),
+            (PULARGE_INTEGER)&nFreeBytesAvailable,
+            (PULARGE_INTEGER)&nTotalNumberOfBytes,
+            (PULARGE_INTEGER)&nTotalNumberOfFreeBytes))
     {
-        printf("ERROR: wxGetDiskSpace() failed\n");
+        printf("ERROR: GetDiskFreeSpaceEx() failed\n");
         return true;
     }
+#else
+    uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
+#endif
 
     // Check for 15MB because database could create another 10MB log file at any time
-    if (nFreeBytesAvailable.GetValue() < (int64)15000000 + nAdditionalBytes)
+    if (nFreeBytesAvailable < (int64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
         wxMessageBox("Warning: Your disk space is low  ", "Bitcoin", wxICON_EXCLAMATION);
@@ -1546,7 +1555,7 @@ void PrintBlockTree()
             pindex->nFile,
             pindex->nBlockPos,
             block.GetHash().ToString().substr(0,14).c_str(),
-            DateTimeStr(block.nTime).c_str(),
+            DateTimeStrFormat("%x %H:%M:%S", block.nTime).c_str(),
             block.vtx.size());
 
         CRITICAL_BLOCK(cs_mapWallet)
@@ -1673,20 +1682,24 @@ bool ProcessMessages(CNode* pfrom)
         bool fRet = false;
         try
         {
-            CheckForShutdown(2);
             CRITICAL_BLOCK(cs_main)
                 fRet = ProcessMessage(pfrom, strCommand, vMsg);
-            CheckForShutdown(2);
+            if (fShutdown)
+                return true;
         }
-        catch (std::ios_base::failure& e) {
+        catch (std::ios_base::failure& e)
+        {
             if (strstr(e.what(), "CDataStream::read() : end of data"))
             {
                 // Allow exceptions from underlength message on vRecv
                 printf("ProcessMessage(%s, %d bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
             }
             else
+            {
                 PrintException(&e, "ProcessMessage()");
-        } catch (std::exception& e) {
+            }
+        }
+        catch (std::exception& e) {
             PrintException(&e, "ProcessMessage()");
         } catch (...) {
             PrintException(NULL, "ProcessMessage()");
@@ -2093,7 +2106,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 bool SendMessages(CNode* pto)
 {
-    CheckForShutdown(2);
     CRITICAL_BLOCK(cs_main)
     {
         // Don't send anything until we get their version message
@@ -2223,12 +2235,10 @@ void GenerateBitcoins(bool fGenerate)
 
 void ThreadBitcoinMiner(void* parg)
 {
-    vnThreadsRunning[3]++;
-    CheckForShutdown(3);
     try
     {
-        bool fRet = BitcoinMiner();
-        printf("BitcoinMiner returned %s\n", fRet ? "true" : "false");
+        vnThreadsRunning[3]++;
+        BitcoinMiner();
         vnThreadsRunning[3]--;
     }
     catch (std::exception& e) {
@@ -2238,6 +2248,8 @@ void ThreadBitcoinMiner(void* parg)
         vnThreadsRunning[3]--;
         PrintException(NULL, "ThreadBitcoinMiner()");
     }
+
+    printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[3]);
 }
 
 int FormatHashBlocks(void* pbuffer, unsigned int len)
@@ -2285,7 +2297,7 @@ void BlockSHA256(const void* pin, unsigned int nBlocks, void* pout)
 }
 
 
-bool BitcoinMiner()
+void BitcoinMiner()
 {
     printf("BitcoinMiner started\n");
 
@@ -2296,11 +2308,13 @@ bool BitcoinMiner()
     {
         SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
         Sleep(50);
-        CheckForShutdown(3);
+        if (fShutdown)
+            return;
         while (vNodes.empty())
         {
             Sleep(1000);
-            CheckForShutdown(3);
+            if (fShutdown)
+                return;
         }
 
         unsigned int nTransactionsUpdatedLast = nTransactionsUpdated;
@@ -2324,7 +2338,7 @@ bool BitcoinMiner()
         //
         auto_ptr<CBlock> pblock(new CBlock());
         if (!pblock.get())
-            return false;
+            return;
 
         // Add our coinbase tx as first transaction
         pblock->vtx.push_back(txNew);
@@ -2433,7 +2447,7 @@ bool BitcoinMiner()
                     {
                         // Save key
                         if (!AddKey(key))
-                            return false;
+                            return;
                         key.MakeNewKey();
 
                         // Process this block the same as if we had received it from another node
@@ -2450,7 +2464,12 @@ bool BitcoinMiner()
             // Update nTime every few seconds
             if ((++tmp.block.nNonce & 0xffff) == 0)
             {
-                CheckForShutdown(3);
+                if (fShutdown)
+                    return;
+                if (!fGenerateBitcoins)
+                    return;
+                if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
+                    return;
                 if (tmp.block.nNonce == 0)
                     break;
                 if (pindexPrev != pindexBest)
@@ -2459,16 +2478,10 @@ bool BitcoinMiner()
                     break;
                 if (vNodes.empty())
                     break;
-                if (!fGenerateBitcoins)
-                    return true;
-                if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
-                    return true;
                 tmp.block.nTime = pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
             }
         }
     }
-
-    return true;
 }
 
 

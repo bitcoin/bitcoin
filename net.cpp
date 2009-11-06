@@ -48,6 +48,10 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
     SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
+#if defined(__BSD__) || defined(__WXOSX__)
+    int set = 1;
+    setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
+#endif
 
     bool fRoutable = !(addrConnect.GetByte(3) == 10 || (addrConnect.GetByte(3) == 192 && addrConnect.GetByte(2) == 168));
     bool fProxy = (fUseProxy && fRoutable);
@@ -68,7 +72,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
         char* pszSocks4 = pszSocks4IP;
         int nSize = sizeof(pszSocks4IP);
 
-        int ret = send(hSocket, pszSocks4, nSize, 0);
+        int ret = send(hSocket, pszSocks4, nSize, MSG_NOSIGNAL);
         if (ret != nSize)
         {
             closesocket(hSocket);
@@ -100,7 +104,7 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
     if (!ConnectSocket(addrConnect, hSocket))
         return error("GetMyExternalIP() : connection to %s failed", addrConnect.ToString().c_str());
 
-    send(hSocket, pszGet, strlen(pszGet), 0);
+    send(hSocket, pszGet, strlen(pszGet), MSG_NOSIGNAL);
 
     string strLine;
     while (RecvLine(hSocket, strLine))
@@ -124,7 +128,8 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
             if (strLine.find("<"))
                 strLine = strLine.substr(0, strLine.find("<"));
             strLine = strLine.substr(strspn(strLine.c_str(), " \t\n\r"));
-            strLine = wxString(strLine).Trim();
+            while (strLine.size() > 0 && isspace(strLine[strLine.size()-1]))
+                strLine.resize(strLine.size()-1);
             CAddress addr(strLine.c_str());
             printf("GetMyExternalIP() received [%s] %s\n", strLine.c_str(), addr.ToString().c_str());
             if (addr.ip == 0 || addr.ip == INADDR_NONE || !addr.IsRoutable())
@@ -492,24 +497,26 @@ void ThreadSocketHandler(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadSocketHandler(parg));
 
-    loop
+    try
     {
         vnThreadsRunning[0]++;
-        CheckForShutdown(0);
-        try
-        {
-            ThreadSocketHandler2(parg);
-            vnThreadsRunning[0]--;
-        }
-        catch (std::exception& e) {
-            vnThreadsRunning[0]--;
-            PrintException(&e, "ThreadSocketHandler()");
-        } catch (...) {
-            vnThreadsRunning[0]--;
-            PrintException(NULL, "ThreadSocketHandler()");
-        }
-        Sleep(5000);
+        ThreadSocketHandler2(parg);
+        vnThreadsRunning[0]--;
     }
+    catch (std::exception& e) {
+        vnThreadsRunning[0]--;
+        PrintException(&e, "ThreadSocketHandler()");
+    } catch (...) {
+        vnThreadsRunning[0]--;
+        PrintException(NULL, "ThreadSocketHandler()");
+    }
+
+    foreach(CNode* pnode, vNodes)
+        closesocket(pnode->hSocket);
+    if (closesocket(hListenSocket) == SOCKET_ERROR)
+        printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
+
+    printf("ThreadSocketHandler exiting\n");
 }
 
 void ThreadSocketHandler2(void* parg)
@@ -600,7 +607,8 @@ void ThreadSocketHandler2(void* parg)
         vnThreadsRunning[0]--;
         int nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, NULL, &timeout);
         vnThreadsRunning[0]++;
-        CheckForShutdown(0);
+        if (fShutdown)
+            return;
         if (nSelect == SOCKET_ERROR)
         {
             int nErr = WSAGetLastError();
@@ -659,7 +667,8 @@ void ThreadSocketHandler2(void* parg)
             vNodesCopy = vNodes;
         foreach(CNode* pnode, vNodesCopy)
         {
-            CheckForShutdown(0);
+            if (fShutdown)
+                return;
             SOCKET hSocket = pnode->hSocket;
 
             //
@@ -708,7 +717,7 @@ void ThreadSocketHandler2(void* parg)
                     CDataStream& vSend = pnode->vSend;
                     if (!vSend.empty())
                     {
-                        int nBytes = send(hSocket, &vSend[0], vSend.size(), 0);
+                        int nBytes = send(hSocket, &vSend[0], vSend.size(), MSG_NOSIGNAL);
                         if (nBytes > 0)
                         {
                             vSend.erase(vSend.begin(), vSend.begin() + nBytes);
@@ -747,24 +756,21 @@ void ThreadOpenConnections(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadOpenConnections(parg));
 
-    loop
+    try
     {
         vnThreadsRunning[1]++;
-        CheckForShutdown(1);
-        try
-        {
-            ThreadOpenConnections2(parg);
-            vnThreadsRunning[1]--;
-        }
-        catch (std::exception& e) {
-            vnThreadsRunning[1]--;
-            PrintException(&e, "ThreadOpenConnections()");
-        } catch (...) {
-            vnThreadsRunning[1]--;
-            PrintException(NULL, "ThreadOpenConnections()");
-        }
-        Sleep(5000);
+        ThreadOpenConnections2(parg);
+        vnThreadsRunning[1]--;
     }
+    catch (std::exception& e) {
+        vnThreadsRunning[1]--;
+        PrintException(&e, "ThreadOpenConnections()");
+    } catch (...) {
+        vnThreadsRunning[1]--;
+        PrintException(NULL, "ThreadOpenConnections()");
+    }
+
+    printf("ThreadOpenConnections exiting\n");
 }
 
 void ThreadOpenConnections2(void* parg)
@@ -778,7 +784,8 @@ void ThreadOpenConnections2(void* parg)
         for (int i = 0; i < 10; i++)
         {
             Sleep(1000);
-            CheckForShutdown(1);
+            if (fShutdown)
+                return;
         }
     }
 
@@ -792,7 +799,8 @@ void ThreadOpenConnections2(void* parg)
             {
                 OpenNetworkConnection(addr);
                 Sleep(1000);
-                CheckForShutdown(1);
+                if (fShutdown)
+                    return;
             }
         }
     }
@@ -806,11 +814,13 @@ void ThreadOpenConnections2(void* parg)
         const int nMaxConnections = 15;
         while (vNodes.size() >= nMaxConnections || vNodes.size() >= mapAddresses.size())
         {
-            CheckForShutdown(1);
+            if (fShutdown)
+                return;
             Sleep(2000);
         }
         vnThreadsRunning[1]++;
-        CheckForShutdown(1);
+        if (fShutdown)
+            return;
 
         //
         // Choose an address to connect to based on most recently seen
@@ -869,14 +879,16 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
     //
     // Initiate outbound network connection
     //
-    CheckForShutdown(1);
+    if (fShutdown)
+        return false;
     if (addrConnect.ip == addrLocalHost.ip || !addrConnect.IsIPv4() || FindNode(addrConnect.ip))
         return false;
 
     vnThreadsRunning[1]--;
     CNode* pnode = ConnectNode(addrConnect);
     vnThreadsRunning[1]++;
-    CheckForShutdown(1);
+    if (fShutdown)
+        return false;
     if (!pnode)
         return false;
     pnode->fNetworkNode = true;
@@ -914,24 +926,21 @@ void ThreadMessageHandler(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadMessageHandler(parg));
 
-    loop
+    try
     {
         vnThreadsRunning[2]++;
-        CheckForShutdown(2);
-        try
-        {
-            ThreadMessageHandler2(parg);
-            vnThreadsRunning[2]--;
-        }
-        catch (std::exception& e) {
-            vnThreadsRunning[2]--;
-            PrintException(&e, "ThreadMessageHandler()");
-        } catch (...) {
-            vnThreadsRunning[2]--;
-            PrintException(NULL, "ThreadMessageHandler()");
-        }
-        Sleep(5000);
+        ThreadMessageHandler2(parg);
+        vnThreadsRunning[2]--;
     }
+    catch (std::exception& e) {
+        vnThreadsRunning[2]--;
+        PrintException(&e, "ThreadMessageHandler()");
+    } catch (...) {
+        vnThreadsRunning[2]--;
+        PrintException(NULL, "ThreadMessageHandler()");
+    }
+
+    printf("ThreadMessageHandler exiting\n");
 }
 
 void ThreadMessageHandler2(void* parg)
@@ -951,10 +960,14 @@ void ThreadMessageHandler2(void* parg)
             // Receive messages
             TRY_CRITICAL_BLOCK(pnode->cs_vRecv)
                 ProcessMessages(pnode);
+            if (fShutdown)
+                return;
 
             // Send messages
             TRY_CRITICAL_BLOCK(pnode->cs_vSend)
                 SendMessages(pnode);
+            if (fShutdown)
+                return;
 
             pnode->Release();
         }
@@ -963,7 +976,8 @@ void ThreadMessageHandler2(void* parg)
         vnThreadsRunning[2]--;
         Sleep(100);
         vnThreadsRunning[2]++;
-        CheckForShutdown(2);
+        if (fShutdown)
+            return;
     }
 }
 
@@ -996,7 +1010,7 @@ bool StartNode(string& strError)
 
     // Get local host ip
     char pszHostName[255];
-    if (gethostname(pszHostName, 255) == SOCKET_ERROR)
+    if (gethostname(pszHostName, sizeof(pszHostName)) == SOCKET_ERROR)
     {
         strError = strprintf("Error: Unable to get IP address of this computer (gethostname returned error %d)", WSAGetLastError());
         printf("%s\n", strError.c_str());
@@ -1009,9 +1023,16 @@ bool StartNode(string& strError)
         printf("%s\n", strError.c_str());
         return false;
     }
-    addrLocalHost = CAddress(*(long*)(phostent->h_addr_list[0]),
-                             DEFAULT_PORT,
-                             nLocalServices);
+
+    // Take the first IP that isn't loopback 127.x.x.x
+    for (int i = 0; phostent->h_addr_list[i] != NULL; i++)
+        printf("host ip %d: %s\n", i, CAddress(*(unsigned int*)phostent->h_addr_list[i]).ToStringIP().c_str());
+    for (int i = 0; phostent->h_addr_list[i] != NULL; i++)
+    {
+        addrLocalHost = CAddress(*(unsigned int*)phostent->h_addr_list[i], DEFAULT_PORT, nLocalServices);
+        if (addrLocalHost.IsValid() && addrLocalHost.GetByte(3) != 127)
+            break;
+    }
     printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
     // Create socket for listening for incoming connections
@@ -1022,6 +1043,10 @@ bool StartNode(string& strError)
         printf("%s\n", strError.c_str());
         return false;
     }
+#if defined(__BSD__) || defined(__WXOSX__)
+    int set = 1;
+    setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
+#endif
 
     // Set to nonblocking, incoming connections will also inherit this
 #ifdef __WXMSW__
@@ -1038,19 +1063,22 @@ bool StartNode(string& strError)
 
     // The sockaddr_in structure specifies the address family,
     // IP address, and port for the socket that is being bound
-    int nRetryLimit = 15;
-    struct sockaddr_in sockaddr = addrLocalHost.GetSockAddr();
+    struct sockaddr_in sockaddr;
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin_family = AF_INET;
+    sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
+    sockaddr.sin_port = DEFAULT_PORT;
     if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf("Error: Unable to bind to port %s on this computer. The program is probably already running.", addrLocalHost.ToString().c_str());
+            strError = strprintf("Error: Unable to bind to port %d on this computer. The program is probably already running.", ntohs(sockaddr.sin_port));
         else
-            strError = strprintf("Error: Unable to bind to port %s on this computer (bind returned error %d)", addrLocalHost.ToString().c_str(), nErr);
+            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
         printf("%s\n", strError.c_str());
         return false;
     }
-    printf("bound to addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
+    printf("bound to port %d\n", ntohs(sockaddr.sin_port));
 
     // Listen for incoming connections
     if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
@@ -1065,6 +1093,7 @@ bool StartNode(string& strError)
     {
         // Proxies can't take incoming connections
         addrLocalHost.ip = CAddress("0.0.0.0").ip;
+        printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
     }
     else
     {
@@ -1115,17 +1144,17 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
-    while (vnThreadsRunning[0] || vnThreadsRunning[2] || vnThreadsRunning[3])
+    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0)
     {
         if (GetTime() - nStart > 15)
             break;
         Sleep(20);
     }
-    if (vnThreadsRunning[0]) printf("ThreadSocketHandler still running\n");
-    if (vnThreadsRunning[1]) printf("ThreadOpenConnections still running\n");
-    if (vnThreadsRunning[2]) printf("ThreadMessageHandler still running\n");
-    if (vnThreadsRunning[3]) printf("ThreadBitcoinMiner still running\n");
-    while (vnThreadsRunning[2])
+    if (vnThreadsRunning[0] > 0) printf("ThreadSocketHandler still running\n");
+    if (vnThreadsRunning[1] > 0) printf("ThreadOpenConnections still running\n");
+    if (vnThreadsRunning[2] > 0) printf("ThreadMessageHandler still running\n");
+    if (vnThreadsRunning[3] > 0) printf("ThreadBitcoinMiner still running\n");
+    while (vnThreadsRunning[2] > 0)
         Sleep(20);
     Sleep(50);
 
@@ -1134,22 +1163,4 @@ bool StopNode()
     WSACleanup();
 #endif
     return true;
-}
-
-void CheckForShutdown(int n)
-{
-    if (fShutdown)
-    {
-        if (n != -1)
-            if (--vnThreadsRunning[n] < 0)
-                vnThreadsRunning[n] = 0;
-        if (n == 0)
-        {
-            foreach(CNode* pnode, vNodes)
-                closesocket(pnode->hSocket);
-            closesocket(hListenSocket);
-        }
-        printf("Thread %d exiting\n", n);
-        _endthread();
-    }
 }

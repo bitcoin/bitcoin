@@ -96,12 +96,7 @@ void RandAddSeedPerfmon()
         hash = 0;
         memset(pdata, 0, nSize);
 
-        time_t nTime;
-        time(&nTime);
-        struct tm* ptmTime = gmtime(&nTime);
-        char pszTime[200];
-        strftime(pszTime, sizeof(pszTime), "%x %H:%M:%S", ptmTime);
-        printf("%s RandAddSeed() %d bytes\n", pszTime, nSize);
+        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str(), nSize);
     }
 #endif
 }
@@ -350,7 +345,9 @@ void FormatException(char* pszMessage, std::exception* pex, const char* pszThrea
     pszModule[0] = '\0';
     GetModuleFileName(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = wxStandardPaths::Get().GetExecutablePath().mb_str();
+    // might not be thread safe, uses wxString
+    //const char* pszModule = wxStandardPaths::Get().GetExecutablePath().mb_str();
+    const char* pszModule = "bitcoin";
 #endif
     if (pex)
         snprintf(pszMessage, 1000,
@@ -425,7 +422,6 @@ void GetDataDir(char* pszDir)
         }
         strlcpy(pszDir, pszCachedDir, MAX_PATH);
     }
-
 }
 
 string GetDataDir()
