@@ -37,7 +37,6 @@
 #include <wx/statbmp.h>
 #include <wx/combobox.h>
 #include <wx/richtext/richtextctrl.h>
-#include <wx/treectrl.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -88,14 +87,7 @@
 #define wxID_BUTTONBACK 1044
 #define wxID_BUTTONNEXT 1045
 #define wxID_SUBMIT 1046
-#define wxID_OPENNEWTABLE 1047
-#define wxID_DEALHAND 1048
-#define wxID_FOLD 1049
-#define wxID_CALL 1050
-#define wxID_RAISE 1051
-#define wxID_LEAVETABLE 1052
-#define wxID_DITCHPLAYER 1053
-#define wxID_TEXTCTRL 1054
+#define wxID_TEXTCTRL 1047
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class CMainFrameBase
@@ -649,78 +641,6 @@ class CEditReviewDialogBase : public wxFrame
 	public:
 		CEditReviewDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Enter Review"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 630,440 ), long style = wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
 		~CEditReviewDialogBase();
-	
-};
-
-///////////////////////////////////////////////////////////////////////////////
-/// Class CPokerLobbyDialogBase
-///////////////////////////////////////////////////////////////////////////////
-class CPokerLobbyDialogBase : public wxFrame 
-{
-	private:
-	
-	protected:
-		wxTreeCtrl* m_treeCtrl;
-		wxListCtrl* m_listCtrl;
-		wxButton* m_buttonNewTable;
-		
-		// Virtual event handlers, overide them in your derived class
-		virtual void OnTreeSelChanged( wxTreeEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemSelected( wxListEvent& event ){ event.Skip(); }
-		virtual void OnButtonNewTable( wxCommandEvent& event ){ event.Skip(); }
-		
-	
-	public:
-		CPokerLobbyDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Poker Lobby"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 586,457 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
-		~CPokerLobbyDialogBase();
-	
-};
-
-///////////////////////////////////////////////////////////////////////////////
-/// Class CPokerDialogBase
-///////////////////////////////////////////////////////////////////////////////
-class CPokerDialogBase : public wxFrame 
-{
-	private:
-	
-	protected:
-		wxButton* m_buttonDealHand;
-		wxButton* m_buttonFold;
-		wxButton* m_buttonCall;
-		wxButton* m_buttonRaise;
-		wxButton* m_buttonLeaveTable;
-		wxTextCtrl* m_textDitchPlayer;
-		
-		// Virtual event handlers, overide them in your derived class
-		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
-		virtual void OnMouseEvents( wxMouseEvent& event ){ event.Skip(); }
-		virtual void OnPaint( wxPaintEvent& event ){ event.Skip(); }
-		virtual void OnSize( wxSizeEvent& event ){ event.Skip(); }
-		virtual void OnCheckSitOut( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonDealHand( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonFold( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCall( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonRaise( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonLeaveTable( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnDitchPlayer( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckPreFold( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckPreCall( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckPreCallAny( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckPreRaise( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckPreRaiseAny( wxCommandEvent& event ){ event.Skip(); }
-		
-	
-	public:
-		wxCheckBox* m_checkSitOut;
-		wxCheckBox* m_checkPreFold;
-		wxCheckBox* m_checkPreCall;
-		wxCheckBox* m_checkPreCallAny;
-		wxCheckBox* m_checkPreRaise;
-		wxCheckBox* m_checkPreRaiseAny;
-		wxStatusBar* m_statusBar;
-		CPokerDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Poker"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 806,550 ), long style = wxDEFAULT_FRAME_STYLE|wxFRAME_NO_TASKBAR|wxFULL_REPAINT_ON_RESIZE|wxTAB_TRAVERSAL );
-		~CPokerDialogBase();
 	
 };
 

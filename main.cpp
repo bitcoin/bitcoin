@@ -1381,7 +1381,7 @@ bool CheckDiskSpace(int64 nAdditionalBytes)
     if (nFreeBytesAvailable < (int64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
-        wxMessageBox("Warning: Your disk space is low  ", "Bitcoin", wxICON_EXCLAMATION);
+        ThreadSafeMessageBox("Warning: Your disk space is low  ", "Bitcoin", wxOK | wxICON_EXCLAMATION);
         _beginthread(Shutdown, 0, NULL);
         return false;
     }

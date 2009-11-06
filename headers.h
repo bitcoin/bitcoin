@@ -53,6 +53,8 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
 #include <boost/array.hpp>
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
 
 #ifdef __WXMSW__
 #include <windows.h>
