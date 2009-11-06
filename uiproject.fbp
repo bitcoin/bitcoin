@@ -70,7 +70,7 @@
             <event name="OnSetFocus"></event>
             <event name="OnSize"></event>
             <event name="OnUpdateUI"></event>
-            <object class="wxMenuBar" expanded="1">
+            <object class="wxMenuBar" expanded="0">
                 <property name="bg">240,240,240</property>
                 <property name="context_help"></property>
                 <property name="enabled">1</property>
@@ -225,7 +225,7 @@
                     </object>
                 </object>
             </object>
-            <object class="wxToolBar" expanded="1">
+            <object class="wxToolBar" expanded="0">
                 <property name="bg"></property>
                 <property name="bitmapsize">20,20</property>
                 <property name="context_help"></property>
@@ -439,7 +439,7 @@
                                 <property name="name">m_textCtrlAddress</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
-                                <property name="size">250,-1</property>
+                                <property name="size">340,-1</property>
                                 <property name="style">wxTE_READONLY</property>
                                 <property name="subclass"></property>
                                 <property name="tooltip"></property>
@@ -944,7 +944,7 @@
                                             <property name="tooltip"></property>
                                             <property name="window_extra_style"></property>
                                             <property name="window_name"></property>
-                                            <property name="window_style">wxALWAYS_SHOW_SB</property>
+                                            <property name="window_style">wxVSCROLL</property>
                                             <event name="OnChar"></event>
                                             <event name="OnEnterWindow"></event>
                                             <event name="OnEraseBackground"></event>
@@ -1648,7 +1648,7 @@
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
-                                <property name="size">85,25</property>
+                                <property name="size">-1,-1</property>
                                 <property name="style"></property>
                                 <property name="subclass"></property>
                                 <property name="tooltip"></property>
@@ -3031,7 +3031,7 @@
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
-                                <property name="size">85,25</property>
+                                <property name="size">-1,-1</property>
                                 <property name="style"></property>
                                 <property name="subclass"></property>
                                 <property name="tooltip"></property>
@@ -3079,7 +3079,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -3131,7 +3131,7 @@
                                 <property name="id">wxID_APPLY</property>
                                 <property name="label">&amp;Apply</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonApply</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -3493,7 +3493,7 @@
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
-                                <property name="size">85,25</property>
+                                <property name="size">-1,-1</property>
                                 <property name="style"></property>
                                 <property name="subclass"></property>
                                 <property name="tooltip"></property>
@@ -4485,7 +4485,7 @@
                                 <property name="id">wxID_BUTTONSEND</property>
                                 <property name="label">&amp;Send</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonSend</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -4537,7 +4537,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -4775,7 +4775,7 @@
                                 <property name="id">wxID_ANY</property>
                                 <property name="label">OK</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -4827,7 +4827,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5089,7 +5089,7 @@
                                 <property name="id">wxID_BUTTONRENAME</property>
                                 <property name="label">&amp;Edit...</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonRename</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5141,7 +5141,7 @@
                                 <property name="id">wxID_BUTTONNEW</property>
                                 <property name="label">&amp;New Address...</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">110,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonNew</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5193,7 +5193,7 @@
                                 <property name="id">wxID_BUTTONCOPY</property>
                                 <property name="label">&amp;Copy to Clipboard</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">120,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCopy</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5245,7 +5245,7 @@
                                 <property name="id">wxID_OK</property>
                                 <property name="label">OK</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5297,7 +5297,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5559,7 +5559,7 @@
                                 <property name="id">wxID_BUTTONEDIT</property>
                                 <property name="label">&amp;Edit...</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonEdit</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5611,7 +5611,7 @@
                                 <property name="id">wxID_BUTTONNEW</property>
                                 <property name="label">&amp;New Address...</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">110,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonNew</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5663,7 +5663,7 @@
                                 <property name="id">wxID_BUTTONDELETE</property>
                                 <property name="label">&amp;Delete</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonDelete</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5715,7 +5715,7 @@
                                 <property name="id">wxID_OK</property>
                                 <property name="label">OK</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -5767,7 +5767,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">public</property>
                                 <property name="pos"></property>
@@ -10225,7 +10225,7 @@
                                 <property name="id">wxID_BUTTONSEND</property>
                                 <property name="label">&amp;Send</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -10277,7 +10277,7 @@
                                 <property name="id">wxID_BUTTONPREVIEW</property>
                                 <property name="label">&amp;Preview</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonPreview</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -10329,7 +10329,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -10798,7 +10798,7 @@
                                 <property name="id">wxID_BUTTONBACK</property>
                                 <property name="label">&lt; &amp;Back  </property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonBack</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -10850,7 +10850,7 @@
                                 <property name="id">wxID_BUTTONNEXT</property>
                                 <property name="label">  &amp;Next &gt;</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonNext</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -10902,7 +10902,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -11087,7 +11087,7 @@
                                 <property name="id">wxID_OK</property>
                                 <property name="label">OK</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -11488,7 +11488,7 @@
                                 <property name="id">wxID_SUBMIT</property>
                                 <property name="label">&amp;Submit</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonSubmit</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -11540,7 +11540,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -12907,7 +12907,7 @@
                                 <property name="id">wxID_OK</property>
                                 <property name="label">OK</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonOK</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>
@@ -12959,7 +12959,7 @@
                                 <property name="id">wxID_CANCEL</property>
                                 <property name="label">Cancel</property>
                                 <property name="maximum_size"></property>
-                                <property name="minimum_size">85,25</property>
+                                <property name="minimum_size">-1,-1</property>
                                 <property name="name">m_buttonCancel</property>
                                 <property name="permission">protected</property>
                                 <property name="pos"></property>

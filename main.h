@@ -68,7 +68,7 @@ bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key);
 bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew);
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
-bool BitcoinMiner();
+void BitcoinMiner();
 
 
 

@@ -550,7 +550,7 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
                 //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
                 //printf(" %12I64d  %s  %s  %s\n",
                 //    wtx.vout[0].nValue,
-                //    DateTimeStr(wtx.nTime).c_str(),
+                //    DateTimeStrFormat("%x %H:%M:%S", wtx.nTime).c_str(),
                 //    wtx.hashBlock.ToString().substr(0,14).c_str(),
                 //    wtx.mapValue["message"].c_str());
             }

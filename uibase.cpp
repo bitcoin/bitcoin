@@ -84,7 +84,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_staticText32->Wrap( -1 );
 	bSizer85->Add( m_staticText32, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 5 );
 	
-	m_textCtrlAddress = new wxTextCtrl( this, wxID_TEXTCTRLADDRESS, wxEmptyString, wxDefaultPosition, wxSize( 250,-1 ), wxTE_READONLY );
+	m_textCtrlAddress = new wxTextCtrl( this, wxID_TEXTCTRLADDRESS, wxEmptyString, wxDefaultPosition, wxSize( 340,-1 ), wxTE_READONLY );
 	m_textCtrlAddress->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_MENU ) );
 	
 	bSizer85->Add( m_textCtrlAddress, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
@@ -143,7 +143,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer157;
 	bSizer157 = new wxBoxSizer( wxVERTICAL );
 	
-	m_listCtrl = new wxListCtrl( m_panel7, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxALWAYS_SHOW_SB );
+	m_listCtrl = new wxListCtrl( m_panel7, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
 	bSizer157->Add( m_listCtrl, 1, wxEXPAND|wxALL, 5 );
 	
 	m_panel7->SetSizer( bSizer157 );
@@ -343,7 +343,7 @@ CTxDetailsDialogBase::CTxDetailsDialogBase( wxWindow* parent, wxWindowID id, con
 	wxBoxSizer* bSizer65;
 	bSizer65 = new wxBoxSizer( wxVERTICAL );
 	
-	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( 85,25 ), 0 );
+	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	bSizer65->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	bSizer64->Add( bSizer65, 0, wxALIGN_RIGHT, 5 );
@@ -520,17 +520,13 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	wxBoxSizer* bSizer58;
 	bSizer58 = new wxBoxSizer( wxHORIZONTAL );
 	
-	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( 85,25 ), 0 );
+	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	bSizer58->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer58->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	m_buttonApply = new wxButton( this, wxID_APPLY, wxT("&Apply"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonApply->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer58->Add( m_buttonApply, 0, wxALL, 5 );
 	
 	bSizer55->Add( bSizer58, 0, wxALIGN_RIGHT, 5 );
@@ -622,7 +618,7 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	
 	bSizer61->Add( 0, 0, 1, wxEXPAND, 5 );
 	
-	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( 85,25 ), 0 );
+	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	bSizer61->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	bSizer60->Add( bSizer61, 0, wxALIGN_RIGHT|wxEXPAND, 5 );
@@ -767,13 +763,10 @@ CSendDialogBase::CSendDialogBase( wxWindow* parent, wxWindowID id, const wxStrin
 	
 	m_buttonSend = new wxButton( this, wxID_BUTTONSEND, wxT("&Send"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	m_buttonSend->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), 70, 90, 90, false, wxEmptyString ) );
-	m_buttonSend->SetMinSize( wxSize( 85,25 ) );
 	
 	bSizer23->Add( m_buttonSend, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer23->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	bSizer21->Add( bSizer23, 0, wxEXPAND, 5 );
@@ -833,13 +826,10 @@ CSendingDialogBase::CSendingDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	m_buttonOK = new wxButton( this, wxID_ANY, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_buttonOK->Enable( false );
-	m_buttonOK->SetMinSize( wxSize( 85,25 ) );
 	
 	bSizer69->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer69->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	bSizer68->Add( bSizer69, 0, wxEXPAND, 5 );
@@ -887,28 +877,19 @@ CYourAddressDialogBase::CYourAddressDialogBase( wxWindow* parent, wxWindowID id,
 	bSizer69->Add( 0, 0, 1, wxEXPAND, 5 );
 	
 	m_buttonRename = new wxButton( this, wxID_BUTTONRENAME, wxT("&Edit..."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonRename->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer69->Add( m_buttonRename, 0, wxALL, 5 );
 	
 	m_buttonNew = new wxButton( this, wxID_BUTTONNEW, wxT("&New Address..."), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonNew->SetMinSize( wxSize( 110,25 ) );
-	
 	bSizer69->Add( m_buttonNew, 0, wxALL, 5 );
 	
 	m_buttonCopy = new wxButton( this, wxID_BUTTONCOPY, wxT("&Copy to Clipboard"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonCopy->SetMinSize( wxSize( 120,25 ) );
-	
 	bSizer69->Add( m_buttonCopy, 0, wxALL, 5 );
 	
 	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonOK->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer69->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	m_buttonCancel->Hide();
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
 	
 	bSizer69->Add( m_buttonCancel, 0, wxALL, 5 );
 	
@@ -969,28 +950,18 @@ CAddressBookDialogBase::CAddressBookDialogBase( wxWindow* parent, wxWindowID id,
 	bSizer69->Add( 0, 0, 1, wxEXPAND, 5 );
 	
 	m_buttonEdit = new wxButton( this, wxID_BUTTONEDIT, wxT("&Edit..."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonEdit->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer69->Add( m_buttonEdit, 0, wxALL, 5 );
 	
 	m_buttonNew = new wxButton( this, wxID_BUTTONNEW, wxT("&New Address..."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonNew->SetMinSize( wxSize( 110,25 ) );
-	
 	bSizer69->Add( m_buttonNew, 0, wxALL, 5 );
 	
 	m_buttonDelete = new wxButton( this, wxID_BUTTONDELETE, wxT("&Delete"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonDelete->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer69->Add( m_buttonDelete, 0, wxALL, 5 );
 	
 	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonOK->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer69->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer69->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	bSizer68->Add( bSizer69, 0, wxEXPAND, 5 );
@@ -1389,18 +1360,12 @@ CEditProductDialogBase::CEditProductDialogBase( wxWindow* parent, wxWindowID id,
 	bSizer26 = new wxBoxSizer( wxHORIZONTAL );
 	
 	m_buttonOK = new wxButton( this, wxID_BUTTONSEND, wxT("&Send"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonOK->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer26->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	m_buttonPreview = new wxButton( this, wxID_BUTTONPREVIEW, wxT("&Preview"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonPreview->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer26->Add( m_buttonPreview, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer26->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	bSizer20->Add( bSizer26, 0, wxALIGN_RIGHT, 5 );
@@ -1605,18 +1570,13 @@ CViewProductDialogBase::CViewProductDialogBase( wxWindow* parent, wxWindowID id,
 	
 	m_buttonBack = new wxButton( this, wxID_BUTTONBACK, wxT("< &Back  "), wxDefaultPosition, wxDefaultSize, 0 );
 	m_buttonBack->Enable( false );
-	m_buttonBack->SetMinSize( wxSize( 85,25 ) );
 	
 	bSizer26->Add( m_buttonBack, 0, wxALL, 5 );
 	
 	m_buttonNext = new wxButton( this, wxID_BUTTONNEXT, wxT("  &Next >"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonNext->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer26->Add( m_buttonNext, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer26->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	bSizer20->Add( bSizer26, 0, wxALIGN_RIGHT, 5 );
@@ -1662,8 +1622,6 @@ CViewOrderDialogBase::CViewOrderDialogBase( wxWindow* parent, wxWindowID id, con
 	bSizer26 = new wxBoxSizer( wxHORIZONTAL );
 	
 	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonOK->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer26->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	bSizer20->Add( bSizer26, 0, wxALIGN_RIGHT, 5 );
@@ -1720,13 +1678,9 @@ CEditReviewDialogBase::CEditReviewDialogBase( wxWindow* parent, wxWindowID id, c
 	bSizer113 = new wxBoxSizer( wxHORIZONTAL );
 	
 	m_buttonSubmit = new wxButton( this, wxID_SUBMIT, wxT("&Submit"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonSubmit->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer113->Add( m_buttonSubmit, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer113->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	bSizer112->Add( bSizer113, 0, wxALIGN_RIGHT, 5 );
@@ -1951,13 +1905,9 @@ CGetTextFromUserDialogBase::CGetTextFromUserDialogBase( wxWindow* parent, wxWind
 	bSizer80->Add( 0, 0, 1, wxEXPAND, 5 );
 	
 	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	m_buttonOK->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer80->Add( m_buttonOK, 0, wxALL, 5 );
 	
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonCancel->SetMinSize( wxSize( 85,25 ) );
-	
 	bSizer80->Add( m_buttonCancel, 0, wxALL, 5 );
 	
 	bSizer79->Add( bSizer80, 0, wxEXPAND, 5 );

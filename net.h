@@ -30,7 +30,6 @@ void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
 bool StartNode(string& strError=REF(string()));
 bool StopNode();
-void CheckForShutdown(int n);
 
 
 
@@ -268,6 +267,7 @@ public:
     struct sockaddr_in GetSockAddr() const
     {
         struct sockaddr_in sockaddr;
+        memset(&sockaddr, 0, sizeof(sockaddr));
         sockaddr.sin_family = AF_INET;
         sockaddr.sin_addr.s_addr = ip;
         sockaddr.sin_port = port;

@@ -65,11 +65,13 @@ bool Is24HourTime()
 
 string DateStr(int64 nTime)
 {
+    // Can only be used safely here in the UI
     return (string)wxDateTime((time_t)nTime).FormatDate();
 }
 
 string DateTimeStr(int64 nTime)
 {
+    // Can only be used safely here in the UI
     wxDateTime datetime((time_t)nTime);
     if (Is24HourTime())
         return (string)datetime.Format("%x %H:%M");
@@ -283,6 +285,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     fRefreshListCtrl = false;
     fRefreshListCtrlRunning = false;
     fOnSetFocusAddress = false;
+    fRefresh = false;
     m_choiceFilter->SetSelection(0);
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
@@ -350,7 +353,7 @@ void Shutdown(void* parg)
         StopNode();
         DBFlush(true);
 
-        printf("Bitcoin exiting\n");
+        printf("Bitcoin exiting\n\n");
         exit(0);
     }
 }
@@ -391,6 +394,30 @@ void CMainFrame::OnListColBeginDrag(wxListEvent& event)
         event.Veto();
 }
 
+int CMainFrame::GetSortIndex(const string& strSort)
+{
+#ifdef __WXMSW__
+    return 0;
+#else
+    // The wx generic listctrl implementation used on GTK doesn't sort,
+    // so we have to do it ourselves.  Remember, we sort in reverse order.
+    // In the wx generic implementation, they store the list of items
+    // in a vector, so indexed lookups are fast, but inserts are slower
+    // the closer they are to the top.
+    int low = 0;
+    int high = m_listCtrl->GetItemCount();
+    while (low < high)
+    {
+        int mid = low + ((high - low) / 2);
+        if (strSort.compare(m_listCtrl->GetItemText(mid).c_str()) >= 0)
+            high = mid;
+        else
+            low = mid + 1;
+    }
+    return low;
+#endif
+}
+
 void CMainFrame::InsertLine(bool fNew, int nIndex, uint256 hashKey, string strSort, const wxString& str2, const wxString& str3, const wxString& str4, const wxString& str5, const wxString& str6)
 {
     string str0 = strSort;
@@ -407,7 +434,7 @@ void CMainFrame::InsertLine(bool fNew, int nIndex, uint256 hashKey, string strSo
     // fNew is for blind insert, only use if you're sure it's new
     if (fNew || nIndex == -1)
     {
-        nIndex = m_listCtrl->InsertItem(0, str0);
+        nIndex = m_listCtrl->InsertItem(GetSortIndex(strSort), str0);
     }
     else
     {
@@ -415,7 +442,7 @@ void CMainFrame::InsertLine(bool fNew, int nIndex, uint256 hashKey, string strSo
         if (GetItemText(m_listCtrl, nIndex, 0) != str0)
         {
             m_listCtrl->DeleteItem(nIndex);
-            nIndex = m_listCtrl->InsertItem(0, str0);
+            nIndex = m_listCtrl->InsertItem(GetSortIndex(strSort), str0);
         }
     }
 
@@ -826,6 +853,11 @@ void CMainFrame::RefreshStatusColumn()
 
 void CMainFrame::OnPaint(wxPaintEvent& event)
 {
+    if (fRefresh)
+    {
+        fRefresh = false;
+        Refresh();
+    }
     event.Skip();
 }
 
@@ -846,7 +878,7 @@ void ThreadDelayedRepaint(void* parg)
             {
                 printf("DelayedRepaint\n");
                 wxPaintEvent event;
-                pframeMain->Refresh();
+                pframeMain->fRefresh = true;
                 pframeMain->AddPendingEvent(event);
             }
         }
@@ -871,7 +903,7 @@ void MainFrameRepaint()
 
         printf("MainFrameRepaint\n");
         wxPaintEvent event;
-        pframeMain->Refresh();
+        pframeMain->fRefresh = true;
         pframeMain->AddPendingEvent(event);
     }
 }
@@ -907,7 +939,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
                 }
                 vWalletUpdated.clear();
                 if (m_listCtrl->GetItemCount() && strTop != (string)m_listCtrl->GetItemText(0))
-                    m_listCtrl->ScrollList(0, INT_MAX);
+                    m_listCtrl->ScrollList(0, INT_MIN/2);
             }
         }
 
@@ -943,9 +975,10 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     string strStatus = strprintf("     %d connections     %d blocks     %d transactions", vNodes.size(), nBestHeight + 1, nTransactionCount);
     m_statusBar->SetStatusText(strStatus, 2);
 
-#ifdef __WXMSW__
-    m_listCtrl->OnPaint(event);
-#endif
+    // Pass through to listctrl to actually do the paint, we're just hooking the message
+    m_listCtrl->Disconnect(wxEVT_PAINT, (wxObjectEventFunction)NULL, NULL, this);
+    m_listCtrl->GetEventHandler()->ProcessEvent(event);
+    m_listCtrl->Connect(wxEVT_PAINT, wxPaintEventHandler(CMainFrame::OnPaintListCtrl), NULL, this);
 }
 
 
@@ -3331,7 +3364,11 @@ bool CMyApp::OnInit2()
     g_isPainting = 10000;
 #endif
     wxImage::AddHandler(new wxPNGHandler);
+#ifdef __WXMSW__
     SetAppName("Bitcoin");
+#else
+    SetAppName("bitcoin");
+#endif
 
     ParseParameters(argc, argv);
     if (mapArgs.count("-?") || mapArgs.count("--help"))
@@ -3355,7 +3392,10 @@ bool CMyApp::OnInit2()
     // Limit to single instance per user
     // Required to protect the database files if we're going to keep deleting log.*
     //
-    wxString strMutexName = wxString("Bitcoin.") + getenv("HOMEPATH");
+#ifdef __WXMSW__
+    // todo: wxSingleInstanceChecker wasn't working on Linux, never deleted its lock file
+    //  maybe should go by whether successfully bind port 8333 instead
+    wxString strMutexName = wxString("bitcoin_running.") + getenv("HOMEPATH");
     for (int i = 0; i < strMutexName.size(); i++)
         if (!isalnum(strMutexName[i]))
             strMutexName[i] = '.';
@@ -3367,7 +3407,6 @@ bool CMyApp::OnInit2()
         loop
         {
             // TODO: find out how to do this in Linux, or replace with wxWidgets commands
-#ifdef __WXMSW__
             // Show the previous instance and exit
             HWND hwndPrev = FindWindow("wxWindowClassNR", "Bitcoin");
             if (hwndPrev)
@@ -3377,7 +3416,6 @@ bool CMyApp::OnInit2()
                 SetForegroundWindow(hwndPrev);
                 return false;
             }
-#endif
 
             if (GetTime() > nStart + 60)
                 return false;
@@ -3390,6 +3428,7 @@ bool CMyApp::OnInit2()
                 break;
         }
     }
+#endif
 
     //
     // Parameters

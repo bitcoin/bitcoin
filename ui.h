@@ -32,7 +32,6 @@ extern int fMinimizeOnClose;
 
 
 extern void HandleCtrlA(wxKeyEvent& event);
-extern string DateTimeStr(int64 nTime);
 extern string FormatTxStatus(const CWalletTx& wtx);
 extern void CrossThreadCall(int nID, void* pdata);
 extern void MainFrameRepaint();
@@ -84,8 +83,10 @@ public:
     bool fRefreshListCtrlRunning;
     bool fOnSetFocusAddress;
     unsigned int nListViewUpdated;
+    bool fRefresh;
 
     void OnCrossThreadCall(wxCommandEvent& event);
+    int GetSortIndex(const string& strSort);
     void InsertLine(bool fNew, int nIndex, uint256 hashKey, string strSort, const wxString& str1, const wxString& str2, const wxString& str3, const wxString& str4, const wxString& str5);
     bool DeleteLine(uint256 hashKey);
     bool InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex=-1);

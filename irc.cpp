@@ -167,9 +167,12 @@ void ThreadIRCSeed(void* parg)
     while (!fShutdown)
     {
         CAddress addrConnect("216.155.130.130:6667");
-        struct hostent* phostent = gethostbyname("chat.freenode.net");
-        if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
-            addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(6667));
+        if (!(fUseProxy && addrProxy.port == htons(9050)))
+        {
+            struct hostent* phostent = gethostbyname("chat.freenode.net");
+            if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
+                addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(6667));
+        }
 
         SOCKET hSocket;
         if (!ConnectSocket(addrConnect, hSocket))
