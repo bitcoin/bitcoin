@@ -24,7 +24,7 @@ extern int fMinimizeOnClose;
 
 extern void HandleCtrlA(wxKeyEvent& event);
 extern string FormatTxStatus(const CWalletTx& wtx);
-extern void UIThreadCall(boost::function<void ()>);
+extern void UIThreadCall(boost::function0<void>);
 extern void MainFrameRepaint();
 extern void Shutdown(void* parg);
 extern int ThreadSafeMessageBox(const string& message, const string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1);

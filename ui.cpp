@@ -181,17 +181,30 @@ void AddToMyProducts(CProduct product)
                 "");
 }
 
-void StringMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
+void CalledMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y, int* pnRet, bool* pfDone)
 {
-    wxMessageBox(message, caption, style, parent, x, y);
+    *pnRet = wxMessageBox(message, caption, style, parent, x, y);
+    *pfDone = true;
 }
 
 int ThreadSafeMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
 {
 #ifdef __WXMSW__
-    wxMessageBox(message, caption, style, parent, x, y);
+    return wxMessageBox(message, caption, style, parent, x, y);
 #else
-    UIThreadCall(bind(StringMessageBox, message, caption, style, parent, x, y));
+    if (wxThread::IsMain())
+    {
+        return wxMessageBox(message, caption, style, parent, x, y);
+    }
+    else
+    {
+        int nRet = 0;
+        bool fDone = false;
+        UIThreadCall(bind(CalledMessageBox, message, caption, style, parent, x, y, &nRet, &fDone));
+        while (!fDone)
+            Sleep(100);
+        return nRet;
+    }
 #endif
 }
 
@@ -303,6 +316,18 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     fOnSetFocusAddress = false;
     fRefresh = false;
     m_choiceFilter->SetSelection(0);
+#ifndef __WXMSW__
+    wxFont fontTmp = m_staticTextBalance->GetFont();
+    fontTmp.SetPointSize(10);
+    fontTmp.SetFamily(wxFONTFAMILY_TELETYPE);
+    m_staticTextBalance->SetFont(fontTmp);
+    m_staticTextBalance->SetSize(140, 17);
+    // ampersand underlines aren't working on gtk
+    m_toolBar->ClearTools();
+    m_toolBar->AddTool(wxID_BUTTONSEND, "Send Coins", wxBitmap(send20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
+    m_toolBar->AddTool(wxID_BUTTONRECEIVE, "Address Book", wxBitmap(addressbook20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
+    m_toolBar->Realize();
+#endif
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
     SetIcon(wxICON(bitcoin));
@@ -998,7 +1023,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
 }
 
 
-void UIThreadCall(boost::function<void ()> fn)
+void UIThreadCall(boost::function0<void> fn)
 {
     // Call this with a function object created with bind.
     // bind needs all parameters to match the function's expected types
@@ -1009,14 +1034,14 @@ void UIThreadCall(boost::function<void ()> fn)
     if (pframeMain)
     {
         wxCommandEvent event(wxEVT_UITHREADCALL);
-        event.SetClientData((void*)new boost::function<void ()>(fn));
+        event.SetClientData((void*)new boost::function0<void>(fn));
         pframeMain->GetEventHandler()->AddPendingEvent(event);
     }
 }
 
 void CMainFrame::OnUIThreadCall(wxCommandEvent& event)
 {
-    boost::function<void ()>* pfn = (boost::function<void ()>*)event.GetClientData();
+    boost::function0<void>* pfn = (boost::function0<void>*)event.GetClientData();
     (*pfn)();
     delete pfn;
 }
@@ -1630,7 +1655,14 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     m_choiceTransferType->SetSelection(0);
     m_bitmapCheckMark->Show(false);
     fEnabledPrev = true;
+    m_textCtrlAddress->SetFocus();
     //// todo: should add a display of your balance for convenience
+#ifndef __WXMSW__
+    wxFont fontTmp = m_staticTextInstructions->GetFont();
+    fontTmp.SetPointSize(fontTmp.GetPointSize()-1);
+    m_staticTextInstructions->SetFont(fontTmp);
+    SetSize(725, wxDefaultCoord);
+#endif
 
     // Set Icon
     wxIcon iconSend;
@@ -1801,7 +1833,7 @@ CSendingDialog::CSendingDialog(wxWindow* parent, const CAddress& addrIn, int64 n
     fUIDone = false;
     fWorkDone = false;
 
-    SetTitle(strprintf("Sending %s to %s...", FormatMoney(nPrice).c_str(), wtx.mapValue["to"].c_str()));
+    SetTitle(strprintf("Sending %s to %s", FormatMoney(nPrice).c_str(), wtx.mapValue["to"].c_str()));
     m_textCtrlStatus->SetValue("");
 
     _beginthread(SendingDialogStartTransfer, 0, this);
@@ -3344,16 +3376,19 @@ IMPLEMENT_APP(CMyApp)
 
 bool CMyApp::OnInit()
 {
+    bool fRet = false;
     try
     {
-        return OnInit2();
+        fRet = OnInit2();
     }
     catch (std::exception& e) {
         PrintException(&e, "OnInit()");
     } catch (...) {
         PrintException(NULL, "OnInit()");
     }
-    return false;
+    if (!fRet)
+        Shutdown(NULL);
+    return fRet;
 }
 
 bool CMyApp::OnInit2()
@@ -3374,6 +3409,9 @@ bool CMyApp::OnInit2()
     SetAppName("bitcoin");
 #endif
 
+    //
+    // Parameters
+    //
     ParseParameters(argc, argv);
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
@@ -3389,7 +3427,27 @@ bool CMyApp::OnInit2()
             "  -connect=<ip>\t  Connect only to the specified node\n"
             "  -?\t\t  This help message\n";
         wxMessageBox(strUsage, "Bitcoin", wxOK);
-        exit(0);
+        return false;
+    }
+
+    if (mapArgs.count("-datadir"))
+        strlcpy(pszSetDataDir, mapArgs["-datadir"].c_str(), sizeof(pszSetDataDir));
+
+    if (mapArgs.count("-debug"))
+        fDebug = true;
+
+    if (mapArgs.count("-printtodebugger"))
+        fPrintToDebugger = true;
+
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    printf("Bitcoin version %d, OS version %s\n", VERSION, wxGetOsDescription().mb_str());
+
+    if (mapArgs.count("-loadblockindextest"))
+    {
+        CTxDB txdb("r");
+        txdb.LoadBlockIndex();
+        PrintBlockTree();
+        return false;
     }
 
     //
@@ -3434,41 +3492,20 @@ bool CMyApp::OnInit2()
     }
 #endif
 
-    //
-    // Parameters
-    //
-    if (mapArgs.count("-datadir"))
-        strlcpy(pszSetDataDir, mapArgs["-datadir"].c_str(), sizeof(pszSetDataDir));
-
-    if (mapArgs.count("-debug"))
-        fDebug = true;
-
-    if (mapArgs.count("-printtodebugger"))
-        fPrintToDebugger = true;
-
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %d, OS version %s\n", VERSION, wxGetOsDescription().mb_str());
-
-    if (mapArgs.count("-dropmessages"))
+    // Bind to the port early so we can tell if another instance is already running.
+    // This is a backup to wxSingleInstanceChecker, which doesn't work on Linux.
+    string strErrors;
+    if (!BindListenPort(strErrors))
     {
-        nDropMessagesTest = atoi(mapArgs["-dropmessages"]);
-        if (nDropMessagesTest == 0)
-            nDropMessagesTest = 20;
-    }
-
-    if (mapArgs.count("-loadblockindextest"))
-    {
-        CTxDB txdb("r");
-        txdb.LoadBlockIndex();
-        PrintBlockTree();
-        exit(0);
+        wxMessageBox(strErrors, "Bitcoin");
+        return false;
     }
 
     //
     // Load data files
     //
     bool fFirstRun;
-    string strErrors;
+    strErrors = "";
     int64 nStart;
 
     printf("Loading addresses...\n");
@@ -3502,7 +3539,6 @@ bool CMyApp::OnInit2()
     if (!strErrors.empty())
     {
         wxMessageBox(strErrors, "Bitcoin");
-        OnExit();
         return false;
     }
 
@@ -3515,7 +3551,6 @@ bool CMyApp::OnInit2()
     if (mapArgs.count("-printblockindex") || mapArgs.count("-printblocktree"))
     {
         PrintBlockTree();
-        OnExit();
         return false;
     }
 
@@ -3539,7 +3574,6 @@ bool CMyApp::OnInit2()
         }
         if (nFound == 0)
             printf("No blocks matching %s were found\n", strMatch.c_str());
-        OnExit();
         return false;
     }
 
@@ -3558,7 +3592,6 @@ bool CMyApp::OnInit2()
         if (!addrProxy.IsValid())
         {
             wxMessageBox("Invalid -proxy address", "Bitcoin");
-            OnExit();
             return false;
         }
     }
@@ -3588,10 +3621,7 @@ bool CMyApp::OnInit2()
     _beginthread(ThreadDelayedRepaint, 0, NULL);
 
     if (!CheckDiskSpace())
-    {
-        OnExit();
         return false;
-    }
 
     RandAddSeedPerfmon();
 

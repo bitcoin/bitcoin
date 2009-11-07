@@ -511,11 +511,6 @@ void ThreadSocketHandler(void* parg)
         PrintException(NULL, "ThreadSocketHandler()");
     }
 
-    foreach(CNode* pnode, vNodes)
-        closesocket(pnode->hSocket);
-    if (closesocket(hListenSocket) == SOCKET_ERROR)
-        printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
-
     printf("ThreadSocketHandler exiting\n");
 }
 
@@ -989,15 +984,13 @@ void ThreadMessageHandler2(void* parg)
 
 
 
-
-bool StartNode(string& strError)
+bool BindListenPort(string& strError)
 {
-    if (pnodeLocalHost == NULL)
-        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress("127.0.0.1", nLocalServices));
     strError = "";
+    int nOne = 1;
 
 #ifdef __WXMSW__
-    // Sockets startup
+    // Initialize Windows Sockets
     WSADATA wsadata;
     int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
     if (ret != NO_ERROR)
@@ -1007,6 +1000,74 @@ bool StartNode(string& strError)
         return false;
     }
 #endif
+
+    // Create socket for listening for incoming connections
+    hListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (hListenSocket == INVALID_SOCKET)
+    {
+        strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %d)", WSAGetLastError());
+        printf("%s\n", strError.c_str());
+        return false;
+    }
+
+#if defined(__BSD__) || defined(__WXOSX__)
+    // Different way of disabling SIGPIPE on BSD
+    setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
+#endif
+
+#ifndef __WXMSW__
+    // Allow binding if the port is still in TIME_WAIT state after
+    // the program was closed and restarted.  Not an issue on windows.
+    setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
+#endif
+
+#ifdef __WXMSW__
+    // Set to nonblocking, incoming connections will also inherit this
+    if (ioctlsocket(hListenSocket, FIONBIO, (u_long*)&nOne) == SOCKET_ERROR)
+#else
+    if (fcntl(hListenSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+#endif
+    {
+        strError = strprintf("Error: Couldn't set properties on socket for incoming connections (error %d)", WSAGetLastError());
+        printf("%s\n", strError.c_str());
+        return false;
+    }
+
+    // The sockaddr_in structure specifies the address family,
+    // IP address, and port for the socket that is being bound
+    struct sockaddr_in sockaddr;
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin_family = AF_INET;
+    sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
+    sockaddr.sin_port = DEFAULT_PORT;
+    if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
+    {
+        int nErr = WSAGetLastError();
+        if (nErr == WSAEADDRINUSE)
+            strError = strprintf("Unable to bind to port %d on this computer.  Bitcoin may be running already.", ntohs(sockaddr.sin_port));
+        else
+            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
+        printf("%s\n", strError.c_str());
+        return false;
+    }
+    printf("bound to port %d\n", ntohs(sockaddr.sin_port));
+
+    // Listen for incoming connections
+    if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
+    {
+        strError = strprintf("Error: Listening for incoming connections failed (listen returned error %d)", WSAGetLastError());
+        printf("%s\n", strError.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+bool StartNode(string& strError)
+{
+    strError = "";
+    if (pnodeLocalHost == NULL)
+        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress("127.0.0.1", nLocalServices));
 
     // Get local host ip
     char pszHostName[255];
@@ -1034,59 +1095,6 @@ bool StartNode(string& strError)
             break;
     }
     printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
-
-    // Create socket for listening for incoming connections
-    hListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (hListenSocket == INVALID_SOCKET)
-    {
-        strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %d)", WSAGetLastError());
-        printf("%s\n", strError.c_str());
-        return false;
-    }
-#if defined(__BSD__) || defined(__WXOSX__)
-    int set = 1;
-    setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
-#endif
-
-    // Set to nonblocking, incoming connections will also inherit this
-#ifdef __WXMSW__
-    u_long nOne = 1;
-    if (ioctlsocket(hListenSocket, FIONBIO, &nOne) == SOCKET_ERROR)
-#else
-    if (fcntl(hListenSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
-#endif
-    {
-        strError = strprintf("Error: Couldn't set properties on socket for incoming connections (error %d)", WSAGetLastError());
-        printf("%s\n", strError.c_str());
-        return false;
-    }
-
-    // The sockaddr_in structure specifies the address family,
-    // IP address, and port for the socket that is being bound
-    struct sockaddr_in sockaddr;
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
-    sockaddr.sin_port = DEFAULT_PORT;
-    if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
-    {
-        int nErr = WSAGetLastError();
-        if (nErr == WSAEADDRINUSE)
-            strError = strprintf("Error: Unable to bind to port %d on this computer. The program is probably already running.", ntohs(sockaddr.sin_port));
-        else
-            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
-        printf("%s\n", strError.c_str());
-        return false;
-    }
-    printf("bound to port %d\n", ntohs(sockaddr.sin_port));
-
-    // Listen for incoming connections
-    if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
-    {
-        strError = strprintf("Error: Listening for incoming connections failed (listen returned error %d)", WSAGetLastError());
-        printf("%s\n", strError.c_str());
-        return false;
-    }
 
     // Get our external IP address for incoming connections
     if (fUseProxy)
@@ -1158,9 +1166,5 @@ bool StopNode()
         Sleep(20);
     Sleep(50);
 
-    // Sockets shutdown
-#ifdef __WXMSW__
-    WSACleanup();
-#endif
     return true;
 }

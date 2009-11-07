@@ -34,7 +34,6 @@ extern int nBestHeight;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
-extern int nDropMessagesTest;
 
 // Settings
 extern int fGenerateBitcoins;
