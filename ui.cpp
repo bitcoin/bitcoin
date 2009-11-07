@@ -316,13 +316,15 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     fOnSetFocusAddress = false;
     fRefresh = false;
     m_choiceFilter->SetSelection(0);
-#ifndef __WXMSW__
-    wxFont fontTmp = m_staticTextBalance->GetFont();
-    fontTmp.SetPointSize(10);
+#ifdef __WXMSW__
+    SetIcon(wxICON(bitcoin));
+#else
+    SetIcon(bitcoin16_xpm);
+    wxFont fontTmp = m_staticText41->GetFont();
     fontTmp.SetFamily(wxFONTFAMILY_TELETYPE);
     m_staticTextBalance->SetFont(fontTmp);
     m_staticTextBalance->SetSize(140, 17);
-    // ampersand underlines aren't working on gtk
+    // & underlines don't work on the toolbar buttons on gtk
     m_toolBar->ClearTools();
     m_toolBar->AddTool(wxID_BUTTONSEND, "Send Coins", wxBitmap(send20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
     m_toolBar->AddTool(wxID_BUTTONRECEIVE, "Address Book", wxBitmap(addressbook20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
@@ -330,7 +332,6 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
 #endif
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
-    SetIcon(wxICON(bitcoin));
     ptaskbaricon = new CMyTaskBarIcon();
 
     // Init column headers
@@ -1659,7 +1660,8 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     //// todo: should add a display of your balance for convenience
 #ifndef __WXMSW__
     wxFont fontTmp = m_staticTextInstructions->GetFont();
-    fontTmp.SetPointSize(fontTmp.GetPointSize()-1);
+    if (fontTmp.GetPointSize() > 9);
+        fontTmp.SetPointSize(9);
     m_staticTextInstructions->SetFont(fontTmp);
     SetSize(725, wxDefaultCoord);
 #endif
@@ -3270,7 +3272,11 @@ void CMyTaskBarIcon::Show(bool fShow)
         if (strncmp(pszPrevTip, strTooltip.c_str(), sizeof(pszPrevTip)-1) != 0)
         {
             strlcpy(pszPrevTip, strTooltip.c_str(), sizeof(pszPrevTip));
+#ifdef __WXMSW__
             SetIcon(wxICON(bitcoin), strTooltip);
+#else
+            SetIcon(bitcoin20_xpm, strTooltip);
+#endif
         }
     }
     else
