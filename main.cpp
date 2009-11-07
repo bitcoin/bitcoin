@@ -42,8 +42,6 @@ map<uint160, vector<unsigned char> > mapPubKeys;
 CCriticalSection cs_mapKeys;
 CKey keyUser;
 
-int nDropMessagesTest = 0;
-
 // Settings
 int fGenerateBitcoins = false;
 int64 nTransactionFee = 0;
@@ -1721,9 +1719,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     static map<unsigned int, vector<unsigned char> > mapReuseKey;
     RandAddSeedPerfmon();
     printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
-    if (nDropMessagesTest > 0 && GetRand(nDropMessagesTest) == 0)
+    if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {
-        printf("dropmessages DROPPING RECV MESSAGE\n");
+        printf("dropmessagestest DROPPING RECV MESSAGE\n");
         return true;
     }
 
@@ -2314,6 +2312,8 @@ void BitcoinMiner()
         {
             Sleep(1000);
             if (fShutdown)
+                return;
+            if (!fGenerateBitcoins)
                 return;
         }
 

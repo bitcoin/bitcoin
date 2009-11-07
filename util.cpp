@@ -53,6 +53,17 @@ public:
         for (int i = 0; i < CRYPTO_num_locks(); i++)
             delete ppmutexOpenSSL[i];
         OPENSSL_free(ppmutexOpenSSL);
+
+        // Close sockets
+        foreach(CNode* pnode, vNodes)
+            closesocket(pnode->hSocket);
+        if (closesocket(hListenSocket) == SOCKET_ERROR)
+            printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
+
+#ifdef __WXMSW__
+        // Shutdown Windows Sockets
+        WSACleanup();
+#endif
     }
 }
 instance_of_cinit;

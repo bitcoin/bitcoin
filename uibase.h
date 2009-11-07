@@ -277,7 +277,7 @@ class CSendDialogBase : public wxDialog
 	protected:
 		
 		
-		wxStaticText* m_staticText14;
+		wxStaticText* m_staticTextInstructions;
 		
 		wxStaticBitmap* m_bitmapCheckMark;
 		wxStaticText* m_staticText36;

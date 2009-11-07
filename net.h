@@ -28,6 +28,7 @@ CNode* FindNode(unsigned int ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
 void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
+bool BindListenPort(string& strError=REF(string()));
 bool StartNode(string& strError=REF(string()));
 bool StopNode();
 
@@ -456,6 +457,8 @@ extern CNode* pnodeLocalHost;
 extern uint64 nLocalHostNonce;
 extern bool fShutdown;
 extern array<int, 10> vnThreadsRunning;
+extern SOCKET hListenSocket;
+
 extern vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
 extern map<vector<unsigned char>, CAddress> mapAddresses;
@@ -647,8 +650,7 @@ public:
 
     void EndMessage()
     {
-        extern int nDropMessagesTest;
-        if (nDropMessagesTest > 0 && GetRand(nDropMessagesTest) == 0)
+        if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
         {
             printf("dropmessages DROPPING SEND MESSAGE\n");
             AbortMessage();
