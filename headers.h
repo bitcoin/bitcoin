@@ -101,7 +101,10 @@ using namespace boost;
 
 #include "xpm/addressbook16.xpm"
 #include "xpm/addressbook20.xpm"
-#include "xpm/bitcoin.xpm"
+#include "xpm/bitcoin16.xpm"
+#include "xpm/bitcoin20.xpm"
+#include "xpm/bitcoin32.xpm"
+#include "xpm/bitcoin48.xpm"
 #include "xpm/check.xpm"
 #include "xpm/send16.xpm"
 #include "xpm/send16noshadow.xpm"

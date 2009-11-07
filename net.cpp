@@ -1044,13 +1044,13 @@ bool BindListenPort(string& strError)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf("Unable to bind to port %d on this computer.  Bitcoin may be running already.", ntohs(sockaddr.sin_port));
+            strError = strprintf("Unable to bind to port %d on this computer.  Bitcoin is probably already running.", ntohs(sockaddr.sin_port));
         else
             strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
         printf("%s\n", strError.c_str());
         return false;
     }
-    printf("bound to port %d\n", ntohs(sockaddr.sin_port));
+    printf("Bound to port %d\n", ntohs(sockaddr.sin_port));
 
     // Listen for incoming connections
     if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
