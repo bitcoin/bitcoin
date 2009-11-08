@@ -1215,7 +1215,7 @@ bool CBlock::AcceptBlock()
         return error("AcceptBlock() : block's timestamp is too early");
 
     // Check that all transactions are finalized (starting around Dec 2009)
-    if (nBestHeight > 31000) // 25620 + 5320
+    if (nBestHeight > 31000)
         foreach(const CTransaction& tx, vtx)
             if (!tx.IsFinal(nTime))
                 return error("AcceptBlock() : contains a non-final transaction");
@@ -1802,7 +1802,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             if (fShutdown)
                 return true;
-            addr.nTime = GetAdjustedTime();
+            addr.nTime = GetAdjustedTime() - 2 * 60 * 60;
             if (pfrom->fGetAddr)
                 addr.nTime -= 5 * 24 * 60 * 60;
             AddAddress(addrdb, addr, false);

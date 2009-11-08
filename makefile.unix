@@ -15,21 +15,24 @@ endif
 
 
 
-INCLUDEPATHS=-I"/usr/include" \
-             -I"/usr/local/boost_1_40_0" \
-             -I"/usr/local/db-4.7.25.NC/build_unix" \
-             -I"/usr/local/include/wx-2.8" \
-             -I"/usr/local/lib/wx/include/gtk2-ansi-debug-static-2.8"
+INCLUDEPATHS= \
+ -I"/usr/include" \
+ -I"/usr/local/boost_1_40_0" \
+ -I"/usr/local/db-4.7.25.NC/build_unix" \
+ -I"/usr/local/include/wx-2.8" \
+ -I"/usr/local/lib/wx/include/gtk2-ansi-debug-static-2.8"
 
-LIBPATHS=-L"/usr/lib" \
-         -L"/usr/local/lib" \
-         -L"/usr/local/db-4.7.25.NC/build_unix"
+LIBPATHS= \
+ -L"/usr/lib" \
+ -L"/usr/local/lib" \
+ -L"/usr/local/db-4.7.25.NC/build_unix"
 
 LIBS= \
  -Wl,-Bstatic -l boost_thread -l boost_system -l boost_filesystem -Wl,-Bdynamic \
  -Wl,-Bstatic -l db_cxx -l wx_gtk2$(D)-2.8 -Wl,-Bdynamic \
  -l crypto \
  -l gtk-x11-2.0 -l gthread-2.0 -l SM
+
 WXDEFS=-D__WXGTK__ -DNOPCH
 CFLAGS=-O0 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
 HEADERS=headers.h util.h main.h serialize.h uint256.h key.h bignum.h script.h db.h base58.h
@@ -76,7 +79,7 @@ obj/irc.o:  irc.cpp		    $(HEADERS)
 
 
 OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o obj/market.o \
-	obj/ui.o obj/uibase.o obj/sha.o obj/irc.o 
+	obj/ui.o obj/uibase.o obj/sha.o obj/irc.o
 
 bitcoin: headers.h.gch $(OBJS)
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $(OBJS) $(LIBS)

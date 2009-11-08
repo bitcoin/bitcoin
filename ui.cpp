@@ -387,16 +387,27 @@ CMainFrame::~CMainFrame()
 void Shutdown(void* parg)
 {
     static CCriticalSection cs_Shutdown;
+    static bool fTaken;
+    bool fFirstThread;
     CRITICAL_BLOCK(cs_Shutdown)
+    {
+        fFirstThread = !fTaken;
+        fTaken = true;
+    }
+    if (fFirstThread)
     {
         fShutdown = true;
         nTransactionsUpdated++;
         DBFlush(false);
         StopNode();
         DBFlush(true);
-
         printf("Bitcoin exiting\n\n");
         exit(0);
+    }
+    else
+    {
+        loop
+            Sleep(100000);
     }
 }
 

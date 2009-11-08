@@ -842,19 +842,19 @@ void ThreadOpenConnections2(void* parg)
                 if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip))
                     continue;
 
+                // Randomize the order in a deterministic way, putting the standard port first
+                int64 nRandomizer = (uint64)(addr.nLastFailed * 9567851 + addr.ip * 7789) % (1 * 60 * 60);
+                if (addr.port != DEFAULT_PORT)
+                    nRandomizer += 1 * 60 * 60;
+
                 // Limit retry frequency
-                if (GetAdjustedTime() < addr.nLastFailed + nDelay)
+                if (GetAdjustedTime() < addr.nLastFailed + nDelay + nRandomizer)
                     continue;
 
                 // Try again only after all addresses had a first attempt
-                int64 nTime = addr.nTime;
+                int64 nTime = addr.nTime - nRandomizer;
                 if (addr.nLastFailed > addr.nTime)
                     nTime -= 365 * 24 * 60 * 60;
-
-                // Randomize the order a little, putting the standard port first
-                nTime += GetRand(1 * 60 * 60);
-                if (addr.port != DEFAULT_PORT)
-                    nTime -= 1 * 60 * 60;
 
                 if (nTime > nBestTime)
                 {
@@ -1069,6 +1069,7 @@ bool StartNode(string& strError)
     if (pnodeLocalHost == NULL)
         pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress("127.0.0.1", nLocalServices));
 
+#ifdef __WXMSW__
     // Get local host ip
     char pszHostName[255];
     if (gethostname(pszHostName, sizeof(pszHostName)) == SOCKET_ERROR)
@@ -1090,10 +1091,49 @@ bool StartNode(string& strError)
         printf("host ip %d: %s\n", i, CAddress(*(unsigned int*)phostent->h_addr_list[i]).ToStringIP().c_str());
     for (int i = 0; phostent->h_addr_list[i] != NULL; i++)
     {
-        addrLocalHost = CAddress(*(unsigned int*)phostent->h_addr_list[i], DEFAULT_PORT, nLocalServices);
-        if (addrLocalHost.IsValid() && addrLocalHost.GetByte(3) != 127)
+        CAddress addr(*(unsigned int*)phostent->h_addr_list[i], DEFAULT_PORT, nLocalServices);
+        if (addr.IsValid() && addr.GetByte(3) != 127)
+        {
+            addrLocalHost = addr;
             break;
+        }
     }
+#else
+    // Get local host ip
+    struct ifaddrs* myaddrs;
+    if (getifaddrs(&myaddrs) == 0)
+    {
+        for (struct ifaddrs* ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
+        {
+            if (ifa->ifa_addr == NULL) continue;
+            if ((ifa->ifa_flags & IFF_UP) == 0) continue;
+            if (strcmp(ifa->ifa_name, "lo") == 0) continue;
+            if (strcmp(ifa->ifa_name, "lo0") == 0) continue;
+            char pszIP[100];
+            if (ifa->ifa_addr->sa_family == AF_INET)
+            {
+                struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
+                if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s4->sin_addr), pszIP, sizeof(pszIP)) != NULL)
+                    printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
+
+                // Take the first IP that isn't loopback 127.x.x.x
+                CAddress addr(*(unsigned int*)&s4->sin_addr, DEFAULT_PORT, nLocalServices);
+                if (addr.IsValid() && addr.GetByte(3) != 127)
+                {
+                    addrLocalHost = addr;
+                    break;
+                }
+            }
+            else if (ifa->ifa_addr->sa_family == AF_INET6)
+            {
+                struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
+                if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s6->sin6_addr), pszIP, sizeof(pszIP)) != NULL)
+                    printf("ipv6 %s: %s\n", ifa->ifa_name, pszIP);
+            }
+        }
+        freeifaddrs(myaddrs);
+    }
+#endif
     printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
     // Get our external IP address for incoming connections

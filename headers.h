@@ -72,6 +72,8 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
+#include <net/if.h>
+#include <ifaddrs.h>
 #include <boost/filesystem.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/algorithm/string.hpp>
