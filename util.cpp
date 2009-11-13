@@ -85,14 +85,14 @@ void RandAddSeed()
 
 void RandAddSeedPerfmon()
 {
-#ifdef __WXMSW__
-    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
     // This can take up to 2 seconds, so only do it every 10 minutes
     static int64 nLastPerfmon;
     if (GetTime() < nLastPerfmon + 10 * 60)
         return;
     nLastPerfmon = GetTime();
 
+#ifdef __WXMSW__
+    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
     // Seed with the entire set of perfmon data
     unsigned char pdata[250000];
     memset(pdata, 0, sizeof(pdata));
@@ -109,8 +109,29 @@ void RandAddSeedPerfmon()
 
         printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str(), nSize);
     }
+#else
+    printf("%s RandAddSeed()\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
 #endif
 }
+
+uint64 GetRand(uint64 nMax)
+{
+    if (nMax == 0)
+        return 0;
+
+    // The range of the random source must be a multiple of the modulus
+    // to give every possible output value an equal possibility
+    uint64 nRange = (UINT64_MAX / nMax) * nMax;
+    uint64 nRand = 0;
+    do
+        RAND_bytes((unsigned char*)&nRand, sizeof(nRand));
+    while (nRand >= nRange);
+    return (nRand % nMax);
+}
+
+
+
+
 
 
 
@@ -449,28 +470,6 @@ string GetDataDir()
 
 
 
-uint64 GetRand(uint64 nMax)
-{
-    if (nMax == 0)
-        return 0;
-
-    // The range of the random source must be a multiple of the modulus
-    // to give every possible output value an equal possibility
-    uint64 nRange = (_UI64_MAX / nMax) * nMax;
-    uint64 nRand = 0;
-    do
-        RAND_bytes((unsigned char*)&nRand, sizeof(nRand));
-    while (nRand >= nRange);
-    return (nRand % nMax);
-}
-
-
-
-
-
-
-
-
 
 
 //
@@ -483,7 +482,6 @@ uint64 GetRand(uint64 nMax)
 // note: NTP isn't implemented yet, so until then we just use the median
 //  of other nodes clocks to correct ours.
 //
-
 int64 GetTime()
 {
     return time(NULL);

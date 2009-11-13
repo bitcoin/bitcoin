@@ -29,9 +29,8 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
 void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
 bool BindListenPort(string& strError=REF(string()));
-bool StartNode(string& strError=REF(string()));
+void StartNode(void* parg);
 bool StopNode();
-
 
 
 
@@ -139,7 +138,7 @@ public:
     unsigned int nTime;
 
     // memory only
-    unsigned int nLastFailed;
+    unsigned int nLastTry;
 
     CAddress()
     {
@@ -183,7 +182,7 @@ public:
         ip = INADDR_NONE;
         port = DEFAULT_PORT;
         nTime = GetAdjustedTime();
-        nLastFailed = 0;
+        nLastTry = 0;
     }
 
     bool SetAddress(const char* pszIn)
@@ -458,6 +457,7 @@ extern uint64 nLocalHostNonce;
 extern bool fShutdown;
 extern array<int, 10> vnThreadsRunning;
 extern SOCKET hListenSocket;
+extern int64 nThreadSocketHandlerHeartbeat;
 
 extern vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
@@ -486,6 +486,10 @@ public:
     CDataStream vRecv;
     CCriticalSection cs_vSend;
     CCriticalSection cs_vRecv;
+    int64 nLastSend;
+    int64 nLastRecv;
+    int64 nLastSendEmpty;
+    int64 nTimeConnected;
     unsigned int nPushPos;
     CAddress addr;
     int nVersion;
@@ -523,6 +527,10 @@ public:
         hSocket = hSocketIn;
         vSend.SetType(SER_NETWORK);
         vRecv.SetType(SER_NETWORK);
+        nLastSend = 0;
+        nLastRecv = 0;
+        nLastSendEmpty = GetTime();
+        nTimeConnected = GetTime();
         nPushPos = -1;
         addr = addrIn;
         nVersion = 0;
@@ -542,7 +550,7 @@ public:
         CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
         CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
         RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce);
+        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, "linux-test5");
     }
 
     ~CNode()
@@ -556,11 +564,6 @@ private:
     void operator=(const CNode&);
 public:
 
-
-    bool ReadyToDisconnect()
-    {
-        return fDisconnect || GetRefCount() <= 0;
-    }
 
     int GetRefCount()
     {
@@ -635,6 +638,8 @@ public:
             AbortMessage();
         nPushPos = vSend.size();
         vSend << CMessageHeader(pszCommand, 0);
+        if (fDebug)
+            printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
         printf("sending: %s ", pszCommand);
     }
 

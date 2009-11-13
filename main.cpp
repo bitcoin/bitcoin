@@ -42,6 +42,9 @@ map<uint160, vector<unsigned char> > mapPubKeys;
 CCriticalSection cs_mapKeys;
 CKey keyUser;
 
+map<uint256, int> mapRequestCount;
+CCriticalSection cs_mapRequestCount;
+
 // Settings
 int fGenerateBitcoins = false;
 int64 nTransactionFee = 0;
@@ -274,7 +277,44 @@ int64 CWalletTx::GetTxTime() const
     return nTimeReceived;
 }
 
+int CWalletTx::GetRequestCount() const
+{
+    // Returns -1 if it wasn't being tracked
+    int nRequests = -1;
+    CRITICAL_BLOCK(cs_mapRequestCount)
+    {
+        if (IsCoinBase())
+        {
+            // Generated block
+            if (hashBlock != 0)
+            {
+                map<uint256, int>::iterator mi = mapRequestCount.find(hashBlock);
+                if (mi != mapRequestCount.end())
+                    nRequests = (*mi).second;
+            }
+        }
+        else
+        {
+            // Did anyone request this transaction?
+            map<uint256, int>::iterator mi = mapRequestCount.find(GetHash());
+            if (mi != mapRequestCount.end())
+            {
+                nRequests = (*mi).second;
 
+                // How about the block it's in?
+                if (nRequests == 0 && hashBlock != 0)
+                {
+                    map<uint256, int>::iterator mi = mapRequestCount.find(hashBlock);
+                    if (mi != mapRequestCount.end())
+                        nRequests = (*mi).second;
+                    else
+                        nRequests = 1; // If it's in someone else's block it must have got out
+                }
+            }
+        }
+    }
+    return nRequests;
+}
 
 
 
@@ -295,7 +335,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
             CTxIndex txindex;
             if (!CTxDB("r").ReadTxIndex(GetHash(), txindex))
                 return 0;
-            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, true))
+            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos))
                 return 0;
             pblock = &blockTmp;
         }
@@ -1003,7 +1043,7 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     foreach(CBlockIndex* pindex, vDisconnect)
     {
         CBlock block;
-        if (!block.ReadFromDisk(pindex->nFile, pindex->nBlockPos, true))
+        if (!block.ReadFromDisk(pindex->nFile, pindex->nBlockPos))
             return error("Reorganize() : ReadFromDisk for disconnect failed");
         if (!block.DisconnectBlock(txdb, pindex))
             return error("Reorganize() : DisconnectBlock failed");
@@ -1020,7 +1060,7 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     {
         CBlockIndex* pindex = vConnect[i];
         CBlock block;
-        if (!block.ReadFromDisk(pindex->nFile, pindex->nBlockPos, true))
+        if (!block.ReadFromDisk(pindex->nFile, pindex->nBlockPos))
             return error("Reorganize() : ReadFromDisk for connect failed");
         if (!block.ConnectBlock(txdb, pindex))
         {
@@ -1380,7 +1420,7 @@ bool CheckDiskSpace(int64 nAdditionalBytes)
     {
         fShutdown = true;
         ThreadSafeMessageBox("Warning: Your disk space is low  ", "Bitcoin", wxOK | wxICON_EXCLAMATION);
-        _beginthread(Shutdown, 0, NULL);
+        CreateThread(Shutdown, NULL);
         return false;
     }
     return true;
@@ -1547,7 +1587,7 @@ void PrintBlockTree()
 
         // print item
         CBlock block;
-        block.ReadFromDisk(pindex, true);
+        block.ReadFromDisk(pindex);
         printf("%d (%u,%u) %s  %s  tx %d",
             pindex->nHeight,
             pindex->nFile,
@@ -1623,7 +1663,8 @@ bool ProcessMessages(CNode* pfrom)
     CDataStream& vRecv = pfrom->vRecv;
     if (vRecv.empty())
         return true;
-    //printf("ProcessMessages(%d bytes)\n", vRecv.size());
+    //if (fDebug)
+    //    printf("ProcessMessages(%d bytes)\n", vRecv.size());
 
     //
     // Message format
@@ -1666,7 +1707,8 @@ bool ProcessMessages(CNode* pfrom)
         {
             // Rewind and wait for rest of message
             ///// need a mechanism to give up waiting for overlong message size error
-            //printf("message-break\n");
+            //if (fDebug)
+            //    printf("message-break\n");
             vRecv.insert(vRecv.begin(), BEGIN(hdr), END(hdr));
             Sleep(100);
             break;
@@ -1718,6 +1760,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     static map<unsigned int, vector<unsigned char> > mapReuseKey;
     RandAddSeedPerfmon();
+    if (fDebug)
+        printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
     printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {
@@ -1739,18 +1783,19 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAddress addrMe;
         CAddress addrFrom;
         uint64 nNonce = 1;
+        string strSubVer;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
         if (pfrom->nVersion >= 106 && !vRecv.empty())
             vRecv >> addrFrom >> nNonce;
+        if (pfrom->nVersion >= 106 && !vRecv.empty())
+            vRecv >> strSubVer;
         if (pfrom->nVersion == 0)
             return false;
 
         // Disconnect if we connected to ourself
-        if (nNonce == nLocalHostNonce)
+        if (nNonce == nLocalHostNonce && nNonce > 1)
         {
             pfrom->fDisconnect = true;
-            pfrom->vRecv.clear();
-            pfrom->vSend.clear();
             return true;
         }
 
@@ -1775,10 +1820,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         pfrom->fSuccessfullyConnected = true;
-
-        // Update the last seen time
-        if (pfrom->fNetworkNode)
-            AddressCurrentlyConnected(pfrom->addr);
 
         printf("version message: version %d\n", pfrom->nVersion);
     }
@@ -1824,10 +1865,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vector<CInv> vInv;
         vRecv >> vInv;
 
-        // Update the last seen time for this node's address
-        if (pfrom->fNetworkNode)
-            AddressCurrentlyConnected(pfrom->addr);
-
         CTxDB txdb("r");
         foreach(const CInv& inv, vInv)
         {
@@ -1842,6 +1879,14 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 pfrom->AskFor(inv);
             else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
                 pfrom->PushMessage("getblocks", CBlockLocator(pindexBest), GetOrphanRoot(mapOrphanBlocks[inv.hash]));
+
+            // Track requests for our stuff
+            CRITICAL_BLOCK(cs_mapRequestCount)
+            {
+                map<uint256, int>::iterator mi = mapRequestCount.find(inv.hash);
+                if (mi != mapRequestCount.end())
+                    (*mi).second++;
+            }
         }
     }
 
@@ -1878,6 +1923,14 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     if (mi != mapRelay.end())
                         pfrom->PushMessage(inv.GetCommand(), (*mi).second);
                 }
+            }
+
+            // Track requests for our stuff
+            CRITICAL_BLOCK(cs_mapRequestCount)
+            {
+                map<uint256, int>::iterator mi = mapRequestCount.find(inv.hash);
+                if (mi != mapRequestCount.end())
+                    (*mi).second++;
             }
         }
     }
@@ -2086,10 +2139,22 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
+    else if (strCommand == "ping")
+    {
+    }
+
+
     else
     {
         // Ignore unknown commands for extensibility
     }
+
+
+    // Update the last seen time for this node's address
+    if (pfrom->fNetworkNode)
+        if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
+            AddressCurrentlyConnected(pfrom->addr);
+
 
     return true;
 }
@@ -2129,6 +2194,10 @@ bool SendMessages(CNode* pto)
             }
         }
 
+        // Keep-alive ping
+        if (pto->nLastSend && GetTime() - pto->nLastSend > 12 * 60 && pto->vSend.empty())
+            pto->PushMessage("ping");
+
 
         //
         // Message: addr
@@ -2139,7 +2208,14 @@ bool SendMessages(CNode* pto)
         {
             // returns true if wasn't already contained in the set
             if (pto->setAddrKnown.insert(addr).second)
+            {
                 vAddrToSend.push_back(addr);
+                if (vAddrToSend.size() >= 1000)
+                {
+                    pto->PushMessage("addr", vAddrToSend);
+                    vAddrToSend.clear();
+                }
+            }
         }
         pto->vAddrToSend.clear();
         if (!vAddrToSend.empty())
@@ -2157,7 +2233,14 @@ bool SendMessages(CNode* pto)
             {
                 // returns true if wasn't already contained in the set
                 if (pto->setInventoryKnown.insert(inv).second)
+                {
                     vInventoryToSend.push_back(inv);
+                    if (vInventoryToSend.size() >= 1000)
+                    {
+                        pto->PushMessage("inv", vInventoryToSend);
+                        vInventoryToSend.clear();
+                    }
+                }
             }
             pto->vInventoryToSend.clear();
             pto->setInventoryKnown2.clear();
@@ -2179,6 +2262,11 @@ bool SendMessages(CNode* pto)
             {
                 printf("sending getdata: %s\n", inv.ToString().c_str());
                 vAskFor.push_back(inv);
+                if (vAskFor.size() >= 1000)
+                {
+                    pto->PushMessage("getdata", vAskFor);
+                    vAskFor.clear();
+                }
             }
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
@@ -2226,8 +2314,8 @@ void GenerateBitcoins(bool fGenerate)
         int nAddThreads = nProcessors - vnThreadsRunning[3];
         printf("Starting %d BitcoinMiner threads\n", nAddThreads);
         for (int i = 0; i < nAddThreads; i++)
-            if (_beginthread(ThreadBitcoinMiner, 0, NULL) == -1)
-                printf("Error: _beginthread(ThreadBitcoinMiner) failed\n");
+            if (!CreateThread(ThreadBitcoinMiner, NULL))
+                printf("Error: CreateThread(ThreadBitcoinMiner) failed\n");
     }
 }
 
@@ -2304,7 +2392,7 @@ void BitcoinMiner()
     CBigNum bnExtraNonce = 0;
     while (fGenerateBitcoins)
     {
-        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+        SetThreadPriority(THREAD_PRIORITY_LOWEST);
         Sleep(50);
         if (fShutdown)
             return;
@@ -2440,7 +2528,7 @@ void BitcoinMiner()
                     printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
                     pblock->print();
 
-                SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+                SetThreadPriority(THREAD_PRIORITY_NORMAL);
                 CRITICAL_BLOCK(cs_main)
                 {
                     if (pindexPrev == pindexBest)
@@ -2450,12 +2538,16 @@ void BitcoinMiner()
                             return;
                         key.MakeNewKey();
 
+                        // Track how many getdata requests this block gets
+                        CRITICAL_BLOCK(cs_mapRequestCount)
+                            mapRequestCount[pblock->GetHash()] = 0;
+
                         // Process this block the same as if we had received it from another node
                         if (!ProcessBlock(NULL, pblock.release()))
                             printf("ERROR in BitcoinMiner, ProcessBlock, block not accepted\n");
                     }
                 }
-                SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+                SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
                 Sleep(500);
                 break;
@@ -2534,7 +2626,7 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
     setCoinsRet.clear();
 
     // List of values less than target
-    int64 nLowestLarger = _I64_MAX;
+    int64 nLowestLarger = INT64_MAX;
     CWalletTx* pcoinLowestLarger = NULL;
     vector<pair<int64, CWalletTx*> > vValue;
     int64 nTotalLower = 0;
@@ -2776,6 +2868,10 @@ bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
             wxMessageBox("Error finalizing transaction  ", "Sending...");
             return error("SendMoney() : Error finalizing transaction");
         }
+
+        // Track how many getdata requests our transaction gets
+        CRITICAL_BLOCK(cs_mapRequestCount)
+            mapRequestCount[wtxNew.GetHash()] = 0;
 
         printf("SendMoney: %s\n", wtxNew.GetHash().ToString().substr(0,6).c_str());
 

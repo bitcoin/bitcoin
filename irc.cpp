@@ -54,7 +54,7 @@ static bool Send(SOCKET hSocket, const char* pszSend)
     const char* pszEnd = psz + strlen(psz);
     while (psz < pszEnd)
     {
-        int ret = send(hSocket, psz, pszEnd - psz, 0);
+        int ret = send(hSocket, psz, pszEnd - psz, MSG_NOSIGNAL);
         if (ret < 0)
             return false;
         psz += ret;
@@ -156,7 +156,7 @@ bool Wait(int nSeconds)
 
 void ThreadIRCSeed(void* parg)
 {
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+    SetThreadPriority(THREAD_PRIORITY_NORMAL);
     int nErrorWait = 10;
     int nRetryWait = 10;
 
@@ -256,6 +256,7 @@ void ThreadIRCSeed(void* parg)
                 CAddress addr;
                 if (DecodeAddress(pszName, addr))
                 {
+                    addr.nTime = GetAdjustedTime() - 51 * 60;
                     CAddrDB addrdb;
                     if (AddAddress(addrdb, addr))
                         printf("IRC got new address\n");

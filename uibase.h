@@ -43,51 +43,52 @@
 #define wxID_MAINFRAME 1000
 #define wxID_VIEWSHOWGENERATED 1001
 #define wxID_OPTIONSGENERATEBITCOINS 1002
-#define wxID_BUTTONSEND 1003
-#define wxID_BUTTONRECEIVE 1004
-#define wxID_TEXTCTRLADDRESS 1005
-#define wxID_BUTTONCOPY 1006
-#define wxID_BUTTONCHANGE 1007
-#define wxID_TRANSACTIONFEE 1008
-#define wxID_PROXYIP 1009
-#define wxID_PROXYPORT 1010
-#define wxID_TEXTCTRLPAYTO 1011
-#define wxID_BUTTONPASTE 1012
-#define wxID_BUTTONADDRESSBOOK 1013
-#define wxID_TEXTCTRLAMOUNT 1014
-#define wxID_CHOICETRANSFERTYPE 1015
-#define wxID_LISTCTRL 1016
-#define wxID_BUTTONRENAME 1017
-#define wxID_BUTTONNEW 1018
-#define wxID_BUTTONEDIT 1019
-#define wxID_BUTTONDELETE 1020
-#define wxID_DEL0 1021
-#define wxID_DEL1 1022
-#define wxID_DEL2 1023
-#define wxID_DEL3 1024
-#define wxID_DEL4 1025
-#define wxID_DEL5 1026
-#define wxID_DEL6 1027
-#define wxID_DEL7 1028
-#define wxID_DEL8 1029
-#define wxID_DEL9 1030
-#define wxID_DEL10 1031
-#define wxID_DEL11 1032
-#define wxID_DEL12 1033
-#define wxID_DEL13 1034
-#define wxID_DEL14 1035
-#define wxID_DEL15 1036
-#define wxID_DEL16 1037
-#define wxID_DEL17 1038
-#define wxID_DEL18 1039
-#define wxID_DEL19 1040
-#define wxID_BUTTONPREVIEW 1041
-#define wxID_BUTTONSAMPLE 1042
-#define wxID_CANCEL2 1043
-#define wxID_BUTTONBACK 1044
-#define wxID_BUTTONNEXT 1045
-#define wxID_SUBMIT 1046
-#define wxID_TEXTCTRL 1047
+#define wxID_MENUOPTIONSOPTIONS 1003
+#define wxID_BUTTONSEND 1004
+#define wxID_BUTTONRECEIVE 1005
+#define wxID_TEXTCTRLADDRESS 1006
+#define wxID_BUTTONCOPY 1007
+#define wxID_BUTTONCHANGE 1008
+#define wxID_TRANSACTIONFEE 1009
+#define wxID_PROXYIP 1010
+#define wxID_PROXYPORT 1011
+#define wxID_TEXTCTRLPAYTO 1012
+#define wxID_BUTTONPASTE 1013
+#define wxID_BUTTONADDRESSBOOK 1014
+#define wxID_TEXTCTRLAMOUNT 1015
+#define wxID_CHOICETRANSFERTYPE 1016
+#define wxID_LISTCTRL 1017
+#define wxID_BUTTONRENAME 1018
+#define wxID_BUTTONNEW 1019
+#define wxID_BUTTONEDIT 1020
+#define wxID_BUTTONDELETE 1021
+#define wxID_DEL0 1022
+#define wxID_DEL1 1023
+#define wxID_DEL2 1024
+#define wxID_DEL3 1025
+#define wxID_DEL4 1026
+#define wxID_DEL5 1027
+#define wxID_DEL6 1028
+#define wxID_DEL7 1029
+#define wxID_DEL8 1030
+#define wxID_DEL9 1031
+#define wxID_DEL10 1032
+#define wxID_DEL11 1033
+#define wxID_DEL12 1034
+#define wxID_DEL13 1035
+#define wxID_DEL14 1036
+#define wxID_DEL15 1037
+#define wxID_DEL16 1038
+#define wxID_DEL17 1039
+#define wxID_DEL18 1040
+#define wxID_DEL19 1041
+#define wxID_BUTTONPREVIEW 1042
+#define wxID_BUTTONSAMPLE 1043
+#define wxID_CANCEL2 1044
+#define wxID_BUTTONBACK 1045
+#define wxID_BUTTONNEXT 1046
+#define wxID_SUBMIT 1047
+#define wxID_TEXTCTRL 1048
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class CMainFrameBase
@@ -203,7 +204,6 @@ class COptionsDialogBase : public wxDialog
 		wxStaticText* m_staticText35;
 		wxCheckBox* m_checkBoxStartOnSystemStartup;
 		wxCheckBox* m_checkBoxMinimizeToTray;
-		
 		wxCheckBox* m_checkBoxMinimizeOnClose;
 		wxCheckBox* m_checkBoxUseProxy;
 		

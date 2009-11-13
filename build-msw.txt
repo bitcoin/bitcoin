@@ -8,7 +8,7 @@ the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
 cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 
- WINDOWS BUILD NOTES
+WINDOWS BUILD NOTES
 
 
 Compilers Supported

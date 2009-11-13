@@ -13,6 +13,7 @@ UNIX BUILD NOTES
 
 Dependencies
 ------------
+Install the dev files for the shared libraries:
 apt-get install build-essential
 apt-get install libgtk2.0-dev
 apt-get install libssl-dev

@@ -505,6 +505,13 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
 {
     vchDefaultKeyRet.clear();
 
+    // Modify defaults
+#ifndef __WXMSW__
+    // Reports that tray icon can disappear on gnome, leaving no way to access the program
+    fMinimizeToTray = false;
+    fMinimizeOnClose = false;
+#endif
+
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     CRITICAL_BLOCK(cs_mapKeys)
     CRITICAL_BLOCK(cs_mapWallet)
@@ -638,7 +645,7 @@ bool LoadWallet(bool& fFirstRunRet)
         CWalletDB().WriteDefaultKey(keyUser.GetPubKey());
     }
 
-    _beginthread(ThreadFlushWalletDB, 0, NULL);
+    CreateThread(ThreadFlushWalletDB, NULL);
     return true;
 }
 

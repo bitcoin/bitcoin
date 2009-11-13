@@ -112,7 +112,6 @@ protected:
     void OnListBox(wxCommandEvent& event);
     void OnKillFocusTransactionFee(wxFocusEvent& event);
     void OnCheckBoxLimitProcessors(wxCommandEvent& event);
-    void OnCheckBoxMinimizeToTray(wxCommandEvent& event);
     void OnCheckBoxUseProxy(wxCommandEvent& event);
     void OnKillFocusProxy(wxFocusEvent& event);
 
@@ -447,6 +446,7 @@ protected:
     // Event handlers
     void OnLeftButtonDClick(wxTaskBarIconEvent& event);
     void OnMenuRestore(wxCommandEvent& event);
+    void OnMenuOptions(wxCommandEvent& event);
     void OnUpdateUIGenerate(wxUpdateUIEvent& event);
     void OnMenuGenerate(wxCommandEvent& event);
     void OnMenuExit(wxCommandEvent& event);
