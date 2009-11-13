@@ -25,6 +25,7 @@ map<string, string> mapAddressBook;
 bool fRandSendTest = false;
 void RandSend();
 extern int g_isPainting;
+bool fClosedToTray = false;
 
 // Settings
 int fShowGenerated = true;
@@ -413,16 +414,17 @@ void Shutdown(void* parg)
 
 void CMainFrame::OnClose(wxCloseEvent& event)
 {
-    if (fMinimizeToTray && fMinimizeOnClose && event.CanVeto() && !IsIconized())
+    if (fMinimizeOnClose && event.CanVeto() && !IsIconized())
     {
         // Divert close to minimize
         event.Veto();
+        fClosedToTray = true;
         Iconize(true);
     }
     else
     {
         Destroy();
-        _beginthread(Shutdown, 0, NULL);
+        CreateThread(Shutdown, NULL);
     }
 }
 
@@ -430,7 +432,16 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
 {
     // Hide the task bar button when minimized.
     // Event is sent when the frame is minimized or restored.
-    Show(!fMinimizeToTray || !event.Iconized());
+    if (!event.Iconized())
+        fClosedToTray = false;
+#ifndef __WXMSW__
+    // Tray is not reliable on Linux gnome
+    fClosedToTray = false;
+#endif
+    if (fMinimizeToTray && event.Iconized())
+        fClosedToTray = true;
+    Show(!fClosedToTray);
+    ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
 }
 
 void CMainFrame::OnMouseEvents(wxMouseEvent& event)
@@ -527,7 +538,6 @@ bool CMainFrame::DeleteLine(uint256 hashKey)
 string FormatTxStatus(const CWalletTx& wtx)
 {
     // Status
-    int nDepth = wtx.GetDepthInMainChain();
     if (!wtx.IsFinal())
     {
         if (wtx.nLockTime < 500000000)
@@ -535,10 +545,16 @@ string FormatTxStatus(const CWalletTx& wtx)
         else
             return strprintf("Open until %s", DateTimeStr(wtx.nLockTime).c_str());
     }
-    else if (nDepth < 6)
-        return strprintf("%d/unconfirmed", nDepth);
     else
-        return strprintf("%d blocks", nDepth);
+    {
+        int nDepth = wtx.GetDepthInMainChain();
+        if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+            return strprintf("%d/offline?", nDepth);
+        else if (nDepth < 6)
+            return strprintf("%d/unconfirmed", nDepth);
+        else
+            return strprintf("%d blocks", nDepth);
+    }
 }
 
 string SingleLine(const string& strIn)
@@ -629,9 +645,17 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 foreach(const CTxOut& txout, wtx.vout)
                     nUnmatured += txout.GetCredit();
                 if (wtx.IsInMainChain())
-                    strDescription += strprintf(" (%s matures in %d more blocks)", FormatMoney(nUnmatured).c_str(), wtx.GetBlocksToMaturity());
+                {
+                    strDescription = strprintf("Generated (%s matures in %d more blocks)", FormatMoney(nUnmatured).c_str(), wtx.GetBlocksToMaturity());
+
+                    // Check if the block was requested by anyone
+                    if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                        strDescription = "Generated - Warning: This block was not received by any other nodes and will probably not be accepted!";
+                }
                 else
-                    strDescription += " (not accepted)";
+                {
+                    strDescription = "Generated (not accepted)";
+                }
             }
         }
         else if (!mapValue["from"].empty() || !mapValue["message"].empty())
@@ -701,8 +725,11 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                        strStatus,
                        nTime ? DateTimeStr(nTime) : "",
                        "Payment to yourself",
-                       FormatMoney(nNet - nValue, true),
-                       FormatMoney(nValue, true));
+                       "",
+                       "");
+            /// issue: can't tell which is the payment and which is the change anymore
+            //           FormatMoney(nNet - nValue, true),
+            //           FormatMoney(nValue, true));
         }
         else if (fAllFromMe)
         {
@@ -1028,6 +1055,9 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     string strStatus = strprintf("     %d connections     %d blocks     %d transactions", vNodes.size(), nBestHeight + 1, nTransactionCount);
     m_statusBar->SetStatusText(strStatus, 2);
 
+    if (fDebug && GetTime() - nThreadSocketHandlerHeartbeat > 60)
+        m_statusBar->SetStatusText("     ERROR: ThreadSocketHandler has stopped", 0);
+
     // Pass through to listctrl to actually do the paint, we're just hooking the message
     m_listCtrl->Disconnect(wxEVT_PAINT, (wxObjectEventFunction)NULL, NULL, this);
     m_listCtrl->GetEventHandler()->ProcessEvent(event);
@@ -1237,7 +1267,19 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
 
 
 
-    strHTML += "<b>Status:</b> " + FormatTxStatus(wtx) + "<br>";
+    strHTML += "<b>Status:</b> " + FormatTxStatus(wtx);
+    int nRequests = wtx.GetRequestCount();
+    if (nRequests != -1)
+    {
+        if (nRequests == 0)
+            strHTML += ", has not been successfully broadcast yet";
+        else if (nRequests == 1)
+            strHTML += strprintf(", broadcast through %d node", nRequests);
+        else
+            strHTML += strprintf(", broadcast through %d nodes", nRequests);
+    }
+    strHTML += "<br>";
+
     strHTML += "<b>Date:</b> " + (nTime ? DateTimeStr(nTime) : "") + "<br>";
 
 
@@ -1366,9 +1408,10 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
             if (fAllToMe)
             {
                 // Payment to self
-                int64 nValue = wtx.vout[0].nValue;
-                strHTML += "<b>Debit:</b> " + FormatMoney(-nValue) + "<br>";
-                strHTML += "<b>Credit:</b> " + FormatMoney(nValue) + "<br>";
+                /// issue: can't tell which is the payment and which is the change anymore
+                //int64 nValue = wtx.vout[0].nValue;
+                //strHTML += "<b>Debit:</b> " + FormatMoney(-nValue) + "<br>";
+                //strHTML += "<b>Credit:</b> " + FormatMoney(nValue) + "<br>";
             }
 
             int64 nTxFee = nDebit - wtx.GetValueOut();
@@ -1469,6 +1512,9 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     //m_listBox->Append("Test 2");
     m_listBox->SetSelection(0);
     SelectPage(0);
+#ifndef __WXMSW__
+    m_checkBoxMinimizeOnClose->SetLabel("&Minimize on close");
+#endif
 
     // Init values
     m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
@@ -1481,9 +1527,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     m_spinCtrlLimitProcessors->SetRange(1, nProcessors);
     m_checkBoxStartOnSystemStartup->SetValue(fTmpStartOnSystemStartup = GetStartOnSystemStartup());
     m_checkBoxMinimizeToTray->SetValue(fMinimizeToTray);
-    m_checkBoxMinimizeOnClose->Enable(fMinimizeToTray);
-    m_checkBoxMinimizeOnClose->SetValue(fMinimizeToTray && fMinimizeOnClose);
-    fTmpMinimizeOnClose = fMinimizeOnClose;
+    m_checkBoxMinimizeOnClose->SetValue(fMinimizeOnClose);
     m_checkBoxUseProxy->SetValue(fUseProxy);
     m_textCtrlProxyIP->Enable(fUseProxy);
     m_textCtrlProxyPort->Enable(fUseProxy);
@@ -1519,22 +1563,6 @@ void COptionsDialog::OnKillFocusTransactionFee(wxFocusEvent& event)
 void COptionsDialog::OnCheckBoxLimitProcessors(wxCommandEvent& event)
 {
     m_spinCtrlLimitProcessors->Enable(event.IsChecked());
-}
-
-void COptionsDialog::OnCheckBoxMinimizeToTray(wxCommandEvent& event)
-{
-    m_checkBoxMinimizeOnClose->Enable(event.IsChecked());
-
-    // Save the value in fTmpMinimizeOnClose so we can
-    // show the checkbox unchecked when its parent is unchecked
-    if (event.IsChecked())
-        m_checkBoxMinimizeOnClose->SetValue(fTmpMinimizeOnClose);
-    else
-    {
-        fTmpMinimizeOnClose = m_checkBoxMinimizeOnClose->GetValue();
-        m_checkBoxMinimizeOnClose->SetValue(false);
-    }
-
 }
 
 void COptionsDialog::OnCheckBoxUseProxy(wxCommandEvent& event)
@@ -1608,12 +1636,12 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
     {
         fMinimizeToTray = m_checkBoxMinimizeToTray->GetValue();
         walletdb.WriteSetting("fMinimizeToTray", fMinimizeToTray);
-        ptaskbaricon->Show(fMinimizeToTray);
+        ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
     }
 
-    if (fMinimizeOnClose != (fMinimizeToTray ? m_checkBoxMinimizeOnClose->GetValue() : fTmpMinimizeOnClose))
+    if (fMinimizeOnClose != m_checkBoxMinimizeOnClose->GetValue())
     {
-        fMinimizeOnClose = (fMinimizeToTray ? m_checkBoxMinimizeOnClose->GetValue() : fTmpMinimizeOnClose);
+        fMinimizeOnClose = m_checkBoxMinimizeOnClose->GetValue();
         walletdb.WriteSetting("fMinimizeOnClose", fMinimizeOnClose);
     }
 
@@ -1643,6 +1671,9 @@ CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
     if (str.Find('Â') != wxNOT_FOUND)
         str.Remove(str.Find('Â'), 1);
     m_staticTextMain->SetLabel(str);
+#ifndef __WXMSW__
+    SetSize(510, 380);
+#endif
 }
 
 void CAboutDialog::OnButtonOK(wxCommandEvent& event)
@@ -1849,7 +1880,7 @@ CSendingDialog::CSendingDialog(wxWindow* parent, const CAddress& addrIn, int64 n
     SetTitle(strprintf("Sending %s to %s", FormatMoney(nPrice).c_str(), wtx.mapValue["to"].c_str()));
     m_textCtrlStatus->SetValue("");
 
-    _beginthread(SendingDialogStartTransfer, 0, this);
+    CreateThread(SendingDialogStartTransfer, this);
 }
 
 CSendingDialog::~CSendingDialog()
@@ -2856,7 +2887,7 @@ CViewProductDialog::CViewProductDialog(wxWindow* parent, const CProduct& product
     this->Layout();
 
     // Request details from seller
-    _beginthread(ThreadRequestProductDetails, 0, new pair<CProduct, wxEvtHandler*>(product, GetEventHandler()));
+    CreateThread(ThreadRequestProductDetails, new pair<CProduct, wxEvtHandler*>(product, GetEventHandler()));
 }
 
 CViewProductDialog::~CViewProductDialog()
@@ -3256,6 +3287,7 @@ void CEditReviewDialog::GetReview(CReview& review)
 enum
 {
     ID_TASKBAR_RESTORE = 10001,
+    ID_TASKBAR_OPTIONS,
     ID_TASKBAR_GENERATE,
     ID_TASKBAR_EXIT,
 };
@@ -3263,6 +3295,7 @@ enum
 BEGIN_EVENT_TABLE(CMyTaskBarIcon, wxTaskBarIcon)
     EVT_TASKBAR_LEFT_DCLICK(CMyTaskBarIcon::OnLeftButtonDClick)
     EVT_MENU(ID_TASKBAR_RESTORE, CMyTaskBarIcon::OnMenuRestore)
+    EVT_MENU(ID_TASKBAR_OPTIONS, CMyTaskBarIcon::OnMenuOptions)
     EVT_MENU(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnMenuGenerate)
     EVT_UPDATE_UI(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnUpdateUIGenerate)
     EVT_MENU(ID_TASKBAR_EXIT, CMyTaskBarIcon::OnMenuExit)
@@ -3312,9 +3345,18 @@ void CMyTaskBarIcon::OnMenuRestore(wxCommandEvent& event)
     Restore();
 }
 
+void CMyTaskBarIcon::OnMenuOptions(wxCommandEvent& event)
+{
+    // Since it's modal, get the main window to do it
+    wxCommandEvent event2(wxEVT_COMMAND_MENU_SELECTED, wxID_MENUOPTIONSOPTIONS);
+    pframeMain->AddPendingEvent(event2);
+}
+
 void CMyTaskBarIcon::Restore()
 {
     pframeMain->Show();
+    wxIconizeEvent event(0, false);
+    pframeMain->AddPendingEvent(event);
     pframeMain->Iconize(false);
     pframeMain->Raise();
 }
@@ -3344,6 +3386,7 @@ wxMenu* CMyTaskBarIcon::CreatePopupMenu()
 {
     wxMenu* pmenu = new wxMenu;
     pmenu->Append(ID_TASKBAR_RESTORE, "&Open Bitcoin");
+    pmenu->Append(ID_TASKBAR_OPTIONS, "O&ptions...");
     pmenu->AppendCheckItem(ID_TASKBAR_GENERATE, "&Generate Coins")->Check(fGenerateBitcoins);
 #ifndef __WXMAC_OSX__ // Mac has built-in quit menu
     pmenu->AppendSeparator();
@@ -3582,7 +3625,7 @@ bool CMyApp::OnInit2()
             {
                 CBlockIndex* pindex = (*mi).second;
                 CBlock block;
-                block.ReadFromDisk(pindex, true);
+                block.ReadFromDisk(pindex);
                 block.BuildMerkleTree();
                 block.print();
                 printf("\n");
@@ -3632,20 +3675,20 @@ bool CMyApp::OnInit2()
     if (mapArgs.count("-min"))
         pframeMain->Iconize(true);
     pframeMain->Show(true);  // have to show first to get taskbar button to hide
-    pframeMain->Show(!fMinimizeToTray || !pframeMain->IsIconized());
-    ptaskbaricon->Show(fMinimizeToTray);
+    if (fMinimizeToTray && pframeMain->IsIconized())
+        fClosedToTray = true;
+    pframeMain->Show(!fClosedToTray);
+    ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
 
-    _beginthread(ThreadDelayedRepaint, 0, NULL);
+    CreateThread(ThreadDelayedRepaint, NULL);
 
     if (!CheckDiskSpace())
         return false;
 
     RandAddSeedPerfmon();
 
-    if (!StartNode(strErrors))
-        wxMessageBox(strErrors, "Bitcoin");
-
-    GenerateBitcoins(fGenerateBitcoins);
+    if (!CreateThread(StartNode, NULL))
+        wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
     if (fFirstRun)
         SetStartOnSystemStartup(true);

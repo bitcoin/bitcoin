@@ -54,9 +54,13 @@ inline T& REF(const T& val)
     return (T&)val;
 }
 
-#ifndef __WXMSW__
-#define _UI64_MAX           UINT64_MAX
-#define _I64_MAX            INT64_MAX
+#ifdef __WXMSW__
+#define MSG_NOSIGNAL        0
+#define MSG_DONTWAIT        0
+#define UINT64_MAX          _UI64_MAX
+#define INT64_MAX           _I64_MAX
+#define INT64_MIN           _I64_MIN
+#else
 #define WSAGetLastError()   errno
 #define WSAEWOULDBLOCK      EWOULDBLOCK
 #define WSAEMSGSIZE         EMSGSIZE
@@ -74,18 +78,6 @@ typedef u_int SOCKET;
 #define MAX_PATH            1024
 #define Sleep(n)            wxMilliSleep(n)
 #define Beep(n1,n2)         (0)
-inline int _beginthread(void(*pfn)(void*), unsigned nStack, void* parg) { thread(bind(pfn, parg)); return 0; }
-inline void _endthread() { pthread_exit(NULL); }
-inline int GetCurrentThread() { return 0; }
-// threads are processes on linux, so setpriority affects just the one thread
-inline void SetThreadPriority(int nThread, int nPriority) { setpriority(PRIO_PROCESS, getpid(), nPriority); }
-#define THREAD_PRIORITY_LOWEST          PRIO_MIN
-#define THREAD_PRIORITY_BELOW_NORMAL    2
-#define THREAD_PRIORITY_NORMAL          0
-#define THREAD_PRIORITY_ABOVE_NORMAL    0
-#endif
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL        0
 #endif
 
 
@@ -121,6 +113,7 @@ uint64 GetRand(uint64 nMax);
 int64 GetTime();
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
+
 
 
 
@@ -191,8 +184,6 @@ public:
 #define TRY_CRITICAL_BLOCK(cs)     \
     for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by TRY_CRITICAL_BLOCK!", !fcriticalblockonce)), fcriticalblockonce=false)  \
     for (CTryCriticalBlock criticalblock(cs); fcriticalblockonce && (fcriticalblockonce = criticalblock.Entered()) && (cs.pszFile=__FILE__, cs.nLine=__LINE__, true); fcriticalblockonce=false, cs.pszFile=NULL, cs.nLine=0)
-
-
 
 
 
@@ -498,3 +489,83 @@ inline uint160 Hash160(const vector<unsigned char>& vch)
     RIPEMD160((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
     return hash2;
 }
+
+
+
+
+
+
+
+
+
+
+
+// Note: It turns out we might have been able to use boost::thread
+// by using TerminateThread(boost::thread.native_handle(), 0);
+#ifdef __WXMSW__
+typedef HANDLE pthread_t;
+
+inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
+{
+    DWORD nUnused = 0;
+    HANDLE hthread =
+        CreateThread(
+            NULL,                        // default security
+            0,                           // inherit stack size from parent
+            (LPTHREAD_START_ROUTINE)pfn, // function pointer
+            parg,                        // argument
+            0,                           // creation option, start immediately
+            &nUnused);                   // thread identifier
+    if (hthread == NULL)
+    {
+        printf("Error: CreateThread() returned %d\n", GetLastError());
+        return (pthread_t)0;
+    }
+    if (!fWantHandle)
+    {
+        CloseHandle(hthread);
+        return (pthread_t)-1;
+    }
+    return hthread;
+}
+
+inline void SetThreadPriority(int nPriority)
+{
+    SetThreadPriority(GetCurrentThread(), nPriority);
+}
+#else
+inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
+{
+    pthread_t hthread = 0;
+    int ret = pthread_create(&hthread, NULL, (void*(*)(void*))pfn, parg);
+    if (ret != 0)
+    {
+        printf("Error: pthread_create() returned %d\n", ret);
+        return (pthread_t)0;
+    }
+    if (!fWantHandle)
+        return (pthread_t)-1;
+    return hthread;
+}
+
+#define THREAD_PRIORITY_LOWEST          PRIO_MIN
+#define THREAD_PRIORITY_BELOW_NORMAL    2
+#define THREAD_PRIORITY_NORMAL          0
+#define THREAD_PRIORITY_ABOVE_NORMAL    0
+
+inline void SetThreadPriority(int nPriority)
+{
+    // threads are processes on linux, so PRIO_PROCESS affects just the one thread
+    setpriority(PRIO_PROCESS, getpid(), nPriority);
+}
+
+inline bool TerminateThread(pthread_t hthread, unsigned int nExitCode)
+{
+    return (pthread_cancel(hthread) == 0);
+}
+
+inline void ExitThread(unsigned int nExitCode)
+{
+    pthread_exit((void*)nExitCode);
+}
+#endif

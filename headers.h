@@ -75,7 +75,6 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <boost/filesystem.hpp>
-#include <boost/thread/thread.hpp>
 #include <boost/algorithm/string.hpp>
 #endif
 

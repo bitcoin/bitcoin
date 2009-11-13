@@ -45,7 +45,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_menuOptions->Append( m_menuOptionsChangeYourAddress );
 	
 	wxMenuItem* m_menuOptionsOptions;
-	m_menuOptionsOptions = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( wxT("&Options...") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuOptionsOptions = new wxMenuItem( m_menuOptions, wxID_MENUOPTIONSOPTIONS, wxString( wxT("&Options...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsOptions );
 	
 	m_menubar->Append( m_menuOptions, wxT("&Options") );
@@ -428,21 +428,13 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	bSizer69->Add( m_checkBoxStartOnSystemStartup, 0, wxALL, 5 );
 	
-	m_checkBoxMinimizeToTray = new wxCheckBox( m_panelMain, wxID_ANY, wxT("&Minimize to the system tray instead of the taskbar"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_checkBoxMinimizeToTray = new wxCheckBox( m_panelMain, wxID_ANY, wxT("&Minimize to the tray instead of the taskbar"), wxDefaultPosition, wxDefaultSize, 0 );
 	
 	bSizer69->Add( m_checkBoxMinimizeToTray, 0, wxALL, 5 );
 	
-	wxBoxSizer* bSizer101;
-	bSizer101 = new wxBoxSizer( wxHORIZONTAL );
+	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, wxT("M&inimize to the tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
 	
-	
-	bSizer101->Add( 16, 0, 0, 0, 5 );
-	
-	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, wxT("Mi&nimize to system tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
-	
-	bSizer101->Add( m_checkBoxMinimizeOnClose, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
-	
-	bSizer69->Add( bSizer101, 1, wxEXPAND, 5 );
+	bSizer69->Add( m_checkBoxMinimizeOnClose, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 	
 	wxBoxSizer* bSizer102;
 	bSizer102 = new wxBoxSizer( wxHORIZONTAL );

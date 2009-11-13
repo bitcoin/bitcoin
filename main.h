@@ -34,6 +34,8 @@ extern int nBestHeight;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
+extern map<uint256, int> mapRequestCount;
+extern CCriticalSection cs_mapRequestCount;
 
 // Settings
 extern int fGenerateBitcoins;
@@ -647,6 +649,15 @@ public:
         nGetCreditCached = 0;
     }
 
+    IMPLEMENT_SERIALIZE
+    (
+        nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
+        nVersion = this->nVersion;
+        READWRITE(hashBlock);
+        READWRITE(vMerkleBranch);
+        READWRITE(nIndex);
+    )
+
     int64 GetCredit(bool fUseCache=false) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
@@ -660,15 +671,6 @@ public:
         fGetCreditCached = true;
         return nGetCreditCached;
     }
-
-    IMPLEMENT_SERIALIZE
-    (
-        nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
-        nVersion = this->nVersion;
-        READWRITE(hashBlock);
-        READWRITE(vMerkleBranch);
-        READWRITE(nIndex);
-    )
 
 
     int SetMerkleBranch(const CBlock* pblock=NULL);
@@ -749,6 +751,7 @@ public:
 
 
     int64 GetTxTime() const;
+    int GetRequestCount() const;
 
     void AddSupportingTransactions(CTxDB& txdb);
 
@@ -978,7 +981,7 @@ public:
         return true;
     }
 
-    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions)
+    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
     {
         SetNull();
 
@@ -1027,7 +1030,7 @@ public:
     int64 GetBlockValue(int64 nFees) const;
     bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
-    bool ReadFromDisk(const CBlockIndex* blockindex, bool fReadTransactions);
+    bool ReadFromDisk(const CBlockIndex* blockindex, bool fReadTransactions=true);
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
     bool CheckBlock() const;
     bool AcceptBlock();
