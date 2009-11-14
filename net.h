@@ -550,7 +550,7 @@ public:
         CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
         CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
         RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, "linux-test5");
+        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, string("test5"));
     }
 
     ~CNode()
