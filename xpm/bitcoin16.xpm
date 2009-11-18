@@ -1,5 +1,5 @@
 /* XPM */
-static char * bitcoin16_xpm[] = {
+static const char * bitcoin16_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "16 16 181 2",
 "   c #775605",

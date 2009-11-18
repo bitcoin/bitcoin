@@ -1664,7 +1664,7 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
 
 CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 {
-    m_staticTextVersion->SetLabel(strprintf("version 0.%d.%d Beta", VERSION/100, VERSION%100));
+    m_staticTextVersion->SetLabel(strprintf("version 0.%d.%d beta", VERSION/100, VERSION%100));
 
     // Workaround until upgrade to wxWidgets supporting UTF-8
     wxString str = m_staticTextMain->GetLabel();
@@ -2030,7 +2030,7 @@ void CSendingDialog::StartTransfer()
     // We may have connected already for product details
     if (!Status("Connecting..."))
         return;
-    CNode* pnode = ConnectNode(addr, 5 * 60);
+    CNode* pnode = ConnectNode(addr, 15 * 60);
     if (!pnode)
     {
         Error("Unable to connect");
@@ -2075,14 +2075,6 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
         return;
     }
 
-    // Should already be connected
-    CNode* pnode = ConnectNode(addr, 5 * 60);
-    if (!pnode)
-    {
-        Error("Lost connection");
-        return;
-    }
-
     // Pause to give the user a chance to cancel
     while (wxDateTime::UNow() < start + wxTimeSpan(0, 0, 0, 2 * 1000))
     {
@@ -2109,6 +2101,14 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
                 Error(strprintf("This is an oversized transaction that requires a transaction fee of %s", FormatMoney(nFeeRequired).c_str()));
             else
                 Error("Transaction creation failed");
+            return;
+        }
+
+        // Make sure we're still connected
+        CNode* pnode = ConnectNode(addr, 2 * 60 * 60);
+        if (!pnode)
+        {
+            Error("Lost connection, transaction cancelled");
             return;
         }
 
@@ -3495,12 +3495,14 @@ bool CMyApp::OnInit2()
 
     if (mapArgs.count("-debug"))
         fDebug = true;
+    if (strstr(pszSubVer, "test"))
+        fDebug = true;
 
     if (mapArgs.count("-printtodebugger"))
         fPrintToDebugger = true;
 
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %d, OS version %s\n", VERSION, wxGetOsDescription().mb_str());
+    printf("Bitcoin version %d%s, OS version %s\n", VERSION, pszSubVer, wxGetOsDescription().mb_str());
 
     if (mapArgs.count("-loadblockindextest"))
     {
@@ -3843,9 +3845,8 @@ void SetStartOnSystemStartup(bool fAutoStart)
         CoInitialize(NULL);
 
         // Get a pointer to the IShellLink interface.
-        HRESULT hres = NULL;
         IShellLink* psl = NULL;
-        hres = CoCreateInstance(CLSID_ShellLink, NULL,
+        HRESULT hres = CoCreateInstance(CLSID_ShellLink, NULL,
                                 CLSCTX_INPROC_SERVER, IID_IShellLink,
                                 reinterpret_cast<void**>(&psl));
 

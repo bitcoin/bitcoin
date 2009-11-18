@@ -56,9 +56,11 @@ public:
 
         // Close sockets
         foreach(CNode* pnode, vNodes)
-            closesocket(pnode->hSocket);
-        if (closesocket(hListenSocket) == SOCKET_ERROR)
-            printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
+            if (pnode->hSocket != INVALID_SOCKET)
+                closesocket(pnode->hSocket);
+        if (hListenSocket != INVALID_SOCKET)
+            if (closesocket(hListenSocket) == SOCKET_ERROR)
+                printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
 
 #ifdef __WXMSW__
         // Shutdown Windows Sockets
@@ -348,7 +350,7 @@ void ParseParameters(int argc, char* argv[])
     {
         char psz[10000];
         strlcpy(psz, argv[i], sizeof(psz));
-        char* pszValue = "";
+        char* pszValue = (char*)"";
         if (strchr(psz, '='))
         {
             pszValue = strchr(psz, '=');

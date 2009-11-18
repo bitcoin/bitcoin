@@ -760,7 +760,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
         bnNew = bnProofOfWorkLimit;
 
     /// debug print
-    printf("\n\n\nGetNextWorkRequired RETARGET *****\n");
+    printf("GetNextWorkRequired RETARGET\n");
     printf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
     printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
     printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
@@ -1013,7 +1013,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
 bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 {
-    printf("*** REORGANIZE ***\n");
+    printf("REORGANIZE\n");
 
     // Find the fork
     CBlockIndex* pfork = pindexBest;
@@ -1114,7 +1114,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     // Check for duplicate
     uint256 hash = GetHash();
     if (mapBlockIndex.count(hash))
-        return error("AddToBlockIndex() : %s already exists", hash.ToString().substr(0,14).c_str());
+        return error("AddToBlockIndex() : %s already exists", hash.ToString().substr(0,16).c_str());
 
     // Construct new block index object
     CBlockIndex* pindexNew = new CBlockIndex(nFile, nBlockPos, *this);
@@ -1174,7 +1174,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         pindexBest = pindexNew;
         nBestHeight = pindexBest->nHeight;
         nTransactionsUpdated++;
-        printf("AddToBlockIndex: new best=%s  height=%d\n", hashBestChain.ToString().substr(0,14).c_str(), nBestHeight);
+        printf("AddToBlockIndex: new best=%s  height=%d\n", hashBestChain.ToString().substr(0,16).c_str(), nBestHeight);
     }
 
     txdb.TxnCommit();
@@ -1294,9 +1294,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // Check for duplicate
     uint256 hash = pblock->GetHash();
     if (mapBlockIndex.count(hash))
-        return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,14).c_str());
+        return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,16).c_str());
     if (mapOrphanBlocks.count(hash))
-        return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,14).c_str());
+        return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,16).c_str());
 
     // Preliminary checks
     if (!pblock->CheckBlock())
@@ -1308,7 +1308,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // If don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,14).c_str());
+        printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,16).c_str());
         mapOrphanBlocks.insert(make_pair(hash, pblock));
         mapOrphanBlocksByPrev.insert(make_pair(pblock->hashPrevBlock, pblock));
 
@@ -1503,11 +1503,11 @@ bool LoadBlockIndex(bool fAllowNew)
         //   vMerkleTree: 4a5e1e
 
         // Genesis block
-        char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+        const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
-        txNew.vin[0].scriptSig     = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((unsigned char*)pszTimestamp, (unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vin[0].scriptSig     = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].nValue       = 50 * COIN;
         txNew.vout[0].scriptPubKey = CScript() << CBigNum("0x5F1DF16B2B704C8A578D0BBAF74D385CDE12C11EE50455F3C438EF4C3FBCF649B6DE611FEAE06279A60939E028A8D65C10B73071A6F16719274855FEB0FD8A6704") << OP_CHECKSIG;
         CBlock block;
@@ -1519,7 +1519,7 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nBits    = 0x1d00ffff;
         block.nNonce   = 2083236893;
 
-            //// debug print, delete this later
+            //// debug print
             printf("%s\n", block.GetHash().ToString().c_str());
             printf("%s\n", block.hashMerkleRoot.ToString().c_str());
             printf("%s\n", hashGenesisBlock.ToString().c_str());
@@ -1592,7 +1592,7 @@ void PrintBlockTree()
             pindex->nHeight,
             pindex->nFile,
             pindex->nBlockPos,
-            block.GetHash().ToString().substr(0,14).c_str(),
+            block.GetHash().ToString().substr(0,16).c_str(),
             DateTimeStrFormat("%x %H:%M:%S", block.nTime).c_str(),
             block.vtx.size());
 
@@ -1912,6 +1912,18 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     CBlock block;
                     block.ReadFromDisk((*mi).second, !pfrom->fClient);
                     pfrom->PushMessage("block", block);
+
+                    // Trigger them to send a getblocks request for the next batch of inventory
+                    if (inv.hash == pfrom->hashContinue)
+                    {
+                        // Bypass PushInventory, this must send even if redundant,
+                        // and we want it right after the last block so they don't
+                        // wait for other stuff first.
+                        vector<CInv> vInv;
+                        vInv.push_back(CInv(MSG_BLOCK, hashBestChain));
+                        pfrom->PushMessage("inv", vInv);
+                        pfrom->hashContinue = 0;
+                    }
                 }
             }
             else if (inv.IsKnownType())
@@ -1948,25 +1960,23 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Send the rest of the chain
         if (pindex)
             pindex = pindex->pnext;
-        printf("getblocks %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,14).c_str());
+        printf("getblocks %d to %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,16).c_str());
+        int nLimit = 500;
         for (; pindex; pindex = pindex->pnext)
         {
             if (pindex->GetBlockHash() == hashStop)
             {
-                printf("  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,14).c_str());
+                printf("  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,16).c_str());
                 break;
             }
-
-            // Bypass setInventoryKnown in case an inventory message got lost
-            CRITICAL_BLOCK(pfrom->cs_inventory)
+            pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+            if (--nLimit <= 0)
             {
-                CInv inv(MSG_BLOCK, pindex->GetBlockHash());
-                // returns true if wasn't already contained in the set
-                if (pfrom->setInventoryKnown2.insert(inv).second)
-                {
-                    pfrom->setInventoryKnown.erase(inv);
-                    pfrom->vInventoryToSend.push_back(inv);
-                }
+                // When this block is requested, we'll send an inv that'll make them
+                // getblocks the next batch of inventory.
+                printf("  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,16).c_str());
+                pfrom->hashContinue = pindex->GetBlockHash();
+                break;
             }
         }
     }
@@ -2049,7 +2059,13 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> *pblock;
 
         //// debug print
-        printf("received block:\n"); pblock->print();
+        if (false)
+        {
+            printf("received block:\n");
+            pblock->print();
+        }
+        else
+            printf("received block %s\n", pblock->GetHash().ToString().substr(0,16).c_str());
 
         CInv inv(MSG_BLOCK, pblock->GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -2175,9 +2191,13 @@ bool SendMessages(CNode* pto)
         if (pto->nVersion == 0)
             return true;
 
+        // Keep-alive ping
+        if (pto->nLastSend && GetTime() - pto->nLastSend > 12 * 60 && pto->vSend.empty())
+            pto->PushMessage("ping");
+
         // Address refresh broadcast
         static int64 nLastRebroadcast;
-        if (nLastRebroadcast < GetTime() - 24 * 60 * 60) // every 24 hours
+        if (GetTime() - nLastRebroadcast > 24 * 60 * 60) // every 24 hours
         {
             nLastRebroadcast = GetTime();
             CRITICAL_BLOCK(cs_vNodes)
@@ -2194,9 +2214,16 @@ bool SendMessages(CNode* pto)
             }
         }
 
-        // Keep-alive ping
-        if (pto->nLastSend && GetTime() - pto->nLastSend > 12 * 60 && pto->vSend.empty())
-            pto->PushMessage("ping");
+        // Clear inventory known periodically in case an inv message was missed,
+        // although usually they would just get it from another node.
+        static int64 nLastInventoryKnownClear;
+        if (GetTime() - nLastInventoryKnownClear > 2 * 60 * 60) // every 2 hours
+        {
+            nLastInventoryKnownClear = GetTime();
+            CRITICAL_BLOCK(cs_vNodes)
+                foreach(CNode* pnode, vNodes)
+                    pnode->setInventoryKnown.clear();
+        }
 
 
         //
@@ -2243,7 +2270,6 @@ bool SendMessages(CNode* pto)
                 }
             }
             pto->vInventoryToSend.clear();
-            pto->setInventoryKnown2.clear();
         }
         if (!vInventoryToSend.empty())
             pto->PushMessage("inv", vInventoryToSend);
@@ -2817,8 +2843,7 @@ bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key)
 
         // This is only to keep the database open to defeat the auto-flush for the
         // duration of this scope.  This is the only place where this optimization
-        // maybe makes sense; please don't do it anywhere else.  Keeping databases
-        // open longer than necessary can create deadlocks.
+        // maybe makes sense; please don't do it anywhere else.
         CWalletDB walletdb("r");
 
         // Add the change's private key to wallet

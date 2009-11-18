@@ -57,9 +57,11 @@ inline T& REF(const T& val)
 #ifdef __WXMSW__
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
+#ifndef UINT64_MAX
 #define UINT64_MAX          _UI64_MAX
 #define INT64_MAX           _I64_MAX
 #define INT64_MIN           _I64_MIN
+#endif
 #else
 #define WSAGetLastError()   errno
 #define WSAEWOULDBLOCK      EWOULDBLOCK
@@ -67,7 +69,7 @@ inline T& REF(const T& val)
 #define WSAEINTR            EINTR
 #define WSAEINPROGRESS      EINPROGRESS
 #define WSAEADDRINUSE       EADDRINUSE
-#define closesocket(s)      close(s)
+#define WSAENOTSOCK         EBADF
 #define INVALID_SOCKET      (SOCKET)(~0)
 #define SOCKET_ERROR        -1
 typedef u_int SOCKET;
@@ -79,6 +81,23 @@ typedef u_int SOCKET;
 #define Sleep(n)            wxMilliSleep(n)
 #define Beep(n1,n2)         (0)
 #endif
+
+inline int myclosesocket(SOCKET& hSocket)
+{
+    if (hSocket == INVALID_SOCKET)
+        return WSAENOTSOCK;
+#ifdef __WXMSW__
+    int ret = closesocket(hSocket);
+#else
+    int ret = close(hSocket);
+#endif
+    hSocket = INVALID_SOCKET;
+    return ret;
+}
+#define closesocket(s)      myclosesocket(s)
+
+
+
 
 
 
@@ -149,7 +168,7 @@ public:
     bool TryEnter() { return mutex.TryLock() == wxMUTEX_NO_ERROR; }
 #endif
 public:
-    char* pszFile;
+    const char* pszFile;
     int nLine;
 };
 
