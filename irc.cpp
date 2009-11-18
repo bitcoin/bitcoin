@@ -159,15 +159,12 @@ void ThreadIRCSeed(void* parg)
     SetThreadPriority(THREAD_PRIORITY_NORMAL);
     int nErrorWait = 10;
     int nRetryWait = 10;
-
-    // IRC server blocks TOR users
-    if (fUseProxy && addrProxy.port == htons(9050))
-        return;
+    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
 
     while (!fShutdown)
     {
         CAddress addrConnect("216.155.130.130:6667");
-        if (!(fUseProxy && addrProxy.port == htons(9050)))
+        if (!fTOR)
         {
             struct hostent* phostent = gethostbyname("chat.freenode.net");
             if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
@@ -188,6 +185,7 @@ void ThreadIRCSeed(void* parg)
         if (!RecvUntil(hSocket, "Found your hostname", "using your IP address instead", "Couldn't look up your hostname"))
         {
             closesocket(hSocket);
+            hSocket = INVALID_SOCKET;
             nErrorWait = nErrorWait * 11 / 10;
             if (Wait(nErrorWait += 60))
                 continue;
@@ -208,6 +206,7 @@ void ThreadIRCSeed(void* parg)
         if (!RecvUntil(hSocket, " 004 "))
         {
             closesocket(hSocket);
+            hSocket = INVALID_SOCKET;
             nErrorWait = nErrorWait * 11 / 10;
             if (Wait(nErrorWait += 60))
                 continue;
@@ -269,6 +268,11 @@ void ThreadIRCSeed(void* parg)
             }
         }
         closesocket(hSocket);
+        hSocket = INVALID_SOCKET;
+
+        // IRC usually blocks TOR, so only try once
+        if (fTOR)
+            return;
 
         if (GetTime() - nStart > 20 * 60)
         {

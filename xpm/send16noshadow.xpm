@@ -1,5 +1,5 @@
 /* XPM */
-static char * send16noshadow_xpm[] = {
+static const char * send16noshadow_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "16 16 256 2",
 "   c #ADF7AD",

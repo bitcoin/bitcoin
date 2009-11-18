@@ -32,8 +32,9 @@ protected:
     Db* pdb;
     string strFile;
     vector<DbTxn*> vTxn;
+    bool fReadOnly;
 
-    explicit CDB(const char* pszFile, const char* pszMode="r+", bool fTxn=false);
+    explicit CDB(const char* pszFile, const char* pszMode="r+");
     ~CDB() { Close(); }
 public:
     void Close();
@@ -77,6 +78,8 @@ protected:
     {
         if (!pdb)
             return false;
+        if (fReadOnly)
+            assert(("Write called on database in read-only mode", false));
 
         // Key
         CDataStream ssKey(SER_DISK);
@@ -104,6 +107,8 @@ protected:
     {
         if (!pdb)
             return false;
+        if (fReadOnly)
+            assert(("Erase called on database in read-only mode", false));
 
         // Key
         CDataStream ssKey(SER_DISK);
@@ -254,7 +259,7 @@ public:
 class CTxDB : public CDB
 {
 public:
-    CTxDB(const char* pszMode="r+", bool fTxn=false) : CDB(!fClient ? "blkindex.dat" : NULL, pszMode, fTxn) { }
+    CTxDB(const char* pszMode="r+") : CDB(!fClient ? "blkindex.dat" : NULL, pszMode) { }
 private:
     CTxDB(const CTxDB&);
     void operator=(const CTxDB&);
@@ -283,7 +288,7 @@ public:
 class CReviewDB : public CDB
 {
 public:
-    CReviewDB(const char* pszMode="r+", bool fTxn=false) : CDB("reviews.dat", pszMode, fTxn) { }
+    CReviewDB(const char* pszMode="r+") : CDB("reviews.dat", pszMode) { }
 private:
     CReviewDB(const CReviewDB&);
     void operator=(const CReviewDB&);
@@ -309,7 +314,7 @@ public:
 class CMarketDB : public CDB
 {
 public:
-    CMarketDB(const char* pszMode="r+", bool fTxn=false) : CDB("market.dat", pszMode, fTxn) { }
+    CMarketDB(const char* pszMode="r+") : CDB("market.dat", pszMode) { }
 private:
     CMarketDB(const CMarketDB&);
     void operator=(const CMarketDB&);
@@ -322,7 +327,7 @@ private:
 class CAddrDB : public CDB
 {
 public:
-    CAddrDB(const char* pszMode="r+", bool fTxn=false) : CDB("addr.dat", pszMode, fTxn) { }
+    CAddrDB(const char* pszMode="r+") : CDB("addr.dat", pszMode) { }
 private:
     CAddrDB(const CAddrDB&);
     void operator=(const CAddrDB&);
@@ -341,7 +346,7 @@ bool LoadAddresses();
 class CWalletDB : public CDB
 {
 public:
-    CWalletDB(const char* pszMode="r+", bool fTxn=false) : CDB("wallet.dat", pszMode, fTxn) { }
+    CWalletDB(const char* pszMode="r+") : CDB("wallet.dat", pszMode) { }
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);

@@ -13,18 +13,18 @@ UNIX BUILD NOTES
 
 Dependencies
 ------------
-Install the dev files for the shared libraries:
 apt-get install build-essential
 apt-get install libgtk2.0-dev
 apt-get install libssl-dev
+apt-get install libdb4.7-dev
+apt-get install libdb4.7++-dev
+apt-get install libboost-dev
 
 Libraries you need to obtain separately and build:
               default path   download
 wxWidgets      \wxwidgets     http://www.wxwidgets.org/downloads/
-Berkeley DB    \db            http://www.oracle.com/technology/software/products/berkeley-db/index.html
-Boost          \boost         http://www.boost.org/users/download/
 
-Their licenses:
+Licenses:
 wxWidgets      LGPL 2.1 with very liberal exceptions
 Berkeley DB    New BSD license with additional requirement that linked software must be free open source
 Boost          MIT-like license
@@ -59,15 +59,9 @@ make install
 ldconfig
 
 
-Berkeley DB
------------
-cd /usr/local/db-4.7.25.NC/build_unix
-../dist/configure --enable-cxx
-make
-
-
 Boost
 -----
+If you download and build Boost yourself
 cd /usr/local/boost_1_40_0
 su
 ./bootstrap.sh

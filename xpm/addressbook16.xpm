@@ -1,5 +1,5 @@
 /* XPM */
-static char * addressbook16_xpm[] = {
+static const char * addressbook16_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "16 16 256 2",
 "   c #FFFFFF",

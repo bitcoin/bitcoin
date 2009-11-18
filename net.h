@@ -414,7 +414,7 @@ public:
 
     string ToString() const
     {
-        return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,14).c_str());
+        return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,16).c_str());
     }
 
     void print() const
@@ -504,6 +504,7 @@ public:
     int64 nReleaseTime;
     map<uint256, CRequestTracker> mapRequests;
     CCriticalSection cs_mapRequests;
+    uint256 hashContinue;
 
     // flood
     vector<CAddress> vAddrToSend;
@@ -512,7 +513,6 @@ public:
 
     // inventory based relay
     set<CInv> setInventoryKnown;
-    set<CInv> setInventoryKnown2;
     vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     multimap<int64, CInv> mapAskFor;
@@ -541,6 +541,7 @@ public:
         fDisconnect = false;
         nRefCount = 0;
         nReleaseTime = 0;
+        hashContinue = 0;
         fGetAddr = false;
         vfSubscribe.assign(256, false);
 
@@ -550,13 +551,16 @@ public:
         CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
         CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
         RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, string("test5"));
+        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, string(pszSubVer));
     }
 
     ~CNode()
     {
         if (hSocket != INVALID_SOCKET)
+        {
             closesocket(hSocket);
+            hSocket = INVALID_SOCKET;
+        }
     }
 
 private:
@@ -570,12 +574,13 @@ public:
         return max(nRefCount, 0) + (GetTime() < nReleaseTime ? 1 : 0);
     }
 
-    void AddRef(int64 nTimeout=0)
+    CNode* AddRef(int64 nTimeout=0)
     {
         if (nTimeout != 0)
             nReleaseTime = max(nReleaseTime, GetTime() + nTimeout);
         else
             nRefCount++;
+        return this;
     }
 
     void Release()
@@ -899,7 +904,8 @@ public:
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);
-    void DoDisconnect();
+    void CloseSocketDisconnect();
+    void Cleanup();
 };
 
 

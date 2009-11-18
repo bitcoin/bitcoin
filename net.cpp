@@ -148,8 +148,8 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
 bool GetMyExternalIP(unsigned int& ipRet)
 {
     CAddress addrConnect;
-    char* pszGet;
-    char* pszKeyword;
+    const char* pszGet;
+    const char* pszKeyword;
 
     if (fUseProxy)
         return false;
@@ -463,14 +463,21 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
     }
 }
 
-void CNode::DoDisconnect()
+void CNode::CloseSocketDisconnect()
 {
-    if (fDebug)
-        printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
-    printf("disconnecting node %s\n", addr.ToStringLog().c_str());
+    fDisconnect = true;
+    if (hSocket != INVALID_SOCKET)
+    {
+        if (fDebug)
+            printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+        printf("disconnecting node %s\n", addr.ToStringLog().c_str());
+        closesocket(hSocket);
+        hSocket = INVALID_SOCKET;
+    }
+}
 
-    closesocket(hSocket);
-
+void CNode::Cleanup()
+{
     // All of a nodes broadcasts and subscriptions are automatically torn down
     // when it goes down, so a node has to stay up to keep its broadcast going.
 
@@ -540,11 +547,12 @@ void ThreadSocketHandler2(void* parg)
                     // remove from vNodes
                     vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
 
-                    // close socket
-                    pnode->DoDisconnect();
+                    // close socket and cleanup
+                    pnode->CloseSocketDisconnect();
+                    pnode->Cleanup();
 
                     // hold in disconnected pool until all refs are released
-                    pnode->nReleaseTime = max(pnode->nReleaseTime, GetTime() + 5 * 60);
+                    pnode->nReleaseTime = max(pnode->nReleaseTime, GetTime() + 15 * 60);
                     if (pnode->fNetworkNode || pnode->fInbound)
                         pnode->Release();
                     vNodesDisconnected.push_back(pnode);
@@ -599,6 +607,8 @@ void ThreadSocketHandler2(void* parg)
         {
             foreach(CNode* pnode, vNodes)
             {
+                if (pnode->hSocket == INVALID_SOCKET || pnode->hSocket < 0)
+                    continue;
                 FD_SET(pnode->hSocket, &fdsetRecv);
                 FD_SET(pnode->hSocket, &fdsetError);
                 hSocketMax = max(hSocketMax, pnode->hSocket);
@@ -659,17 +669,22 @@ void ThreadSocketHandler2(void* parg)
         //
         vector<CNode*> vNodesCopy;
         CRITICAL_BLOCK(cs_vNodes)
+        {
             vNodesCopy = vNodes;
+            foreach(CNode* pnode, vNodesCopy)
+                pnode->AddRef();
+        }
         foreach(CNode* pnode, vNodesCopy)
         {
             if (fShutdown)
                 return;
-            SOCKET hSocket = pnode->hSocket;
 
             //
             // Receive
             //
-            if (FD_ISSET(hSocket, &fdsetRecv) || FD_ISSET(hSocket, &fdsetError))
+            if (pnode->hSocket == INVALID_SOCKET)
+                continue;
+            if (FD_ISSET(pnode->hSocket, &fdsetRecv) || FD_ISSET(pnode->hSocket, &fdsetError))
             {
                 TRY_CRITICAL_BLOCK(pnode->cs_vRecv)
                 {
@@ -678,7 +693,7 @@ void ThreadSocketHandler2(void* parg)
 
                     // typical socket buffer is 8K-64K
                     char pchBuf[0x10000];
-                    int nBytes = recv(hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+                    int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
                     if (nBytes > 0)
                     {
                         vRecv.resize(nPos + nBytes);
@@ -690,7 +705,7 @@ void ThreadSocketHandler2(void* parg)
                         // socket closed gracefully
                         if (!pnode->fDisconnect)
                             printf("socket closed\n");
-                        pnode->fDisconnect = true;
+                        pnode->CloseSocketDisconnect();
                     }
                     else if (nBytes < 0)
                     {
@@ -700,7 +715,7 @@ void ThreadSocketHandler2(void* parg)
                         {
                             if (!pnode->fDisconnect)
                                 printf("socket recv error %d\n", nErr);
-                            pnode->fDisconnect = true;
+                            pnode->CloseSocketDisconnect();
                         }
                     }
                 }
@@ -709,14 +724,16 @@ void ThreadSocketHandler2(void* parg)
             //
             // Send
             //
-            if (FD_ISSET(hSocket, &fdsetSend))
+            if (pnode->hSocket == INVALID_SOCKET)
+                continue;
+            if (FD_ISSET(pnode->hSocket, &fdsetSend))
             {
                 TRY_CRITICAL_BLOCK(pnode->cs_vSend)
                 {
                     CDataStream& vSend = pnode->vSend;
                     if (!vSend.empty())
                     {
-                        int nBytes = send(hSocket, &vSend[0], vSend.size(), MSG_NOSIGNAL | MSG_DONTWAIT);
+                        int nBytes = send(pnode->hSocket, &vSend[0], vSend.size(), MSG_NOSIGNAL | MSG_DONTWAIT);
                         if (nBytes > 0)
                         {
                             vSend.erase(vSend.begin(), vSend.begin() + nBytes);
@@ -729,7 +746,7 @@ void ThreadSocketHandler2(void* parg)
                             if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
                             {
                                 printf("socket send error %d\n", nErr);
-                                pnode->fDisconnect = true;
+                                pnode->CloseSocketDisconnect();
                             }
                         }
                     }
@@ -760,17 +777,11 @@ void ThreadSocketHandler2(void* parg)
                 }
             }
         }
-
-
-        //// debug heartbeat
-        static int64 nHeartbeat1;
-        if (GetTime() - nHeartbeat1 >= 5 * 60)
+        CRITICAL_BLOCK(cs_vNodes)
         {
-            printf("%s sendrecv\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
-            nHeartbeat1 = GetTime();
-            fDebug = true;
+            foreach(CNode* pnode, vNodesCopy)
+                pnode->Release();
         }
-
 
         nThreadSocketHandlerHeartbeat = GetTime();
         Sleep(10);
@@ -812,18 +823,21 @@ void ThreadOpenConnections2(void* parg)
     printf("ThreadOpenConnections started\n");
 
     // Connect to specific addresses
-    while (mapArgs.count("-connect"))
+    if (mapArgs.count("-connect"))
     {
-        foreach(string strAddr, mapMultiArgs["-connect"])
+        for (int64 nLoop = 0;; nLoop++)
         {
-            CAddress addr(strAddr, NODE_NETWORK);
-            if (addr.IsValid())
-                OpenNetworkConnection(addr);
-            for (int i = 0; i < 10; i++)
+            foreach(string strAddr, mapMultiArgs["-connect"])
             {
-                Sleep(1000);
-                if (fShutdown)
-                    return;
+                CAddress addr(strAddr, NODE_NETWORK);
+                if (addr.IsValid())
+                    OpenNetworkConnection(addr);
+                for (int i = 0; i < 10 && i < nLoop; i++)
+                {
+                    Sleep(500);
+                    if (fShutdown)
+                        return;
+                }
             }
         }
     }
@@ -837,7 +851,7 @@ void ThreadOpenConnections2(void* parg)
             if (addr.IsValid())
             {
                 OpenNetworkConnection(addr);
-                Sleep(1000);
+                Sleep(500);
                 if (fShutdown)
                     return;
             }
@@ -898,7 +912,7 @@ void ThreadOpenConnections2(void* parg)
                 //   30 days   27 hours
                 //   90 days   46 hours
                 //  365 days   93 hours
-                int64 nDelay = 3600.0 * sqrt(fabs(nSinceLastSeen) / 3600.0) + nRandomizer;
+                int64 nDelay = (int64)(3600.0 * sqrt(fabs(nSinceLastSeen) / 3600.0) + nRandomizer);
 
                 // Fast reconnect for one hour after last seen
                 if (nSinceLastSeen < 60 * 60)
@@ -1013,11 +1027,13 @@ void ThreadMessageHandler2(void* parg)
         // Poll the connected nodes for messages
         vector<CNode*> vNodesCopy;
         CRITICAL_BLOCK(cs_vNodes)
+        {
             vNodesCopy = vNodes;
+            foreach(CNode* pnode, vNodesCopy)
+                pnode->AddRef();
+        }
         foreach(CNode* pnode, vNodesCopy)
         {
-            pnode->AddRef();
-
             // Receive messages
             TRY_CRITICAL_BLOCK(pnode->cs_vRecv)
                 ProcessMessages(pnode);
@@ -1029,8 +1045,11 @@ void ThreadMessageHandler2(void* parg)
                 SendMessages(pnode);
             if (fShutdown)
                 return;
-
-            pnode->Release();
+        }
+        CRITICAL_BLOCK(cs_vNodes)
+        {
+            foreach(CNode* pnode, vNodesCopy)
+                pnode->Release();
         }
 
         // Wait and allow messages to bunch up
@@ -1257,8 +1276,7 @@ void StartNode(void* parg)
                     if (!fGot)
                     {
                         printf("*** closing socket\n");
-                        closesocket(pnode->hSocket);
-                        pnode->fDisconnect = true;
+                        pnode->CloseSocketDisconnect();
                     }
                 }
             }
@@ -1292,7 +1310,7 @@ bool StopNode()
     int64 nStart = GetTime();
     while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0)
     {
-        if (GetTime() - nStart > 15)
+        if (GetTime() - nStart > 20)
             break;
         Sleep(20);
     }

@@ -20,6 +20,7 @@ class CDataStream;
 class CAutoFile;
 
 static const int VERSION = 106;
+static const char* pszSubVer = " linux-test8";
 
 
 

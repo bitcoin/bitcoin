@@ -1,5 +1,5 @@
 /* XPM */
-static char * send20_xpm[] = {
+static const char * send20_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "20 20 256 2",
 "   c #CEFFCE",
