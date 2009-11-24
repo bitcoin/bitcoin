@@ -1298,6 +1298,27 @@ public:
         vHave.push_back(hashGenesisBlock);
     }
 
+    int GetDistanceBack()
+    {
+        // Retrace how far back it was in the sender's branch
+        int nDistance = 0;
+        int nStep = 1;
+        foreach(const uint256& hash, vHave)
+        {
+            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+            if (mi != mapBlockIndex.end())
+            {
+                CBlockIndex* pindex = (*mi).second;
+                if (pindex->IsInMainChain())
+                    return nDistance;
+            }
+            nDistance += nStep;
+            if (nDistance > 10)
+                nStep *= 2;
+        }
+        return nDistance;
+    }
+
     CBlockIndex* GetBlockIndex()
     {
         // Find the first block the caller has in the main chain
