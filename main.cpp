@@ -1254,8 +1254,8 @@ bool CBlock::AcceptBlock()
     if (nTime <= pindexPrev->GetMedianTimePast())
         return error("AcceptBlock() : block's timestamp is too early");
 
-    // Check that all transactions are finalized (starting around Dec 2009)
-    if (nBestHeight > 31000)
+    // Check that all transactions are finalized (starting around Mar 2010)
+    if (nBestHeight > 36000)
         foreach(const CTransaction& tx, vtx)
             if (!tx.IsFinal(nTime))
                 return error("AcceptBlock() : contains a non-final transaction");
@@ -2059,13 +2059,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> *pblock;
 
         //// debug print
-        if (false)
-        {
-            printf("received block:\n");
-            pblock->print();
-        }
-        else
-            printf("received block %s\n", pblock->GetHash().ToString().substr(0,16).c_str());
+        // printf("received block:\n");
+        // pblock->print();
+        printf("received block %s\n", pblock->GetHash().ToString().substr(0,16).c_str());
 
         CInv inv(MSG_BLOCK, pblock->GetHash());
         pfrom->AddInventoryKnown(inv);
