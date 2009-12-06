@@ -2479,10 +2479,8 @@ void BitcoinMiner()
                     if (tx.IsCoinBase() || !tx.IsFinal())
                         continue;
 
-                    // Transaction fee requirements, mainly only needed for flood control
-                    // Under 10K (about 80 inputs) is free for first 100 transactions
-                    // Base rate is 0.01 per KB
-                    int64 nMinFee = tx.GetMinFee(pblock->vtx.size() < 100);
+                    // Transaction fee based on block size
+                    int64 nMinFee = tx.GetMinFee(nBlockSize);
 
                     map<uint256, CTxIndex> mapTestPoolTmp(mapTestPool);
                     if (!tx.ConnectInputs(txdb, mapTestPoolTmp, CDiskTxPos(1,1,1), 0, nFees, false, true, nMinFee))
@@ -2768,11 +2766,11 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                 if (nValue < 0)
                     return false;
                 int64 nValueOut = nValue;
-                nValue += nFee;
+                int64 nTotalValue = nValue + nFee;
 
                 // Choose coins to use
                 set<CWalletTx*> setCoins;
-                if (!SelectCoins(nValue, setCoins))
+                if (!SelectCoins(nTotalValue, setCoins))
                     return false;
                 int64 nValueIn = 0;
                 foreach(CWalletTx* pcoin, setCoins)
@@ -2784,7 +2782,7 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                     wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
 
                 // Fill a vout back to self with any change
-                if (nValueIn > nValue)
+                if (nValueIn > nTotalValue)
                 {
                     // New private key
                     if (keyRet.IsNull())
@@ -2793,7 +2791,7 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                     // Fill a vout to ourself
                     CScript scriptPubKey;
                     scriptPubKey << keyRet.GetPubKey() << OP_CHECKSIG;
-                    wtxNew.vout.push_back(CTxOut(nValueIn - nValue, scriptPubKey));
+                    wtxNew.vout.push_back(CTxOut(nValueIn - nTotalValue, scriptPubKey));
                 }
 
                 // Fill a vout to the payee
@@ -2814,9 +2812,9 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                             SignSignature(*pcoin, wtxNew, nIn++);
 
                 // Check that enough fee is included
-                if (nFee < wtxNew.GetMinFee(true))
+                if (nFee < wtxNew.GetMinFee())
                 {
-                    nFee = nFeeRequiredRet = wtxNew.GetMinFee(true);
+                    nFee = nFeeRequiredRet = wtxNew.GetMinFee();
                     continue;
                 }
 
