@@ -9,7 +9,7 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 
 WINDOWS BUILD NOTES
-
+===================
 
 Compilers Supported
 -------------------
@@ -19,7 +19,7 @@ Microsoft Visual C++ 6.0 SP6
 
 Dependencies
 ------------
-Libraries you need to obtain separately to build:
+Libraries you need to download separately and build:
 
               default path   download
 wxWidgets      \wxwidgets     http://www.wxwidgets.org/downloads/
@@ -44,7 +44,7 @@ Boost        1.34.1
 
 Notes
 -----
-The UI layout is edited with wxFormBuilder.  Open the project file
+The UI layout is edited with wxFormBuilder.  The project file is
 uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
 classes that do the rote work of constructing all the UI elements.
 

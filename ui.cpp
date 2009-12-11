@@ -317,6 +317,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     fOnSetFocusAddress = false;
     fRefresh = false;
     m_choiceFilter->SetSelection(0);
+    double dResize = 1.0;
 #ifdef __WXMSW__
     SetIcon(wxICON(bitcoin));
 #else
@@ -330,6 +331,10 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_toolBar->AddTool(wxID_BUTTONSEND, "Send Coins", wxBitmap(send20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
     m_toolBar->AddTool(wxID_BUTTONRECEIVE, "Address Book", wxBitmap(addressbook20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
     m_toolBar->Realize();
+    // resize to fit ubuntu's huge default font
+    dResize = 1.19;
+    SetSize(dResize * GetSize().GetWidth(), 1.1 * GetSize().GetHeight());
+    dResize = 1.20;
 #endif
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
@@ -339,13 +344,13 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     int nDateWidth = DateTimeStr(1229413914).size() * 6 + 8;
     if (!strstr(DateTimeStr(1229413914).c_str(), "2008"))
         nDateWidth += 12;
-    m_listCtrl->InsertColumn(0, "",             wxLIST_FORMAT_LEFT,     0);
-    m_listCtrl->InsertColumn(1, "",             wxLIST_FORMAT_LEFT,     0);
-    m_listCtrl->InsertColumn(2, "Status",       wxLIST_FORMAT_LEFT,    90);
-    m_listCtrl->InsertColumn(3, "Date",         wxLIST_FORMAT_LEFT,   nDateWidth);
-    m_listCtrl->InsertColumn(4, "Description",  wxLIST_FORMAT_LEFT,   409 - nDateWidth);
-    m_listCtrl->InsertColumn(5, "Debit",        wxLIST_FORMAT_RIGHT,   79);
-    m_listCtrl->InsertColumn(6, "Credit",       wxLIST_FORMAT_RIGHT,   79);
+    m_listCtrl->InsertColumn(0, "",             wxLIST_FORMAT_LEFT,  dResize * 0);
+    m_listCtrl->InsertColumn(1, "",             wxLIST_FORMAT_LEFT,  dResize * 0);
+    m_listCtrl->InsertColumn(2, "Status",       wxLIST_FORMAT_LEFT,  dResize * 90);
+    m_listCtrl->InsertColumn(3, "Date",         wxLIST_FORMAT_LEFT,  dResize * nDateWidth);
+    m_listCtrl->InsertColumn(4, "Description",  wxLIST_FORMAT_LEFT,  dResize * 409 - nDateWidth);
+    m_listCtrl->InsertColumn(5, "Debit",        wxLIST_FORMAT_RIGHT, dResize * 79);
+    m_listCtrl->InsertColumn(6, "Credit",       wxLIST_FORMAT_RIGHT, dResize * 79);
 
     //m_listCtrlProductsSent->InsertColumn(0, "Category",      wxLIST_FORMAT_LEFT,  100);
     //m_listCtrlProductsSent->InsertColumn(1, "Title",         wxLIST_FORMAT_LEFT,  100);
@@ -367,6 +372,10 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
 
     // Init status bar
     int pnWidths[3] = { -100, 88, 290 };
+#ifndef __WXMSW__
+    pnWidths[1] = pnWidths[1] * 1.1 * dResize;
+    pnWidths[2] = pnWidths[2] * 1.1 * dResize;
+#endif
     m_statusBar->SetFieldsCount(3, pnWidths);
 
     // Fill your address text box
@@ -1514,6 +1523,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     SelectPage(0);
 #ifndef __WXMSW__
     m_checkBoxMinimizeOnClose->SetLabel("&Minimize on close");
+    m_checkBoxStartOnSystemStartup->Enable(false); // not implemented yet
 #endif
 
     // Init values
@@ -1876,6 +1886,9 @@ CSendingDialog::CSendingDialog(wxWindow* parent, const CAddress& addrIn, int64 n
     fSuccess = false;
     fUIDone = false;
     fWorkDone = false;
+#ifndef __WXMSW__
+    SetSize(1.2 * GetSize().GetWidth(), 1.05 * GetSize().GetHeight());
+#endif
 
     SetTitle(strprintf("Sending %s to %s", FormatMoney(nPrice).c_str(), wtx.mapValue["to"].c_str()));
     m_textCtrlStatus->SetValue("");
@@ -3475,6 +3488,7 @@ bool CMyApp::OnInit2()
     ParseParameters(argc, argv);
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
+#ifdef __WXMSW__
         string strUsage =
             "Usage: bitcoin [options]\t\t\t\t\t\t\n"
             "Options:\n"
@@ -3487,6 +3501,20 @@ bool CMyApp::OnInit2()
             "  -connect=<ip>\t  Connect only to the specified node\n"
             "  -?\t\t  This help message\n";
         wxMessageBox(strUsage, "Bitcoin", wxOK);
+#else
+        string strUsage =
+            "Usage: bitcoin [options]\n"
+            "Options:\n"
+            "  -gen              Generate coins\n"
+            "  -gen=0            Don't generate coins\n"
+            "  -min              Start minimized\n"
+            "  -datadir=<dir>    Specify data directory\n"
+            "  -proxy=<ip:port>  Connect through socks4 proxy\n"
+            "  -addnode=<ip>     Add a node to connect to\n"
+            "  -connect=<ip>     Connect only to the specified node\n"
+            "  -?                This help message\n";
+        fprintf(stderr, "%s", strUsage.c_str());
+#endif
         return false;
     }
 
@@ -3495,12 +3523,12 @@ bool CMyApp::OnInit2()
 
     if (mapArgs.count("-debug"))
         fDebug = true;
-    if (strstr(pszSubVer, "test"))
-        fDebug = true;
 
     if (mapArgs.count("-printtodebugger"))
         fPrintToDebugger = true;
 
+    if (!fDebug && !pszSetDataDir[0])
+        ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %d%s, OS version %s\n", VERSION, pszSubVer, wxGetOsDescription().mb_str());
 

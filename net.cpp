@@ -21,7 +21,6 @@ uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
 CAddress addrLocalHost(0, DEFAULT_PORT, nLocalServices);
 CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
-bool fShutdown = false;
 array<int, 10> vnThreadsRunning;
 SOCKET hListenSocket = INVALID_SOCKET;
 int64 nThreadSocketHandlerHeartbeat = INT64_MAX;
@@ -1324,3 +1323,27 @@ bool StopNode()
 
     return true;
 }
+
+class CNetCleanup
+{
+public:
+    CNetCleanup()
+    {
+    }
+    ~CNetCleanup()
+    {
+        // Close sockets
+        foreach(CNode* pnode, vNodes)
+            if (pnode->hSocket != INVALID_SOCKET)
+                closesocket(pnode->hSocket);
+        if (hListenSocket != INVALID_SOCKET)
+            if (closesocket(hListenSocket) == SOCKET_ERROR)
+                printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
+
+#ifdef __WXMSW__
+        // Shutdown Windows Sockets
+        WSACleanup();
+#endif
+    }
+}
+instance_of_cnetcleanup;

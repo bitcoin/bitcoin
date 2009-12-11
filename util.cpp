@@ -11,6 +11,7 @@ bool fDebug = false;
 bool fPrintToDebugger = false;
 bool fPrintToConsole = false;
 char pszSetDataDir[MAX_PATH] = "";
+bool fShutdown = false;
 
 
 
@@ -53,19 +54,6 @@ public:
         for (int i = 0; i < CRYPTO_num_locks(); i++)
             delete ppmutexOpenSSL[i];
         OPENSSL_free(ppmutexOpenSSL);
-
-        // Close sockets
-        foreach(CNode* pnode, vNodes)
-            if (pnode->hSocket != INVALID_SOCKET)
-                closesocket(pnode->hSocket);
-        if (hListenSocket != INVALID_SOCKET)
-            if (closesocket(hListenSocket) == SOCKET_ERROR)
-                printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
-
-#ifdef __WXMSW__
-        // Shutdown Windows Sockets
-        WSACleanup();
-#endif
     }
 }
 instance_of_cinit;
@@ -416,16 +404,6 @@ void PrintException(std::exception* pex, const char* pszThread)
 
 
 
-int GetFilesize(FILE* file)
-{
-    int nSavePos = ftell(file);
-    int nFilesize = -1;
-    if (fseek(file, 0, SEEK_END) == 0)
-        nFilesize = ftell(file);
-    fseek(file, nSavePos, SEEK_SET);
-    return nFilesize;
-}
-
 void GetDataDir(char* pszDir)
 {
     // pszDir must be at least MAX_PATH length.
@@ -464,6 +442,37 @@ string GetDataDir()
     GetDataDir(pszDir);
     return pszDir;
 }
+
+int GetFilesize(FILE* file)
+{
+    int nSavePos = ftell(file);
+    int nFilesize = -1;
+    if (fseek(file, 0, SEEK_END) == 0)
+        nFilesize = ftell(file);
+    fseek(file, nSavePos, SEEK_SET);
+    return nFilesize;
+}
+
+void ShrinkDebugFile()
+{
+    // Scroll debug.log if it's getting too big
+    string strFile = GetDataDir() + "/debug.log";
+    FILE* file = fopen(strFile.c_str(), "r");
+    if (file && GetFilesize(file) > 10 * 1000000)
+    {
+        // Restart the file with some of the end
+        char pch[200000];
+        fseek(file, -sizeof(pch), SEEK_END);
+        int nBytes = fread(pch, 1, sizeof(pch), file);
+        fclose(file);
+        if (file = fopen(strFile.c_str(), "w"))
+        {
+            fwrite(pch, 1, nBytes, file);
+            fclose(file);
+        }
+    }
+}
+
 
 
 

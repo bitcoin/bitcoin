@@ -9,7 +9,7 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 
 UNIX BUILD NOTES
-
+================
 
 Dependencies
 ------------
@@ -20,11 +20,10 @@ apt-get install libdb4.7-dev
 apt-get install libdb4.7++-dev
 apt-get install libboost-dev
 
-Libraries you need to obtain separately and build:
-              default path   download
-wxWidgets      \wxwidgets     http://www.wxwidgets.org/downloads/
+You need to download wxWidgets from http://www.wxwidgets.org/downloads/
+and build it yourself.
 
-Licenses:
+Licenses of statically linked libraries:
 wxWidgets      LGPL 2.1 with very liberal exceptions
 Berkeley DB    New BSD license with additional requirement that linked software must be free open source
 Boost          MIT-like license
@@ -39,7 +38,7 @@ Boost        1.40.0
 
 Notes
 -----
-The UI layout is edited with wxFormBuilder.  Open the project file
+The UI layout is edited with wxFormBuilder.  The project file is
 uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
 classes that do the rote work of constructing all the UI elements.
 
@@ -61,7 +60,7 @@ ldconfig
 
 Boost
 -----
-If you download and build Boost yourself
+If you want to build Boost yourself,
 cd /usr/local/boost_1_40_0
 su
 ./bootstrap.sh

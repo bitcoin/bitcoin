@@ -111,6 +111,7 @@ extern bool fDebug;
 extern bool fPrintToDebugger;
 extern bool fPrintToConsole;
 extern char pszSetDataDir[MAX_PATH];
+extern bool fShutdown;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
@@ -128,6 +129,7 @@ void ParseParameters(int argc, char* argv[]);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
 string GetDataDir();
+void ShrinkDebugFile();
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
 int64 GetAdjustedTime();

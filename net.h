@@ -454,7 +454,6 @@ extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
 extern CNode* pnodeLocalHost;
 extern uint64 nLocalHostNonce;
-extern bool fShutdown;
 extern array<int, 10> vnThreadsRunning;
 extern SOCKET hListenSocket;
 extern int64 nThreadSocketHandlerHeartbeat;
