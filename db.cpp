@@ -445,7 +445,7 @@ bool CAddrDB::LoadAddresses()
     CRITICAL_BLOCK(cs_mapAddresses)
     {
         // Load user provided addresses
-        CAutoFile filein = fopen("addr.txt", "rt");
+        CAutoFile filein = fopen((GetDataDir() + "/addr.txt").c_str(), "rt");
         if (filein)
         {
             try
@@ -536,10 +536,11 @@ bool CReviewDB::WriteReviews(uint256 hash, const vector<CReview>& vReviews)
 bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
 {
     vchDefaultKeyRet.clear();
+    int nFileVersion = 0;
 
     // Modify defaults
 #ifndef __WXMSW__
-    // Reports that tray icon can disappear on gnome, leaving no way to access the program
+    // Tray icon sometimes disappears on 9.10 karmic koala 64-bit, leaving no way to access the program
     fMinimizeToTray = false;
     fMinimizeOnClose = false;
 #endif
@@ -607,6 +608,10 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
             {
                 ssValue >> vchDefaultKeyRet;
             }
+            else if (strType == "version")
+            {
+                ssValue >> nFileVersion;
+            }
             else if (strType == "setting")
             {
                 string strKey;
@@ -649,6 +654,16 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
         WriteSetting("nTransactionFee", nTransactionFee);
     }
 
+    // Upgrade
+    if (nFileVersion < VERSION)
+    {
+        // Get rid of old debug.log file in current directory
+        if (nFileVersion <= 105 && !pszSetDataDir[0])
+            unlink("debug.log");
+
+        WriteVersion(VERSION);
+    }
+
     return true;
 }
 
@@ -656,7 +671,7 @@ bool LoadWallet(bool& fFirstRunRet)
 {
     fFirstRunRet = false;
     vector<unsigned char> vchDefaultKey;
-    if (!CWalletDB("cr").LoadWallet(vchDefaultKey))
+    if (!CWalletDB("cr+").LoadWallet(vchDefaultKey))
         return false;
     fFirstRunRet = vchDefaultKey.empty();
 

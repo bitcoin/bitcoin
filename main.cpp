@@ -2530,7 +2530,7 @@ void BitcoinMiner()
         //
         // Search
         //
-        unsigned int nStart = GetTime();
+        int64 nStart = GetTime();
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hash;
         loop
@@ -2582,14 +2582,27 @@ void BitcoinMiner()
                     return;
                 if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
                     return;
-                if (tmp.block.nNonce == 0)
+                if (vNodes.empty())
                     break;
-                if (pindexPrev != pindexBest)
+                if (tmp.block.nNonce == 0)
                     break;
                 if (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
-                if (vNodes.empty())
+                if (pindexPrev != pindexBest)
+                {
+                    // Pause generating during initial download
+                    if (GetTime() - nStart < 20)
+                    {
+                        CBlockIndex* pindexTmp;
+                        do
+                        {
+                            pindexTmp = pindexBest;
+                            Sleep(10000);
+                        }
+                        while (pindexTmp != pindexBest);
+                    }
                     break;
+                }
                 tmp.block.nTime = pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
             }
         }

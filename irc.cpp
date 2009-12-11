@@ -121,20 +121,20 @@ bool RecvLineIRC(SOCKET hSocket, string& strLine)
     }
 }
 
-bool RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const char* psz3=NULL)
+int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const char* psz3=NULL)
 {
     loop
     {
         string strLine;
         if (!RecvLineIRC(hSocket, strLine))
-            return false;
+            return 0;
         printf("IRC %s\n", strLine.c_str());
         if (psz1 && strLine.find(psz1) != -1)
-            return true;
+            return 1;
         if (psz2 && strLine.find(psz2) != -1)
-            return true;
+            return 2;
         if (psz3 && strLine.find(psz3) != -1)
-            return true;
+            return 3;
     }
 }
 
@@ -159,6 +159,7 @@ void ThreadIRCSeed(void* parg)
     SetThreadPriority(THREAD_PRIORITY_NORMAL);
     int nErrorWait = 10;
     int nRetryWait = 10;
+    bool fNameInUse = false;
     bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
 
     while (!fShutdown)
@@ -194,7 +195,7 @@ void ThreadIRCSeed(void* parg)
         }
 
         string strMyName;
-        if (addrLocalHost.IsRoutable() && !fUseProxy)
+        if (addrLocalHost.IsRoutable() && !fUseProxy && !fNameInUse)
             strMyName = EncodeAddress(addrLocalHost);
         else
             strMyName = strprintf("x%u", GetRand(1000000000));
@@ -203,10 +204,18 @@ void ThreadIRCSeed(void* parg)
         Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
         Send(hSocket, strprintf("USER %s 8 * : %s\r", strMyName.c_str(), strMyName.c_str()).c_str());
 
-        if (!RecvUntil(hSocket, " 004 "))
+        int nRet = RecvUntil(hSocket, " 004 ", " 433 ");
+        if (nRet != 1)
         {
             closesocket(hSocket);
             hSocket = INVALID_SOCKET;
+            if (nRet == 2)
+            {
+                printf("IRC name already in use\n");
+                fNameInUse = true;
+                Wait(10);
+                continue;
+            }
             nErrorWait = nErrorWait * 11 / 10;
             if (Wait(nErrorWait += 60))
                 continue;
