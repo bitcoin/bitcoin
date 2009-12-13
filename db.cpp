@@ -637,6 +637,7 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
         pcursor->close();
     }
 
+    printf("nFileVersion = %d\n", nFileVersion);
     printf("fShowGenerated = %d\n", fShowGenerated);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
     printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
