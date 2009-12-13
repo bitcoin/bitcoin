@@ -62,6 +62,10 @@ inline T& REF(const T& val)
 #define INT64_MAX           _I64_MAX
 #define INT64_MIN           _I64_MIN
 #endif
+#ifndef S_IRUSR
+#define S_IRUSR             0400
+#define S_IWUSR             0200
+#endif
 #else
 #define WSAGetLastError()   errno
 #define WSAEWOULDBLOCK      EWOULDBLOCK
