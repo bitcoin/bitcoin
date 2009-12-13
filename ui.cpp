@@ -3494,6 +3494,7 @@ bool CMyApp::OnInit2()
     SetAppName("Bitcoin");
 #else
     SetAppName("bitcoin");
+    umask(077);
 #endif
 
     //
