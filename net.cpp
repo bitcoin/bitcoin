@@ -929,7 +929,7 @@ void ThreadOpenConnections2(void* parg)
                 // Only try the old stuff if we don't have enough connections
                 if (vNodes.size() >= 2 && nSinceLastSeen > 7 * 24 * 60 * 60)
                     continue;
-                if (vNodes.size() >= 4 && nSinceLastSeen > 24 * 60 * 60)
+                if (vNodes.size() >= 5 && nSinceLastSeen > 24 * 60 * 60)
                     continue;
 
                 // If multiple addresses are ready, prioritize by time since
@@ -1256,11 +1256,14 @@ void StartNode(void* parg)
 
     //
     // Thread monitoring
+    // Not really needed anymore, the cause of the hanging was fixed
     //
     loop
     {
-        Sleep(15000);
-        if (GetTime() - nThreadSocketHandlerHeartbeat > 4 * 60)
+        Sleep(1000);
+        if (fShutdown)
+            return;
+        if (GetTime() - nThreadSocketHandlerHeartbeat > 15 * 60)
         {
             // First see if closing sockets will free it
             printf("*** ThreadSocketHandler is stopped ***\n");
@@ -1280,6 +1283,8 @@ void StartNode(void* parg)
                 }
             }
             Sleep(10000);
+            if (fShutdown)
+                return;
             if (GetTime() - nThreadSocketHandlerHeartbeat < 60)
                 continue;
 

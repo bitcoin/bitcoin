@@ -7,12 +7,12 @@ RequestExecutionLevel highest
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.1.6
+!define VERSION 0.2.0
 !define COMPANY "Bitcoin project"
-!define URL http://bitcoin.sourceforge.net/
+!define URL http://www.bitcoin.org/
 
 # MUI Symbol Definitions
-!define MUI_ICON "rc\bitcoin.ico"
+!define MUI_ICON "src\rc\bitcoin.ico"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
@@ -42,12 +42,12 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile Bitcoin_0.1.6_setup.exe
+OutFile bitcoin-0.2.0-setup.exe
 InstallDir $PROGRAMFILES\Bitcoin
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 0.1.6.0
+VIProductVersion 0.2.0.0
 VIAddVersionKey ProductName Bitcoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -65,6 +65,11 @@ Section -Main SEC0000
     File bitcoin.exe
     File libeay32.dll
     File mingwm10.dll
+    File license.txt
+    File readme.txt
+    SetOutPath $INSTDIR\src
+    File /r src\*.*
+    SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
 
@@ -102,9 +107,12 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
-    Delete /REBOOTOK $INSTDIR\mingwm10.dll
-    Delete /REBOOTOK $INSTDIR\libeay32.dll
     Delete /REBOOTOK $INSTDIR\bitcoin.exe
+    Delete /REBOOTOK $INSTDIR\libeay32.dll
+    Delete /REBOOTOK $INSTDIR\mingwm10.dll
+    Delete /REBOOTOK $INSTDIR\license.txt
+    Delete /REBOOTOK $INSTDIR\readme.txt
+    RMDir /r /REBOOTOK $INSTDIR\src
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
 
@@ -114,6 +122,7 @@ Section -un.post UNSEC0001
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Bitcoin.lnk"
     Delete /REBOOTOK "$SMSTARTUP\Bitcoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
+    Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log
     DeleteRegValue HKCU "${REGKEY}" StartMenuGroup
     DeleteRegValue HKCU "${REGKEY}" Path
@@ -139,4 +148,3 @@ Function un.onInit
     !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuGroup
     !insertmacro SELECT_UNSECTION Main ${UNSEC0000}
 FunctionEnd
-

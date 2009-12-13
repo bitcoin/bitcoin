@@ -394,6 +394,14 @@ CMainFrame::~CMainFrame()
     ptaskbaricon = NULL;
 }
 
+void ExitTimeout(void* parg)
+{
+#ifdef __WXMSW__
+    Sleep(5000);
+    ExitProcess(0);
+#endif
+}
+
 void Shutdown(void* parg)
 {
     static CCriticalSection cs_Shutdown;
@@ -404,6 +412,7 @@ void Shutdown(void* parg)
         fFirstThread = !fTaken;
         fTaken = true;
     }
+    static bool fExit;
     if (fFirstThread)
     {
         fShutdown = true;
@@ -411,13 +420,18 @@ void Shutdown(void* parg)
         DBFlush(false);
         StopNode();
         DBFlush(true);
+        CreateThread(ExitTimeout, NULL);
+        Sleep(10);
         printf("Bitcoin exiting\n\n");
+        fExit = true;
         exit(0);
     }
     else
     {
-        loop
-            Sleep(100000);
+        while (!fExit)
+            Sleep(500);
+        Sleep(100);
+        ExitThread(0);
     }
 }
 
