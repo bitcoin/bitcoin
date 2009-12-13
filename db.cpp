@@ -79,7 +79,7 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
                              DB_THREAD     |
                              DB_PRIVATE    |
                              DB_RECOVER,
-                             0);
+                             S_IRUSR | S_IWUSR);
             if (ret > 0)
                 throw runtime_error(strprintf("CDB() : error %d opening database environment\n", ret));
             fDbEnvInit = true;
