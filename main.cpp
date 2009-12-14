@@ -1274,7 +1274,7 @@ bool CBlock::AcceptBlock()
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
-    if (hashBestChain == hash)
+    if (hashBestChain == hash && nBestHeight > 28000)
         RelayInventory(CInv(MSG_BLOCK, hash));
 
     // // Add atoms to user reviews for coins created
@@ -1314,7 +1314,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
         // Ask this guy to fill in what we're missing
         if (pfrom)
-            pfrom->PushMessage("getblocks", CBlockLocator(pindexBest), GetOrphanRoot(pblock));
+            pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock));
         return true;
     }
 
@@ -1816,7 +1816,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (!fAskedForBlocks && !pfrom->fClient)
         {
             fAskedForBlocks = true;
-            pfrom->PushMessage("getblocks", CBlockLocator(pindexBest), uint256(0));
+            pfrom->PushGetBlocks(pindexBest, uint256(0));
         }
 
         pfrom->fSuccessfullyConnected = true;
@@ -1836,6 +1836,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CAddress> vAddr;
         vRecv >> vAddr;
+        if (vAddr.size() > 50000) // lower this to 1000 later
+            return error("message addr size() = %d", vAddr.size());
 
         // Store the new addresses
         CAddrDB addrdb;
@@ -1864,6 +1866,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
+        if (vInv.size() > 50000)
+            return error("message inv size() = %d", vInv.size());
 
         CTxDB txdb("r");
         foreach(const CInv& inv, vInv)
@@ -1878,7 +1882,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (!fAlreadyHave)
                 pfrom->AskFor(inv);
             else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
-                pfrom->PushMessage("getblocks", CBlockLocator(pindexBest), GetOrphanRoot(mapOrphanBlocks[inv.hash]));
+                pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
 
             // Track requests for our stuff
             CRITICAL_BLOCK(cs_mapRequestCount)
@@ -1895,6 +1899,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
+        if (vInv.size() > 50000)
+            return error("message getdata size() = %d", vInv.size());
 
         foreach(const CInv& inv, vInv)
         {
@@ -2208,17 +2214,6 @@ bool SendMessages(CNode* pto)
                         pnode->PushAddress(addrLocalHost);
                 }
             }
-        }
-
-        // Clear inventory known periodically in case an inv message was missed,
-        // although usually they would just get it from another node.
-        static int64 nLastInventoryKnownClear;
-        if (GetTime() - nLastInventoryKnownClear > 2 * 60 * 60) // every 2 hours
-        {
-            nLastInventoryKnownClear = GetTime();
-            CRITICAL_BLOCK(cs_vNodes)
-                foreach(CNode* pnode, vNodes)
-                    pnode->setInventoryKnown.clear();
         }
 
 
