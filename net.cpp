@@ -40,6 +40,23 @@ CAddress addrProxy("127.0.0.1:9050");
 
 
 
+
+
+void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
+{
+    // Filter out duplicate requests
+    if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
+        return;
+    pindexLastGetBlocksBegin = pindexBegin;
+    hashLastGetBlocksEnd = hashEnd;
+
+    PushMessage("getblocks", CBlockLocator(pindexBegin), hashEnd);
+}
+
+
+
+
+
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
 {
     hSocketRet = INVALID_SOCKET;
@@ -764,12 +781,12 @@ void ThreadSocketHandler2(void* parg)
                     printf("socket no message in first 60 seconds, %d %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0);
                     pnode->fDisconnect = true;
                 }
-                else if (GetTime() - pnode->nLastSend > 10 * 60 && GetTime() - pnode->nLastSendEmpty > 10 * 60)
+                else if (GetTime() - pnode->nLastSend > 90*60 && GetTime() - pnode->nLastSendEmpty > 90*60)
                 {
                     printf("socket not sending\n");
                     pnode->fDisconnect = true;
                 }
-                else if (GetTime() - pnode->nLastRecv > (pnode->nVersion >= 107 ? 15*60 : 90*60))
+                else if (GetTime() - pnode->nLastRecv > 90*60)
                 {
                     printf("socket inactivity timeout\n");
                     pnode->fDisconnect = true;

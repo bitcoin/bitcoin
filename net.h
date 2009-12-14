@@ -7,6 +7,7 @@ class CAddress;
 class CInv;
 class CRequestTracker;
 class CNode;
+class CBlockIndex;
 
 
 
@@ -504,6 +505,8 @@ public:
     map<uint256, CRequestTracker> mapRequests;
     CCriticalSection cs_mapRequests;
     uint256 hashContinue;
+    CBlockIndex* pindexLastGetBlocksBegin;
+    uint256 hashLastGetBlocksEnd;
 
     // flood
     vector<CAddress> vAddrToSend;
@@ -541,6 +544,8 @@ public:
         nRefCount = 0;
         nReleaseTime = 0;
         hashContinue = 0;
+        pindexLastGetBlocksBegin = 0;
+        hashLastGetBlocksEnd = 0;
         fGetAddr = false;
         vfSubscribe.assign(256, false);
 
@@ -633,6 +638,7 @@ public:
         nRequestTime = max(nRequestTime + 2 * 60 * 1000000, nNow);
         mapAskFor.insert(make_pair(nRequestTime, inv));
     }
+
 
 
     void BeginMessage(const char* pszCommand)
@@ -900,6 +906,7 @@ public:
 
 
 
+    void PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd);
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);
