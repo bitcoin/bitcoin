@@ -190,6 +190,9 @@ void CalledMessageBox(const string& message, const string& caption, int style, w
 
 int ThreadSafeMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
 {
+    if (mapArgs.count("-noui"))
+        return wxOK;
+
 #ifdef __WXMSW__
     return wxMessageBox(message, caption, style, parent, x, y);
 #else
@@ -3716,16 +3719,19 @@ bool CMyApp::OnInit2()
     //
     // Create the main frame window
     //
-    pframeMain = new CMainFrame(NULL);
-    if (mapArgs.count("-min"))
-        pframeMain->Iconize(true);
-    pframeMain->Show(true);  // have to show first to get taskbar button to hide
-    if (fMinimizeToTray && pframeMain->IsIconized())
-        fClosedToTray = true;
-    pframeMain->Show(!fClosedToTray);
-    ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
+    if (!mapArgs.count("-noui"))
+    {
+        pframeMain = new CMainFrame(NULL);
+        if (mapArgs.count("-min"))
+            pframeMain->Iconize(true);
+        pframeMain->Show(true);  // have to show first to get taskbar button to hide
+        if (fMinimizeToTray && pframeMain->IsIconized())
+            fClosedToTray = true;
+        pframeMain->Show(!fClosedToTray);
+        ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
 
-    CreateThread(ThreadDelayedRepaint, NULL);
+        CreateThread(ThreadDelayedRepaint, NULL);
+    }
 
     if (!CheckDiskSpace())
         return false;
@@ -3928,13 +3934,3 @@ void SetStartOnSystemStartup(bool fAutoStart)
 bool GetStartOnSystemStartup() { return false; }
 void SetStartOnSystemStartup(bool fAutoStart) { }
 #endif
-
-
-
-
-
-
-
-
-
-
