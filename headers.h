@@ -35,9 +35,7 @@
 #include <limits.h>
 #include <float.h>
 #include <assert.h>
-#include <malloc.h>
 #include <memory>
-#define BOUNDSCHECK 1
 #include <sstream>
 #include <string>
 #include <vector>
@@ -64,6 +62,7 @@
 #include <shlwapi.h>
 #include <io.h>
 #include <process.h>
+#include <malloc.h>
 #else
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -77,6 +76,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #endif
+#ifdef __BSD__
+#include <netinet/in.h>
+#endif
+
 
 #pragma hdrstop
 using namespace std;
