@@ -1734,6 +1734,11 @@ bool ProcessMessages(CNode* pfrom)
                 // Allow exceptions from underlength message on vRecv
                 printf("ProcessMessage(%s, %d bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
             }
+            else if (strstr(e.what(), ": size too large"))
+            {
+                // Allow exceptions from overlong size
+                printf("ProcessMessage(%s, %d bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
+            }
             else
             {
                 PrintException(&e, "ProcessMessage()");
@@ -1840,7 +1845,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return error("message addr size() = %d", vAddr.size());
 
         // Store the new addresses
-        CAddrDB addrdb;
         foreach(CAddress& addr, vAddr)
         {
             if (fShutdown)
@@ -1848,7 +1852,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             addr.nTime = GetAdjustedTime() - 2 * 60 * 60;
             if (pfrom->fGetAddr)
                 addr.nTime -= 5 * 24 * 60 * 60;
-            AddAddress(addrdb, addr, false);
+            AddAddress(addr, false);
             pfrom->AddAddressKnown(addr);
             if (!pfrom->fGetAddr && addr.IsRoutable())
             {

@@ -349,7 +349,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
         nDateWidth += 12;
     m_listCtrl->InsertColumn(0, "",             wxLIST_FORMAT_LEFT,  dResize * 0);
     m_listCtrl->InsertColumn(1, "",             wxLIST_FORMAT_LEFT,  dResize * 0);
-    m_listCtrl->InsertColumn(2, "Status",       wxLIST_FORMAT_LEFT,  dResize * 90);
+    m_listCtrl->InsertColumn(2, "Status",       wxLIST_FORMAT_LEFT,  dResize * 110);
     m_listCtrl->InsertColumn(3, "Date",         wxLIST_FORMAT_LEFT,  dResize * nDateWidth);
     m_listCtrl->InsertColumn(4, "Description",  wxLIST_FORMAT_LEFT,  dResize * 409 - nDateWidth);
     m_listCtrl->InsertColumn(5, "Debit",        wxLIST_FORMAT_RIGHT, dResize * 79);
@@ -579,7 +579,7 @@ string FormatTxStatus(const CWalletTx& wtx)
         else if (nDepth < 6)
             return strprintf("%d/unconfirmed", nDepth);
         else
-            return strprintf("%d blocks", nDepth);
+            return strprintf("%d confirmations", nDepth);
     }
 }
 
@@ -3706,13 +3706,12 @@ bool CMyApp::OnInit2()
 
     if (mapArgs.count("-addnode"))
     {
-        CAddrDB addrdb;
         foreach(string strAddr, mapMultiArgs["-addnode"])
         {
             CAddress addr(strAddr, NODE_NETWORK);
             addr.nTime = 0; // so it won't relay unless successfully connected
             if (addr.IsValid())
-                AddAddress(addrdb, addr);
+                AddAddress(addr);
         }
     }
 
@@ -3934,3 +3933,13 @@ void SetStartOnSystemStartup(bool fAutoStart)
 bool GetStartOnSystemStartup() { return false; }
 void SetStartOnSystemStartup(bool fAutoStart) { }
 #endif
+
+
+
+
+
+
+
+
+
+
