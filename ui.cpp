@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -252,18 +252,23 @@ bool IsCallbackAvailable(void* p)
 template<typename T>
 void AddPendingCustomEvent(wxEvtHandler* pevthandler, int nEventID, const T pbeginIn, const T pendIn)
 {
-    if (!pevthandler)
-        return;
-
-    const char* pbegin = (pendIn != pbeginIn) ? &pbeginIn[0] : NULL;
-    const char* pend = pbegin + (pendIn - pbeginIn) * sizeof(pbeginIn[0]);
-    wxCommandEvent event(nEventID);
-    wxString strData(wxChar(0), (pend - pbegin) / sizeof(wxChar) + 1);
-    memcpy(&strData[0], pbegin, pend - pbegin);
-    event.SetString(strData);
-    event.SetInt(pend - pbegin);
-
-    pevthandler->AddPendingEvent(event);
+    // Need to rewrite with something like UIThreadCall
+    // I'm tired of maintaining this hack that's only called by unfinished unused code,
+    // but I'm not willing to delete it because it serves as documentation of what the
+    // unfinished code was trying to do.
+    assert(("Unimplemented", 0));
+    //if (!pevthandler)
+    //    return;
+    //
+    //const char* pbegin = (pendIn != pbeginIn) ? &pbeginIn[0] : NULL;
+    //const char* pend = pbegin + (pendIn - pbeginIn) * sizeof(pbeginIn[0]);
+    //wxCommandEvent event(nEventID);
+    //wxString strData(wxChar(0), (pend - pbegin) / sizeof(wxChar) + 1);
+    //memcpy(&strData[0], pbegin, pend - pbegin);
+    //event.SetString(strData);
+    //event.SetInt(pend - pbegin);
+    //
+    //pevthandler->AddPendingEvent(event);
 }
 
 template<class T>
@@ -335,9 +340,8 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_toolBar->AddTool(wxID_BUTTONRECEIVE, "Address Book", wxBitmap(addressbook20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
     m_toolBar->Realize();
     // resize to fit ubuntu's huge default font
-    dResize = 1.19;
-    SetSize(dResize * GetSize().GetWidth(), 1.1 * GetSize().GetHeight());
     dResize = 1.20;
+    SetSize(dResize * GetSize().GetWidth(), 1.1 * GetSize().GetHeight());
 #endif
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
@@ -458,6 +462,8 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
 {
     // Hide the task bar button when minimized.
     // Event is sent when the frame is minimized or restored.
+    // wxWidgets 2.8.9 doesn't have IsIconized() so there's no way
+    // to get rid of the deprecated warning.  Just ignore it.
     if (!event.Iconized())
         fClosedToTray = false;
 #ifndef __WXMSW__
@@ -985,7 +991,7 @@ void ThreadDelayedRepaint(void* parg)
                 printf("DelayedRepaint\n");
                 wxPaintEvent event;
                 pframeMain->fRefresh = true;
-                pframeMain->AddPendingEvent(event);
+                pframeMain->GetEventHandler()->AddPendingEvent(event);
             }
         }
         Sleep(nRepaintInterval);
@@ -1010,7 +1016,7 @@ void MainFrameRepaint()
         printf("MainFrameRepaint\n");
         wxPaintEvent event;
         pframeMain->fRefresh = true;
-        pframeMain->AddPendingEvent(event);
+        pframeMain->GetEventHandler()->AddPendingEvent(event);
     }
 }
 
@@ -1695,12 +1701,14 @@ CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 
     // Workaround until upgrade to wxWidgets supporting UTF-8
     wxString str = m_staticTextMain->GetLabel();
+#if !wxUSE_UNICODE
     if (str.Find('Â') != wxNOT_FOUND)
         str.Remove(str.Find('Â'), 1);
-    m_staticTextMain->SetLabel(str);
+#endif
 #ifndef __WXMSW__
     SetSize(510, 380);
 #endif
+    m_staticTextMain->SetLabel(str);
 }
 
 void CAboutDialog::OnButtonOK(wxCommandEvent& event)
@@ -1732,7 +1740,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     if (fontTmp.GetPointSize() > 9);
         fontTmp.SetPointSize(9);
     m_staticTextInstructions->SetFont(fontTmp);
-    SetSize(725, wxDefaultCoord);
+    SetSize(725, 380);
 #endif
 
     // Set Icon
@@ -2000,7 +2008,7 @@ void CSendingDialog::Repaint()
 {
     Refresh();
     wxPaintEvent event;
-    AddPendingEvent(event);
+    GetEventHandler()->AddPendingEvent(event);
 }
 
 bool CSendingDialog::Status()
@@ -3379,14 +3387,14 @@ void CMyTaskBarIcon::OnMenuOptions(wxCommandEvent& event)
 {
     // Since it's modal, get the main window to do it
     wxCommandEvent event2(wxEVT_COMMAND_MENU_SELECTED, wxID_MENUOPTIONSOPTIONS);
-    pframeMain->AddPendingEvent(event2);
+    pframeMain->GetEventHandler()->AddPendingEvent(event2);
 }
 
 void CMyTaskBarIcon::Restore()
 {
     pframeMain->Show();
     wxIconizeEvent event(0, false);
-    pframeMain->AddPendingEvent(event);
+    pframeMain->GetEventHandler()->AddPendingEvent(event);
     pframeMain->Iconize(false);
     pframeMain->Raise();
 }
@@ -3548,7 +3556,7 @@ bool CMyApp::OnInit2()
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %d%s, OS version %s\n", VERSION, pszSubVer, wxGetOsDescription().mb_str());
+    printf("Bitcoin version %d%s, OS version %s\n", VERSION, pszSubVer, ((string)wxGetOsDescription()).c_str());
 
     if (mapArgs.count("-loadblockindextest"))
     {

@@ -32,7 +32,7 @@
             <property name="minimum_size"></property>
             <property name="name">CMainFrameBase</property>
             <property name="pos"></property>
-            <property name="size">725,484</property>
+            <property name="size">727,484</property>
             <property name="style">wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER</property>
             <property name="subclass"></property>
             <property name="title">Bitcoin</property>
@@ -3509,7 +3509,7 @@
                 </object>
             </object>
         </object>
-        <object class="Dialog" expanded="0">
+        <object class="Dialog" expanded="1">
             <property name="bg"></property>
             <property name="center"></property>
             <property name="context_help"></property>
@@ -3580,7 +3580,7 @@
                     <property name="border">5</property>
                     <property name="flag">wxEXPAND|wxLEFT</property>
                     <property name="proportion">0</property>
-                    <object class="wxFlexGridSizer" expanded="0">
+                    <object class="wxFlexGridSizer" expanded="1">
                         <property name="cols">2</property>
                         <property name="flexible_direction">wxBOTH</property>
                         <property name="growablecols">1</property>
@@ -3590,7 +3590,7 @@
                         <property name="name">fgSizer1</property>
                         <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_SPECIFIED</property>
                         <property name="permission">none</property>
-                        <property name="rows">3</property>
+                        <property name="rows">0</property>
                         <property name="vgap">0</property>
                         <object class="sizeritem" expanded="1">
                             <property name="border">5</property>
@@ -4189,7 +4189,7 @@
                     <property name="border">5</property>
                     <property name="flag">wxEXPAND</property>
                     <property name="proportion">0</property>
-                    <object class="wxBoxSizer" expanded="1">
+                    <object class="wxBoxSizer" expanded="0">
                         <property name="minimum_size"></property>
                         <property name="name">bSizer672</property>
                         <property name="orient">wxHORIZONTAL</property>
@@ -4317,7 +4317,7 @@
                     <property name="border">5</property>
                     <property name="flag">wxEXPAND</property>
                     <property name="proportion">1</property>
-                    <object class="wxBoxSizer" expanded="1">
+                    <object class="wxBoxSizer" expanded="0">
                         <property name="minimum_size"></property>
                         <property name="name">bSizer67</property>
                         <property name="orient">wxHORIZONTAL</property>
@@ -4445,7 +4445,7 @@
                     <property name="border">5</property>
                     <property name="flag">wxEXPAND</property>
                     <property name="proportion">0</property>
-                    <object class="wxBoxSizer" expanded="1">
+                    <object class="wxBoxSizer" expanded="0">
                         <property name="minimum_size"></property>
                         <property name="name">bSizer23</property>
                         <property name="orient">wxHORIZONTAL</property>
