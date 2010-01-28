@@ -112,13 +112,14 @@ inline int myclosesocket(SOCKET& hSocket)
 extern map<string, string> mapArgs;
 extern map<string, vector<string> > mapMultiArgs;
 extern bool fDebug;
-extern bool fPrintToDebugger;
 extern bool fPrintToConsole;
+extern bool fPrintToDebugger;
 extern char pszSetDataDir[MAX_PATH];
 extern bool fShutdown;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
+int OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
 string strprintf(const char* format, ...);
 bool error(const char* format, ...);
@@ -209,92 +210,6 @@ public:
 #define TRY_CRITICAL_BLOCK(cs)     \
     for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by TRY_CRITICAL_BLOCK!", !fcriticalblockonce)), fcriticalblockonce=false)  \
     for (CTryCriticalBlock criticalblock(cs); fcriticalblockonce && (fcriticalblockonce = criticalblock.Entered()) && (cs.pszFile=__FILE__, cs.nLine=__LINE__, true); fcriticalblockonce=false, cs.pszFile=NULL, cs.nLine=0)
-
-
-
-
-
-
-
-
-
-
-inline int OutputDebugStringF(const char* pszFormat, ...)
-{
-    int ret = 0;
-#ifdef __WXDEBUG__
-    if (!fPrintToConsole)
-    {
-        // print to debug.log
-        char pszFile[MAX_PATH+100];
-        GetDataDir(pszFile);
-        strlcat(pszFile, "/debug.log", sizeof(pszFile));
-        FILE* fileout = fopen(pszFile, "a");
-        if (fileout)
-        {
-            //// Debug print useful for profiling
-            //fprintf(fileout, " %"PRI64d" ", wxGetLocalTimeMillis().GetValue());
-            va_list arg_ptr;
-            va_start(arg_ptr, pszFormat);
-            ret = vfprintf(fileout, pszFormat, arg_ptr);
-            va_end(arg_ptr);
-            fclose(fileout);
-        }
-    }
-
-#ifdef __WXMSW__
-    if (fPrintToDebugger)
-    {
-        // accumulate a line at a time
-        static CCriticalSection cs_OutputDebugStringF;
-        CRITICAL_BLOCK(cs_OutputDebugStringF)
-        {
-            static char pszBuffer[50000];
-            static char* pend;
-            if (pend == NULL)
-                pend = pszBuffer;
-            va_list arg_ptr;
-            va_start(arg_ptr, pszFormat);
-            int limit = END(pszBuffer) - pend - 2;
-            int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
-            va_end(arg_ptr);
-            if (ret < 0 || ret >= limit)
-            {
-                pend = END(pszBuffer) - 2;
-                *pend++ = '\n';
-            }
-            else
-                pend += ret;
-            *pend = '\0';
-            char* p1 = pszBuffer;
-            char* p2;
-            while (p2 = strchr(p1, '\n'))
-            {
-                p2++;
-                char c = *p2;
-                *p2 = '\0';
-                OutputDebugString(p1);
-                *p2 = c;
-                p1 = p2;
-            }
-            if (p1 != pszBuffer)
-                memmove(pszBuffer, p1, pend - p1 + 1);
-            pend -= (p1 - pszBuffer);
-        }
-    }
-#endif
-#endif
-
-    if (fPrintToConsole)
-    {
-        // print to console
-        va_list arg_ptr;
-        va_start(arg_ptr, pszFormat);
-        ret = vprintf(pszFormat, arg_ptr);
-        va_end(arg_ptr);
-    }
-    return ret;
-}
 
 
 
@@ -415,11 +330,19 @@ inline string DateTimeStrFormat(const char* pszFormat, int64 nTime)
 
 
 
+
+
+
+
+
+
+
 inline void heapchk()
 {
 #ifdef __WXMSW__
-    if (_heapchk() != _HEAPOK)
-        DebugBreak();
+    /// for debugging
+    //if (_heapchk() != _HEAPOK)
+    //    DebugBreak();
 #endif
 }
 

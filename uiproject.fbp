@@ -32,7 +32,7 @@
             <property name="minimum_size"></property>
             <property name="name">CMainFrameBase</property>
             <property name="pos"></property>
-            <property name="size">705,484</property>
+            <property name="size">725,484</property>
             <property name="style">wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER</property>
             <property name="subclass"></property>
             <property name="title">Bitcoin</property>
@@ -1737,7 +1737,7 @@
             <event name="OnSetFocus"></event>
             <event name="OnSize"></event>
             <event name="OnUpdateUI"></event>
-            <object class="wxBoxSizer" expanded="1">
+            <object class="wxBoxSizer" expanded="0">
                 <property name="minimum_size"></property>
                 <property name="name">bSizer55</property>
                 <property name="orient">wxVERTICAL</property>

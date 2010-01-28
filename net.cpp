@@ -223,7 +223,7 @@ bool GetMyExternalIP(unsigned int& ipRet)
 
 
 
-bool AddAddress(CAddrDB& addrdb, CAddress addr, bool fCurrentlyOnline)
+bool AddAddress(CAddress addr, bool fCurrentlyOnline)
 {
     if (!addr.IsRoutable())
         return false;
@@ -239,7 +239,7 @@ bool AddAddress(CAddrDB& addrdb, CAddress addr, bool fCurrentlyOnline)
             // New address
             printf("AddAddress(%s)\n", addr.ToStringLog().c_str());
             mapAddresses.insert(make_pair(addr.GetKey(), addr));
-            addrdb.WriteAddress(addr);
+            CAddrDB().WriteAddress(addr);
             return true;
         }
         else
@@ -260,7 +260,7 @@ bool AddAddress(CAddrDB& addrdb, CAddress addr, bool fCurrentlyOnline)
                 fUpdated = true;
             }
             if (fUpdated)
-                addrdb.WriteAddress(addrFound);
+                CAddrDB().WriteAddress(addrFound);
         }
     }
     return false;
@@ -881,11 +881,11 @@ void ThreadOpenConnections2(void* parg)
         vnThreadsRunning[1]--;
         Sleep(500);
         const int nMaxConnections = 15;
-        while (vNodes.size() >= nMaxConnections || vNodes.size() >= mapAddresses.size())
+        while (vNodes.size() >= nMaxConnections)
         {
+            Sleep(2000);
             if (fShutdown)
                 return;
-            Sleep(2000);
         }
         vnThreadsRunning[1]++;
         if (fShutdown)

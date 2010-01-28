@@ -134,8 +134,6 @@ void CDB::Close()
 
     CRITICAL_BLOCK(cs_db)
         --mapFileUseCount[strFile];
-
-    RandAddSeed();
 }
 
 void CloseDb(const string& strFile)
@@ -456,7 +454,7 @@ bool CAddrDB::LoadAddresses()
                     CAddress addr(psz, NODE_NETWORK);
                     addr.nTime = 0; // so it won't relay unless successfully connected
                     if (addr.IsValid())
-                        AddAddress(*this, addr);
+                        AddAddress(addr);
                 }
             }
             catch (...) { }
