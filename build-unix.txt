@@ -1,6 +1,6 @@
 Bitcoin v0.2.0 BETA
 
-Copyright (c) 2009 Satoshi Nakamoto
+Copyright (c) 2009-2010 Satoshi Nakamoto
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -13,15 +13,22 @@ UNIX BUILD NOTES
 
 Dependencies
 ------------
-apt-get install build-essential
-apt-get install libgtk2.0-dev
-apt-get install libssl-dev
-apt-get install libdb4.7-dev
-apt-get install libdb4.7++-dev
-apt-get install libboost-dev
+sudo apt-get install build-essential
+sudo apt-get install libgtk2.0-dev
+sudo apt-get install libssl-dev
+sudo apt-get install libdb4.7-dev
+sudo apt-get install libdb4.7++-dev
+sudo apt-get install libboost-dev
+
+There is currently no libwxgtk2.8-ansi-dev debian package for Karmic.
+libwxgtk2.8-dev is the "unicode" build, but for wxWidgets 2.8 "unicode"
+means wchar, not UTF-8.  wchar wxString doesn't convert to std::string.
+
+In wxWidgets 2.9, unicode is UTF-8 and that's the only version.
 
 You need to download wxWidgets from http://www.wxwidgets.org/downloads/
-and build it yourself.
+and build it yourself.  See the build instructions and configure parameters
+below.
 
 Licenses of statically linked libraries:
 wxWidgets      LGPL 2.1 with very liberal exceptions
@@ -48,7 +55,7 @@ symbols, which reduces the executable size by about 90%.
 
 wxWidgets
 ---------
-cd /usr/local/wxWidgets-2.8.9
+cd /usr/local/wxWidgets-2.8.9 or 2.9.0
 mkdir buildgtk
 cd buildgtk
 ../configure --with-gtk --enable-debug --disable-shared --enable-monolithic

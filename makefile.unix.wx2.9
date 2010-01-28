@@ -1,0 +1,89 @@
+# Copyright (c) 2009 Satoshi Nakamoto
+# Distributed under the MIT/X11 software license, see the accompanying
+# file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+
+ifneq "$(BUILD)" "debug"
+ifneq "$(BUILD)" "release"
+BUILD=debug
+endif
+endif
+ifeq "$(BUILD)" "debug"
+D=d
+DEBUGFLAGS=-g -D__WXDEBUG__
+endif
+
+
+
+INCLUDEPATHS= \
+ -I"/usr/include" \
+ -I"/usr/local/include/wx-2.9" \
+ -I"/usr/local/lib/wx/include/gtk2-unicode-debug-static-2.9"
+
+LIBPATHS= \
+ -L"/usr/lib" \
+ -L"/usr/local/lib"
+
+LIBS= \
+ -Wl,-Bstatic \
+   -l boost_system-mt -l boost_filesystem-mt \
+   -l db_cxx \
+   -l wx_gtk2u$(D)-2.9 \
+ -Wl,-Bdynamic \
+   -l crypto \
+   -l gtk-x11-2.0 -l gthread-2.0 -l SM
+
+WXDEFS=-D__WXGTK__ -DNOPCH
+CFLAGS=-O0 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+HEADERS=headers.h util.h main.h serialize.h uint256.h key.h bignum.h script.h db.h base58.h
+
+
+
+all: bitcoin
+
+
+headers.h.gch: headers.h $(HEADERS) net.h irc.h market.h uibase.h ui.h
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/util.o: util.cpp                $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/script.o: script.cpp            $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/db.o: db.cpp                    $(HEADERS) market.h
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/net.o: net.cpp                  $(HEADERS) net.h
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/main.o: main.cpp                $(HEADERS) net.h market.h sha.h
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/market.o: market.cpp            $(HEADERS) market.h
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/ui.o: ui.cpp                    $(HEADERS) net.h uibase.h ui.h market.h
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/uibase.o: uibase.cpp            uibase.h
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/sha.o: sha.cpp                  sha.h
+	g++ -c $(CFLAGS) -O3 -o $@ $<
+
+obj/irc.o: irc.cpp                  $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+
+
+
+
+OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o obj/market.o \
+        obj/ui.o obj/uibase.o obj/sha.o obj/irc.o
+
+bitcoin: headers.h.gch $(OBJS)
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $(OBJS) $(LIBS)
+
+clean:
+	-rm obj/*
+	-rm headers.h.gch
