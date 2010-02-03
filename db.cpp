@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -593,14 +593,17 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
                 //    wtx.hashBlock.ToString().substr(0,16).c_str(),
                 //    wtx.mapValue["message"].c_str());
             }
-            else if (strType == "key")
+            else if (strType == "key" || strType == "wkey")
             {
                 vector<unsigned char> vchPubKey;
                 ssKey >> vchPubKey;
-                CPrivKey vchPrivKey;
-                ssValue >> vchPrivKey;
+                CWalletKey wkey;
+                if (strType == "key")
+                    ssValue >> wkey.vchPrivKey;
+                else
+                    ssValue >> wkey;
 
-                mapKeys[vchPubKey] = vchPrivKey;
+                mapKeys[vchPubKey] = wkey.vchPrivKey;
                 mapPubKeys[Hash160(vchPubKey)] = vchPubKey;
             }
             else if (strType == "defaultkey")

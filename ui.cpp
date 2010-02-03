@@ -134,7 +134,6 @@ int GetSelection(wxListCtrl* listCtrl)
     return -1;
 }
 
-
 string HtmlEscape(const char* psz, bool fMultiLine=false)
 {
     int len = 0;
@@ -168,18 +167,6 @@ string HtmlEscape(const char* psz, bool fMultiLine=false)
 string HtmlEscape(const string& str, bool fMultiLine=false)
 {
     return HtmlEscape(str.c_str(), fMultiLine);
-}
-
-void AddToMyProducts(CProduct product)
-{
-    CProduct& productInsert = mapMyProducts[product.GetHash()];
-    productInsert = product;
-    InsertLine(pframeMain->m_listCtrlProductsSent, &productInsert,
-                product.mapValue["category"],
-                product.mapValue["title"].substr(0, 100),
-                product.mapValue["description"].substr(0, 100),
-                product.mapValue["price"],
-                "");
 }
 
 void CalledMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y, int* pnRet, bool* pfDone)
@@ -253,9 +240,7 @@ template<typename T>
 void AddPendingCustomEvent(wxEvtHandler* pevthandler, int nEventID, const T pbeginIn, const T pendIn)
 {
     // Need to rewrite with something like UIThreadCall
-    // I'm tired of maintaining this hack that's only called by unfinished unused code,
-    // but I'm not willing to delete it because it serves as documentation of what the
-    // unfinished code was trying to do.
+    // I'm tired of maintaining this hack that's only called by unfinished unused code.
     assert(("Unimplemented", 0));
     //if (!pevthandler)
     //    return;
@@ -1233,7 +1218,7 @@ void CMainFrame::OnButtonChange(wxCommandEvent& event)
     }
 }
 
-void CMainFrame::OnListItemActivatedAllTransactions(wxListEvent& event)
+void CMainFrame::OnListItemActivated(wxListEvent& event)
 {
     uint256 hash((string)GetItemText(m_listCtrl, event.GetIndex(), 1));
     CWalletTx wtx;
@@ -1242,7 +1227,7 @@ void CMainFrame::OnListItemActivatedAllTransactions(wxListEvent& event)
         map<uint256, CWalletTx>::iterator mi = mapWallet.find(hash);
         if (mi == mapWallet.end())
         {
-            printf("CMainFrame::OnListItemActivatedAllTransactions() : tx not found in mapWallet\n");
+            printf("CMainFrame::OnListItemActivated() : tx not found in mapWallet\n");
             return;
         }
         wtx = (*mi).second;
@@ -1699,16 +1684,23 @@ CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 {
     m_staticTextVersion->SetLabel(strprintf("version 0.%d.%d beta", VERSION/100, VERSION%100));
 
+#if !wxUSE_UNICODE
     // Workaround until upgrade to wxWidgets supporting UTF-8
     wxString str = m_staticTextMain->GetLabel();
-#if !wxUSE_UNICODE
     if (str.Find('Â') != wxNOT_FOUND)
         str.Remove(str.Find('Â'), 1);
+    m_staticTextMain->SetLabel(str);
 #endif
 #ifndef __WXMSW__
-    SetSize(510, 380);
+    // Resize on Linux to make the window fit the text.
+    // The text was wrapped manually rather than using the Wrap setting because
+    // the wrap would be too small on Linux and it can't be changed at this point.
+    wxFont fontTmp = m_staticTextMain->GetFont();
+    if (fontTmp.GetPointSize() > 8);
+        fontTmp.SetPointSize(8);
+    m_staticTextMain->SetFont(fontTmp);
+    SetSize(GetSize().GetWidth() + 44, GetSize().GetHeight() - 4);
 #endif
-    m_staticTextMain->SetLabel(str);
 }
 
 void CAboutDialog::OnButtonOK(wxCommandEvent& event)
@@ -2787,6 +2779,18 @@ void CEditProductDialog::OnButtonAddField(wxCommandEvent& event)
             break;
         }
     }
+}
+
+void AddToMyProducts(CProduct product)
+{
+    CProduct& productInsert = mapMyProducts[product.GetHash()];
+    productInsert = product;
+    //InsertLine(pframeMain->m_listCtrlProductsSent, &productInsert,
+    //            product.mapValue["category"],
+    //            product.mapValue["title"].substr(0, 100),
+    //            product.mapValue["description"].substr(0, 100),
+    //            product.mapValue["price"],
+    //            "");
 }
 
 void CEditProductDialog::OnButtonSend(wxCommandEvent& event)
