@@ -1,7 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
 ///////////////////////////////////////////////////////////////////////////
 // C++ code generated with wxFormBuilder (version Apr 16 2008)
 // http://www.wxformbuilder.org/
@@ -30,7 +29,6 @@
 #include <wx/panel.h>
 #include <wx/choice.h>
 #include <wx/listctrl.h>
-#include <wx/notebook.h>
 #include <wx/frame.h>
 #include <wx/html/htmlwin.h>
 #include <wx/dialog.h>
@@ -119,12 +117,6 @@ class CMainFrameBase : public wxFrame
 		wxStaticText* m_staticTextBalance;
 		
 		wxChoice* m_choiceFilter;
-		wxNotebook* m_notebook;
-		wxPanel* m_panel7;
-		wxPanel* m_panel9;
-		wxPanel* m_panel8;
-		wxPanel* m_panel10;
-		wxPanel* m_panel11;
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
@@ -148,21 +140,14 @@ class CMainFrameBase : public wxFrame
 		virtual void OnButtonCopy( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonChange( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnListColBeginDrag( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivatedAllTransactions( wxListEvent& event ){ event.Skip(); }
+		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
 		virtual void OnPaintListCtrl( wxPaintEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivatedOrdersSent( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivatedProductsSent( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivatedOrdersReceived( wxListEvent& event ){ event.Skip(); }
 		
 	
 	public:
 		wxMenu* m_menuOptions;
 		wxListCtrl* m_listCtrl;
-		wxListCtrl* m_listCtrlEscrows;
-		wxListCtrl* m_listCtrlOrdersSent;
-		wxListCtrl* m_listCtrlProductsSent;
-		wxListCtrl* m_listCtrlOrdersReceived;
-		CMainFrameBase( wxWindow* parent, wxWindowID id = wxID_MAINFRAME, const wxString& title = wxT("Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 727,484 ), long style = wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
+		CMainFrameBase( wxWindow* parent, wxWindowID id = wxID_MAINFRAME, const wxString& title = wxT("Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 712,484 ), long style = wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
 		~CMainFrameBase();
 	
 };
@@ -251,7 +236,7 @@ class CAboutDialogBase : public wxDialog
 	private:
 	
 	protected:
-		
+		wxStaticBitmap* m_bitmap;
 		
 		wxStaticText* m_staticText40;
 		
@@ -266,7 +251,7 @@ class CAboutDialogBase : public wxDialog
 	
 	public:
 		wxStaticText* m_staticTextVersion;
-		CAboutDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("About Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 507,298 ), long style = wxDEFAULT_DIALOG_STYLE );
+		CAboutDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("About Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 532,329 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~CAboutDialogBase();
 	
 };

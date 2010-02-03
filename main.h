@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,6 +56,7 @@ FILE* AppendBlockFile(unsigned int& nFileRet);
 bool AddKey(const CKey& key);
 vector<unsigned char> GenerateNewKey();
 bool AddToWallet(const CWalletTx& wtxIn);
+void WalletUpdateSpent(const COutPoint& prevout);
 void ReacceptWalletTransactions();
 void RelayWalletTransactions();
 bool LoadBlockIndex(bool fAllowNew=true);
@@ -1370,6 +1371,31 @@ public:
 
 
 
+//
+// Private key that includes an expiration date in case it never gets used.
+//
+class CWalletKey
+{
+public:
+    CPrivKey vchPrivKey;
+    int64 nTimeCreated;
+    int64 nTimeExpires;
+
+    CWalletKey(int64 nTimeExpiresIn=0)
+    {
+        nTimeCreated = (nTimeExpiresIn ? GetTime() : 0);
+        nTimeExpires = nTimeExpiresIn;
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+        READWRITE(vchPrivKey);
+        READWRITE(nTimeCreated);
+        READWRITE(nTimeExpires);
+    )
+};
 
 
 

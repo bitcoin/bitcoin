@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -168,6 +168,27 @@ bool EraseFromWallet(uint256 hash)
     return true;
 }
 
+void WalletUpdateSpent(const COutPoint& prevout)
+{
+    // Anytime a signature is successfully verified, it's proof the outpoint is spent.
+    // Update the wallet spent flag if it doesn't know due to wallet.dat being
+    // restored from backup or the user making copies of wallet.dat.
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        map<uint256, CWalletTx>::iterator mi = mapWallet.find(prevout.hash);
+        if (mi != mapWallet.end())
+        {
+            CWalletTx& wtx = (*mi).second;
+            if (!wtx.fSpent && wtx.vout[prevout.n].IsMine())
+            {
+                printf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                wtx.fSpent = true;
+                wtx.WriteToDisk();
+                vWalletUpdated.push_back(prevout.hash);
+            }
+        }
+    }
+}
 
 
 
@@ -622,15 +643,44 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
 
 void ReacceptWalletTransactions()
 {
-    // Reaccept any txes of ours that aren't already in a block
     CTxDB txdb("r");
     CRITICAL_BLOCK(cs_mapWallet)
     {
         foreach(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
-            if (!wtx.IsCoinBase() && !txdb.ContainsTx(wtx.GetHash()))
-                wtx.AcceptWalletTransaction(txdb, false);
+            if (wtx.fSpent && wtx.IsCoinBase())
+                continue;
+
+            CTxIndex txindex;
+            if (txdb.ReadTxIndex(wtx.GetHash(), txindex))
+            {
+                // Update fSpent if a tx got spent somewhere else by a copy of wallet.dat
+                if (!wtx.fSpent)
+                {
+                    if (txindex.vSpent.size() != wtx.vout.size())
+                    {
+                        printf("ERROR: ReacceptWalletTransactions() : txindex.vSpent.size() %d != wtx.vout.size() %d\n", txindex.vSpent.size(), wtx.vout.size());
+                        continue;
+                    }
+                    for (int i = 0; i < txindex.vSpent.size(); i++)
+                    {
+                        if (!txindex.vSpent[i].IsNull() && wtx.vout[i].IsMine())
+                        {
+                            printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                            wtx.fSpent = true;
+                            wtx.WriteToDisk();
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Reaccept any txes of ours that aren't already in a block
+                if (!wtx.IsCoinBase())
+                    wtx.AcceptWalletTransaction(txdb, false);
+            }
         }
     }
 }
@@ -2843,9 +2893,13 @@ bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key)
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
     {
-        //// todo: eventually should make this transactional, never want to add a
+        //// old: eventually should make this transactional, never want to add a
         ////  transaction without marking spent transactions, although the risk of
         ////  interruption during this step is remote.
+        //// update: This matters even less now that fSpent can get corrected
+        ////  when transactions are seen in VerifySignature.  The remote chance of
+        ////  unmarked fSpent will be handled by that.  Don't need to make this
+        ////  transactional.
 
         // This is only to keep the database open to defeat the auto-flush for the
         // duration of this scope.  This is the only place where this optimization
@@ -2910,8 +2964,7 @@ bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
         if (!wtxNew.AcceptTransaction())
         {
             // This must not fail. The transaction has already been signed and recorded.
-            throw runtime_error("SendMoney() : wtxNew.AcceptTransaction() failed\n");
-            wxMessageBox("Error: Transaction not valid  ", "Sending...");
+            wxMessageBox("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.", "Sending...");
             return error("SendMoney() : Error: Transaction not valid");
         }
         wtxNew.RelayWalletTransaction();

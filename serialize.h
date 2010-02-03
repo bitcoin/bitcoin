@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ class CDataStream;
 class CAutoFile;
 
 static const int VERSION = 200;
-static const char* pszSubVer = " test1";
+static const char* pszSubVer = " test2";
 
 
 

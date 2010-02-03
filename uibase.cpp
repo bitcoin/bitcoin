@@ -1,7 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
 ///////////////////////////////////////////////////////////////////////////
 // C++ code generated with wxFormBuilder (version Apr 16 2008)
 // http://www.wxformbuilder.org/
@@ -11,6 +10,7 @@
 
 #include "uibase.h"
 
+#include "xpm/about.xpm"
 #include "xpm/addressbook20.xpm"
 #include "xpm/check.xpm"
 #include "xpm/send20.xpm"
@@ -142,81 +142,8 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	
 	bSizer2->Add( bSizer3, 0, wxEXPAND, 5 );
 	
-	m_notebook = new wxNotebook( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
-	m_panel7 = new wxPanel( m_notebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	wxBoxSizer* bSizer157;
-	bSizer157 = new wxBoxSizer( wxVERTICAL );
-	
-	m_listCtrl = new wxListCtrl( m_panel7, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
-	bSizer157->Add( m_listCtrl, 1, wxEXPAND|wxALL, 5 );
-	
-	m_panel7->SetSizer( bSizer157 );
-	m_panel7->Layout();
-	bSizer157->Fit( m_panel7 );
-	m_notebook->AddPage( m_panel7, wxT("All Transactions"), false );
-	
-	bSizer2->Add( m_notebook, 1, wxEXPAND, 5 );
-	
-	wxBoxSizer* bSizer_TabsForFutureUse;
-	bSizer_TabsForFutureUse = new wxBoxSizer( wxVERTICAL );
-	
-	m_panel9 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	m_panel9->Hide();
-	
-	wxBoxSizer* bSizer159;
-	bSizer159 = new wxBoxSizer( wxVERTICAL );
-	
-	m_listCtrlEscrows = new wxListCtrl( m_panel9, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT );
-	bSizer159->Add( m_listCtrlEscrows, 1, wxALL|wxEXPAND, 5 );
-	
-	m_panel9->SetSizer( bSizer159 );
-	m_panel9->Layout();
-	bSizer159->Fit( m_panel9 );
-	bSizer_TabsForFutureUse->Add( m_panel9, 1, wxEXPAND | wxALL, 5 );
-	
-	m_panel8 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	m_panel8->Hide();
-	
-	wxBoxSizer* bSizer158;
-	bSizer158 = new wxBoxSizer( wxVERTICAL );
-	
-	m_listCtrlOrdersSent = new wxListCtrl( m_panel8, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT );
-	bSizer158->Add( m_listCtrlOrdersSent, 1, wxALL|wxEXPAND, 5 );
-	
-	m_panel8->SetSizer( bSizer158 );
-	m_panel8->Layout();
-	bSizer158->Fit( m_panel8 );
-	bSizer_TabsForFutureUse->Add( m_panel8, 1, wxEXPAND | wxALL, 5 );
-	
-	m_panel10 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	m_panel10->Hide();
-	
-	wxBoxSizer* bSizer160;
-	bSizer160 = new wxBoxSizer( wxVERTICAL );
-	
-	m_listCtrlProductsSent = new wxListCtrl( m_panel10, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT );
-	bSizer160->Add( m_listCtrlProductsSent, 1, wxALL|wxEXPAND, 5 );
-	
-	m_panel10->SetSizer( bSizer160 );
-	m_panel10->Layout();
-	bSizer160->Fit( m_panel10 );
-	bSizer_TabsForFutureUse->Add( m_panel10, 1, wxEXPAND | wxALL, 5 );
-	
-	m_panel11 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	m_panel11->Hide();
-	
-	wxBoxSizer* bSizer161;
-	bSizer161 = new wxBoxSizer( wxVERTICAL );
-	
-	m_listCtrlOrdersReceived = new wxListCtrl( m_panel11, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT );
-	bSizer161->Add( m_listCtrlOrdersReceived, 1, wxALL|wxEXPAND, 5 );
-	
-	m_panel11->SetSizer( bSizer161 );
-	m_panel11->Layout();
-	bSizer161->Fit( m_panel11 );
-	bSizer_TabsForFutureUse->Add( m_panel11, 1, wxEXPAND | wxALL, 5 );
-	
-	bSizer2->Add( bSizer_TabsForFutureUse, 1, wxEXPAND, 5 );
+	m_listCtrl = new wxListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	bSizer2->Add( m_listCtrl, 1, wxEXPAND, 5 );
 	
 	this->SetSizer( bSizer2 );
 	this->Layout();
@@ -267,11 +194,8 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_buttonCopy->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonCopy ), NULL, this );
 	m_button91->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonChange ), NULL, this );
 	m_listCtrl->Connect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
-	m_listCtrl->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedAllTransactions ), NULL, this );
+	m_listCtrl->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
 	m_listCtrl->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
-	m_listCtrlOrdersSent->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedOrdersSent ), NULL, this );
-	m_listCtrlProductsSent->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedProductsSent ), NULL, this );
-	m_listCtrlOrdersReceived->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedOrdersReceived ), NULL, this );
 }
 
 CMainFrameBase::~CMainFrameBase()
@@ -322,11 +246,8 @@ CMainFrameBase::~CMainFrameBase()
 	m_buttonCopy->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonCopy ), NULL, this );
 	m_button91->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonChange ), NULL, this );
 	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
-	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedAllTransactions ), NULL, this );
+	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
 	m_listCtrl->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
-	m_listCtrlOrdersSent->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedOrdersSent ), NULL, this );
-	m_listCtrlProductsSent->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedProductsSent ), NULL, this );
-	m_listCtrlOrdersReceived->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivatedOrdersReceived ), NULL, this );
 }
 
 CTxDetailsDialogBase::CTxDetailsDialogBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
@@ -562,20 +483,23 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 	
+	wxBoxSizer* bSizer63;
+	bSizer63 = new wxBoxSizer( wxHORIZONTAL );
+	
+	m_bitmap = new wxStaticBitmap( this, wxID_ANY, wxBitmap( about_xpm ), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer63->Add( m_bitmap, 0, 0, 5 );
+	
 	wxBoxSizer* bSizer60;
 	bSizer60 = new wxBoxSizer( wxVERTICAL );
 	
 	wxBoxSizer* bSizer62;
 	bSizer62 = new wxBoxSizer( wxHORIZONTAL );
 	
-	
-	bSizer62->Add( 60, 0, 0, wxEXPAND, 5 );
-	
-	wxBoxSizer* bSizer63;
-	bSizer63 = new wxBoxSizer( wxVERTICAL );
+	wxBoxSizer* bSizer631;
+	bSizer631 = new wxBoxSizer( wxVERTICAL );
 	
 	
-	bSizer63->Add( 0, 50, 0, wxEXPAND, 5 );
+	bSizer631->Add( 0, 65, 0, wxEXPAND, 5 );
 	
 	wxBoxSizer* bSizer64;
 	bSizer64 = new wxBoxSizer( wxHORIZONTAL );
@@ -592,19 +516,19 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	
 	bSizer64->Add( m_staticTextVersion, 0, wxALIGN_BOTTOM|wxTOP|wxBOTTOM|wxRIGHT, 5 );
 	
-	bSizer63->Add( bSizer64, 0, wxEXPAND, 5 );
+	bSizer631->Add( bSizer64, 0, wxEXPAND, 5 );
 	
 	
-	bSizer63->Add( 0, 4, 0, wxEXPAND, 5 );
+	bSizer631->Add( 0, 4, 0, wxEXPAND, 5 );
 	
-	m_staticTextMain = new wxStaticText( this, wxID_ANY, wxT("Copyright © 2009 Satoshi Nakamoto.\n\nThis is experimental software.  Do not rely on it for actual financial transactions.\n\nDistributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticTextMain->Wrap( 400 );
-	bSizer63->Add( m_staticTextMain, 0, wxALL, 5 );
+	m_staticTextMain = new wxStaticText( this, wxID_ANY, wxT("Copyright © 2009-2010 Satoshi Nakamoto.\n\nThis is experimental software.  Do not rely on it for actual financial transactions.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextMain->Wrap( -1 );
+	bSizer631->Add( m_staticTextMain, 0, wxALL, 5 );
 	
 	
-	bSizer63->Add( 0, 0, 1, wxEXPAND, 5 );
+	bSizer631->Add( 0, 0, 1, wxEXPAND, 5 );
 	
-	bSizer62->Add( bSizer63, 1, wxEXPAND, 5 );
+	bSizer62->Add( bSizer631, 1, wxEXPAND, 5 );
 	
 	bSizer60->Add( bSizer62, 1, wxEXPAND, 5 );
 	
@@ -617,9 +541,11 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	m_buttonOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	bSizer61->Add( m_buttonOK, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
 	
-	bSizer60->Add( bSizer61, 0, wxALIGN_RIGHT|wxEXPAND, 5 );
+	bSizer60->Add( bSizer61, 0, wxALIGN_RIGHT|wxEXPAND|wxRIGHT, 5 );
 	
-	this->SetSizer( bSizer60 );
+	bSizer63->Add( bSizer60, 1, wxEXPAND|wxLEFT, 5 );
+	
+	this->SetSizer( bSizer63 );
 	this->Layout();
 	
 	// Connect Events

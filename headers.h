@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -113,3 +113,4 @@ using namespace boost;
 #include "xpm/send16.xpm"
 #include "xpm/send16noshadow.xpm"
 #include "xpm/send20.xpm"
+#include "xpm/about.xpm"

@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -60,7 +60,7 @@ protected:
     void OnButtonCopy(wxCommandEvent& event);
     void OnButtonChange(wxCommandEvent& event);
     void OnListColBeginDrag(wxListEvent& event);
-    void OnListItemActivatedAllTransactions(wxListEvent& event);
+    void OnListItemActivated(wxListEvent& event);
     void OnListItemActivatedProductsSent(wxListEvent& event);
     void OnListItemActivatedOrdersSent(wxListEvent& event);
     void OnListItemActivatedOrdersReceived(wxListEvent& event);
