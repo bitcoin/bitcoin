@@ -67,10 +67,12 @@ obj/irc.o: irc.cpp                  $(HEADERS)
 obj/ui_res.o: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
 	windres $(WXDEFS) $(INCLUDEPATHS) -o $@ -i $<
 
+obj/ipc.o: ipc.cpp                  $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
 
 
 OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o obj/market.o \
-        obj/ui.o obj/uibase.o obj/sha.o obj/irc.o obj/ui_res.o
+        obj/ui.o obj/uibase.o obj/sha.o obj/irc.o obj/ui_res.o obj/ipc.o
 
 bitcoin.exe: headers.h.gch $(OBJS)
 	-kill /f bitcoin.exe

@@ -75,11 +75,12 @@ obj/sha.o: sha.cpp                  sha.h
 obj/irc.o: irc.cpp                  $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-
+obj/ipc.o: ipc.cpp                  $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
 
 
 OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o obj/market.o \
-        obj/ui.o obj/uibase.o obj/sha.o obj/irc.o
+        obj/ui.o obj/uibase.o obj/sha.o obj/irc.o obj/ipc.o
 
 bitcoin: headers.h.gch $(OBJS)
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $(OBJS) $(LIBS)

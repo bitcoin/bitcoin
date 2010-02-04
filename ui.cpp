@@ -21,6 +21,7 @@ DEFINE_EVENT_TYPE(wxEVT_REPLY3)
 
 CMainFrame* pframeMain = NULL;
 CMyTaskBarIcon* ptaskbaricon = NULL;
+CServer* pserver = NULL;
 map<string, string> mapAddressBook;
 bool fRandSendTest = false;
 void RandSend();
@@ -384,6 +385,8 @@ CMainFrame::~CMainFrame()
     pframeMain = NULL;
     delete ptaskbaricon;
     ptaskbaricon = NULL;
+    delete pserver;
+    pserver = NULL;
 }
 
 void ExitTimeout(void* parg)
@@ -1687,8 +1690,8 @@ CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 #if !wxUSE_UNICODE
     // Workaround until upgrade to wxWidgets supporting UTF-8
     wxString str = m_staticTextMain->GetLabel();
-    if (str.Find('Â') != wxNOT_FOUND)
-        str.Remove(str.Find('Â'), 1);
+    if (str.Find('ï¿½') != wxNOT_FOUND)
+        str.Remove(str.Find('ï¿½'), 1);
     m_staticTextMain->SetLabel(str);
 #endif
 #ifndef __WXMSW__
@@ -3548,6 +3551,26 @@ bool CMyApp::OnInit2()
         return false;
     }
 
+    if (mapArgs.count("-blockamount")) {
+        CClient client;
+        wxString hostname = "localhost";
+        wxString server = GetDataDir() + "service";
+        CClientConnection * pconnection = (CClientConnection *)client.MakeConnection(hostname, server, "ipc test");
+        string output = "";
+        if (pconnection) {
+            char * pbuffer = (char *)pconnection->Request("blockamount");
+            while (*pbuffer != '\n') {
+                output += *pbuffer;
+                pbuffer++;
+            }
+        }
+        else {
+            output = "Cannot access Bitcoin. Are you sure the program is running?\n";
+        }
+        fprintf(stderr, "%s", output.c_str());
+        return false;
+    }
+
     if (mapArgs.count("-datadir"))
         strlcpy(pszSetDataDir, mapArgs["-datadir"].c_str(), sizeof(pszSetDataDir));
 
@@ -3755,6 +3778,8 @@ bool CMyApp::OnInit2()
     if (fFirstRun)
         SetStartOnSystemStartup(true);
 
+    pserver = new CServer;
+    pserver->Create(GetDataDir() + "service");
 
     //
     // Tests
