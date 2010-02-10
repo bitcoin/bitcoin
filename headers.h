@@ -24,8 +24,6 @@
 #include <wx/taskbar.h>
 #include <wx/stdpaths.h>
 #include <wx/utils.h>
-#include <wx/ipc.h>
-#include <wx/ipcbase.h>
 #include <openssl/ecdsa.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -104,7 +102,6 @@ using namespace boost;
 #include "market.h"
 #include "uibase.h"
 #include "ui.h"
-#include "ipc.h"
 
 #include "xpm/addressbook16.xpm"
 #include "xpm/addressbook20.xpm"
