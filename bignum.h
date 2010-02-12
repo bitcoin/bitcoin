@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -307,6 +307,37 @@ public:
         }
         if (fNegative)
             *this = 0 - *this;
+    }
+
+    std::string ToString(int nBase=10) const
+    {
+        CAutoBN_CTX pctx;
+        CBigNum bnBase = nBase;
+        CBigNum bn0 = 0;
+        string str;
+        CBigNum bn = *this;
+        BN_set_negative(&bn, false);
+        CBigNum dv;
+        CBigNum rem;
+        if (BN_cmp(&bn, &bn0) == 0)
+            return "0";
+        while (BN_cmp(&bn, &bn0) > 0)
+        {
+            if (!BN_div(&dv, &rem, &bn, &bnBase, pctx))
+                throw bignum_error("CBigNum::ToString() : BN_div failed");
+            bn = dv;
+            unsigned int c = rem.getulong();
+            str += "0123456789abcdef"[c];
+        }
+        if (BN_is_negative(this))
+            str += "-";
+        reverse(str.begin(), str.end());
+        return str;
+    }
+
+    std::string GetHex() const
+    {
+        return ToString(16);
     }
 
     unsigned int GetSerializeSize(int nType=0, int nVersion=VERSION) const

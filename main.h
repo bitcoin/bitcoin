@@ -36,6 +36,8 @@ extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
 extern map<uint256, int> mapRequestCount;
 extern CCriticalSection cs_mapRequestCount;
+extern map<string, string> mapAddressBook;
+extern CCriticalSection cs_mapAddressBook;
 
 // Settings
 extern int fGenerateBitcoins;
@@ -58,7 +60,6 @@ vector<unsigned char> GenerateNewKey();
 bool AddToWallet(const CWalletTx& wtxIn);
 void WalletUpdateSpent(const COutPoint& prevout);
 void ReacceptWalletTransactions();
-void RelayWalletTransactions();
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
 bool ProcessMessages(CNode* pfrom);
@@ -67,7 +68,8 @@ bool SendMessages(CNode* pto);
 int64 GetBalance();
 bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CKey& keyRet, int64& nFeeRequiredRet);
 bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key);
-bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew);
+string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew);
+string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew);
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 void BitcoinMiner();
@@ -680,7 +682,8 @@ public:
 
 
     int SetMerkleBranch(const CBlock* pblock=NULL);
-    int GetDepthInMainChain() const;
+    int GetDepthInMainChain(int& nHeightRet) const;
+    int GetDepthInMainChain() const { int nHeight; return GetDepthInMainChain(nHeight); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
     int GetBlocksToMaturity() const;
     bool AcceptTransaction(CTxDB& txdb, bool fCheckInputs=true);

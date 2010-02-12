@@ -1,8 +1,7 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include <db_cxx.h>
 class CTransaction;
 class CTxIndex;
 class CDiskBlockIndex;
@@ -14,6 +13,7 @@ class CAddress;
 class CWalletTx;
 
 extern map<string, string> mapAddressBook;
+extern CCriticalSection cs_mapAddressBook;
 extern bool fClient;
 
 
@@ -359,15 +359,17 @@ public:
 
     bool WriteName(const string& strAddress, const string& strName)
     {
+        CRITICAL_BLOCK(cs_mapAddressBook)
+            mapAddressBook[strAddress] = strName;
         nWalletDBUpdated++;
-        mapAddressBook[strAddress] = strName;
         return Write(make_pair(string("name"), strAddress), strName);
     }
 
     bool EraseName(const string& strAddress)
     {
+        CRITICAL_BLOCK(cs_mapAddressBook)
+            mapAddressBook.erase(strAddress);
         nWalletDBUpdated++;
-        mapAddressBook.erase(strAddress);
         return Erase(make_pair(string("name"), strAddress));
     }
 

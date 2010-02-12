@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -55,6 +55,7 @@ inline T& REF(const T& val)
 }
 
 #ifdef __WXMSW__
+static const bool fWindows = true;
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
 #ifndef UINT64_MAX
@@ -66,7 +67,9 @@ inline T& REF(const T& val)
 #define S_IRUSR             0400
 #define S_IWUSR             0200
 #endif
+#define unlink              _unlink
 #else
+static const bool fWindows = false;
 #define WSAGetLastError()   errno
 #define WSAEWOULDBLOCK      EWOULDBLOCK
 #define WSAEMSGSIZE         EMSGSIZE
@@ -116,6 +119,7 @@ extern bool fPrintToConsole;
 extern bool fPrintToDebugger;
 extern char pszSetDataDir[MAX_PATH];
 extern bool fShutdown;
+extern bool fDaemon;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
@@ -258,6 +262,11 @@ inline int roundint(double d)
     return (int)(d > 0 ? d + 0.5 : d - 0.5);
 }
 
+inline int64 roundint64(double d)
+{
+    return (int64)(d > 0 ? d + 0.5 : d - 0.5);
+}
+
 template<typename T>
 string HexStr(const T itbegin, const T itend, bool fSpaces=true)
 {
@@ -323,7 +332,12 @@ inline string DateTimeStrFormat(const char* pszFormat, int64 nTime)
     return pszTime;
 }
 
-
+template<typename T>
+void skipspaces(T& it)
+{
+    while (isspace(*it))
+        ++it;
+}
 
 
 

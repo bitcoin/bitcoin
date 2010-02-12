@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -472,7 +472,7 @@ public:
 
     bool GetOp(iterator& pc, opcodetype& opcodeRet, vector<unsigned char>& vchRet)
     {
-         // This is why people hate C++
+         // Wrapper so it can be called with either iterator or const_iterator
          const_iterator pc2 = pc;
          bool fRet = GetOp(pc2, opcodeRet, vchRet);
          pc = begin() + (pc2 - begin());
@@ -548,6 +548,46 @@ public:
         }
         while (GetOp(pc, opcode, vchPushValue));
         //printf("FindAndDeleted deleted %d items\n", count); /// debug
+    }
+
+
+    uint160 GetBitcoinAddressHash160() const
+    {
+        opcodetype opcode;
+        vector<unsigned char> vch;
+        CScript::const_iterator pc = begin();
+        if (!GetOp(pc, opcode, vch) || opcode != OP_DUP) return 0;
+        if (!GetOp(pc, opcode, vch) || opcode != OP_HASH160) return 0;
+        if (!GetOp(pc, opcode, vch) || vch.size() != sizeof(uint160)) return 0;
+        uint160 hash160 = uint160(vch);
+        if (!GetOp(pc, opcode, vch) || opcode != OP_EQUALVERIFY) return 0;
+        if (!GetOp(pc, opcode, vch) || opcode != OP_CHECKSIG) return 0;
+        if (pc != end()) return 0;
+        return hash160;
+    }
+
+    string GetBitcoinAddress() const
+    {
+        uint160 hash160 = GetBitcoinAddressHash160();
+        if (hash160 == 0)
+            return "";
+        return Hash160ToAddress(hash160);
+    }
+
+    void SetBitcoinAddress(const uint160& hash160)
+    {
+        this->clear();
+        *this << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
+    }
+
+    bool SetBitcoinAddress(const string& strAddress)
+    {
+        this->clear();
+        uint160 hash160;
+        if (!AddressToHash160(strAddress, hash160))
+            return false;
+        SetBitcoinAddress(hash160);
+        return true;
     }
 
 

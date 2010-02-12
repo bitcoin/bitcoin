@@ -29,6 +29,7 @@
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
+#include <db_cxx.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -36,6 +37,7 @@
 #include <float.h>
 #include <assert.h>
 #include <memory>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -53,6 +55,8 @@
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifdef __WXMSW__
 #include <windows.h>
@@ -73,8 +77,6 @@
 #include <errno.h>
 #include <net/if.h>
 #include <ifaddrs.h>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 #endif
 #ifdef __BSD__
 #include <netinet/in.h>
@@ -84,8 +86,6 @@
 #pragma hdrstop
 using namespace std;
 using namespace boost;
-
-
 
 #include "strlcpy.h"
 #include "serialize.h"
@@ -100,6 +100,7 @@ using namespace boost;
 #include "irc.h"
 #include "main.h"
 #include "market.h"
+#include "rpc.h"
 #include "uibase.h"
 #include "ui.h"
 
