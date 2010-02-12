@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -522,7 +522,6 @@ void CNode::Cleanup()
 void ThreadSocketHandler(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadSocketHandler(parg));
-
     try
     {
         vnThreadsRunning[0]++;
@@ -536,7 +535,6 @@ void ThreadSocketHandler(void* parg)
         vnThreadsRunning[0]--;
         throw; // support pthread_cancel()
     }
-
     printf("ThreadSocketHandler exiting\n");
 }
 
@@ -816,7 +814,6 @@ void ThreadSocketHandler2(void* parg)
 void ThreadOpenConnections(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadOpenConnections(parg));
-
     try
     {
         vnThreadsRunning[1]++;
@@ -830,7 +827,6 @@ void ThreadOpenConnections(void* parg)
         vnThreadsRunning[1]--;
         PrintException(NULL, "ThreadOpenConnections()");
     }
-
     printf("ThreadOpenConnections exiting\n");
 }
 
@@ -928,7 +924,7 @@ void ThreadOpenConnections2(void* parg)
                 //   30 days   27 hours
                 //   90 days   46 hours
                 //  365 days   93 hours
-                int64 nDelay = (int64)(3600.0 * sqrt(fabs(nSinceLastSeen) / 3600.0) + nRandomizer);
+                int64 nDelay = (int64)(3600.0 * sqrt(fabs((double)nSinceLastSeen) / 3600.0) + nRandomizer);
 
                 // Fast reconnect for one hour after last seen
                 if (nSinceLastSeen < 60 * 60)
@@ -1016,7 +1012,6 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
 void ThreadMessageHandler(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadMessageHandler(parg));
-
     try
     {
         vnThreadsRunning[2]++;
@@ -1030,7 +1025,6 @@ void ThreadMessageHandler(void* parg)
         vnThreadsRunning[2]--;
         PrintException(NULL, "ThreadMessageHandler()");
     }
-
     printf("ThreadMessageHandler exiting\n");
 }
 
@@ -1329,7 +1323,7 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
-    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0)
+    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0)
     {
         if (GetTime() - nStart > 20)
             break;
@@ -1339,7 +1333,8 @@ bool StopNode()
     if (vnThreadsRunning[1] > 0) printf("ThreadOpenConnections still running\n");
     if (vnThreadsRunning[2] > 0) printf("ThreadMessageHandler still running\n");
     if (vnThreadsRunning[3] > 0) printf("ThreadBitcoinMiner still running\n");
-    while (vnThreadsRunning[2] > 0)
+    if (vnThreadsRunning[4] > 0) printf("ThreadRPCServer still running\n");
+    while (vnThreadsRunning[2] > 0 || vnThreadsRunning[4] > 0)
         Sleep(20);
     Sleep(50);
 

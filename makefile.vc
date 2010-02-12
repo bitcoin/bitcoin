@@ -1,4 +1,4 @@
-# Copyright (c) 2009 Satoshi Nakamoto
+# Copyright (c) 2009-2010 Satoshi Nakamoto
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,15 +14,16 @@ DEBUGFLAGS=/Zi /Od /D__WXDEBUG__
 
 
 INCLUDEPATHS=/I"/boost" /I"/db/build_windows" /I"/openssl/include" /I"/wxwidgets/lib/vc_lib/mswd" /I"/wxwidgets/include"
-LIBPATHS=/LIBPATH:"/db/build_windows/$(BUILD)" /LIBPATH:"/openssl/out" /LIBPATH:"/wxwidgets/lib/vc_lib"
+LIBPATHS=/LIBPATH:"/boost/stage/lib" /LIBPATH:"/db/build_windows/$(BUILD)" /LIBPATH:"/openssl/out" /LIBPATH:"/wxwidgets/lib/vc_lib"
 LIBS= \
+    libboost_system-vc80-mt-gd.lib libboost_filesystem-vc80-mt-gd.lib \
     libdb47s$(D).lib \
     libeay32.lib \
     wxmsw28$(D)_richtext.lib wxmsw28$(D)_html.lib wxmsw28$(D)_core.lib wxmsw28$(D)_adv.lib wxbase28$(D).lib wxtiff$(D).lib wxjpeg$(D).lib wxpng$(D).lib wxzlib$(D).lib wxregex$(D).lib wxexpat$(D).lib \
     kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib ws2_32.lib shlwapi.lib
 WXDEFS=/DWIN32 /D__WXMSW__ /D_WINDOWS /DNOPCH
 CFLAGS=/c /nologo /Ob0 /MD$(D) /EHsc /GR /Zm300 /YX /Fpobj/headers.pch $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
-HEADERS=headers.h util.h main.h serialize.h uint256.h key.h bignum.h script.h db.h base58.h
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h market.h rpc.h uibase.h ui.h
 
 
 
@@ -35,28 +36,31 @@ obj\util.obj: util.cpp        $(HEADERS)
 obj\script.obj: script.cpp    $(HEADERS)
     cl $(CFLAGS) /Fo$@ %s
 
-obj\db.obj: db.cpp            $(HEADERS) market.h
+obj\db.obj: db.cpp            $(HEADERS)
     cl $(CFLAGS) /Fo$@ %s
 
-obj\net.obj: net.cpp          $(HEADERS) net.h
+obj\net.obj: net.cpp          $(HEADERS)
     cl $(CFLAGS) /Fo$@ %s
 
-obj\main.obj: main.cpp        $(HEADERS) net.h market.h
+obj\main.obj: main.cpp        $(HEADERS) sha.h
     cl $(CFLAGS) /Fo$@ %s
 
-obj\market.obj: market.cpp    $(HEADERS) market.h
+obj\market.obj: market.cpp    $(HEADERS)
     cl $(CFLAGS) /Fo$@ %s
 
-obj\ui.obj: ui.cpp            $(HEADERS) net.h uibase.h ui.h market.h
+obj\ui.obj: ui.cpp            $(HEADERS)
     cl $(CFLAGS) /Fo$@ %s
 
 obj\uibase.obj: uibase.cpp    uibase.h
     cl $(CFLAGS) /Fo$@ %s
 
-obj\sha.obj: sha.cpp sha.h
+obj\sha.obj: sha.cpp          sha.h
     cl $(CFLAGS) /O2 /Fo$@ %s
 
 obj\irc.obj:  irc.cpp         $(HEADERS)
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\rpc.obj:  rpc.cpp         $(HEADERS)
     cl $(CFLAGS) /Fo$@ %s
 
 obj\ui.res: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
@@ -65,7 +69,8 @@ obj\ui.res: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp r
 
 
 OBJS=obj\util.obj obj\script.obj obj\db.obj obj\net.obj obj\main.obj obj\market.obj \
-  obj\ui.obj obj\uibase.obj obj\sha.obj obj\irc.obj obj\ui.res
+    obj\ui.obj obj\uibase.obj obj\sha.obj obj\irc.obj obj\rpc.obj \
+    obj\ui.res
 
 bitcoin.exe: $(OBJS)
     -kill /f bitcoin.exe & sleep 1

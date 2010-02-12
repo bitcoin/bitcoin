@@ -660,7 +660,7 @@ bool EvalScript(const CScript& script, const CTransaction& txTo, unsigned int nI
                 if (stack.size() < 1)
                     return false;
                 valtype& vch = stacktop(-1);
-                valtype vchHash(opcode == OP_RIPEMD160 || opcode == OP_SHA1 || opcode == OP_HASH160 ? 20 : 32);
+                valtype vchHash((opcode == OP_RIPEMD160 || opcode == OP_SHA1 || opcode == OP_HASH160) ? 20 : 32);
                 if (opcode == OP_RIPEMD160)
                     RIPEMD160(&vch[0], vch.size(), &vchHash[0]);
                 else if (opcode == OP_SHA1)
@@ -753,9 +753,9 @@ bool EvalScript(const CScript& script, const CTransaction& txTo, unsigned int nI
                 CScript scriptCode(pbegincodehash, pend);
 
                 // Drop the signatures, since there's no way for a signature to sign itself
-                for (int i = 0; i < nSigsCount; i++)
+                for (int k = 0; k < nSigsCount; k++)
                 {
-                    valtype& vchSig = stacktop(-isig-i);
+                    valtype& vchSig = stacktop(-isig-k);
                     scriptCode.FindAndDelete(CScript(vchSig));
                 }
 
@@ -909,7 +909,6 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
 
 
 
-
 bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSolutionRet)
 {
     // Templates
@@ -919,7 +918,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
         // Standard tx, sender provides pubkey, receiver adds signature
         vTemplates.push_back(CScript() << OP_PUBKEY << OP_CHECKSIG);
 
-        // Short account number tx, sender provides hash of pubkey, receiver provides signature and pubkey
+        // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         vTemplates.push_back(CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG);
     }
 

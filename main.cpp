@@ -26,6 +26,7 @@ CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
+int64 nTimeBestReceived = 0;
 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
@@ -44,6 +45,9 @@ CKey keyUser;
 
 map<uint256, int> mapRequestCount;
 CCriticalSection cs_mapRequestCount;
+
+map<string, string> mapAddressBook;
+CCriticalSection cs_mapAddressBook;
 
 // Settings
 int fGenerateBitcoins = false;
@@ -573,7 +577,7 @@ bool CTransaction::RemoveFromMemoryPool()
 
 
 
-int CMerkleTx::GetDepthInMainChain() const
+int CMerkleTx::GetDepthInMainChain(int& nHeightRet) const
 {
     if (hashBlock == 0 || nIndex == -1)
         return 0;
@@ -594,6 +598,7 @@ int CMerkleTx::GetDepthInMainChain() const
         fMerkleVerified = true;
     }
 
+    nHeightRet = pindex->nHeight;
     return pindexBest->nHeight - pindex->nHeight + 1;
 }
 
@@ -708,15 +713,20 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
     }
 }
 
-void RelayWalletTransactions()
+void ResendWalletTransactions()
 {
-    static int64 nLastTime;
-    if (GetTime() - nLastTime < 10 * 60)
+    // Do this infrequently and randomly to avoid giving away
+    // that these are our transactions.
+    static int64 nNextTime;
+    if (GetTime() < nNextTime)
         return;
-    nLastTime = GetTime();
+    bool fFirst = (nNextTime == 0);
+    nNextTime = GetTime() + GetRand(120 * 60);
+    if (fFirst)
+        return;
 
     // Rebroadcast any of our txes that aren't in a block yet
-    printf("RelayWalletTransactions()\n");
+    printf("ResendWalletTransactions()\n");
     CTxDB txdb("r");
     CRITICAL_BLOCK(cs_mapWallet)
     {
@@ -725,7 +735,10 @@ void RelayWalletTransactions()
         foreach(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
-            mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
+            // Don't rebroadcast until it's had plenty of time that
+            // it should have gotten in already by now.
+            if (nTimeBestReceived - wtx.nTimeReceived > 60 * 60)
+                mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
         }
         foreach(PAIRTYPE(const unsigned int, CWalletTx*)& item, mapSorted)
         {
@@ -1219,10 +1232,11 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
             }
         }
 
-        // New best link
+        // New best block
         hashBestChain = hash;
         pindexBest = pindexNew;
         nBestHeight = pindexBest->nHeight;
+        nTimeBestReceived = GetTime();
         nTransactionsUpdated++;
         printf("AddToBlockIndex: new best=%s  height=%d\n", hashBestChain.ToString().substr(0,16).c_str(), nBestHeight);
     }
@@ -1232,9 +1246,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     if (pindexNew == pindexBest)
     {
-        // Relay wallet transactions that haven't gotten in yet
-        RelayWalletTransactions();
-
         // Notify UI to display prev block's coinbase if it was ours
         static uint256 hashPrevBestCoinBase;
         CRITICAL_BLOCK(cs_mapWallet)
@@ -2248,7 +2259,7 @@ bool SendMessages(CNode* pto)
             return true;
 
         // Keep-alive ping
-        if (pto->nLastSend && GetTime() - pto->nLastSend > 12 * 60 && pto->vSend.empty())
+        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty())
             pto->PushMessage("ping");
 
         // Address refresh broadcast
@@ -2270,60 +2281,81 @@ bool SendMessages(CNode* pto)
             }
         }
 
+        // Delay tx inv messages to protect privacy,
+        // trickle them out to a few nodes at a time.
+        bool fSendTxInv = false;
+        if (GetTimeMillis() - pto->nLastSentTxInv > 1800 + GetRand(200))
+        {
+            pto->nLastSentTxInv = GetTimeMillis();
+            fSendTxInv = true;
+        }
+
+        // Resend wallet transactions that haven't gotten in a block yet
+        ResendWalletTransactions();
+
 
         //
         // Message: addr
         //
-        vector<CAddress> vAddrToSend;
-        vAddrToSend.reserve(pto->vAddrToSend.size());
+        vector<CAddress> vAddr;
+        vAddr.reserve(pto->vAddrToSend.size());
         foreach(const CAddress& addr, pto->vAddrToSend)
         {
             // returns true if wasn't already contained in the set
             if (pto->setAddrKnown.insert(addr).second)
             {
-                vAddrToSend.push_back(addr);
-                if (vAddrToSend.size() >= 1000)
+                vAddr.push_back(addr);
+                if (vAddr.size() >= 1000)
                 {
-                    pto->PushMessage("addr", vAddrToSend);
-                    vAddrToSend.clear();
+                    pto->PushMessage("addr", vAddr);
+                    vAddr.clear();
                 }
             }
         }
         pto->vAddrToSend.clear();
-        if (!vAddrToSend.empty())
-            pto->PushMessage("addr", vAddrToSend);
+        if (!vAddr.empty())
+            pto->PushMessage("addr", vAddr);
 
 
         //
         // Message: inventory
         //
-        vector<CInv> vInventoryToSend;
+        vector<CInv> vInv;
+        vector<CInv> vInvWait;
         CRITICAL_BLOCK(pto->cs_inventory)
         {
-            vInventoryToSend.reserve(pto->vInventoryToSend.size());
+            vInv.reserve(pto->vInventoryToSend.size());
+            vInvWait.reserve(pto->vInventoryToSend.size());
             foreach(const CInv& inv, pto->vInventoryToSend)
             {
+                // delay txes
+                if (!fSendTxInv && inv.type == MSG_TX)
+                {
+                    vInvWait.push_back(inv);
+                    continue;
+                }
+
                 // returns true if wasn't already contained in the set
                 if (pto->setInventoryKnown.insert(inv).second)
                 {
-                    vInventoryToSend.push_back(inv);
-                    if (vInventoryToSend.size() >= 1000)
+                    vInv.push_back(inv);
+                    if (vInv.size() >= 1000)
                     {
-                        pto->PushMessage("inv", vInventoryToSend);
-                        vInventoryToSend.clear();
+                        pto->PushMessage("inv", vInv);
+                        vInv.clear();
                     }
                 }
             }
-            pto->vInventoryToSend.clear();
+            pto->vInventoryToSend = vInvWait;
         }
-        if (!vInventoryToSend.empty())
-            pto->PushMessage("inv", vInventoryToSend);
+        if (!vInv.empty())
+            pto->PushMessage("inv", vInv);
 
 
         //
         // Message: getdata
         //
-        vector<CInv> vAskFor;
+        vector<CInv> vGetData;
         int64 nNow = GetTime() * 1000000;
         CTxDB txdb("r");
         while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
@@ -2332,17 +2364,17 @@ bool SendMessages(CNode* pto)
             if (!AlreadyHave(txdb, inv))
             {
                 printf("sending getdata: %s\n", inv.ToString().c_str());
-                vAskFor.push_back(inv);
-                if (vAskFor.size() >= 1000)
+                vGetData.push_back(inv);
+                if (vGetData.size() >= 1000)
                 {
-                    pto->PushMessage("getdata", vAskFor);
-                    vAskFor.clear();
+                    pto->PushMessage("getdata", vGetData);
+                    vGetData.clear();
                 }
             }
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
-        if (!vAskFor.empty())
-            pto->PushMessage("getdata", vAskFor);
+        if (!vGetData.empty())
+            pto->PushMessage("getdata", vGetData);
 
     }
     return true;
@@ -2405,7 +2437,6 @@ void ThreadBitcoinMiner(void* parg)
         vnThreadsRunning[3]--;
         PrintException(NULL, "ThreadBitcoinMiner()");
     }
-
     printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[3]);
 }
 
@@ -2842,6 +2873,13 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                 // Fill a vout back to self with any change
                 if (nValueIn > nTotalValue)
                 {
+                    // Note: We use a new key here to keep it from being obvious which side is the change.
+                    //  The drawback is that by not reusing a previous key, the change may be lost if a
+                    //  backup is restored, if the backup doesn't have the new private key for the change.
+                    //  If we reused the old key, it would be possible to add code to look for and
+                    //  rediscover unknown transactions that were written with keys of ours to recover
+                    //  post-backup change.
+
                     // New private key
                     if (keyRet.IsNull())
                         keyRet.MakeNewKey();
@@ -2899,7 +2937,7 @@ bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key)
         //// update: This matters even less now that fSpent can get corrected
         ////  when transactions are seen in VerifySignature.  The remote chance of
         ////  unmarked fSpent will be handled by that.  Don't need to make this
-        ////  transactional.
+        ////  transactional.  Pls delete this comment block later.
 
         // This is only to keep the database open to defeat the auto-flush for the
         // duration of this scope.  This is the only place where this optimization
@@ -2932,7 +2970,7 @@ bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key)
 
 
 
-bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
+string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
 {
     CRITICAL_BLOCK(cs_main)
     {
@@ -2945,13 +2983,13 @@ bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
                 strError = strprintf("Error: This is an oversized transaction that requires a transaction fee of %s  ", FormatMoney(nFeeRequired).c_str());
             else
                 strError = "Error: Transaction creation failed  ";
-            wxMessageBox(strError, "Sending...");
-            return error("SendMoney() : %s", strError.c_str());
+            printf("SendMoney() : %s", strError.c_str());
+            return strError;
         }
         if (!CommitTransactionSpent(wtxNew, key))
         {
-            wxMessageBox("Error finalizing transaction  ", "Sending...");
-            return error("SendMoney() : Error finalizing transaction");
+            printf("SendMoney() : Error finalizing transaction");
+            return "Error finalizing transaction";
         }
 
         // Track how many getdata requests our transaction gets
@@ -2964,11 +3002,32 @@ bool SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
         if (!wtxNew.AcceptTransaction())
         {
             // This must not fail. The transaction has already been signed and recorded.
-            wxMessageBox("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.", "Sending...");
-            return error("SendMoney() : Error: Transaction not valid");
+            printf("SendMoney() : Error: Transaction not valid");
+            return "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.";
         }
         wtxNew.RelayWalletTransaction();
     }
     MainFrameRepaint();
-    return true;
+    return "";
+}
+
+
+
+string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew)
+{
+    // Check amount
+    if (nValue <= 0)
+        return "Invalid amount";
+    if (nValue + nTransactionFee > GetBalance())
+        return "You don't have enough money";
+
+    // Parse bitcoin address
+    uint160 hash160;
+    if (!AddressToHash160(strAddress, hash160))
+        return "Invalid bitcoin address";
+
+    // Send to bitcoin address
+    CScript scriptPubKey;
+    scriptPubKey.SetBitcoinAddress(hash160);
+    return SendMoney(scriptPubKey, nValue, wtxNew);
 }

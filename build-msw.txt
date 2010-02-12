@@ -1,6 +1,6 @@
 Bitcoin v0.2.0 BETA
 
-Copyright (c) 2009 Satoshi Nakamoto
+Copyright (c) 2009-2010 Satoshi Nakamoto
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -13,8 +13,16 @@ WINDOWS BUILD NOTES
 
 Compilers Supported
 -------------------
-MinGW GCC
-Microsoft Visual C++ 6.0 SP6
+MinGW GCC (recommended)
+
+MSVC 6.0 SP6: You'll need Boost version 1.34 because they dropped support
+for MSVC 6.0 after that.  However, they didn't add Asio until 1.35.
+You should still be able to build with MSVC 6.0 by adding Asio to 1.34 by
+unpacking boost_asio_*.zip into the boost directory:
+http://sourceforge.net/projects/asio/files/asio
+
+MSVC 8.0 (2005) SP1 has been tested.  Note: MSVC 7.0 and up have a habit of
+linking to runtime DLLs that are not installed on XP by default.
 
 
 Dependencies
@@ -22,8 +30,7 @@ Dependencies
 Libraries you need to download separately and build:
 
               default path   download
-wxWidgets      \wxwidgets     http://www.wxwidgets.org/downloads/
-                                or prebuilt: http://wxpack.sourceforge.net
+wxWidgets      \wxwidgets     prebuilt: http://wxpack.sourceforge.net
 OpenSSL        \openssl       http://www.openssl.org/source/
 Berkeley DB    \db            http://www.oracle.com/technology/software/products/berkeley-db/index.html
 Boost          \boost         http://www.boost.org/users/download/
@@ -89,3 +96,13 @@ Using MinGW and MSYS:
 cd \db\build_unix
 sh ../dist/configure --enable-mingw --enable-cxx
 make
+
+
+Boost
+-----
+download bjam.exe from
+http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=72941
+cd \boost
+bjam toolset=gcc --build-type=complete stage
+or
+bjam toolset=msvc --build-type=complete stage

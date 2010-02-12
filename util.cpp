@@ -1,4 +1,4 @@
-// Copyright (c) 2009 Satoshi Nakamoto
+// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@ bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
 char pszSetDataDir[MAX_PATH] = "";
 bool fShutdown = false;
+bool fDaemon = false;
 
 
 
