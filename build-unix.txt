@@ -20,11 +20,15 @@ sudo apt-get install libdb4.7-dev
 sudo apt-get install libdb4.7++-dev
 sudo apt-get install libboost-dev
 
+The release was built with wxWidgets 2.8.9 ansi on 32-bit.  The current
+sourcecode can be built on 64-bit with wxWidgets 2.9.0.
+
 There is currently no libwxgtk2.8-ansi-dev debian package for Karmic.
 libwxgtk2.8-dev is the "unicode" build, but for wxWidgets 2.8 "unicode"
 means wchar, not UTF-8.  wchar wxString doesn't convert to std::string.
+We haven't been able to compile the 2.8 versions on 64-bit.
 
-In wxWidgets 2.9, unicode is UTF-8 and that's the only version.
+wxWidgets 2.9 is UTF-8 and compiles on 64-bit.
 
 You need to download wxWidgets from http://www.wxwidgets.org/downloads/
 and build it yourself.  See the build instructions and configure parameters
@@ -60,7 +64,7 @@ mkdir buildgtk
 cd buildgtk
 ../configure --with-gtk --enable-debug --disable-shared --enable-monolithic
 make
-su
+sudo su
 make install
 ldconfig
 
