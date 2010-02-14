@@ -299,19 +299,18 @@ public:
         return string(psz, psz + sizeof(pn)*2);
     }
 
-    void SetHex(const std::string& str)
+    void SetHex(const char* psz)
     {
         for (int i = 0; i < WIDTH; i++)
             pn[i] = 0;
 
-        // skip 0x
-        const char* psz = str.c_str();
+        // skip leading spaces
         while (isspace(*psz))
             psz++;
+
+        // skip 0x
         if (psz[0] == '0' && tolower(psz[1]) == 'x')
             psz += 2;
-        while (isspace(*psz))
-            psz++;
 
         // hex string to uint
         static char phexdigit[256] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0 };
@@ -330,6 +329,11 @@ public:
                 p1++;
             }
         }
+    }
+
+    void SetHex(const std::string& str)
+    {
+        SetHex(str.c_str());
     }
 
     std::string ToString() const

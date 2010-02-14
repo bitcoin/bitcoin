@@ -1032,7 +1032,7 @@ void ThreadMessageHandler2(void* parg)
 {
     printf("ThreadMessageHandler started\n");
     SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
-    loop
+    while (!fShutdown)
     {
         // Poll the connected nodes for messages
         vector<CNode*> vNodesCopy;

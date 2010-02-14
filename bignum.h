@@ -64,12 +64,6 @@ public:
         }
     }
 
-    explicit CBigNum(const std::string& str)
-    {
-        BN_init(this);
-        SetHex(str);
-    }
-
     CBigNum& operator=(const CBigNum& b)
     {
         if (!BN_copy(this, &b))
@@ -407,6 +401,7 @@ public:
 
     CBigNum& operator>>=(unsigned int shift)
     {
+        // Note: BN_rshift segfaults on 64-bit ubuntu 9.10 if 2^shift is greater than the number
         if (!BN_rshift(this, this, shift))
             throw bignum_error("CBigNum:operator>>= : BN_rshift failed");
         return *this;
@@ -516,6 +511,7 @@ inline const CBigNum operator<<(const CBigNum& a, unsigned int shift)
 inline const CBigNum operator>>(const CBigNum& a, unsigned int shift)
 {
     CBigNum r;
+    // Note: BN_rshift segfaults on 64-bit ubuntu 9.10 if 2^shift is greater than the number
     if (!BN_rshift(&r, &a, shift))
         throw bignum_error("CBigNum:operator>> : BN_rshift failed");
     return r;

@@ -1570,7 +1570,9 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig     = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].nValue       = 50 * COIN;
-        txNew.vout[0].scriptPubKey = CScript() << CBigNum("0x5F1DF16B2B704C8A578D0BBAF74D385CDE12C11EE50455F3C438EF4C3FBCF649B6DE611FEAE06279A60939E028A8D65C10B73071A6F16719274855FEB0FD8A6704") << OP_CHECKSIG;
+        CBigNum bnPubKey;
+        bnPubKey.SetHex("0x5F1DF16B2B704C8A578D0BBAF74D385CDE12C11EE50455F3C438EF4C3FBCF649B6DE611FEAE06279A60939E028A8D65C10B73071A6F16719274855FEB0FD8A6704");
+        txNew.vout[0].scriptPubKey = CScript() << bnPubKey << OP_CHECKSIG;
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
@@ -3022,12 +3024,9 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
         return "You don't have enough money";
 
     // Parse bitcoin address
-    uint160 hash160;
-    if (!AddressToHash160(strAddress, hash160))
+    CScript scriptPubKey;
+    if (!scriptPubKey.SetBitcoinAddress(strAddress))
         return "Invalid bitcoin address";
 
-    // Send to bitcoin address
-    CScript scriptPubKey;
-    scriptPubKey.SetBitcoinAddress(hash160);
     return SendMoney(scriptPubKey, nValue, wtxNew);
 }
