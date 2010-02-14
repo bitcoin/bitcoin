@@ -68,6 +68,7 @@ static const bool fWindows = true;
 #define S_IWUSR             0200
 #endif
 #define unlink              _unlink
+typedef int socklen_t;
 #else
 static const bool fWindows = false;
 #define WSAGetLastError()   errno

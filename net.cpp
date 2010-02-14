@@ -655,11 +655,7 @@ void ThreadSocketHandler2(void* parg)
         if (FD_ISSET(hListenSocket, &fdsetRecv))
         {
             struct sockaddr_in sockaddr;
-#ifdef __WXMSW__
-            int len = sizeof(sockaddr);
-#else
             socklen_t len = sizeof(sockaddr);
-#endif
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
             CAddress addr(sockaddr);
             if (hSocket == INVALID_SOCKET)
