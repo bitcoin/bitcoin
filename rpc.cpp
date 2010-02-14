@@ -503,7 +503,7 @@ Value CallRPC(const string& strMethod, const Array& params)
     // Connect to localhost
     tcp::iostream stream("127.0.0.1", "8332");
     if (stream.fail())
-        throw runtime_error("unable to connect to server");
+        throw runtime_error("couldn't connect to server");
 
     // Send request
     string strRequest = JSONRPCRequest(strMethod, params, 1);

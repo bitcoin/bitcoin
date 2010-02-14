@@ -328,7 +328,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_toolBar->Realize();
     // resize to fit ubuntu's huge default font
     dResize = 1.20;
-    SetSize(dResize * GetSize().GetWidth(), 1.1 * GetSize().GetHeight());
+    SetSize((dResize + 0.02) * GetSize().GetWidth(), 1.09 * GetSize().GetHeight());
 #endif
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
@@ -345,24 +345,6 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_listCtrl->InsertColumn(4, "Description",  wxLIST_FORMAT_LEFT,  dResize * 409 - nDateWidth);
     m_listCtrl->InsertColumn(5, "Debit",        wxLIST_FORMAT_RIGHT, dResize * 79);
     m_listCtrl->InsertColumn(6, "Credit",       wxLIST_FORMAT_RIGHT, dResize * 79);
-
-    //m_listCtrlProductsSent->InsertColumn(0, "Category",      wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlProductsSent->InsertColumn(1, "Title",         wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlProductsSent->InsertColumn(2, "Description",   wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlProductsSent->InsertColumn(3, "Price",         wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlProductsSent->InsertColumn(4, "",              wxLIST_FORMAT_LEFT,  100);
-
-    //m_listCtrlOrdersSent->InsertColumn(0, "Time",          wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersSent->InsertColumn(1, "Price",         wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersSent->InsertColumn(2, "",              wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersSent->InsertColumn(3, "",              wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersSent->InsertColumn(4, "",              wxLIST_FORMAT_LEFT,  100);
-
-    //m_listCtrlOrdersReceived->InsertColumn(0, "Time",            wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersReceived->InsertColumn(1, "Price",           wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersReceived->InsertColumn(2, "Payment Status",  wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersReceived->InsertColumn(3, "",                wxLIST_FORMAT_LEFT,  100);
-    //m_listCtrlOrdersReceived->InsertColumn(4, "",                wxLIST_FORMAT_LEFT,  100);
 
     // Init status bar
     int pnWidths[3] = { -100, 88, 290 };
@@ -503,33 +485,34 @@ int CMainFrame::GetSortIndex(const string& strSort)
 
 void CMainFrame::InsertLine(bool fNew, int nIndex, uint256 hashKey, string strSort, const wxString& str2, const wxString& str3, const wxString& str4, const wxString& str5, const wxString& str6)
 {
-    string str0 = strSort;
-    long nData = *(long*)&hashKey;
+    strSort = " " + strSort;       // leading space to workaround wx2.9.0 ubuntu 9.10 bug
+    long nData = *(long*)&hashKey; //  where first char of hidden column is displayed
 
     // Find item
     if (!fNew && nIndex == -1)
     {
+        string strHash = " " + hashKey.ToString();
         while ((nIndex = m_listCtrl->FindItem(nIndex, nData)) != -1)
-            if (GetItemText(m_listCtrl, nIndex, 1) == hashKey.ToString())
+            if (GetItemText(m_listCtrl, nIndex, 1) == strHash)
                 break;
     }
 
     // fNew is for blind insert, only use if you're sure it's new
     if (fNew || nIndex == -1)
     {
-        nIndex = m_listCtrl->InsertItem(GetSortIndex(strSort), str0);
+        nIndex = m_listCtrl->InsertItem(GetSortIndex(strSort), strSort);
     }
     else
     {
         // If sort key changed, must delete and reinsert to make it relocate
-        if (GetItemText(m_listCtrl, nIndex, 0) != str0)
+        if (GetItemText(m_listCtrl, nIndex, 0) != strSort)
         {
             m_listCtrl->DeleteItem(nIndex);
-            nIndex = m_listCtrl->InsertItem(GetSortIndex(strSort), str0);
+            nIndex = m_listCtrl->InsertItem(GetSortIndex(strSort), strSort);
         }
     }
 
-    m_listCtrl->SetItem(nIndex, 1, hashKey.ToString());
+    m_listCtrl->SetItem(nIndex, 1, " " + hashKey.ToString());
     m_listCtrl->SetItem(nIndex, 2, str2);
     m_listCtrl->SetItem(nIndex, 3, str3);
     m_listCtrl->SetItem(nIndex, 4, str4);
@@ -544,8 +527,9 @@ bool CMainFrame::DeleteLine(uint256 hashKey)
 
     // Find item
     int nIndex = -1;
+    string strHash = " " + hashKey.ToString();
     while ((nIndex = m_listCtrl->FindItem(nIndex, nData)) != -1)
-        if (GetItemText(m_listCtrl, nIndex, 1) == hashKey.ToString())
+        if (GetItemText(m_listCtrl, nIndex, 1) == strHash)
             break;
 
     if (nIndex != -1)
@@ -1916,7 +1900,7 @@ CSendingDialog::CSendingDialog(wxWindow* parent, const CAddress& addrIn, int64 n
     fUIDone = false;
     fWorkDone = false;
 #ifndef __WXMSW__
-    SetSize(1.2 * GetSize().GetWidth(), 1.05 * GetSize().GetHeight());
+    SetSize(1.2 * GetSize().GetWidth(), 1.08 * GetSize().GetHeight());
 #endif
 
     SetTitle(strprintf("Sending %s to %s", FormatMoney(nPrice).c_str(), wtx.mapValue["to"].c_str()));
