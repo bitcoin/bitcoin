@@ -157,12 +157,12 @@ Value listtransactions(const Array& params)
 }
 
 
-Value getamountpaid(const Array& params)
+Value getamountreceived(const Array& params)
 {
     if (params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getamountpaid <bitcoinaddress> [minconf=1]\n"
-            "Returns the total amount paid to <bitcoinaddress> in transactions with at least [minconf] confirmations.");
+            "getamountreceived <bitcoinaddress> [minconf=1]\n"
+            "Returns the total amount received by <bitcoinaddress> in transactions with at least [minconf] confirmations.");
 
     // Bitcoin address
     string strAddress = params[0].get_str();
@@ -207,15 +207,15 @@ struct tallyitem
     }
 };
 
-Value getallpayments(const Array& params)
+Value getallreceived(const Array& params)
 {
     if (params.size() > 1)
         throw runtime_error(
-            "getallpayments [minconf=1]\n"
+            "getallreceived [minconf=1]\n"
             "[minconf] is the minimum number of confirmations before payments are included.\n"
             "Returns an array of objects containing:\n"
             "  \"address\" : bitcoin address\n"
-            "  \"amount\" : total amount paid to the address\n"
+            "  \"amount\" : total amount received by the address\n"
             "  \"conf\" : number of confirmations\n"
             "  \"label\" : the label set for this address when it was created by getnewaddress");
 
@@ -294,8 +294,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getnewaddress",      &getnewaddress),
     make_pair("sendtoaddress",      &sendtoaddress),
     make_pair("listtransactions",   &listtransactions),
-    make_pair("getamountpaid",      &getamountpaid),
-    make_pair("getallpayments",     &getallpayments),
+    make_pair("getamountreceived",  &getamountreceived),
+    make_pair("getallreceived",     &getallreceived),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -571,11 +571,11 @@ int CommandLineRPC(int argc, char *argv[])
 
         // Special case other types
         int n = params.size();
-        if (strMethod == "sendtoaddress"    && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "listtransactions" && n > 0) ConvertTo<boost::int64_t>(params[0]);
-        if (strMethod == "listtransactions" && n > 1) ConvertTo<bool>(params[1]);
-        if (strMethod == "getamountpaid"    && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "getallpayments"   && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "sendtoaddress"     && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "listtransactions"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "listtransactions"  && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "getamountreceived" && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "getallreceived"    && n > 0) ConvertTo<boost::int64_t>(params[0]);
 
         // Execute
         Value result = CallRPC(strMethod, params);
