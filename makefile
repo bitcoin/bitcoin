@@ -15,7 +15,7 @@ endif
 
 
 
-INCLUDEPATHS=-I"/boost" -I"/db/build_unix" -I"/openssl/include" -I"/wxwidgets/lib/vc_lib/mswd" -I"/wxwidgets/include"
+INCLUDEPATHS=-I"/boost" -I"/db/build_unix" -I"/openssl/include" -I"/wxwidgets/lib/gcc_lib/mswd" -I"/wxwidgets/include"
 LIBPATHS=-L"/boost/stage/lib" -L"/db/build_unix" -L"/openssl/out" -L"/wxwidgets/lib/gcc_lib"
 LIBS= \
  -l libboost_system-mgw34-mt-d -l libboost_filesystem-mgw34-mt-d \
