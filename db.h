@@ -285,45 +285,6 @@ public:
 
 
 
-class CReviewDB : public CDB
-{
-public:
-    CReviewDB(const char* pszMode="r+") : CDB("reviews.dat", pszMode) { }
-private:
-    CReviewDB(const CReviewDB&);
-    void operator=(const CReviewDB&);
-public:
-    bool ReadUser(uint256 hash, CUser& user)
-    {
-        return Read(make_pair(string("user"), hash), user);
-    }
-
-    bool WriteUser(uint256 hash, const CUser& user)
-    {
-        return Write(make_pair(string("user"), hash), user);
-    }
-
-    bool ReadReviews(uint256 hash, vector<CReview>& vReviews);
-    bool WriteReviews(uint256 hash, const vector<CReview>& vReviews);
-};
-
-
-
-
-
-class CMarketDB : public CDB
-{
-public:
-    CMarketDB(const char* pszMode="r+") : CDB("market.dat", pszMode) { }
-private:
-    CMarketDB(const CMarketDB&);
-    void operator=(const CMarketDB&);
-};
-
-
-
-
-
 class CAddrDB : public CDB
 {
 public:

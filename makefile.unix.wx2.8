@@ -35,7 +35,7 @@ LIBS= \
 
 WXDEFS=-D__WXGTK__ -DNOPCH
 CFLAGS=-O0 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h market.h rpc.h uibase.h ui.h
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h
 
 
 
@@ -60,9 +60,6 @@ obj/net.o: net.cpp                  $(HEADERS)
 obj/main.o: main.cpp                $(HEADERS) sha.h
 	g++ -c $(CFLAGS) -o $@ $<
 
-obj/market.o: market.cpp            $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
 obj/ui.o: ui.cpp                    $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
@@ -80,7 +77,7 @@ obj/rpc.o: rpc.cpp                  $(HEADERS)
 
 
 
-OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o obj/market.o \
+OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o \
         obj/ui.o obj/uibase.o obj/sha.o obj/irc.o obj/rpc.o
 
 bitcoin: headers.h.gch $(OBJS)

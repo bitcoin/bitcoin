@@ -25,7 +25,7 @@ LIBS= \
  -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
 WXDEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH
 CFLAGS=-mthreads -O0 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h market.h rpc.h uibase.h ui.h
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h
 
 
 
@@ -50,9 +50,6 @@ obj/net.o: net.cpp                  $(HEADERS)
 obj/main.o: main.cpp                $(HEADERS) sha.h
 	g++ -c $(CFLAGS) -o $@ $<
 
-obj/market.o: market.cpp            $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
 obj/ui.o: ui.cpp                    $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
@@ -73,7 +70,7 @@ obj/ui_res.o: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp
 
 
 
-OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o obj/market.o \
+OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o \
         obj/ui.o obj/uibase.o obj/sha.o obj/irc.o obj/rpc.o \
         obj/ui_res.o
 

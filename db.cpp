@@ -508,27 +508,6 @@ bool LoadAddresses()
 
 
 //
-// CReviewDB
-//
-
-bool CReviewDB::ReadReviews(uint256 hash, vector<CReview>& vReviews)
-{
-    vReviews.size(); // msvc workaround, just need to do anything with vReviews
-    return Read(make_pair(string("reviews"), hash), vReviews);
-}
-
-bool CReviewDB::WriteReviews(uint256 hash, const vector<CReview>& vReviews)
-{
-    return Write(make_pair(string("reviews"), hash), vReviews);
-}
-
-
-
-
-
-
-
-//
 // CWalletDB
 //
 
