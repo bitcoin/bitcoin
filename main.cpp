@@ -1706,10 +1706,8 @@ bool AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
-    case MSG_TX:        return mapTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
-    case MSG_BLOCK:     return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
-    case MSG_REVIEW:    return true;
-    case MSG_PRODUCT:   return mapProducts.count(inv.hash);
+    case MSG_TX:    return mapTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
+    case MSG_BLOCK: return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -2104,24 +2102,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             printf("storing orphan tx %s\n", inv.hash.ToString().substr(0,6).c_str());
             AddOrphanTx(vMsg);
-        }
-    }
-
-
-    else if (strCommand == "review")
-    {
-        CDataStream vMsg(vRecv);
-        CReview review;
-        vRecv >> review;
-
-        CInv inv(MSG_REVIEW, review.GetHash());
-        pfrom->AddInventoryKnown(inv);
-
-        if (review.AcceptReview())
-        {
-            // Relay the original message as-is in case it's a higher version than we know how to parse
-            RelayMessage(inv, vMsg);
-            mapAlreadyAskedFor.erase(inv);
         }
     }
 

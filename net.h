@@ -341,9 +341,6 @@ enum
 {
     MSG_TX = 1,
     MSG_BLOCK,
-    MSG_REVIEW,
-    MSG_PRODUCT,
-    MSG_TABLE,
 };
 
 static const char* ppszTypeName[] =
@@ -351,9 +348,6 @@ static const char* ppszTypeName[] =
     "ERROR",
     "tx",
     "block",
-    "review",
-    "product",
-    "table",
 };
 
 class CInv

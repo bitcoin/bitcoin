@@ -99,7 +99,6 @@ using namespace boost;
 #include "net.h"
 #include "irc.h"
 #include "main.h"
-#include "market.h"
 #include "rpc.h"
 #include "uibase.h"
 #include "ui.h"
