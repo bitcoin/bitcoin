@@ -1,6 +1,3 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Distributed under the MIT/X11 software license, see the accompanying
-// file license.txt or http://www.opensource.org/licenses/mit-license.php.
 ///////////////////////////////////////////////////////////////////////////
 // C++ code generated with wxFormBuilder (version Apr 16 2008)
 // http://www.wxformbuilder.org/
@@ -178,8 +175,6 @@ class COptionsDialogBase : public wxDialog
 		
 		wxStaticText* m_staticText321;
 		wxStaticText* m_staticText69;
-		wxStaticText* m_staticText70;
-		wxStaticText* m_staticText71;
 		wxButton* m_buttonOK;
 		wxButton* m_buttonCancel;
 		wxButton* m_buttonApply;

@@ -340,10 +340,11 @@ void skipspaces(T& it)
         ++it;
 }
 
-
-
-
-
+inline const char* wxGetTranslation(const char* psz)
+{
+    // Return translated UTF-8 const char*
+    return wxGetTranslation(wxString(psz, wxConvUTF8)).utf8_str();
+}
 
 
 

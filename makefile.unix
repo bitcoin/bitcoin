@@ -3,17 +3,6 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 
-ifneq "$(BUILD)" "debug"
-ifneq "$(BUILD)" "release"
-BUILD=debug
-endif
-endif
-ifeq "$(BUILD)" "debug"
-D=d
-DEBUGFLAGS=-g -D__WXDEBUG__
-endif
-
-
 
 INCLUDEPATHS= \
  -I"/usr/include" \
@@ -28,12 +17,13 @@ LIBS= \
  -Wl,-Bstatic \
    -l boost_system-mt -l boost_filesystem-mt \
    -l db_cxx \
-   -l wx_gtk2u$(D)-2.9 \
+   -l wx_gtk2ud-2.9 \
  -Wl,-Bdynamic \
    -l crypto \
    -l gtk-x11-2.0 -l gthread-2.0 -l SM
 
 WXDEFS=-D__WXGTK__ -DNOPCH
+DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-O0 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h
 

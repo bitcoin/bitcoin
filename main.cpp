@@ -1460,27 +1460,13 @@ bool ScanMessageStart(Stream& s)
 
 bool CheckDiskSpace(int64 nAdditionalBytes)
 {
-#ifdef __WXMSW__
-    uint64 nFreeBytesAvailable = 0;     // bytes available to caller
-    uint64 nTotalNumberOfBytes = 0;     // bytes on disk
-    uint64 nTotalNumberOfFreeBytes = 0; // free bytes on disk
-    if (!GetDiskFreeSpaceEx(GetDataDir().c_str(),
-            (PULARGE_INTEGER)&nFreeBytesAvailable,
-            (PULARGE_INTEGER)&nTotalNumberOfBytes,
-            (PULARGE_INTEGER)&nTotalNumberOfFreeBytes))
-    {
-        printf("ERROR: GetDiskFreeSpaceEx() failed\n");
-        return true;
-    }
-#else
     uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
-#endif
 
     // Check for 15MB because database could create another 10MB log file at any time
     if (nFreeBytesAvailable < (int64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
-        ThreadSafeMessageBox("Warning: Your disk space is low  ", "Bitcoin", wxOK | wxICON_EXCLAMATION);
+        ThreadSafeMessageBox(_("Warning: Disk space is low  "), "Bitcoin", wxOK | wxICON_EXCLAMATION);
         CreateThread(Shutdown, NULL);
         return false;
     }
@@ -2962,16 +2948,16 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
         {
             string strError;
             if (nValue + nFeeRequired > GetBalance())
-                strError = strprintf("Error: This is an oversized transaction that requires a transaction fee of %s  ", FormatMoney(nFeeRequired).c_str());
+                strError = strprintf(_("Error: This is an oversized transaction that requires a transaction fee of %s  "), FormatMoney(nFeeRequired).c_str());
             else
-                strError = "Error: Transaction creation failed  ";
+                strError = _("Error: Transaction creation failed  ");
             printf("SendMoney() : %s", strError.c_str());
             return strError;
         }
         if (!CommitTransactionSpent(wtxNew, key))
         {
             printf("SendMoney() : Error finalizing transaction");
-            return "Error finalizing transaction";
+            return _("Error finalizing transaction");
         }
 
         // Track how many getdata requests our transaction gets
@@ -2985,7 +2971,7 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("SendMoney() : Error: Transaction not valid");
-            return "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.";
+            return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
         }
         wtxNew.RelayWalletTransaction();
     }
@@ -2999,14 +2985,14 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
 {
     // Check amount
     if (nValue <= 0)
-        return "Invalid amount";
+        return _("Invalid amount");
     if (nValue + nTransactionFee > GetBalance())
-        return "You don't have enough money";
+        return _("You don't have enough money");
 
     // Parse bitcoin address
     CScript scriptPubKey;
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
-        return "Invalid bitcoin address";
+        return _("Invalid bitcoin address");
 
     return SendMoney(scriptPubKey, nValue, wtxNew);
 }
