@@ -136,6 +136,7 @@ bool ParseMoney(const char* pszIn, int64& nRet);
 vector<unsigned char> ParseHex(const char* psz);
 vector<unsigned char> ParseHex(const std::string& str);
 void ParseParameters(int argc, char* argv[]);
+const char* wxGetTranslation(const char* psz);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
 string GetDataDir();
@@ -340,11 +341,9 @@ void skipspaces(T& it)
         ++it;
 }
 
-inline const char* wxGetTranslation(const char* psz)
-{
-    // Return translated UTF-8 const char*
-    return wxGetTranslation(wxString(psz, wxConvUTF8)).utf8_str();
-}
+
+
+
 
 
 
