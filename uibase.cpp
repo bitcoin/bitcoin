@@ -1,6 +1,3 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Distributed under the MIT/X11 software license, see the accompanying
-// file license.txt or http://www.opensource.org/licenses/mit-license.php.
 ///////////////////////////////////////////////////////////////////////////
 // C++ code generated with wxFormBuilder (version Apr 16 2008)
 // http://www.wxformbuilder.org/
@@ -406,21 +403,13 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	bSizer64->Add( 0, 16, 0, wxEXPAND, 5 );
 	
-	m_staticText321 = new wxStaticText( m_panelTest2, wxID_ANY, _("Test panel 2 for future expansion"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText321 = new wxStaticText( m_panelTest2, wxID_ANY, _("// [don't translate] Test panel 2 for future expansion"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText321->Wrap( -1 );
 	bSizer64->Add( m_staticText321, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	m_staticText69 = new wxStaticText( m_panelTest2, wxID_ANY, _("Let's not start multiple pages until the first page is filled up"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText69 = new wxStaticText( m_panelTest2, wxID_ANY, _("// [don't translate] Let's not start multiple pages until the first page is filled up"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText69->Wrap( -1 );
 	bSizer64->Add( m_staticText69, 0, wxALL, 5 );
-	
-	m_staticText70 = new wxStaticText( m_panelTest2, wxID_ANY, _("MyLabel"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText70->Wrap( -1 );
-	bSizer64->Add( m_staticText70, 0, wxALL, 5 );
-	
-	m_staticText71 = new wxStaticText( m_panelTest2, wxID_ANY, _("MyLabel"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText71->Wrap( -1 );
-	bSizer64->Add( m_staticText71, 0, wxALL, 5 );
 	
 	m_panelTest2->SetSizer( bSizer64 );
 	m_panelTest2->Layout();
@@ -521,7 +510,7 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	
 	bSizer631->Add( 0, 4, 0, wxEXPAND, 5 );
 	
-	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright © 2009-2010 Satoshi Nakamoto.\n\nThis is experimental software.  Do not rely on it for actual financial transactions.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright (c) 2009-2010 Satoshi Nakamoto.\n\nThis is experimental software.  Do not rely on it for actual financial transactions.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticTextMain->Wrap( -1 );
 	bSizer631->Add( m_staticTextMain, 0, wxALL, 5 );
 	

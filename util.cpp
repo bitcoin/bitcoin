@@ -90,7 +90,7 @@ void RandAddSeedPerfmon()
     unsigned char pdata[250000];
     memset(pdata, 0, sizeof(pdata));
     unsigned long nSize = sizeof(pdata);
-    long ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, pdata, &nSize);
+    long ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, pdata, &nSize);
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS)
     {
@@ -193,7 +193,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
                 p2++;
                 char c = *p2;
                 *p2 = '\0';
-                OutputDebugString(p1);
+                OutputDebugStringA(p1);
                 *p2 = c;
                 p1 = p2;
             }
@@ -441,7 +441,7 @@ void FormatException(char* pszMessage, std::exception* pex, const char* pszThrea
 #ifdef __WXMSW__
     char pszModule[MAX_PATH];
     pszModule[0] = '\0';
-    GetModuleFileName(NULL, pszModule, sizeof(pszModule));
+    GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
     // might not be thread safe, uses wxString
     //const char* pszModule = wxStandardPaths::Get().GetExecutablePath().mb_str();

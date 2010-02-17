@@ -3,26 +3,31 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 
-!IF "$(BUILD)" != "debug" && "$(BUILD)" != "release"
-BUILD=debug
-!ENDIF
-!IF "$(BUILD)" == "debug"
-D=d
-DEBUGFLAGS=/Zi /Od /D__WXDEBUG__
-!ENDIF
+# for wxWidgets-2.8.x, search and replace "mswud"->"mswd" and "29u"->"28"
 
+INCLUDEPATHS= \
+  /I"/boost" \
+  /I"/db/build_windows" \
+  /I"/openssl/include" \
+  /I"/wxwidgets/lib/vc_lib/mswud" \
+  /I"/wxwidgets/include"
 
+LIBPATHS= \
+  /LIBPATH:"/boost/stage/lib" \
+  /LIBPATH:"/db/build_windows/debug" \
+  /LIBPATH:"/openssl/out" \
+  /LIBPATH:"/wxwidgets/lib/vc_lib"
 
-INCLUDEPATHS=/I"/boost" /I"/db/build_windows" /I"/openssl/include" /I"/wxwidgets/lib/vc_lib/mswd" /I"/wxwidgets/include"
-LIBPATHS=/LIBPATH:"/boost/stage/lib" /LIBPATH:"/db/build_windows/$(BUILD)" /LIBPATH:"/openssl/out" /LIBPATH:"/wxwidgets/lib/vc_lib"
 LIBS= \
-    libboost_system-vc80-mt-gd.lib libboost_filesystem-vc80-mt-gd.lib \
-    libdb47s$(D).lib \
-    libeay32.lib \
-    wxmsw28$(D)_richtext.lib wxmsw28$(D)_html.lib wxmsw28$(D)_core.lib wxmsw28$(D)_adv.lib wxbase28$(D).lib wxtiff$(D).lib wxjpeg$(D).lib wxpng$(D).lib wxzlib$(D).lib wxregex$(D).lib wxexpat$(D).lib \
-    kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib ws2_32.lib shlwapi.lib
+  libboost_system-vc80-mt-gd.lib libboost_filesystem-vc80-mt-gd.lib \
+  libdb47sd.lib \
+  libeay32.lib \
+  wxmsw29ud_html.lib wxmsw29ud_core.lib wxmsw29ud_adv.lib wxbase29ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib \
+  kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib ws2_32.lib shlwapi.lib
+
 WXDEFS=/DWIN32 /D__WXMSW__ /D_WINDOWS /DNOPCH
-CFLAGS=/c /nologo /Ob0 /MD$(D) /EHsc /GR /Zm300 $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+DEBUGFLAGS=/Zi /Od /D__WXDEBUG__
+CFLAGS=/c /nologo /Ob0 /MDd /EHsc /GR /Zm300 $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h
 
 
