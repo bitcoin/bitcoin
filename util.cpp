@@ -431,6 +431,35 @@ void ParseParameters(int argc, char* argv[])
 }
 
 
+const char* wxGetTranslation(const char* pszEnglish)
+{
+    // Wrapper of wxGetTranslation returning the same const char* type as was passed in
+    static CCriticalSection cs;
+    CRITICAL_BLOCK(cs)
+    {
+        // Look in cache
+        static map<string, char*> mapCache;
+        map<string, char*>::iterator mi = mapCache.find(pszEnglish);
+        if (mi != mapCache.end())
+            return (*mi).second;
+
+        // wxWidgets translation
+        const char* pszTranslated = wxGetTranslation(wxString(pszEnglish, wxConvUTF8)).utf8_str();
+        if (strcmp(pszEnglish, pszTranslated) == 0)
+            return pszEnglish;
+
+        // Add to cache, memory doesn't need to be freed
+        char* pszCached = new char[strlen(pszTranslated)+1];
+        strcpy(pszCached, pszTranslated);
+        mapCache[pszEnglish] = pszCached;
+        return pszCached;
+    }
+}
+
+
+
+
+
 
 
 
