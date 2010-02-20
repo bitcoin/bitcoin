@@ -35,13 +35,54 @@ int fMinimizeOnClose = true;
 // Util
 //
 
+void ExitTimeout(void* parg)
+{
+#ifdef __WXMSW__
+    Sleep(5000);
+    ExitProcess(0);
+#endif
+}
+
+void Shutdown(void* parg)
+{
+    static CCriticalSection cs_Shutdown;
+    static bool fTaken;
+    bool fFirstThread;
+    CRITICAL_BLOCK(cs_Shutdown)
+    {
+        fFirstThread = !fTaken;
+        fTaken = true;
+    }
+    static bool fExit;
+    if (fFirstThread)
+    {
+        fShutdown = true;
+        nTransactionsUpdated++;
+        DBFlush(false);
+        StopNode();
+        DBFlush(true);
+        CreateThread(ExitTimeout, NULL);
+        Sleep(50);
+        printf("Bitcoin exiting\n\n");
+        fExit = true;
+        exit(0);
+    }
+    else
+    {
+        while (!fExit)
+            Sleep(500);
+        Sleep(100);
+        ExitThread(0);
+    }
+}
+
 void HandleCtrlA(wxKeyEvent& event)
 {
     // Ctrl-a select all
+    event.Skip();
     wxTextCtrl* textCtrl = (wxTextCtrl*)event.GetEventObject();
     if (event.GetModifiers() == wxMOD_CONTROL && event.GetKeyCode() == 'A')
         textCtrl->SetSelection(-1, -1);
-    event.Skip();
 }
 
 bool Is24HourTime()
@@ -194,6 +235,35 @@ int ThreadSafeMessageBox(const string& message, const string& caption, int style
 #endif
 }
 
+bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
+{
+    if (nFeeRequired == 0 || fDaemon)
+        return true;
+    string strMessage = strprintf(
+        _("This transaction is over the size limit.  You can still send it for a fee of %s, "
+          "which goes to the nodes that process your transaction and helps to support the network.  "
+          "Do you want to pay the fee?"),
+        FormatMoney(nFeeRequired).c_str());
+    return (ThreadSafeMessageBox(strMessage, strCaption, wxYES_NO, parent) == wxYES);
+}
+
+void SetDefaultReceivingAddress(const string& strAddress)
+{
+    // Update main window address and database
+    if (pframeMain == NULL)
+        return;
+    if (strAddress != pframeMain->m_textCtrlAddress->GetValue())
+    {
+        uint160 hash160;
+        if (!AddressToHash160(strAddress, hash160))
+            return;
+        if (!mapPubKeys.count(hash160))
+            return;
+        CWalletDB().WriteDefaultKey(mapPubKeys[hash160]);
+        pframeMain->m_textCtrlAddress->SetValue(strAddress);
+    }
+}
+
 
 
 
@@ -227,11 +297,6 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     fontTmp.SetFamily(wxFONTFAMILY_TELETYPE);
     m_staticTextBalance->SetFont(fontTmp);
     m_staticTextBalance->SetSize(140, 17);
-    // & underlines don't work on the toolbar buttons on gtk
-    m_toolBar->ClearTools();
-    m_toolBar->AddTool(wxID_BUTTONSEND, _("Send Coins"), wxBitmap(send20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
-    m_toolBar->AddTool(wxID_BUTTONRECEIVE, _("Address Book"), wxBitmap(addressbook20_xpm), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString);
-    m_toolBar->Realize();
     // resize to fit ubuntu's huge default font
     dResize = 1.20;
     SetSize((dResize + 0.02) * GetSize().GetWidth(), 1.09 * GetSize().GetHeight());
@@ -276,47 +341,6 @@ CMainFrame::~CMainFrame()
     ptaskbaricon = NULL;
 }
 
-void ExitTimeout(void* parg)
-{
-#ifdef __WXMSW__
-    Sleep(5000);
-    ExitProcess(0);
-#endif
-}
-
-void Shutdown(void* parg)
-{
-    static CCriticalSection cs_Shutdown;
-    static bool fTaken;
-    bool fFirstThread;
-    CRITICAL_BLOCK(cs_Shutdown)
-    {
-        fFirstThread = !fTaken;
-        fTaken = true;
-    }
-    static bool fExit;
-    if (fFirstThread)
-    {
-        fShutdown = true;
-        nTransactionsUpdated++;
-        DBFlush(false);
-        StopNode();
-        DBFlush(true);
-        CreateThread(ExitTimeout, NULL);
-        Sleep(50);
-        printf("Bitcoin exiting\n\n");
-        fExit = true;
-        exit(0);
-    }
-    else
-    {
-        while (!fExit)
-            Sleep(500);
-        Sleep(100);
-        ExitThread(0);
-    }
-}
-
 void CMainFrame::OnClose(wxCloseEvent& event)
 {
     if (fMinimizeOnClose && event.CanVeto() && !IsIconized())
@@ -335,6 +359,7 @@ void CMainFrame::OnClose(wxCloseEvent& event)
 
 void CMainFrame::OnIconize(wxIconizeEvent& event)
 {
+    event.Skip();
     // Hide the task bar button when minimized.
     // Event is sent when the frame is minimized or restored.
     // wxWidgets 2.8.9 doesn't have IsIconized() so there's no way
@@ -342,7 +367,7 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
     if (!event.Iconized())
         fClosedToTray = false;
 #ifndef __WXMSW__
-    // Tray is not reliable on Linux gnome
+    // Tray is not reliable on ubuntu 9.10 gnome
     fClosedToTray = false;
 #endif
     if (fMinimizeToTray && event.Iconized())
@@ -353,6 +378,7 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
 
 void CMainFrame::OnMouseEvents(wxMouseEvent& event)
 {
+    event.Skip();
     RandAddSeed();
     RAND_add(&event.m_x, sizeof(event.m_x), 0.25);
     RAND_add(&event.m_y, sizeof(event.m_y), 0.25);
@@ -360,9 +386,11 @@ void CMainFrame::OnMouseEvents(wxMouseEvent& event)
 
 void CMainFrame::OnListColBeginDrag(wxListEvent& event)
 {
-     // Hidden columns not resizeable
-     if (event.GetColumn() <= 1 && !fDebug)
+    // Hidden columns not resizeable
+    if (event.GetColumn() <= 1 && !fDebug)
         event.Veto();
+    else
+        event.Skip();
 }
 
 int CMainFrame::GetSortIndex(const string& strSort)
@@ -546,7 +574,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
 
         if (wtx.IsCoinBase())
         {
-            // Coinbase
+            // Generated
             strDescription = _("Generated");
             if (nCredit == 0)
             {
@@ -569,7 +597,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
         }
         else if (!mapValue["from"].empty() || !mapValue["message"].empty())
         {
-            // Online transaction
+            // Received by IP connection
             if (!mapValue["from"].empty())
                 strDescription += _("From: ") + mapValue["from"];
             if (!mapValue["message"].empty())
@@ -581,7 +609,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
         }
         else
         {
-            // Offline transaction
+            // Received by Bitcoin Address
             foreach(const CTxOut& txout, wtx.vout)
             {
                 if (txout.IsMine())
@@ -591,20 +619,19 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                     {
                         CRITICAL_BLOCK(cs_mapAddressBook)
                         {
+                            //strDescription += _("Received payment to ");
+                            //strDescription += _("Received with address ");
+                            strDescription += _("From: unknown, Received with: ");
                             string strAddress = PubKeyToAddress(vchPubKey);
-                            if (mapAddressBook.count(strAddress))
+                            map<string, string>::iterator mi = mapAddressBook.find(strAddress);
+                            if (mi != mapAddressBook.end() && !(*mi).second.empty())
                             {
-                                //strDescription += _("Received payment to ");
-                                //strDescription += _("Received with address ");
-                                strDescription += _("From: unknown, To: ");
-                                strDescription += strAddress;
-                                /// The labeling feature is just too confusing, so I hid it
-                                /// by putting it at the end where it runs off the screen.
-                                /// It can still be seen by widening the column, or in the
-                                /// details dialog.
-                                if (!mapAddressBook[strAddress].empty())
-                                    strDescription += " (" + mapAddressBook[strAddress] + ")";
+                                string strLabel = (*mi).second;
+                                strDescription += strAddress.substr(0,12) + "... ";
+                                strDescription += "(" + strLabel + ")";
                             }
+                            else
+                                strDescription += strAddress;
                         }
                     }
                     break;
@@ -659,12 +686,12 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 string strAddress;
                 if (!mapValue["to"].empty())
                 {
-                    // Online transaction
+                    // Sent to IP
                     strAddress = mapValue["to"];
                 }
                 else
                 {
-                    // Offline transaction
+                    // Sent to Bitcoin Address
                     uint160 hash160;
                     if (ExtractHash160(txout.scriptPubKey, hash160))
                         strAddress = Hash160ToAddress(hash160);
@@ -683,8 +710,11 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 }
 
                 int64 nValue = txout.nValue;
-                if (nOut == 0 && nTxFee > 0)
+                if (nTxFee > 0)
+                {
                     nValue += nTxFee;
+                    nTxFee = 0;
+                }
 
                 InsertLine(fNew, nIndex, hash, strprintf("%s-%d", strSort.c_str(), nOut),
                            strStatus,
@@ -846,12 +876,12 @@ void CMainFrame::RefreshStatusColumn()
 
 void CMainFrame::OnPaint(wxPaintEvent& event)
 {
+    event.Skip();
     if (fRefresh)
     {
         fRefresh = false;
         Refresh();
     }
-    event.Skip();
 }
 
 
@@ -903,6 +933,9 @@ void MainFrameRepaint()
 
 void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
 {
+    // Skip lets the listctrl do the paint, we're just hooking the message
+    event.Skip();
+
     if (ptaskbaricon)
         ptaskbaricon->UpdateTooltip();
 
@@ -970,11 +1003,6 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
 
     if (fDebug && GetTime() - nThreadSocketHandlerHeartbeat > 60)
         m_statusBar->SetStatusText("     ERROR: ThreadSocketHandler has stopped", 0);
-
-    // Pass through to listctrl to actually do the paint, we're just hooking the message
-    m_listCtrl->Disconnect(wxEVT_PAINT, (wxObjectEventFunction)NULL, NULL, this);
-    m_listCtrl->GetEventHandler()->ProcessEvent(event);
-    m_listCtrl->Connect(wxEVT_PAINT, wxPaintEventHandler(CMainFrame::OnPaintListCtrl), NULL, this);
 }
 
 
@@ -1033,8 +1061,10 @@ void CMainFrame::OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event)
 
 void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
 {
-    // Options->Change Your Address
-    OnButtonChange(event);
+    // Options->Your Receiving Addresses
+    CAddressBookDialog dialog(this, "", CAddressBookDialog::RECEIVING, false);
+    if (!dialog.ShowModal())
+        return;
 }
 
 void CMainFrame::OnMenuOptionsOptions(wxCommandEvent& event)
@@ -1061,11 +1091,11 @@ void CMainFrame::OnButtonSend(wxCommandEvent& event)
 void CMainFrame::OnButtonAddressBook(wxCommandEvent& event)
 {
     // Toolbar: Address Book
-    CAddressBookDialog dialogAddr(this, "", false);
+    CAddressBookDialog dialogAddr(this, "", CAddressBookDialog::SENDING, false);
     if (dialogAddr.ShowModal() == 2)
     {
         // Send
-        CSendDialog dialogSend(this, dialogAddr.GetAddress());
+        CSendDialog dialogSend(this, dialogAddr.GetSelectedAddress());
         dialogSend.ShowModal();
     }
 }
@@ -1073,35 +1103,36 @@ void CMainFrame::OnButtonAddressBook(wxCommandEvent& event)
 void CMainFrame::OnSetFocusAddress(wxFocusEvent& event)
 {
     // Automatically select-all when entering window
+    event.Skip();
     m_textCtrlAddress->SetSelection(-1, -1);
     fOnSetFocusAddress = true;
-    event.Skip();
 }
 
 void CMainFrame::OnMouseEventsAddress(wxMouseEvent& event)
 {
+    event.Skip();
     if (fOnSetFocusAddress)
         m_textCtrlAddress->SetSelection(-1, -1);
     fOnSetFocusAddress = false;
-    event.Skip();
 }
 
-void CMainFrame::OnButtonChange(wxCommandEvent& event)
+void CMainFrame::OnButtonNew(wxCommandEvent& event)
 {
-    CYourAddressDialog dialog(this, string(m_textCtrlAddress->GetValue()));
+    // Ask name
+    CGetTextFromUserDialog dialog(this,
+        _("New Receiving Address"),
+        _("It's good policy to use a new address for each payment you receive.\n\nLabel"),
+        "");
     if (!dialog.ShowModal())
         return;
-    string strAddress = (string)dialog.GetAddress();
-    if (strAddress != m_textCtrlAddress->GetValue())
-    {
-        uint160 hash160;
-        if (!AddressToHash160(strAddress, hash160))
-            return;
-        if (!mapPubKeys.count(hash160))
-            return;
-        CWalletDB().WriteDefaultKey(mapPubKeys[hash160]);
-        m_textCtrlAddress->SetValue(strAddress);
-    }
+    string strName = dialog.GetValue();
+
+    // Generate new key
+    string strAddress = PubKeyToAddress(GenerateNewKey());
+
+    // Save
+    SetAddressBookName(strAddress, strName);
+    SetDefaultReceivingAddress(strAddress);
 }
 
 void CMainFrame::OnButtonCopy(wxCommandEvent& event)
@@ -1133,7 +1164,6 @@ void CMainFrame::OnListItemActivated(wxListEvent& event)
     //CTxDetailsDialog* pdialog = new CTxDetailsDialog(this, wtx);
     //pdialog->Show();
 }
-
 
 
 
@@ -1452,6 +1482,7 @@ void COptionsDialog::OnListBox(wxCommandEvent& event)
 
 void COptionsDialog::OnKillFocusTransactionFee(wxFocusEvent& event)
 {
+    event.Skip();
     int64 nTmp = nTransactionFee;
     ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
     m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
@@ -1485,6 +1516,7 @@ CAddress COptionsDialog::GetProxyAddr()
 
 void COptionsDialog::OnKillFocusProxy(wxFocusEvent& event)
 {
+    event.Skip();
     m_textCtrlProxyIP->SetValue(GetProxyAddr().ToStringIP());
     m_textCtrlProxyPort->SetValue(GetProxyAddr().ToStringPort());
 }
@@ -1632,6 +1664,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
 void CSendDialog::OnTextAddress(wxCommandEvent& event)
 {
     // Check mark
+    event.Skip();
     bool fBitcoinAddress = IsValidBitcoinAddress(m_textCtrlAddress->GetValue());
     m_bitmapCheckMark->Show(fBitcoinAddress);
 
@@ -1660,6 +1693,7 @@ void CSendDialog::OnTextAddress(wxCommandEvent& event)
 void CSendDialog::OnKillFocusAmount(wxFocusEvent& event)
 {
     // Reformat the amount
+    event.Skip();
     if (m_textCtrlAmount->GetValue().Trim().empty())
         return;
     int64 nTmp;
@@ -1670,9 +1704,9 @@ void CSendDialog::OnKillFocusAmount(wxFocusEvent& event)
 void CSendDialog::OnButtonAddressBook(wxCommandEvent& event)
 {
     // Open address book
-    CAddressBookDialog dialog(this, m_textCtrlAddress->GetValue(), true);
+    CAddressBookDialog dialog(this, m_textCtrlAddress->GetValue(), CAddressBookDialog::SENDING, true);
     if (dialog.ShowModal())
-        m_textCtrlAddress->SetValue(dialog.GetAddress());
+        m_textCtrlAddress->SetValue(dialog.GetSelectedAddress());
 }
 
 void CSendDialog::OnButtonPaste(wxCommandEvent& event)
@@ -1723,11 +1757,11 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
         CScript scriptPubKey;
         scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
 
-        string strError = SendMoney(scriptPubKey, nValue, wtx);
-        if (strError != "")
-            wxMessageBox(strError + "  ", _("Sending..."));
-        else
+        string strError = SendMoney(scriptPubKey, nValue, wtx, true);
+        if (strError == "")
             wxMessageBox(_("Payment sent  "), _("Sending..."));
+        else if (strError != "ABORTED")
+            wxMessageBox(strError + "  ", _("Sending..."));
     }
     else
     {
@@ -1846,6 +1880,7 @@ void CSendingDialog::OnButtonCancel(wxCommandEvent& event)
 
 void CSendingDialog::OnPaint(wxPaintEvent& event)
 {
+    event.Skip();
     if (strlen(pszStatus) > 130)
         m_textCtrlStatus->SetValue(string("\n") + pszStatus);
     else
@@ -1869,7 +1904,6 @@ void CSendingDialog::OnPaint(wxPaintEvent& event)
         Close();
         wxMessageBox(_("Transfer cancelled  "), _("Sending..."), wxOK, this);
     }
-    event.Skip();
 }
 
 
@@ -2016,6 +2050,13 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             return;
         }
 
+        // Transaction fee
+        if (!ThreadSafeAskFee(nFeeRequired, _("Sending..."), this))
+        {
+            Error(_("Transaction aborted"));
+            return;
+        }
+
         // Make sure we're still connected
         CNode* pnode = ConnectNode(addr, 2 * 60 * 60);
         if (!pnode)
@@ -2040,19 +2081,14 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             return;
 
         // Commit
-        if (!CommitTransactionSpent(wtx, key))
+        if (!CommitTransaction(wtx, key))
         {
-            Error(_("Error finalizing payment"));
+            Error(_("The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."));
             return;
         }
 
         // Send payment tx to seller, with response going to OnReply3 via event handler
         pnode->PushRequest("submitorder", wtx, SendingDialogOnReply3, this);
-
-        // Accept and broadcast transaction
-        if (!wtx.AcceptTransaction())
-            printf("ERROR: CSendingDialog : wtxNew.AcceptTransaction() %s failed\n", wtx.GetHash().ToString().c_str());
-        wtx.RelayWalletTransaction();
 
         Status(_("Waiting for confirmation..."));
         MainFrameRepaint();
@@ -2097,177 +2133,54 @@ void CSendingDialog::OnReply3(CDataStream& vRecv)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// CYourAddressDialog
-//
-
-CYourAddressDialog::CYourAddressDialog(wxWindow* parent, const string& strInitSelected) : CYourAddressDialogBase(parent)
-{
-    // Init column headers
-    m_listCtrl->InsertColumn(0, _("Label"), wxLIST_FORMAT_LEFT, 200);
-    m_listCtrl->InsertColumn(1, _("Bitcoin Address"), wxLIST_FORMAT_LEFT, 350);
-    m_listCtrl->SetFocus();
-
-    // Fill listctrl with address book data
-    CRITICAL_BLOCK(cs_mapKeys)
-    CRITICAL_BLOCK(cs_mapAddressBook)
-    {
-        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
-        {
-            string strAddress = item.first;
-            string strName = item.second;
-            uint160 hash160;
-            bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
-            if (fMine)
-            {
-                int nIndex = InsertLine(m_listCtrl, strName, strAddress);
-                if (strAddress == strInitSelected)
-                    m_listCtrl->SetItemState(nIndex, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
-            }
-        }
-    }
-}
-
-wxString CYourAddressDialog::GetAddress()
-{
-    int nIndex = GetSelection(m_listCtrl);
-    if (nIndex == -1)
-        return "";
-    return GetItemText(m_listCtrl, nIndex, 1);
-}
-
-void CYourAddressDialog::OnListEndLabelEdit(wxListEvent& event)
-{
-    // Update address book with edited name
-    if (event.IsEditCancelled())
-        return;
-    string strAddress = (string)GetItemText(m_listCtrl, event.GetIndex(), 1);
-    SetAddressBookName(strAddress, string(event.GetText()));
-    pframeMain->RefreshListCtrl();
-}
-
-void CYourAddressDialog::OnListItemSelected(wxListEvent& event)
-{
-}
-
-void CYourAddressDialog::OnListItemActivated(wxListEvent& event)
-{
-    // Doubleclick edits item
-    wxCommandEvent event2;
-    OnButtonRename(event2);
-}
-
-void CYourAddressDialog::OnButtonRename(wxCommandEvent& event)
-{
-    // Ask new name
-    int nIndex = GetSelection(m_listCtrl);
-    if (nIndex == -1)
-        return;
-    string strName = (string)m_listCtrl->GetItemText(nIndex);
-    string strAddress = (string)GetItemText(m_listCtrl, nIndex, 1);
-    CGetTextFromUserDialog dialog(this, _("Edit Address Label"), _("New Label"), strName);
-    if (!dialog.ShowModal())
-        return;
-    strName = dialog.GetValue();
-
-    // Change name
-    SetAddressBookName(strAddress, strName);
-    m_listCtrl->SetItemText(nIndex, strName);
-    pframeMain->RefreshListCtrl();
-}
-
-void CYourAddressDialog::OnButtonNew(wxCommandEvent& event)
-{
-    // Ask name
-    CGetTextFromUserDialog dialog(this, _("New Bitcoin Address"), _("Label"), "");
-    if (!dialog.ShowModal())
-        return;
-    string strName = dialog.GetValue();
-
-    // Generate new key
-    string strAddress = PubKeyToAddress(GenerateNewKey());
-    SetAddressBookName(strAddress, strName);
-
-    // Add to list and select it
-    int nIndex = InsertLine(m_listCtrl, strName, strAddress);
-    SetSelection(m_listCtrl, nIndex);
-    m_listCtrl->SetFocus();
-}
-
-void CYourAddressDialog::OnButtonCopy(wxCommandEvent& event)
-{
-    // Copy address box to clipboard
-    if (wxTheClipboard->Open())
-    {
-        wxTheClipboard->SetData(new wxTextDataObject(GetAddress()));
-        wxTheClipboard->Close();
-    }
-}
-
-void CYourAddressDialog::OnButtonOK(wxCommandEvent& event)
-{
-    // OK
-    EndModal(true);
-}
-
-void CYourAddressDialog::OnButtonCancel(wxCommandEvent& event)
-{
-    // Cancel
-    EndModal(false);
-}
-
-void CYourAddressDialog::OnClose(wxCloseEvent& event)
-{
-    // Close
-    EndModal(false);
-}
-
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////
-//
 // CAddressBookDialog
 //
 
-CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInitSelected, bool fSendingIn) : CAddressBookDialogBase(parent)
+CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInitSelected, int nPageIn, bool fDuringSendIn) : CAddressBookDialogBase(parent)
 {
-    fSending = fSendingIn;
-    if (!fSending)
-        m_buttonCancel->Show(false);
+    // Set initially selected page
+    wxNotebookEvent event;
+    event.SetSelection(nPageIn);
+    OnNotebookPageChanged(event);
+    m_notebook->ChangeSelection(nPageIn);
 
-    // Init column headers
-    m_listCtrl->InsertColumn(0, _("Name"), wxLIST_FORMAT_LEFT, 200);
-    m_listCtrl->InsertColumn(1, _("Address"), wxLIST_FORMAT_LEFT, 350);
-    m_listCtrl->SetFocus();
+    fDuringSend = fDuringSendIn;
+    if (!fDuringSend)
+        m_buttonCancel->Show(false);
 
     // Set Icon
     wxIcon iconAddressBook;
     iconAddressBook.CopyFromBitmap(wxBitmap(addressbook16_xpm));
     SetIcon(iconAddressBook);
 
+    // Init column headers
+    m_listCtrlSending->InsertColumn(0, _("Name"), wxLIST_FORMAT_LEFT, 200);
+    m_listCtrlSending->InsertColumn(1, _("Address"), wxLIST_FORMAT_LEFT, 350);
+    m_listCtrlSending->SetFocus();
+    m_listCtrlReceiving->InsertColumn(0, _("Label"), wxLIST_FORMAT_LEFT, 200);
+    m_listCtrlReceiving->InsertColumn(1, _("Bitcoin Address"), wxLIST_FORMAT_LEFT, 350);
+    m_listCtrlReceiving->SetFocus();
+
     // Fill listctrl with address book data
     CRITICAL_BLOCK(cs_mapKeys)
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
+        string strDefaultReceiving = (string)pframeMain->m_textCtrlAddress->GetValue();
         foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
         {
             string strAddress = item.first;
             string strName = item.second;
             uint160 hash160;
             bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
-            if (!fMine)
-            {
-                int nIndex = InsertLine(m_listCtrl, strName, strAddress);
-                if (strAddress == strInitSelected)
-                    m_listCtrl->SetItemState(nIndex, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
-            }
+            wxListCtrl* plistCtrl = fMine ? m_listCtrlReceiving : m_listCtrlSending;
+            int nIndex = InsertLine(plistCtrl, strName, strAddress);
+            if (strAddress == (fMine ? strDefaultReceiving : strInitSelected))
+                plistCtrl->SetItemState(nIndex, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
         }
     }
 }
 
-wxString CAddressBookDialog::GetAddress()
+wxString CAddressBookDialog::GetSelectedAddress()
 {
     int nIndex = GetSelection(m_listCtrl);
     if (nIndex == -1)
@@ -2275,9 +2188,40 @@ wxString CAddressBookDialog::GetAddress()
     return GetItemText(m_listCtrl, nIndex, 1);
 }
 
+wxString CAddressBookDialog::GetSelectedSendingAddress()
+{
+    int nIndex = GetSelection(m_listCtrlSending);
+    if (nIndex == -1)
+        return "";
+    return GetItemText(m_listCtrlSending, nIndex, 1);
+}
+
+wxString CAddressBookDialog::GetSelectedReceivingAddress()
+{
+    int nIndex = GetSelection(m_listCtrlReceiving);
+    if (nIndex == -1)
+        return "";
+    return GetItemText(m_listCtrlReceiving, nIndex, 1);
+}
+
+void CAddressBookDialog::OnNotebookPageChanged(wxNotebookEvent& event)
+{
+    event.Skip();
+    nPage = event.GetSelection();
+    if (nPage == SENDING)
+        m_listCtrl = m_listCtrlSending;
+    else if (nPage == RECEIVING)
+        m_listCtrl = m_listCtrlReceiving;
+    m_buttonDelete->Show(nPage == SENDING);
+    m_buttonCopy->Show(nPage == RECEIVING);
+    this->Layout();
+    m_listCtrl->SetFocus();
+}
+
 void CAddressBookDialog::OnListEndLabelEdit(wxListEvent& event)
 {
     // Update address book with edited name
+    event.Skip();
     if (event.IsEditCancelled())
         return;
     string strAddress = (string)GetItemText(m_listCtrl, event.GetIndex(), 1);
@@ -2287,85 +2231,30 @@ void CAddressBookDialog::OnListEndLabelEdit(wxListEvent& event)
 
 void CAddressBookDialog::OnListItemSelected(wxListEvent& event)
 {
+    event.Skip();
+    if (nPage == RECEIVING)
+        SetDefaultReceivingAddress((string)GetSelectedReceivingAddress());
 }
 
 void CAddressBookDialog::OnListItemActivated(wxListEvent& event)
 {
-    if (fSending)
+    event.Skip();
+    if (fDuringSend)
     {
         // Doubleclick returns selection
-        EndModal(GetAddress() != "" ? 2 : 0);
-    }
-    else
-    {
-        // Doubleclick edits item
-        wxCommandEvent event2;
-        OnButtonEdit(event2);
-    }
-}
-
-bool CAddressBookDialog::CheckIfMine(const string& strAddress, const string& strTitle)
-{
-    uint160 hash160;
-    bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
-    if (fMine)
-        wxMessageBox(_("This is one of your own addresses for receiving payments and cannot be entered in the address book.  "), strTitle);
-    return fMine;
-}
-
-void CAddressBookDialog::OnButtonEdit(wxCommandEvent& event)
-{
-    // Ask new name
-    int nIndex = GetSelection(m_listCtrl);
-    if (nIndex == -1)
+        EndModal(GetSelectedAddress() != "" ? 2 : 0);
         return;
-    string strName = (string)m_listCtrl->GetItemText(nIndex);
-    string strAddress = (string)GetItemText(m_listCtrl, nIndex, 1);
-    string strAddressOrg = strAddress;
-    do
-    {
-        CGetTextFromUserDialog dialog(this, _("Edit Address"), _("Name"), strName, _("Address"), strAddress);
-        if (!dialog.ShowModal())
-            return;
-        strName = dialog.GetValue1();
-        strAddress = dialog.GetValue2();
     }
-    while (CheckIfMine(strAddress, _("Edit Address")));
 
-    // Change name
-    if (strAddress != strAddressOrg)
-        CWalletDB().EraseName(strAddressOrg);
-    SetAddressBookName(strAddress, strName);
-    m_listCtrl->SetItem(nIndex, 1, strAddress);
-    m_listCtrl->SetItemText(nIndex, strName);
-    pframeMain->RefreshListCtrl();
-}
-
-void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
-{
-    // Ask name
-    string strName;
-    string strAddress;
-    do
-    {
-        CGetTextFromUserDialog dialog(this, _("New Address"), _("Name"), strName, _("Address"), strAddress);
-        if (!dialog.ShowModal())
-            return;
-        strName = dialog.GetValue1();
-        strAddress = dialog.GetValue2();
-    }
-    while (CheckIfMine(strAddress, _("New Address")));
-
-    // Add to list and select it
-    SetAddressBookName(strAddress, strName);
-    int nIndex = InsertLine(m_listCtrl, strName, strAddress);
-    SetSelection(m_listCtrl, nIndex);
-    m_listCtrl->SetFocus();
-    pframeMain->RefreshListCtrl();
+    // Doubleclick edits item
+    wxCommandEvent event2;
+    OnButtonEdit(event2);
 }
 
 void CAddressBookDialog::OnButtonDelete(wxCommandEvent& event)
 {
+    if (nPage != SENDING)
+        return;
     for (int nIndex = m_listCtrl->GetItemCount()-1; nIndex >= 0; nIndex--)
     {
         if (m_listCtrl->GetItemState(nIndex, wxLIST_STATE_SELECTED))
@@ -2383,15 +2272,107 @@ void CAddressBookDialog::OnButtonCopy(wxCommandEvent& event)
     // Copy address box to clipboard
     if (wxTheClipboard->Open())
     {
-        wxTheClipboard->SetData(new wxTextDataObject(GetAddress()));
+        wxTheClipboard->SetData(new wxTextDataObject(GetSelectedAddress()));
         wxTheClipboard->Close();
     }
+}
+
+bool CAddressBookDialog::CheckIfMine(const string& strAddress, const string& strTitle)
+{
+    uint160 hash160;
+    bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
+    if (fMine)
+        wxMessageBox(_("This is one of your own addresses for receiving payments and cannot be entered in the address book.  "), strTitle);
+    return fMine;
+}
+
+void CAddressBookDialog::OnButtonEdit(wxCommandEvent& event)
+{
+    int nIndex = GetSelection(m_listCtrl);
+    if (nIndex == -1)
+        return;
+    string strName = (string)m_listCtrl->GetItemText(nIndex);
+    string strAddress = (string)GetItemText(m_listCtrl, nIndex, 1);
+    string strAddressOrg = strAddress;
+
+    if (nPage == SENDING)
+    {
+        // Ask name and address
+        do
+        {
+            CGetTextFromUserDialog dialog(this, _("Edit Address"), _("Name"), strName, _("Address"), strAddress);
+            if (!dialog.ShowModal())
+                return;
+            strName = dialog.GetValue1();
+            strAddress = dialog.GetValue2();
+        }
+        while (CheckIfMine(strAddress, _("Edit Address")));
+
+    }
+    else if (nPage == RECEIVING)
+    {
+        // Ask name
+        CGetTextFromUserDialog dialog(this, _("Edit Address Label"), _("Label"), strName);
+        if (!dialog.ShowModal())
+            return;
+        strName = dialog.GetValue();
+    }
+
+    // Write back
+    if (strAddress != strAddressOrg)
+        CWalletDB().EraseName(strAddressOrg);
+    SetAddressBookName(strAddress, strName);
+    m_listCtrl->SetItem(nIndex, 1, strAddress);
+    m_listCtrl->SetItemText(nIndex, strName);
+    pframeMain->RefreshListCtrl();
+}
+
+void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
+{
+    string strName;
+    string strAddress;
+
+    if (nPage == SENDING)
+    {
+        // Ask name and address
+        do
+        {
+            CGetTextFromUserDialog dialog(this, _("Add Address"), _("Name"), strName, _("Address"), strAddress);
+            if (!dialog.ShowModal())
+                return;
+            strName = dialog.GetValue1();
+            strAddress = dialog.GetValue2();
+        }
+        while (CheckIfMine(strAddress, _("Add Address")));
+    }
+    else if (nPage == RECEIVING)
+    {
+        // Ask name
+        CGetTextFromUserDialog dialog(this,
+            _("New Receiving Address"),
+            _("It's good policy to use a new address for each payment you receive.\n\nLabel"),
+            "");
+        if (!dialog.ShowModal())
+            return;
+        strName = dialog.GetValue();
+
+        // Generate new key
+        strAddress = PubKeyToAddress(GenerateNewKey());
+    }
+
+    // Add to list and select it
+    SetAddressBookName(strAddress, strName);
+    int nIndex = InsertLine(m_listCtrl, strName, strAddress);
+    SetSelection(m_listCtrl, nIndex);
+    m_listCtrl->SetFocus();
+    if (nPage == SENDING)
+        pframeMain->RefreshListCtrl();
 }
 
 void CAddressBookDialog::OnButtonOK(wxCommandEvent& event)
 {
     // OK
-    EndModal(GetAddress() != "" ? 1 : 0);
+    EndModal(GetSelectedAddress() != "" ? 1 : 0);
 }
 
 void CAddressBookDialog::OnButtonCancel(wxCommandEvent& event)
@@ -2644,14 +2625,14 @@ bool CMyApp::OnInit2()
         wxString strUsage = string() +
             _("Usage: bitcoin [options]") + "\t\t\t\t\t\t\n" +
             _("Options:\n") +
-            "  -gen            \t\t   " + _("Generate coins\n") +
-            "  -gen=0          \t\t   " + _("Don't generate coins\n") +
-            "  -min            \t\t   " + _("Start minimized\n") +
-            "  -datadir=<dir>  \t   "   + _("Specify data directory\n") +
-            "  -proxy=<ip:port>\t   "   + _("Connect through socks4 proxy\n") +
-            "  -addnode=<ip>   \t   "   + _("Add a node to connect to\n") +
-            "  -connect=<ip>   \t   "   + _("Connect only to the specified node\n") +
-            "  -?              \t\t   " + _("This help message\n");
+            "  -gen            \t\t  " + _("Generate coins\n") +
+            "  -gen=0          \t\t  " + _("Don't generate coins\n") +
+            "  -min            \t\t  " + _("Start minimized\n") +
+            "  -datadir=<dir>  \t  "   + _("Specify data directory\n") +
+            "  -proxy=<ip:port>\t  "   + _("Connect through socks4 proxy\n") +
+            "  -addnode=<ip>   \t  "   + _("Add a node to connect to\n") +
+            "  -connect=<ip>   \t  "   + _("Connect only to the specified node\n") +
+            "  -?              \t\t  " + _("This help message\n");
 
         if (fWindows)
         {
@@ -2947,7 +2928,6 @@ bool CMyApp::OnExceptionInMainLoop()
         Sleep(1000);
         throw;
     }
-
     return true;
 }
 

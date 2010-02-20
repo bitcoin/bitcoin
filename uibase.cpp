@@ -42,14 +42,14 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_menuOptions->Append( m_menuOptionsGenerateBitcoins );
 	
 	wxMenuItem* m_menuOptionsChangeYourAddress;
-	m_menuOptionsChangeYourAddress = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( _("&Change Your Address...") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuOptionsChangeYourAddress = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( _("&Your Receiving Addresses...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsChangeYourAddress );
 	
 	wxMenuItem* m_menuOptionsOptions;
 	m_menuOptionsOptions = new wxMenuItem( m_menuOptions, wxID_MENUOPTIONSOPTIONS, wxString( _("&Options...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsOptions );
 	
-	m_menubar->Append( m_menuOptions, _("&Options") );
+	m_menubar->Append( m_menuOptions, _("&Settings") );
 	
 	m_menuHelp = new wxMenu();
 	wxMenuItem* m_menuHelpAbout;
@@ -65,8 +65,8 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_toolBar->SetToolSeparation( 1 );
 	m_toolBar->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), 70, 90, 90, false, wxEmptyString ) );
 	
-	m_toolBar->AddTool( wxID_BUTTONSEND, _("&Send Coins"), wxBitmap( send20_xpm ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
-	m_toolBar->AddTool( wxID_BUTTONRECEIVE, _("&Address Book"), wxBitmap( addressbook20_xpm ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
+	m_toolBar->AddTool( wxID_BUTTONSEND, _("Send Coins"), wxBitmap( send20_xpm ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
+	m_toolBar->AddTool( wxID_BUTTONRECEIVE, _("Address Book"), wxBitmap( addressbook20_xpm ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString );
 	m_toolBar->Realize();
 	
 	m_statusBar = this->CreateStatusBar( 1, wxST_SIZEGRIP, wxID_ANY );
@@ -86,14 +86,10 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer85->Add( m_staticText32, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 5 );
 	
 	m_textCtrlAddress = new wxTextCtrl( this, wxID_TEXTCTRLADDRESS, wxEmptyString, wxDefaultPosition, wxSize( 340,-1 ), wxTE_READONLY );
-	m_textCtrlAddress->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_MENU ) );
-	
 	bSizer85->Add( m_textCtrlAddress, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
 	
-	m_buttonNew = new wxButton( this, wxID_BUTTONCHANGE, _("&New..."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_buttonNew->Hide();
-	
-	bSizer85->Add( m_buttonNew, 0, wxRIGHT, 5 );
+	m_buttonNew = new wxButton( this, wxID_BUTTONNEW, _(" &New... "), wxDefaultPosition, wxSize( -1,-1 ), wxBU_EXACTFIT );
+	bSizer85->Add( m_buttonNew, 0, wxRIGHT|wxALIGN_CENTER_VERTICAL, 5 );
 	
 	m_buttonCopy = new wxButton( this, wxID_BUTTONCOPY, _(" &Copy to Clipboard "), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT );
 	bSizer85->Add( m_buttonCopy, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT, 5 );
@@ -188,7 +184,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_textCtrlAddress->Connect( wxEVT_ENTER_WINDOW, wxMouseEventHandler( CMainFrameBase::OnMouseEventsAddress ), NULL, this );
 	m_textCtrlAddress->Connect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEventsAddress ), NULL, this );
 	m_textCtrlAddress->Connect( wxEVT_SET_FOCUS, wxFocusEventHandler( CMainFrameBase::OnSetFocusAddress ), NULL, this );
-	m_buttonNew->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonChange ), NULL, this );
+	m_buttonNew->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonNew ), NULL, this );
 	m_buttonCopy->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonCopy ), NULL, this );
 	m_listCtrl->Connect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
 	m_listCtrl->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
@@ -240,7 +236,7 @@ CMainFrameBase::~CMainFrameBase()
 	m_textCtrlAddress->Disconnect( wxEVT_ENTER_WINDOW, wxMouseEventHandler( CMainFrameBase::OnMouseEventsAddress ), NULL, this );
 	m_textCtrlAddress->Disconnect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEventsAddress ), NULL, this );
 	m_textCtrlAddress->Disconnect( wxEVT_SET_FOCUS, wxFocusEventHandler( CMainFrameBase::OnSetFocusAddress ), NULL, this );
-	m_buttonNew->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonChange ), NULL, this );
+	m_buttonNew->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonNew ), NULL, this );
 	m_buttonCopy->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonCopy ), NULL, this );
 	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
 	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
@@ -844,20 +840,53 @@ CAddressBookDialogBase::CAddressBookDialogBase( wxWindow* parent, wxWindowID id,
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 	
+	wxBoxSizer* bSizer58;
+	bSizer58 = new wxBoxSizer( wxVERTICAL );
+	
+	m_notebook = new wxNotebook( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
+	m_panelSending = new wxPanel( m_notebook, wxID_PANELSENDING, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxBoxSizer* bSizer68;
 	bSizer68 = new wxBoxSizer( wxVERTICAL );
 	
 	
-	bSizer68->Add( 0, 5, 0, wxEXPAND, 5 );
+	bSizer68->Add( 0, 0, 0, wxEXPAND, 5 );
 	
-	m_staticText55 = new wxStaticText( this, wxID_ANY, _("Bitcoin Address"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText55 = new wxStaticText( m_panelSending, wxID_ANY, _("Bitcoin Address"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText55->Wrap( -1 );
 	m_staticText55->Hide();
 	
 	bSizer68->Add( m_staticText55, 0, wxTOP|wxRIGHT|wxLEFT, 5 );
 	
-	m_listCtrl = new wxListCtrl( this, wxID_LISTCTRL, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_ASCENDING );
-	bSizer68->Add( m_listCtrl, 1, wxALL|wxEXPAND, 5 );
+	m_listCtrlSending = new wxListCtrl( m_panelSending, wxID_LISTCTRLSENDING, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_ASCENDING );
+	bSizer68->Add( m_listCtrlSending, 1, wxALL|wxEXPAND, 5 );
+	
+	m_panelSending->SetSizer( bSizer68 );
+	m_panelSending->Layout();
+	bSizer68->Fit( m_panelSending );
+	m_notebook->AddPage( m_panelSending, _("Sending"), false );
+	m_panelReceiving = new wxPanel( m_notebook, wxID_PANELRECEIVING, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer681;
+	bSizer681 = new wxBoxSizer( wxVERTICAL );
+	
+	
+	bSizer681->Add( 0, 0, 0, wxEXPAND, 5 );
+	
+	m_staticText45 = new wxStaticText( m_panelReceiving, wxID_ANY, _("These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText45->Wrap( 570 );
+	bSizer681->Add( m_staticText45, 0, wxTOP|wxRIGHT|wxLEFT, 6 );
+	
+	
+	bSizer681->Add( 0, 2, 0, wxEXPAND, 5 );
+	
+	m_listCtrlReceiving = new wxListCtrl( m_panelReceiving, wxID_LISTCTRLRECEIVING, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_ASCENDING );
+	bSizer681->Add( m_listCtrlReceiving, 1, wxALL|wxEXPAND, 5 );
+	
+	m_panelReceiving->SetSizer( bSizer681 );
+	m_panelReceiving->Layout();
+	bSizer681->Fit( m_panelReceiving );
+	m_notebook->AddPage( m_panelReceiving, _("Receiving"), true );
+	
+	bSizer58->Add( m_notebook, 1, wxEXPAND|wxTOP|wxRIGHT|wxLEFT, 5 );
 	
 	wxBoxSizer* bSizer69;
 	bSizer69 = new wxBoxSizer( wxHORIZONTAL );
@@ -865,14 +894,17 @@ CAddressBookDialogBase::CAddressBookDialogBase( wxWindow* parent, wxWindowID id,
 	
 	bSizer69->Add( 0, 0, 1, wxEXPAND, 5 );
 	
+	m_buttonDelete = new wxButton( this, wxID_BUTTONDELETE, _("&Delete"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer69->Add( m_buttonDelete, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
+	
+	m_buttonCopy = new wxButton( this, wxID_BUTTONCOPY, _(" &Copy to Clipboard "), wxDefaultPosition, wxSize( -1,-1 ), 0 );
+	bSizer69->Add( m_buttonCopy, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
+	
 	m_buttonEdit = new wxButton( this, wxID_BUTTONEDIT, _("&Edit..."), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer69->Add( m_buttonEdit, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
 	
 	m_buttonNew = new wxButton( this, wxID_BUTTONNEW, _(" &New Address... "), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer69->Add( m_buttonNew, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
-	
-	m_buttonDelete = new wxButton( this, wxID_BUTTONDELETE, _("&Delete"), wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer69->Add( m_buttonDelete, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
 	
 	m_buttonOK = new wxButton( this, wxID_OK, _("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	bSizer69->Add( m_buttonOK, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
@@ -880,19 +912,24 @@ CAddressBookDialogBase::CAddressBookDialogBase( wxWindow* parent, wxWindowID id,
 	m_buttonCancel = new wxButton( this, wxID_CANCEL, _("Cancel"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	bSizer69->Add( m_buttonCancel, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
 	
-	bSizer68->Add( bSizer69, 0, wxEXPAND, 5 );
+	bSizer58->Add( bSizer69, 0, wxEXPAND, 5 );
 	
-	this->SetSizer( bSizer68 );
+	this->SetSizer( bSizer58 );
 	this->Layout();
 	
 	// Connect Events
 	this->Connect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( CAddressBookDialogBase::OnClose ) );
-	m_listCtrl->Connect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( CAddressBookDialogBase::OnListEndLabelEdit ), NULL, this );
-	m_listCtrl->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CAddressBookDialogBase::OnListItemActivated ), NULL, this );
-	m_listCtrl->Connect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( CAddressBookDialogBase::OnListItemSelected ), NULL, this );
+	m_notebook->Connect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( CAddressBookDialogBase::OnNotebookPageChanged ), NULL, this );
+	m_listCtrlSending->Connect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( CAddressBookDialogBase::OnListEndLabelEdit ), NULL, this );
+	m_listCtrlSending->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CAddressBookDialogBase::OnListItemActivated ), NULL, this );
+	m_listCtrlSending->Connect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( CAddressBookDialogBase::OnListItemSelected ), NULL, this );
+	m_listCtrlReceiving->Connect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( CAddressBookDialogBase::OnListEndLabelEdit ), NULL, this );
+	m_listCtrlReceiving->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CAddressBookDialogBase::OnListItemActivated ), NULL, this );
+	m_listCtrlReceiving->Connect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( CAddressBookDialogBase::OnListItemSelected ), NULL, this );
+	m_buttonDelete->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonDelete ), NULL, this );
+	m_buttonCopy->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonCopy ), NULL, this );
 	m_buttonEdit->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonEdit ), NULL, this );
 	m_buttonNew->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonNew ), NULL, this );
-	m_buttonDelete->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonDelete ), NULL, this );
 	m_buttonOK->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonCancel ), NULL, this );
 }
@@ -901,12 +938,17 @@ CAddressBookDialogBase::~CAddressBookDialogBase()
 {
 	// Disconnect Events
 	this->Disconnect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( CAddressBookDialogBase::OnClose ) );
-	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( CAddressBookDialogBase::OnListEndLabelEdit ), NULL, this );
-	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CAddressBookDialogBase::OnListItemActivated ), NULL, this );
-	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( CAddressBookDialogBase::OnListItemSelected ), NULL, this );
+	m_notebook->Disconnect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( CAddressBookDialogBase::OnNotebookPageChanged ), NULL, this );
+	m_listCtrlSending->Disconnect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( CAddressBookDialogBase::OnListEndLabelEdit ), NULL, this );
+	m_listCtrlSending->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CAddressBookDialogBase::OnListItemActivated ), NULL, this );
+	m_listCtrlSending->Disconnect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( CAddressBookDialogBase::OnListItemSelected ), NULL, this );
+	m_listCtrlReceiving->Disconnect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( CAddressBookDialogBase::OnListEndLabelEdit ), NULL, this );
+	m_listCtrlReceiving->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CAddressBookDialogBase::OnListItemActivated ), NULL, this );
+	m_listCtrlReceiving->Disconnect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( CAddressBookDialogBase::OnListItemSelected ), NULL, this );
+	m_buttonDelete->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonDelete ), NULL, this );
+	m_buttonCopy->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonCopy ), NULL, this );
 	m_buttonEdit->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonEdit ), NULL, this );
 	m_buttonNew->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonNew ), NULL, this );
-	m_buttonDelete->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonDelete ), NULL, this );
 	m_buttonOK->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CAddressBookDialogBase::OnButtonCancel ), NULL, this );
 }

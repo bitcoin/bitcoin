@@ -2645,7 +2645,12 @@ void BitcoinMiner()
                         do
                         {
                             pindexTmp = pindexBest;
-                            Sleep(10000);
+                            for (int i = 0; i < 10; i++)
+                            {
+                                Sleep(1000);
+                                if (fShutdown)
+                                    return;
+                            }
                         }
                         while (pindexTmp != pindexBest);
                     }
@@ -2852,10 +2857,13 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                     if (keyRet.IsNull())
                         keyRet.MakeNewKey();
 
-                    // Fill a vout to ourself
-                    CScript scriptPubKey;
-                    scriptPubKey << keyRet.GetPubKey() << OP_CHECKSIG;
-                    wtxNew.vout.push_back(CTxOut(nValueIn - nTotalValue, scriptPubKey));
+                    // Fill a vout to ourself, using same address type as the payment
+                    CScript scriptChange;
+                    if (scriptPubKey.GetBitcoinAddressHash160() != 0)
+                        scriptChange.SetBitcoinAddress(keyRet.GetPubKey());
+                    else
+                        scriptChange << keyRet.GetPubKey() << OP_CHECKSIG;
+                    wtxNew.vout.push_back(CTxOut(nValueIn - nTotalValue, scriptChange));
                 }
 
                 // Fill a vout to the payee
@@ -2894,42 +2902,50 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
 }
 
 // Call after CreateTransaction unless you want to abort
-bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key)
+bool CommitTransaction(CWalletTx& wtxNew, const CKey& key)
 {
     CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(cs_mapWallet)
     {
-        //// old: eventually should make this transactional, never want to add a
-        ////  transaction without marking spent transactions, although the risk of
-        ////  interruption during this step is remote.
-        //// update: This matters even less now that fSpent can get corrected
-        ////  when transactions are seen in VerifySignature.  The remote chance of
-        ////  unmarked fSpent will be handled by that.  Don't need to make this
-        ////  transactional.  Pls delete this comment block later.
-
-        // This is only to keep the database open to defeat the auto-flush for the
-        // duration of this scope.  This is the only place where this optimization
-        // maybe makes sense; please don't do it anywhere else.
-        CWalletDB walletdb("r");
-
-        // Add the change's private key to wallet
-        if (!key.IsNull() && !AddKey(key))
-            throw runtime_error("CommitTransactionSpent() : AddKey failed\n");
-
-        // Add tx to wallet, because if it has change it's also ours,
-        // otherwise just for transaction history.
-        AddToWallet(wtxNew);
-
-        // Mark old coins as spent
-        set<CWalletTx*> setCoins;
-        foreach(const CTxIn& txin, wtxNew.vin)
-            setCoins.insert(&mapWallet[txin.prevout.hash]);
-        foreach(CWalletTx* pcoin, setCoins)
+        printf("CommitTransaction:\n%s", wtxNew.ToString().c_str());
+        CRITICAL_BLOCK(cs_mapWallet)
         {
-            pcoin->fSpent = true;
-            pcoin->WriteToDisk();
-            vWalletUpdated.push_back(pcoin->GetHash());
+            // This is only to keep the database open to defeat the auto-flush for the
+            // duration of this scope.  This is the only place where this optimization
+            // maybe makes sense; please don't do it anywhere else.
+            CWalletDB walletdb("r");
+
+            // Add the change's private key to wallet
+            if (!key.IsNull() && !AddKey(key))
+                throw runtime_error("CommitTransaction() : AddKey failed\n");
+
+            // Add tx to wallet, because if it has change it's also ours,
+            // otherwise just for transaction history.
+            AddToWallet(wtxNew);
+
+            // Mark old coins as spent
+            set<CWalletTx*> setCoins;
+            foreach(const CTxIn& txin, wtxNew.vin)
+                setCoins.insert(&mapWallet[txin.prevout.hash]);
+            foreach(CWalletTx* pcoin, setCoins)
+            {
+                pcoin->fSpent = true;
+                pcoin->WriteToDisk();
+                vWalletUpdated.push_back(pcoin->GetHash());
+            }
         }
+
+        // Track how many getdata requests our transaction gets
+        CRITICAL_BLOCK(cs_mapRequestCount)
+            mapRequestCount[wtxNew.GetHash()] = 0;
+
+        // Broadcast
+        if (!wtxNew.AcceptTransaction())
+        {
+            // This must not fail. The transaction has already been signed and recorded.
+            printf("CommitTransaction() : Error: Transaction not valid");
+            return false;
+        }
+        wtxNew.RelayWalletTransaction();
     }
     MainFrameRepaint();
     return true;
@@ -2938,7 +2954,7 @@ bool CommitTransactionSpent(const CWalletTx& wtxNew, const CKey& key)
 
 
 
-string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
+string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
 {
     CRITICAL_BLOCK(cs_main)
     {
@@ -2954,26 +2970,12 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
             printf("SendMoney() : %s", strError.c_str());
             return strError;
         }
-        if (!CommitTransactionSpent(wtxNew, key))
-        {
-            printf("SendMoney() : Error finalizing transaction");
-            return _("Error finalizing transaction");
-        }
 
-        // Track how many getdata requests our transaction gets
-        CRITICAL_BLOCK(cs_mapRequestCount)
-            mapRequestCount[wtxNew.GetHash()] = 0;
+        if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
+            return "ABORTED";
 
-        printf("SendMoney: %s\n", wtxNew.GetHash().ToString().substr(0,6).c_str());
-
-        // Broadcast
-        if (!wtxNew.AcceptTransaction())
-        {
-            // This must not fail. The transaction has already been signed and recorded.
-            printf("SendMoney() : Error: Transaction not valid");
+        if (!CommitTransaction(wtxNew, key))
             return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
-        }
-        wtxNew.RelayWalletTransaction();
     }
     MainFrameRepaint();
     return "";
@@ -2981,7 +2983,7 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew)
 
 
 
-string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew)
+string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
 {
     // Check amount
     if (nValue <= 0)
@@ -2994,5 +2996,5 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
         return _("Invalid bitcoin address");
 
-    return SendMoney(scriptPubKey, nValue, wtxNew);
+    return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
 }

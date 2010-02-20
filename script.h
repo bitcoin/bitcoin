@@ -580,6 +580,11 @@ public:
         *this << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
+    void SetBitcoinAddress(const vector<unsigned char>& vchPubKey)
+    {
+        SetBitcoinAddress(Hash160(vchPubKey));
+    }
+
     bool SetBitcoinAddress(const string& strAddress)
     {
         this->clear();

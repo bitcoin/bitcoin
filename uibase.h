@@ -36,6 +36,7 @@
 #include <wx/spinctrl.h>
 #include <wx/scrolwin.h>
 #include <wx/statbmp.h>
+#include <wx/notebook.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +47,7 @@
 #define wxID_BUTTONSEND 1004
 #define wxID_BUTTONRECEIVE 1005
 #define wxID_TEXTCTRLADDRESS 1006
-#define wxID_BUTTONCHANGE 1007
+#define wxID_BUTTONNEW 1007
 #define wxID_BUTTONCOPY 1008
 #define wxID_TRANSACTIONFEE 1009
 #define wxID_PROXYIP 1010
@@ -58,10 +59,13 @@
 #define wxID_CHOICETRANSFERTYPE 1016
 #define wxID_LISTCTRL 1017
 #define wxID_BUTTONRENAME 1018
-#define wxID_BUTTONNEW 1019
-#define wxID_BUTTONEDIT 1020
-#define wxID_BUTTONDELETE 1021
-#define wxID_TEXTCTRL 1022
+#define wxID_PANELSENDING 1019
+#define wxID_LISTCTRLSENDING 1020
+#define wxID_PANELRECEIVING 1021
+#define wxID_LISTCTRLRECEIVING 1022
+#define wxID_BUTTONDELETE 1023
+#define wxID_BUTTONEDIT 1024
+#define wxID_TEXTCTRL 1025
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class CMainFrameBase
@@ -79,7 +83,6 @@ class CMainFrameBase : public wxFrame
 		wxStatusBar* m_statusBar;
 		
 		wxStaticText* m_staticText32;
-		wxTextCtrl* m_textCtrlAddress;
 		wxButton* m_buttonNew;
 		wxButton* m_buttonCopy;
 		
@@ -108,7 +111,7 @@ class CMainFrameBase : public wxFrame
 		virtual void OnKeyDown( wxKeyEvent& event ){ event.Skip(); }
 		virtual void OnMouseEventsAddress( wxMouseEvent& event ){ event.Skip(); }
 		virtual void OnSetFocusAddress( wxFocusEvent& event ){ event.Skip(); }
-		virtual void OnButtonChange( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnButtonNew( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonCopy( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnListColBeginDrag( wxListEvent& event ){ event.Skip(); }
 		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
@@ -117,6 +120,7 @@ class CMainFrameBase : public wxFrame
 	
 	public:
 		wxMenu* m_menuOptions;
+		wxTextCtrl* m_textCtrlAddress;
 		wxListCtrl* m_listCtrl;
 		CMainFrameBase( wxWindow* parent, wxWindowID id = wxID_MAINFRAME, const wxString& title = _("Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 712,484 ), long style = wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
 		~CMainFrameBase();
@@ -343,23 +347,33 @@ class CAddressBookDialogBase : public wxDialog
 	private:
 	
 	protected:
+		wxNotebook* m_notebook;
+		wxPanel* m_panelSending;
 		
 		wxStaticText* m_staticText55;
-		wxListCtrl* m_listCtrl;
+		wxListCtrl* m_listCtrlSending;
+		wxPanel* m_panelReceiving;
 		
+		wxStaticText* m_staticText45;
+		
+		wxListCtrl* m_listCtrlReceiving;
+		
+		wxButton* m_buttonDelete;
+		wxButton* m_buttonCopy;
 		wxButton* m_buttonEdit;
 		wxButton* m_buttonNew;
-		wxButton* m_buttonDelete;
 		wxButton* m_buttonOK;
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
+		virtual void OnNotebookPageChanged( wxNotebookEvent& event ){ event.Skip(); }
 		virtual void OnListEndLabelEdit( wxListEvent& event ){ event.Skip(); }
 		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
 		virtual void OnListItemSelected( wxListEvent& event ){ event.Skip(); }
+		virtual void OnButtonDelete( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnButtonCopy( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonEdit( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonNew( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonDelete( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
 		
@@ -397,7 +411,7 @@ class CGetTextFromUserDialogBase : public wxDialog
 		
 	
 	public:
-		CGetTextFromUserDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 403,138 ), long style = wxDEFAULT_DIALOG_STYLE );
+		CGetTextFromUserDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 440,138 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~CGetTextFromUserDialogBase();
 	
 };

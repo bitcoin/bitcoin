@@ -445,10 +445,14 @@ const char* wxGetTranslation(const char* pszEnglish)
 
         // wxWidgets translation
         const char* pszTranslated = wxGetTranslation(wxString(pszEnglish, wxConvUTF8)).utf8_str();
+
+        // We don't cache unknown strings because caller might be passing in a
+        // dynamic string and we would keep allocating memory for each variation.
         if (strcmp(pszEnglish, pszTranslated) == 0)
             return pszEnglish;
 
-        // Add to cache, memory doesn't need to be freed
+        // Add to cache, memory doesn't need to be freed.  We only cache because
+        // we must pass back a pointer to permanently allocated memory.
         char* pszCached = new char[strlen(pszTranslated)+1];
         strcpy(pszCached, pszTranslated);
         mapCache[pszEnglish] = pszCached;
