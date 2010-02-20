@@ -2,10 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-
-
-
 DECLARE_EVENT_TYPE(wxEVT_UITHREADCALL, -1)
+
 
 extern map<string, string> mapArgs;
 
@@ -22,6 +20,7 @@ void UIThreadCall(boost::function0<void>);
 void MainFrameRepaint();
 void Shutdown(void* parg);
 int ThreadSafeMessageBox(const string& message, const string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1);
+bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent);
 
 
 
@@ -51,7 +50,7 @@ protected:
     void OnButtonAddressBook(wxCommandEvent& event);
     void OnSetFocusAddress(wxFocusEvent& event);
     void OnMouseEventsAddress(wxMouseEvent& event);
-    void OnButtonChange(wxCommandEvent& event);
+    void OnButtonNew(wxCommandEvent& event);
     void OnButtonCopy(wxCommandEvent& event);
     void OnListColBeginDrag(wxListEvent& event);
     void OnListItemActivated(wxListEvent& event);
@@ -205,53 +204,39 @@ void SendingDialogOnReply3(void* parg, CDataStream& vRecv);
 
 
 
-class CYourAddressDialog : public CYourAddressDialogBase
-{
-protected:
-    // Event handlers
-    void OnListEndLabelEdit(wxListEvent& event);
-    void OnListItemSelected(wxListEvent& event);
-    void OnListItemActivated(wxListEvent& event);
-    void OnButtonRename(wxCommandEvent& event);
-    void OnButtonNew(wxCommandEvent& event);
-    void OnButtonCopy(wxCommandEvent& event);
-    void OnButtonOK(wxCommandEvent& event);
-    void OnButtonCancel(wxCommandEvent& event);
-    void OnClose(wxCloseEvent& event);
-
-public:
-    /** Constructor */
-    CYourAddressDialog(wxWindow* parent);
-    CYourAddressDialog(wxWindow* parent, const string& strInitSelected);
-
-    // Custom
-    wxString GetAddress();
-};
-
-
-
 class CAddressBookDialog : public CAddressBookDialogBase
 {
 protected:
     // Event handlers
+    void OnNotebookPageChanged(wxNotebookEvent& event);
     void OnListEndLabelEdit(wxListEvent& event);
     void OnListItemSelected(wxListEvent& event);
     void OnListItemActivated(wxListEvent& event);
-    void OnButtonEdit(wxCommandEvent& event);
     void OnButtonDelete(wxCommandEvent& event);
-    void OnButtonNew(wxCommandEvent& event);
     void OnButtonCopy(wxCommandEvent& event);
+    void OnButtonEdit(wxCommandEvent& event);
+    void OnButtonNew(wxCommandEvent& event);
     void OnButtonOK(wxCommandEvent& event);
     void OnButtonCancel(wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
 
 public:
     /** Constructor */
-    CAddressBookDialog(wxWindow* parent, const wxString& strInitSelected, bool fSendingIn);
+    CAddressBookDialog(wxWindow* parent, const wxString& strInitSelected, int nPageIn, bool fDuringSendIn);
 
     // Custom
-    bool fSending;
+    enum
+    {
+        SENDING = 0,
+        RECEIVING = 1,
+    };
+    int nPage;
+    wxListCtrl* m_listCtrl;
+    bool fDuringSend;
     wxString GetAddress();
+    wxString GetSelectedAddress();
+    wxString GetSelectedSendingAddress();
+    wxString GetSelectedReceivingAddress();
     bool CheckIfMine(const string& strAddress, const string& strTitle);
 };
 
@@ -282,18 +267,25 @@ public:
                            const string& strMessage2="",
                            const string& strValue2="") : CGetTextFromUserDialogBase(parent, wxID_ANY, strCaption)
     {
+        int x = GetSize().GetWidth();
+        int y = GetSize().GetHeight();
         m_staticTextMessage1->SetLabel(strMessage1);
         m_textCtrl1->SetValue(strValue1);
+        y += wxString(strMessage1).Freq('\n') * 14;
         if (!strMessage2.empty())
         {
             m_staticTextMessage2->Show(true);
             m_staticTextMessage2->SetLabel(strMessage2);
             m_textCtrl2->Show(true);
             m_textCtrl2->SetValue(strValue2);
-            SetSize(wxDefaultCoord, 180);
+            y += 46 + wxString(strMessage2).Freq('\n') * 14;
         }
         if (!fWindows)
-            SetSize(1.14 * GetSize().GetWidth(), 1.14 * GetSize().GetHeight());
+        {
+            x *= 1.14;
+            y *= 1.14;
+        }
+        SetSize(x, y);
     }
 
     // Custom
