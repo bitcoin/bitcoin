@@ -28,6 +28,7 @@
 #include <wx/panel.h>
 #include <wx/choice.h>
 #include <wx/listctrl.h>
+#include <wx/notebook.h>
 #include <wx/frame.h>
 #include <wx/html/htmlwin.h>
 #include <wx/dialog.h>
@@ -36,36 +37,34 @@
 #include <wx/spinctrl.h>
 #include <wx/scrolwin.h>
 #include <wx/statbmp.h>
-#include <wx/notebook.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
 #define wxID_MAINFRAME 1000
-#define wxID_VIEWSHOWGENERATED 1001
-#define wxID_OPTIONSGENERATEBITCOINS 1002
-#define wxID_MENUOPTIONSOPTIONS 1003
-#define wxID_BUTTONSEND 1004
-#define wxID_BUTTONRECEIVE 1005
-#define wxID_TEXTCTRLADDRESS 1006
-#define wxID_BUTTONNEW 1007
-#define wxID_BUTTONCOPY 1008
-#define wxID_TRANSACTIONFEE 1009
-#define wxID_PROXYIP 1010
-#define wxID_PROXYPORT 1011
-#define wxID_TEXTCTRLPAYTO 1012
-#define wxID_BUTTONPASTE 1013
-#define wxID_BUTTONADDRESSBOOK 1014
-#define wxID_TEXTCTRLAMOUNT 1015
-#define wxID_CHOICETRANSFERTYPE 1016
-#define wxID_LISTCTRL 1017
-#define wxID_BUTTONRENAME 1018
-#define wxID_PANELSENDING 1019
-#define wxID_LISTCTRLSENDING 1020
-#define wxID_PANELRECEIVING 1021
-#define wxID_LISTCTRLRECEIVING 1022
-#define wxID_BUTTONDELETE 1023
-#define wxID_BUTTONEDIT 1024
-#define wxID_TEXTCTRL 1025
+#define wxID_OPTIONSGENERATEBITCOINS 1001
+#define wxID_MENUOPTIONSOPTIONS 1002
+#define wxID_BUTTONSEND 1003
+#define wxID_BUTTONRECEIVE 1004
+#define wxID_TEXTCTRLADDRESS 1005
+#define wxID_BUTTONNEW 1006
+#define wxID_BUTTONCOPY 1007
+#define wxID_TRANSACTIONFEE 1008
+#define wxID_PROXYIP 1009
+#define wxID_PROXYPORT 1010
+#define wxID_TEXTCTRLPAYTO 1011
+#define wxID_BUTTONPASTE 1012
+#define wxID_BUTTONADDRESSBOOK 1013
+#define wxID_TEXTCTRLAMOUNT 1014
+#define wxID_CHOICETRANSFERTYPE 1015
+#define wxID_LISTCTRL 1016
+#define wxID_BUTTONRENAME 1017
+#define wxID_PANELSENDING 1018
+#define wxID_LISTCTRLSENDING 1019
+#define wxID_PANELRECEIVING 1020
+#define wxID_LISTCTRLRECEIVING 1021
+#define wxID_BUTTONDELETE 1022
+#define wxID_BUTTONEDIT 1023
+#define wxID_TEXTCTRL 1024
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class CMainFrameBase
@@ -77,7 +76,6 @@ class CMainFrameBase : public wxFrame
 	protected:
 		wxMenuBar* m_menubar;
 		wxMenu* m_menuFile;
-		wxMenu* m_menuView;
 		wxMenu* m_menuHelp;
 		wxToolBar* m_toolBar;
 		wxStatusBar* m_statusBar;
@@ -91,6 +89,11 @@ class CMainFrameBase : public wxFrame
 		wxStaticText* m_staticTextBalance;
 		
 		wxChoice* m_choiceFilter;
+		wxNotebook* m_notebook;
+		wxPanel* m_panel9;
+		wxPanel* m_panel91;
+		wxPanel* m_panel92;
+		wxPanel* m_panel93;
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
@@ -99,8 +102,6 @@ class CMainFrameBase : public wxFrame
 		virtual void OnMouseEvents( wxMouseEvent& event ){ event.Skip(); }
 		virtual void OnPaint( wxPaintEvent& event ){ event.Skip(); }
 		virtual void OnMenuFileExit( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnMenuViewShowGenerated( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnUpdateUIViewShowGenerated( wxUpdateUIEvent& event ){ event.Skip(); }
 		virtual void OnMenuOptionsGenerate( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnUpdateUIOptionsGenerate( wxUpdateUIEvent& event ){ event.Skip(); }
 		virtual void OnMenuOptionsChangeYourAddress( wxCommandEvent& event ){ event.Skip(); }
@@ -113,6 +114,7 @@ class CMainFrameBase : public wxFrame
 		virtual void OnSetFocusAddress( wxFocusEvent& event ){ event.Skip(); }
 		virtual void OnButtonNew( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonCopy( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnNotebookPageChanged( wxNotebookEvent& event ){ event.Skip(); }
 		virtual void OnListColBeginDrag( wxListEvent& event ){ event.Skip(); }
 		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
 		virtual void OnPaintListCtrl( wxPaintEvent& event ){ event.Skip(); }
@@ -121,8 +123,11 @@ class CMainFrameBase : public wxFrame
 	public:
 		wxMenu* m_menuOptions;
 		wxTextCtrl* m_textCtrlAddress;
-		wxListCtrl* m_listCtrl;
-		CMainFrameBase( wxWindow* parent, wxWindowID id = wxID_MAINFRAME, const wxString& title = _("Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 712,484 ), long style = wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
+		wxListCtrl* m_listCtrlAll;
+		wxListCtrl* m_listCtrlSentReceived;
+		wxListCtrl* m_listCtrlSent;
+		wxListCtrl* m_listCtrlReceived;
+		CMainFrameBase( wxWindow* parent, wxWindowID id = wxID_MAINFRAME, const wxString& title = _("Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 723,484 ), long style = wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
 		~CMainFrameBase();
 	
 };

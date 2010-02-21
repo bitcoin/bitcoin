@@ -8,7 +8,6 @@ DECLARE_EVENT_TYPE(wxEVT_UITHREADCALL, -1)
 extern map<string, string> mapArgs;
 
 // Settings
-extern int fShowGenerated;
 extern int fMinimizeToTray;
 extern int fMinimizeOnClose;
 
@@ -31,6 +30,7 @@ class CMainFrame : public CMainFrameBase
 {
 protected:
     // Event handlers
+    void OnNotebookPageChanged(wxNotebookEvent& event);
     void OnClose(wxCloseEvent& event);
     void OnIconize(wxIconizeEvent& event);
     void OnMouseEvents(wxMouseEvent& event);
@@ -39,8 +39,6 @@ protected:
     void OnPaint(wxPaintEvent& event);
     void OnPaintListCtrl(wxPaintEvent& event);
     void OnMenuFileExit(wxCommandEvent& event);
-    void OnMenuViewShowGenerated(wxCommandEvent& event);
-    void OnUpdateUIViewShowGenerated(wxUpdateUIEvent& event);
     void OnMenuOptionsGenerate(wxCommandEvent& event);
     void OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event);
     void OnMenuOptionsChangeYourAddress(wxCommandEvent& event);
@@ -64,6 +62,18 @@ public:
     ~CMainFrame();
 
     // Custom
+    enum
+    {
+        ALL = 0,
+        SENTRECEIVED = 1,
+        SENT = 2,
+        RECEIVED = 3,
+    };
+    int nPage;
+    wxListCtrl* m_listCtrl;
+    bool fShowGenerated;
+    bool fShowSent;
+    bool fShowReceived;
     bool fRefreshListCtrl;
     bool fRefreshListCtrlRunning;
     bool fOnSetFocusAddress;

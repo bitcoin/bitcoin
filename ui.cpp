@@ -20,7 +20,6 @@ extern int g_isPainting;
 bool fClosedToTray = false;
 
 // Settings
-int fShowGenerated = true;
 int fMinimizeToTray = true;
 int fMinimizeOnClose = true;
 
@@ -282,6 +281,12 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
 {
     Connect(wxEVT_UITHREADCALL, wxCommandEventHandler(CMainFrame::OnUIThreadCall), NULL, this);
 
+    // Set initially selected page
+    wxNotebookEvent event;
+    event.SetSelection(0);
+    OnNotebookPageChanged(event);
+    m_notebook->ChangeSelection(0);
+
     // Init
     fRefreshListCtrl = false;
     fRefreshListCtrlRunning = false;
@@ -298,8 +303,8 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_staticTextBalance->SetFont(fontTmp);
     m_staticTextBalance->SetSize(140, 17);
     // resize to fit ubuntu's huge default font
-    dResize = 1.20;
-    SetSize((dResize + 0.02) * GetSize().GetWidth(), 1.09 * GetSize().GetHeight());
+    dResize = 1.22;
+    SetSize(dResize * GetSize().GetWidth(), 1.09 * GetSize().GetHeight());
 #endif
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
@@ -309,13 +314,17 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     int nDateWidth = DateTimeStr(1229413914).size() * 6 + 8;
     if (!strstr(DateTimeStr(1229413914).c_str(), "2008"))
         nDateWidth += 12;
-    m_listCtrl->InsertColumn(0, "",               wxLIST_FORMAT_LEFT,  dResize * 0);
-    m_listCtrl->InsertColumn(1, "",               wxLIST_FORMAT_LEFT,  dResize * 0);
-    m_listCtrl->InsertColumn(2, _("Status"),      wxLIST_FORMAT_LEFT,  dResize * 110);
-    m_listCtrl->InsertColumn(3, _("Date"),        wxLIST_FORMAT_LEFT,  dResize * nDateWidth);
-    m_listCtrl->InsertColumn(4, _("Description"), wxLIST_FORMAT_LEFT,  dResize * 409 - nDateWidth);
-    m_listCtrl->InsertColumn(5, _("Debit"),       wxLIST_FORMAT_RIGHT, dResize * 79);
-    m_listCtrl->InsertColumn(6, _("Credit"),      wxLIST_FORMAT_RIGHT, dResize * 79);
+    wxListCtrl* pplistCtrl[] = {m_listCtrlAll, m_listCtrlSentReceived, m_listCtrlSent, m_listCtrlReceived};
+    foreach(wxListCtrl* p, pplistCtrl)
+    {
+        p->InsertColumn(0, "",               wxLIST_FORMAT_LEFT,  dResize * 0);
+        p->InsertColumn(1, "",               wxLIST_FORMAT_LEFT,  dResize * 0);
+        p->InsertColumn(2, _("Status"),      wxLIST_FORMAT_LEFT,  dResize * 112);
+        p->InsertColumn(3, _("Date"),        wxLIST_FORMAT_LEFT,  dResize * nDateWidth);
+        p->InsertColumn(4, _("Description"), wxLIST_FORMAT_LEFT,  dResize * 409 - nDateWidth);
+        p->InsertColumn(5, _("Debit"),       wxLIST_FORMAT_RIGHT, dResize * 79);
+        p->InsertColumn(6, _("Credit"),      wxLIST_FORMAT_RIGHT, dResize * 79);
+    }
 
     // Init status bar
     int pnWidths[3] = { -100, 88, 290 };
@@ -339,6 +348,42 @@ CMainFrame::~CMainFrame()
     pframeMain = NULL;
     delete ptaskbaricon;
     ptaskbaricon = NULL;
+}
+
+void CMainFrame::OnNotebookPageChanged(wxNotebookEvent& event)
+{
+    event.Skip();
+    nPage = event.GetSelection();
+    if (nPage == ALL)
+    {
+        m_listCtrl = m_listCtrlAll;
+        fShowGenerated = true;
+        fShowSent = true;
+        fShowReceived = true;
+    }
+    else if (nPage == SENTRECEIVED)
+    {
+        m_listCtrl = m_listCtrlSentReceived;
+        fShowGenerated = false;
+        fShowSent = true;
+        fShowReceived = true;
+    }
+    else if (nPage == SENT)
+    {
+        m_listCtrl = m_listCtrlSent;
+        fShowGenerated = false;
+        fShowSent = true;
+        fShowReceived = false;
+    }
+    else if (nPage == RECEIVED)
+    {
+        m_listCtrl = m_listCtrlReceived;
+        fShowGenerated = false;
+        fShowSent = false;
+        fShowReceived = true;
+    }
+    RefreshListCtrl();
+    m_listCtrl->SetFocus();
 }
 
 void CMainFrame::OnClose(wxCloseEvent& event)
@@ -547,7 +592,6 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             return false;
         }
 
-        // View->Show Generated
         if (!fShowGenerated)
             return false;
     }
@@ -571,7 +615,6 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
         // Credit
         //
         string strDescription;
-
         if (wtx.IsCoinBase())
         {
             // Generated
@@ -598,6 +641,8 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
         else if (!mapValue["from"].empty() || !mapValue["message"].empty())
         {
             // Received by IP connection
+            if (!fShowReceived)
+                return false;
             if (!mapValue["from"].empty())
                 strDescription += _("From: ") + mapValue["from"];
             if (!mapValue["message"].empty())
@@ -610,6 +655,8 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
         else
         {
             // Received by Bitcoin Address
+            if (!fShowReceived)
+                return false;
             foreach(const CTxOut& txout, wtx.vout)
             {
                 if (txout.IsMine())
@@ -675,6 +722,9 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             //
             // Debit
             //
+            if (!fShowSent)
+                return false;
+
             int64 nTxFee = nDebit - wtx.GetValueOut();
             wtx.nLinesDisplayed = 0;
             for (int nOut = 0; nOut < wtx.vout.size(); nOut++)
@@ -1033,19 +1083,6 @@ void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
 {
     // File->Exit
     Close(true);
-}
-
-void CMainFrame::OnMenuViewShowGenerated(wxCommandEvent& event)
-{
-    // View->Show Generated
-    fShowGenerated = event.IsChecked();
-    CWalletDB().WriteSetting("fShowGenerated", fShowGenerated);
-    RefreshListCtrl();
-}
-
-void CMainFrame::OnUpdateUIViewShowGenerated(wxUpdateUIEvent& event)
-{
-    event.Check(fShowGenerated);
 }
 
 void CMainFrame::OnMenuOptionsGenerate(wxCommandEvent& event)
