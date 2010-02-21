@@ -1335,7 +1335,9 @@ bool CBlock::AcceptBlock()
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
-    if (hashBestChain == hash && nBestHeight > 28000)
+    // Don't relay old inventory during initial block download.
+    // Please keep this constant updated to a few thousand below current block count.
+    if (hashBestChain == hash && nBestHeight > 40000)
         RelayInventory(CInv(MSG_BLOCK, hash));
 
     // // Add atoms to user reviews for coins created

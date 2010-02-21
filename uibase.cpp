@@ -29,13 +29,6 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	
 	m_menubar->Append( m_menuFile, _("&File") );
 	
-	m_menuView = new wxMenu();
-	wxMenuItem* m_menuViewShowGenerated;
-	m_menuViewShowGenerated = new wxMenuItem( m_menuView, wxID_VIEWSHOWGENERATED, wxString( _("&Show Generated Coins") ) , wxEmptyString, wxITEM_CHECK );
-	m_menuView->Append( m_menuViewShowGenerated );
-	
-	m_menubar->Append( m_menuView, _("&View") );
-	
 	m_menuOptions = new wxMenu();
 	wxMenuItem* m_menuOptionsGenerateBitcoins;
 	m_menuOptionsGenerateBitcoins = new wxMenuItem( m_menuOptions, wxID_OPTIONSGENERATEBITCOINS, wxString( _("&Generate Coins") ) , wxEmptyString, wxITEM_CHECK );
@@ -135,8 +128,53 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	
 	bSizer2->Add( bSizer3, 0, wxEXPAND, 5 );
 	
-	m_listCtrl = new wxListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
-	bSizer2->Add( m_listCtrl, 1, wxEXPAND, 5 );
+	m_notebook = new wxNotebook( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0 );
+	m_panel9 = new wxPanel( m_notebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer11;
+	bSizer11 = new wxBoxSizer( wxVERTICAL );
+	
+	m_listCtrlAll = new wxListCtrl( m_panel9, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	bSizer11->Add( m_listCtrlAll, 1, wxEXPAND, 5 );
+	
+	m_panel9->SetSizer( bSizer11 );
+	m_panel9->Layout();
+	bSizer11->Fit( m_panel9 );
+	m_notebook->AddPage( m_panel9, _("All Transactions"), true );
+	m_panel91 = new wxPanel( m_notebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer111;
+	bSizer111 = new wxBoxSizer( wxVERTICAL );
+	
+	m_listCtrlSentReceived = new wxListCtrl( m_panel91, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	bSizer111->Add( m_listCtrlSentReceived, 1, wxEXPAND, 5 );
+	
+	m_panel91->SetSizer( bSizer111 );
+	m_panel91->Layout();
+	bSizer111->Fit( m_panel91 );
+	m_notebook->AddPage( m_panel91, _("Sent/Received"), false );
+	m_panel92 = new wxPanel( m_notebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer112;
+	bSizer112 = new wxBoxSizer( wxVERTICAL );
+	
+	m_listCtrlSent = new wxListCtrl( m_panel92, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	bSizer112->Add( m_listCtrlSent, 1, wxEXPAND, 5 );
+	
+	m_panel92->SetSizer( bSizer112 );
+	m_panel92->Layout();
+	bSizer112->Fit( m_panel92 );
+	m_notebook->AddPage( m_panel92, _("Sent"), false );
+	m_panel93 = new wxPanel( m_notebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer113;
+	bSizer113 = new wxBoxSizer( wxVERTICAL );
+	
+	m_listCtrlReceived = new wxListCtrl( m_panel93, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	bSizer113->Add( m_listCtrlReceived, 1, wxEXPAND, 5 );
+	
+	m_panel93->SetSizer( bSizer113 );
+	m_panel93->Layout();
+	bSizer113->Fit( m_panel93 );
+	m_notebook->AddPage( m_panel93, _("Received"), false );
+	
+	bSizer2->Add( m_notebook, 1, wxEXPAND, 5 );
 	
 	this->SetSizer( bSizer2 );
 	this->Layout();
@@ -160,8 +198,6 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	this->Connect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEvents ) );
 	this->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaint ) );
 	this->Connect( m_menuFileExit->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuFileExit ) );
-	this->Connect( m_menuViewShowGenerated->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuViewShowGenerated ) );
-	this->Connect( m_menuViewShowGenerated->GetId(), wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIViewShowGenerated ) );
 	this->Connect( m_menuOptionsGenerateBitcoins->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsGenerate ) );
 	this->Connect( m_menuOptionsGenerateBitcoins->GetId(), wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIOptionsGenerate ) );
 	this->Connect( m_menuOptionsChangeYourAddress->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsChangeYourAddress ) );
@@ -186,9 +222,19 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_textCtrlAddress->Connect( wxEVT_SET_FOCUS, wxFocusEventHandler( CMainFrameBase::OnSetFocusAddress ), NULL, this );
 	m_buttonNew->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonNew ), NULL, this );
 	m_buttonCopy->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonCopy ), NULL, this );
-	m_listCtrl->Connect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
-	m_listCtrl->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
-	m_listCtrl->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_notebook->Connect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( CMainFrameBase::OnNotebookPageChanged ), NULL, this );
+	m_listCtrlAll->Connect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlAll->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlAll->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_listCtrlSentReceived->Connect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlSentReceived->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlSentReceived->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_listCtrlSent->Connect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlSent->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlSent->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_listCtrlReceived->Connect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlReceived->Connect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlReceived->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
 }
 
 CMainFrameBase::~CMainFrameBase()
@@ -212,8 +258,6 @@ CMainFrameBase::~CMainFrameBase()
 	this->Disconnect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEvents ) );
 	this->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaint ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuFileExit ) );
-	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuViewShowGenerated ) );
-	this->Disconnect( wxID_ANY, wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIViewShowGenerated ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsGenerate ) );
 	this->Disconnect( wxID_ANY, wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIOptionsGenerate ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsChangeYourAddress ) );
@@ -238,9 +282,19 @@ CMainFrameBase::~CMainFrameBase()
 	m_textCtrlAddress->Disconnect( wxEVT_SET_FOCUS, wxFocusEventHandler( CMainFrameBase::OnSetFocusAddress ), NULL, this );
 	m_buttonNew->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonNew ), NULL, this );
 	m_buttonCopy->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CMainFrameBase::OnButtonCopy ), NULL, this );
-	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
-	m_listCtrl->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
-	m_listCtrl->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_notebook->Disconnect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( CMainFrameBase::OnNotebookPageChanged ), NULL, this );
+	m_listCtrlAll->Disconnect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlAll->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlAll->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_listCtrlSentReceived->Disconnect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlSentReceived->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlSentReceived->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_listCtrlSent->Disconnect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlSent->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlSent->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
+	m_listCtrlReceived->Disconnect( wxEVT_COMMAND_LIST_COL_BEGIN_DRAG, wxListEventHandler( CMainFrameBase::OnListColBeginDrag ), NULL, this );
+	m_listCtrlReceived->Disconnect( wxEVT_COMMAND_LIST_ITEM_ACTIVATED, wxListEventHandler( CMainFrameBase::OnListItemActivated ), NULL, this );
+	m_listCtrlReceived->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaintListCtrl ), NULL, this );
 }
 
 CTxDetailsDialogBase::CTxDetailsDialogBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )

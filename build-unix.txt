@@ -70,7 +70,7 @@ ldconfig
 Boost
 -----
 If you want to build Boost yourself,
-cd /usr/local/boost_1_42_0
+cd /usr/local/boost_1_38_0
 su
 ./bootstrap.sh
 ./bjam install

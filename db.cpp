@@ -599,7 +599,6 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
                 ssKey >> strKey;
 
                 // Menu state
-                if (strKey == "fShowGenerated")     ssValue >> fShowGenerated;
                 if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
 
                 // Options
@@ -618,7 +617,6 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
     }
 
     printf("nFileVersion = %d\n", nFileVersion);
-    printf("fShowGenerated = %d\n", fShowGenerated);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
     printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
     printf("addrIncoming = %s\n", addrIncoming.ToString().c_str());
