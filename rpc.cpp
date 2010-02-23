@@ -66,6 +66,17 @@ Value getblocknumber(const Array& params)
 }
 
 
+Value getconnectioncount(const Array& params)
+{
+    if (params.size() != 0)
+        throw runtime_error(
+            "getconnectioncount (no parameters)\n"
+            "Returns the number of connections to other nodes.");
+
+    return (int)vNodes.size();
+}
+
+
 Value getdifficulty(const Array& params)
 {
     if (params.size() != 0)
@@ -82,6 +93,71 @@ Value getdifficulty(const Array& params)
     double dMinimum = (CBigNum().SetCompact(bnProofOfWorkLimit.GetCompact()) >> nShift).getuint();
     double dCurrently = (CBigNum().SetCompact(pindexBest->nBits) >> nShift).getuint();
     return dMinimum / dCurrently;
+}
+
+
+Value getbalance(const Array& params)
+{
+    if (params.size() != 0)
+        throw runtime_error(
+            "getbalance (no parameters)\n"
+            "Returns the server's available balance.");
+
+    return ((double)GetBalance() / (double)COIN);
+}
+
+
+Value getgenerate(const Array& params)
+{
+    if (params.size() != 0)
+        throw runtime_error(
+            "getgenerate (no parameters)\n"
+            "Returns true or false.");
+
+    return (bool)fGenerateBitcoins;
+}
+
+
+Value setgenerate(const Array& params)
+{
+    if (params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setgenerate <generate> [genproclimit]\n"
+            "<generate> is true or false to turn generation on or off.\n"
+            "Generation is limited to [genproclimit] processors, -1 is unlimited.");
+
+    bool fGenerate = true;
+    if (params.size() > 0)
+        fGenerate = params[0].get_bool();
+
+    if (params.size() > 1)
+    {
+        int nGenProcLimit = params[1].get_int();
+        fLimitProcessors = (nGenProcLimit != -1);
+        CWalletDB().WriteSetting("fLimitProcessors", fLimitProcessors);
+        if (nGenProcLimit != -1)
+            CWalletDB().WriteSetting("nLimitProcessors", nLimitProcessors = nGenProcLimit);
+    }
+
+    GenerateBitcoins(fGenerate);
+    return Value::null;
+}
+
+
+Value getinfo(const Array& params)
+{
+    if (params.size() != 0)
+        throw runtime_error(
+            "getinfo (no parameters)");
+
+    Object obj;
+    obj.push_back(Pair("balance",       (double)GetBalance() / (double)COIN));
+    obj.push_back(Pair("blocks",        (int)nBestHeight + 1));
+    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+    obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
+    obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
+    return obj;
 }
 
 
@@ -102,8 +178,7 @@ Value getnewaddress(const Array& params)
     // Generate a new key that is added to wallet
     string strAddress = PubKeyToAddress(GenerateNewKey());
 
-    if (params.size() > 0)
-        SetAddressBookName(strAddress, strLabel);
+    SetAddressBookName(strAddress, strLabel);
     return strAddress;
 }
 
@@ -214,10 +289,10 @@ Value getallreceived(const Array& params)
             "getallreceived [minconf=1]\n"
             "[minconf] is the minimum number of confirmations before payments are included.\n"
             "Returns an array of objects containing:\n"
-            "  \"address\" : bitcoin address\n"
+            "  \"address\" : receiving address\n"
             "  \"amount\" : total amount received by the address\n"
-            "  \"conf\" : number of confirmations\n"
-            "  \"label\" : the label set for this address when it was created by getnewaddress");
+            "  \"confirmations\" : number of confirmations of the most recent transaction included\n"
+            "  \"label\" : the label of the receiving address");
 
     // Minimum confirmations
     int nMinDepth = 1;
@@ -235,18 +310,26 @@ Value getallreceived(const Array& params)
                 continue;
 
             int nDepth = wtx.GetDepthInMainChain();
-            if (nDepth >= nMinDepth)
-            {
-                foreach(const CTxOut& txout, wtx.vout)
-                {
-                    uint160 hash160 = txout.scriptPubKey.GetBitcoinAddressHash160();
-                    if (hash160 == 0 || !mapPubKeys.count(hash160))
-                        continue;
+            if (nDepth < nMinDepth)
+                continue;
 
-                    tallyitem& item = mapTally[hash160];
-                    item.nAmount += txout.nValue;
-                    item.nConf = min(item.nConf, nDepth);
-                }
+            // Filter out debits and payments to self, which may have change return
+            // we don't want to count.
+            int64 nCredit = wtx.GetCredit(true);
+            int64 nDebit = wtx.GetDebit();
+            int64 nNet = nCredit - nDebit;
+            if (nNet <= 0)
+                continue;
+
+            foreach(const CTxOut& txout, wtx.vout)
+            {
+                uint160 hash160 = txout.scriptPubKey.GetBitcoinAddressHash160();
+                if (hash160 == 0 || !mapPubKeys.count(hash160))
+                    continue;
+
+                tallyitem& item = mapTally[hash160];
+                item.nAmount += txout.nValue;
+                item.nConf = min(item.nConf, nDepth);
             }
         }
     }
@@ -264,10 +347,10 @@ Value getallreceived(const Array& params)
                 strLabel = (*mi).second;
 
             Object obj;
-            obj.push_back(Pair("address", strAddress));
-            obj.push_back(Pair("amount",  (double)(*it).second.nAmount / (double)COIN));
-            obj.push_back(Pair("conf",    (*it).second.nConf));
-            obj.push_back(Pair("label",   strLabel));
+            obj.push_back(Pair("address",       strAddress));
+            obj.push_back(Pair("amount",        (double)(*it).second.nAmount / (double)COIN));
+            obj.push_back(Pair("confirmations", (*it).second.nConf));
+            obj.push_back(Pair("label",         strLabel));
             ret.push_back(obj);
         }
     }
@@ -290,7 +373,12 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("stop",               &stop),
     make_pair("getblockcount",      &getblockcount),
     make_pair("getblocknumber",     &getblocknumber),
+    make_pair("getconnectioncount", &getconnectioncount),
     make_pair("getdifficulty",      &getdifficulty),
+    make_pair("getbalance",         &getbalance),
+    make_pair("getgenerate",        &getgenerate),
+    make_pair("setgenerate",        &setgenerate),
+    make_pair("getinfo",            &getinfo),
     make_pair("getnewaddress",      &getnewaddress),
     make_pair("sendtoaddress",      &sendtoaddress),
     make_pair("listtransactions",   &listtransactions),
@@ -568,9 +656,13 @@ int CommandLineRPC(int argc, char *argv[])
         Array params;
         for (int i = 2; i < argc; i++)
             params.push_back(argv[i]);
-
-        // Special case other types
         int n = params.size();
+
+        //
+        // Special case other types
+        //
+        if (strMethod == "setgenerate"       && n > 0) ConvertTo<bool>(params[0]);
+        if (strMethod == "setgenerate"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"     && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "listtransactions"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "listtransactions"  && n > 1) ConvertTo<bool>(params[1]);

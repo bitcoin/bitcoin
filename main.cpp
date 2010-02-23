@@ -1315,11 +1315,10 @@ bool CBlock::AcceptBlock()
     if (nTime <= pindexPrev->GetMedianTimePast())
         return error("AcceptBlock() : block's timestamp is too early");
 
-    // Check that all transactions are finalized (starting around Mar 2010)
-    if (nBestHeight > 36000)
-        foreach(const CTransaction& tx, vtx)
-            if (!tx.IsFinal(nTime))
-                return error("AcceptBlock() : contains a non-final transaction");
+    // Check that all transactions are finalized
+    foreach(const CTransaction& tx, vtx)
+        if (!tx.IsFinal(nTime))
+            return error("AcceptBlock() : contains a non-final transaction");
 
     // Check proof of work
     if (nBits != GetNextWorkRequired(pindexPrev))
@@ -1336,7 +1335,7 @@ bool CBlock::AcceptBlock()
         return error("AcceptBlock() : AddToBlockIndex failed");
 
     // Don't relay old inventory during initial block download.
-    // Please keep this constant updated to a few thousand below current block count.
+    // Please keep this number updated to a few thousand below current block count.
     if (hashBestChain == hash && nBestHeight > 40000)
         RelayInventory(CInv(MSG_BLOCK, hash));
 
@@ -1556,8 +1555,8 @@ bool LoadBlockIndex(bool fAllowNew)
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
-        txNew.vin[0].scriptSig     = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue       = 50 * COIN;
+        txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vout[0].nValue = 50 * COIN;
         CBigNum bnPubKey;
         bnPubKey.SetHex("0x5F1DF16B2B704C8A578D0BBAF74D385CDE12C11EE50455F3C438EF4C3FBCF649B6DE611FEAE06279A60939E028A8D65C10B73071A6F16719274855FEB0FD8A6704");
         txNew.vout[0].scriptPubKey = CScript() << bnPubKey << OP_CHECKSIG;
