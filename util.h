@@ -121,6 +121,7 @@ extern bool fPrintToDebugger;
 extern char pszSetDataDir[MAX_PATH];
 extern bool fShutdown;
 extern bool fDaemon;
+extern bool fCommandLine;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();

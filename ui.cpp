@@ -26,6 +26,20 @@ int fMinimizeOnClose = true;
 
 
 
+int MyMessageBox(const wxString& message, const wxString& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
+{
+    if (fDaemon)
+    {
+        printf("wxMessageBox %s: %s\n", string(caption).c_str(), string(message).c_str());
+        fprintf(stderr, "%s: %s\n", string(caption).c_str(), string(message).c_str());
+        return wxOK;
+    }
+    return wxMessageBox(message, caption, style, parent, x, y);
+}
+#define wxMessageBox  MyMessageBox
+
+
+
 
 
 
@@ -209,16 +223,10 @@ void CalledMessageBox(const string& message, const string& caption, int style, w
 
 int ThreadSafeMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
 {
-    if (fDaemon)
-    {
-        printf("wxMessageBox %s: %s\n", caption.c_str(), message.c_str());
-        return wxOK;
-    }
-
 #ifdef __WXMSW__
     return wxMessageBox(message, caption, style, parent, x, y);
 #else
-    if (wxThread::IsMain())
+    if (wxThread::IsMain() || fDaemon)
     {
         return wxMessageBox(message, caption, style, parent, x, y);
     }
@@ -563,7 +571,7 @@ string SingleLine(const string& strIn)
 bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
 {
     int64 nTime = wtx.nTimeDisplayed = wtx.GetTxTime();
-    int64 nCredit = wtx.GetCredit();
+    int64 nCredit = wtx.GetCredit(true);
     int64 nDebit = wtx.GetDebit();
     int64 nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
@@ -2571,6 +2579,9 @@ public:
     bool OnInit2();
     int OnExit();
 
+    // Hook Initialize so we can start without GUI
+    virtual bool Initialize(int& argc, wxChar** argv);
+
     // 2nd-level exception handling: we get all the exceptions occurring in any
     // event handler here
     virtual bool OnExceptionInMainLoop();
@@ -2585,6 +2596,64 @@ public:
 };
 
 IMPLEMENT_APP(CMyApp)
+
+bool CMyApp::Initialize(int& argc, wxChar** argv)
+{
+    if (argc > 1 && argv[1][0] != '-' && (!fWindows || argv[1][0] != '/') &&
+        wxString(argv[1]) != "start")
+    {
+        fCommandLine = true;
+    }
+    else
+    {
+        // wxApp::Initialize will remove environment-specific parameters,
+        // so it's too early to call ParseParameters yet
+        for (int i = 1; i < argc; i++)
+        {
+            wxString str = argv[i];
+            #ifdef __WXMSW__
+            if (str.size() >= 1 && str[0] == '/')
+                str[0] = '-';
+            str = str.MakeLower();
+            #endif
+            // haven't decided which argument to use for this yet
+            if (str == "-daemon" || str == "-d" || str == "start")
+                fDaemon = true;
+        }
+    }
+
+#ifdef __WXGTK__
+    if (fDaemon || fCommandLine)
+    {
+        // Call the original Initialize while suppressing error messages
+        // and ignoring failure.  If unable to initialize GTK, it fails
+        // near the end so hopefully the last few things don't matter.
+        {
+            wxLogNull logNo;
+            wxApp::Initialize(argc, argv);
+        }
+
+        if (fDaemon)
+        {
+            fprintf(stdout, "bitcoin server starting\n");
+
+            // Daemonize
+            pid_t pid = fork();
+            if (pid < 0)
+            {
+                fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+                return false;
+            }
+            if (pid > 0)
+                pthread_exit((void*)0);
+        }
+
+        return true;
+    }
+#endif
+
+    return wxApp::Initialize(argc, argv);
+}
 
 bool CMyApp::OnInit()
 {
@@ -2650,7 +2719,7 @@ bool CMyApp::OnInit2()
     //
     // Parameters
     //
-    if (argc > 1 && argv[1][0] != '-' && argv[1][0] != '/')
+    if (fCommandLine)
     {
         int ret = CommandLineRPC(argc, argv);
         exit(ret);
@@ -2695,13 +2764,6 @@ bool CMyApp::OnInit2()
 
     if (mapArgs.count("-printtodebugger"))
         fPrintToDebugger = true;
-
-    if (mapArgs.count("-daemon") || mapArgs.count("-d"))
-    {
-        fDaemon = true;
-        /// todo: need to fork
-        ///  should it fork after the bind/single instance stuff?
-    }
 
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();

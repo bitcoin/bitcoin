@@ -1384,6 +1384,9 @@ public:
     CPrivKey vchPrivKey;
     int64 nTimeCreated;
     int64 nTimeExpires;
+    string strComment;
+    //// todo: add something to note what created it (user, getnewaddress, change)
+    ////   maybe should have a map<string, string> property map
 
     CWalletKey(int64 nTimeExpiresIn=0)
     {
@@ -1398,6 +1401,7 @@ public:
         READWRITE(vchPrivKey);
         READWRITE(nTimeCreated);
         READWRITE(nTimeExpires);
+        READWRITE(strComment);
     )
 };
 

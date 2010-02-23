@@ -13,6 +13,7 @@ bool fPrintToDebugger = false;
 char pszSetDataDir[MAX_PATH] = "";
 bool fShutdown = false;
 bool fDaemon = false;
+bool fCommandLine = false;
 
 
 
@@ -500,7 +501,8 @@ void PrintException(std::exception* pex, const char* pszThread)
     char pszMessage[1000];
     FormatException(pszMessage, pex, pszThread);
     printf("\n\n************************\n%s\n", pszMessage);
-    if (wxTheApp)
+    fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
+    if (wxTheApp && !fDaemon)
         wxMessageBox(pszMessage, "Error", wxOK | wxICON_ERROR);
     throw;
     //DebugBreak();
