@@ -459,6 +459,7 @@ const char* wxGetTranslation(const char* pszEnglish)
         mapCache[pszEnglish] = pszCached;
         return pszCached;
     }
+    return NULL;
 }
 
 
@@ -502,8 +503,8 @@ void PrintException(std::exception* pex, const char* pszThread)
     FormatException(pszMessage, pex, pszThread);
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
-    if (wxTheApp && !fDaemon)
-        wxMessageBox(pszMessage, "Error", wxOK | wxICON_ERROR);
+    if (wxTheApp && !fDaemon && fGUI)
+        MyMessageBox(pszMessage, "Error", wxOK | wxICON_ERROR);
     throw;
     //DebugBreak();
 }

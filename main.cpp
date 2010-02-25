@@ -55,6 +55,8 @@ int64 nTransactionFee = 0;
 CAddress addrIncoming;
 int fLimitProcessors = false;
 int nLimitProcessors = 1;
+int fMinimizeToTray = true;
+int fMinimizeOnClose = true;
 
 
 
@@ -2990,7 +2992,7 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
     if (nValue <= 0)
         return _("Invalid amount");
     if (nValue + nTransactionFee > GetBalance())
-        return _("You don't have enough money");
+        return _("Insufficient funds");
 
     // Parse bitcoin address
     CScript scriptPubKey;

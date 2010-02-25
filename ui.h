@@ -4,23 +4,58 @@
 
 DECLARE_EVENT_TYPE(wxEVT_UITHREADCALL, -1)
 
+#if wxUSE_GUI
+static const bool fGUI=true;
+#else
+static const bool fGUI=false;
+#endif
 
-extern map<string, string> mapArgs;
+inline int MyMessageBox(const wxString& message, const wxString& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
+{
+#if wxUSE_GUI
+    if (!fDaemon)
+        return wxMessageBox(message, caption, style, parent, x, y);
+#endif
+    printf("wxMessageBox %s: %s\n", string(caption).c_str(), string(message).c_str());
+    fprintf(stderr, "%s: %s\n", string(caption).c_str(), string(message).c_str());
+    return wxOK;
+}
+#define wxMessageBox  MyMessageBox
 
-// Settings
-extern int fMinimizeToTray;
-extern int fMinimizeOnClose;
 
 
 
 void HandleCtrlA(wxKeyEvent& event);
 string FormatTxStatus(const CWalletTx& wtx);
 void UIThreadCall(boost::function0<void>);
-void MainFrameRepaint();
-void Shutdown(void* parg);
 int ThreadSafeMessageBox(const string& message, const string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1);
 bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent);
+void MainFrameRepaint();
+void CreateMainWindow();
 
+
+
+
+
+#if !wxUSE_GUI
+inline int ThreadSafeMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
+{
+    return MyMessageBox(message, caption, style, parent, x, y);
+}
+
+inline bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
+{
+    return true;
+}
+
+inline void MainFrameRepaint()
+{
+}
+
+inline void CreateMainWindow()
+{
+}
+#else // wxUSE_GUI
 
 
 
@@ -331,3 +366,5 @@ public:
 
 DECLARE_EVENT_TABLE()
 };
+
+#endif // wxUSE_GUI

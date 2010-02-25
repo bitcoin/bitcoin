@@ -28,57 +28,80 @@ LIBS= \
 WXDEFS=/DWIN32 /D__WXMSW__ /D_WINDOWS /DNOPCH
 DEBUGFLAGS=/Zi /Od /D__WXDEBUG__
 CFLAGS=/c /nologo /Ob0 /MDd /EHsc /GR /Zm300 $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h
-
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h init.h sha.h
 
 
 all: bitcoin.exe
 
 
-obj\util.obj: util.cpp        $(HEADERS)
-    cl $(CFLAGS) /Fo$@ %s
+.cpp{obj}.obj:
+	cl $(CFLAGS) /Fo$@ %s
 
-obj\script.obj: script.cpp    $(HEADERS)
-    cl $(CFLAGS) /Fo$@ %s
+obj\util.obj: $(HEADERS)
 
-obj\db.obj: db.cpp            $(HEADERS)
-    cl $(CFLAGS) /Fo$@ %s
+obj\script.obj: $(HEADERS)
 
-obj\net.obj: net.cpp          $(HEADERS)
-    cl $(CFLAGS) /Fo$@ %s
+obj\db.obj: $(HEADERS)
 
-obj\main.obj: main.cpp        $(HEADERS) sha.h
-    cl $(CFLAGS) /Fo$@ %s
+obj\net.obj: $(HEADERS)
 
-obj\ui.obj: ui.cpp            $(HEADERS)
-    cl $(CFLAGS) /Fo$@ %s
+obj\irc.obj: $(HEADERS)
 
-obj\uibase.obj: uibase.cpp    uibase.h
-    cl $(CFLAGS) /Fo$@ %s
+obj\main.obj: $(HEADERS)
 
-obj\sha.obj: sha.cpp          sha.h
-    cl $(CFLAGS) /O2 /Fo$@ %s
+obj\rpc.obj: $(HEADERS)
 
-obj\irc.obj:  irc.cpp         $(HEADERS)
-    cl $(CFLAGS) /Fo$@ %s
+obj\init.obj: $(HEADERS)
 
-obj\rpc.obj:  rpc.cpp         $(HEADERS)
-    cl $(CFLAGS) /Fo$@ %s
+obj\ui.obj: $(HEADERS)
+
+obj\uibase.obj: $(HEADERS)
+
+obj\sha.obj: sha.cpp sha.h
+	cl $(CFLAGS) /O2 /Fo$@ %s
 
 obj\ui.res: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
-    rc $(INCLUDEPATHS) $(WXDEFS) /Fo$@ %s
+	rc $(INCLUDEPATHS) $(WXDEFS) /Fo$@ %s
+
+OBJS= \
+    obj\util.obj \
+    obj\script.obj \
+    obj\db.obj \
+    obj\net.obj \
+    obj\irc.obj \
+    obj\main.obj \
+    obj\rpc.obj \
+    obj\init.obj
+
+bitcoin.exe: $(OBJS) obj\ui.obj obj\uibase.obj obj\sha.obj obj\ui.res
+	link /nologo /DEBUG /SUBSYSTEM:WINDOWS /OUT:$@ $(LIBPATHS) $** $(LIBS)
 
 
+.cpp{obj\nogui}.obj:
+	cl $(CFLAGS) /DwxUSE_GUI=0 /Fo$@ %s
 
-OBJS=obj\util.obj obj\script.obj obj\db.obj obj\net.obj obj\main.obj \
-    obj\ui.obj obj\uibase.obj obj\sha.obj obj\irc.obj obj\rpc.obj \
-    obj\ui.res
+obj\nogui\util.obj: $(HEADERS)
 
-bitcoin.exe: $(OBJS)
-    -kill /f bitcoin.exe & sleep 1
-    link /nologo /DEBUG /SUBSYSTEM:WINDOWS /OUT:$@ $(LIBPATHS) $** $(LIBS)
+obj\nogui\script.obj: $(HEADERS)
+
+obj\nogui\db.obj: $(HEADERS)
+
+obj\nogui\net.obj: $(HEADERS)
+
+obj\nogui\irc.obj: $(HEADERS)
+
+obj\nogui\main.obj: $(HEADERS)
+
+obj\nogui\rpc.obj: $(HEADERS)
+
+obj\nogui\init.obj: $(HEADERS)
+
+bitcoind.exe: $(OBJS:obj\=obj\nogui\) obj\sha.obj obj\ui.res
+	link /nologo /DEBUG /OUT:$@ $(LIBPATHS) $** $(LIBS)
+
 
 clean:
-    -del /Q obj\*
-    -del *.ilk
-    -del *.pdb
+	-del /Q obj\*
+	-del *.ilk
+	-del *.pdb

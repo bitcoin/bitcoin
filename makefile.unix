@@ -13,66 +13,61 @@ LIBPATHS= \
  -L"/usr/lib" \
  -L"/usr/local/lib"
 
+WXLIBS= \
+ -Wl,-Bstatic \
+   -l wx_gtk2ud-2.9 \
+ -Wl,-Bdynamic \
+   -l gtk-x11-2.0 -l SM
+
 LIBS= \
  -Wl,-Bstatic \
    -l boost_system-mt -l boost_filesystem-mt \
    -l db_cxx \
-   -l wx_gtk2ud-2.9 \
  -Wl,-Bdynamic \
    -l crypto \
-   -l gtk-x11-2.0 -l gthread-2.0 -l SM
+   -l gthread-2.0
 
 WXDEFS=-D__WXGTK__ -DNOPCH
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-O0 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h
-
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h init.h sha.h
 
 
 all: bitcoin
 
 
-headers.h.gch: headers.h            $(HEADERS)
+headers.h.gch: headers.h $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-obj/util.o: util.cpp                $(HEADERS)
+obj/%.o: %.cpp $(HEADERS) headers.h.gch
 	g++ -c $(CFLAGS) -o $@ $<
 
-obj/script.o: script.cpp            $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/db.o: db.cpp                    $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/net.o: net.cpp                  $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/main.o: main.cpp                $(HEADERS) sha.h
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/ui.o: ui.cpp                    $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/uibase.o: uibase.cpp            uibase.h
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/sha.o: sha.cpp                  sha.h
+obj/sha.o: sha.cpp sha.h
 	g++ -c $(CFLAGS) -O3 -o $@ $<
 
-obj/irc.o: irc.cpp                  $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
+OBJS= \
+    obj/util.o \
+    obj/script.o \
+    obj/db.o \
+    obj/net.o \
+    obj/irc.o \
+    obj/main.o \
+    obj/rpc.o \
+    obj/init.o
 
-obj/rpc.o: rpc.cpp                  $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
+bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha.o
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
 
 
+obj/nogui/%.o: %.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -DwxUSE_GUI=0 -o $@ $<
 
-OBJS=obj/util.o obj/script.o obj/db.o obj/net.o obj/main.o \
-        obj/ui.o obj/uibase.o obj/sha.o obj/irc.o obj/rpc.o
+bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha.o
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -l wx_baseud-2.9 $(LIBS)
 
-bitcoin: headers.h.gch $(OBJS)
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $(OBJS) $(LIBS)
 
 clean:
 	-rm obj/*
+	-rm obj/nogui/*
 	-rm headers.h.gch

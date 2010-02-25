@@ -21,9 +21,11 @@
 #include <wx/wx.h>
 #include <wx/clipbrd.h>
 #include <wx/snglinst.h>
-#include <wx/taskbar.h>
 #include <wx/stdpaths.h>
 #include <wx/utils.h>
+#if wxUSE_GUI
+#include <wx/taskbar.h>
+#endif
 #include <openssl/ecdsa.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -100,8 +102,11 @@ using namespace boost;
 #include "irc.h"
 #include "main.h"
 #include "rpc.h"
+#if wxUSE_GUI
 #include "uibase.h"
+#endif
 #include "ui.h"
+#include "init.h"
 
 #include "xpm/addressbook16.xpm"
 #include "xpm/addressbook20.xpm"
