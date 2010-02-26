@@ -19,11 +19,11 @@
 #define WIN32_LEAN_AND_MEAN 1
 #define __STDC_LIMIT_MACROS // to enable UINT64_MAX from stdint.h
 #include <wx/wx.h>
-#include <wx/clipbrd.h>
-#include <wx/snglinst.h>
 #include <wx/stdpaths.h>
-#include <wx/utils.h>
+#include <wx/snglinst.h>
 #if wxUSE_GUI
+#include <wx/utils.h>
+#include <wx/clipbrd.h>
 #include <wx/taskbar.h>
 #endif
 #include <openssl/ecdsa.h>
