@@ -76,6 +76,8 @@ bool RecvLine(SOCKET hSocket, string& strLine)
             if (c == '\r')
                 return true;
             strLine += c;
+            if (strLine.size() >= 9000)
+                return true;
         }
         else if (nBytes <= 0)
         {
@@ -109,7 +111,7 @@ bool RecvLineIRC(SOCKET hSocket, string& strLine)
                 return false;
             vector<string> vWords;
             ParseString(strLine, ' ', vWords);
-            if (vWords[0] == "PING")
+            if (vWords.size() >= 1 && vWords[0] == "PING")
             {
                 strLine[1] = 'O';
                 strLine += '\r';
@@ -156,6 +158,7 @@ bool Wait(int nSeconds)
 
 void ThreadIRCSeed(void* parg)
 {
+    printf("ThreadIRCSeed started\n");
     SetThreadPriority(THREAD_PRIORITY_NORMAL);
     int nErrorWait = 10;
     int nRetryWait = 10;
