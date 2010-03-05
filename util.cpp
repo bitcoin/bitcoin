@@ -282,15 +282,21 @@ bool error(const char* format, ...)
 
 void ParseString(const string& str, char c, vector<string>& v)
 {
-    unsigned int i1 = 0;
-    unsigned int i2;
-    do
+    if (str.empty())
+        return;
+    string::size_type i1 = 0;
+    string::size_type i2;
+    loop
     {
         i2 = str.find(c, i1);
+        if (i2 == str.npos)
+        {
+            v.push_back(str.substr(i1));
+            return;
+        }
         v.push_back(str.substr(i1, i2-i1));
         i1 = i2+1;
     }
-    while (i2 != str.npos);
 }
 
 
