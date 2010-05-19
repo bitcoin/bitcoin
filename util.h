@@ -133,6 +133,7 @@ void PrintException(std::exception* pex, const char* pszThread);
 void LogException(std::exception* pex, const char* pszThread);
 void ParseString(const string& str, char c, vector<string>& v);
 string FormatMoney(int64 n, bool fPlus=false);
+bool ParseMoney(const string& str, int64& nRet);
 bool ParseMoney(const char* pszIn, int64& nRet);
 vector<unsigned char> ParseHex(const char* psz);
 vector<unsigned char> ParseHex(const std::string& str);

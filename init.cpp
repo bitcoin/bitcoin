@@ -284,6 +284,10 @@ bool CMyApp::OnInit2()
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_WARN, CreateFileA("NUL", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0));
 #endif
+#if _MSC_VER >= 1400
+    // Disable confusing "helpful" text message on abort, ctrl-c
+    _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+#endif
 #if defined(__WXMSW__) && defined(__WXDEBUG__) && wxUSE_GUI
     // Disable malfunctioning wxWidgets debug assertion
     g_isPainting = 10000;
@@ -291,10 +295,12 @@ bool CMyApp::OnInit2()
 #if wxUSE_GUI
     wxImage::AddHandler(new wxPNGHandler);
 #endif
-#ifdef __WXMSW__
+#if defined(__WXMSW__ ) || defined(__WXMAC__)
     SetAppName("Bitcoin");
 #else
     SetAppName("bitcoin");
+#endif
+#ifndef __WXMSW__
     umask(077);
 #endif
 #ifdef __WXMSW__

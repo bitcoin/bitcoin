@@ -256,11 +256,20 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_staticTextBalance->SetLabel(FormatMoney(GetBalance()) + "  ");
     m_listCtrl->SetFocus();
     ptaskbaricon = new CMyTaskBarIcon();
+#ifdef __WXMAC__
+    // Mac automatically moves wxID_EXIT, wxID_PREFERENCES and wxID_ABOUT
+    // to their standard places, leaving these menus empty.
+    GetMenuBar()->Remove(2); // remove Help menu
+    GetMenuBar()->Remove(0); // remove File menu
+#endif
 
     // Init column headers
     int nDateWidth = DateTimeStr(1229413914).size() * 6 + 8;
     if (!strstr(DateTimeStr(1229413914).c_str(), "2008"))
         nDateWidth += 12;
+#ifdef __WXMAC__
+    nDateWidth += 2;
+#endif
     wxListCtrl* pplistCtrl[] = {m_listCtrlAll, m_listCtrlSentReceived, m_listCtrlSent, m_listCtrlReceived};
     foreach(wxListCtrl* p, pplistCtrl)
     {
@@ -274,7 +283,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     }
 
     // Init status bar
-    int pnWidths[3] = { -100, 88, 290 };
+    int pnWidths[3] = { -100, 88, 300 };
 #ifndef __WXMSW__
     pnWidths[1] = pnWidths[1] * 1.1 * dResize;
     pnWidths[2] = pnWidths[2] * 1.1 * dResize;
@@ -2157,7 +2166,7 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
             bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
             wxListCtrl* plistCtrl = fMine ? m_listCtrlReceiving : m_listCtrlSending;
             int nIndex = InsertLine(plistCtrl, strName, strAddress);
-            if (strAddress == (fMine ? strDefaultReceiving : strInitSelected))
+            if (strAddress == (fMine ? strDefaultReceiving : string(strInitSelected)))
                 plistCtrl->SetItemState(nIndex, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
         }
     }
@@ -2444,7 +2453,7 @@ void CMyTaskBarIcon::OnMenuRestore(wxCommandEvent& event)
 void CMyTaskBarIcon::OnMenuOptions(wxCommandEvent& event)
 {
     // Since it's modal, get the main window to do it
-    wxCommandEvent event2(wxEVT_COMMAND_MENU_SELECTED, wxID_MENUOPTIONSOPTIONS);
+    wxCommandEvent event2(wxEVT_COMMAND_MENU_SELECTED, wxID_PREFERENCES);
     pframeMain->GetEventHandler()->AddPendingEvent(event2);
 }
 

@@ -24,7 +24,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	
 	m_menuFile = new wxMenu();
 	wxMenuItem* m_menuFileExit;
-	m_menuFileExit = new wxMenuItem( m_menuFile, wxID_ANY, wxString( _("E&xit") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuFileExit = new wxMenuItem( m_menuFile, wxID_EXIT, wxString( _("E&xit") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuFile->Append( m_menuFileExit );
 	
 	m_menubar->Append( m_menuFile, _("&File") );
@@ -39,14 +39,14 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_menuOptions->Append( m_menuOptionsChangeYourAddress );
 	
 	wxMenuItem* m_menuOptionsOptions;
-	m_menuOptionsOptions = new wxMenuItem( m_menuOptions, wxID_MENUOPTIONSOPTIONS, wxString( _("&Options...") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuOptionsOptions = new wxMenuItem( m_menuOptions, wxID_PREFERENCES, wxString( _("&Options...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsOptions );
 	
 	m_menubar->Append( m_menuOptions, _("&Settings") );
 	
 	m_menuHelp = new wxMenu();
 	wxMenuItem* m_menuHelpAbout;
-	m_menuHelpAbout = new wxMenuItem( m_menuHelp, wxID_ANY, wxString( _("&About...") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuHelpAbout = new wxMenuItem( m_menuHelp, wxID_ABOUT, wxString( _("&About...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuHelp->Append( m_menuHelpAbout );
 	
 	m_menubar->Append( m_menuHelp, _("&Help") );
@@ -133,7 +133,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer11;
 	bSizer11 = new wxBoxSizer( wxVERTICAL );
 	
-	m_listCtrlAll = new wxListCtrl( m_panel9, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	m_listCtrlAll = new wxListCtrl( m_panel9, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING );
 	bSizer11->Add( m_listCtrlAll, 1, wxEXPAND, 5 );
 	
 	m_panel9->SetSizer( bSizer11 );
@@ -144,7 +144,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer111;
 	bSizer111 = new wxBoxSizer( wxVERTICAL );
 	
-	m_listCtrlSentReceived = new wxListCtrl( m_panel91, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	m_listCtrlSentReceived = new wxListCtrl( m_panel91, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING );
 	bSizer111->Add( m_listCtrlSentReceived, 1, wxEXPAND, 5 );
 	
 	m_panel91->SetSizer( bSizer111 );
@@ -155,7 +155,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer112;
 	bSizer112 = new wxBoxSizer( wxVERTICAL );
 	
-	m_listCtrlSent = new wxListCtrl( m_panel92, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	m_listCtrlSent = new wxListCtrl( m_panel92, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING );
 	bSizer112->Add( m_listCtrlSent, 1, wxEXPAND, 5 );
 	
 	m_panel92->SetSizer( bSizer112 );
@@ -166,7 +166,7 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer113;
 	bSizer113 = new wxBoxSizer( wxVERTICAL );
 	
-	m_listCtrlReceived = new wxListCtrl( m_panel93, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING|wxVSCROLL );
+	m_listCtrlReceived = new wxListCtrl( m_panel93, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxLC_SORT_DESCENDING );
 	bSizer113->Add( m_listCtrlReceived, 1, wxEXPAND, 5 );
 	
 	m_panel93->SetSizer( bSizer113 );

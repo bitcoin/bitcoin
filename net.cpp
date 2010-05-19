@@ -927,9 +927,7 @@ void ThreadOpenConnections2(void* parg)
                     continue;
 
                 // Only try the old stuff if we don't have enough connections
-                if (vNodes.size() >= 2 && nSinceLastSeen > 7 * 24 * 60 * 60)
-                    continue;
-                if (vNodes.size() >= 5 && nSinceLastSeen > 24 * 60 * 60)
+                if (vNodes.size() >= 8 && nSinceLastSeen > 24 * 60 * 60)
                     continue;
 
                 // If multiple addresses are ready, prioritize by time since
