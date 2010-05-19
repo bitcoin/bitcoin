@@ -314,6 +314,12 @@ string FormatMoney(int64 n, bool fPlus)
     return str;
 }
 
+
+bool ParseMoney(const string& str, int64& nRet)
+{
+    return ParseMoney(str.c_str(), nRet);
+}
+
 bool ParseMoney(const char* pszIn, int64& nRet)
 {
     string strWhole;

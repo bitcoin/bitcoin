@@ -1338,7 +1338,7 @@ bool CBlock::AcceptBlock()
 
     // Don't relay old inventory during initial block download.
     // Please keep this number updated to a few thousand below current block count.
-    if (hashBestChain == hash && nBestHeight > 40000)
+    if (hashBestChain == hash && nBestHeight > 55000)
         RelayInventory(CInv(MSG_BLOCK, hash));
 
     // // Add atoms to user reviews for coins created
@@ -2255,9 +2255,9 @@ bool SendMessages(CNode* pto)
         // Delay tx inv messages to protect privacy,
         // trickle them out to a few nodes at a time.
         bool fSendTxInv = false;
-        if (GetTimeMillis() - pto->nLastSentTxInv > 1800 + GetRand(200))
+        if (GetTimeMillis() > pto->nNextSendTxInv)
         {
-            pto->nLastSentTxInv = GetTimeMillis();
+            pto->nNextSendTxInv = GetTimeMillis() + 3000 + GetRand(2000);
             fSendTxInv = true;
         }
 

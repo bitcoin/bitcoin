@@ -45,6 +45,7 @@ bool StopNode();
 //  (4) message start
 //  (12) command
 //  (4) size
+//  (4) checksum
 
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ascii, not valid as UTF-8, and produce
@@ -58,6 +59,7 @@ public:
     char pchMessageStart[sizeof(::pchMessageStart)];
     char pchCommand[COMMAND_SIZE];
     unsigned int nMessageSize;
+    //unsigned int nChecksum;
 
     CMessageHeader()
     {
@@ -65,6 +67,7 @@ public:
         memset(pchCommand, 0, sizeof(pchCommand));
         pchCommand[1] = 1;
         nMessageSize = -1;
+        //nChecksum = 0;
     }
 
     CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
@@ -79,6 +82,8 @@ public:
         READWRITE(FLATDATA(pchMessageStart));
         READWRITE(FLATDATA(pchCommand));
         READWRITE(nMessageSize);
+        //if (nVersion >= 209 && GetCommand() != "version")
+        //    READWRITE(nChecksum);
     )
 
     string GetCommand()
@@ -484,7 +489,8 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
-    unsigned int nPushPos;
+    unsigned int nHeaderStart;
+    unsigned int nMessageStart;
     CAddress addr;
     int nVersion;
     bool fClient;
@@ -512,7 +518,7 @@ public:
     vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     multimap<int64, CInv> mapAskFor;
-    int64 nLastSentTxInv;
+    int64 nNextSendTxInv;
 
     // publish and subscription
     vector<char> vfSubscribe;
@@ -528,7 +534,8 @@ public:
         nLastRecv = 0;
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
-        nPushPos = -1;
+        nHeaderStart = -1;
+        nMessageStart = -1;
         addr = addrIn;
         nVersion = 0;
         fClient = false; // set by version message
@@ -542,6 +549,7 @@ public:
         pindexLastGetBlocksBegin = 0;
         hashLastGetBlocksEnd = 0;
         fGetAddr = false;
+        nNextSendTxInv = 0;
         vfSubscribe.assign(256, false);
 
         // Push a version message
@@ -639,10 +647,11 @@ public:
     void BeginMessage(const char* pszCommand)
     {
         cs_vSend.Enter();
-        if (nPushPos != -1)
+        if (nHeaderStart != -1)
             AbortMessage();
-        nPushPos = vSend.size();
+        nHeaderStart = vSend.size();
         vSend << CMessageHeader(pszCommand, 0);
+        nMessageStart = vSend.size();
         if (fDebug)
             printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
         printf("sending: %s ", pszCommand);
@@ -650,10 +659,11 @@ public:
 
     void AbortMessage()
     {
-        if (nPushPos == -1)
+        if (nHeaderStart == -1)
             return;
-        vSend.resize(nPushPos);
-        nPushPos = -1;
+        vSend.resize(nHeaderStart);
+        nHeaderStart = -1;
+        nMessageStart = -1;
         cs_vSend.Leave();
         printf("(aborted)\n");
     }
@@ -667,25 +677,26 @@ public:
             return;
         }
 
-        if (nPushPos == -1)
+        if (nHeaderStart == -1)
             return;
 
         // Patch in the size
-        unsigned int nSize = vSend.size() - nPushPos - sizeof(CMessageHeader);
-        memcpy((char*)&vSend[nPushPos] + offsetof(CMessageHeader, nMessageSize), &nSize, sizeof(nSize));
+        unsigned int nSize = vSend.size() - nMessageStart;
+        memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nMessageSize), &nSize, sizeof(nSize));
 
         printf("(%d bytes) ", nSize);
         printf("\n");
 
-        nPushPos = -1;
+        nHeaderStart = -1;
+        nMessageStart = -1;
         cs_vSend.Leave();
     }
 
     void EndMessageAbortIfEmpty()
     {
-        if (nPushPos == -1)
+        if (nHeaderStart == -1)
             return;
-        int nSize = vSend.size() - nPushPos - sizeof(CMessageHeader);
+        int nSize = vSend.size() - nMessageStart;
         if (nSize > 0)
             EndMessage();
         else
@@ -694,9 +705,9 @@ public:
 
     const char* GetMessageCommand() const
     {
-        if (nPushPos == -1)
+        if (nHeaderStart == -1)
             return "";
-        return &vSend[nPushPos] + offsetof(CMessageHeader, pchCommand);
+        return &vSend[nHeaderStart] + offsetof(CMessageHeader, pchCommand);
     }
 
 

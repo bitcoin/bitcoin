@@ -77,6 +77,18 @@ Value getconnectioncount(const Array& params)
 }
 
 
+double GetDifficulty()
+{
+    // Floating point number that is a multiple of the minimum difficulty,
+    // minimum difficulty = 1.0.
+    if (pindexBest == NULL)
+        return 1.0;
+    int nShift = 256 - 32 - 31; // to fit in a uint
+    double dMinimum = (CBigNum().SetCompact(bnProofOfWorkLimit.GetCompact()) >> nShift).getuint();
+    double dCurrently = (CBigNum().SetCompact(pindexBest->nBits) >> nShift).getuint();
+    return dMinimum / dCurrently;
+}
+
 Value getdifficulty(const Array& params)
 {
     if (params.size() != 0)
@@ -84,15 +96,7 @@ Value getdifficulty(const Array& params)
             "getdifficulty (no parameters)\n"
             "Returns the proof-of-work difficulty as a multiple of the minimum difficulty.");
 
-    if (pindexBest == NULL)
-        throw runtime_error("block chain not loaded");
-
-    // Floating point number that is a multiple of the minimum difficulty,
-    // minimum difficulty = 1.0.
-    int nShift = 256 - 32 - 31; // to fit in a uint
-    double dMinimum = (CBigNum().SetCompact(bnProofOfWorkLimit.GetCompact()) >> nShift).getuint();
-    double dCurrently = (CBigNum().SetCompact(pindexBest->nBits) >> nShift).getuint();
-    return dMinimum / dCurrently;
+    return GetDifficulty();
 }
 
 
@@ -157,6 +161,7 @@ Value getinfo(const Array& params)
     obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
     obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
     obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
+    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     return obj;
 }
 
