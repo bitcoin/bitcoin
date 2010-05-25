@@ -1,0 +1,209 @@
+Mac OS X build instructions
+Laszlo Hanyecz (solar@heliacal.net)
+
+
+Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
+
+All of the commands should be executed in Terminal.app.. it's in
+/Applications/Utilities
+
+You need to install XCode with all the options checked so that the compiler
+and everything is available in /usr not just /Developer
+I think it comes on the DVD but you can get the current version from
+http://developer.apple.com
+
+
+1.  Pick a directory to work inside.. something like ~/bitcoin works.  The
+structure I use looks like this:
+(~ is your home directory)
+
+~/bitcoin
+~/bitcoin/trunk         # source code
+~/bitcoin/deps          # dependencies.. like libraries and headers needed to compile
+~/bitcoin/Bitcoin.app   # the application bundle where you can run the app
+
+Just execute: mkdir ~/bitcoin
+This will create the top dir for you..
+
+WARNING: do not use the ~ notation with the configure scripts.. use the full
+name of the directory, for example /Users/james/bitcoin/deps for a user named
+'james'.  In my examples I am using 'macosuser' so make sure you change that.
+
+2.  Check out the trunk version of the bitcoin code from subversion:
+
+cd ~/bitcoin
+svn checkout https://bitcoin.svn.sourceforge.net/svnroot/bitcoin/trunk
+
+This will make ~/bitcoin/trunk for you with all the files from subversion. 
+
+3.  Get and build the dependencies
+
+
+Boost
+-----
+
+Download from http://www.boost.org/users/download/
+I'm assuming it ended up in ~/Downloads..
+
+mkdir ~/bitcoin/deps
+cd ~/bitcoin/deps
+tar xvjf ~/Downloads/boost_1_42_0.tar.bz2
+cd boost_1_42_0
+./bootstrap.sh
+./bjam architecture=combined address-model=32_64 macosx-version=10.6 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/bitcoin/deps install
+
+This part takes a while.. use your judgement and fix it if something doesn't
+build for some reason.
+
+Change the prefix to whatever your directory is (my username in this example
+is macosuser).  I'm also running on 10.6 so i have macosx-version=10.6  change
+to 10.5 if you're using leopard.
+
+This is what my output looked like at the end:
+...failed updating 2 targets...
+...skipped 144 targets...
+...updated 8074 targets...
+
+
+OpenSSL
+-------
+
+Download from http://www.openssl.org/source/
+
+We would like to build this as a 32 bit/64 bit library so we actually build it
+2 times and join it together here..  If you downloaded with safari it already
+uncompressed it so it will just be a tar not a tar.gz
+
+cd ~/bitcoin/deps
+tar xvf ~/Downloads/openssl-1.0.0.tar
+mv openssl-1.0.0 openssl-1.0.0-i386
+tar xvf ~/Downloads/openssl-1.0.0.tar
+mv openssl-1.0.0 openssl-1.0.0-x86_64
+# build i386 (32 bit intel) binary
+cd openssl-1.0.0-i386
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/deps/openssl darwin-i386-cc && make
+make install # only do this on one of the architectures, to install the headers
+cd ..
+# build x86_64 (64 bit intel) binary
+cd openssl-1.0.0-x86_64
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/deps/openssl darwin64-x86_64-cc && make
+cd ..
+
+# combine the libs
+cd ~/bitcoin/deps
+lipo -arch i386 openssl-1.0.0-i386/libcrypto.a -arch x86_64 openssl-1.0.0-x86_64/libcrypto.a -o lib/libcrypto.a -create
+lipo -arch i386 openssl-1.0.0-i386/libssl.a -arch x86_64 openssl-1.0.0-x86_64/libssl.a -o lib/libssl.a -create
+
+Verify your binaries
+
+file lib/libcrypto.a
+
+output should look like this:
+
+ib/libcrypto.a: Mach-O universal binary with 2 architectures
+lib/libcrypto.a (for architecture i386):	current ar archive random library
+lib/libcrypto.a (for architecture x86_64):	current ar archive random library
+
+
+Berkeley DB
+-----------
+
+Download from http://freshmeat.net/projects/berkeleydb/
+
+cd ~/bitcoin/deps
+tar xvf ~/Downloads/db-4.8.26.tar
+cd db-4.8.26/build_unix
+../dist/configure --prefix=/Users/macosuser/bitcoin/deps --enable-cxx && make && make install
+
+
+wxWidgets
+---------
+
+This is the big one..
+
+Check it out from svn
+
+cd ~/bitcoin/deps
+svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk
+
+This will make a wxWidgets-trunk directory in deps.
+
+Use this script snippet, change your prefix to whatever your dir is:
+
+PREFIX=~/bitcoin/deps
+SRCDIR="$PREFIX/wxWidgets-trunk"
+BUILDDIR="$SRCDIR/macbuild"
+
+cd "$PREFIX" &&
+#svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk &&
+cd "$SRCDIR" &&
+
+[ -f include/wx/hashmap.h.orig ] || cp include/wx/hashmap.h include/wx/hashmap.h.orig &&
+sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashmap.h.orig > include/wx/hashmap.h &&
+
+[ -f include/wx/hashset.h.orig ] || cp include/wx/hashset.h include/wx/hashset.h.orig &&
+sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashset.h.orig > include/wx/hashset.h &&
+
+
+
+rm -vrf "$BUILDDIR" &&
+mkdir "$BUILDDIR" &&
+cd "$BUILDDIR" &&
+
+../configure --prefix="$PREFIX" \
+--with-osx_cocoa \
+--disable-shared \
+--disable-debug_flag \
+--with-macosx-version-min=10.5 \
+--enable-stl \
+--enable-utf8 \
+--enable-universal_binary \
+--with-libjpeg=builtin \
+--with-libpng=builtin \
+--with-regex=builtin \
+--with-libtiff=builtin \
+--with-zlib=builtin \
+--with-expat=builtin \
+--with-macosx-sdk=/Developer/SDKs/MacOSX10.5.sdk &&
+
+
+find . -name Makefile | 
+while read i; do 
+  echo $i; 
+  sed 's/-arch i386/-arch i386 -arch x86_64/g' < "$i" > "$i".new && 
+  mv "$i" "$i".old && 
+  mv "$i".new "$i"; 
+done
+
+
+
+make && 
+make install
+
+
+
+Now you should be able to build bitcoin
+
+cd ~/bitcoin/trunk
+make -f makefile.osx bitcoin
+
+Before you can run it, you need to create an application bundle for Mac OS.
+Create the directories in terminal using mkdir and copy the files into place.
+They are available at http://heliacal.net/~solar/bitcoin/mac-build/
+You need the Info.plist and the .ins file.  The Contents/MacOS/bitcoin file is
+the output of the build.
+Your directory structure should look like this:
+
+Bitcoin.app
+Bitcoin.app/Contents
+Bitcoin.app/Contents/Info.plist
+Bitcoin.app/Contents/MacOS
+Bitcoin.app/Contents/MacOS/bitcoin
+Bitcoin.app/Contents/Resources
+Bitcoin.app/Contents/Resources/BitcoinAppIcon.icns
+
+To run it you can just click the Bitcoin.app in Finder, or just do open
+~/bitcoin/Bitcoin.app
+If you want to run it with arguments you can just run it without backgrounding
+by specifying the full name in terminal:
+~/bitcoin/Bitcoin.app/Contents/MacOS/bitcoin -addnode=192.75.207.66

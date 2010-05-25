@@ -1,0 +1,65 @@
+# Copyright (c) 2009-2010 Satoshi Nakamoto
+# Distributed under the MIT/X11 software license, see the accompanying
+# file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+# Mac OS X makefile for bitcoin
+# Laszlo Hanyecz (solar@heliacal.net)
+
+DEPSDIR=/Users/macosuser/bitcoin/deps
+
+INCLUDEPATHS= \
+ -I"$(DEPSDIR)/include"
+
+LIBPATHS= \
+ -L"$(DEPSDIR)/lib"
+
+WXLIBS=$(shell $(DEPSDIR)/bin/wx-config --libs --static)
+
+LIBS= -dead_strip \
+ $(DEPSDIR)/lib/libdb_cxx-4.8.a \
+ $(DEPSDIR)/lib/libboost_system.a \
+ $(DEPSDIR)/lib/libboost_filesystem.a \
+ $(DEPSDIR)/lib/libcrypto.a 
+
+WXDEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -DNOPCH -DMSG_NOSIGNAL=0
+
+DEBUGFLAGS=-g -DwxDEBUG_LEVEL=0
+# ppc doesn't work because we don't support big-endian
+CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h init.h sha.h
+
+
+all: bitcoin
+
+
+obj/%.o: %.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+
+obj/sha.o: sha.cpp sha.h
+	g++ -c $(CFLAGS) -O3 -o $@ $<
+
+OBJS= \
+    obj/util.o \
+    obj/script.o \
+    obj/db.o \
+    obj/net.o \
+    obj/irc.o \
+    obj/main.o \
+    obj/rpc.o \
+    obj/init.o
+	
+bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha.o
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
+
+
+obj/nogui/%.o: %.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -DwxUSE_GUI=0 -o $@ $<
+
+bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha.o
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
+
+
+clean:
+	-rm -f obj/*.o
+	-rm -f obj/nogui/*.o
