@@ -193,6 +193,12 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* pa
     return (ThreadSafeMessageBox(strMessage, strCaption, wxYES_NO, parent) == wxYES);
 }
 
+void CalledSetStatusBar(const string& strText, int nField)
+{
+    if (pframeMain && pframeMain->m_statusBar)
+        pframeMain->m_statusBar->SetStatusText(strText, nField);
+}
+
 void SetDefaultReceivingAddress(const string& strAddress)
 {
     // Update main window address and database
@@ -268,7 +274,8 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     if (!strstr(DateTimeStr(1229413914).c_str(), "2008"))
         nDateWidth += 12;
 #ifdef __WXMAC__
-    nDateWidth += 2;
+    nDateWidth += 5;
+    dResize -= 0.01;
 #endif
     wxListCtrl* pplistCtrl[] = {m_listCtrlAll, m_listCtrlSentReceived, m_listCtrlSent, m_listCtrlReceived};
     foreach(wxListCtrl* p, pplistCtrl)

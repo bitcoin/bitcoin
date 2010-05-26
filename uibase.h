@@ -77,7 +77,6 @@ class CMainFrameBase : public wxFrame
 		wxMenu* m_menuFile;
 		wxMenu* m_menuHelp;
 		wxToolBar* m_toolBar;
-		wxStatusBar* m_statusBar;
 		
 		wxStaticText* m_staticText32;
 		wxButton* m_buttonNew;
@@ -121,6 +120,7 @@ class CMainFrameBase : public wxFrame
 	
 	public:
 		wxMenu* m_menuOptions;
+		wxStatusBar* m_statusBar;
 		wxTextCtrl* m_textCtrlAddress;
 		wxListCtrl* m_listCtrlAll;
 		wxListCtrl* m_listCtrlSentReceived;

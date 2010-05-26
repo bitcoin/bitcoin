@@ -250,11 +250,6 @@ string strprintf(const char* format, ...)
         if (p == NULL)
             throw std::bad_alloc();
     }
-#ifdef _MSC_VER
-    // msvc optimisation
-    if (p == buffer)
-        return string(p, p+ret);
-#endif
     string str(p, p+ret);
     if (p != buffer)
         delete p;
