@@ -30,6 +30,7 @@ string FormatTxStatus(const CWalletTx& wtx);
 void UIThreadCall(boost::function0<void>);
 int ThreadSafeMessageBox(const string& message, const string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1);
 bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent);
+void CalledSetStatusBar(const string& strText, int nField);
 void MainFrameRepaint();
 void CreateMainWindow();
 
@@ -46,6 +47,14 @@ inline int ThreadSafeMessageBox(const string& message, const string& caption, in
 inline bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
 {
     return true;
+}
+
+inline void CalledSetStatusBar(const string& strText, int nField)
+{
+}
+
+inline void UIThreadCall(boost::function0<void> fn)
+{
 }
 
 inline void MainFrameRepaint()

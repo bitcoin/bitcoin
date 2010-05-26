@@ -8,6 +8,7 @@ class CInv;
 class CRequestTracker;
 class CNode;
 class CBlockIndex;
+extern int nBestHeight;
 
 
 
@@ -59,7 +60,7 @@ public:
     char pchMessageStart[sizeof(::pchMessageStart)];
     char pchCommand[COMMAND_SIZE];
     unsigned int nMessageSize;
-    //unsigned int nChecksum;
+    unsigned int nChecksum;
 
     CMessageHeader()
     {
@@ -67,7 +68,7 @@ public:
         memset(pchCommand, 0, sizeof(pchCommand));
         pchCommand[1] = 1;
         nMessageSize = -1;
-        //nChecksum = 0;
+        nChecksum = 0;
     }
 
     CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
@@ -75,6 +76,7 @@ public:
         memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
         strncpy(pchCommand, pszCommand, COMMAND_SIZE);
         nMessageSize = nMessageSizeIn;
+        nChecksum = 0;
     }
 
     IMPLEMENT_SERIALIZE
@@ -82,8 +84,8 @@ public:
         READWRITE(FLATDATA(pchMessageStart));
         READWRITE(FLATDATA(pchCommand));
         READWRITE(nMessageSize);
-        //if (nVersion >= 209 && GetCommand() != "version")
-        //    READWRITE(nChecksum);
+        if (nVersion >= 209)
+            READWRITE(nChecksum);
     )
 
     string GetCommand()
@@ -475,6 +477,7 @@ extern CAddress addrProxy;
 
 
 
+
 class CNode
 {
 public:
@@ -507,6 +510,7 @@ public:
     uint256 hashContinue;
     CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
+    int nStartingHeight;
 
     // flood
     vector<CAddress> vAddrToSend;
@@ -529,7 +533,9 @@ public:
         nServices = 0;
         hSocket = hSocketIn;
         vSend.SetType(SER_NETWORK);
+        vSend.SetVersion(0);
         vRecv.SetType(SER_NETWORK);
+        vRecv.SetVersion(0);
         nLastSend = 0;
         nLastRecv = 0;
         nLastSendEmpty = GetTime();
@@ -548,6 +554,7 @@ public:
         hashContinue = 0;
         pindexLastGetBlocksBegin = 0;
         hashLastGetBlocksEnd = 0;
+        nStartingHeight = -1;
         fGetAddr = false;
         nNextSendTxInv = 0;
         vfSubscribe.assign(256, false);
@@ -558,7 +565,8 @@ public:
         CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
         CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
         RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe, nLocalHostNonce, string(pszSubVer));
+        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe,
+                    nLocalHostNonce, string(pszSubVer), nBestHeight);
     }
 
     ~CNode()
@@ -680,9 +688,19 @@ public:
         if (nHeaderStart == -1)
             return;
 
-        // Patch in the size
+        // Set the size
         unsigned int nSize = vSend.size() - nMessageStart;
         memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nMessageSize), &nSize, sizeof(nSize));
+
+        // Set the checksum
+        if (vSend.GetVersion() >= 209)
+        {
+            uint256 hash = Hash(vSend.begin() + nMessageStart, vSend.end());
+            unsigned int nChecksum = 0;
+            memcpy(&nChecksum, &hash, sizeof(nChecksum));
+            assert(nMessageStart - nHeaderStart >= offsetof(CMessageHeader, nChecksum) + sizeof(nChecksum));
+            memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
+        }
 
         printf("(%d bytes) ", nSize);
         printf("\n");

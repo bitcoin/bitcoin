@@ -328,6 +328,8 @@ public:
 
     bool EraseName(const string& strAddress)
     {
+        // This should only be used for sending addresses, never for receiving addresses,
+        // receiving addresses must always have an address book entry if they're not change return.
         CRITICAL_BLOCK(cs_mapAddressBook)
             mapAddressBook.erase(strAddress);
         nWalletDBUpdated++;

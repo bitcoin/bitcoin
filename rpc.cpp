@@ -26,7 +26,7 @@ void ThreadRPCServer2(void* parg);
 
 
 ///
-/// Note: I'm not finished designing this interface, it's still subject to change.
+/// Note: This interface may still be subject to change.
 ///
 
 
@@ -188,6 +188,73 @@ Value getnewaddress(const Array& params)
 }
 
 
+Value setlabel(const Array& params)
+{
+    if (params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setlabel <bitcoinaddress> <label>\n"
+            "Sets the label associated with the given address.");
+
+    string strAddress = params[0].get_str();
+    string strLabel;
+    if (params.size() > 1)
+        strLabel = params[1].get_str();
+
+    SetAddressBookName(strAddress, strLabel);
+    return Value::null;
+}
+
+
+Value getlabel(const Array& params)
+{
+    if (params.size() != 1)
+        throw runtime_error(
+            "getlabel <bitcoinaddress>\n"
+            "Returns the label associated with the given address.");
+
+    string strAddress = params[0].get_str();
+
+    string strLabel;
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        map<string, string>::iterator mi = mapAddressBook.find(strAddress);
+        if (mi != mapAddressBook.end() && !(*mi).second.empty())
+            strLabel = (*mi).second;
+    }
+    return strLabel;
+}
+
+
+Value getaddressesbylabel(const Array& params)
+{
+    if (params.size() != 1)
+        throw runtime_error(
+            "getaddressesbylabel <label>\n"
+            "Returns the list of addresses with the given label.");
+
+    string strLabel = params[0].get_str();
+
+    // Find all addresses that have the given label
+    Array ret;
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
+        {
+            const string& strAddress = item.first;
+            const string& strName = item.second;
+            if (strName == strLabel)
+            {
+                // We're only adding valid bitcoin addresses and not ip addresses
+                CScript scriptPubKey;
+                if (scriptPubKey.SetBitcoinAddress(strAddress))
+                    ret.push_back(strAddress);
+            }
+        }
+    }
+    return ret;
+}
+
+
 Value sendtoaddress(const Array& params)
 {
     if (params.size() < 2 || params.size() > 4)
@@ -237,11 +304,11 @@ Value listtransactions(const Array& params)
 }
 
 
-Value getamountreceived(const Array& params)
+Value getreceivedbyaddress(const Array& params)
 {
     if (params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getamountreceived <bitcoinaddress> [minconf=1]\n"
+            "getreceivedbyaddress <bitcoinaddress> [minconf=1]\n"
             "Returns the total amount received by <bitcoinaddress> in transactions with at least [minconf] confirmations.");
 
     // Bitcoin address
@@ -249,6 +316,8 @@ Value getamountreceived(const Array& params)
     CScript scriptPubKey;
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
         throw runtime_error("Invalid bitcoin address");
+    if (!IsMine(scriptPubKey))
+        return (double)0.0;
 
     // Minimum confirmations
     int nMinDepth = 1;
@@ -276,6 +345,59 @@ Value getamountreceived(const Array& params)
 }
 
 
+Value getreceivedbylabel(const Array& params)
+{
+    if (params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "getreceivedbylabel <label> [minconf=1]\n"
+            "Returns the total amount received by addresses with <label> in transactions with at least [minconf] confirmations.");
+
+    // Get the set of pub keys that have the label
+    string strLabel = params[0].get_str();
+    set<CScript> setPubKey;
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
+        {
+            const string& strAddress = item.first;
+            const string& strName = item.second;
+            if (strName == strLabel)
+            {
+                // We're only counting our own valid bitcoin addresses and not ip addresses
+                CScript scriptPubKey;
+                if (scriptPubKey.SetBitcoinAddress(strAddress))
+                    if (IsMine(scriptPubKey))
+                        setPubKey.insert(scriptPubKey);
+            }
+        }
+    }
+
+    // Minimum confirmations
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
+
+    // Tally
+    int64 nAmount = 0;
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            if (wtx.IsCoinBase() || !wtx.IsFinal())
+                continue;
+
+            foreach(const CTxOut& txout, wtx.vout)
+                if (setPubKey.count(txout.scriptPubKey))
+                    if (wtx.GetDepthInMainChain() >= nMinDepth)
+                        nAmount += txout.nValue;
+        }
+    }
+
+    return (double)nAmount / (double)COIN;
+}
+
+
 struct tallyitem
 {
     int64 nAmount;
@@ -287,22 +409,17 @@ struct tallyitem
     }
 };
 
-Value getallreceived(const Array& params)
+Value ListReceived(const Array& params, bool fByLabels)
 {
-    if (params.size() > 1)
-        throw runtime_error(
-            "getallreceived [minconf=1]\n"
-            "[minconf] is the minimum number of confirmations before payments are included.\n"
-            "Returns an array of objects containing:\n"
-            "  \"address\" : receiving address\n"
-            "  \"amount\" : total amount received by the address\n"
-            "  \"confirmations\" : number of confirmations of the most recent transaction included\n"
-            "  \"label\" : the label of the receiving address");
-
     // Minimum confirmations
     int nMinDepth = 1;
     if (params.size() > 0)
         nMinDepth = params[0].get_int();
+
+    // Whether to include empty accounts
+    bool fIncludeEmpty = false;
+    if (params.size() > 1)
+        fIncludeEmpty = params[1].get_bool();
 
     // Tally
     map<uint160, tallyitem> mapTally;
@@ -318,18 +435,11 @@ Value getallreceived(const Array& params)
             if (nDepth < nMinDepth)
                 continue;
 
-            // Filter out debits and payments to self, which may have change return
-            // we don't want to count.
-            int64 nCredit = wtx.GetCredit(true);
-            int64 nDebit = wtx.GetDebit();
-            int64 nNet = nCredit - nDebit;
-            if (nNet <= 0)
-                continue;
-
             foreach(const CTxOut& txout, wtx.vout)
             {
+                // Only counting our own bitcoin addresses and not ip addresses
                 uint160 hash160 = txout.scriptPubKey.GetBitcoinAddressHash160();
-                if (hash160 == 0 || !mapPubKeys.count(hash160))
+                if (hash160 == 0 || !mapPubKeys.count(hash160)) // IsMine
                     continue;
 
                 tallyitem& item = mapTally[hash160];
@@ -341,26 +451,99 @@ Value getallreceived(const Array& params)
 
     // Reply
     Array ret;
+    map<string, tallyitem> mapLabelTally;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
-        for (map<uint160, tallyitem>::iterator it = mapTally.begin(); it != mapTally.end(); ++it)
+        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
         {
-            string strAddress = Hash160ToAddress((*it).first);
-            string strLabel;
-            map<string, string>::iterator mi = mapAddressBook.find(strAddress);
-            if (mi != mapAddressBook.end())
-                strLabel = (*mi).second;
+            const string& strAddress = item.first;
+            const string& strLabel = item.second;
+            uint160 hash160;
+            if (!AddressToHash160(strAddress, hash160))
+                continue;
+            map<uint160, tallyitem>::iterator it = mapTally.find(hash160);
+            if (it == mapTally.end() && !fIncludeEmpty)
+                continue;
 
+            int64 nAmount = 0;
+            int nConf = INT_MAX;
+            if (it != mapTally.end())
+            {
+                nAmount = (*it).second.nAmount;
+                nConf = (*it).second.nConf;
+            }
+
+            if (fByLabels)
+            {
+                tallyitem& item = mapLabelTally[strLabel];
+                item.nAmount += nAmount;
+                item.nConf = min(item.nConf, nConf);
+            }
+            else
+            {
+                Object obj;
+                obj.push_back(Pair("address",       strAddress));
+                obj.push_back(Pair("label",         strLabel));
+                obj.push_back(Pair("amount",        (double)nAmount / (double)COIN));
+                obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
+                ret.push_back(obj);
+            }
+        }
+    }
+
+    if (fByLabels)
+    {
+        for (map<string, tallyitem>::iterator it = mapLabelTally.begin(); it != mapLabelTally.end(); ++it)
+        {
+            int64 nAmount = (*it).second.nAmount;
+            int nConf = (*it).second.nConf;
             Object obj;
-            obj.push_back(Pair("address",       strAddress));
-            obj.push_back(Pair("amount",        (double)(*it).second.nAmount / (double)COIN));
-            obj.push_back(Pair("confirmations", (*it).second.nConf));
-            obj.push_back(Pair("label",         strLabel));
+            obj.push_back(Pair("label",         (*it).first));
+            obj.push_back(Pair("amount",        (double)nAmount / (double)COIN));
+            obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
             ret.push_back(obj);
         }
     }
+
     return ret;
 }
+
+Value listreceivedbyaddress(const Array& params)
+{
+    if (params.size() > 2)
+        throw runtime_error(
+            "listreceivedbyaddress [minconf=1] [includeempty=false]\n"
+            "[minconf] is the minimum number of confirmations before payments are included.\n"
+            "[includeempty] whether to include addresses that haven't received any payments.\n"
+            "Returns an array of objects containing:\n"
+            "  \"address\" : receiving address\n"
+            "  \"label\" : the label of the receiving address\n"
+            "  \"amount\" : total amount received by the address\n"
+            "  \"confirmations\" : number of confirmations of the most recent transaction included");
+
+    return ListReceived(params, false);
+}
+
+Value listreceivedbylabel(const Array& params)
+{
+    if (params.size() > 2)
+        throw runtime_error(
+            "listreceivedbylabel [minconf=1] [includeempty=false]\n"
+            "[minconf] is the minimum number of confirmations before payments are included.\n"
+            "[includeempty] whether to include labels that haven't received any payments.\n"
+            "Returns an array of objects containing:\n"
+            "  \"label\" : the label of the receiving addresses\n"
+            "  \"amount\" : total amount received by addresses with this label\n"
+            "  \"confirmations\" : number of confirmations of the most recent transaction included");
+
+    return ListReceived(params, true);
+}
+
+
+
+
+
+
 
 
 
@@ -375,20 +558,27 @@ Value getallreceived(const Array& params)
 typedef Value(*rpcfn_type)(const Array& params);
 pair<string, rpcfn_type> pCallTable[] =
 {
-    make_pair("stop",               &stop),
-    make_pair("getblockcount",      &getblockcount),
-    make_pair("getblocknumber",     &getblocknumber),
-    make_pair("getconnectioncount", &getconnectioncount),
-    make_pair("getdifficulty",      &getdifficulty),
-    make_pair("getbalance",         &getbalance),
-    make_pair("getgenerate",        &getgenerate),
-    make_pair("setgenerate",        &setgenerate),
-    make_pair("getinfo",            &getinfo),
-    make_pair("getnewaddress",      &getnewaddress),
-    make_pair("sendtoaddress",      &sendtoaddress),
-    make_pair("listtransactions",   &listtransactions),
-    make_pair("getamountreceived",  &getamountreceived),
-    make_pair("getallreceived",     &getallreceived),
+    make_pair("stop",                  &stop),
+    make_pair("getblockcount",         &getblockcount),
+    make_pair("getblocknumber",        &getblocknumber),
+    make_pair("getconnectioncount",    &getconnectioncount),
+    make_pair("getdifficulty",         &getdifficulty),
+    make_pair("getbalance",            &getbalance),
+    make_pair("getgenerate",           &getgenerate),
+    make_pair("setgenerate",           &setgenerate),
+    make_pair("getinfo",               &getinfo),
+    make_pair("getnewaddress",         &getnewaddress),
+    make_pair("setlabel",              &setlabel),
+    make_pair("getlabel",              &getlabel),
+    make_pair("getaddressesbylabel",   &getaddressesbylabel),
+    make_pair("sendtoaddress",         &sendtoaddress),
+    make_pair("listtransactions",      &listtransactions),
+    make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
+    make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
+    make_pair("getreceivedbyaddress",  &getreceivedbyaddress),
+    make_pair("getreceivedbylabel",    &getreceivedbylabel),
+    make_pair("listreceivedbyaddress", &listreceivedbyaddress),
+    make_pair("listreceivedbylabel",   &listreceivedbylabel),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -666,13 +856,20 @@ int CommandLineRPC(int argc, char *argv[])
         //
         // Special case other types
         //
-        if (strMethod == "setgenerate"       && n > 0) ConvertTo<bool>(params[0]);
-        if (strMethod == "setgenerate"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "sendtoaddress"     && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "listtransactions"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
-        if (strMethod == "listtransactions"  && n > 1) ConvertTo<bool>(params[1]);
-        if (strMethod == "getamountreceived" && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "getallreceived"    && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
+        if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "listtransactions"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "listtransactions"       && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
+        if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "getreceivedbylabel"     && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "getallreceived"         && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
+        if (strMethod == "getallreceived"         && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "listreceivedbyaddress"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "listreceivedbyaddress"  && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]);
 
         // Execute
         Value result = CallRPC(strMethod, params);

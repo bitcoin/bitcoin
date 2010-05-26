@@ -1336,19 +1336,12 @@ bool CBlock::AcceptBlock()
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
-    // Don't relay old inventory during initial block download.
-    // Please keep this number updated to a few thousand below current block count.
-    if (hashBestChain == hash && nBestHeight > 55000)
-        RelayInventory(CInv(MSG_BLOCK, hash));
-
-    // // Add atoms to user reviews for coins created
-    // vector<unsigned char> vchPubKey;
-    // if (ExtractPubKey(vtx[0].vout[0].scriptPubKey, false, vchPubKey))
-    // {
-    //     unsigned short nAtom = GetRand(USHRT_MAX - 100) + 100;
-    //     vector<unsigned short> vAtoms(1, nAtom);
-    //     AddAtomsAndPropagate(Hash(vchPubKey.begin(), vchPubKey.end()), vAtoms, true);
-    // }
+    // Relay inventory, but don't relay old inventory during initial block download
+    if (hashBestChain == hash)
+        CRITICAL_BLOCK(cs_vNodes)
+            foreach(CNode* pnode, vNodes)
+                if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 55000))
+                    pnode->PushInventory(CInv(MSG_BLOCK, hash));
 
     return true;
 }
@@ -1721,6 +1714,7 @@ bool ProcessMessages(CNode* pfrom)
     //  (4) message start
     //  (12) command
     //  (4) size
+    //  (4) checksum
     //  (x) data
     //
 
@@ -1728,12 +1722,13 @@ bool ProcessMessages(CNode* pfrom)
     {
         // Scan for message start
         CDataStream::iterator pstart = search(vRecv.begin(), vRecv.end(), BEGIN(pchMessageStart), END(pchMessageStart));
-        if (vRecv.end() - pstart < sizeof(CMessageHeader))
+        int nHeaderSize = vRecv.GetSerializeSize(CMessageHeader());
+        if (vRecv.end() - pstart < nHeaderSize)
         {
-            if (vRecv.size() > sizeof(CMessageHeader))
+            if (vRecv.size() > nHeaderSize)
             {
                 printf("\n\nPROCESSMESSAGE MESSAGESTART NOT FOUND\n\n");
-                vRecv.erase(vRecv.begin(), vRecv.end() - sizeof(CMessageHeader));
+                vRecv.erase(vRecv.begin(), vRecv.end() - nHeaderSize);
             }
             break;
         }
@@ -1742,6 +1737,7 @@ bool ProcessMessages(CNode* pfrom)
         vRecv.erase(vRecv.begin(), pstart);
 
         // Read header
+        vector<char> vHeaderSave(vRecv.begin(), vRecv.begin() + nHeaderSize);
         CMessageHeader hdr;
         vRecv >> hdr;
         if (!hdr.IsValid())
@@ -1757,16 +1753,29 @@ bool ProcessMessages(CNode* pfrom)
         {
             // Rewind and wait for rest of message
             ///// need a mechanism to give up waiting for overlong message size error
-            //if (fDebug)
-            //    printf("message-break\n");
-            vRecv.insert(vRecv.begin(), BEGIN(hdr), END(hdr));
-            Sleep(100);
+            if (fDebug)
+                printf("message-break\n");
+            vRecv.insert(vRecv.begin(), vHeaderSave.begin(), vHeaderSave.end());
             break;
         }
 
         // Copy message to its own buffer
         CDataStream vMsg(vRecv.begin(), vRecv.begin() + nMessageSize, vRecv.nType, vRecv.nVersion);
         vRecv.ignore(nMessageSize);
+
+        // Checksum
+        if (vRecv.GetVersion() >= 209)
+        {
+            uint256 hash = Hash(vMsg.begin(), vMsg.end());
+            unsigned int nChecksum = 0;
+            memcpy(&nChecksum, &hash, sizeof(nChecksum));
+            if (nChecksum != hdr.nChecksum)
+            {
+                printf("ProcessMessage(%s, %d bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
+                       strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
+                continue;
+            }
+        }
 
         // Process message
         bool fRet = false;
@@ -1844,6 +1853,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vRecv >> addrFrom >> nNonce;
         if (pfrom->nVersion >= 106 && !vRecv.empty())
             vRecv >> strSubVer;
+        if (pfrom->nVersion >= 209 && !vRecv.empty())
+            vRecv >> pfrom->nStartingHeight;
+
         if (pfrom->nVersion == 0)
             return false;
 
@@ -1854,9 +1866,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return true;
         }
 
-        pfrom->vSend.SetVersion(min(pfrom->nVersion, VERSION));
-        pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
-
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
         if (pfrom->fClient)
         {
@@ -1865,6 +1874,13 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         AddTimeData(pfrom->addr.ip, nTime);
+
+        // Change version
+        if (pfrom->nVersion >= 209)
+            pfrom->PushMessage("verack");
+        pfrom->vSend.SetVersion(min(pfrom->nVersion, VERSION));
+        if (pfrom->nVersion < 209)
+            pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
 
         // Ask the first connected node for block updates
         static bool fAskedForBlocks;
@@ -1876,7 +1892,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         pfrom->fSuccessfullyConnected = true;
 
-        printf("version message: version %d\n", pfrom->nVersion);
+        printf("version message: version %d, blocks=%d\n", pfrom->nVersion, pfrom->nStartingHeight);
     }
 
 
@@ -1884,6 +1900,12 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         // Must have a version message before anything else
         return false;
+    }
+
+
+    else if (strCommand == "verack")
+    {
+        pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
     }
 
 
@@ -2101,9 +2123,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> *pblock;
 
         //// debug print
-        // printf("received block:\n");
-        // pblock->print();
         printf("received block %s\n", pblock->GetHash().ToString().substr(0,16).c_str());
+        // pblock->print();
 
         CInv inv(MSG_BLOCK, pblock->GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -2388,8 +2409,11 @@ void GenerateBitcoins(bool fGenerate)
         int nAddThreads = nProcessors - vnThreadsRunning[3];
         printf("Starting %d BitcoinMiner threads\n", nAddThreads);
         for (int i = 0; i < nAddThreads; i++)
+        {
             if (!CreateThread(ThreadBitcoinMiner, NULL))
                 printf("Error: CreateThread(ThreadBitcoinMiner) failed\n");
+            Sleep(10);
+        }
     }
 }
 

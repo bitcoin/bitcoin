@@ -224,9 +224,6 @@ bool CMyApp::Initialize(int& argc, wxChar** argv)
         }
     }
 
-    if (fDaemon)
-        fprintf(stdout, "bitcoin server starting\n");
-
 #ifdef __WXGTK__
     if (fDaemon || fCommandLine)
     {
@@ -447,7 +444,8 @@ bool CMyApp::OnInit2()
     //
     // Load data files
     //
-    bool fFirstRun;
+    if (fDaemon)
+        fprintf(stdout, "bitcoin server starting\n");
     strErrors = "";
     int64 nStart;
 
@@ -465,6 +463,7 @@ bool CMyApp::OnInit2()
 
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
+    bool fFirstRun;
     if (!LoadWallet(fFirstRun))
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
