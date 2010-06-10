@@ -159,7 +159,6 @@ bool Wait(int nSeconds)
 void ThreadIRCSeed(void* parg)
 {
     printf("ThreadIRCSeed started\n");
-    SetThreadPriority(THREAD_PRIORITY_NORMAL);
     int nErrorWait = 10;
     int nRetryWait = 10;
     bool fNameInUse = false;

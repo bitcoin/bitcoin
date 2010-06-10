@@ -12,7 +12,7 @@ extern int nBestHeight;
 
 
 
-static const unsigned short DEFAULT_PORT = htons(8333);
+#define DEFAULT_PORT    htons(8333)
 static const unsigned int PUBLISH_HOPS = 5;
 enum
 {
@@ -522,7 +522,6 @@ public:
     vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     multimap<int64, CInv> mapAskFor;
-    int64 nNextSendTxInv;
 
     // publish and subscription
     vector<char> vfSubscribe;
@@ -536,6 +535,12 @@ public:
         vSend.SetVersion(0);
         vRecv.SetType(SER_NETWORK);
         vRecv.SetVersion(0);
+        // Version 0.2 obsoletes 20 Feb 2012
+        if (GetTime() > 1329696000)
+        {
+            vSend.SetVersion(209);
+            vRecv.SetVersion(209);
+        }
         nLastSend = 0;
         nLastRecv = 0;
         nLastSendEmpty = GetTime();
@@ -556,7 +561,6 @@ public:
         hashLastGetBlocksEnd = 0;
         nStartingHeight = -1;
         fGetAddr = false;
-        nNextSendTxInv = 0;
         vfSubscribe.assign(256, false);
 
         // Push a version message

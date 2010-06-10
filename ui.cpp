@@ -1016,6 +1016,11 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
 
     if (fDebug && GetTime() - nThreadSocketHandlerHeartbeat > 60)
         m_statusBar->SetStatusText("     ERROR: ThreadSocketHandler has stopped", 0);
+
+    // Update receiving address
+    string strDefaultAddress = PubKeyToAddress(vchDefaultKey);
+    if (m_textCtrlAddress->GetValue() != strDefaultAddress)
+        m_textCtrlAddress->SetValue(strDefaultAddress);
 }
 
 
@@ -2087,7 +2092,9 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
         }
 
         // Send payment tx to seller, with response going to OnReply3 via event handler
-        pnode->PushRequest("submitorder", wtx, SendingDialogOnReply3, this);
+        CWalletTx wtxSend = wtx;
+        wtxSend.fFromMe = false;
+        pnode->PushRequest("submitorder", wtxSend, SendingDialogOnReply3, this);
 
         Status(_("Waiting for confirmation..."));
         MainFrameRepaint();

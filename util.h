@@ -520,8 +520,13 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
 
 inline void SetThreadPriority(int nPriority)
 {
-    // threads are processes on linux, so PRIO_PROCESS affects just the one thread
-    setpriority(PRIO_PROCESS, getpid(), nPriority);
+    // It's unclear if it's even possible to change thread priorities on Linux,
+    // but we really and truly need it for the generation threads.
+#ifdef PRIO_THREAD
+    setpriority(PRIO_THREAD, 0, nPriority);
+#else
+    setpriority(PRIO_PROCESS, 0, nPriority);
+#endif
 }
 
 inline bool TerminateThread(pthread_t hthread, unsigned int nExitCode)

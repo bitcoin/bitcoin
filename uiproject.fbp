@@ -18,7 +18,7 @@
         <property name="relative_path">1</property>
         <property name="use_enum">0</property>
         <property name="use_microsoft_bom">0</property>
-        <object class="Frame" expanded="1">
+        <object class="Frame" expanded="0">
             <property name="bg">wxSYS_COLOUR_BTNFACE</property>
             <property name="center"></property>
             <property name="context_help"></property>
@@ -3317,7 +3317,7 @@
             <property name="minimum_size"></property>
             <property name="name">CSendDialogBase</property>
             <property name="pos"></property>
-            <property name="size">675,312</property>
+            <property name="size">675,298</property>
             <property name="style">wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER</property>
             <property name="subclass"></property>
             <property name="title">Send Coins</property>
@@ -3408,7 +3408,7 @@
                                 <property name="font"></property>
                                 <property name="hidden">0</property>
                                 <property name="id">wxID_ANY</property>
-                                <property name="label">Enter the recipient&apos;s IP address (e.g. 123.45.6.7) for online transfer with comments and confirmation, &#x0A;or Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) if recipient is not online.</property>
+                                <property name="label">Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) or IP address (e.g. 123.45.6.7)</property>
                                 <property name="maximum_size"></property>
                                 <property name="minimum_size"></property>
                                 <property name="name">m_staticTextInstructions</property>

@@ -1019,7 +1019,6 @@ void ThreadMessageHandler2(void* parg)
     SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (!fShutdown)
     {
-        // Poll the connected nodes for messages
         vector<CNode*> vNodesCopy;
         CRITICAL_BLOCK(cs_vNodes)
         {
@@ -1027,6 +1026,11 @@ void ThreadMessageHandler2(void* parg)
             foreach(CNode* pnode, vNodesCopy)
                 pnode->AddRef();
         }
+
+        // Poll the connected nodes for messages
+        CNode* pnodeTrickle = NULL;
+        if (!vNodesCopy.empty())
+            pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
         foreach(CNode* pnode, vNodesCopy)
         {
             // Receive messages
@@ -1037,10 +1041,11 @@ void ThreadMessageHandler2(void* parg)
 
             // Send messages
             TRY_CRITICAL_BLOCK(pnode->cs_vSend)
-                SendMessages(pnode);
+                SendMessages(pnode, pnode == pnodeTrickle);
             if (fShutdown)
                 return;
         }
+
         CRITICAL_BLOCK(cs_vNodes)
         {
             foreach(CNode* pnode, vNodesCopy)

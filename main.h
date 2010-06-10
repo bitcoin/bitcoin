@@ -38,6 +38,7 @@ extern map<uint256, int> mapRequestCount;
 extern CCriticalSection cs_mapRequestCount;
 extern map<string, string> mapAddressBook;
 extern CCriticalSection cs_mapAddressBook;
+extern vector<unsigned char> vchDefaultKey;
 
 // Settings
 extern int fGenerateBitcoins;
@@ -66,7 +67,7 @@ bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
 bool ProcessMessages(CNode* pfrom);
 bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv);
-bool SendMessages(CNode* pto);
+bool SendMessages(CNode* pto, bool fSendTrickle);
 int64 GetBalance();
 bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CKey& keyRet, int64& nFeeRequiredRet);
 bool CommitTransaction(CWalletTx& wtxNew, const CKey& key);
