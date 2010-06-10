@@ -14,7 +14,9 @@ class CWalletTx;
 
 extern map<string, string> mapAddressBook;
 extern CCriticalSection cs_mapAddressBook;
+extern vector<unsigned char> vchDefaultKey;
 extern bool fClient;
+
 
 
 extern unsigned int nWalletDBUpdated;
@@ -373,6 +375,7 @@ public:
 
     bool WriteDefaultKey(const vector<unsigned char>& vchPubKey)
     {
+        vchDefaultKey = vchPubKey;
         nWalletDBUpdated++;
         return Write(string("defaultkey"), vchPubKey);
     }
@@ -390,7 +393,7 @@ public:
         return Write(make_pair(string("setting"), strKey), value);
     }
 
-    bool LoadWallet(vector<unsigned char>& vchDefaultKeyRet);
+    bool LoadWallet();
 };
 
 bool LoadWallet(bool& fFirstRunRet);

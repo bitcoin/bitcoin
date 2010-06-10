@@ -49,6 +49,8 @@ CCriticalSection cs_mapRequestCount;
 map<string, string> mapAddressBook;
 CCriticalSection cs_mapAddressBook;
 
+vector<unsigned char> vchDefaultKey;
+
 // Settings
 int fGenerateBitcoins = false;
 int64 nTransactionFee = 0;
@@ -141,6 +143,19 @@ bool AddToWallet(const CWalletTx& wtxIn)
         if (fInsertedNew || fUpdated)
             if (!wtx.WriteToDisk())
                 return false;
+
+        // If default receiving address gets used, replace it with a new one
+        CScript scriptDefaultKey;
+        scriptDefaultKey.SetBitcoinAddress(vchDefaultKey);
+        foreach(const CTxOut& txout, wtx.vout)
+        {
+            if (txout.scriptPubKey == scriptDefaultKey)
+            {
+                CWalletDB walletdb;
+                walletdb.WriteDefaultKey(GenerateNewKey());
+                walletdb.WriteName(PubKeyToAddress(vchDefaultKey), "");
+            }
+        }
 
         // Notify UI
         vWalletUpdated.push_back(hash);
@@ -1753,8 +1768,6 @@ bool ProcessMessages(CNode* pfrom)
         {
             // Rewind and wait for rest of message
             ///// need a mechanism to give up waiting for overlong message size error
-            if (fDebug)
-                printf("message-break\n");
             vRecv.insert(vRecv.begin(), vHeaderSave.begin(), vHeaderSave.end());
             break;
         }
@@ -1922,19 +1935,26 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (fShutdown)
                 return true;
             addr.nTime = GetAdjustedTime() - 2 * 60 * 60;
-            if (pfrom->fGetAddr)
+            if (pfrom->fGetAddr || vAddr.size() > 10)
                 addr.nTime -= 5 * 24 * 60 * 60;
             AddAddress(addr, false);
             pfrom->AddAddressKnown(addr);
             if (!pfrom->fGetAddr && addr.IsRoutable())
             {
-                // Put on lists to send to other nodes
+                // Relay to a limited number of other nodes
                 CRITICAL_BLOCK(cs_vNodes)
+                {
+                    multimap<int, CNode*> mapMix;
                     foreach(CNode* pnode, vNodes)
-                        pnode->PushAddress(addr);
+                        mapMix.insert(make_pair(GetRand(INT_MAX), pnode));
+                    int nRelayNodes = 5;
+                    for (multimap<int, CNode*>::iterator mi = mapMix.begin(); mi != mapMix.end() && nRelayNodes-- > 0; ++mi)
+                        ((*mi).second)->PushAddress(addr);
+                }
             }
         }
-        pfrom->fGetAddr = false;
+        if (vAddr.size() < 1000)
+            pfrom->fGetAddr = false;
     }
 
 
@@ -2177,6 +2197,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         uint256 hashReply;
         CWalletTx wtxNew;
         vRecv >> hashReply >> wtxNew;
+        wtxNew.fFromMe = false;
 
         // Broadcast
         if (!wtxNew.AcceptWalletTransaction())
@@ -2242,7 +2263,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 
 
-bool SendMessages(CNode* pto)
+bool SendMessages(CNode* pto, bool fSendTrickle)
 {
     CRITICAL_BLOCK(cs_main)
     {
@@ -2273,15 +2294,6 @@ bool SendMessages(CNode* pto)
             }
         }
 
-        // Delay tx inv messages to protect privacy,
-        // trickle them out to a few nodes at a time.
-        bool fSendTxInv = false;
-        if (GetTimeMillis() > pto->nNextSendTxInv)
-        {
-            pto->nNextSendTxInv = GetTimeMillis() + 3000 + GetRand(2000);
-            fSendTxInv = true;
-        }
-
         // Resend wallet transactions that haven't gotten in a block yet
         ResendWalletTransactions();
 
@@ -2289,24 +2301,27 @@ bool SendMessages(CNode* pto)
         //
         // Message: addr
         //
-        vector<CAddress> vAddr;
-        vAddr.reserve(pto->vAddrToSend.size());
-        foreach(const CAddress& addr, pto->vAddrToSend)
+        if (fSendTrickle)
         {
-            // returns true if wasn't already contained in the set
-            if (pto->setAddrKnown.insert(addr).second)
+            vector<CAddress> vAddr;
+            vAddr.reserve(pto->vAddrToSend.size());
+            foreach(const CAddress& addr, pto->vAddrToSend)
             {
-                vAddr.push_back(addr);
-                if (vAddr.size() >= 1000)
+                // returns true if wasn't already contained in the set
+                if (pto->setAddrKnown.insert(addr).second)
                 {
-                    pto->PushMessage("addr", vAddr);
-                    vAddr.clear();
+                    vAddr.push_back(addr);
+                    if (vAddr.size() >= 1000)
+                    {
+                        pto->PushMessage("addr", vAddr);
+                        vAddr.clear();
+                    }
                 }
             }
+            pto->vAddrToSend.clear();
+            if (!vAddr.empty())
+                pto->PushMessage("addr", vAddr);
         }
-        pto->vAddrToSend.clear();
-        if (!vAddr.empty())
-            pto->PushMessage("addr", vAddr);
 
 
         //
@@ -2320,11 +2335,40 @@ bool SendMessages(CNode* pto)
             vInvWait.reserve(pto->vInventoryToSend.size());
             foreach(const CInv& inv, pto->vInventoryToSend)
             {
-                // delay txes
-                if (!fSendTxInv && inv.type == MSG_TX)
-                {
-                    vInvWait.push_back(inv);
+                if (pto->setInventoryKnown.count(inv))
                     continue;
+
+                // trickle out tx inv to protect privacy
+                if (inv.type == MSG_TX && !fSendTrickle)
+                {
+                    // 1/4 of tx invs blast to all immediately
+                    static uint256 hashSalt;
+                    if (hashSalt == 0)
+                        RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
+                    uint256 hashRand = (inv.hash ^ hashSalt);
+                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
+                    bool fTrickleWait = ((hashRand & 3) != 0);
+
+                    // always trickle our own transactions
+                    if (!fTrickleWait)
+                    {
+                        TRY_CRITICAL_BLOCK(cs_mapWallet)
+                        {
+                            map<uint256, CWalletTx>::iterator mi = mapWallet.find(inv.hash);
+                            if (mi != mapWallet.end())
+                            {
+                                CWalletTx& wtx = (*mi).second;
+                                if (wtx.fFromMe)
+                                    fTrickleWait = true;
+                            }
+                        }
+                    }
+
+                    if (fTrickleWait)
+                    {
+                        vInvWait.push_back(inv);
+                        continue;
+                    }
                 }
 
                 // returns true if wasn't already contained in the set
@@ -2852,6 +2896,7 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
             {
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
+                wtxNew.fFromMe = true;
                 if (nValue < 0)
                     return false;
                 int64 nValueOut = nValue;

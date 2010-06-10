@@ -275,7 +275,7 @@ class CSendDialogBase : public wxDialog
 		
 	
 	public:
-		CSendDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Send Coins"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 675,312 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER );
+		CSendDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Send Coins"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 675,298 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER );
 		~CSendDialogBase();
 	
 };

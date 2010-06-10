@@ -388,7 +388,6 @@ typedef base_uint<256> base_uint256;
 //
 // uint160 and uint256 could be implemented as templates, but to keep
 // compile errors and debugging cleaner, they're copy and pasted.
-// It's safe to search and replace 160 with 256 and vice versa.
 //
 
 
@@ -405,6 +404,8 @@ public:
 
     uint160()
     {
+        for (int i = 0; i < WIDTH; i++)
+            pn[i] = 0;
     }
 
     uint160(const basetype& b)
@@ -517,6 +518,8 @@ public:
 
     uint256()
     {
+        for (int i = 0; i < WIDTH; i++)
+            pn[i] = 0;
     }
 
     uint256(const basetype& b)

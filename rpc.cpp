@@ -18,6 +18,8 @@ using boost::asio::ip::tcp;
 using namespace json_spirit;
 
 void ThreadRPCServer2(void* parg);
+typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
+extern map<string, rpcfn_type> mapCallTable;
 
 
 
@@ -31,11 +33,40 @@ void ThreadRPCServer2(void* parg);
 
 
 
-Value stop(const Array& params)
+Value help(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "stop (no parameters)\n"
+            "help\n"
+            "List commands.");
+
+    string strRet;
+    for (map<string, rpcfn_type>::iterator mi = mapCallTable.begin(); mi != mapCallTable.end(); ++mi)
+    {
+        try
+        {
+            Array params;
+            (*(*mi).second)(params, true);
+        }
+        catch (std::exception& e)
+        {
+            // Help text is returned in an exception
+            string strHelp = string(e.what());
+            if (strHelp.find('\n') != -1)
+                strHelp = strHelp.substr(0, strHelp.find('\n'));
+            strRet += strHelp + "\n";
+        }
+    }
+    strRet = strRet.substr(0,strRet.size()-1);
+    return strRet;
+}
+
+
+Value stop(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "stop\n"
             "Stop bitcoin server.");
 
     // Shutdown will take long enough that the response should get back
@@ -44,33 +75,33 @@ Value stop(const Array& params)
 }
 
 
-Value getblockcount(const Array& params)
+Value getblockcount(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getblockcount (no parameters)\n"
+            "getblockcount\n"
             "Returns the number of blocks in the longest block chain.");
 
     return nBestHeight + 1;
 }
 
 
-Value getblocknumber(const Array& params)
+Value getblocknumber(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getblocknumber (no parameters)\n"
+            "getblocknumber\n"
             "Returns the block number of the latest block in the longest block chain.");
 
     return nBestHeight;
 }
 
 
-Value getconnectioncount(const Array& params)
+Value getconnectioncount(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getconnectioncount (no parameters)\n"
+            "getconnectioncount\n"
             "Returns the number of connections to other nodes.");
 
     return (int)vNodes.size();
@@ -89,42 +120,42 @@ double GetDifficulty()
     return dMinimum / dCurrently;
 }
 
-Value getdifficulty(const Array& params)
+Value getdifficulty(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getdifficulty (no parameters)\n"
+            "getdifficulty\n"
             "Returns the proof-of-work difficulty as a multiple of the minimum difficulty.");
 
     return GetDifficulty();
 }
 
 
-Value getbalance(const Array& params)
+Value getbalance(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getbalance (no parameters)\n"
+            "getbalance\n"
             "Returns the server's available balance.");
 
     return ((double)GetBalance() / (double)COIN);
 }
 
 
-Value getgenerate(const Array& params)
+Value getgenerate(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getgenerate (no parameters)\n"
+            "getgenerate\n"
             "Returns true or false.");
 
     return (bool)fGenerateBitcoins;
 }
 
 
-Value setgenerate(const Array& params)
+Value setgenerate(const Array& params, bool fHelp)
 {
-    if (params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "setgenerate <generate> [genproclimit]\n"
             "<generate> is true or false to turn generation on or off.\n"
@@ -148,11 +179,11 @@ Value setgenerate(const Array& params)
 }
 
 
-Value getinfo(const Array& params)
+Value getinfo(const Array& params, bool fHelp)
 {
-    if (params.size() != 0)
+    if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getinfo (no parameters)");
+            "getinfo");
 
     Object obj;
     obj.push_back(Pair("balance",       (double)GetBalance() / (double)COIN));
@@ -166,9 +197,9 @@ Value getinfo(const Array& params)
 }
 
 
-Value getnewaddress(const Array& params)
+Value getnewaddress(const Array& params, bool fHelp)
 {
-    if (params.size() > 1)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress [label]\n"
             "Returns a new bitcoin address for receiving payments.  "
@@ -188,9 +219,9 @@ Value getnewaddress(const Array& params)
 }
 
 
-Value setlabel(const Array& params)
+Value setlabel(const Array& params, bool fHelp)
 {
-    if (params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "setlabel <bitcoinaddress> <label>\n"
             "Sets the label associated with the given address.");
@@ -205,9 +236,9 @@ Value setlabel(const Array& params)
 }
 
 
-Value getlabel(const Array& params)
+Value getlabel(const Array& params, bool fHelp)
 {
-    if (params.size() != 1)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
             "getlabel <bitcoinaddress>\n"
             "Returns the label associated with the given address.");
@@ -225,9 +256,9 @@ Value getlabel(const Array& params)
 }
 
 
-Value getaddressesbylabel(const Array& params)
+Value getaddressesbylabel(const Array& params, bool fHelp)
 {
-    if (params.size() != 1)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaddressesbylabel <label>\n"
             "Returns the list of addresses with the given label.");
@@ -255,9 +286,9 @@ Value getaddressesbylabel(const Array& params)
 }
 
 
-Value sendtoaddress(const Array& params)
+Value sendtoaddress(const Array& params, bool fHelp)
 {
-    if (params.size() < 2 || params.size() > 4)
+    if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
             "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.01");
@@ -283,9 +314,9 @@ Value sendtoaddress(const Array& params)
 }
 
 
-Value listtransactions(const Array& params)
+Value listtransactions(const Array& params, bool fHelp)
 {
-    if (params.size() > 2)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
             "listtransactions [count=10] [includegenerated=false]\n"
             "Returns up to [count] most recent transactions.");
@@ -304,9 +335,9 @@ Value listtransactions(const Array& params)
 }
 
 
-Value getreceivedbyaddress(const Array& params)
+Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
-    if (params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "getreceivedbyaddress <bitcoinaddress> [minconf=1]\n"
             "Returns the total amount received by <bitcoinaddress> in transactions with at least [minconf] confirmations.");
@@ -345,9 +376,9 @@ Value getreceivedbyaddress(const Array& params)
 }
 
 
-Value getreceivedbylabel(const Array& params)
+Value getreceivedbylabel(const Array& params, bool fHelp)
 {
-    if (params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "getreceivedbylabel <label> [minconf=1]\n"
             "Returns the total amount received by addresses with <label> in transactions with at least [minconf] confirmations.");
@@ -508,9 +539,9 @@ Value ListReceived(const Array& params, bool fByLabels)
     return ret;
 }
 
-Value listreceivedbyaddress(const Array& params)
+Value listreceivedbyaddress(const Array& params, bool fHelp)
 {
-    if (params.size() > 2)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
             "listreceivedbyaddress [minconf=1] [includeempty=false]\n"
             "[minconf] is the minimum number of confirmations before payments are included.\n"
@@ -524,9 +555,9 @@ Value listreceivedbyaddress(const Array& params)
     return ListReceived(params, false);
 }
 
-Value listreceivedbylabel(const Array& params)
+Value listreceivedbylabel(const Array& params, bool fHelp)
 {
-    if (params.size() > 2)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
             "listreceivedbylabel [minconf=1] [includeempty=false]\n"
             "[minconf] is the minimum number of confirmations before payments are included.\n"
@@ -555,9 +586,9 @@ Value listreceivedbylabel(const Array& params)
 // Call Table
 //
 
-typedef Value(*rpcfn_type)(const Array& params);
 pair<string, rpcfn_type> pCallTable[] =
 {
+    make_pair("help",                  &help),
     make_pair("stop",                  &stop),
     make_pair("getblockcount",         &getblockcount),
     make_pair("getblocknumber",        &getblocknumber),
@@ -760,7 +791,7 @@ void ThreadRPCServer2(void* parg)
                 map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
                 if (mi == mapCallTable.end())
                     throw runtime_error("Method not found.");
-                Value result = (*(*mi).second)(params);
+                Value result = (*(*mi).second)(params, false);
 
                 // Send reply
                 string strReply = JSONRPCReply(result, Value::null, id);
@@ -847,32 +878,50 @@ int CommandLineRPC(int argc, char *argv[])
         if (!mapCallTable.count(strMethod))
             throw runtime_error(strprintf("unknown command: %s", strMethod.c_str()));
 
-        // Parameters default to strings
-        Array params;
-        for (int i = 2; i < argc; i++)
-            params.push_back(argv[i]);
-        int n = params.size();
+        Value result;
+        if (argc == 3 && strcmp(argv[2], "-?") == 0)
+        {
+            // Call help locally, help text is returned in an exception
+            try
+            {
+                map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
+                Array params;
+                (*(*mi).second)(params, true);
+            }
+            catch (std::exception& e)
+            {
+                result = e.what();
+            }
+        }
+        else
+        {
+            // Parameters default to strings
+            Array params;
+            for (int i = 2; i < argc; i++)
+                params.push_back(argv[i]);
+            int n = params.size();
 
-        //
-        // Special case other types
-        //
-        if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
-        if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "listtransactions"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
-        if (strMethod == "listtransactions"       && n > 1) ConvertTo<bool>(params[1]);
-        if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
-        if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "getreceivedbylabel"     && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "getallreceived"         && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
-        if (strMethod == "getallreceived"         && n > 1) ConvertTo<bool>(params[1]);
-        if (strMethod == "listreceivedbyaddress"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
-        if (strMethod == "listreceivedbyaddress"  && n > 1) ConvertTo<bool>(params[1]);
-        if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]);
-        if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]);
+            //
+            // Special case non-string parameter types
+            //
+            if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
+            if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
+            if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
+            if (strMethod == "listtransactions"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
+            if (strMethod == "listtransactions"       && n > 1) ConvertTo<bool>(params[1]);
+            if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
+            if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
+            if (strMethod == "getreceivedbylabel"     && n > 1) ConvertTo<boost::int64_t>(params[1]);
+            if (strMethod == "getallreceived"         && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
+            if (strMethod == "getallreceived"         && n > 1) ConvertTo<bool>(params[1]);
+            if (strMethod == "listreceivedbyaddress"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
+            if (strMethod == "listreceivedbyaddress"  && n > 1) ConvertTo<bool>(params[1]);
+            if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]);
+            if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]);
 
-        // Execute
-        Value result = CallRPC(strMethod, params);
+            // Execute
+            result = CallRPC(strMethod, params);
+        }
 
         // Print result
         string strResult = (result.type() == str_type ? result.get_str() : write_string(result, true));

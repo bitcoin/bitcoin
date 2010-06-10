@@ -339,22 +339,27 @@ bool CMyApp::OnInit2()
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
         wxString strUsage = string() +
-            _("Usage: bitcoin [options]") + "\t\t\t\t\t\t\n" +
-            _("Options:\n") +
-            "  -gen            \t\t  " + _("Generate coins\n") +
-            "  -gen=0          \t\t  " + _("Don't generate coins\n") +
-            "  -min            \t\t  " + _("Start minimized\n") +
-            "  -datadir=<dir>  \t  "   + _("Specify data directory\n") +
-            "  -proxy=<ip:port>\t  "   + _("Connect through socks4 proxy\n") +
-            "  -addnode=<ip>   \t  "   + _("Add a node to connect to\n") +
-            "  -connect=<ip>   \t  "   + _("Connect only to the specified node\n") +
-            "  -?              \t\t  " + _("This help message\n");
+          _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
+            "  bitcoin [options]       \t" + "\n" +
+            "  bitcoin [command]       \t" + _("Send command to bitcoin running with -server or -daemon\n") +
+            "  bitcoin [command] -?    \t" + _("Get help for a command\n") +
+            "  bitcoin help            \t" + _("List commands\n") +
+          _("Options:\n") +
+            "  -gen            \t  " + _("Generate coins\n") +
+            "  -gen=0          \t  " + _("Don't generate coins\n") +
+            "  -min            \t  " + _("Start minimized\n") +
+            "  -datadir=<dir>  \t  " + _("Specify data directory\n") +
+            "  -proxy=<ip:port>\t  " + _("Connect through socks4 proxy\n") +
+            "  -addnode=<ip>   \t  " + _("Add a node to connect to\n") +
+            "  -connect=<ip>   \t  " + _("Connect only to the specified node\n") +
+            "  -server         \t  " + _("Accept command line and JSON-RPC commands\n") +
+            "  -daemon         \t  " + _("Run in the background as a daemon and accept commands\n") +
+            "  -?              \t  " + _("This help message\n");
+
 
         if (fWindows && fGUI)
         {
-            // Remove spaces, the tabs make the columns line up in the message box
-            for (int i = 0; i < 50; i++)
-                strUsage.Replace(" \t", "\t");
+            // Tabs make the columns line up in the message box
             wxMessageBox(strUsage, "Bitcoin", wxOK);
         }
         else

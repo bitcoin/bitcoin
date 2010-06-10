@@ -511,9 +511,9 @@ bool LoadAddresses()
 // CWalletDB
 //
 
-bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
+bool CWalletDB::LoadWallet()
 {
-    vchDefaultKeyRet.clear();
+    vchDefaultKey.clear();
     int nFileVersion = 0;
 
     // Modify defaults
@@ -587,7 +587,7 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
             }
             else if (strType == "defaultkey")
             {
-                ssValue >> vchDefaultKeyRet;
+                ssValue >> vchDefaultKey;
             }
             else if (strType == "version")
             {
@@ -650,8 +650,7 @@ bool CWalletDB::LoadWallet(vector<unsigned char>& vchDefaultKeyRet)
 bool LoadWallet(bool& fFirstRunRet)
 {
     fFirstRunRet = false;
-    vector<unsigned char> vchDefaultKey;
-    if (!CWalletDB("cr+").LoadWallet(vchDefaultKey))
+    if (!CWalletDB("cr+").LoadWallet())
         return false;
     fFirstRunRet = vchDefaultKey.empty();
 
