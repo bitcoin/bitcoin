@@ -289,16 +289,24 @@ public:
 
     bool IsRoutable() const
     {
-        return !(GetByte(3) == 10 ||
-                 (GetByte(3) == 192 && GetByte(2) == 168) ||
-                 GetByte(3) == 127 ||
-                 GetByte(3) == 0 ||
-                 ip == 0 ||
-                 ip == INADDR_NONE);
+        return IsValid() &&
+            !(GetByte(3) == 10 ||
+              (GetByte(3) == 192 && GetByte(2) == 168) ||
+              GetByte(3) == 127 ||
+              GetByte(3) == 0);
     }
 
     bool IsValid() const
     {
+        // Clean up 3-byte shifted addresses caused by garbage in size field
+        // of addr messages from versions before 0.2.9 checksum.
+        // Two consecutive addr messages look like this:
+        // header20 vectorlen3 addr26 addr26 addr26 header20 vectorlen3 addr26 addr26 addr26...
+        // so if the first length field is garbled, it reads the second batch
+        // of addr misaligned by 3 bytes.
+        if (memcmp(pchReserved, pchIPv4+3, sizeof(pchIPv4)-3) == 0)
+            return false;
+
         return (ip != 0 && ip != INADDR_NONE && port != htons(USHRT_MAX));
     }
 
@@ -619,7 +627,7 @@ public:
         // Known checking here is only to save space from duplicates.
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
-        if (!setAddrKnown.count(addr))
+        if (addr.IsValid() && !setAddrKnown.count(addr))
             vAddrToSend.push_back(addr);
     }
 
