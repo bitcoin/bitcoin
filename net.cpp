@@ -968,9 +968,9 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
     if (addrLocalHost.IsRoutable() && !fUseProxy)
     {
         // Advertise our address
-        vector<CAddress> vAddrToSend;
-        vAddrToSend.push_back(addrLocalHost);
-        pnode->PushMessage("addr", vAddrToSend);
+        vector<CAddress> vAddr;
+        vAddr.push_back(addrLocalHost);
+        pnode->PushMessage("addr", vAddr);
     }
 
     // Get as many addresses as we can

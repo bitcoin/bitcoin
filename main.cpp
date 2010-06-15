@@ -1926,7 +1926,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CAddress> vAddr;
         vRecv >> vAddr;
-        if (vAddr.size() > 50000) // lower this to 1000 later
+        if (pfrom->nVersion < 200) // don't want addresses from 0.1.5
+            return true;
+        if (vAddr.size() > 1000)
             return error("message addr size() = %d", vAddr.size());
 
         // Store the new addresses
@@ -2311,6 +2313,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 if (pto->setAddrKnown.insert(addr).second)
                 {
                     vAddr.push_back(addr);
+                    // receiver rejects addr messages larger than 1000
                     if (vAddr.size() >= 1000)
                     {
                         pto->PushMessage("addr", vAddr);
