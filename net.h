@@ -24,7 +24,7 @@ enum
 
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet);
 bool GetMyExternalIP(unsigned int& ipRet);
-bool AddAddress(CAddress addr, bool fCurrentlyOnline=true);
+bool AddAddress(CAddress addr);
 void AddressCurrentlyConnected(const CAddress& addr);
 CNode* FindNode(unsigned int ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
