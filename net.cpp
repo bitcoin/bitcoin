@@ -223,14 +223,12 @@ bool GetMyExternalIP(unsigned int& ipRet)
 
 
 
-bool AddAddress(CAddress addr, bool fCurrentlyOnline)
+bool AddAddress(CAddress addr)
 {
     if (!addr.IsRoutable())
         return false;
     if (addr.ip == addrLocalHost.ip)
         return false;
-    if (fCurrentlyOnline)
-        addr.nTime = GetAdjustedTime();
     CRITICAL_BLOCK(cs_mapAddresses)
     {
         map<vector<unsigned char>, CAddress>::iterator it = mapAddresses.find(addr.GetKey());
@@ -252,6 +250,7 @@ bool AddAddress(CAddress addr, bool fCurrentlyOnline)
                 addrFound.nServices |= addr.nServices;
                 fUpdated = true;
             }
+            bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
             int64 nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
             if (addrFound.nTime < addr.nTime - nUpdateInterval)
             {
@@ -798,6 +797,25 @@ void ThreadSocketHandler2(void* parg)
 
 
 
+
+
+
+unsigned int pnSeed[] =
+{
+    0x35218252, 0x9c9c9618, 0xda6bacad, 0xb9aca862, 0x97c235c6,
+    0x146f9562, 0xb67b9e4b, 0x87cf4bc0, 0xb83945d0, 0x984333ad,
+    0xbbeec555, 0x6f0eb440, 0xe0005318, 0x7797e460, 0xddc60fcc,
+    0xb3bbd24a, 0x1ac85746, 0x641846a6, 0x85ee1155, 0xbb2e7a4c,
+    0x9cb8514b, 0xfc342648, 0x62958fae, 0xd0a8c87a, 0xa800795b,
+    0xda8c814e, 0x256a0c80, 0x3f23ec63, 0xd565df43, 0x997d9044,
+    0xaa121448, 0xbed8688e, 0x59d09a5e, 0xb2931243, 0x3730ba18,
+    0xdd3462d0, 0x4e4d1448, 0x171df645, 0x84ee1155,
+    0x248ac445, 0x0e634444, 0x0ded1b63, 0x30c01e60,
+    0xa2b9a094, 0x29e4fd43, 0x9ce61b4c, 0xdae09744,
+};
+
+
+
 void ThreadOpenConnections(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadOpenConnections(parg));
@@ -858,6 +876,7 @@ void ThreadOpenConnections2(void* parg)
     }
 
     // Initiate network connections
+    int64 nStart = GetTime();
     loop
     {
         // Wait
@@ -873,6 +892,55 @@ void ThreadOpenConnections2(void* parg)
         vnThreadsRunning[1]++;
         if (fShutdown)
             return;
+
+        CRITICAL_BLOCK(cs_mapAddresses)
+        {
+            // Add seed nodes if IRC isn't working
+            static bool fSeedUsed;
+            bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+            if (mapAddresses.empty() && (GetTime() - nStart > 60 || fTOR))
+            {
+                for (int i = 0; i < ARRAYLEN(pnSeed); i++)
+                {
+                    // It'll only connect to one or two seed nodes because once it connects,
+                    // it'll get a pile of addresses with newer timestamps.
+                    CAddress addr;
+                    addr.ip = pnSeed[i];
+                    addr.nTime = 0;
+                    AddAddress(addr);
+                }
+                fSeedUsed = true;
+            }
+
+            if (fSeedUsed && mapAddresses.size() > ARRAYLEN(pnSeed) + 100)
+            {
+                // Disconnect seed nodes
+                set<unsigned int> setSeed(pnSeed, pnSeed + ARRAYLEN(pnSeed));
+                static int64 nSeedDisconnected;
+                if (nSeedDisconnected == 0)
+                {
+                    nSeedDisconnected = GetTime();
+                    CRITICAL_BLOCK(cs_vNodes)
+                        foreach(CNode* pnode, vNodes)
+                            if (setSeed.count(pnode->addr.ip))
+                                pnode->fDisconnect = true;
+                }
+
+                // Keep setting timestamps to 0 so they won't reconnect
+                if (GetTime() - nSeedDisconnected < 60 * 60)
+                {
+                    foreach(PAIRTYPE(const vector<unsigned char>, CAddress)& item, mapAddresses)
+                    {
+                        if (setSeed.count(item.second.ip))
+                        {
+                            item.second.nTime = 0;
+                            CAddrDB().WriteAddress(item.second);
+                        }
+                    }
+                }
+            }
+        }
+
 
         //
         // Choose an address to connect to based on most recently seen
@@ -897,9 +965,9 @@ void ThreadOpenConnections2(void* parg)
                 int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;
 
                 // Randomize the order in a deterministic way, putting the standard port first
-                int64 nRandomizer = (uint64)(addr.nLastTry * 9567851 + addr.ip * 7789) % (30 * 60);
+                int64 nRandomizer = (uint64)(nStart + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
                 if (addr.port != DEFAULT_PORT)
-                    nRandomizer += 30 * 60;
+                    nRandomizer += 2 * 60 * 60;
 
                 // Last seen  Base retry frequency
                 //   <1 hour   10 min

@@ -493,7 +493,7 @@ bool CTransaction::AcceptTransaction(CTxDB& txdb, bool fCheckInputs, bool* pfMis
     if (!CheckTransaction())
         return error("AcceptTransaction() : CheckTransaction failed");
 
-    // To help v0.1.5 clients who would see it as negative number. please delete this later.
+    // To help v0.1.5 clients who would see it as a negative number
     if (nLockTime > INT_MAX)
         return error("AcceptTransaction() : not accepting nLockTime beyond 2038");
 
@@ -1896,10 +1896,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
 
         // Ask the first connected node for block updates
-        static bool fAskedForBlocks;
-        if (!fAskedForBlocks && !pfrom->fClient)
+        static int nAskedForBlocks;
+        if (!pfrom->fClient && (nAskedForBlocks < 1 || vNodes.size() <= 1))
         {
-            fAskedForBlocks = true;
+            nAskedForBlocks++;
             pfrom->PushGetBlocks(pindexBest, uint256(0));
         }
 
@@ -1939,18 +1939,24 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             addr.nTime = GetAdjustedTime() - 2 * 60 * 60;
             if (pfrom->fGetAddr || vAddr.size() > 10)
                 addr.nTime -= 5 * 24 * 60 * 60;
-            AddAddress(addr, false);
+            AddAddress(addr);
             pfrom->AddAddressKnown(addr);
             if (!pfrom->fGetAddr && addr.IsRoutable())
             {
                 // Relay to a limited number of other nodes
                 CRITICAL_BLOCK(cs_vNodes)
                 {
-                    multimap<int, CNode*> mapMix;
+                    // Use deterministic randomness to send to
+                    // the same places for an hour at a time
+                    static uint256 hashSalt;
+                    if (hashSalt == 0)
+                        RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
+                    uint256 hashRand = addr.ip ^ (GetTime()/3600) ^ hashSalt;
+                    multimap<uint256, CNode*> mapMix;
                     foreach(CNode* pnode, vNodes)
-                        mapMix.insert(make_pair(GetRand(INT_MAX), pnode));
-                    int nRelayNodes = 5;
-                    for (multimap<int, CNode*>::iterator mi = mapMix.begin(); mi != mapMix.end() && nRelayNodes-- > 0; ++mi)
+                        mapMix.insert(make_pair(hashRand = Hash(BEGIN(hashRand), END(hashRand)), pnode));
+                    int nRelayNodes = 10; // reduce this to 5 when the network is large
+                    for (multimap<uint256, CNode*>::iterator mi = mapMix.begin(); mi != mapMix.end() && nRelayNodes-- > 0; ++mi)
                         ((*mi).second)->PushAddress(addr);
                 }
             }
@@ -2158,8 +2164,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "getaddr")
     {
+        // This includes all nodes that are currently online,
+        // since they rebroadcast an addr every 24 hours
         pfrom->vAddrToSend.clear();
-        int64 nSince = GetAdjustedTime() - 5 * 24 * 60 * 60; // in the last 5 days
+        int64 nSince = GetAdjustedTime() - 24 * 60 * 60; // in the last 24 hours
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             unsigned int nSize = mapAddresses.size();
@@ -2348,7 +2356,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     static uint256 hashSalt;
                     if (hashSalt == 0)
                         RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
-                    uint256 hashRand = (inv.hash ^ hashSalt);
+                    uint256 hashRand = inv.hash ^ hashSalt;
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     bool fTrickleWait = ((hashRand & 3) != 0);
 
