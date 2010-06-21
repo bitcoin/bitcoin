@@ -2437,7 +2437,9 @@ void CMyTaskBarIcon::Show(bool fShow)
         {
             strlcpy(pszPrevTip, strTooltip.c_str(), sizeof(pszPrevTip));
 #ifdef __WXMSW__
-            SetIcon(wxICON(bitcoin), strTooltip);
+            // somehow it'll choose the wrong icon and scale it down if
+            // we use the main icon, so we hand it one with only 16x16
+            SetIcon(wxICON(favicon), strTooltip);
 #else
             SetIcon(bitcoin80_xpm, strTooltip);
 #endif
