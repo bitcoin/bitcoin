@@ -20,8 +20,6 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	this->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_BTNFACE ) );
 	
 	m_menubar = new wxMenuBar( 0 );
-	m_menubar->SetBackgroundColour( wxColour( 240, 240, 240 ) );
-	
 	m_menuFile = new wxMenu();
 	wxMenuItem* m_menuFileExit;
 	m_menuFileExit = new wxMenuItem( m_menuFile, wxID_EXIT, wxString( _("E&xit") ) , wxEmptyString, wxITEM_NORMAL );
@@ -95,25 +93,21 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxHORIZONTAL );
 	
-	m_panel14 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxBoxSizer* bSizer66;
 	bSizer66 = new wxBoxSizer( wxHORIZONTAL );
 	
-	m_staticText41 = new wxStaticText( m_panel14, wxID_ANY, _("Balance:"), wxDefaultPosition, wxSize( -1,15 ), 0 );
+	m_staticText41 = new wxStaticText( this, wxID_ANY, _("Balance:"), wxDefaultPosition, wxSize( -1,15 ), 0 );
 	m_staticText41->Wrap( -1 );
 	bSizer66->Add( m_staticText41, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
 	
-	m_staticTextBalance = new wxStaticText( m_panel14, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 120,15 ), wxALIGN_RIGHT|wxST_NO_AUTORESIZE );
+	m_staticTextBalance = new wxStaticText( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 120,15 ), wxALIGN_RIGHT|wxST_NO_AUTORESIZE );
 	m_staticTextBalance->Wrap( -1 );
 	m_staticTextBalance->SetFont( wxFont( 8, 70, 90, 90, false, wxEmptyString ) );
 	m_staticTextBalance->SetBackgroundColour( wxColour( 255, 255, 255 ) );
 	
 	bSizer66->Add( m_staticTextBalance, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	m_panel14->SetSizer( bSizer66 );
-	m_panel14->Layout();
-	bSizer66->Fit( m_panel14 );
-	bSizer3->Add( m_panel14, 1, wxEXPAND|wxALIGN_BOTTOM|wxALL, 5 );
+	bSizer3->Add( bSizer66, 1, wxEXPAND|wxALL, 5 );
 	
 	
 	bSizer3->Add( 0, 0, 0, wxEXPAND, 5 );
@@ -560,12 +554,12 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	
 	bSizer631->Add( 0, 4, 0, wxEXPAND, 5 );
 	
-	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright (c) 2009-2010 Satoshi Nakamoto.\n\nThis is experimental software.  Do not rely on it for actual financial transactions.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright (c) 2009-2010 Satoshi Nakamoto.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticTextMain->Wrap( -1 );
 	bSizer631->Add( m_staticTextMain, 0, wxALL, 5 );
 	
 	
-	bSizer631->Add( 0, 0, 1, wxEXPAND, 5 );
+	bSizer631->Add( 0, 0, 0, wxEXPAND, 5 );
 	
 	bSizer62->Add( bSizer631, 1, wxEXPAND, 5 );
 	
@@ -578,9 +572,9 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	bSizer61->Add( 0, 0, 1, wxEXPAND, 5 );
 	
 	m_buttonOK = new wxButton( this, wxID_OK, _("OK"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	bSizer61->Add( m_buttonOK, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 5 );
+	bSizer61->Add( m_buttonOK, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND, 6 );
 	
-	bSizer60->Add( bSizer61, 0, wxALIGN_RIGHT|wxEXPAND|wxRIGHT, 5 );
+	bSizer60->Add( bSizer61, 0, wxALIGN_RIGHT|wxEXPAND|wxRIGHT, 2 );
 	
 	bSizer63->Add( bSizer60, 1, wxEXPAND|wxLEFT, 5 );
 	

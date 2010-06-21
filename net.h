@@ -12,7 +12,7 @@ extern int nBestHeight;
 
 
 
-#define DEFAULT_PORT    htons(8333)
+static const unsigned short DEFAULT_PORT = 0x8d20; // htons(8333)
 static const unsigned int PUBLISH_HOPS = 5;
 enum
 {

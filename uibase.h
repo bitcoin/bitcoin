@@ -25,9 +25,9 @@
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/sizer.h>
-#include <wx/panel.h>
 #include <wx/choice.h>
 #include <wx/listctrl.h>
+#include <wx/panel.h>
 #include <wx/notebook.h>
 #include <wx/frame.h>
 #include <wx/html/htmlwin.h>
@@ -82,7 +82,6 @@ class CMainFrameBase : public wxFrame
 		wxButton* m_buttonNew;
 		wxButton* m_buttonCopy;
 		
-		wxPanel* m_panel14;
 		wxStaticText* m_staticText41;
 		wxStaticText* m_staticTextBalance;
 		
@@ -228,7 +227,7 @@ class CAboutDialogBase : public wxDialog
 	
 	public:
 		wxStaticText* m_staticTextVersion;
-		CAboutDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("About Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 532,329 ), long style = wxDEFAULT_DIALOG_STYLE );
+		CAboutDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("About Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 532,315 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~CAboutDialogBase();
 	
 };
