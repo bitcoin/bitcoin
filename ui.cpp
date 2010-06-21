@@ -250,7 +250,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
 #ifdef __WXMSW__
     SetIcon(wxICON(bitcoin));
 #else
-    SetIcon(bitcoin20_xpm);
+    SetIcon(bitcoin80_xpm);
     SetBackgroundColour(m_toolBar->GetBackgroundColour());
     wxFont fontTmp = m_staticText41->GetFont();
     fontTmp.SetFamily(wxFONTFAMILY_TELETYPE);
@@ -2439,7 +2439,7 @@ void CMyTaskBarIcon::Show(bool fShow)
 #ifdef __WXMSW__
             SetIcon(wxICON(bitcoin), strTooltip);
 #else
-            SetIcon(bitcoin20_xpm, strTooltip);
+            SetIcon(bitcoin80_xpm, strTooltip);
 #endif
         }
     }

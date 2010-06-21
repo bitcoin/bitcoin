@@ -114,6 +114,7 @@ using namespace boost;
 #include "xpm/bitcoin20.xpm"
 #include "xpm/bitcoin32.xpm"
 #include "xpm/bitcoin48.xpm"
+#include "xpm/bitcoin80.xpm"
 #include "xpm/check.xpm"
 #include "xpm/send16.xpm"
 #include "xpm/send16noshadow.xpm"
