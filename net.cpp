@@ -965,7 +965,7 @@ void ThreadOpenConnections2(void* parg)
                 int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;
 
                 // Randomize the order in a deterministic way, putting the standard port first
-                int64 nRandomizer = (uint64)(nStart + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
+                int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
                 if (addr.port != DEFAULT_PORT)
                     nRandomizer += 2 * 60 * 60;
 

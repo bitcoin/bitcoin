@@ -2487,6 +2487,7 @@ void ThreadBitcoinMiner(void* parg)
         vnThreadsRunning[3]--;
         PrintException(NULL, "ThreadBitcoinMiner()");
     }
+    UIThreadCall(bind(CalledSetStatusBar, "", 0));
     printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[3]);
 }
 
@@ -2677,6 +2678,8 @@ void BitcoinMiner()
                     printf("BitcoinMiner:\n");
                     printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
                     pblock->print();
+                    printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
+                    printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 
                 SetThreadPriority(THREAD_PRIORITY_NORMAL);
                 CRITICAL_BLOCK(cs_main)
@@ -2704,8 +2707,33 @@ void BitcoinMiner()
             }
 
             // Update nTime every few seconds
-            if ((++tmp.block.nNonce & 0xffff) == 0)
+            const uint64 nMask = 0xffff;
+            if ((++tmp.block.nNonce & nMask) == 0)
             {
+                // Meter hashes/sec
+                static int64 nHashCounter;
+                static int64 nLastTick;
+                if (nLastTick == 0)
+                    nLastTick = GetTimeMillis();
+                else
+                    nHashCounter += nMask + 1;
+                if (GetTimeMillis() - nLastTick > 4000)
+                {
+                    double dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nLastTick);
+                    nLastTick = GetTimeMillis();
+                    nHashCounter = 0;
+                    string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
+                    UIThreadCall(bind(CalledSetStatusBar, strStatus, 0));
+                    static int64 nLogTime;
+                    if (GetTime() - nLogTime > 60 * 60)
+                    {
+                        nLogTime = GetTime();
+                        printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
+                        printf("hashmeter %3d CPUs %6.0f khash/s\n", vnThreadsRunning[3], dHashesPerSec/1000.0);
+                    }
+                }
+
+                // Check for stop or if block needs to be rebuilt
                 if (fShutdown)
                     return;
                 if (!fGenerateBitcoins)
@@ -2738,6 +2766,7 @@ void BitcoinMiner()
                     }
                     break;
                 }
+
                 tmp.block.nTime = pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
             }
         }

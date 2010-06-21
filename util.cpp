@@ -101,10 +101,8 @@ void RandAddSeedPerfmon()
         hash = 0;
         memset(pdata, 0, nSize);
 
-        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str(), nSize);
+        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M", GetTime()).c_str(), nSize);
     }
-#else
-    printf("%s RandAddSeed()\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
 #endif
 }
 

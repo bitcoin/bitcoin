@@ -250,7 +250,8 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
 #ifdef __WXMSW__
     SetIcon(wxICON(bitcoin));
 #else
-    SetIcon(bitcoin16_xpm);
+    SetIcon(bitcoin20_xpm);
+    SetBackgroundColour(m_toolBar->GetBackgroundColour());
     wxFont fontTmp = m_staticText41->GetFont();
     fontTmp.SetFamily(wxFONTFAMILY_TELETYPE);
     m_staticTextBalance->SetFont(fontTmp);
@@ -374,13 +375,13 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
     // to get rid of the deprecated warning.  Just ignore it.
     if (!event.Iconized())
         fClosedToTray = false;
-#ifndef __WXMSW__
-    // Tray is not reliable on ubuntu 9.10 gnome
-    fClosedToTray = false;
-#endif
+#ifdef __WXMSW__
+    // The tray icon sometimes disappears on ubuntu karmic
+    // Hiding the taskbar button doesn't work reliably on ubuntu lucid
     if (fMinimizeToTray && event.Iconized())
         fClosedToTray = true;
     Show(!fClosedToTray);
+#endif
     ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
 }
 

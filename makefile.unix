@@ -21,7 +21,7 @@ WXLIBS= \
 
 LIBS= \
  -Wl,-Bstatic \
-   -l boost_system-mt -l boost_filesystem-mt \
+   -l boost_system -l boost_filesystem \
    -l db_cxx \
  -Wl,-Bdynamic \
    -l crypto \
@@ -29,7 +29,7 @@ LIBS= \
 
 WXDEFS=-D__WXGTK__ -DNOPCH
 DEBUGFLAGS=-g -D__WXDEBUG__
-CFLAGS=-O0 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h init.h sha.h
 
@@ -68,6 +68,6 @@ bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha.o
 
 
 clean:
-	-rm obj/*
-	-rm obj/nogui/*
+	-rm obj/*.o
+	-rm obj/nogui/*.o
 	-rm headers.h.gch
