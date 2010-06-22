@@ -2725,7 +2725,7 @@ void BitcoinMiner()
                     string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
                     UIThreadCall(bind(CalledSetStatusBar, strStatus, 0));
                     static int64 nLogTime;
-                    if (GetTime() - nLogTime > 60 * 60)
+                    if (GetTime() - nLogTime > 30 * 60)
                     {
                         nLogTime = GetTime();
                         printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
