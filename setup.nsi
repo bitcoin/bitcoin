@@ -7,7 +7,7 @@ RequestExecutionLevel highest
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.2.0
+!define VERSION 0.3.0
 !define COMPANY "Bitcoin project"
 !define URL http://www.bitcoin.org/
 
@@ -42,12 +42,12 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile bitcoin-0.2.0-win32-setup.exe
+OutFile bitcoin-0.3.0-win32-setup.exe
 InstallDir $PROGRAMFILES\Bitcoin
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 0.2.0.0
+VIProductVersion 0.3.0.0
 VIAddVersionKey ProductName Bitcoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -67,6 +67,10 @@ Section -Main SEC0000
     File mingwm10.dll
     File license.txt
     File readme.txt
+    SetOutPath $INSTDIR\daemon
+    File /r daemon\*.*
+    SetOutPath $INSTDIR\locale
+    File /r locale\*.*
     SetOutPath $INSTDIR\src
     File /r src\*.*
     SetOutPath $INSTDIR
@@ -112,6 +116,8 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\mingwm10.dll
     Delete /REBOOTOK $INSTDIR\license.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
+    RMDir /r /REBOOTOK $INSTDIR\daemon
+    RMDir /r /REBOOTOK $INSTDIR\locale
     RMDir /r /REBOOTOK $INSTDIR\src
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
