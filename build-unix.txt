@@ -63,6 +63,15 @@ make
 sudo su
 make install
 ldconfig
+su <username>
+cd ..
+mkdir buildbase
+cd buildbase
+../configure --disable-gui --enable-debug --disable-shared --enable-monolithic
+make
+sudo su
+make install
+ldconfig
 
 
 Boost
