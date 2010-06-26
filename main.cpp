@@ -2707,7 +2707,7 @@ void BitcoinMiner()
             }
 
             // Update nTime every few seconds
-            const uint64 nMask = 0xffff;
+            const unsigned int nMask = 0xffff;
             if ((++tmp.block.nNonce & nMask) == 0)
             {
                 // Meter hashes/sec
