@@ -34,11 +34,11 @@ Berkeley DB    New BSD license with additional requirement that linked software 
 Boost          MIT-like license
 
 Versions used in this release:
-GCC          4.3.3
+GCC          4.4.3
 OpenSSL      0.9.8k
 wxWidgets    2.9.0
 Berkeley DB  4.7.25.NC
-Boost        1.38.0
+Boost        1.40.0
 
 
 Notes
@@ -77,7 +77,7 @@ ldconfig
 Boost
 -----
 If you want to build Boost yourself,
-cd /usr/local/boost_1_38_0
+cd /usr/local/boost_1_40_0
 su
 ./bootstrap.sh
 ./bjam install
