@@ -1862,6 +1862,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         uint64 nNonce = 1;
         string strSubVer;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
+        if (pfrom->nVersion == 10300)
+            pfrom->nVersion = 300;
         if (pfrom->nVersion >= 106 && !vRecv.empty())
             vRecv >> addrFrom >> nNonce;
         if (pfrom->nVersion >= 106 && !vRecv.empty())

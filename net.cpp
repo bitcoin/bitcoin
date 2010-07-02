@@ -882,7 +882,7 @@ void ThreadOpenConnections2(void* parg)
         // Wait
         vnThreadsRunning[1]--;
         Sleep(500);
-        const int nMaxConnections = 15;
+        const int nMaxConnections = 8;
         while (vNodes.size() >= nMaxConnections)
         {
             Sleep(2000);
