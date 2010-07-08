@@ -4,6 +4,8 @@
 
 #include "headers.h"
 
+extern string GetDefaultDataDir(); /// todo: delete this later, just used by debug test
+
 
 
 
@@ -59,40 +61,6 @@ void Shutdown(void* parg)
 //
 
 #ifdef __WXMSW__
-typedef WINSHELLAPI BOOL (WINAPI *PSHGETSPECIALFOLDERPATHA)(HWND hwndOwner, LPSTR lpszPath, int nFolder, BOOL fCreate);
-
-string MyGetSpecialFolderPath(int nFolder, bool fCreate)
-{
-    char pszPath[MAX_PATH+100] = "";
-
-    // SHGetSpecialFolderPath is not usually available on NT 4.0
-    HMODULE hShell32 = LoadLibraryA("shell32.dll");
-    if (hShell32)
-    {
-        PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
-            (PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
-        if (pSHGetSpecialFolderPath)
-            (*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
-        FreeModule(hShell32);
-    }
-
-    // Backup option
-    if (pszPath[0] == '\0')
-    {
-        if (nFolder == CSIDL_STARTUP)
-        {
-            strcpy(pszPath, getenv("USERPROFILE"));
-            strcat(pszPath, "\\Start Menu\\Programs\\Startup");
-        }
-        else if (nFolder == CSIDL_APPDATA)
-        {
-            strcpy(pszPath, getenv("APPDATA"));
-        }
-    }
-
-    return pszPath;
-}
-
 string StartupShortcutPath()
 {
     return MyGetSpecialFolderPath(CSIDL_STARTUP, true) + "\\Bitcoin.lnk";
@@ -100,7 +68,7 @@ string StartupShortcutPath()
 
 bool GetStartOnSystemStartup()
 {
-    return wxFileExists(StartupShortcutPath());
+    return filesystem::exists(StartupShortcutPath().c_str());
 }
 
 void SetStartOnSystemStartup(bool fAutoStart)
@@ -166,7 +134,7 @@ void SetStartOnSystemStartup(bool fAutoStart) { }
 //
 
 // Define a new application
-class CMyApp: public wxApp
+class CMyApp : public wxApp
 {
 public:
     wxLocale m_locale;
@@ -216,7 +184,10 @@ bool CMyApp::Initialize(int& argc, wxChar** argv)
             #ifdef __WXMSW__
             if (str.size() >= 1 && str[0] == '/')
                 str[0] = '-';
-            str = str.MakeLower();
+            char pszLower[MAX_PATH];
+            strlcpy(pszLower, str.c_str(), sizeof(pszLower));
+            strlwr(pszLower);
+            str = pszLower;
             #endif
             // haven't decided which argument to use for this yet
             if (str == "-daemon" || str == "-d" || str == "start")
@@ -356,18 +327,14 @@ bool CMyApp::OnInit2()
             "  -daemon         \t  " + _("Run in the background as a daemon and accept commands\n") +
             "  -?              \t  " + _("This help message\n");
 
-
-        if (fWindows && fGUI)
-        {
-            // Tabs make the columns line up in the message box
-            wxMessageBox(strUsage, "Bitcoin", wxOK);
-        }
-        else
-        {
-            // Remove tabs
-            strUsage.Replace("\t", "");
-            fprintf(stderr, "%s", ((string)strUsage).c_str());
-        }
+#if defined(__WXMSW__) && wxUSE_GUI
+        // Tabs make the columns line up in the message box
+        wxMessageBox(strUsage, "Bitcoin", wxOK);
+#else
+        // Remove tabs
+        strUsage.Replace("\t", "");
+        fprintf(stderr, "%s", ((string)strUsage).c_str());
+#endif
         return false;
     }
 
@@ -386,6 +353,15 @@ bool CMyApp::OnInit2()
     printf("Bitcoin version %d.%d.%d%s beta, OS version %s\n", VERSION/10000, (VERSION/100)%100, VERSION%100, pszSubVer, ((string)wxGetOsDescription()).c_str());
     printf("System default language is %d %s\n", m_locale.GetSystemLanguage(), ((string)m_locale.GetSysName()).c_str());
     printf("Language file %s (%s)\n", (string("locale/") + (string)m_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)m_locale.GetLocale()).c_str());
+
+        /// debug - for now, just watching if these match
+        if (pszSetDataDir[0] == 0)
+        {
+            if (GetDefaultDataDir() != GetDataDir())
+                printf("**** GetDefaultDataDir() %s != %s\n", GetDefaultDataDir().c_str(), GetDataDir().c_str());
+            else
+                printf("OK GetDefaultDataDir() %s == %s\n", GetDefaultDataDir().c_str(), GetDataDir().c_str());
+        }
 
     if (mapArgs.count("-loadblockindextest"))
     {

@@ -927,20 +927,22 @@ int CommandLineRPC(int argc, char *argv[])
         string strResult = (result.type() == str_type ? result.get_str() : write_string(result, true));
         if (result.type() != null_type)
         {
-            if (fWindows && fGUI)
-                // Windows GUI apps can't print to command line,
-                // so settle for a message box yuck
-                MyMessageBox(strResult.c_str(), "Bitcoin", wxOK);
-            else
-                fprintf(stdout, "%s\n", strResult.c_str());
+#if defined(__WXMSW__) && wxUSE_GUI
+            // Windows GUI apps can't print to command line,
+            // so settle for a message box yuck
+            MyMessageBox(strResult.c_str(), "Bitcoin", wxOK);
+#else
+            fprintf(stdout, "%s\n", strResult.c_str());
+#endif
         }
         return 0;
     }
     catch (std::exception& e) {
-        if (fWindows && fGUI)
-            MyMessageBox(strprintf("error: %s\n", e.what()).c_str(), "Bitcoin", wxOK);
-        else
-            fprintf(stderr, "error: %s\n", e.what());
+#if defined(__WXMSW__) && wxUSE_GUI
+        MyMessageBox(strprintf("error: %s\n", e.what()).c_str(), "Bitcoin", wxOK);
+#else
+        fprintf(stderr, "error: %s\n", e.what());
+#endif
     } catch (...) {
         PrintException(NULL, "CommandLineRPC()");
     }

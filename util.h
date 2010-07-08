@@ -141,6 +141,9 @@ void ParseParameters(int argc, char* argv[]);
 const char* wxGetTranslation(const char* psz);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
+#ifdef __WXMSW__
+string MyGetSpecialFolderPath(int nFolder, bool fCreate);
+#endif
 string GetDataDir();
 void ShrinkDebugFile();
 uint64 GetRand(uint64 nMax);
@@ -174,13 +177,13 @@ public:
     bool TryEnter() { return TryEnterCriticalSection(&cs); }
 #else
 protected:
-    wxMutex mutex;
+    boost::interprocess::interprocess_recursive_mutex mutex;
 public:
-    explicit CCriticalSection() : mutex(wxMUTEX_RECURSIVE) { }
+    explicit CCriticalSection() { }
     ~CCriticalSection() { }
-    void Enter() { mutex.Lock(); }
-    void Leave() { mutex.Unlock(); }
-    bool TryEnter() { return mutex.TryLock() == wxMUTEX_NO_ERROR; }
+    void Enter() { mutex.lock(); }
+    void Leave() { mutex.unlock(); }
+    bool TryEnter() { return mutex.try_lock(); }
 #endif
 public:
     const char* pszFile;
@@ -324,7 +327,8 @@ inline int64 PerformanceCounter()
 
 inline int64 GetTimeMillis()
 {
-    return wxGetLocalTimeMillis().GetValue();
+    return (posix_time::ptime(posix_time::microsec_clock::universal_time()) -
+            posix_time::ptime(gregorian::date(1970,1,1))).total_milliseconds();
 }
 
 inline string DateTimeStrFormat(const char* pszFormat, int64 nTime)
@@ -513,7 +517,7 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
     return hthread;
 }
 
-#define THREAD_PRIORITY_LOWEST          PRIO_MIN
+#define THREAD_PRIORITY_LOWEST          PRIO_MAX
 #define THREAD_PRIORITY_BELOW_NORMAL    2
 #define THREAD_PRIORITY_NORMAL          0
 #define THREAD_PRIORITY_ABOVE_NORMAL    0
