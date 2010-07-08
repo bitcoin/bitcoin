@@ -68,6 +68,6 @@ bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha.o
 
 
 clean:
-	-rm obj/*.o
-	-rm obj/nogui/*.o
-	-rm headers.h.gch
+	-rm -f obj/*.o
+	-rm -f obj/nogui/*.o
+	-rm -f headers.h.gch

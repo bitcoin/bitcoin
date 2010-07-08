@@ -20,13 +20,13 @@ bool fCommandLine = false;
 
 
 // Init openssl library multithreading support
-static wxMutex** ppmutexOpenSSL;
+static boost::interprocess::interprocess_mutex** ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line)
 {
     if (mode & CRYPTO_LOCK)
-        ppmutexOpenSSL[i]->Lock();
+        ppmutexOpenSSL[i]->lock();
     else
-        ppmutexOpenSSL[i]->Unlock();
+        ppmutexOpenSSL[i]->unlock();
 }
 
 // Init
@@ -36,9 +36,9 @@ public:
     CInit()
     {
         // Init openssl library multithreading support
-        ppmutexOpenSSL = (wxMutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(wxMutex*));
+        ppmutexOpenSSL = (boost::interprocess::interprocess_mutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(boost::interprocess::interprocess_mutex*));
         for (int i = 0; i < CRYPTO_num_locks(); i++)
-            ppmutexOpenSSL[i] = new wxMutex();
+            ppmutexOpenSSL[i] = new boost::interprocess::interprocess_mutex();
         CRYPTO_set_locking_callback(locking_callback);
 
 #ifdef __WXMSW__
@@ -152,7 +152,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         if (fileout)
         {
             //// Debug print useful for profiling
-            //fprintf(fileout, " %"PRI64d" ", wxGetLocalTimeMillis().GetValue());
+            //fprintf(fileout, " %"PRI64d" ", GetTimeMillis());
             va_list arg_ptr;
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);
@@ -521,6 +521,69 @@ void PrintException(std::exception* pex, const char* pszThread)
 
 
 
+#ifdef __WXMSW__
+typedef WINSHELLAPI BOOL (WINAPI *PSHGETSPECIALFOLDERPATHA)(HWND hwndOwner, LPSTR lpszPath, int nFolder, BOOL fCreate);
+
+string MyGetSpecialFolderPath(int nFolder, bool fCreate)
+{
+    char pszPath[MAX_PATH+100] = "";
+
+    // SHGetSpecialFolderPath isn't always available on old Windows versions
+    HMODULE hShell32 = LoadLibraryA("shell32.dll");
+    if (hShell32)
+    {
+        PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
+            (PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
+        if (pSHGetSpecialFolderPath)
+            (*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
+        FreeModule(hShell32);
+    }
+
+    // Backup option
+    if (pszPath[0] == '\0')
+    {
+        if (nFolder == CSIDL_STARTUP)
+        {
+            strcpy(pszPath, getenv("USERPROFILE"));
+            strcat(pszPath, "\\Start Menu\\Programs\\Startup");
+        }
+        else if (nFolder == CSIDL_APPDATA)
+        {
+            strcpy(pszPath, getenv("APPDATA"));
+        }
+    }
+
+    return pszPath;
+}
+#endif
+
+string GetDefaultDataDir()
+{
+    // Windows: C:\Documents and Settings\username\Application Data\Appname
+    // Mac: ~/Library/Application Support/Appname
+    // Unix: ~/.appname
+#ifdef __WXMSW__
+    // Windows
+    return MyGetSpecialFolderPath(CSIDL_APPDATA, true) + "\\Bitcoin";
+#else
+    char* pszHome = getenv("HOME");
+    if (pszHome == NULL || strlen(pszHome) == 0)
+        pszHome = (char*)"/";
+    string strHome = pszHome;
+    if (strHome[strHome.size()-1] != '/')
+        strHome += '/';
+#ifdef __WXOSX__
+    // Mac
+    strHome += "Library/Application Support/";
+    _mkdir(strHome.c_str());
+    return strHome + "Bitcoin";
+#else
+    // Unix
+    return strHome + ".bitcoin";
+#endif
+#endif
+}
+
 void GetDataDir(char* pszDir)
 {
     // pszDir must be at least MAX_PATH length.
@@ -538,11 +601,6 @@ void GetDataDir(char* pszDir)
     {
         // This can be called during exceptions by printf, so we cache the
         // value so we don't have to do memory allocations after that.
-        // wxStandardPaths::GetUserDataDir
-        //  Return the directory for the user-dependent application data files:
-        //  Unix: ~/.appname
-        //  Windows: C:\Documents and Settings\username\Application Data\appname
-        //  Mac: ~/Library/Application Support/appname
         static char pszCachedDir[MAX_PATH];
         if (pszCachedDir[0] == 0)
         {
