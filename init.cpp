@@ -4,8 +4,6 @@
 
 #include "headers.h"
 
-extern string GetDefaultDataDir(); /// todo: delete this later, just used by debug test
-
 
 
 
@@ -430,15 +428,7 @@ bool CMyApp::OnInit2()
     printf("Bitcoin version %d.%d.%d%s beta, OS version %s\n", VERSION/10000, (VERSION/100)%100, VERSION%100, pszSubVer, ((string)wxGetOsDescription()).c_str());
     printf("System default language is %d %s\n", m_locale.GetSystemLanguage(), ((string)m_locale.GetSysName()).c_str());
     printf("Language file %s (%s)\n", (string("locale/") + (string)m_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)m_locale.GetLocale()).c_str());
-
-        /// debug - for now, just watching if these match
-        if (pszSetDataDir[0] == 0)
-        {
-            if (GetDefaultDataDir() != GetDataDir())
-                printf("**** GetDefaultDataDir() %s != %s\n", GetDefaultDataDir().c_str(), GetDataDir().c_str());
-            else
-                printf("OK GetDefaultDataDir() %s == %s\n", GetDefaultDataDir().c_str(), GetDataDir().c_str());
-        }
+    printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
     if (mapArgs.count("-loadblockindextest"))
     {
