@@ -144,6 +144,7 @@ void GetDataDir(char* pszDirRet);
 #ifdef __WXMSW__
 string MyGetSpecialFolderPath(int nFolder, bool fCreate);
 #endif
+string GetDefaultDataDir();
 string GetDataDir();
 void ShrinkDebugFile();
 uint64 GetRand(uint64 nMax);
