@@ -20,7 +20,7 @@ class CDataStream;
 class CAutoFile;
 
 static const int VERSION = 300;
-static const char* pszSubVer = ".1";
+static const char* pszSubVer = ".2";
 
 
 

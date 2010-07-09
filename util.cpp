@@ -559,9 +559,9 @@ string MyGetSpecialFolderPath(int nFolder, bool fCreate)
 
 string GetDefaultDataDir()
 {
-    // Windows: C:\Documents and Settings\username\Application Data\Appname
-    // Mac: ~/Library/Application Support/Appname
-    // Unix: ~/.appname
+    // Windows: C:\Documents and Settings\username\Application Data\Bitcoin
+    // Mac: ~/Library/Application Support/Bitcoin
+    // Unix: ~/.bitcoin
 #ifdef __WXMSW__
     // Windows
     return MyGetSpecialFolderPath(CSIDL_APPDATA, true) + "\\Bitcoin";
