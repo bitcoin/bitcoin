@@ -1444,8 +1444,10 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     //m_listBox->Append(_("Test 2"));
     m_listBox->SetSelection(0);
     SelectPage(0);
-#ifndef __WXMSW__
-    m_checkBoxMinimizeOnClose->SetLabel(_("&Minimize on close"));
+#ifdef __WXGTK__
+    m_checkBoxStartOnSystemStartup->SetLabel(_("&Start Bitcoin on window system startup"));
+#endif
+#ifdef __WXMAC_OSX__
     m_checkBoxStartOnSystemStartup->Enable(false); // not implemented yet
 #endif
 

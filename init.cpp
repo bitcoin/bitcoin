@@ -117,9 +117,86 @@ void SetStartOnSystemStartup(bool fAutoStart)
         CoUninitialize();
     }
 }
+
+#elif defined(__WXGTK__)
+
+//
+// Follow the Desktop Application Autostart Spec:
+//  http://standards.freedesktop.org/autostart-spec/autostart-spec-latest.html
+//
+
+boost::filesystem::path GetAutostartDir()
+{
+    namespace fs = boost::filesystem;
+
+    char* pszConfigHome = getenv("XDG_CONFIG_HOME");
+    if (pszConfigHome) return fs::path(pszConfigHome) / fs::path("autostart");
+    char* pszHome = getenv("HOME");
+    if (pszHome) return fs::path(pszHome) / fs::path(".config/autostart");
+    return fs::path();
+}
+
+boost::filesystem::path GetAutostartFilePath()
+{
+    return GetAutostartDir() / boost::filesystem::path("bitcoin.desktop");
+}
+
+bool GetStartOnSystemStartup()
+{
+    boost::filesystem::ifstream optionFile(GetAutostartFilePath());
+    if (!optionFile.good())
+        return false;
+    // Scan through file for "Hidden=true":
+    string line;
+    while (!optionFile.eof())
+    {
+        getline(optionFile, line);
+        if (line.find("Hidden") != string::npos &&
+            line.find("true") != string::npos)
+            return false;
+    }
+    optionFile.close();
+
+    return true;
+}
+
+void SetStartOnSystemStartup(bool fAutoStart)
+{
+    if (!fAutoStart)
+    {
+        unlink(GetAutostartFilePath().native_file_string().c_str());
+    }
+    else
+    {
+        boost::filesystem::create_directories(GetAutostartDir());
+
+        boost::filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
+        if (!optionFile.good())
+        {
+            wxMessageBox(_("Cannot write autostart/bitcoin.desktop file"), "Bitcoin");
+            return;
+        }
+        // Write a bitcoin.desktop file to the autostart directory:
+        char pszExePath[MAX_PATH+1];
+        memset(pszExePath, 0, sizeof(pszExePath));
+        readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1);
+        optionFile << "[Desktop Entry]\n";
+        optionFile << "Type=Application\n";
+        optionFile << "Name=Bitcoin\n";
+        optionFile << "Exec=" << pszExePath << "\n";
+        optionFile << "Terminal=false\n";
+        optionFile << "Hidden=false\n";
+        optionFile.close();
+    }
+}
 #else
+
+// TODO: OSX startup stuff; see:
+// http://developer.apple.com/mac/library/documentation/MacOSX/Conceptual/BPSystemStartup/Articles/CustomLogin.html
+
 bool GetStartOnSystemStartup() { return false; }
 void SetStartOnSystemStartup(bool fAutoStart) { }
+
 #endif
 
 
