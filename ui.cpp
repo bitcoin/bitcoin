@@ -375,13 +375,12 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
     // to get rid of the deprecated warning.  Just ignore it.
     if (!event.Iconized())
         fClosedToTray = false;
-//#ifdef __WXMSW__
     // The tray icon sometimes disappears on ubuntu karmic
     // Hiding the taskbar button doesn't work cleanly on ubuntu lucid
+    // Reports of CPU peg on 64-bit linux
     if (fMinimizeToTray && event.Iconized())
         fClosedToTray = true;
     Show(!fClosedToTray);
-//#endif
     ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
 }
 
@@ -1446,6 +1445,14 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     SelectPage(0);
 #ifdef __WXGTK__
     m_checkBoxStartOnSystemStartup->SetLabel(_("&Start Bitcoin on window system startup"));
+    if (!mapArgs.count("-minimizetotray"))
+    {
+        // Minimize to tray is just too buggy on Linux
+        fMinimizeToTray = false;
+        m_checkBoxMinimizeToTray->SetValue(false);
+        m_checkBoxMinimizeToTray->Enable(false);
+        m_checkBoxMinimizeOnClose->SetLabel(_("&Minimize on close"));
+    }
 #endif
 #ifdef __WXMAC_OSX__
     m_checkBoxStartOnSystemStartup->Enable(false); // not implemented yet
@@ -2536,6 +2543,10 @@ void CreateMainWindow()
     pframeMain = new CMainFrame(NULL);
     if (mapArgs.count("-min"))
         pframeMain->Iconize(true);
+#ifdef __WXGTK__
+    if (!mapArgs.count("-minimizetotray"))
+        fMinimizeToTray = false;
+#endif
     pframeMain->Show(true);  // have to show first to get taskbar button to hide
     if (fMinimizeToTray && pframeMain->IsIconized())
         fClosedToTray = true;

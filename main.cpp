@@ -2610,6 +2610,9 @@ void BitcoinMiner()
                     CTransaction& tx = (*mi).second;
                     if (tx.IsCoinBase() || !tx.IsFinal())
                         continue;
+                    unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK);
+                    if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE - 10000)
+                        continue;
 
                     // Transaction fee based on block size
                     int64 nMinFee = tx.GetMinFee(nBlockSize);
@@ -2620,7 +2623,7 @@ void BitcoinMiner()
                     swap(mapTestPool, mapTestPoolTmp);
 
                     pblock->vtx.push_back(tx);
-                    nBlockSize += ::GetSerializeSize(tx, SER_NETWORK);
+                    nBlockSize += nTxSize;
                     vfAlreadyAdded[n] = true;
                     fFoundSomething = true;
                 }
