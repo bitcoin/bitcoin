@@ -2544,13 +2544,13 @@ void BlockSHA256(const void* pin, unsigned int nBlocks, void* pout)
 void BitcoinMiner()
 {
     printf("BitcoinMiner started\n");
+    SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
     CKey key;
     key.MakeNewKey();
     CBigNum bnExtraNonce = 0;
     while (fGenerateBitcoins)
     {
-        SetThreadPriority(THREAD_PRIORITY_LOWEST);
         Sleep(50);
         if (fShutdown)
             return;
