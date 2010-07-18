@@ -1,7 +1,0 @@
-Changes after 0.1.5:
---------------------
-+ Options dialog layout changed - added the UI options panel
-+ Minimize to tray feature
-+ Startup on system boot feature
-+ Ask before closing
-+ NSIS installer

@@ -1,2 +1,0 @@
-Known bugs:
-- Window flickers when blocks are added (problem with repainting?)

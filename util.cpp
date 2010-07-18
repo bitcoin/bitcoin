@@ -701,12 +701,13 @@ void AddTimeData(unsigned int ip, int64 nTime)
         sort(vTimeOffsets.begin(), vTimeOffsets.end());
         int64 nMedian = vTimeOffsets[vTimeOffsets.size()/2];
         nTimeOffset = nMedian;
-        if ((nMedian > 0 ? nMedian : -nMedian) > 5 * 60)
+        if ((nMedian > 0 ? nMedian : -nMedian) > 36 * 60 * 60)
         {
             // Only let other nodes change our clock so far before we
             // go to the NTP servers
             /// todo: Get time from NTP servers, then set a flag
             ///    to make sure it doesn't get changed again
+            nTimeOffset = 0;
         }
         foreach(int64 n, vTimeOffsets)
             printf("%+"PRI64d"  ", n);

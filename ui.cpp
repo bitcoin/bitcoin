@@ -1132,7 +1132,7 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
     // Ask name
     CGetTextFromUserDialog dialog(this,
         _("New Receiving Address"),
-        _("It's good policy to use a new address for each payment you receive.\n\nLabel"),
+        _("You should use a new address for each payment you receive.\n\nLabel"),
         "");
     if (!dialog.ShowModal())
         return;
@@ -2372,7 +2372,7 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
         // Ask name
         CGetTextFromUserDialog dialog(this,
             _("New Receiving Address"),
-            _("It's good policy to use a new address for each payment you receive.\n\nLabel"),
+            _("You should use a new address for each payment you receive.\n\nLabel"),
             "");
         if (!dialog.ShowModal())
             return;
