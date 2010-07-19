@@ -592,6 +592,8 @@ bool CWalletDB::LoadWallet()
             else if (strType == "version")
             {
                 ssValue >> nFileVersion;
+                if (nFileVersion == 10300)
+                    nFileVersion = 300;
             }
             else if (strType == "setting")
             {

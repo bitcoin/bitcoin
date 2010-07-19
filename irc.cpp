@@ -158,6 +158,10 @@ bool Wait(int nSeconds)
 
 void ThreadIRCSeed(void* parg)
 {
+    if (mapArgs.count("-connect"))
+        return;
+    if (mapArgs.count("-noirc"))
+        return;
     printf("ThreadIRCSeed started\n");
     int nErrorWait = 10;
     int nRetryWait = 10;

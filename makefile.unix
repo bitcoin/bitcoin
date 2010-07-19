@@ -23,8 +23,8 @@ LIBS= \
  -Wl,-Bstatic \
    -l boost_system -l boost_filesystem \
    -l db_cxx \
- -Wl,-Bdynamic \
    -l crypto \
+ -Wl,-Bdynamic \
    -l gthread-2.0
 
 WXDEFS=-D__WXGTK__ -DNOPCH
