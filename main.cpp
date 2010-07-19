@@ -1341,6 +1341,14 @@ bool CBlock::AcceptBlock()
     if (nBits != GetNextWorkRequired(pindexPrev))
         return error("AcceptBlock() : incorrect proof of work");
 
+    // Check that the block chain matches the known block chain up to a checkpoint
+    if (pindexPrev->nHeight+1 == 11111 && hash != uint256("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d"))
+        return error("AcceptBlock() : rejected by checkpoint lockin at 11111");
+    if (pindexPrev->nHeight+1 == 33333 && hash != uint256("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6"))
+        return error("AcceptBlock() : rejected by checkpoint lockin at 33333");
+    if (pindexPrev->nHeight+1 == 68555 && hash != uint256("0x00000000001e1b4903550a0b96e9a9405c8a95f387162e4944e8d9fbe501cd6a"))
+        return error("AcceptBlock() : rejected by checkpoint lockin at 68555");
+
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))
         return error("AcceptBlock() : out of disk space");
@@ -1933,6 +1941,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> vAddr;
         if (pfrom->nVersion < 200) // don't want addresses from 0.1.5
             return true;
+        if (pfrom->nVersion < 209 && mapAddresses.size() > 1000) // don't want addr from 0.2.0 unless seeding
+            return true;
         if (vAddr.size() > 1000)
             return error("message addr size() = %d", vAddr.size());
 
@@ -1941,6 +1951,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             if (fShutdown)
                 return true;
+            // ignore IPv6 for now, since it isn't implemented anyway
+            if (!addr.IsIPv4())
+                continue;
             addr.nTime = GetAdjustedTime() - 2 * 60 * 60;
             if (pfrom->fGetAddr || vAddr.size() > 10)
                 addr.nTime -= 5 * 24 * 60 * 60;
@@ -1952,15 +1965,15 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 CRITICAL_BLOCK(cs_vNodes)
                 {
                     // Use deterministic randomness to send to
-                    // the same places for an hour at a time
+                    // the same places for 12 hours at a time
                     static uint256 hashSalt;
                     if (hashSalt == 0)
                         RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
-                    uint256 hashRand = addr.ip ^ (GetTime()/3600) ^ hashSalt;
+                    uint256 hashRand = addr.ip ^ ((GetTime()+addr.ip)/(12*60*60)) ^ hashSalt;
                     multimap<uint256, CNode*> mapMix;
                     foreach(CNode* pnode, vNodes)
                         mapMix.insert(make_pair(hashRand = Hash(BEGIN(hashRand), END(hashRand)), pnode));
-                    int nRelayNodes = 10; // reduce this to 5 when the network is large
+                    int nRelayNodes = 4;
                     for (multimap<uint256, CNode*>::iterator mi = mapMix.begin(); mi != mapMix.end() && nRelayNodes-- > 0; ++mi)
                         ((*mi).second)->PushAddress(addr);
                 }
