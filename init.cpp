@@ -389,7 +389,7 @@ bool CMyApp::OnInit2()
             "  bitcoin [options]       \t" + "\n" +
             "  bitcoin [command]       \t" + _("Send command to bitcoin running with -server or -daemon\n") +
             "  bitcoin [command] -?    \t" + _("Get help for a command\n") +
-            "  bitcoin help            \t" + _("List commands\n") +
+            "  bitcoin help <pw>       \t" + _("List commands\n") +
           _("Options:\n") +
             "  -gen            \t  " + _("Generate coins\n") +
             "  -gen=0          \t  " + _("Don't generate coins\n") +
@@ -398,7 +398,7 @@ bool CMyApp::OnInit2()
             "  -proxy=<ip:port>\t  " + _("Connect through socks4 proxy\n") +
             "  -addnode=<ip>   \t  " + _("Add a node to connect to\n") +
             "  -connect=<ip>   \t  " + _("Connect only to the specified node\n") +
-            "  -server         \t  " + _("Accept command line and JSON-RPC commands\n") +
+            "  -rpcpw=<pw>     \t  " + _("Accept command line and JSON-RPC commands with the given password\n") +
             "  -daemon         \t  " + _("Run in the background as a daemon and accept commands\n") +
             "  -?              \t  " + _("This help message\n");
 
@@ -611,7 +611,7 @@ bool CMyApp::OnInit2()
     if (!CreateThread(StartNode, NULL))
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
-    if (mapArgs.count("-server") || fDaemon)
+    if (mapArgs.count("-server") || mapArgs.count("-rpcpw") || fDaemon)
         CreateThread(ThreadRPCServer, NULL);
 
     if (fFirstRun)

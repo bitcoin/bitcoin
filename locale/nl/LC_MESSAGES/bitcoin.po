@@ -216,7 +216,7 @@ msgstr "Nieuw Ontvangings Adres"
 #: ../../../ui.cpp:1124
 #: ../../../ui.cpp:2352
 msgid ""
-"It's good policy to use a new address for each payment you receive.\n"
+"You should use a new address for each payment you receive.\n"
 "\n"
 "Label"
 msgstr ""
