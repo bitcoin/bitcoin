@@ -375,6 +375,9 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
     // to get rid of the deprecated warning.  Just ignore it.
     if (!event.Iconized())
         fClosedToTray = false;
+#ifdef __WXGTK__
+    if (mapArgs.count("-minimizetotray")) {
+#endif
     // The tray icon sometimes disappears on ubuntu karmic
     // Hiding the taskbar button doesn't work cleanly on ubuntu lucid
     // Reports of CPU peg on 64-bit linux
@@ -382,6 +385,9 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
         fClosedToTray = true;
     Show(!fClosedToTray);
     ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
+#ifdef __WXGTK__
+    }
+#endif
 }
 
 void CMainFrame::OnMouseEvents(wxMouseEvent& event)
