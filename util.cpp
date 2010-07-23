@@ -416,7 +416,7 @@ void ParseParameters(int argc, char* argv[])
 {
     mapArgs.clear();
     mapMultiArgs.clear();
-    for (int i = 0; i < argc; i++)
+    for (int i = 1; i < argc; i++)
     {
         char psz[10000];
         strlcpy(psz, argv[i], sizeof(psz));
@@ -431,6 +431,8 @@ void ParseParameters(int argc, char* argv[])
         if (psz[0] == '/')
             psz[0] = '-';
         #endif
+        if (psz[0] != '-')
+            break;
         mapArgs[psz] = pszValue;
         mapMultiArgs[psz].push_back(pszValue);
     }
@@ -619,6 +621,38 @@ string GetDataDir()
     return pszDir;
 }
 
+string GetConfigFile()
+{
+    namespace fs = boost::filesystem;
+    fs::path pathConfig(mapArgs.count("-conf") ? mapArgs["-conf"] : string("bitcoin.conf"));
+    if (!pathConfig.is_complete())
+        pathConfig = fs::path(GetDataDir()) / pathConfig;
+    return pathConfig.string();
+}
+
+void ReadConfigFile(map<string, string>& mapSettingsRet,
+                    map<string, vector<string> >& mapMultiSettingsRet)
+{
+    namespace fs = boost::filesystem;
+    namespace pod = boost::program_options::detail;
+
+    fs::ifstream streamConfig(GetConfigFile());
+    if (!streamConfig.good())
+        return;
+
+    set<string> setOptions;
+    setOptions.insert("*");
+
+    for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
+    {
+        // Don't overwrite existing settings so command line settings override bitcoin.conf
+        string strKey = string("-") + it->string_key;
+        if (mapSettingsRet.count(strKey) == 0)
+            mapSettingsRet[strKey] = it->value[0];
+        mapMultiSettingsRet[strKey].push_back(it->value[0]);
+    }
+}
+
 int GetFilesize(FILE* file)
 {
     int nSavePos = ftell(file);
@@ -648,9 +682,6 @@ void ShrinkDebugFile()
         }
     }
 }
-
-
-
 
 
 

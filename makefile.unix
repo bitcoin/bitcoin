@@ -21,7 +21,7 @@ WXLIBS= \
 
 LIBS= \
  -Wl,-Bstatic \
-   -l boost_system -l boost_filesystem \
+   -l boost_system -l boost_filesystem  -l boost_program_options \
    -l db_cxx \
    -l crypto \
  -Wl,-Bdynamic \

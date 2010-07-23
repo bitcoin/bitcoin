@@ -26,6 +26,7 @@
 #include <wx/clipbrd.h>
 #include <wx/taskbar.h>
 #endif
+#include <openssl/buffer.h>
 #include <openssl/ecdsa.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -64,6 +65,9 @@
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/config.hpp>
+#include <boost/program_options/detail/config_file.hpp>
+#include <boost/program_options/parsers.hpp>
 
 #ifdef __WXMSW__
 #include <windows.h>

@@ -19,7 +19,7 @@ LIBPATHS= \
   /LIBPATH:"/wxwidgets/lib/vc_lib"
 
 LIBS= \
-  libboost_system-vc80-mt-gd.lib libboost_filesystem-vc80-mt-gd.lib \
+  libboost_system-vc80-mt-gd.lib libboost_filesystem-vc80-mt-gd.lib libboost_program_options-vc80-mt-gd.lib \
   libdb47sd.lib \
   libeay32.lib \
   wxmsw29ud_html.lib wxmsw29ud_core.lib wxmsw29ud_adv.lib wxbase29ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib \

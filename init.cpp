@@ -240,33 +240,34 @@ IMPLEMENT_APP(CMyApp)
 
 bool CMyApp::Initialize(int& argc, wxChar** argv)
 {
-    if (argc > 1 && argv[1][0] != '-' && (!fWindows || argv[1][0] != '/') &&
-        wxString(argv[1]) != "start")
+    for (int i = 1; i < argc; i++)
+        if (!IsSwitchChar(argv[i][0]))
+            fCommandLine = true;
+
+    if (!fCommandLine)
     {
-        fCommandLine = true;
-    }
-    else if (!fGUI)
-    {
-        fDaemon = true;
-    }
-    else
-    {
-        // wxApp::Initialize will remove environment-specific parameters,
-        // so it's too early to call ParseParameters yet
-        for (int i = 1; i < argc; i++)
+        if (!fGUI)
         {
-            wxString str = argv[i];
-            #ifdef __WXMSW__
-            if (str.size() >= 1 && str[0] == '/')
-                str[0] = '-';
-            char pszLower[MAX_PATH];
-            strlcpy(pszLower, str.c_str(), sizeof(pszLower));
-            strlwr(pszLower);
-            str = pszLower;
-            #endif
-            // haven't decided which argument to use for this yet
-            if (str == "-daemon" || str == "-d" || str == "start")
-                fDaemon = true;
+            fDaemon = true;
+        }
+        else
+        {
+            // wxApp::Initialize will remove environment-specific parameters,
+            // so it's too early to call ParseParameters yet
+            for (int i = 1; i < argc; i++)
+            {
+                wxString str = argv[i];
+                #ifdef __WXMSW__
+                if (str.size() >= 1 && str[0] == '/')
+                    str[0] = '-';
+                char pszLower[MAX_PATH];
+                strlcpy(pszLower, str.c_str(), sizeof(pszLower));
+                strlwr(pszLower);
+                str = pszLower;
+                #endif
+                if (str == "-daemon")
+                    fDaemon = true;
+            }
         }
     }
 
@@ -375,22 +376,23 @@ bool CMyApp::OnInit2()
     //
     // Parameters
     //
-    if (fCommandLine)
-    {
-        int ret = CommandLineRPC(argc, argv);
-        exit(ret);
-    }
-
     ParseParameters(argc, argv);
+
+    if (mapArgs.count("-datadir"))
+        strlcpy(pszSetDataDir, mapArgs["-datadir"].c_str(), sizeof(pszSetDataDir));
+
+    ReadConfigFile(mapArgs, mapMultiArgs); // Must be done after processing datadir
+
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
         wxString strUsage = string() +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
-            "  bitcoin [options]       \t" + "\n" +
-            "  bitcoin [command]       \t" + _("Send command to bitcoin running with -server or -daemon\n") +
-            "  bitcoin [command] -?    \t" + _("Get help for a command\n") +
-            "  bitcoin help <pw>       \t" + _("List commands\n") +
+            "  bitcoin [options]                   \t  " + "\n" +
+            "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
+            "  bitcoin [options] <command> -?      \t\t  " + _("Get help for a command\n") +
+            "  bitcoin help                        \t\t\t  " + _("List commands\n") +
           _("Options:\n") +
+            "  -conf=<file>    \t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
             "  -gen            \t  " + _("Generate coins\n") +
             "  -gen=0          \t  " + _("Don't generate coins\n") +
             "  -min            \t  " + _("Start minimized\n") +
@@ -398,7 +400,7 @@ bool CMyApp::OnInit2()
             "  -proxy=<ip:port>\t  " + _("Connect through socks4 proxy\n") +
             "  -addnode=<ip>   \t  " + _("Add a node to connect to\n") +
             "  -connect=<ip>   \t  " + _("Connect only to the specified node\n") +
-            "  -rpcpw=<pw>     \t  " + _("Accept command line and JSON-RPC commands with the given password\n") +
+            "  -server         \t  " + _("Accept command line and JSON-RPC commands\n") +
             "  -daemon         \t  " + _("Run in the background as a daemon and accept commands\n") +
             "  -?              \t  " + _("This help message\n");
 
@@ -413,14 +415,17 @@ bool CMyApp::OnInit2()
         return false;
     }
 
-    if (mapArgs.count("-datadir"))
-        strlcpy(pszSetDataDir, mapArgs["-datadir"].c_str(), sizeof(pszSetDataDir));
-
     if (mapArgs.count("-debug"))
         fDebug = true;
 
     if (mapArgs.count("-printtodebugger"))
         fPrintToDebugger = true;
+
+    if (fCommandLine)
+    {
+        int ret = CommandLineRPC(argc, argv);
+        exit(ret);
+    }
 
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
@@ -611,7 +616,7 @@ bool CMyApp::OnInit2()
     if (!CreateThread(StartNode, NULL))
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
-    if (mapArgs.count("-server") || mapArgs.count("-rpcpw") || fDaemon)
+    if (mapArgs.count("-server") || fDaemon)
         CreateThread(ThreadRPCServer, NULL);
 
     if (fFirstRun)

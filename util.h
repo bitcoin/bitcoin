@@ -141,6 +141,8 @@ void ParseParameters(int argc, char* argv[]);
 const char* wxGetTranslation(const char* psz);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
+string GetConfigFile();
+void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<string> >& mapMultiSettingsRet);
 #ifdef __WXMSW__
 string MyGetSpecialFolderPath(int nFolder, bool fCreate);
 #endif
@@ -348,7 +350,14 @@ void skipspaces(T& it)
         ++it;
 }
 
-
+inline bool IsSwitchChar(char c)
+{
+#ifdef __WXMSW__
+    return c == '-' || c == '/';
+#else
+    return c == '-';
+#endif
+}
 
 
 
