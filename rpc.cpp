@@ -774,6 +774,10 @@ string EncodeBase64(string s)
     string result(bptr->data, bptr->length-1);
     BIO_free_all(b64);
 
+    // Remove newlines every 64 characters
+    result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+    result.erase(std::remove(result.begin(), result.end(), '\r'), result.end());
+
     return result;
 }
 
