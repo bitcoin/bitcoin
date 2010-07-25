@@ -227,7 +227,7 @@ class CAboutDialogBase : public wxDialog
 	
 	public:
 		wxStaticText* m_staticTextVersion;
-		CAboutDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("About Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 532,329 ), long style = wxDEFAULT_DIALOG_STYLE );
+		CAboutDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("About Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 532,333 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~CAboutDialogBase();
 	
 };

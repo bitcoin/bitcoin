@@ -22,7 +22,7 @@ WXLIBS= \
  -l wxmsw29ud_html -l wxmsw29ud_core -l wxmsw29ud_adv -l wxbase29ud -l wxtiffd -l wxjpegd -l wxpngd -l wxzlibd
 
 LIBS= \
- -l libboost_system-mgw34-mt-d -l libboost_filesystem-mgw34-mt-d \
+ -l libboost_system-mgw34-mt-d -l libboost_filesystem-mgw34-mt-d -l libboost_program_options-mgw34-mt-d \
  -l db_cxx \
  -l eay32 \
  -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi

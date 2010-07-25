@@ -24,6 +24,7 @@ map<uint256, CBlockIndex*> mapBlockIndex;
 const uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
+CBigNum bnBestChainWork = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64 nTimeBestReceived = 0;
@@ -848,6 +849,23 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
     return bnNew.GetCompact();
 }
 
+vector<int> vStartingHeight;
+void AddStartingHeight(int nStartingHeight)
+{
+    if (nStartingHeight != -1)
+    {
+        vStartingHeight.push_back(nStartingHeight);
+        sort(vStartingHeight.begin(), vStartingHeight.end());
+    }
+}
+
+bool IsInitialBlockDownload()
+{
+    int nMedian = 69000;
+    if (vStartingHeight.size() >= 5)
+        nMedian = vStartingHeight[vStartingHeight.size()/2];
+    return nBestHeight < nMedian-1000;
+}
 
 
 
@@ -1208,13 +1226,14 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
     }
+    pindexNew->bnChainWork = (pindexNew->pprev ? pindexNew->pprev->bnChainWork : 0) + pindexNew->GetBlockWork();
 
     CTxDB txdb;
     txdb.TxnBegin();
     txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
 
     // New best
-    if (pindexNew->nHeight > nBestHeight)
+    if (pindexNew->bnChainWork > bnBestChainWork)
     {
         if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
         {
@@ -1253,6 +1272,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         hashBestChain = hash;
         pindexBest = pindexNew;
         nBestHeight = pindexBest->nHeight;
+        bnBestChainWork = pindexNew->bnChainWork;
         nTimeBestReceived = GetTime();
         nTransactionsUpdated++;
         printf("AddToBlockIndex: new best=%s  height=%d\n", hashBestChain.ToString().substr(0,16).c_str(), nBestHeight);
@@ -1900,6 +1920,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         AddTimeData(pfrom->addr.ip, nTime);
+        AddStartingHeight(pfrom->nStartingHeight);
 
         // Change version
         if (pfrom->nVersion >= 209)
@@ -2845,6 +2866,10 @@ int64 GetBalance()
 }
 
 
+int GetRandInt(int nMax)
+{
+    return GetRand(nMax);
+}
 
 bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
 {
@@ -2858,9 +2883,14 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
 
     CRITICAL_BLOCK(cs_mapWallet)
     {
-        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-        {
-            CWalletTx* pcoin = &(*it).second;
+       vector<CWalletTx*> vCoins;
+       vCoins.reserve(mapWallet.size());
+       for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+           vCoins.push_back(&(*it).second);
+       random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+
+       foreach(CWalletTx* pcoin, vCoins)
+       {
             if (!pcoin->IsFinal() || pcoin->fSpent)
                 continue;
             int64 n = pcoin->GetCredit();

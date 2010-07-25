@@ -130,7 +130,14 @@ void CDB::Close()
         vTxn.front()->abort();
     vTxn.clear();
     pdb = NULL;
-    dbenv.txn_checkpoint(0, 0, 0);
+
+    // Flush database activity from memory pool to disk log
+    unsigned int nMinutes = 0;
+    if (strFile == "addr.dat")
+        nMinutes = 2;
+    if (strFile == "blkindex.dat" && IsInitialBlockDownload() && nBestHeight % 500 != 0)
+        nMinutes = 1;
+    dbenv.txn_checkpoint(0, nMinutes, 0);
 
     CRITICAL_BLOCK(cs_db)
         --mapFileUseCount[strFile];
@@ -357,11 +364,12 @@ CBlockIndex* InsertBlockIndex(uint256 hash)
 
 bool CTxDB::LoadBlockIndex()
 {
-    // Get cursor
+    // Get database cursor
     Dbc* pcursor = GetCursor();
     if (!pcursor)
         return false;
 
+    // Load mapBlockIndex
     unsigned int fFlags = DB_SET_RANGE;
     loop
     {
@@ -398,7 +406,7 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->nBits          = diskindex.nBits;
             pindexNew->nNonce         = diskindex.nNonce;
 
-            // Watch for genesis block and best block
+            // Watch for genesis block
             if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
                 pindexGenesisBlock = pindexNew;
         }
@@ -409,17 +417,33 @@ bool CTxDB::LoadBlockIndex()
     }
     pcursor->close();
 
+    // Calculate bnChainWork
+    vector<pair<int, CBlockIndex*> > vSortedByHeight;
+    vSortedByHeight.reserve(mapBlockIndex.size());
+    foreach(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
+    {
+        CBlockIndex* pindex = item.second;
+        vSortedByHeight.push_back(make_pair(pindex->nHeight, pindex));
+    }
+    sort(vSortedByHeight.begin(), vSortedByHeight.end());
+    foreach(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
+    {
+        CBlockIndex* pindex = item.second;
+        pindex->bnChainWork = (pindex->pprev ? pindex->pprev->bnChainWork : 0) + pindex->GetBlockWork();
+    }
+
+    // Load hashBestChain pointer to end of best chain
     if (!ReadHashBestChain(hashBestChain))
     {
         if (pindexGenesisBlock == NULL)
             return true;
-        return error("CTxDB::LoadBlockIndex() : hashBestChain not found");
+        return error("CTxDB::LoadBlockIndex() : hashBestChain not loaded");
     }
-
     if (!mapBlockIndex.count(hashBestChain))
-        return error("CTxDB::LoadBlockIndex() : blockindex for hashBestChain not found");
+        return error("CTxDB::LoadBlockIndex() : hashBestChain not found in the block index");
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
+    bnBestChainWork = pindexBest->bnChainWork;
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,16).c_str(), nBestHeight);
 
     return true;

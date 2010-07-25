@@ -32,6 +32,7 @@ extern map<uint256, CBlockIndex*> mapBlockIndex;
 extern const uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
+extern CBigNum bnBestChainWork;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
@@ -78,6 +79,7 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 void BitcoinMiner();
+bool IsInitialBlockDownload();
 
 
 
@@ -986,11 +988,14 @@ public:
 
         // Flush stdio buffers and commit to disk before returning
         fflush(fileout);
+        if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+        {
 #ifdef __WXMSW__
-        _commit(_fileno(fileout));
+            _commit(_fileno(fileout));
 #else
-        fsync(fileno(fileout));
+            fsync(fileno(fileout));
 #endif
+        }
 
         return true;
     }
@@ -1072,6 +1077,7 @@ public:
     unsigned int nFile;
     unsigned int nBlockPos;
     int nHeight;
+    CBigNum bnChainWork;
 
     // block header
     int nVersion;
@@ -1089,6 +1095,7 @@ public:
         nFile = 0;
         nBlockPos = 0;
         nHeight = 0;
+        bnChainWork = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1105,6 +1112,7 @@ public:
         nFile = nFileIn;
         nBlockPos = nBlockPosIn;
         nHeight = 0;
+        bnChainWork = 0;
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -1116,6 +1124,11 @@ public:
     uint256 GetBlockHash() const
     {
         return *phashBlock;
+    }
+
+    CBigNum GetBlockWork() const
+    {
+        return (CBigNum(1)<<256) / (CBigNum().SetCompact(nBits)+1);
     }
 
     bool IsInMainChain() const

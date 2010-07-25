@@ -19,6 +19,7 @@ LIBS= -dead_strip \
  $(DEPSDIR)/lib/libdb_cxx-4.8.a \
  $(DEPSDIR)/lib/libboost_system.a \
  $(DEPSDIR)/lib/libboost_filesystem.a \
+ $(DEPSDIR)/lib/libboost_program_options.a \
  $(DEPSDIR)/lib/libcrypto.a 
 
 WXDEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -DNOPCH -DMSG_NOSIGNAL=0
