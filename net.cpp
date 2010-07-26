@@ -64,7 +64,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
     SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
-#if defined(__BSD__) || defined(__WXOSX__)
+#if defined(__BSD__) || defined(__WXMAC_OSX__)
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
@@ -1163,7 +1163,7 @@ bool BindListenPort(string& strError)
         return false;
     }
 
-#if defined(__BSD__) || defined(__WXOSX__)
+#if defined(__BSD__) || defined(__WXMAC_OSX__)
     // Different way of disabling SIGPIPE on BSD
     setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif

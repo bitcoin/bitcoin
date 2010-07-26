@@ -83,6 +83,7 @@ bool AddKey(const CKey& key)
 
 vector<unsigned char> GenerateNewKey()
 {
+    RandAddSeedPerfmon();
     CKey key;
     key.MakeNewKey();
     if (!AddKey(key))
@@ -1506,7 +1507,7 @@ bool CheckDiskSpace(int64 nAdditionalBytes)
     {
         fShutdown = true;
         printf("***  %s***\n", _("Warning: Disk space is low  "));
-#if wxUSE_GUI
+#ifdef GUI
         ThreadSafeMessageBox(_("Warning: Disk space is low  "), "Bitcoin", wxOK | wxICON_EXCLAMATION);
 #endif
         CreateThread(Shutdown, NULL);
@@ -2494,7 +2495,7 @@ void GenerateBitcoins(bool fGenerate)
     }
     if (fGenerateBitcoins)
     {
-        int nProcessors = wxThread::GetCPUCount();
+        int nProcessors = boost::thread::hardware_concurrency();
         printf("%d processors\n", nProcessors);
         if (nProcessors < 1)
             nProcessors = 1;

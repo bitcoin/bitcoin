@@ -3,8 +3,6 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 
-# for wxWidgets-2.8.x, search and replace "mswud"->"mswd" and "29u"->"28"
-
 INCLUDEPATHS= \
  -I"/boost" \
  -I"/db/build_unix" \
@@ -22,32 +20,32 @@ WXLIBS= \
  -l wxmsw29ud_html -l wxmsw29ud_core -l wxmsw29ud_adv -l wxbase29ud -l wxtiffd -l wxjpegd -l wxpngd -l wxzlibd
 
 LIBS= \
- -l libboost_system-mgw34-mt-d -l libboost_filesystem-mgw34-mt-d -l libboost_program_options-mgw34-mt-d \
+ -l libboost_system-mgw34-mt-d \
+ -l libboost_filesystem-mgw34-mt-d \
+ -l libboost_program_options-mgw34-mt-d \
+ -l libboost_thread-mgw34-mt-d \
  -l db_cxx \
  -l eay32 \
  -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
 
-WXDEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH
+DEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH
 DEBUGFLAGS=-g -D__WXDEBUG__
-CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h init.h sha.h
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h sha.h
 
 
 all: bitcoin.exe
 
 
-headers.h.gch: headers.h $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/%.o: %.cpp $(HEADERS) headers.h.gch
-	g++ -c $(CFLAGS) -o $@ $<
+obj/%.o: %.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 obj/sha.o: sha.cpp sha.h
 	g++ -c $(CFLAGS) -O3 -o $@ $<
 
 obj/ui_res.o: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
-	windres $(WXDEFS) $(INCLUDEPATHS) -o $@ -i $<
+	windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
 
 OBJS= \
     obj/util.o \
@@ -64,10 +62,10 @@ bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/sha.o obj/ui_res.o
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -DwxUSE_GUI=0 -o $@ $<
+	g++ -c $(CFLAGS) -o $@ $<
 
 bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/sha.o obj/ui_res.o
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -l wxbase29ud $(LIBS)
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 clean:

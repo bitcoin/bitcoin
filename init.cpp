@@ -7,6 +7,15 @@
 
 
 
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Shutdown
+//
+
 void ExitTimeout(void* parg)
 {
 #ifdef __WXMSW__
@@ -55,273 +64,59 @@ void Shutdown(void* parg)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// Startup folder
+// Start
 //
 
-#ifdef __WXMSW__
-string StartupShortcutPath()
-{
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) + "\\Bitcoin.lnk";
-}
-
-bool GetStartOnSystemStartup()
-{
-    return filesystem::exists(StartupShortcutPath().c_str());
-}
-
-void SetStartOnSystemStartup(bool fAutoStart)
-{
-    // If the shortcut exists already, remove it for updating
-    remove(StartupShortcutPath().c_str());
-
-    if (fAutoStart)
-    {
-        CoInitialize(NULL);
-
-        // Get a pointer to the IShellLink interface.
-        IShellLink* psl = NULL;
-        HRESULT hres = CoCreateInstance(CLSID_ShellLink, NULL,
-                                CLSCTX_INPROC_SERVER, IID_IShellLink,
-                                reinterpret_cast<void**>(&psl));
-
-        if (SUCCEEDED(hres))
-        {
-            // Get the current executable path
-            TCHAR pszExePath[MAX_PATH];
-            GetModuleFileName(NULL, pszExePath, sizeof(pszExePath));
-
-            // Set the path to the shortcut target
-            psl->SetPath(pszExePath);
-            PathRemoveFileSpec(pszExePath);
-            psl->SetWorkingDirectory(pszExePath);
-            psl->SetShowCmd(SW_SHOWMINNOACTIVE);
-
-            // Query IShellLink for the IPersistFile interface for
-            // saving the shortcut in persistent storage.
-            IPersistFile* ppf = NULL;
-            hres = psl->QueryInterface(IID_IPersistFile,
-                                       reinterpret_cast<void**>(&ppf));
-            if (SUCCEEDED(hres))
-            {
-                WCHAR pwsz[MAX_PATH];
-                // Ensure that the string is ANSI.
-                MultiByteToWideChar(CP_ACP, 0, StartupShortcutPath().c_str(), -1, pwsz, MAX_PATH);
-                // Save the link by calling IPersistFile::Save.
-                hres = ppf->Save(pwsz, TRUE);
-                ppf->Release();
-            }
-            psl->Release();
-        }
-        CoUninitialize();
-    }
-}
-
-#elif defined(__WXGTK__)
-
-//
-// Follow the Desktop Application Autostart Spec:
-//  http://standards.freedesktop.org/autostart-spec/autostart-spec-latest.html
-//
-
-boost::filesystem::path GetAutostartDir()
-{
-    namespace fs = boost::filesystem;
-
-    char* pszConfigHome = getenv("XDG_CONFIG_HOME");
-    if (pszConfigHome) return fs::path(pszConfigHome) / fs::path("autostart");
-    char* pszHome = getenv("HOME");
-    if (pszHome) return fs::path(pszHome) / fs::path(".config/autostart");
-    return fs::path();
-}
-
-boost::filesystem::path GetAutostartFilePath()
-{
-    return GetAutostartDir() / boost::filesystem::path("bitcoin.desktop");
-}
-
-bool GetStartOnSystemStartup()
-{
-    boost::filesystem::ifstream optionFile(GetAutostartFilePath());
-    if (!optionFile.good())
-        return false;
-    // Scan through file for "Hidden=true":
-    string line;
-    while (!optionFile.eof())
-    {
-        getline(optionFile, line);
-        if (line.find("Hidden") != string::npos &&
-            line.find("true") != string::npos)
-            return false;
-    }
-    optionFile.close();
-
-    return true;
-}
-
-void SetStartOnSystemStartup(bool fAutoStart)
-{
-    if (!fAutoStart)
-    {
-        unlink(GetAutostartFilePath().native_file_string().c_str());
-    }
-    else
-    {
-        boost::filesystem::create_directories(GetAutostartDir());
-
-        boost::filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
-        if (!optionFile.good())
-        {
-            wxMessageBox(_("Cannot write autostart/bitcoin.desktop file"), "Bitcoin");
-            return;
-        }
-        // Write a bitcoin.desktop file to the autostart directory:
-        char pszExePath[MAX_PATH+1];
-        memset(pszExePath, 0, sizeof(pszExePath));
-        readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1);
-        optionFile << "[Desktop Entry]\n";
-        optionFile << "Type=Application\n";
-        optionFile << "Name=Bitcoin\n";
-        optionFile << "Exec=" << pszExePath << "\n";
-        optionFile << "Terminal=false\n";
-        optionFile << "Hidden=false\n";
-        optionFile.close();
-    }
-}
-#else
-
-// TODO: OSX startup stuff; see:
-// http://developer.apple.com/mac/library/documentation/MacOSX/Conceptual/BPSystemStartup/Articles/CustomLogin.html
-
-bool GetStartOnSystemStartup() { return false; }
-void SetStartOnSystemStartup(bool fAutoStart) { }
-
-#endif
-
-
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// CMyApp
-//
-
-// Define a new application
-class CMyApp : public wxApp
-{
-public:
-    wxLocale m_locale;
-
-    CMyApp(){};
-    ~CMyApp(){};
-    bool OnInit();
-    bool OnInit2();
-    int OnExit();
-
-    // Hook Initialize so we can start without GUI
-    virtual bool Initialize(int& argc, wxChar** argv);
-
-    // 2nd-level exception handling: we get all the exceptions occurring in any
-    // event handler here
-    virtual bool OnExceptionInMainLoop();
-
-    // 3rd, and final, level exception handling: whenever an unhandled
-    // exception is caught, this function is called
-    virtual void OnUnhandledException();
-
-    // and now for something different: this function is called in case of a
-    // crash (e.g. dereferencing null pointer, division by 0, ...)
-    virtual void OnFatalException();
-};
-
-IMPLEMENT_APP(CMyApp)
-
-bool CMyApp::Initialize(int& argc, wxChar** argv)
+#ifndef GUI
+int main(int argc, char* argv[])
 {
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))
             fCommandLine = true;
-
-    if (!fCommandLine)
-    {
-        if (!fGUI)
-        {
-            fDaemon = true;
-        }
-        else
-        {
-            // wxApp::Initialize will remove environment-specific parameters,
-            // so it's too early to call ParseParameters yet
-            for (int i = 1; i < argc; i++)
-            {
-                wxString str = argv[i];
-                #ifdef __WXMSW__
-                if (str.size() >= 1 && str[0] == '/')
-                    str[0] = '-';
-                char pszLower[MAX_PATH];
-                strlcpy(pszLower, str.c_str(), sizeof(pszLower));
-                strlwr(pszLower);
-                str = pszLower;
-                #endif
-                if (str == "-daemon")
-                    fDaemon = true;
-            }
-        }
-    }
+    fDaemon = !fCommandLine;
 
 #ifdef __WXGTK__
-    if (fDaemon || fCommandLine)
+    if (!fCommandLine)
     {
-        // Call the original Initialize while suppressing error messages
-        // and ignoring failure.  If unable to initialize GTK, it fails
-        // near the end so hopefully the last few things don't matter.
+        // Daemonize
+        pid_t pid = fork();
+        if (pid < 0)
         {
-            wxLogNull logNo;
-            wxApp::Initialize(argc, argv);
+            fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+            return 1;
         }
-
-        if (fDaemon)
-        {
-            // Daemonize
-            pid_t pid = fork();
-            if (pid < 0)
-            {
-                fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
-                return false;
-            }
-            if (pid > 0)
-                pthread_exit((void*)0);
-        }
-
-        return true;
+        if (pid > 0)
+            pthread_exit((void*)0);
     }
 #endif
 
-    return wxApp::Initialize(argc, argv);
-}
+    if (!AppInit(argc, argv))
+        return 1;
 
-bool CMyApp::OnInit()
+    while (!fShutdown)
+        Sleep(1000000);
+    return 0;
+}
+#endif
+
+bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
     try
     {
-        fRet = OnInit2();
+        fRet = AppInit2(argc, argv);
     }
     catch (std::exception& e) {
-        PrintException(&e, "OnInit()");
+        PrintException(&e, "AppInit()");
     } catch (...) {
-        PrintException(NULL, "OnInit()");
+        PrintException(NULL, "AppInit()");
     }
     if (!fRet)
         Shutdown(NULL);
     return fRet;
 }
 
-extern int g_isPainting;
-
-bool CMyApp::OnInit2()
+bool AppInit2(int argc, char* argv[])
 {
 #ifdef _MSC_VER
     // Turn off microsoft heap dump noise
@@ -332,46 +127,9 @@ bool CMyApp::OnInit2()
     // Disable confusing "helpful" text message on abort, ctrl-c
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
-#if defined(__WXMSW__) && defined(__WXDEBUG__) && wxUSE_GUI
-    // Disable malfunctioning wxWidgets debug assertion
-    g_isPainting = 10000;
-#endif
-#if wxUSE_GUI
-    wxImage::AddHandler(new wxPNGHandler);
-#endif
-#if defined(__WXMSW__ ) || defined(__WXMAC__)
-    SetAppName("Bitcoin");
-#else
-    SetAppName("bitcoin");
-#endif
 #ifndef __WXMSW__
     umask(077);
 #endif
-#ifdef __WXMSW__
-#if wxUSE_UNICODE
-    // Hack to set wxConvLibc codepage to UTF-8 on Windows,
-    // may break if wxMBConv_win32 implementation in strconv.cpp changes.
-    class wxMBConv_win32 : public wxMBConv
-    {
-    public:
-        long m_CodePage;
-        size_t m_minMBCharWidth;
-    };
-    if (((wxMBConv_win32*)&wxConvLibc)->m_CodePage == CP_ACP)
-        ((wxMBConv_win32*)&wxConvLibc)->m_CodePage = CP_UTF8;
-#endif
-#endif
-
-    // Load locale/<lang>/LC_MESSAGES/bitcoin.mo language file
-    m_locale.Init(wxLANGUAGE_DEFAULT, 0);
-    m_locale.AddCatalogLookupPathPrefix("locale");
-    if (!fWindows)
-    {
-        m_locale.AddCatalogLookupPathPrefix("/usr/share/locale");
-        m_locale.AddCatalogLookupPathPrefix("/usr/local/share/locale");
-    }
-    m_locale.AddCatalog("wxstd"); // wxWidgets standard translations, if any
-    m_locale.AddCatalog("bitcoin");
 
     //
     // Parameters
@@ -385,7 +143,7 @@ bool CMyApp::OnInit2()
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
-        wxString strUsage = string() +
+        string strUsage = string() +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
             "  bitcoin [options]                   \t  " + "\n" +
             "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
@@ -404,13 +162,13 @@ bool CMyApp::OnInit2()
             "  -daemon         \t  " + _("Run in the background as a daemon and accept commands\n") +
             "  -?              \t  " + _("This help message\n");
 
-#if defined(__WXMSW__) && wxUSE_GUI
+#if defined(__WXMSW__) && defined(GUI)
         // Tabs make the columns line up in the message box
         wxMessageBox(strUsage, "Bitcoin", wxOK);
 #else
         // Remove tabs
-        strUsage.Replace("\t", "");
-        fprintf(stderr, "%s", ((string)strUsage).c_str());
+        strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
+        fprintf(stderr, "%s", strUsage.c_str());
 #endif
         return false;
     }
@@ -430,9 +188,12 @@ bool CMyApp::OnInit2()
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %d.%d.%d%s beta, OS version %s\n", VERSION/10000, (VERSION/100)%100, VERSION%100, pszSubVer, ((string)wxGetOsDescription()).c_str());
-    printf("System default language is %d %s\n", m_locale.GetSystemLanguage(), ((string)m_locale.GetSysName()).c_str());
-    printf("Language file %s (%s)\n", (string("locale/") + (string)m_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)m_locale.GetLocale()).c_str());
+    printf("Bitcoin version %d.%d.%d%s beta\n", VERSION/10000, (VERSION/100)%100, VERSION%100, pszSubVer);
+#ifdef GUI
+    printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
+    printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
+    printf("Language file %s (%s)\n", (string("locale/") + (string)g_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)g_locale.GetLocale()).c_str());
+#endif
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
     if (mapArgs.count("-loadblockindextest"))
@@ -447,7 +208,7 @@ bool CMyApp::OnInit2()
     // Limit to single instance per user
     // Required to protect the database files if we're going to keep deleting log.*
     //
-#ifdef __WXMSW__
+#if defined(__WXMSW__) && defined(GUI)
     // todo: wxSingleInstanceChecker wasn't working on Linux, never deleted its lock file
     //  maybe should go by whether successfully bind port 8333 instead
     wxString strMutexName = wxString("bitcoin_running.") + getenv("HOMEPATH");
@@ -605,8 +366,10 @@ bool CMyApp::OnInit2()
     //
     // Create the main window and start the node
     //
+#ifdef GUI
     if (!fDaemon)
         CreateMainWindow();
+#endif
 
     if (!CheckDiskSpace())
         return false;
@@ -619,65 +382,10 @@ bool CMyApp::OnInit2()
     if (mapArgs.count("-server") || fDaemon)
         CreateThread(ThreadRPCServer, NULL);
 
+#ifdef GUI
     if (fFirstRun)
         SetStartOnSystemStartup(true);
+#endif
 
     return true;
-}
-
-int CMyApp::OnExit()
-{
-    Shutdown(NULL);
-    return wxApp::OnExit();
-}
-
-bool CMyApp::OnExceptionInMainLoop()
-{
-    try
-    {
-        throw;
-    }
-    catch (std::exception& e)
-    {
-        PrintException(&e, "CMyApp::OnExceptionInMainLoop()");
-        wxLogWarning("Exception %s %s", typeid(e).name(), e.what());
-        Sleep(1000);
-        throw;
-    }
-    catch (...)
-    {
-        PrintException(NULL, "CMyApp::OnExceptionInMainLoop()");
-        wxLogWarning("Unknown exception");
-        Sleep(1000);
-        throw;
-    }
-    return true;
-}
-
-void CMyApp::OnUnhandledException()
-{
-    // this shows how we may let some exception propagate uncaught
-    try
-    {
-        throw;
-    }
-    catch (std::exception& e)
-    {
-        PrintException(&e, "CMyApp::OnUnhandledException()");
-        wxLogWarning("Exception %s %s", typeid(e).name(), e.what());
-        Sleep(1000);
-        throw;
-    }
-    catch (...)
-    {
-        PrintException(NULL, "CMyApp::OnUnhandledException()");
-        wxLogWarning("Unknown exception");
-        Sleep(1000);
-        throw;
-    }
-}
-
-void CMyApp::OnFatalException()
-{
-    wxMessageBox(_("Program has crashed and will terminate.  "), "Bitcoin", wxOK | wxICON_ERROR);
 }

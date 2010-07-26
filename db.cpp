@@ -60,7 +60,7 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
                 return;
             string strDataDir = GetDataDir();
             string strLogDir = strDataDir + "/database";
-            _mkdir(strLogDir.c_str());
+            filesystem::create_directory(strLogDir.c_str());
             string strErrorFile = strDataDir + "/db.log";
             printf("dbenv.open strLogDir=%s strErrorFile=%s\n", strLogDir.c_str(), strErrorFile.c_str());
 

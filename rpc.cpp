@@ -36,7 +36,7 @@ void PrintConsole(const char* format, ...)
         ret = limit - 1;
         buffer[limit-1] = 0;
     }
-#if defined(__WXMSW__) && wxUSE_GUI
+#if defined(__WXMSW__) && defined(GUI)
     MyMessageBox(buffer, "Bitcoin", wxOK | wxICON_EXCLAMATION);
 #else
     fprintf(stdout, "%s", buffer);
@@ -1111,7 +1111,7 @@ int CommandLineRPC(int argc, char *argv[])
         string strResult = (result.type() == str_type ? result.get_str() : write_string(result, true));
         if (result.type() != null_type)
         {
-#if defined(__WXMSW__) && wxUSE_GUI
+#if defined(__WXMSW__) && defined(GUI)
             // Windows GUI apps can't print to command line,
             // so settle for a message box yuck
             MyMessageBox(strResult.c_str(), "Bitcoin", wxOK);
@@ -1122,7 +1122,7 @@ int CommandLineRPC(int argc, char *argv[])
         return 0;
     }
     catch (std::exception& e) {
-#if defined(__WXMSW__) && wxUSE_GUI
+#if defined(__WXMSW__) && defined(GUI)
         MyMessageBox(strprintf("error: %s\n", e.what()).c_str(), "Bitcoin", wxOK);
 #else
         fprintf(stderr, "error: %s\n", e.what());
