@@ -642,7 +642,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 
     set<string> setOptions;
     setOptions.insert("*");
-
+    
     for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
         // Don't overwrite existing settings so command line settings override bitcoin.conf
@@ -732,7 +732,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
         sort(vTimeOffsets.begin(), vTimeOffsets.end());
         int64 nMedian = vTimeOffsets[vTimeOffsets.size()/2];
         nTimeOffset = nMedian;
-        if ((nMedian > 0 ? nMedian : -nMedian) > 36 * 60 * 60)
+        if ((nMedian > 0 ? nMedian : -nMedian) > 70 * 60)
         {
             // Only let other nodes change our clock so far before we
             // go to the NTP servers

@@ -39,7 +39,7 @@ void PrintConsole(const char* format, ...)
 #if defined(__WXMSW__) && wxUSE_GUI
     MyMessageBox(buffer, "Bitcoin", wxOK | wxICON_EXCLAMATION);
 #else
-    fprintf(stdout, buffer);
+    fprintf(stdout, "%s", buffer);
 #endif
 }
 
