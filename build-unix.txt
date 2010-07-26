@@ -18,11 +18,8 @@ sudo apt-get install libdb4.7-dev
 sudo apt-get install libdb4.7++-dev
 sudo apt-get install libboost-all-dev
 
-We're now using wxWidgets 2.9, which uses UTF-8.
-
-There isn't currently a debian package of wxWidgets we can use.  The 2.8
-packages for Karmic are UTF-16 unicode and won't work for us, and we've had
-trouble building 2.8 on 64-bit.
+We're now using wxWidgets 2.9, which uses UTF-8.  Don't try to use 2.8, it
+won't work.
 
 You need to download wxWidgets from http://www.wxwidgets.org/downloads/
 and build it yourself.  See the build instructions and configure parameters
@@ -59,15 +56,6 @@ cd /usr/local/wxWidgets-2.9.0
 mkdir buildgtk
 cd buildgtk
 ../configure --with-gtk --enable-debug --disable-shared --enable-monolithic
-make
-sudo su
-make install
-ldconfig
-su <username>
-cd ..
-mkdir buildbase
-cd buildbase
-../configure --disable-gui --enable-debug --disable-shared --enable-monolithic
 make
 sudo su
 make install

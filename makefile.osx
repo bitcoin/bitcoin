@@ -20,22 +20,23 @@ LIBS= -dead_strip \
  $(DEPSDIR)/lib/libboost_system.a \
  $(DEPSDIR)/lib/libboost_filesystem.a \
  $(DEPSDIR)/lib/libboost_program_options.a \
+ $(DEPSDIR)/lib/libboost_thread.a \
  $(DEPSDIR)/lib/libcrypto.a 
 
-WXDEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -DNOPCH -DMSG_NOSIGNAL=0
+DEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0
 
 DEBUGFLAGS=-g -DwxDEBUG_LEVEL=0
 # ppc doesn't work because we don't support big-endian
-CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h init.h sha.h
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h sha.h
 
 
 all: bitcoin
 
 
 obj/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
+	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 obj/sha.o: sha.cpp sha.h
 	g++ -c $(CFLAGS) -O3 -o $@ $<
@@ -55,10 +56,10 @@ bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha.o
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -DwxUSE_GUI=0 -o $@ $<
+	g++ -c $(CFLAGS) -o $@ $<
 
 bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha.o
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 clean:

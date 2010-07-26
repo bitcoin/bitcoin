@@ -3,5 +3,5 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 void Shutdown(void* parg);
-bool GetStartOnSystemStartup();
-void SetStartOnSystemStartup(bool fAutoStart);
+bool AppInit(int argc, char* argv[]);
+bool AppInit2(int argc, char* argv[]);

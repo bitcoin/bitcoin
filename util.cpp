@@ -134,7 +134,7 @@ uint64 GetRand(uint64 nMax)
 inline int OutputDebugStringF(const char* pszFormat, ...)
 {
     int ret = 0;
-    if (fPrintToConsole || wxTheApp == NULL)
+    if (fPrintToConsole)
     {
         // print to console
         va_list arg_ptr;
@@ -441,6 +441,7 @@ void ParseParameters(int argc, char* argv[])
 
 const char* wxGetTranslation(const char* pszEnglish)
 {
+#ifdef GUI
     // Wrapper of wxGetTranslation returning the same const char* type as was passed in
     static CCriticalSection cs;
     CRITICAL_BLOCK(cs)
@@ -467,6 +468,9 @@ const char* wxGetTranslation(const char* pszEnglish)
         return pszCached;
     }
     return NULL;
+#else
+    return pszEnglish;
+#endif
 }
 
 
@@ -485,8 +489,6 @@ void FormatException(char* pszMessage, std::exception* pex, const char* pszThrea
     pszModule[0] = '\0';
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    // might not be thread safe, uses wxString
-    //const char* pszModule = wxStandardPaths::Get().GetExecutablePath().mb_str();
     const char* pszModule = "bitcoin";
 #endif
     if (pex)
@@ -510,8 +512,10 @@ void PrintException(std::exception* pex, const char* pszThread)
     FormatException(pszMessage, pex, pszThread);
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
-    if (wxTheApp && !fDaemon && fGUI)
+#ifdef GUI
+    if (wxTheApp && !fDaemon)
         MyMessageBox(pszMessage, "Error", wxOK | wxICON_ERROR);
+#endif
     throw;
     //DebugBreak();
 }
@@ -574,10 +578,10 @@ string GetDefaultDataDir()
     string strHome = pszHome;
     if (strHome[strHome.size()-1] != '/')
         strHome += '/';
-#ifdef __WXOSX__
+#ifdef __WXMAC_OSX__
     // Mac
     strHome += "Library/Application Support/";
-    _mkdir(strHome.c_str());
+    filesystem::create_directory(strHome.c_str());
     return strHome + "Bitcoin";
 #else
     // Unix
@@ -596,7 +600,7 @@ void GetDataDir(char* pszDir)
         if (!fMkdirDone)
         {
             fMkdirDone = true;
-            _mkdir(pszDir);
+            filesystem::create_directory(pszDir);
         }
     }
     else
@@ -606,9 +610,8 @@ void GetDataDir(char* pszDir)
         static char pszCachedDir[MAX_PATH];
         if (pszCachedDir[0] == 0)
         {
-            //strlcpy(pszCachedDir, wxStandardPaths::Get().GetUserDataDir().c_str(), sizeof(pszCachedDir));
             strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
-            _mkdir(pszCachedDir);
+            filesystem::create_directory(pszCachedDir);
         }
         strlcpy(pszDir, pszCachedDir, MAX_PATH);
     }

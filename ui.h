@@ -4,24 +4,9 @@
 
 DECLARE_EVENT_TYPE(wxEVT_UITHREADCALL, -1)
 
-#if wxUSE_GUI
-static const bool fGUI=true;
-#else
-static const bool fGUI=false;
-#endif
 
-inline int MyMessageBox(const wxString& message, const wxString& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
-{
-#if wxUSE_GUI
-    if (!fDaemon)
-        return wxMessageBox(message, caption, style, parent, x, y);
-#endif
-    printf("wxMessageBox %s: %s\n", string(caption).c_str(), string(message).c_str());
-    fprintf(stderr, "%s: %s\n", string(caption).c_str(), string(message).c_str());
-    return wxOK;
-}
-#define wxMessageBox  MyMessageBox
 
+extern wxLocale g_locale;
 
 
 
@@ -33,38 +18,23 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* pa
 void CalledSetStatusBar(const string& strText, int nField);
 void MainFrameRepaint();
 void CreateMainWindow();
+void SetStartOnSystemStartup(bool fAutoStart);
 
 
 
 
-
-#if !wxUSE_GUI
-inline int ThreadSafeMessageBox(const string& message, const string& caption, int style, wxWindow* parent, int x, int y)
+inline int MyMessageBox(const wxString& message, const wxString& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
 {
-    return MyMessageBox(message, caption, style, parent, x, y);
+#ifdef GUI
+    if (!fDaemon)
+        return wxMessageBox(message, caption, style, parent, x, y);
+#endif
+    printf("wxMessageBox %s: %s\n", string(caption).c_str(), string(message).c_str());
+    fprintf(stderr, "%s: %s\n", string(caption).c_str(), string(message).c_str());
+    return wxOK;
 }
+#define wxMessageBox  MyMessageBox
 
-inline bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
-{
-    return true;
-}
-
-inline void CalledSetStatusBar(const string& strText, int nField)
-{
-}
-
-inline void UIThreadCall(boost::function0<void> fn)
-{
-}
-
-inline void MainFrameRepaint()
-{
-}
-
-inline void CreateMainWindow()
-{
-}
-#else // wxUSE_GUI
 
 
 
@@ -334,11 +304,10 @@ public:
             m_textCtrl2->SetValue(strValue2);
             y += 46 + wxString(strMessage2).Freq('\n') * 14;
         }
-        if (!fWindows)
-        {
-            x *= 1.14;
-            y *= 1.14;
-        }
+#ifndef __WXMSW__
+        x *= 1.14;
+        y *= 1.14;
+#endif
         SetSize(x, y);
     }
 
@@ -375,5 +344,3 @@ public:
 
 DECLARE_EVENT_TABLE()
 };
-
-#endif // wxUSE_GUI

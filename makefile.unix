@@ -3,7 +3,6 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 
-
 INCLUDEPATHS= \
  -I"/usr/include" \
  -I"/usr/local/include/wx-2.9" \
@@ -21,27 +20,30 @@ WXLIBS= \
 
 LIBS= \
  -Wl,-Bstatic \
-   -l boost_system -l boost_filesystem -l boost_program_options \
+   -l boost_system \
+   -l boost_filesystem \
+   -l boost_program_options \
+   -l boost_thread \
    -l db_cxx \
    -l crypto \
  -Wl,-Bdynamic \
    -l gthread-2.0
 
-WXDEFS=-D__WXGTK__ -DNOPCH
+DEFS=-D__WXGTK__ -DNOPCH
 DEBUGFLAGS=-g -D__WXDEBUG__
-CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(WXDEFS) $(INCLUDEPATHS)
+CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h init.h sha.h
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h sha.h
 
 
 all: bitcoin
 
 
 headers.h.gch: headers.h $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
+	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 obj/%.o: %.cpp $(HEADERS) headers.h.gch
-	g++ -c $(CFLAGS) -o $@ $<
+	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 obj/sha.o: sha.cpp sha.h
 	g++ -c $(CFLAGS) -O3 -o $@ $<
@@ -61,10 +63,10 @@ bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha.o
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -DwxUSE_GUI=0 -o $@ $<
+	g++ -c $(CFLAGS) -o $@ $<
 
 bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha.o
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -l wx_baseud-2.9 $(LIBS)
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 clean:
