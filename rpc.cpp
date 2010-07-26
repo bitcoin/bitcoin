@@ -765,13 +765,14 @@ string EncodeBase64(string s)
     BUF_MEM *bptr;
 
     b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
     bmem = BIO_new(BIO_s_mem());
     b64 = BIO_push(b64, bmem);
     BIO_write(b64, s.c_str(), s.size());
     BIO_flush(b64);
     BIO_get_mem_ptr(b64, &bptr);
 
-    string result(bptr->data, bptr->length-1);
+    string result(bptr->data, bptr->length);
     BIO_free_all(b64);
 
     return result;
