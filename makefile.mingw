@@ -32,20 +32,7 @@ DEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h sha.h
-
-
-all: bitcoin.exe
-
-
-obj/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -DGUI -o $@ $<
-
-obj/sha.o: sha.cpp sha.h
-	g++ -c $(CFLAGS) -O3 -o $@ $<
-
-obj/ui_res.o: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
-	windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h
 
 OBJS= \
     obj/util.o \
@@ -55,20 +42,36 @@ OBJS= \
     obj/irc.o \
     obj/main.o \
     obj/rpc.o \
-    obj/init.o
+    obj/init.o \
+    cryptopp/obj/sha.o \
+    cryptopp/obj/cpu.o
 
-bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/sha.o obj/ui_res.o
+
+all: bitcoin.exe
+
+
+obj/%.o: %.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -DGUI -o $@ $<
+
+cryptopp/obj/%.o: cryptopp/%.cpp
+	g++ -c $(CFLAGS) -O3 -DCRYPTOPP_X86_ASM_AVAILABLE -o $@ $<
+
+obj/ui_res.o: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
+	windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
+
+bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o
 	g++ $(CFLAGS) -mwindows -Wl,--subsystem,windows -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/sha.o obj/ui_res.o
+bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 clean:
 	-del /Q obj\*
 	-del /Q obj\nogui\*
+	-del /Q cryptopp\obj\*
 	-del /Q headers.h.gch

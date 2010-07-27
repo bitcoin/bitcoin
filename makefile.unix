@@ -33,7 +33,19 @@ DEFS=-D__WXGTK__ -DNOPCH
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h sha.h
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h
+
+OBJS= \
+    obj/util.o \
+    obj/script.o \
+    obj/db.o \
+    obj/net.o \
+    obj/irc.o \
+    obj/main.o \
+    obj/rpc.o \
+    obj/init.o \
+    cryptopp/obj/sha.o \
+    cryptopp/obj/cpu.o
 
 
 all: bitcoin
@@ -45,31 +57,22 @@ headers.h.gch: headers.h $(HEADERS)
 obj/%.o: %.cpp $(HEADERS) headers.h.gch
 	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
-obj/sha.o: sha.cpp sha.h
+cryptopp/obj/%.o: cryptopp/%.cpp
 	g++ -c $(CFLAGS) -O3 -o $@ $<
 
-OBJS= \
-    obj/util.o \
-    obj/script.o \
-    obj/db.o \
-    obj/net.o \
-    obj/irc.o \
-    obj/main.o \
-    obj/rpc.o \
-    obj/init.o
-
-bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha.o
+bitcoin: $(OBJS) obj/ui.o obj/uibase.o
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha.o
+bitcoind: $(OBJS:obj/%=obj/nogui/%)
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 clean:
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
+	-rm -f cryptopp/obj/*.o
 	-rm -f headers.h.gch

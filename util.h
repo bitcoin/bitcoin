@@ -54,6 +54,20 @@ inline T& REF(const T& val)
     return (T&)val;
 }
 
+// Align by increasing pointer, must have extra space at end of buffer
+template <size_t nBytes, typename T>
+T* alignup(T* p)
+{
+    union
+    {
+        T* ptr;
+        size_t n;
+    } u;
+    u.ptr = p;
+    u.n = (u.n + (nBytes-1)) & ~(nBytes-1);
+    return u.ptr;
+}
+
 #ifdef __WXMSW__
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
