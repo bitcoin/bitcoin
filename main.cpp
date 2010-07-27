@@ -2547,33 +2547,89 @@ int FormatHashBlocks(void* pbuffer, unsigned int len)
 }
 
 using CryptoPP::ByteReverse;
-static int detectlittleendian = 1;
 
-void BlockSHA256(const void* pin, unsigned int nBlocks, void* pout)
+static const unsigned int pSHA256InitState[8] =
+{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+
+static const unsigned int SHA256_K[64] = {
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+};
+
+#define blk0(i) (W[i] = dat[i])
+
+#define blk2(i) (W[i&15]+=s1(W[(i-2)&15])+W[(i-7)&15]+s0(W[(i-15)&15]))
+
+#define Ch(x,y,z) (z^(x&(y^z)))
+#define Maj(x,y,z) ((x&y)|(z&(x|y)))
+
+#define a(i) T[(0-i)&7]
+#define b(i) T[(1-i)&7]
+#define c(i) T[(2-i)&7]
+#define d(i) T[(3-i)&7]
+#define e(i) T[(4-i)&7]
+#define f(i) T[(5-i)&7]
+#define g(i) T[(6-i)&7]
+#define h(i) T[(7-i)&7]
+
+#define R(i,j) h(i)+=S1(e(i))+Ch(e(i),f(i),g(i))+SHA256_K[i+j]+(j?blk2(i):blk0(i));\
+                                         d(i)+=h(i);h(i)+=S0(a(i))+Maj(a(i),b(i),c(i))
+
+#define rotrFixed(x,y) ((x>>y) | (x<<(sizeof(unsigned int)*8-y)))
+
+// for SHA256
+#define S0(x) (rotrFixed(x,2)^rotrFixed(x,13)^rotrFixed(x,22))
+#define S1(x) (rotrFixed(x,6)^rotrFixed(x,11)^rotrFixed(x,25))
+#define s0(x) (rotrFixed(x,7)^rotrFixed(x,18)^(x>>3))
+#define s1(x) (rotrFixed(x,17)^rotrFixed(x,19)^(x>>10))
+
+#if 1
+inline void SHA256Transform(void* pout, const void* pin, const void* pinit)
 {
-    unsigned int* pinput = (unsigned int*)pin;
-    unsigned int* pstate = (unsigned int*)pout;
+    memcpy(pout, pinit, 32);
+    unsigned int* dat = (unsigned int*)pin;
+    unsigned int* T = (unsigned int*)pout;
+    unsigned int* initstate = (unsigned int*)pinit;
+    unsigned int W[16];
 
-    CryptoPP::SHA256::InitState(pstate);
+    R( 0,  0); R( 1,  0); R( 2,  0); R( 3,  0); R( 4,  0); R( 5,  0); R( 6,  0); R( 7,  0); R( 8,  0); R( 9,  0); R(10,  0); R(11,  0); R(12,  0); R(13,  0); R(14,  0); R(15,  0);
+    R( 0, 16); R( 1, 16); R( 2, 16); R( 3, 16); R( 4, 16); R( 5, 16); R( 6, 16); R( 7, 16); R( 8, 16); R( 9, 16); R(10, 16); R(11, 16); R(12, 16); R(13, 16); R(14, 16); R(15, 16);
+    R( 0, 32); R( 1, 32); R( 2, 32); R( 3, 32); R( 4, 32); R( 5, 32); R( 6, 32); R( 7, 32); R( 8, 32); R( 9, 32); R(10, 32); R(11, 32); R(12, 32); R(13, 32); R(14, 32); R(15, 32);
+    R( 0, 48); R( 1, 48); R( 2, 48); R( 3, 48); R( 4, 48); R( 5, 48); R( 6, 48); R( 7, 48); R( 8, 48); R( 9, 48); R(10, 48); R(11, 48); R(12, 48); R(13, 48); R(14, 48); R(15, 48);
 
-    if (*(char*)&detectlittleendian != 0)
-    {
-        for (int n = 0; n < nBlocks; n++)
-        {
-            unsigned int pbuf[16];
-            for (int i = 0; i < 16; i++)
-                pbuf[i] = ByteReverse(pinput[n * 16 + i]);
-            CryptoPP::SHA256::Transform(pstate, pbuf);
-        }
-        for (int i = 0; i < 8; i++)
-            pstate[i] = ByteReverse(pstate[i]);
-    }
-    else
-    {
-        for (int n = 0; n < nBlocks; n++)
-            CryptoPP::SHA256::Transform(pstate, pinput + n * 16);
-    }
+    T[0] += initstate[0];
+    T[1] += initstate[1];
+    T[2] += initstate[2];
+    T[3] += initstate[3];
+    T[4] += initstate[4];
+    T[5] += initstate[5];
+    T[6] += initstate[6];
+    T[7] += initstate[7];
 }
+#else
+inline void SHA256Transform(void* pstate, void* pinput, const void* pinit)
+{
+    memcpy(pstate, pinit, 32);
+    CryptoPP::SHA256::Transform((CryptoPP::word32*)pstate, (CryptoPP::word32*)pinput);
+}
+#endif
+
+
+
 
 
 void BitcoinMiner()
@@ -2695,10 +2751,18 @@ void BitcoinMiner()
         tmp.block.hashMerkleRoot = pblock->hashMerkleRoot = pblock->BuildMerkleTree();
         tmp.block.nTime          = pblock->nTime          = max((pindexPrev ? pindexPrev->GetMedianTimePast()+1 : 0), GetAdjustedTime());
         tmp.block.nBits          = pblock->nBits          = nBits;
-        tmp.block.nNonce         = pblock->nNonce         = 1;
+        tmp.block.nNonce         = pblock->nNonce         = 0;
 
         unsigned int nBlocks0 = FormatHashBlocks(&tmp.block, sizeof(tmp.block));
         unsigned int nBlocks1 = FormatHashBlocks(&tmp.hash1, sizeof(tmp.hash1));
+
+        // Byte swap all the input buffer
+        for (int i = 0; i < sizeof(tmp)/4; i++)
+            ((unsigned int*)&tmp)[i] = ByteReverse(((unsigned int*)&tmp)[i]);
+
+        // Precalc the first half of the first hash, which stays constant
+        uint256 midstate;
+        SHA256Transform(&midstate, &tmp.block, pSHA256InitState);
 
 
         //
@@ -2709,44 +2773,51 @@ void BitcoinMiner()
         uint256 hash;
         loop
         {
-            BlockSHA256(&tmp.block, nBlocks0, &tmp.hash1);
-            BlockSHA256(&tmp.hash1, nBlocks1, &hash);
+            SHA256Transform(&tmp.hash1, (char*)&tmp.block + 64, &midstate);
+            SHA256Transform(&hash, &tmp.hash1, pSHA256InitState);
 
-            if (hash <= hashTarget)
+            if (((unsigned short*)&hash)[14] == 0)
             {
-                pblock->nNonce = tmp.block.nNonce;
-                assert(hash == pblock->GetHash());
+                // Byte swap the result after preliminary check
+                for (int i = 0; i < sizeof(hash)/4; i++)
+                    ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
 
-                    //// debug print
-                    printf("BitcoinMiner:\n");
-                    printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
-                    pblock->print();
-                    printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
-                    printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
-
-                SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                CRITICAL_BLOCK(cs_main)
+                if (hash <= hashTarget)
                 {
-                    if (pindexPrev == pindexBest)
+                    pblock->nNonce = ByteReverse(tmp.block.nNonce);
+                    assert(hash == pblock->GetHash());
+
+                        //// debug print
+                        printf("BitcoinMiner:\n");
+                        printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
+                        pblock->print();
+                        printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
+                        printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
+
+                    SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                    CRITICAL_BLOCK(cs_main)
                     {
-                        // Save key
-                        if (!AddKey(key))
-                            return;
-                        key.MakeNewKey();
+                        if (pindexPrev == pindexBest)
+                        {
+                            // Save key
+                            if (!AddKey(key))
+                                return;
+                            key.MakeNewKey();
 
-                        // Track how many getdata requests this block gets
-                        CRITICAL_BLOCK(cs_mapRequestCount)
-                            mapRequestCount[pblock->GetHash()] = 0;
+                            // Track how many getdata requests this block gets
+                            CRITICAL_BLOCK(cs_mapRequestCount)
+                                mapRequestCount[pblock->GetHash()] = 0;
 
-                        // Process this block the same as if we had received it from another node
-                        if (!ProcessBlock(NULL, pblock.release()))
-                            printf("ERROR in BitcoinMiner, ProcessBlock, block not accepted\n");
+                            // Process this block the same as if we had received it from another node
+                            if (!ProcessBlock(NULL, pblock.release()))
+                                printf("ERROR in BitcoinMiner, ProcessBlock, block not accepted\n");
+                        }
                     }
-                }
-                SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                    SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-                Sleep(500);
-                break;
+                    Sleep(500);
+                    break;
+                }
             }
 
             // Update nTime every few seconds
@@ -2817,7 +2888,8 @@ void BitcoinMiner()
                     break;
                 }
 
-                tmp.block.nTime = pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+                pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+                tmp.block.nTime = ByteReverse(pblock->nTime);
             }
         }
     }
