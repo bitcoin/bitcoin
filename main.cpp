@@ -850,22 +850,19 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
     return bnNew.GetCompact();
 }
 
-vector<int> vStartingHeight;
-void AddStartingHeight(int nStartingHeight)
-{
-    if (nStartingHeight != -1)
-    {
-        vStartingHeight.push_back(nStartingHeight);
-        sort(vStartingHeight.begin(), vStartingHeight.end());
-    }
-}
-
 bool IsInitialBlockDownload()
 {
-    int nMedian = 69000;
-    if (vStartingHeight.size() >= 5)
-        nMedian = vStartingHeight[vStartingHeight.size()/2];
-    return nBestHeight < nMedian-1000;
+    if (pindexBest == NULL)
+        return true;
+    static int64 nLastUpdate;
+    static CBlockIndex* pindexLastBest;
+    if (pindexBest != pindexLastBest)
+    {
+        pindexLastBest = pindexBest;
+        nLastUpdate = GetTime();
+    }
+    return (GetTime() - nLastUpdate < 10 &&
+            pindexBest->nTime < GetTime() - 24 * 60 * 60);
 }
 
 
@@ -1923,7 +1920,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         AddTimeData(pfrom->addr.ip, nTime);
-        AddStartingHeight(pfrom->nStartingHeight);
 
         // Change version
         if (pfrom->nVersion >= 209)
