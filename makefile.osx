@@ -51,7 +51,7 @@ obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 cryptopp/obj/%.o: cryptopp/%.cpp
-	g++ -c $(CFLAGS) -O3 -o $@ $<
+	g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
 
 bitcoin: $(OBJS) obj/ui.o obj/uibase.o
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
