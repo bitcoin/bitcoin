@@ -1763,8 +1763,7 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
 
 CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 {
-    m_staticTextVersion->SetLabel(strprintf(_("version %d.%d.%d beta"), VERSION/10000, (VERSION/100)%100, VERSION%100));
-    //m_staticTextVersion->SetLabel(strprintf(_("version %d.%d.%d%s beta"), VERSION/10000, (VERSION/100)%100, VERSION%100, pszSubVer));
+    m_staticTextVersion->SetLabel(strprintf(_("version %d.%d.%d%s beta"), VERSION/10000, (VERSION/100)%100, VERSION%100, pszSubVer));
 
     // Change (c) into UTF-8 or ANSI copyright symbol
     wxString str = m_staticTextMain->GetLabel();
