@@ -401,7 +401,8 @@ public:
 
     CBigNum& operator>>=(unsigned int shift)
     {
-        // Note: BN_rshift segfaults on 64-bit ubuntu 9.10 if 2^shift is greater than the number
+        // Note: BN_rshift segfaults on 64-bit ubuntu 9.10 if 2^shift is greater than the number,
+        //       tested OK on 64-bit ubuntu 10.4
         if (!BN_rshift(this, this, shift))
             throw bignum_error("CBigNum:operator>>= : BN_rshift failed");
         return *this;

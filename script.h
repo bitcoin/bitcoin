@@ -136,6 +136,20 @@ enum opcodetype
     OP_CHECKMULTISIG,
     OP_CHECKMULTISIGVERIFY,
 
+    // expansion
+    OP_NOP1,
+    OP_NOP2,
+    OP_NOP3,
+    OP_NOP4,
+    OP_NOP5,
+    OP_NOP6,
+    OP_NOP7,
+    OP_NOP8,
+    OP_NOP9,
+    OP_NOP10,
+
+
+
 
     // multi-byte opcodes
     OP_SINGLEBYTE_END = 0xF0,
@@ -276,6 +290,18 @@ inline const char* GetOpName(opcodetype opcode)
     case OP_CHECKMULTISIG          : return "OP_CHECKMULTISIG";
     case OP_CHECKMULTISIGVERIFY    : return "OP_CHECKMULTISIGVERIFY";
 
+    // expanson
+    case OP_NOP1                   : return "OP_NOP1";
+    case OP_NOP2                   : return "OP_NOP2";
+    case OP_NOP3                   : return "OP_NOP3";
+    case OP_NOP4                   : return "OP_NOP4";
+    case OP_NOP5                   : return "OP_NOP5";
+    case OP_NOP6                   : return "OP_NOP6";
+    case OP_NOP7                   : return "OP_NOP7";
+    case OP_NOP8                   : return "OP_NOP8";
+    case OP_NOP9                   : return "OP_NOP9";
+    case OP_NOP10                  : return "OP_NOP10";
+
 
 
     // multi-byte opcodes
@@ -283,7 +309,6 @@ inline const char* GetOpName(opcodetype opcode)
     case OP_DOUBLEBYTE_BEGIN       : return "OP_DOUBLEBYTE_BEGIN";
     case OP_PUBKEY                 : return "OP_PUBKEY";
     case OP_PUBKEYHASH             : return "OP_PUBKEYHASH";
-
 
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
