@@ -73,10 +73,10 @@ obj\ui.obj: $(HEADERS)
 obj\uibase.obj: $(HEADERS)
 
 cryptopp\obj\sha.obj: cryptopp\sha.cpp
-    cl $(CFLAGS) /O2 /Fo$@ %s
+    cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
 
 cryptopp\obj\cpu.obj: cryptopp\cpu.cpp
-    cl $(CFLAGS) /O2 /Fo$@ %s
+    cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
 
 obj\ui.res: ui.rc  rc/bitcoin.ico rc/check.ico rc/send16.bmp rc/send16mask.bmp rc/send16masknoshadow.bmp rc/send20.bmp rc/send20mask.bmp rc/addressbook16.bmp rc/addressbook16mask.bmp rc/addressbook20.bmp rc/addressbook20mask.bmp
     rc $(INCLUDEPATHS) $(DEFS) /Fo$@ %s
