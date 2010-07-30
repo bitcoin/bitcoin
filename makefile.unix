@@ -4,13 +4,8 @@
 
 
 INCLUDEPATHS= \
- -I"/usr/include" \
  -I"/usr/local/include/wx-2.9" \
  -I"/usr/local/lib/wx/include/gtk2-unicode-debug-static-2.9"
-
-LIBPATHS= \
- -L"/usr/lib" \
- -L"/usr/local/lib"
 
 WXLIBS= \
  -Wl,-Bstatic \
@@ -18,6 +13,7 @@ WXLIBS= \
  -Wl,-Bdynamic \
    -l gtk-x11-2.0 -l SM
 
+# for boost 1.37, add -mt to the boost libraries
 LIBS= \
  -Wl,-Bstatic \
    -l boost_system \
@@ -51,24 +47,21 @@ OBJS= \
 all: bitcoin
 
 
-headers.h.gch: headers.h $(HEADERS)
-	g++ -c $(CFLAGS) -DGUI -o $@ $<
-
-obj/%.o: %.cpp $(HEADERS) headers.h.gch
+obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 cryptopp/obj/%.o: cryptopp/%.cpp
 	g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_SSE2 -o $@ $<
 
 bitcoin: $(OBJS) obj/ui.o obj/uibase.o
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
+	g++ $(CFLAGS) -o $@ $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
 bitcoind: $(OBJS:obj/%=obj/nogui/%)
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	g++ $(CFLAGS) -o $@ $^ $(LIBS)
 
 
 clean:
