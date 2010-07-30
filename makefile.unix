@@ -3,11 +3,20 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 
-WXLIBS=$(shell wx-config --debug=yes --libs --static)
-WXFLAGS=$(shell wx-config --debug=yes --cppflags)
+INCLUDEPATHS= \
+ -I"/usr/include" \
+ -I"/usr/local/include/wx-2.9" \
+ -I"/usr/local/lib/wx/include/gtk2-unicode-debug-static-2.9"
 
 LIBPATHS= \
+ -L"/usr/lib" \
  -L"/usr/local/lib"
+
+WXLIBS= \
+ -Wl,-Bstatic \
+   -l wx_gtk2ud-2.9 \
+ -Wl,-Bdynamic \
+   -l gtk-x11-2.0 -l SM
 
 LIBS= \
  -Wl,-Bstatic \
@@ -22,7 +31,7 @@ LIBS= \
 
 DEFS=-D__WXGTK__ -DNOPCH
 DEBUGFLAGS=-g -D__WXDEBUG__
-CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS)
+CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h
 
@@ -43,10 +52,10 @@ all: bitcoin
 
 
 headers.h.gch: headers.h $(HEADERS)
-	g++ -c $(CFLAGS) $(WXFLAGS) -DGUI -o $@ $<
+	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 obj/%.o: %.cpp $(HEADERS) headers.h.gch
-	g++ -c $(CFLAGS) $(WXFLAGS) -DGUI -o $@ $<
+	g++ -c $(CFLAGS) -DGUI -o $@ $<
 
 cryptopp/obj/%.o: cryptopp/%.cpp
 	g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_SSE2 -o $@ $<

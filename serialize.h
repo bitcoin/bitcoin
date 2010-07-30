@@ -19,8 +19,8 @@ class CScript;
 class CDataStream;
 class CAutoFile;
 
-static const int VERSION = 304;
-static const char* pszSubVer = ".0";
+static const int VERSION = 306;
+static const char* pszSubVer = "";
 
 
 
