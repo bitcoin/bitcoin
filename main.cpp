@@ -806,9 +806,9 @@ int64 CBlock::GetBlockValue(int64 nFees) const
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
 {
-    const unsigned int nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-    const unsigned int nTargetSpacing = 10 * 60;
-    const unsigned int nInterval = nTargetTimespan / nTargetSpacing;
+    const int64 nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+    const int64 nTargetSpacing = 10 * 60;
+    const int64 nInterval = nTargetTimespan / nTargetSpacing;
 
     // Genesis block
     if (pindexLast == NULL)
@@ -825,8 +825,8 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
     assert(pindexFirst);
 
     // Limit adjustment step
-    unsigned int nActualTimespan = pindexLast->nTime - pindexFirst->nTime;
-    printf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
+    int64 nActualTimespan = (int64)pindexLast->nTime - (int64)pindexFirst->nTime;
+    printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
     if (nActualTimespan < nTargetTimespan/4)
         nActualTimespan = nTargetTimespan/4;
     if (nActualTimespan > nTargetTimespan*4)
@@ -843,7 +843,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
 
     /// debug print
     printf("GetNextWorkRequired RETARGET\n");
-    printf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
+    printf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
     printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
     printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
 
