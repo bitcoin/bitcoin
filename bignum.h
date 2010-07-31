@@ -401,8 +401,16 @@ public:
 
     CBigNum& operator>>=(unsigned int shift)
     {
-        // Note: BN_rshift segfaults on 64-bit ubuntu 9.10 if 2^shift is greater than the number,
-        //       tested OK on 64-bit ubuntu 10.4
+        // Note: BN_rshift segfaults on 64-bit if 2^shift is greater than the number
+        //   if built on ubuntu 9.04 or 9.10, probably depends on version of openssl
+        CBigNum a = 1;
+        a <<= shift;
+        if (BN_cmp(&a, this) > 0)
+        {
+            *this = 0;
+            return *this;
+        }
+
         if (!BN_rshift(this, this, shift))
             throw bignum_error("CBigNum:operator>>= : BN_rshift failed");
         return *this;
@@ -511,10 +519,8 @@ inline const CBigNum operator<<(const CBigNum& a, unsigned int shift)
 
 inline const CBigNum operator>>(const CBigNum& a, unsigned int shift)
 {
-    CBigNum r;
-    // Note: BN_rshift segfaults on 64-bit ubuntu 9.10 if 2^shift is greater than the number
-    if (!BN_rshift(&r, &a, shift))
-        throw bignum_error("CBigNum:operator>> : BN_rshift failed");
+    CBigNum r = a;
+    r >>= shift;
     return r;
 }
 
