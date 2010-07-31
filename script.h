@@ -657,8 +657,6 @@ public:
 
 
 
-bool EvalScript(const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType=0,
-                vector<vector<unsigned char> >* pvStackRet=NULL);
 uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 bool IsMine(const CScript& scriptPubKey);
 bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned char>& vchPubKeyRet);

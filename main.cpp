@@ -3036,7 +3036,8 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                 foreach(CWalletTx* pcoin, setCoins)
                     for (int nOut = 0; nOut < pcoin->vout.size(); nOut++)
                         if (pcoin->vout[nOut].IsMine())
-                            SignSignature(*pcoin, wtxNew, nIn++);
+                            if (!SignSignature(*pcoin, wtxNew, nIn++))
+                                return false;
 
                 // Check that enough fee is included
                 if (nFee < wtxNew.GetMinFee())

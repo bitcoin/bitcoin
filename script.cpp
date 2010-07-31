@@ -42,20 +42,17 @@ void MakeSameSize(valtype& vch1, valtype& vch2)
 #define stacktop(i)  (stack.at(stack.size()+(i)))
 #define altstacktop(i)  (altstack.at(altstack.size()+(i)))
 
-bool EvalScript(const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType,
-                vector<vector<unsigned char> >* pvStackRet)
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     CAutoBN_CTX pctx;
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
     CScript::const_iterator pbegincodehash = script.begin();
     vector<bool> vfExec;
-    vector<valtype> stack;
     vector<valtype> altstack;
-    if (pvStackRet)
-        pvStackRet->clear();
-    if (script.size() > 20000)
+    if (script.size() > 10000)
         return false;
+    int nOpCount = 0;
 
 
     try
@@ -72,6 +69,8 @@ bool EvalScript(const CScript& script, const CTransaction& txTo, unsigned int nI
             if (!script.GetOp(pc, opcode, vchPushValue))
                 return false;
             if (vchPushValue.size() > 5000)
+                return false;
+            if (opcode > OP_16 && nOpCount++ > 200)
                 return false;
 
             if (fExec && opcode <= OP_PUSHDATA4)
@@ -828,9 +827,7 @@ bool EvalScript(const CScript& script, const CTransaction& txTo, unsigned int nI
     if (!vfExec.empty())
         return false;
 
-    if (pvStackRet)
-        *pvStackRet = stack;
-    return (stack.empty() ? false : CastToBool(stack.back()));
+    return true;
 }
 
 #undef top
@@ -1114,6 +1111,19 @@ bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret)
 }
 
 
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int nHashType)
+{
+    vector<vector<unsigned char> > stack;
+    if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType))
+        return false;
+    if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType))
+        return false;
+    if (stack.empty())
+        return false;
+    return CastToBool(stack.back());
+}
+
+
 bool SignSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType, CScript scriptPrereq)
 {
     assert(nIn < txTo.vin.size());
@@ -1132,7 +1142,7 @@ bool SignSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int 
 
     // Test solution
     if (scriptPrereq.empty())
-        if (!EvalScript(txin.scriptSig + CScript(OP_CODESEPARATOR) + txout.scriptPubKey, txTo, nIn))
+        if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, 0))
             return false;
 
     return true;
@@ -1150,7 +1160,7 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
 
-    if (!EvalScript(txin.scriptSig + CScript(OP_CODESEPARATOR) + txout.scriptPubKey, txTo, nIn, nHashType))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nHashType))
         return false;
 
     // Anytime a signature is successfully verified, it's proof the outpoint is spent,
