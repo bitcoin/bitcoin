@@ -33,6 +33,7 @@ extern const uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
 extern CBigNum bnBestChainWork;
+extern CBigNum bnBestInvalidWork;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
@@ -80,6 +81,7 @@ void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 void BitcoinMiner();
 bool IsInitialBlockDownload();
+bool IsLockdown();
 
 
 
@@ -410,15 +412,16 @@ public:
         return SerializeHash(*this);
     }
 
-    bool IsFinal(int64 nBlockTime=0) const
+    bool IsFinal(int nBlockHeight=0, int64 nBlockTime=0) const
     {
-        // Time based nLockTime implemented in 0.1.6,
-        // do not use time based until most 0.1.5 nodes have upgraded.
+        // Time based nLockTime implemented in 0.1.6
         if (nLockTime == 0)
             return true;
+        if (nBlockHeight == 0)
+            nBlockHeight = nBestHeight;
         if (nBlockTime == 0)
             nBlockTime = GetAdjustedTime();
-        if (nLockTime < (nLockTime < 500000000 ? nBestHeight : nBlockTime))
+        if (nLockTime < (nLockTime < 500000000 ? nBlockHeight : nBlockTime))
             return true;
         foreach(const CTxIn& txin, vin)
             if (!txin.IsFinal())
@@ -1046,7 +1049,7 @@ public:
     }
 
 
-    int64 GetBlockValue(int64 nFees) const;
+    int64 GetBlockValue(int nHeight, int64 nFees) const;
     bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ReadFromDisk(const CBlockIndex* blockindex, bool fReadTransactions=true);

@@ -25,6 +25,7 @@ const uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 CBigNum bnBestChainWork = 0;
+CBigNum bnBestInvalidWork = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64 nTimeBestReceived = 0;
@@ -794,12 +795,12 @@ uint256 GetOrphanRoot(const CBlock* pblock)
     return pblock->GetHash();
 }
 
-int64 CBlock::GetBlockValue(int64 nFees) const
+int64 CBlock::GetBlockValue(int nHeight, int64 nFees) const
 {
     int64 nSubsidy = 50 * COIN;
 
     // Subsidy is cut in half every 4 years
-    nSubsidy >>= (nBestHeight / 210000);
+    nSubsidy >>= (nHeight / 210000);
 
     return nSubsidy + nFees;
 }
@@ -863,6 +864,28 @@ bool IsInitialBlockDownload()
     }
     return (GetTime() - nLastUpdate < 10 &&
             pindexBest->nTime < GetTime() - 24 * 60 * 60);
+}
+
+bool IsLockdown()
+{
+    if (!pindexBest)
+        return false;
+    return (bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6);
+}
+
+void Lockdown(CBlockIndex* pindexNew)
+{
+    if (pindexNew->bnChainWork > bnBestInvalidWork)
+    {
+        bnBestInvalidWork = pindexNew->bnChainWork;
+        CTxDB().WriteBestInvalidWork(bnBestInvalidWork);
+        MainFrameRepaint();
+    }
+    printf("Lockdown: invalid block=%s  height=%d  work=%s\n", pindexNew->GetBlockHash().ToString().substr(0,22).c_str(), pindexNew->nHeight, pindexNew->bnChainWork.ToString().c_str());
+    printf("Lockdown:  current best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,22).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
+    printf("Lockdown: IsLockdown()=%d\n", (IsLockdown() ? 1 : 0));
+    if (IsLockdown())
+        printf("Lockdown: WARNING: Displayed transactions may not be correct!  You may need to upgrade.\n");
 }
 
 
@@ -1086,7 +1109,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             return false;
     }
 
-    if (vtx[0].GetValueOut() > GetBlockValue(nFees))
+    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
         return false;
 
     // Update block index on disk without changing it in memory.
@@ -1116,11 +1139,13 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     CBlockIndex* plonger = pindexNew;
     while (pfork != plonger)
     {
-        if (!(pfork = pfork->pprev))
-            return error("Reorganize() : pfork->pprev is null");
         while (plonger->nHeight > pfork->nHeight)
             if (!(plonger = plonger->pprev))
                 return error("Reorganize() : plonger->pprev is null");
+        if (pfork == plonger)
+            break;
+        if (!(pfork = pfork->pprev))
+            return error("Reorganize() : pfork->pprev is null");
     }
 
     // List of what to disconnect
@@ -1160,16 +1185,8 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
             return error("Reorganize() : ReadFromDisk for connect failed");
         if (!block.ConnectBlock(txdb, pindex))
         {
-            // Invalid block, delete the rest of this branch
+            // Invalid block
             txdb.TxnAbort();
-            for (int j = i; j < vConnect.size(); j++)
-            {
-                CBlockIndex* pindex = vConnect[j];
-                pindex->EraseBlockFromDisk();
-                txdb.EraseBlockIndex(pindex->GetBlockHash());
-                mapBlockIndex.erase(pindex->GetBlockHash());
-                delete pindex;
-            }
             return error("Reorganize() : ConnectBlock failed");
         }
 
@@ -1227,12 +1244,12 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     pindexNew->bnChainWork = (pindexNew->pprev ? pindexNew->pprev->bnChainWork : 0) + pindexNew->GetBlockWork();
 
     CTxDB txdb;
-    txdb.TxnBegin();
     txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
 
     // New best
     if (pindexNew->bnChainWork > bnBestChainWork)
     {
+        txdb.TxnBegin();
         if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
         {
             pindexGenesisBlock = pindexNew;
@@ -1244,9 +1261,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
             if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
             {
                 txdb.TxnAbort();
-                pindexNew->EraseBlockFromDisk();
-                mapBlockIndex.erase(pindexNew->GetBlockHash());
-                delete pindexNew;
+                Lockdown(pindexNew);
                 return error("AddToBlockIndex() : ConnectBlock failed");
             }
             txdb.TxnCommit();
@@ -1262,9 +1277,11 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
             if (!Reorganize(txdb, pindexNew))
             {
                 txdb.TxnAbort();
+                Lockdown(pindexNew);
                 return error("AddToBlockIndex() : Reorganize failed");
             }
         }
+        txdb.TxnCommit();
 
         // New best block
         hashBestChain = hash;
@@ -1273,10 +1290,9 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         bnBestChainWork = pindexNew->bnChainWork;
         nTimeBestReceived = GetTime();
         nTransactionsUpdated++;
-        printf("AddToBlockIndex: new best=%s  height=%d\n", hashBestChain.ToString().substr(0,16).c_str(), nBestHeight);
+        printf("AddToBlockIndex: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,22).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
     }
 
-    txdb.TxnCommit();
     txdb.Close();
 
     if (pindexNew == pindexBest)
@@ -1352,7 +1368,7 @@ bool CBlock::AcceptBlock()
 
     // Check that all transactions are finalized
     foreach(const CTransaction& tx, vtx)
-        if (!tx.IsFinal(nTime))
+        if (!tx.IsFinal(pindexPrev->nHeight+1, nTime))
             return error("AcceptBlock() : contains a non-final transaction");
 
     // Check proof of work
@@ -2648,7 +2664,7 @@ void BitcoinMiner()
             }
         }
         pblock->nBits = nBits;
-        pblock->vtx[0].vout[0].nValue = pblock->GetBlockValue(nFees);
+        pblock->vtx[0].vout[0].nValue = pblock->GetBlockValue(pindexPrev->nHeight+1, nFees);
         printf("Running BitcoinMiner with %d transactions in block\n", pblock->vtx.size());
 
 
