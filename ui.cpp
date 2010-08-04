@@ -388,7 +388,7 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
         fClosedToTray = true;
     Show(!fClosedToTray);
     ptaskbaricon->Show(fMinimizeToTray || fClosedToTray);
-#ifdef __WXGTK__
+#if defined(__WXGTK__) || defined(__WXMAC_OSX__)
     }
 #endif
 }

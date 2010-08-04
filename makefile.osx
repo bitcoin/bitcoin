@@ -5,6 +5,7 @@
 # Mac OS X makefile for bitcoin
 # Laszlo Hanyecz (solar@heliacal.net)
 
+CXX=llvm-g++
 DEPSDIR=/Users/macosuser/bitcoin/deps
 
 INCLUDEPATHS= \
@@ -27,7 +28,7 @@ DEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -D__WXMAC_OSX__ -DNOPCH -DMSG_
 
 DEBUGFLAGS=-g -DwxDEBUG_LEVEL=0
 # ppc doesn't work because we don't support big-endian
-CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h
 
@@ -48,22 +49,23 @@ all: bitcoin
 
 
 obj/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -DGUI -o $@ $<
+	$(CXX) -c $(CFLAGS) -DGUI -o $@ $<
 
 cryptopp/obj/%.o: cryptopp/%.cpp
-	g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
+	$(CXX) -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
 
 bitcoin: $(OBJS) obj/ui.o obj/uibase.o
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
+	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
+	$(CXX) -c $(CFLAGS) -o $@ $<
 
 bitcoind: $(OBJS:obj/%=obj/nogui/%)
-	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 clean:
+	-rm -f bitcoin bitcoind
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
