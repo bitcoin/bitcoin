@@ -280,6 +280,8 @@ public:
     bool EraseBlockIndex(uint256 hash);
     bool ReadHashBestChain(uint256& hashBestChain);
     bool WriteHashBestChain(uint256 hashBestChain);
+    bool ReadBestInvalidWork(CBigNum& bnBestInvalidWork);
+    bool WriteBestInvalidWork(CBigNum bnBestInvalidWork);
     bool LoadBlockIndex();
 };
 

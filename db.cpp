@@ -342,6 +342,16 @@ bool CTxDB::WriteHashBestChain(uint256 hashBestChain)
     return Write(string("hashBestChain"), hashBestChain);
 }
 
+bool CTxDB::ReadBestInvalidWork(CBigNum& bnBestInvalidWork)
+{
+    return Read(string("bnBestInvalidWork"), bnBestInvalidWork);
+}
+
+bool CTxDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
+{
+    return Write(string("bnBestInvalidWork"), bnBestInvalidWork);
+}
+
 CBlockIndex* InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
@@ -445,6 +455,9 @@ bool CTxDB::LoadBlockIndex()
     nBestHeight = pindexBest->nHeight;
     bnBestChainWork = pindexBest->bnChainWork;
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,16).c_str(), nBestHeight);
+
+    // Load bnBestInvalidWork, OK if it doesn't exist
+    ReadBestInvalidWork(bnBestInvalidWork);
 
     return true;
 }

@@ -196,6 +196,8 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* pa
 
 void CalledSetStatusBar(const string& strText, int nField)
 {
+    if (nField == 0 && IsLockdown())
+        return;
     if (pframeMain && pframeMain->m_statusBar)
         pframeMain->m_statusBar->SetStatusText(strText, nField);
 }
@@ -376,7 +378,7 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
     // to get rid of the deprecated warning.  Just ignore it.
     if (!event.Iconized())
         fClosedToTray = false;
-#ifdef __WXGTK__
+#if defined(__WXGTK__) || defined(__WXMAC_OSX__)
     if (mapArgs.count("-minimizetotray")) {
 #endif
     // The tray icon sometimes disappears on ubuntu karmic
@@ -1011,6 +1013,13 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     RefreshStatusColumn();
 
     // Update status bar
+    static bool fPrevLockdown;
+    if (IsLockdown())
+        m_statusBar->SetStatusText(string("    ") + _("WARNING: Displayed transactions may not be correct!  You may need to upgrade."), 0);
+    else if (fPrevLockdown)
+        m_statusBar->SetStatusText("", 0);
+    fPrevLockdown = IsLockdown();
+
     string strGen = "";
     if (fGenerateBitcoins)
         strGen = _("    Generating");
@@ -1598,7 +1607,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     //m_listBox->Append(_("Test 2"));
     m_listBox->SetSelection(0);
     SelectPage(0);
-#ifdef __WXGTK__
+#if defined(__WXGTK__) || defined(__WXMAC_OSX__)
     m_checkBoxStartOnSystemStartup->SetLabel(_("&Start Bitcoin on window system startup"));
     if (!mapArgs.count("-minimizetotray"))
     {
@@ -2697,7 +2706,7 @@ void CreateMainWindow()
     pframeMain = new CMainFrame(NULL);
     if (mapArgs.count("-min"))
         pframeMain->Iconize(true);
-#ifdef __WXGTK__
+#if defined(__WXGTK__) || defined(__WXMAC_OSX__)
     if (!mapArgs.count("-minimizetotray"))
         fMinimizeToTray = false;
 #endif
