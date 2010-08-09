@@ -1015,7 +1015,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     // Update status bar
     static bool fPrevLockdown;
     if (IsLockdown())
-        m_statusBar->SetStatusText(string("    ") + _("WARNING: Displayed transactions may not be correct!  You may need to upgrade."), 0);
+        m_statusBar->SetStatusText(string("    ") + _("WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade."), 0);
     else if (fPrevLockdown)
         m_statusBar->SetStatusText("", 0);
     fPrevLockdown = IsLockdown();

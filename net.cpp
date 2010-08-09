@@ -4,6 +4,8 @@
 
 #include "headers.h"
 
+static const int MAX_OUTBOUND_CONNECTIONS = 8;
+
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
 void ThreadOpenConnections2(void* parg);
@@ -653,6 +655,10 @@ void ThreadSocketHandler2(void* parg)
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
                     printf("socket error accept failed: %d\n", WSAGetLastError());
             }
+            else if (mapArgs.count("-maxconnections") && (int)vNodes.size() >= atoi(mapArgs["-maxconnections"]) - MAX_OUTBOUND_CONNECTIONS)
+            {
+                closesocket(hSocket);
+            }
             else
             {
                 printf("accepted connection %s\n", addr.ToStringLog().c_str());
@@ -879,12 +885,21 @@ void ThreadOpenConnections2(void* parg)
     int64 nStart = GetTime();
     loop
     {
-        // Wait
+        // Limit outbound connections
         vnThreadsRunning[1]--;
         Sleep(500);
-        const int nMaxConnections = 8;
-        while (vNodes.size() >= nMaxConnections)
+        loop
         {
+            int nOutbound = 0;
+            CRITICAL_BLOCK(cs_vNodes)
+                foreach(CNode* pnode, vNodes)
+                    if (!pnode->fInbound)
+                        nOutbound++;
+            int nMaxOutboundConnections = MAX_OUTBOUND_CONNECTIONS;
+            if (mapArgs.count("-maxconnections"))
+                nMaxOutboundConnections = min(nMaxOutboundConnections, atoi(mapArgs["-maxconnections"]));
+            if (nOutbound < nMaxOutboundConnections)
+                break;
             Sleep(2000);
             if (fShutdown)
                 return;
@@ -948,18 +963,19 @@ void ThreadOpenConnections2(void* parg)
         CAddress addrConnect;
         int64 nBest = INT64_MIN;
 
-        // Do this here so we don't have to critsect vNodes inside mapAddresses critsect
+        // Only connect to one address per a.b.?.? range.
+        // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
         set<unsigned int> setConnected;
         CRITICAL_BLOCK(cs_vNodes)
             foreach(CNode* pnode, vNodes)
-                setConnected.insert(pnode->addr.ip);
+                setConnected.insert(pnode->addr.ip & 0x0000ffff);
 
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             foreach(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
             {
                 const CAddress& addr = item.second;
-                if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip))
+                if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip & 0x0000ffff))
                     continue;
                 int64 nSinceLastSeen = GetAdjustedTime() - addr.nTime;
                 int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;

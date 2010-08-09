@@ -885,7 +885,7 @@ void Lockdown(CBlockIndex* pindexNew)
     printf("Lockdown:  current best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,22).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
     printf("Lockdown: IsLockdown()=%d\n", (IsLockdown() ? 1 : 0));
     if (IsLockdown())
-        printf("Lockdown: WARNING: Displayed transactions may not be correct!  You may need to upgrade.\n");
+        printf("Lockdown: WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.\n");
 }
 
 
