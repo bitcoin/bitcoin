@@ -53,6 +53,9 @@ CCriticalSection cs_mapAddressBook;
 
 vector<unsigned char> vchDefaultKey;
 
+double dHashesPerSec;
+int64 nHPSTimerStart;
+
 // Settings
 int fGenerateBitcoins = false;
 int64 nTransactionFee = 0;
@@ -2542,6 +2545,9 @@ void ThreadBitcoinMiner(void* parg)
         PrintException(NULL, "ThreadBitcoinMiner()");
     }
     UIThreadCall(bind(CalledSetStatusBar, "", 0));
+    nHPSTimerStart = 0;
+    if (vnThreadsRunning[3] == 0)
+        dHashesPerSec = 0;
     printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[3]);
 }
 
@@ -2768,25 +2774,28 @@ void BitcoinMiner()
 
             // Update nTime every few seconds
             const unsigned int nMask = 0xffff;
+            const int nHashesPerCycle = (nMask+1);
             if ((++tmp.block.nNonce & nMask) == 0)
             {
                 // Meter hashes/sec
-                static int64 nTimerStart;
-                static int nHashCounter;
-                if (nTimerStart == 0)
-                    nTimerStart = GetTimeMillis();
+                static int nCycleCounter;
+                if (nHPSTimerStart == 0)
+                {
+                    nHPSTimerStart = GetTimeMillis();
+                    nCycleCounter = 0;
+                }
                 else
-                    nHashCounter++;
-                if (GetTimeMillis() - nTimerStart > 4000)
+                    nCycleCounter++;
+                if (GetTimeMillis() - nHPSTimerStart > 4000)
                 {
                     static CCriticalSection cs;
                     CRITICAL_BLOCK(cs)
                     {
-                        if (GetTimeMillis() - nTimerStart > 4000)
+                        if (GetTimeMillis() - nHPSTimerStart > 4000)
                         {
-                            double dHashesPerSec = 1000.0 * (nMask+1) * nHashCounter / (GetTimeMillis() - nTimerStart);
-                            nTimerStart = GetTimeMillis();
-                            nHashCounter = 0;
+                            dHashesPerSec = 1000.0 * nHashesPerCycle * nCycleCounter / (GetTimeMillis() - nHPSTimerStart);
+                            nHPSTimerStart = GetTimeMillis();
+                            nCycleCounter = 0;
                             string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
                             UIThreadCall(bind(CalledSetStatusBar, strStatus, 0));
                             static int64 nLogTime;
