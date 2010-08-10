@@ -64,10 +64,17 @@ make install
 ldconfig
 
 
+Berkeley DB
+-----------
+You need Berkeley DB 4.7.  Don't use 4.8, the database/log0000* files
+are incompatible.  If you have to build Berkeley DB yourself:
+../dist/configure --enable-cxx
+make
+
+
 Boost
 -----
-If you want to build Boost yourself,
-cd /usr/local/boost_1_40_0
-su
+If you need to build Boost yourself:
+sudo su
 ./bootstrap.sh
 ./bjam install
