@@ -1,6 +1,13 @@
 #ifndef CRYPTOPP_CONFIG_H
 #define CRYPTOPP_CONFIG_H
 
+//// Bitcoin: disable SSE2 on 32-bit
+#if !defined(_M_X64) && !defined(__x86_64__)
+#define CRYPTOPP_DISABLE_SSE2  1
+#endif
+//////////// end of Bitcoin changes
+
+
 // ***************** Important Settings ********************
 
 // define this if running on a big-endian CPU
