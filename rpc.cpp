@@ -974,8 +974,8 @@ void ThreadRPCServer2(void* parg)
                 printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
                 // Observe lockdown
-                if (IsLockdown() && strMethod != "help" && strMethod != "stop" && strMethod != "getgenerate" && strMethod != "setgenerate")
-                    throw runtime_error("WARNING: Displayed transactions may not be correct!  You may need to upgrade.");
+                if (IsLockdown() && !mapArgs.count("-overridesafety") && strMethod != "help" && strMethod != "stop" && strMethod != "getgenerate" && strMethod != "setgenerate")
+                    throw runtime_error("WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.");
 
                 // Execute
                 map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
