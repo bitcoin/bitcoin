@@ -147,8 +147,8 @@ bool AppInit2(int argc, char* argv[])
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
             "  bitcoin [options]                   \t  " + "\n" +
             "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
-            "  bitcoin [options] <command> -?      \t\t  " + _("Get help for a command\n") +
-            "  bitcoin help                        \t\t\t  " + _("List commands\n") +
+            "  bitcoin [options] help              \t\t  " + _("List commands\n") +
+            "  bitcoin [options] help <command>    \t\t  " + _("Get help for a command\n") +
           _("Options:\n") +
             "  -conf=<file>    \t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
             "  -gen            \t  " + _("Generate coins\n") +
