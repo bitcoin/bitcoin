@@ -217,13 +217,28 @@ Value setgenerate(const Array& params, bool fHelp)
 }
 
 
+Value gethashespersec(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "gethashespersec\n"
+            "Returns a recent hashes per second performance measurement while generating.");
+
+    if (GetTimeMillis() - nHPSTimerStart > 8000)
+        return (int64)0;
+    return (int64)dHashesPerSec;
+}
+
+
 Value getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getinfo");
+            "getinfo\n"
+            "Returns an object containing various state info.");
 
     Object obj;
+    obj.push_back(Pair("version",       (int)VERSION));
     obj.push_back(Pair("balance",       (double)GetBalance() / (double)COIN));
     obj.push_back(Pair("blocks",        (int)nBestHeight + 1));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
@@ -231,6 +246,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
     obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
+    obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     return obj;
 }
 
@@ -467,6 +483,7 @@ Value getreceivedbylabel(const Array& params, bool fHelp)
 }
 
 
+
 struct tallyitem
 {
     int64 nAmount;
@@ -635,6 +652,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getbalance",            &getbalance),
     make_pair("getgenerate",           &getgenerate),
     make_pair("setgenerate",           &setgenerate),
+    make_pair("gethashespersec",       &gethashespersec),
     make_pair("getinfo",               &getinfo),
     make_pair("getnewaddress",         &getnewaddress),
     make_pair("setlabel",              &setlabel),
