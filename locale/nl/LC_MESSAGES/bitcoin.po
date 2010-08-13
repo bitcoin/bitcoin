@@ -184,8 +184,8 @@ msgid "From: "
 msgstr "Van: "
 
 #: ../../../ui.cpp:634
-msgid "From: unknown, Received with: "
-msgstr "Van: onbekend, Ontvangen met: "
+msgid "Received with: "
+msgstr "Ontvangen met: "
 
 #: ../../../ui.cpp:676
 msgid "Payment to yourself"
@@ -326,6 +326,14 @@ msgstr "versie 0.%d.%d beta"
 #: ../../../ui.cpp:1681
 msgid "Will appear as \"From: Unknown\""
 msgstr "Word vertoont als \"Van: Onbekend\""
+
+#: ../../../ui.cpp:1681
+msgid "n/a"
+msgstr "Onbekend"
+
+#: ../../../ui.cpp:1681
+msgid "Unknown"
+msgstr "Onbekend"
 
 #: ../../../ui.cpp:1682
 msgid "Can't include a message when sending to a Bitcoin address"

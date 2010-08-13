@@ -137,7 +137,10 @@ bool AppInit2(int argc, char* argv[])
     ParseParameters(argc, argv);
 
     if (mapArgs.count("-datadir"))
-        strlcpy(pszSetDataDir, mapArgs["-datadir"].c_str(), sizeof(pszSetDataDir));
+    {
+        filesystem::path pathDataDir = filesystem::system_complete(mapArgs["-datadir"]);
+        strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
+    }
 
     ReadConfigFile(mapArgs, mapMultiArgs); // Must be done after processing datadir
 
@@ -363,6 +366,15 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
+    if (mapArgs.count("-paytxfee"))
+    {
+        if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
+        {
+            wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
+            return false;
+        }
+    }
+
     //
     // Create the main window and start the node
     //
@@ -382,7 +394,7 @@ bool AppInit2(int argc, char* argv[])
     if (mapArgs.count("-server") || fDaemon)
         CreateThread(ThreadRPCServer, NULL);
 
-#ifdef GUI
+#if defined(__WXMSW__) && defined(GUI)
     if (fFirstRun)
         SetStartOnSystemStartup(true);
 #endif

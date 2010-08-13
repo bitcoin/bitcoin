@@ -2224,7 +2224,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // This includes all nodes that are currently online,
         // since they rebroadcast an addr every 24 hours
         pfrom->vAddrToSend.clear();
-        int64 nSince = GetAdjustedTime() - 24 * 60 * 60; // in the last 24 hours
+        int64 nSince = GetAdjustedTime() - 12 * 60 * 60; // in the last 12 hours
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             unsigned int nSize = mapAddresses.size();

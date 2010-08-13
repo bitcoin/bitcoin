@@ -18,6 +18,14 @@
 #define _WIN32_IE 0x0400
 #define WIN32_LEAN_AND_MEAN 1
 #define __STDC_LIMIT_MACROS // to enable UINT64_MAX from stdint.h
+#if (defined(__unix__) || defined(unix)) && !defined(USG)
+#include <sys/param.h>  // to get BSD define
+#endif
+#ifdef __WXMAC_OSX__
+#ifndef BSD
+#define BSD 1
+#endif
+#endif
 #ifdef GUI
 #include <wx/wx.h>
 #include <wx/stdpaths.h>
@@ -25,12 +33,6 @@
 #include <wx/utils.h>
 #include <wx/clipbrd.h>
 #include <wx/taskbar.h>
-#else
-#ifdef __WXMAC_OSX__
-#define __WXMAC__ 1
-#define __WXOSX__ 1
-#define __BSD__ 1
-#endif
 #endif
 #include <openssl/buffer.h>
 #include <openssl/ecdsa.h>
@@ -98,7 +100,7 @@
 #include <ifaddrs.h>
 #include <fcntl.h>
 #endif
-#ifdef __BSD__
+#ifdef BSD
 #include <netinet/in.h>
 #endif
 

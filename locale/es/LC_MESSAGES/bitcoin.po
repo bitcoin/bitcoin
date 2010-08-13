@@ -210,8 +210,8 @@ msgid "From: "
 msgstr "De: "
 
 #: ../../../ui.cpp:634
-msgid "From: unknown, Received with: "
-msgstr "De: desconocido, Recibido con: "
+msgid "Received with: "
+msgstr "Recibido con: "
 
 #: ../../../ui.cpp:676
 msgid "Payment to yourself"
@@ -356,6 +356,14 @@ msgstr "version %d.%d.%d beta"
 #: ../../../ui.cpp:1696
 msgid "Will appear as \"From: Unknown\""
 msgstr "Aparecera como \"De: Desconocido\""
+
+#: ../../../ui.cpp:1696
+msgid "n/a"
+msgstr "Desconocido"
+
+#: ../../../ui.cpp:1696
+msgid "Unknown"
+msgstr "Desconocido"
 
 #: ../../../ui.cpp:1697
 msgid "Can't include a message when sending to a Bitcoin address"

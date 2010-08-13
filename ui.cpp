@@ -515,7 +515,7 @@ string SingleLine(const string& strIn)
 {
     string strOut;
     bool fOneSpace = false;
-    foreach(int c, strIn)
+    foreach(unsigned char c, strIn)
     {
         if (isspace(c))
         {
@@ -640,7 +640,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                         {
                             //strDescription += _("Received payment to ");
                             //strDescription += _("Received with address ");
-                            strDescription += _("From: unknown, Received with: ");
+                            strDescription += _("Received with: ");
                             string strAddress = PubKeyToAddress(vchPubKey);
                             map<string, string>::iterator mi = mapAddressBook.find(strAddress);
                             if (mi != mapAddressBook.end() && !(*mi).second.empty())
@@ -1559,6 +1559,11 @@ void SetStartOnSystemStartup(bool fAutoStart)
     }
     else
     {
+        char pszExePath[MAX_PATH+1];
+        memset(pszExePath, 0, sizeof(pszExePath));
+        if (readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1) == -1)
+            return;
+
         boost::filesystem::create_directories(GetAutostartDir());
 
         boost::filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
@@ -1568,9 +1573,6 @@ void SetStartOnSystemStartup(bool fAutoStart)
             return;
         }
         // Write a bitcoin.desktop file to the autostart directory:
-        char pszExePath[MAX_PATH+1];
-        memset(pszExePath, 0, sizeof(pszExePath));
-        readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1);
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         optionFile << "Name=Bitcoin\n";
@@ -1858,7 +1860,7 @@ void CSendDialog::OnTextAddress(wxCommandEvent& event)
     {
         strFromSave    = m_textCtrlFrom->GetValue();
         strMessageSave = m_textCtrlMessage->GetValue();
-        m_textCtrlFrom->SetValue(_("Will appear as \"From: Unknown\""));
+        m_textCtrlFrom->SetValue(_("n/a"));
         m_textCtrlMessage->SetValue(_("Can't include a message when sending to a Bitcoin address"));
     }
     else if (fEnable && !fEnabledPrev)
