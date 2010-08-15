@@ -373,6 +373,8 @@ bool AppInit2(int argc, char* argv[])
             wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
             return false;
         }
+        if (nTransactionFee > 1 * COIN)
+            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin");
     }
 
     //
