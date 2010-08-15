@@ -473,8 +473,12 @@ public:
 
         // Check for negative values
         foreach(const CTxOut& txout, vout)
+        {
             if (txout.nValue < 0)
                 return error("CTransaction::CheckTransaction() : txout.nValue negative");
+            if (txout.nValue > 21000000*COIN)
+                return error("CTransaction::CheckTransaction() : txout.nValue over-max");
+        }
 
         if (IsCoinBase())
         {
@@ -520,6 +524,8 @@ public:
         int64 nValueOut = 0;
         foreach(const CTxOut& txout, vout)
         {
+            if (txout.nValue > 21000000*COIN)
+                continue; // ignore over-max-value...
             if (txout.nValue < 0)
                 throw runtime_error("CTransaction::GetValueOut() : negative value");
             nValueOut += txout.nValue;
