@@ -473,12 +473,8 @@ public:
 
         // Check for negative values
         foreach(const CTxOut& txout, vout)
-        {
             if (txout.nValue < 0)
                 return error("CTransaction::CheckTransaction() : txout.nValue negative");
-            if (txout.nValue > 21000000*COIN)
-                return error("CTransaction::CheckTransaction() : txout.nValue over-max");
-        }
 
         if (IsCoinBase())
         {
@@ -524,8 +520,6 @@ public:
         int64 nValueOut = 0;
         foreach(const CTxOut& txout, vout)
         {
-            if (txout.nValue > 21000000*COIN)
-                continue; // ignore over-max-value...
             if (txout.nValue < 0)
                 throw runtime_error("CTransaction::GetValueOut() : negative value");
             nValueOut += txout.nValue;
@@ -619,7 +613,8 @@ public:
 
 
     bool DisconnectInputs(CTxDB& txdb);
-    bool ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx, int nHeight, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee=0);
+    bool ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
+                       CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee=0);
     bool ClientConnectInputs();
 
     bool AcceptTransaction(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);

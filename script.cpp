@@ -16,12 +16,30 @@ static const CBigNum bnZero(0);
 static const CBigNum bnOne(1);
 static const CBigNum bnFalse(0);
 static const CBigNum bnTrue(1);
-static const size_t nMaxNumSize = 258;
+static const size_t nMaxNumSize = 4;
 
+
+CBigNum CastToBigNum(const valtype& vch)
+{
+    if (vch.size() > nMaxNumSize)
+        throw runtime_error("CastToBigNum() : overflow");
+    // Get rid of extra leading zeros
+    return CBigNum(CBigNum(vch).getvch());
+}
 
 bool CastToBool(const valtype& vch)
 {
-    return (CBigNum(vch) != bnZero);
+    for (int i = 0; i < vch.size(); i++)
+    {
+        if (vch[i] != 0)
+        {
+            // Can be negative zero
+            if (i == vch.size()-1 && vch[i] == 0x80)
+                return false;
+            return true;
+        }
+    }
+    return false;
 }
 
 void MakeSameSize(valtype& vch1, valtype& vch2)
@@ -68,9 +86,26 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
             valtype vchPushValue;
             if (!script.GetOp(pc, opcode, vchPushValue))
                 return false;
-            if (vchPushValue.size() > 5000)
+            if (vchPushValue.size() > 520)
                 return false;
             if (opcode > OP_16 && nOpCount++ > 200)
+                return false;
+
+            if (opcode == OP_CAT ||
+                opcode == OP_SUBSTR ||
+                opcode == OP_LEFT ||
+                opcode == OP_RIGHT ||
+                opcode == OP_INVERT ||
+                opcode == OP_AND ||
+                opcode == OP_OR ||
+                opcode == OP_XOR ||
+                opcode == OP_2MUL ||
+                opcode == OP_2DIV ||
+                opcode == OP_MUL ||
+                opcode == OP_DIV ||
+                opcode == OP_MOD ||
+                opcode == OP_LSHIFT ||
+                opcode == OP_RSHIFT)
                 return false;
 
             if (fExec && opcode <= OP_PUSHDATA4)
@@ -332,7 +367,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // (xn ... x2 x1 x0 n - ... x2 x1 x0 xn)
                     if (stack.size() < 2)
                         return false;
-                    int n = CBigNum(stacktop(-1)).getint();
+                    int n = CastToBigNum(stacktop(-1)).getint();
                     stack.pop_back();
                     if (n < 0 || n >= stack.size())
                         return false;
@@ -387,7 +422,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     valtype& vch2 = stacktop(-1);
                     vch1.insert(vch1.end(), vch2.begin(), vch2.end());
                     stack.pop_back();
-                    if (stacktop(-1).size() > 5000)
+                    if (stacktop(-1).size() > 520)
                         return false;
                 }
                 break;
@@ -398,8 +433,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (stack.size() < 3)
                         return false;
                     valtype& vch = stacktop(-3);
-                    int nBegin = CBigNum(stacktop(-2)).getint();
-                    int nEnd = nBegin + CBigNum(stacktop(-1)).getint();
+                    int nBegin = CastToBigNum(stacktop(-2)).getint();
+                    int nEnd = nBegin + CastToBigNum(stacktop(-1)).getint();
                     if (nBegin < 0 || nEnd < nBegin)
                         return false;
                     if (nBegin > vch.size())
@@ -420,7 +455,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (stack.size() < 2)
                         return false;
                     valtype& vch = stacktop(-2);
-                    int nSize = CBigNum(stacktop(-1)).getint();
+                    int nSize = CastToBigNum(stacktop(-1)).getint();
                     if (nSize < 0)
                         return false;
                     if (nSize > vch.size())
@@ -531,9 +566,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // (in -- out)
                     if (stack.size() < 1)
                         return false;
-                    if (stacktop(-1).size() > nMaxNumSize)
-                        return false;
-                    CBigNum bn(stacktop(-1));
+                    CBigNum bn = CastToBigNum(stacktop(-1));
                     switch (opcode)
                     {
                     case OP_1ADD:       bn += bnOne; break;
@@ -572,11 +605,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // (x1 x2 -- out)
                     if (stack.size() < 2)
                         return false;
-                    if (stacktop(-2).size() > nMaxNumSize ||
-                        stacktop(-1).size() > nMaxNumSize)
-                        return false;
-                    CBigNum bn1(stacktop(-2));
-                    CBigNum bn2(stacktop(-1));
+                    CBigNum bn1 = CastToBigNum(stacktop(-2));
+                    CBigNum bn2 = CastToBigNum(stacktop(-1));
                     CBigNum bn;
                     switch (opcode)
                     {
@@ -646,13 +676,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // (x min max -- out)
                     if (stack.size() < 3)
                         return false;
-                    if (stacktop(-3).size() > nMaxNumSize ||
-                        stacktop(-2).size() > nMaxNumSize ||
-                        stacktop(-1).size() > nMaxNumSize)
-                        return false;
-                    CBigNum bn1(stacktop(-3));
-                    CBigNum bn2(stacktop(-2));
-                    CBigNum bn3(stacktop(-1));
+                    CBigNum bn1 = CastToBigNum(stacktop(-3));
+                    CBigNum bn2 = CastToBigNum(stacktop(-2));
+                    CBigNum bn3 = CastToBigNum(stacktop(-1));
                     bool fValue = (bn2 <= bn1 && bn1 < bn3);
                     stack.pop_back();
                     stack.pop_back();
@@ -748,7 +774,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (stack.size() < i)
                         return false;
 
-                    int nKeysCount = CBigNum(stacktop(-i)).getint();
+                    int nKeysCount = CastToBigNum(stacktop(-i)).getint();
                     if (nKeysCount < 0)
                         return false;
                     int ikey = ++i;
@@ -756,7 +782,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (stack.size() < i)
                         return false;
 
-                    int nSigsCount = CBigNum(stacktop(-i)).getint();
+                    int nSigsCount = CastToBigNum(stacktop(-i)).getint();
                     if (nSigsCount < 0 || nSigsCount > nKeysCount)
                         return false;
                     int isig = ++i;
