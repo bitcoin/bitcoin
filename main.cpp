@@ -1006,6 +1006,14 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
                 mapTestPool[prevout.hash] = txindex;
 
             nValueIn += txPrev.vout[prevout.n].nValue;
+
+            // Check for negative or overflow input values
+            if (txPrev.vout[prevout.n].nValue < 0)
+                return error("ConnectInputs() : txin.nValue negative");
+            if (txPrev.vout[prevout.n].nValue > MAX_MONEY)
+                return error("ConnectInputs() : txin.nValue too high");
+            if (nValueIn > MAX_MONEY)
+                return error("ConnectInputs() : txin total too high");
         }
 
         // Tally transaction fees
