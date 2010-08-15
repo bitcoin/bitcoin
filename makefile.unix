@@ -25,7 +25,7 @@ LIBS= \
  -Wl,-Bdynamic \
    -l gthread-2.0
 
-DEFS=-D__WXGTK__ -DNOPCH
+DEFS=-D__WXGTK__ -DNOPCH -DFOURWAYSSE2
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
@@ -53,14 +53,17 @@ obj/%.o: %.cpp $(HEADERS)
 cryptopp/obj/%.o: cryptopp/%.cpp
 	g++ -c $(CFLAGS) -O3 -o $@ $<
 
-bitcoin: $(OBJS) obj/ui.o obj/uibase.o
+obj/sha256.o: sha256.cpp
+	g++ -c $(CFLAGS) -msse2 -O3 -o $@ $<
+
+bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha256.o
 	g++ $(CFLAGS) -o $@ $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind: $(OBJS:obj/%=obj/nogui/%)
+bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha256.o
 	g++ $(CFLAGS) -o $@ $^ $(LIBS)
 
 
