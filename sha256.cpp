@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifdef FOURWAYSSE2
+
 #include <string.h>
 #include <assert.h>
 
@@ -417,3 +419,5 @@ void Double_BlockSHA256(const void* pin, void* pad, const void *pre, unsigned in
     }
 
 }
+
+#endif // FOURWAYSSE2
