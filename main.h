@@ -1065,6 +1065,7 @@ public:
     bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ReadFromDisk(const CBlockIndex* blockindex, bool fReadTransactions=true);
+    bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
     bool CheckBlock() const;
     bool AcceptBlock();

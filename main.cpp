@@ -1234,6 +1234,57 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 }
 
 
+bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
+{
+    uint256 hash = GetHash();
+
+    txdb.TxnBegin();
+    if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
+    {
+        pindexGenesisBlock = pindexNew;
+        txdb.WriteHashBestChain(hash);
+    }
+    else if (hashPrevBlock == hashBestChain)
+    {
+        // Adding to current best branch
+        if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
+        {
+            txdb.TxnAbort();
+            Lockdown(pindexNew);
+            return error("SetBestChain() : ConnectBlock failed");
+        }
+        txdb.TxnCommit();
+        pindexNew->pprev->pnext = pindexNew;
+
+        // Delete redundant memory transactions
+        foreach(CTransaction& tx, vtx)
+            tx.RemoveFromMemoryPool();
+    }
+    else
+    {
+        // New best branch
+        if (!Reorganize(txdb, pindexNew))
+        {
+            txdb.TxnAbort();
+            Lockdown(pindexNew);
+            return error("SetBestChain() : Reorganize failed");
+        }
+    }
+    txdb.TxnCommit();
+
+    // New best block
+    hashBestChain = hash;
+    pindexBest = pindexNew;
+    nBestHeight = pindexBest->nHeight;
+    bnBestChainWork = pindexNew->bnChainWork;
+    nTimeBestReceived = GetTime();
+    nTransactionsUpdated++;
+    printf("SetBestChain: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,22).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
+
+    return true;
+}
+
+
 bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 {
     // Check for duplicate
@@ -1260,50 +1311,8 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // New best
     if (pindexNew->bnChainWork > bnBestChainWork)
-    {
-        txdb.TxnBegin();
-        if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
-        {
-            pindexGenesisBlock = pindexNew;
-            txdb.WriteHashBestChain(hash);
-        }
-        else if (hashPrevBlock == hashBestChain)
-        {
-            // Adding to current best branch
-            if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
-            {
-                txdb.TxnAbort();
-                Lockdown(pindexNew);
-                return error("AddToBlockIndex() : ConnectBlock failed");
-            }
-            txdb.TxnCommit();
-            pindexNew->pprev->pnext = pindexNew;
-
-            // Delete redundant memory transactions
-            foreach(CTransaction& tx, vtx)
-                tx.RemoveFromMemoryPool();
-        }
-        else
-        {
-            // New best branch
-            if (!Reorganize(txdb, pindexNew))
-            {
-                txdb.TxnAbort();
-                Lockdown(pindexNew);
-                return error("AddToBlockIndex() : Reorganize failed");
-            }
-        }
-        txdb.TxnCommit();
-
-        // New best block
-        hashBestChain = hash;
-        pindexBest = pindexNew;
-        nBestHeight = pindexBest->nHeight;
-        bnBestChainWork = pindexNew->bnChainWork;
-        nTimeBestReceived = GetTime();
-        nTransactionsUpdated++;
-        printf("AddToBlockIndex: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,22).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
-    }
+        if (!SetBestChain(txdb, pindexNew))
+            return false;
 
     txdb.Close();
 
@@ -1393,7 +1402,16 @@ bool CBlock::AcceptBlock()
         (pindexPrev->nHeight+1 == 68555 && hash != uint256("0x00000000001e1b4903550a0b96e9a9405c8a95f387162e4944e8d9fbe501cd6a")) ||
         (pindexPrev->nHeight+1 == 70567 && hash != uint256("0x00000000006a49b14bcf27462068f1264c961f11fa2e0eddd2be0791e1d4124a")) ||
         (pindexPrev->nHeight+1 == 74000 && hash != uint256("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")))
-        return error("AcceptBlock() : rejected by checkpoint lockin");
+        return error("AcceptBlock() : rejected by checkpoint lockin at %d", pindexPrev->nHeight+1);
+
+    // Scanback checkpoint lockin
+    for (CBlockIndex* pindex = pindexPrev; pindex->nHeight >= 74000; pindex = pindex->pprev)
+    {
+        if (pindex->nHeight == 74000 && pindex->GetBlockHash() != uint256("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20"))
+            return error("AcceptBlock() : rejected by scanback lockin at %d", pindex->nHeight);
+        if (pindex->nHeight == 74638 && pindex->GetBlockHash() == uint256("0x0000000000790ab3f22ec756ad43b6ab569abf0bddeb97c67a6f7b1470a7ec1c"))
+            return error("AcceptBlock() : rejected by scanback lockin at %d", pindex->nHeight);
+    }
 
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))

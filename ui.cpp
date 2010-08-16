@@ -1027,7 +1027,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
         strGen = _("(not connected)");
     m_statusBar->SetStatusText(strGen, 1);
 
-    string strStatus = strprintf(_("     %d connections     %d blocks     %d transactions"), vNodes.size(), nBestHeight + 1, nTransactionCount);
+    string strStatus = strprintf(_("     %d connections     %d blocks     %d transactions"), vNodes.size(), nBestHeight, nTransactionCount);
     m_statusBar->SetStatusText(strStatus, 2);
 
     if (fDebug && GetTime() - nThreadSocketHandlerHeartbeat > 60)
