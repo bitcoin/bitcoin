@@ -460,9 +460,12 @@ bool CTxDB::LoadBlockIndex()
     ReadBestInvalidWork(bnBestInvalidWork);
 
     // Verify blocks in the best chain
+    vector<CBlockIndex*> vChain;
+    vector<CBlockIndex*> vBad;
     CBlockIndex* pindexFork = NULL;
     for (CBlockIndex* pindex = pindexBest; pindex && pindex->pprev; pindex = pindex->pprev)
     {
+        vChain.push_back(pindex);
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
@@ -470,6 +473,7 @@ bool CTxDB::LoadBlockIndex()
         {
             printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
             pindexFork = pindex->pprev;
+            vBad = vChain;
         }
     }
     if (pindexFork)
@@ -480,6 +484,14 @@ bool CTxDB::LoadBlockIndex()
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
         CTxDB txdb;
         block.SetBestChain(txdb, pindexFork);
+
+        // Delete the bad chain
+        foreach(CBlockIndex* pindex, vBad)
+        {
+            txdb.EraseBlockIndex(pindex->GetBlockHash());
+            mapBlockIndex.erase(pindex->GetBlockHash());
+            delete pindex;
+        }
     }
 
     return true;
