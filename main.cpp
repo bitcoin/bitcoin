@@ -1234,6 +1234,57 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 }
 
 
+bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
+{
+    uint256 hash = GetHash();
+
+    txdb.TxnBegin();
+    if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
+    {
+        pindexGenesisBlock = pindexNew;
+        txdb.WriteHashBestChain(hash);
+    }
+    else if (hashPrevBlock == hashBestChain)
+    {
+        // Adding to current best branch
+        if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
+        {
+            txdb.TxnAbort();
+            Lockdown(pindexNew);
+            return error("SetBestChain() : ConnectBlock failed");
+        }
+        txdb.TxnCommit();
+        pindexNew->pprev->pnext = pindexNew;
+
+        // Delete redundant memory transactions
+        foreach(CTransaction& tx, vtx)
+            tx.RemoveFromMemoryPool();
+    }
+    else
+    {
+        // New best branch
+        if (!Reorganize(txdb, pindexNew))
+        {
+            txdb.TxnAbort();
+            Lockdown(pindexNew);
+            return error("SetBestChain() : Reorganize failed");
+        }
+    }
+    txdb.TxnCommit();
+
+    // New best block
+    hashBestChain = hash;
+    pindexBest = pindexNew;
+    nBestHeight = pindexBest->nHeight;
+    bnBestChainWork = pindexNew->bnChainWork;
+    nTimeBestReceived = GetTime();
+    nTransactionsUpdated++;
+    printf("SetBestChain: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,22).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
+
+    return true;
+}
+
+
 bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 {
     // Check for duplicate
@@ -1260,50 +1311,8 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // New best
     if (pindexNew->bnChainWork > bnBestChainWork)
-    {
-        txdb.TxnBegin();
-        if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
-        {
-            pindexGenesisBlock = pindexNew;
-            txdb.WriteHashBestChain(hash);
-        }
-        else if (hashPrevBlock == hashBestChain)
-        {
-            // Adding to current best branch
-            if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
-            {
-                txdb.TxnAbort();
-                Lockdown(pindexNew);
-                return error("AddToBlockIndex() : ConnectBlock failed");
-            }
-            txdb.TxnCommit();
-            pindexNew->pprev->pnext = pindexNew;
-
-            // Delete redundant memory transactions
-            foreach(CTransaction& tx, vtx)
-                tx.RemoveFromMemoryPool();
-        }
-        else
-        {
-            // New best branch
-            if (!Reorganize(txdb, pindexNew))
-            {
-                txdb.TxnAbort();
-                Lockdown(pindexNew);
-                return error("AddToBlockIndex() : Reorganize failed");
-            }
-        }
-        txdb.TxnCommit();
-
-        // New best block
-        hashBestChain = hash;
-        pindexBest = pindexNew;
-        nBestHeight = pindexBest->nHeight;
-        bnBestChainWork = pindexNew->bnChainWork;
-        nTimeBestReceived = GetTime();
-        nTransactionsUpdated++;
-        printf("AddToBlockIndex: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,22).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
-    }
+        if (!SetBestChain(txdb, pindexNew))
+            return false;
 
     txdb.Close();
 

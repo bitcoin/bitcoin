@@ -120,7 +120,7 @@ Value getblockcount(const Array& params, bool fHelp)
             "getblockcount\n"
             "Returns the number of blocks in the longest block chain.");
 
-    return nBestHeight + 1;
+    return nBestHeight;
 }
 
 
@@ -240,7 +240,7 @@ Value getinfo(const Array& params, bool fHelp)
     Object obj;
     obj.push_back(Pair("version",       (int)VERSION));
     obj.push_back(Pair("balance",       (double)GetBalance() / (double)COIN));
-    obj.push_back(Pair("blocks",        (int)nBestHeight + 1));
+    obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
     obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
