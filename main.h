@@ -19,8 +19,8 @@ static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
 static const int64 MAX_MONEY = 21000000 * COIN;
+inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int COINBASE_MATURITY = 100;
-
 static const CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 
 
@@ -83,6 +83,7 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 void BitcoinMiner();
+bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 bool IsInitialBlockDownload();
 bool IsLockdown();
 
@@ -338,6 +339,8 @@ public:
 
     int64 GetCredit() const
     {
+        if (!MoneyRange(nValue))
+            throw runtime_error("CTxOut::GetCredit() : value out of range");
         if (IsMine())
             return nValue;
         return 0;
@@ -424,7 +427,7 @@ public:
             nBlockHeight = nBestHeight;
         if (nBlockTime == 0)
             nBlockTime = GetAdjustedTime();
-        if (nLockTime < (nLockTime < 500000000 ? nBlockHeight : nBlockTime))
+        if ((int64)nLockTime < (nLockTime < 500000000 ? (int64)nBlockHeight : nBlockTime))
             return true;
         foreach(const CTxIn& txin, vin)
             if (!txin.IsFinal())
@@ -481,8 +484,8 @@ public:
             if (txout.nValue > MAX_MONEY)
                 return error("CTransaction::CheckTransaction() : txout.nValue too high");
             nValueOut += txout.nValue;
-            if (nValueOut > MAX_MONEY)
-                return error("CTransaction::CheckTransaction() : txout total too high");
+            if (!MoneyRange(nValueOut))
+                return error("CTransaction::CheckTransaction() : txout total out of range");
         }
 
         if (IsCoinBase())
@@ -512,7 +515,11 @@ public:
     {
         int64 nDebit = 0;
         foreach(const CTxIn& txin, vin)
+        {
             nDebit += txin.GetDebit();
+            if (!MoneyRange(nDebit))
+                throw runtime_error("CTransaction::GetDebit() : value out of range");
+        }
         return nDebit;
     }
 
@@ -520,7 +527,11 @@ public:
     {
         int64 nCredit = 0;
         foreach(const CTxOut& txout, vout)
+        {
             nCredit += txout.GetCredit();
+            if (!MoneyRange(nCredit))
+                throw runtime_error("CTransaction::GetCredit() : value out of range");
+        }
         return nCredit;
     }
 
@@ -529,9 +540,9 @@ public:
         int64 nValueOut = 0;
         foreach(const CTxOut& txout, vout)
         {
-            if (txout.nValue < 0)
-                throw runtime_error("CTransaction::GetValueOut() : negative value");
             nValueOut += txout.nValue;
+            if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
+                throw runtime_error("CTransaction::GetValueOut() : value out of range");
         }
         return nValueOut;
     }
@@ -930,6 +941,11 @@ public:
         return Hash(BEGIN(nVersion), END(nNonce));
     }
 
+    int64 GetBlockTime() const
+    {
+        return (int64)nTime;
+    }
+
 
     uint256 BuildMerkleTree() const
     {
@@ -1030,10 +1046,8 @@ public:
         filein >> *this;
 
         // Check the header
-        if (CBigNum().SetCompact(nBits) > bnProofOfWorkLimit)
-            return error("CBlock::ReadFromDisk() : nBits errors in block header");
-        if (GetHash() > CBigNum().SetCompact(nBits).getuint256())
-            return error("CBlock::ReadFromDisk() : GetHash() errors in block header");
+        if (!CheckProofOfWork(GetHash(), nBits))
+            return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;
     }
@@ -1043,9 +1057,9 @@ public:
     void print() const
     {
         printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%d)\n",
-            GetHash().ToString().substr(0,16).c_str(),
+            GetHash().ToString().substr(0,20).c_str(),
             nVersion,
-            hashPrevBlock.ToString().substr(0,16).c_str(),
+            hashPrevBlock.ToString().substr(0,20).c_str(),
             hashMerkleRoot.ToString().substr(0,6).c_str(),
             nTime, nBits, nNonce,
             vtx.size());
@@ -1064,7 +1078,7 @@ public:
     int64 GetBlockValue(int nHeight, int64 nFees) const;
     bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
-    bool ReadFromDisk(const CBlockIndex* blockindex, bool fReadTransactions=true);
+    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
     bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
     bool CheckBlock() const;
@@ -1142,14 +1156,26 @@ public:
         return *phashBlock;
     }
 
+    int64 GetBlockTime() const
+    {
+        return (int64)nTime;
+    }
+
     CBigNum GetBlockWork() const
     {
+        if (CBigNum().SetCompact(nBits) <= 0)
+            return 0;
         return (CBigNum(1)<<256) / (CBigNum().SetCompact(nBits)+1);
     }
 
     bool IsInMainChain() const
     {
         return (pnext || this == pindexBest);
+    }
+
+    bool CheckIndex() const
+    {
+        return CheckProofOfWork(GetBlockHash(), nBits);
     }
 
     bool EraseBlockFromDisk()
@@ -1171,13 +1197,13 @@ public:
 
     int64 GetMedianTimePast() const
     {
-        unsigned int pmedian[nMedianTimeSpan];
-        unsigned int* pbegin = &pmedian[nMedianTimeSpan];
-        unsigned int* pend = &pmedian[nMedianTimeSpan];
+        int64 pmedian[nMedianTimeSpan];
+        int64* pbegin = &pmedian[nMedianTimeSpan];
+        int64* pend = &pmedian[nMedianTimeSpan];
 
         const CBlockIndex* pindex = this;
         for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
-            *(--pbegin) = pindex->nTime;
+            *(--pbegin) = pindex->GetBlockTime();
 
         sort(pbegin, pend);
         return pbegin[(pend - pbegin)/2];
@@ -1189,7 +1215,7 @@ public:
         for (int i = 0; i < nMedianTimeSpan/2; i++)
         {
             if (!pindex->pnext)
-                return nTime;
+                return GetBlockTime();
             pindex = pindex->pnext;
         }
         return pindex->GetMedianTimePast();
@@ -1202,7 +1228,7 @@ public:
         return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nHeight,
             hashMerkleRoot.ToString().substr(0,6).c_str(),
-            GetBlockHash().ToString().substr(0,16).c_str());
+            GetBlockHash().ToString().substr(0,20).c_str());
     }
 
     void print() const
@@ -1272,8 +1298,8 @@ public:
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashNext=%s)",
             GetBlockHash().ToString().c_str(),
-            hashPrev.ToString().substr(0,16).c_str(),
-            hashNext.ToString().substr(0,16).c_str());
+            hashPrev.ToString().substr(0,20).c_str(),
+            hashNext.ToString().substr(0,20).c_str());
         return str;
     }
 
