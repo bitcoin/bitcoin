@@ -1579,10 +1579,10 @@ bool CheckDiskSpace(int64 nAdditionalBytes)
     if (nFreeBytesAvailable < (int64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
-        printf("***  %s***\n", _("Warning: Disk space is low  "));
-#ifdef GUI
-        ThreadSafeMessageBox(_("Warning: Disk space is low  "), "Bitcoin", wxOK | wxICON_EXCLAMATION);
-#endif
+        string strMessage = _("Warning: Disk space is low  ");
+        strWarning = strMessage;
+        printf("*** %s\n", strMessage.c_str());
+        ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
         CreateThread(Shutdown, NULL);
         return false;
     }
