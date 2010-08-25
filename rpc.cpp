@@ -995,8 +995,8 @@ void ThreadRPCServer2(void* parg)
 
                 // Observe safe mode
                 string strWarning = GetWarnings("rpc");
-                if (strWarning != "" && !mapArgs.count("-overridesafety") && !setAllowInSafeMode.count(strMethod))
-                    throw runtime_error(strWarning);
+                if (strWarning != "" && !mapArgs.count("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+                    throw runtime_error(string("Safe mode: ") + strWarning);
 
                 // Execute
                 map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
