@@ -669,6 +669,25 @@ pair<string, rpcfn_type> pCallTable[] =
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
+string pAllowInSafeMode[] =
+{
+    "help",
+    "stop",
+    "getblockcount",
+    "getblocknumber",
+    "getconnectioncount",
+    "getdifficulty",
+    "getgenerate",
+    "setgenerate",
+    "gethashespersec",
+    "getinfo",
+    "getnewaddress",
+    "setlabel",
+    "getlabel",
+    "getaddressesbylabel",
+};
+set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
+
 
 
 
@@ -974,9 +993,9 @@ void ThreadRPCServer2(void* parg)
 
                 printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
-                // Observe lockdown
+                // Observe safe mode
                 string strWarning = GetWarnings("rpc");
-                if (strWarning != "" && !mapArgs.count("-overridesafety") && strMethod != "getinfo" && strMethod != "help" && strMethod != "stop" && strMethod != "getgenerate" && strMethod != "setgenerate")
+                if (strWarning != "" && !mapArgs.count("-overridesafety") && !setAllowInSafeMode.count(strMethod))
                     throw runtime_error(strWarning);
 
                 // Execute
