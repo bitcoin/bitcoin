@@ -247,7 +247,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
-    obj.push_back(Pair("status",        strWarning));
+    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
 
@@ -975,8 +975,9 @@ void ThreadRPCServer2(void* parg)
                 printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
                 // Observe lockdown
-                if (IsLockdown() && !mapArgs.count("-overridesafety") && strMethod != "help" && strMethod != "stop" && strMethod != "getgenerate" && strMethod != "setgenerate")
-                    throw runtime_error("WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.");
+                string strWarning = GetWarnings("rpc");
+                if (strWarning != "" && !mapArgs.count("-overridesafety") && strMethod != "getinfo" && strMethod != "help" && strMethod != "stop" && strMethod != "getgenerate" && strMethod != "setgenerate")
+                    throw runtime_error(strWarning);
 
                 // Execute
                 map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);

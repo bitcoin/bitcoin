@@ -196,7 +196,7 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* pa
 
 void CalledSetStatusBar(const string& strText, int nField)
 {
-    if (nField == 0 && IsLockdown())
+    if (nField == 0 && GetWarnings("statusbar") != "")
         return;
     if (pframeMain && pframeMain->m_statusBar)
         pframeMain->m_statusBar->SetStatusText(strText, nField);
@@ -1013,12 +1013,13 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     RefreshStatusColumn();
 
     // Update status bar
-    static bool fPrevLockdown;
-    if (IsLockdown())
-        m_statusBar->SetStatusText(string("    ") + _("WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade."), 0);
-    else if (fPrevLockdown)
+    static string strPrevWarning;
+    string strWarning = GetWarnings("statusbar");
+    if (strWarning != "")
+        m_statusBar->SetStatusText(string("    ") + _(strWarning), 0);
+    else if (strPrevWarning != "")
         m_statusBar->SetStatusText("", 0);
-    fPrevLockdown = IsLockdown();
+    strPrevWarning = strWarning;
 
     string strGen = "";
     if (fGenerateBitcoins)

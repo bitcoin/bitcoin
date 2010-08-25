@@ -898,14 +898,7 @@ bool IsInitialBlockDownload()
             pindexBest->GetBlockTime() < GetTime() - 24 * 60 * 60);
 }
 
-bool IsLockdown()
-{
-    if (!pindexBest)
-        return false;
-    return (bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6);
-}
-
-void Lockdown(CBlockIndex* pindexNew)
+void InvalidChainFound(CBlockIndex* pindexNew)
 {
     if (pindexNew->bnChainWork > bnBestInvalidWork)
     {
@@ -913,12 +906,14 @@ void Lockdown(CBlockIndex* pindexNew)
         CTxDB().WriteBestInvalidWork(bnBestInvalidWork);
         MainFrameRepaint();
     }
-    printf("Lockdown: invalid block=%s  height=%d  work=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, pindexNew->bnChainWork.ToString().c_str());
-    printf("Lockdown:  current best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
-    printf("Lockdown: IsLockdown()=%d\n", (IsLockdown() ? 1 : 0));
-    if (IsLockdown())
-        printf("Lockdown: WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.\n");
+    printf("InvalidChainFound: invalid block=%s  height=%d  work=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, pindexNew->bnChainWork.ToString().c_str());
+    printf("InvalidChainFound:  current best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
+    if (pindexBest && bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6)
+        printf("InvalidChainFound: WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.\n");
 }
+
+
+
 
 
 
@@ -1282,7 +1277,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
         if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
         {
             txdb.TxnAbort();
-            Lockdown(pindexNew);
+            InvalidChainFound(pindexNew);
             return error("SetBestChain() : ConnectBlock failed");
         }
         txdb.TxnCommit();
@@ -1298,7 +1293,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
         if (!Reorganize(txdb, pindexNew))
         {
             txdb.TxnAbort();
-            Lockdown(pindexNew);
+            InvalidChainFound(pindexNew);
             return error("SetBestChain() : Reorganize failed");
         }
     }
@@ -1571,16 +1566,16 @@ bool ScanMessageStart(Stream& s)
     }
 }
 
-bool CheckDiskSpace(int64 nAdditionalBytes)
+bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
     uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
 
     // Check for 15MB because database could create another 10MB log file at any time
-    if (nFreeBytesAvailable < (int64)15000000 + nAdditionalBytes)
+    if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
         string strMessage = _("Warning: Disk space is low  ");
-        strWarning = strMessage;
+        strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
         ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
         CreateThread(Shutdown, NULL);
@@ -1648,17 +1643,7 @@ bool LoadBlockIndex(bool fAllowNew)
         if (!fAllowNew)
             return false;
 
-
         // Genesis Block:
-        // GetHash()      = 0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
-        // hashMerkleRoot = 0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
-        // txNew.vin[0].scriptSig     = 486604799 4 0x736B6E616220726F662074756F6C69616220646E6F63657320666F206B6E697262206E6F20726F6C6C65636E61684320393030322F6E614A2F33302073656D695420656854
-        // txNew.vout[0].nValue       = 5000000000
-        // txNew.vout[0].scriptPubKey = 0x5F1DF16B2B704C8A578D0BBAF74D385CDE12C11EE50455F3C438EF4C3FBCF649B6DE611FEAE06279A60939E028A8D65C10B73071A6F16719274855FEB0FD8A6704 OP_CHECKSIG
-        // block.nVersion = 1
-        // block.nTime    = 1231006505
-        // block.nBits    = 0x1d00ffff
-        // block.nNonce   = 2083236893
         // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
         //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
         //     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73)
@@ -1672,9 +1657,7 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].nValue = 50 * COIN;
-        CBigNum bnPubKey;
-        bnPubKey.SetHex("0x5F1DF16B2B704C8A578D0BBAF74D385CDE12C11EE50455F3C438EF4C3FBCF649B6DE611FEAE06279A60939E028A8D65C10B73071A6F16719274855FEB0FD8A6704");
-        txNew.vout[0].scriptPubKey = CScript() << bnPubKey << OP_CHECKSIG;
+        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
@@ -1686,11 +1669,10 @@ bool LoadBlockIndex(bool fAllowNew)
 
             //// debug print
             printf("%s\n", block.GetHash().ToString().c_str());
-            printf("%s\n", block.hashMerkleRoot.ToString().c_str());
             printf("%s\n", hashGenesisBlock.ToString().c_str());
-            txNew.vout[0].scriptPubKey.print();
-            block.print();
+            printf("%s\n", block.hashMerkleRoot.ToString().c_str());
             assert(block.hashMerkleRoot == uint256("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+            block.print();
 
         assert(block.GetHash() == hashGenesisBlock);
 
@@ -1800,6 +1782,111 @@ void PrintBlockTree()
 
 //////////////////////////////////////////////////////////////////////////////
 //
+// CAlert
+//
+
+map<uint256, CAlert> mapAlerts;
+CCriticalSection cs_mapAlerts;
+
+string GetWarnings(string strFor)
+{
+    int nPriority = 0;
+    string strStatusBar;
+    string strRPC;
+
+    // Misc warnings like out of disk space and clock is wrong
+    if (strMiscWarning != "")
+    {
+        nPriority = 1000;
+        strStatusBar = strMiscWarning;
+    }
+
+    // Longer invalid proof-of-work chain
+    if (pindexBest && bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6)
+    {
+        nPriority = 2000;
+        strStatusBar = strRPC = "WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.";
+    }
+
+    // Alerts
+    CRITICAL_BLOCK(cs_mapAlerts)
+    {
+        foreach(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
+        {
+            const CAlert& alert = item.second;
+            if (alert.AppliesToMe() && alert.nPriority > nPriority)
+            {
+                nPriority = alert.nPriority;
+                strStatusBar = alert.strStatusBar;
+                strRPC = alert.strRPCError;
+            }
+        }
+    }
+
+    if (strFor == "statusbar")
+        return strStatusBar;
+    else if (strFor == "rpc")
+        return strRPC;
+    assert(("GetWarnings() : invalid parameter", false));
+    return "error";
+}
+
+bool CAlert::ProcessAlert()
+{
+    if (!CheckSignature())
+        return false;
+    if (!IsInEffect())
+        return false;
+
+    CRITICAL_BLOCK(cs_mapAlerts)
+    {
+        // Cancel previous alerts
+        for (map<uint256, CAlert>::iterator mi = mapAlerts.begin(); mi != mapAlerts.end();)
+        {
+            const CAlert& alert = (*mi).second;
+            if (Cancels(alert))
+            {
+                printf("cancelling alert %d\n", alert.nID);
+                mapAlerts.erase(mi++);
+            }
+            else if (!alert.IsInEffect())
+            {
+                printf("expiring alert %d\n", alert.nID);
+                mapAlerts.erase(mi++);
+            }
+            else
+                mi++;
+        }
+
+        // Check if this alert has been cancelled
+        foreach(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
+        {
+            const CAlert& alert = item.second;
+            if (alert.Cancels(*this))
+            {
+                printf("alert already cancelled by %d\n", alert.nID);
+                return false;
+            }
+        }
+
+        // Add to mapAlerts
+        mapAlerts.insert(make_pair(GetHash(), *this));
+    }
+
+    printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
+    MainFrameRepaint();
+    return true;
+}
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
 // Messages
 //
 
@@ -1827,7 +1914,7 @@ bool ProcessMessages(CNode* pfrom)
     if (vRecv.empty())
         return true;
     //if (fDebug)
-    //    printf("ProcessMessages(%d bytes)\n", vRecv.size());
+    //    printf("ProcessMessages(%u bytes)\n", vRecv.size());
 
     //
     // Message format
@@ -1869,6 +1956,11 @@ bool ProcessMessages(CNode* pfrom)
 
         // Message size
         unsigned int nMessageSize = hdr.nMessageSize;
+        if (nMessageSize > MAX_SIZE)
+        {
+            printf("ProcessMessage(%s, %u bytes) : nMessageSize > MAX_SIZE\n", strCommand.c_str(), nMessageSize);
+            continue;
+        }
         if (nMessageSize > vRecv.size())
         {
             // Rewind and wait for rest of message
@@ -1889,7 +1981,7 @@ bool ProcessMessages(CNode* pfrom)
             memcpy(&nChecksum, &hash, sizeof(nChecksum));
             if (nChecksum != hdr.nChecksum)
             {
-                printf("ProcessMessage(%s, %d bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
+                printf("ProcessMessage(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
                        strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
                 continue;
             }
@@ -1906,15 +1998,15 @@ bool ProcessMessages(CNode* pfrom)
         }
         catch (std::ios_base::failure& e)
         {
-            if (strstr(e.what(), "CDataStream::read() : end of data"))
+            if (strstr(e.what(), "end of data"))
             {
                 // Allow exceptions from underlength message on vRecv
-                printf("ProcessMessage(%s, %d bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
+                printf("ProcessMessage(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
             }
-            else if (strstr(e.what(), ": size too large"))
+            else if (strstr(e.what(), "size too large"))
             {
                 // Allow exceptions from overlong size
-                printf("ProcessMessage(%s, %d bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
+                printf("ProcessMessage(%s, %u bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
             }
             else
             {
@@ -1928,7 +2020,7 @@ bool ProcessMessages(CNode* pfrom)
         }
 
         if (!fRet)
-            printf("ProcessMessage(%s, %d bytes) FAILED\n", strCommand.c_str(), nMessageSize);
+            printf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand.c_str(), nMessageSize);
     }
 
     vRecv.Compact();
@@ -1965,14 +2057,13 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAddress addrMe;
         CAddress addrFrom;
         uint64 nNonce = 1;
-        string strSubVer;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
         if (pfrom->nVersion >= 106 && !vRecv.empty())
             vRecv >> addrFrom >> nNonce;
         if (pfrom->nVersion >= 106 && !vRecv.empty())
-            vRecv >> strSubVer;
+            vRecv >> pfrom->strSubVer;
         if (pfrom->nVersion >= 209 && !vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
 
@@ -2009,6 +2100,11 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             nAskedForBlocks++;
             pfrom->PushGetBlocks(pindexBest, uint256(0));
         }
+
+        // Relay alerts
+        CRITICAL_BLOCK(cs_mapAlerts)
+            foreach(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
+                item.second.RelayTo(pfrom);
 
         pfrom->fSuccessfullyConnected = true;
 
@@ -2362,6 +2458,22 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
+    else if (strCommand == "alert")
+    {
+        CAlert alert;
+        vRecv >> alert;
+
+        if (alert.ProcessAlert())
+        {
+            // Relay
+            pfrom->setKnown.insert(alert.GetHash());
+            CRITICAL_BLOCK(cs_vNodes)
+                foreach(CNode* pnode, vNodes)
+                    alert.RelayTo(pnode);
+        }
+    }
+
+
     else
     {
         // Ignore unknown commands for extensibility
@@ -2695,7 +2807,7 @@ void BitcoinMiner()
             map<uint256, CTxIndex> mapTestPool;
             vector<char> vfAlreadyAdded(mapTransactions.size());
             bool fFoundSomething = true;
-            unsigned int nBlockSize = 0;
+            uint64 nBlockSize = 0;
             while (fFoundSomething && nBlockSize < MAX_SIZE/2)
             {
                 fFoundSomething = false;
