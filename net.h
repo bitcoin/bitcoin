@@ -424,7 +424,7 @@ public:
 
     string ToString() const
     {
-        return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,16).c_str());
+        return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,20).c_str());
     }
 
     void print() const

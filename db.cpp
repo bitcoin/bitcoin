@@ -419,6 +419,9 @@ bool CTxDB::LoadBlockIndex()
             // Watch for genesis block
             if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
                 pindexGenesisBlock = pindexNew;
+
+            if (!pindexNew->CheckIndex())
+                return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
         }
         else
         {
@@ -454,7 +457,7 @@ bool CTxDB::LoadBlockIndex()
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
     bnBestChainWork = pindexBest->bnChainWork;
-    printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,16).c_str(), nBestHeight);
+    printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight);
 
     // Load bnBestInvalidWork, OK if it doesn't exist
     ReadBestInvalidWork(bnBestInvalidWork);
@@ -463,6 +466,8 @@ bool CTxDB::LoadBlockIndex()
     CBlockIndex* pindexFork = NULL;
     for (CBlockIndex* pindex = pindexBest; pindex && pindex->pprev; pindex = pindex->pprev)
     {
+        if (pindex->nHeight < 74000 && !mapArgs.count("-checkblocks"))
+            break;
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
@@ -629,8 +634,8 @@ bool CWalletDB::LoadWallet()
                 //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
                 //printf(" %12I64d  %s  %s  %s\n",
                 //    wtx.vout[0].nValue,
-                //    DateTimeStrFormat("%x %H:%M:%S", wtx.nTime).c_str(),
-                //    wtx.hashBlock.ToString().substr(0,16).c_str(),
+                //    DateTimeStrFormat("%x %H:%M:%S", wtx.GetBlockTime()).c_str(),
+                //    wtx.hashBlock.ToString().substr(0,20).c_str(),
                 //    wtx.mapValue["message"].c_str());
             }
             else if (strType == "key" || strType == "wkey")

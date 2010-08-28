@@ -20,7 +20,7 @@ class CDataStream;
 class CAutoFile;
 
 static const int VERSION = 310;
-static const char* pszSubVer = ".3";
+static const char* pszSubVer = ".4";
 
 
 
@@ -80,6 +80,13 @@ enum
     }
 
 #define READWRITE(obj)      (nSerSize += ::SerReadWrite(s, (obj), nType, nVersion, ser_action))
+
+#define READWRITEVER(obj)       \
+    do {                        \
+        READWRITE((obj));       \
+        if ((obj) == 10300)     \
+            (obj) = 300;        \
+    } while (false)
 
 
 
