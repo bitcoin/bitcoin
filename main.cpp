@@ -1793,6 +1793,8 @@ string GetWarnings(string strFor)
     int nPriority = 0;
     string strStatusBar;
     string strRPC;
+    if (mapArgs.count("-testsafemode"))
+        strRPC = "test";
 
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
