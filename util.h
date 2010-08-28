@@ -143,6 +143,7 @@ extern char pszSetDataDir[MAX_PATH];
 extern bool fShutdown;
 extern bool fDaemon;
 extern bool fCommandLine;
+extern string strWarning;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
@@ -296,6 +297,11 @@ inline int roundint(double d)
 inline int64 roundint64(double d)
 {
     return (int64)(d > 0 ? d + 0.5 : d - 0.5);
+}
+
+inline int64 abs64(int64 n)
+{
+    return (n >= 0 ? n : -n);
 }
 
 template<typename T>
