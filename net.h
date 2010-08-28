@@ -504,6 +504,7 @@ public:
     unsigned int nMessageStart;
     CAddress addr;
     int nVersion;
+    string strSubVer;
     bool fClient;
     bool fInbound;
     bool fNetworkNode;
@@ -520,10 +521,11 @@ public:
     uint256 hashLastGetBlocksEnd;
     int nStartingHeight;
 
-    // flood
+    // flood relay
     vector<CAddress> vAddrToSend;
     set<CAddress> setAddrKnown;
     bool fGetAddr;
+    set<uint256> setKnown;
 
     // inventory based relay
     set<CInv> setInventoryKnown;
@@ -557,6 +559,7 @@ public:
         nMessageStart = -1;
         addr = addrIn;
         nVersion = 0;
+        strSubVer = "";
         fClient = false; // set by version message
         fInbound = fInboundIn;
         fNetworkNode = false;

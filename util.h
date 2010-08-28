@@ -143,7 +143,7 @@ extern char pszSetDataDir[MAX_PATH];
 extern bool fShutdown;
 extern bool fDaemon;
 extern bool fCommandLine;
-extern string strWarning;
+extern string strMiscWarning;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
@@ -307,6 +307,8 @@ inline int64 abs64(int64 n)
 template<typename T>
 string HexStr(const T itbegin, const T itend, bool fSpaces=true)
 {
+    if (itbegin == itend)
+        return "";
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
     string str;
@@ -323,6 +325,8 @@ inline string HexStr(vector<unsigned char> vch, bool fSpaces=true)
 template<typename T>
 string HexNumStr(const T itbegin, const T itend, bool f0x=true)
 {
+    if (itbegin == itend)
+        return "";
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
     string str = (f0x ? "0x" : "");

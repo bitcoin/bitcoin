@@ -19,8 +19,11 @@ class CScript;
 class CDataStream;
 class CAutoFile;
 
-static const int VERSION = 310;
-static const char* pszSubVer = ".5";
+static const unsigned int MAX_SIZE = 0x02000000;
+
+static const int VERSION = 311;
+static const char* pszSubVer = ".0";
+
 
 
 
@@ -224,7 +227,7 @@ uint64 ReadCompactSize(Stream& is)
         READDATA(is, nSize);
         nSizeRet = nSize;
     }
-    if (nSizeRet > (uint64)INT_MAX)
+    if (nSizeRet > (uint64)MAX_SIZE)
         throw std::ios_base::failure("ReadCompactSize() : size too large");
     return nSizeRet;
 }

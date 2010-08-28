@@ -14,7 +14,6 @@ class CBlockIndex;
 class CWalletTx;
 class CKeyItem;
 
-static const unsigned int MAX_SIZE = 0x02000000;
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
@@ -61,7 +60,7 @@ extern int fMinimizeOnClose;
 
 
 
-bool CheckDiskSpace(int64 nAdditionalBytes=0);
+bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");
 FILE* AppendBlockFile(unsigned int& nFileRet);
 bool AddKey(const CKey& key);
@@ -85,7 +84,7 @@ void ThreadBitcoinMiner(void* parg);
 void BitcoinMiner();
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 bool IsInitialBlockDownload();
-bool IsLockdown();
+string GetWarnings(string strFor);
 
 
 
@@ -298,7 +297,6 @@ public:
     int64 nValue;
     CScript scriptPubKey;
 
-public:
     CTxOut()
     {
         SetNull();
@@ -474,6 +472,10 @@ public:
         // Basic checks that don't depend on any context
         if (vin.empty() || vout.empty())
             return error("CTransaction::CheckTransaction() : vin or vout empty");
+
+        // Size limits
+        if (::GetSerializeSize(*this, SER_DISK) > MAX_SIZE)
+            return error("CTransaction::CheckTransaction() : size limits failed");
 
         // Check for negative or overflow output values
         int64 nValueOut = 0;
@@ -1463,6 +1465,214 @@ public:
         READWRITE(strComment);
     )
 };
+
+
+
+
+
+
+//
+// Alert messages are broadcast as a vector of signed data.  Unserializing may
+// not read the entire buffer if the alert is for a newer version, but older
+// versions can still relay the original data.
+//
+class CUnsignedAlert
+{
+public:
+    int nVersion;
+    int64 nRelayUntil;      // when newer nodes stop relaying to newer nodes
+    int64 nExpiration;
+    int nID;
+    int nCancel;
+    set<int> setCancel;
+    int nMinVer;            // lowest version inclusive
+    int nMaxVer;            // highest version inclusive
+    set<string> setSubVer;  // empty matches all
+    int nPriority;
+
+    // Actions
+    string strComment;
+    string strStatusBar;
+    string strRPCError;
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(nRelayUntil);
+        READWRITE(nExpiration);
+        READWRITE(nID);
+        READWRITE(nCancel);
+        READWRITE(setCancel);
+        READWRITE(nMinVer);
+        READWRITE(nMaxVer);
+        READWRITE(setSubVer);
+        READWRITE(nPriority);
+
+        READWRITE(strComment);
+        READWRITE(strStatusBar);
+        READWRITE(strRPCError);
+    )
+
+    void SetNull()
+    {
+        nVersion = 1;
+        nRelayUntil = 0;
+        nExpiration = 0;
+        nID = 0;
+        nCancel = 0;
+        setCancel.clear();
+        nMinVer = 0;
+        nMaxVer = 0;
+        setSubVer.clear();
+        nPriority = 0;
+
+        strComment.clear();
+        strStatusBar.clear();
+        strRPCError.clear();
+    }
+
+    string ToString() const
+    {
+        string strSetCancel;
+        foreach(int n, setCancel)
+            strSetCancel += strprintf("%d ", n);
+        string strSetSubVer;
+        foreach(string str, setSubVer)
+            strSetSubVer += "\"" + str + "\" ";
+        return strprintf(
+                "CAlert(\n"
+                "    nVersion     = %d\n"
+                "    nRelayUntil  = %"PRI64d"\n"
+                "    nExpiration  = %"PRI64d"\n"
+                "    nID          = %d\n"
+                "    nCancel      = %d\n"
+                "    setCancel    = %s\n"
+                "    nMinVer      = %d\n"
+                "    nMaxVer      = %d\n"
+                "    setSubVer    = %s\n"
+                "    nPriority    = %d\n"
+                "    strComment   = \"%s\"\n"
+                "    strStatusBar = \"%s\"\n"
+                "    strRPCError  = \"%s\"\n"
+                ")\n",
+            nVersion,
+            nRelayUntil,
+            nExpiration,
+            nID,
+            nCancel,
+            strSetCancel.c_str(),
+            nMinVer,
+            nMaxVer,
+            strSetSubVer.c_str(),
+            nPriority,
+            strComment.c_str(),
+            strStatusBar.c_str(),
+            strRPCError.c_str());
+    }
+
+    void print() const
+    {
+        printf("%s", ToString().c_str());
+    }
+};
+
+class CAlert : public CUnsignedAlert
+{
+public:
+    vector<unsigned char> vchMsg;
+    vector<unsigned char> vchSig;
+
+    CAlert()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(vchMsg);
+        READWRITE(vchSig);
+    )
+
+    void SetNull()
+    {
+        CUnsignedAlert::SetNull();
+        vchMsg.clear();
+        vchSig.clear();
+    }
+
+    bool IsNull() const
+    {
+        return (nExpiration == 0);
+    }
+
+    uint256 GetHash() const
+    {
+        return SerializeHash(*this);
+    }
+
+    bool IsInEffect() const
+    {
+        return (GetAdjustedTime() < nExpiration);
+    }
+
+    bool Cancels(const CAlert& alert) const
+    {
+        if (!IsInEffect())
+            false;
+        return (alert.nID <= nCancel || setCancel.count(alert.nID));
+    }
+
+    bool AppliesTo(int nVersion, string strSubVerIn) const
+    {
+        return (IsInEffect() &&
+                nMinVer <= nVersion && nVersion <= nMaxVer &&
+                (setSubVer.empty() || setSubVer.count(strSubVerIn)));
+    }
+
+    bool AppliesToMe() const
+    {
+        return AppliesTo(VERSION, ::pszSubVer);
+    }
+
+    bool RelayTo(CNode* pnode) const
+    {
+        if (!IsInEffect())
+            return false;
+        // returns true if wasn't already contained in the set
+        if (pnode->setKnown.insert(GetHash()).second)
+        {
+            if (AppliesTo(pnode->nVersion, pnode->strSubVer) ||
+                AppliesToMe() ||
+                GetAdjustedTime() < nRelayUntil)
+            {
+                pnode->PushMessage("alert", *this);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool CheckSignature()
+    {
+        CKey key;
+        if (!key.SetPubKey(ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284")))
+            return error("CAlert::CheckSignature() : SetPubKey failed");
+        if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+            return error("CAlert::CheckSignature() : verify signature failed");
+
+        // Now unserialize the data
+        CDataStream sMsg(vchMsg);
+        sMsg >> *(CUnsignedAlert*)this;
+        return true;
+    }
+
+    bool ProcessAlert();
+};
+
+
+
+
 
 
 
