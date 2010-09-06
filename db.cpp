@@ -81,7 +81,7 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
                              DB_RECOVER,
                              S_IRUSR | S_IWUSR);
             if (ret > 0)
-                throw runtime_error(strprintf("CDB() : error %d opening database environment\n", ret));
+                throw runtime_error(strprintf("CDB() : error %d opening database environment", ret));
             fDbEnvInit = true;
         }
 
@@ -106,7 +106,7 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
                 CRITICAL_BLOCK(cs_db)
                     --mapFileUseCount[strFile];
                 strFile = "";
-                throw runtime_error(strprintf("CDB() : can't open database file %s, error %d\n", pszFile, ret));
+                throw runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
             }
 
             if (fCreate && !Exists(string("version")))
@@ -801,5 +801,34 @@ void ThreadFlushWalletDB(void* parg)
                 }
             }
         }
+    }
+}
+
+void BackupWallet(const string& strDest)
+{
+    while (!fShutdown)
+    {
+        CRITICAL_BLOCK(cs_db)
+        {
+            const string strFile = "wallet.dat";
+            if (!mapFileUseCount.count(strFile) || mapFileUseCount[strFile] == 0)
+            {
+                // Flush log data to the dat file
+                CloseDb(strFile);
+                dbenv.txn_checkpoint(0, 0, 0);
+                dbenv.lsn_reset(strFile.c_str(), 0);
+                mapFileUseCount.erase(strFile);
+
+                // Copy wallet.dat
+                filesystem::path pathDest(strDest);
+                if (filesystem::is_directory(pathDest))
+                    pathDest = pathDest / strFile;
+                filesystem::copy_file(filesystem::path(GetDataDir() + "/" + strFile), pathDest, filesystem::copy_option::overwrite_if_exists);
+                printf("copied wallet.dat to %s\n", pathDest.string().c_str());
+
+                return;
+            }
+        }
+        Sleep(100);
     }
 }
