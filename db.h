@@ -399,6 +399,7 @@ public:
 };
 
 bool LoadWallet(bool& fFirstRunRet);
+void BackupWallet(const string& strDest);
 
 inline bool SetAddressBookName(const string& strAddress, const string& strName)
 {

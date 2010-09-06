@@ -22,6 +22,14 @@ typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
 extern map<string, rpcfn_type> mapCallTable;
 
 
+Object JSONRPCError(int code, const string& message)
+{
+    Object error;
+    error.push_back(Pair("code", code));
+    error.push_back(Pair("message", message));
+    return error;
+}
+
 
 void PrintConsole(const char* format, ...)
 {
@@ -352,7 +360,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     // Amount
     if (params[1].get_real() <= 0.0 || params[1].get_real() > 21000000.0)
-        throw runtime_error("Invalid amount");
+        throw JSONRPCError(-3, "Invalid amount");
     int64 nAmount = roundint64(params[1].get_real() * 100.00) * CENT;
 
     // Wallet comments
@@ -364,7 +372,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
     if (strError != "")
-        throw runtime_error(strError);
+        throw JSONRPCError(-4, strError);
     return "sent";
 }
 
@@ -401,7 +409,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     CScript scriptPubKey;
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
-        throw runtime_error("Invalid bitcoin address");
+        throw JSONRPCError(-5, "Invalid bitcoin address");
     if (!IsMine(scriptPubKey))
         return (double)0.0;
 
@@ -627,6 +635,20 @@ Value listreceivedbylabel(const Array& params, bool fHelp)
 }
 
 
+Value backupwallet(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "backupwallet <destination>\n"
+            "Safely copies wallet.dat to destination, which can be a directory or a path with filename.");
+
+    string strDest = params[0].get_str();
+    BackupWallet(strDest);
+
+    return Value::null;
+}
+
+
 
 
 
@@ -666,6 +688,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getreceivedbylabel",    &getreceivedbylabel),
     make_pair("listreceivedbyaddress", &listreceivedbyaddress),
     make_pair("listreceivedbylabel",   &listreceivedbylabel),
+    make_pair("backupwallet",          &backupwallet),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -685,6 +708,7 @@ string pAllowInSafeMode[] =
     "setlabel",
     "getlabel",
     "getaddressesbylabel",
+    "backupwallet",
 };
 set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
 
@@ -707,14 +731,14 @@ string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeader
       << "Content-Type: application/json\r\n"
       << "Content-Length: " << strMsg.size() << "\r\n"
       << "Accept: application/json\r\n";
-    for (map<string,string>::const_iterator it = mapRequestHeaders.begin(); it != mapRequestHeaders.end(); ++it)
-        s << it->first << ": " << it->second << "\r\n";
+    foreach(const PAIRTYPE(string, string)& item, mapRequestHeaders)
+        s << item.first << ": " << item.second << "\r\n";
     s << "\r\n" << strMsg;
 
     return s.str();
 }
 
-string HTTPReply(const string& strMsg, int nStatus=200)
+string HTTPReply(int nStatus, const string& strMsg)
 {
     if (nStatus == 401)
         return "HTTP/1.0 401 Authorization Required\r\n"
@@ -734,8 +758,10 @@ string HTTPReply(const string& strMsg, int nStatus=200)
             "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
             "</HTML>\r\n";
     string strStatus;
-    if (nStatus == 200) strStatus = "OK";
-    if (nStatus == 500) strStatus = "Internal Server Error";
+         if (nStatus == 200) strStatus = "OK";
+    else if (nStatus == 400) strStatus = "Bad Request";
+    else if (nStatus == 404) strStatus = "Not Found";
+    else if (nStatus == 500) strStatus = "Internal Server Error";
     return strprintf(
             "HTTP/1.1 %d %s\r\n"
             "Connection: close\r\n"
@@ -795,13 +821,16 @@ int ReadHTTP(tcp::iostream& stream, map<string, string>& mapHeadersRet, string& 
 
     // Read header
     int nLen = ReadHTTPHeader(stream, mapHeadersRet);
-    if (nLen <= 0)
+    if (nLen < 0 || nLen > MAX_SIZE)
         return 500;
 
     // Read message
-    vector<char> vch(nLen);
-    stream.read(&vch[0], nLen);
-    strMessageRet = string(vch.begin(), vch.end());
+    if (nLen > 0)
+    {
+        vector<char> vch(nLen);
+        stream.read(&vch[0], nLen);
+        strMessageRet = string(vch.begin(), vch.end());
+    }
 
     return nStatus;
 }
@@ -859,9 +888,12 @@ bool HTTPAuthorized(map<string, string>& mapHeaders)
 }
 
 //
-// JSON-RPC protocol
+// JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
+// but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
+// unspecified (HTTP errors and contents of 'error').
 //
-// http://json-rpc.org/wiki/specification
+// 1.0 spec: http://json-rpc.org/wiki/specification
+// 1.2 spec: http://groups.google.com/group/json-rpc/web/json-rpc-over-http
 // http://www.codeproject.com/KB/recipes/JSON_Spirit.aspx
 //
 
@@ -956,7 +988,7 @@ void ThreadRPCServer2(void* parg)
         // Check authorization
         if (mapHeaders.count("Authorization") == 0)
         {
-            stream << HTTPReply("", 401) << std::flush;
+            stream << HTTPReply(401, "") << std::flush;
             continue;
         }
         if (!HTTPAuthorized(mapHeaders))
@@ -965,57 +997,83 @@ void ThreadRPCServer2(void* parg)
             if (mapArgs["-rpcpassword"].size() < 15)
                 Sleep(50);
 
-            stream << HTTPReply("", 401) << std::flush;
+            stream << HTTPReply(401, "") << std::flush;
             printf("ThreadRPCServer incorrect password attempt\n");
             continue;
         }
 
-        // Handle multiple invocations per request
-        string::iterator begin = strRequest.begin();
-        while (skipspaces(begin), begin != strRequest.end())
+        Value id = Value::null;
+        try
         {
-            string::iterator prev = begin;
-            Value id;
+            // Parse request
+            Value valRequest;
+            if (!read_string(strRequest, valRequest) || valRequest.type() != obj_type)
+                throw JSONRPCError(-32700, "Parse error");
+            const Object& request = valRequest.get_obj();
+
+            // Parse id now so errors from here on will have the id
+            id = find_value(request, "id");
+
+            // Parse method
+            Value valMethod = find_value(request, "method");
+            if (valMethod.type() == null_type)
+                throw JSONRPCError(-32600, "Missing method");
+            if (valMethod.type() != str_type)
+                throw JSONRPCError(-32600, "Method must be a string");
+            string strMethod = valMethod.get_str();
+            printf("ThreadRPCServer method=%s\n", strMethod.c_str());
+
+            // Parse params
+            Value valParams = find_value(request, "params");
+            Array params;
+            if (valParams.type() == array_type)
+                params = valParams.get_array();
+            else if (valParams.type() == null_type)
+                params = Array();
+            else
+                throw JSONRPCError(-32600, "Params must be an array");
+
+            // Find method
+            map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
+            if (mi == mapCallTable.end())
+                throw JSONRPCError(-32601, "Method not found");
+
+            // Observe safe mode
+            string strWarning = GetWarnings("rpc");
+            if (strWarning != "" && !mapArgs.count("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+                throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
+
             try
             {
-                // Parse request
-                Value valRequest;
-                if (!read_range(begin, strRequest.end(), valRequest))
-                    throw runtime_error("Parse error.");
-                const Object& request = valRequest.get_obj();
-                if (find_value(request, "method").type() != str_type ||
-                    find_value(request, "params").type() != array_type)
-                    throw runtime_error("Invalid request.");
-
-                string strMethod    = find_value(request, "method").get_str();
-                const Array& params = find_value(request, "params").get_array();
-                id                  = find_value(request, "id");
-
-                printf("ThreadRPCServer method=%s\n", strMethod.c_str());
-
-                // Observe safe mode
-                string strWarning = GetWarnings("rpc");
-                if (strWarning != "" && !mapArgs.count("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
-                    throw runtime_error(string("Safe mode: ") + strWarning);
-
                 // Execute
-                map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
-                if (mi == mapCallTable.end())
-                    throw runtime_error("Method not found.");
                 Value result = (*(*mi).second)(params, false);
 
                 // Send reply
                 string strReply = JSONRPCReply(result, Value::null, id);
-                stream << HTTPReply(strReply, 200) << std::flush;
+                stream << HTTPReply(200, strReply) << std::flush;
             }
             catch (std::exception& e)
             {
-                // Send error reply
-                string strReply = JSONRPCReply(Value::null, e.what(), id);
-                stream << HTTPReply(strReply, 500) << std::flush;
+                // Send error reply from method
+                string strReply = JSONRPCReply(Value::null, JSONRPCError(-1, e.what()), id);
+                stream << HTTPReply(500, strReply) << std::flush;
             }
-            if (begin == prev)
-                break;
+        }
+        catch (Object& objError)
+        {
+            // Send error reply from json-rpc error object
+            int nStatus = 500;
+            int code = find_value(objError, "code").get_int();
+            if (code == -32600) nStatus = 400;
+            else if (code == -32601) nStatus = 404;
+            string strReply = JSONRPCReply(Value::null, objError, id);
+            stream << HTTPReply(nStatus, strReply) << std::flush;
+        }
+        catch (std::exception& e)
+        {
+            // Send error reply from other json-rpc parsing errors
+            string strReply = JSONRPCReply(Value::null, JSONRPCError(-32700, e.what()), id);
+            stream << HTTPReply(500, strReply) << std::flush;
         }
     }
 }
@@ -1023,7 +1081,7 @@ void ThreadRPCServer2(void* parg)
 
 
 
-Value CallRPC(const string& strMethod, const Array& params)
+Object CallRPC(const string& strMethod, const Array& params)
 {
     if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
         throw runtime_error(strprintf(
@@ -1052,7 +1110,7 @@ Value CallRPC(const string& strMethod, const Array& params)
     int nStatus = ReadHTTP(stream, mapHeaders, strReply);
     if (nStatus == 401)
         throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
-    else if (nStatus >= 400 && nStatus != 500)
+    else if (nStatus >= 400 && nStatus != 400 && nStatus != 404 && nStatus != 500)
         throw runtime_error(strprintf("server returned HTTP error %d", nStatus));
     else if (strReply.empty())
         throw runtime_error("no response from server");
@@ -1065,15 +1123,7 @@ Value CallRPC(const string& strMethod, const Array& params)
     if (reply.empty())
         throw runtime_error("expected reply to have result, error and id properties");
 
-    const Value& result = find_value(reply, "result");
-    const Value& error  = find_value(reply, "error");
-    const Value& id     = find_value(reply, "id");
-
-    if (error.type() == str_type)
-        throw runtime_error(error.get_str());
-    else if (error.type() != null_type)
-        throw runtime_error(write_string(error, false));
-    return result;
+    return reply;
 }
 
 
@@ -1098,6 +1148,8 @@ void ConvertTo(Value& value)
 
 int CommandLineRPC(int argc, char *argv[])
 {
+    string strPrint;
+    int nRet = 0;
     try
     {
         // Skip switches
@@ -1137,32 +1189,52 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]);
 
         // Execute
-        Value result = CallRPC(strMethod, params);
+        Object reply = CallRPC(strMethod, params);
 
-        // Print result
-        string strResult = (result.type() == str_type ? result.get_str() : write_string(result, true));
-        if (result.type() != null_type)
+        // Parse reply
+        const Value& result = find_value(reply, "result");
+        const Value& error  = find_value(reply, "error");
+        const Value& id     = find_value(reply, "id");
+
+        if (error.type() != null_type)
         {
-#if defined(__WXMSW__) && defined(GUI)
-            // Windows GUI apps can't print to command line,
-            // so settle for a message box yuck
-            MyMessageBox(strResult.c_str(), "Bitcoin", wxOK);
-#else
-            fprintf(stdout, "%s\n", strResult.c_str());
-#endif
+            // Error
+            strPrint = "error: " + write_string(error, false);
+            int code = find_value(error.get_obj(), "code").get_int();
+            nRet = abs(code);
         }
-        return 0;
+        else
+        {
+            // Result
+            if (result.type() == null_type)
+                strPrint = "";
+            else if (result.type() == str_type)
+                strPrint = result.get_str();
+            else
+                strPrint = write_string(result, true);
+        }
     }
-    catch (std::exception& e) {
-#if defined(__WXMSW__) && defined(GUI)
-        MyMessageBox(strprintf("error: %s\n", e.what()).c_str(), "Bitcoin", wxOK);
-#else
-        fprintf(stderr, "error: %s\n", e.what());
-#endif
-    } catch (...) {
+    catch (std::exception& e)
+    {
+        strPrint = string("error: ") + e.what();
+        nRet = 87;
+    }
+    catch (...)
+    {
         PrintException(NULL, "CommandLineRPC()");
     }
-    return 1;
+
+    if (strPrint != "")
+    {
+#if defined(__WXMSW__) && defined(GUI)
+        // Windows GUI apps can't print to command line,
+        // so settle for a message box yuck
+        MyMessageBox(strPrint, "Bitcoin", wxOK);
+#else
+        fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+#endif
+    }
+    return nRet;
 }
 
 
