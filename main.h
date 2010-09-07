@@ -15,6 +15,7 @@ class CWalletTx;
 class CKeyItem;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
+static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
 static const int64 MAX_MONEY = 21000000 * COIN;
@@ -266,7 +267,7 @@ public:
         str += strprintf("CTxIn(");
         str += prevout.ToString();
         if (prevout.IsNull())
-            str += strprintf(", coinbase %s", HexStr(scriptSig.begin(), scriptSig.end(), false).c_str());
+            str += strprintf(", coinbase %s", HexStr(scriptSig).c_str());
         else
             str += strprintf(", scriptSig=%s", scriptSig.ToString().substr(0,24).c_str());
         if (nSequence != UINT_MAX)
@@ -474,7 +475,7 @@ public:
             return error("CTransaction::CheckTransaction() : vin or vout empty");
 
         // Size limits
-        if (::GetSerializeSize(*this, SER_DISK) > MAX_SIZE)
+        if (::GetSerializeSize(*this, SER_NETWORK) > MAX_SIZE)
             return error("CTransaction::CheckTransaction() : size limits failed");
 
         // Check for negative or overflow output values
@@ -503,6 +504,16 @@ public:
         }
 
         return true;
+    }
+
+    int GetSigOpCount() const
+    {
+        int n = 0;
+        foreach(const CTxIn& txin, vin)
+            n += txin.scriptSig.GetSigOpCount();
+        foreach(const CTxOut& txout, vout)
+            n += txout.scriptPubKey.GetSigOpCount();
+        return n;
     }
 
     bool IsMine() const
@@ -570,9 +581,14 @@ public:
                 if (txout.nValue < CENT)
                     nMinFee = CENT;
 
+        // Raise the price as the block approaches full
+        if (MAX_BLOCK_SIZE/2 <= nBlockSize && nBlockSize < MAX_BLOCK_SIZE)
+            nMinFee *= MAX_BLOCK_SIZE / (MAX_BLOCK_SIZE - nBlockSize);
+        if (!MoneyRange(nMinFee))
+            nMinFee = MAX_MONEY;
+
         return nMinFee;
     }
-
 
 
     bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
@@ -639,16 +655,16 @@ public:
                        CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee=0);
     bool ClientConnectInputs();
 
-    bool AcceptTransaction(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
+    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
 
-    bool AcceptTransaction(bool fCheckInputs=true, bool* pfMissingInputs=NULL)
+    bool AcceptToMemoryPool(bool fCheckInputs=true, bool* pfMissingInputs=NULL)
     {
         CTxDB txdb("r");
-        return AcceptTransaction(txdb, fCheckInputs, pfMissingInputs);
+        return AcceptToMemoryPool(txdb, fCheckInputs, pfMissingInputs);
     }
 
 protected:
-    bool AddToMemoryPool();
+    bool AddToMemoryPoolUnchecked();
 public:
     bool RemoveFromMemoryPool();
 };
@@ -721,8 +737,8 @@ public:
     int GetDepthInMainChain() const { int nHeight; return GetDepthInMainChain(nHeight); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
     int GetBlocksToMaturity() const;
-    bool AcceptTransaction(CTxDB& txdb, bool fCheckInputs=true);
-    bool AcceptTransaction() { CTxDB txdb("r"); return AcceptTransaction(txdb); }
+    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true);
+    bool AcceptToMemoryPool() { CTxDB txdb("r"); return AcceptToMemoryPool(txdb); }
 };
 
 
@@ -852,12 +868,8 @@ public:
 
     friend bool operator==(const CTxIndex& a, const CTxIndex& b)
     {
-        if (a.pos != b.pos || a.vSpent.size() != b.vSpent.size())
-            return false;
-        for (int i = 0; i < a.vSpent.size(); i++)
-            if (a.vSpent[i] != b.vSpent[i])
-                return false;
-        return true;
+        return (a.pos    == b.pos &&
+                a.vSpent == b.vSpent);
     }
 
     friend bool operator!=(const CTxIndex& a, const CTxIndex& b)
@@ -946,6 +958,14 @@ public:
     int64 GetBlockTime() const
     {
         return (int64)nTime;
+    }
+
+    int GetSigOpCount() const
+    {
+        int n = 0;
+        foreach(const CTransaction& tx, vtx)
+            n += tx.GetSigOpCount();
+        return n;
     }
 
 

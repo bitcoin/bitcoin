@@ -151,8 +151,9 @@ int OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
 string strprintf(const char* format, ...);
 bool error(const char* format, ...);
-void PrintException(std::exception* pex, const char* pszThread);
 void LogException(std::exception* pex, const char* pszThread);
+void PrintException(std::exception* pex, const char* pszThread);
+void PrintExceptionContinue(std::exception* pex, const char* pszThread);
 void ParseString(const string& str, char c, vector<string>& v);
 string FormatMoney(int64 n, bool fPlus=false);
 bool ParseMoney(const string& str, int64& nRet);
@@ -305,19 +306,20 @@ inline int64 abs64(int64 n)
 }
 
 template<typename T>
-string HexStr(const T itbegin, const T itend, bool fSpaces=true)
+string HexStr(const T itbegin, const T itend, bool fSpaces=false)
 {
     if (itbegin == itend)
         return "";
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
     string str;
+    str.reserve((pend-pbegin) * (fSpaces ? 3 : 2));
     for (const unsigned char* p = pbegin; p != pend; p++)
         str += strprintf((fSpaces && p != pend-1 ? "%02x " : "%02x"), *p);
     return str;
 }
 
-inline string HexStr(vector<unsigned char> vch, bool fSpaces=true)
+inline string HexStr(const vector<unsigned char>& vch, bool fSpaces=false)
 {
     return HexStr(vch.begin(), vch.end(), fSpaces);
 }
@@ -330,9 +332,15 @@ string HexNumStr(const T itbegin, const T itend, bool f0x=true)
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
     string str = (f0x ? "0x" : "");
+    str.reserve(str.size() + (pend-pbegin) * 2);
     for (const unsigned char* p = pend-1; p >= pbegin; p--)
-        str += strprintf("%02X", *p);
+        str += strprintf("%02x", *p);
     return str;
+}
+
+inline string HexNumStr(const vector<unsigned char>& vch, bool f0x=true)
+{
+    return HexNumStr(vch.begin(), vch.end(), f0x);
 }
 
 template<typename T>
@@ -341,12 +349,12 @@ void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSp
     printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
 }
 
-inline void PrintHex(vector<unsigned char> vch, const char* pszFormat="%s", bool fSpaces=true)
+inline void PrintHex(const vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
 {
     printf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
-inline int64 PerformanceCounter()
+inline int64 GetPerformanceCounter()
 {
     int64 nCounter = 0;
 #ifdef __WXMSW__
@@ -409,16 +417,16 @@ inline void heapchk()
 }
 
 // Randomize the stack to help protect against buffer overrun exploits
-#define IMPLEMENT_RANDOMIZE_STACK(ThreadFn)                         \
-    {                                                               \
-        static char nLoops;                                         \
-        if (nLoops <= 0)                                            \
-            nLoops = GetRand(20) + 1;                               \
-        if (nLoops-- > 1)                                           \
-        {                                                           \
-            ThreadFn;                                               \
-            return;                                                 \
-        }                                                           \
+#define IMPLEMENT_RANDOMIZE_STACK(ThreadFn)     \
+    {                                           \
+        static char nLoops;                     \
+        if (nLoops <= 0)                        \
+            nLoops = GetRand(20) + 1;           \
+        if (nLoops-- > 1)                       \
+        {                                       \
+            ThreadFn;                           \
+            return;                             \
+        }                                       \
     }
 
 #define CATCH_PRINT_EXCEPTION(pszFn)     \

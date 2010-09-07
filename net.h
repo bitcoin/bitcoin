@@ -117,9 +117,9 @@ public:
         }
 
         // Message size
-        if (nMessageSize > 0x10000000)
+        if (nMessageSize > MAX_SIZE)
         {
-            printf("CMessageHeader::IsValid() : nMessageSize too large %u\n", nMessageSize);
+            printf("CMessageHeader::IsValid() : (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand().c_str(), nMessageSize);
             return false;
         }
 
@@ -466,7 +466,6 @@ extern CNode* pnodeLocalHost;
 extern uint64 nLocalHostNonce;
 extern array<int, 10> vnThreadsRunning;
 extern SOCKET hListenSocket;
-extern int64 nThreadSocketHandlerHeartbeat;
 
 extern vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;

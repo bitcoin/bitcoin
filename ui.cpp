@@ -1031,9 +1031,6 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     string strStatus = strprintf(_("     %d connections     %d blocks     %d transactions"), vNodes.size(), nBestHeight, nTransactionCount);
     m_statusBar->SetStatusText(strStatus, 2);
 
-    if (fDebug && GetTime() - nThreadSocketHandlerHeartbeat > 60)
-        m_statusBar->SetStatusText("     ERROR: ThreadSocketHandler has stopped", 0);
-
     // Update receiving address
     string strDefaultAddress = PubKeyToAddress(vchDefaultKey);
     if (m_textCtrlAddress->GetValue() != strDefaultAddress)

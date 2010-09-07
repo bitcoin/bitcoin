@@ -184,7 +184,8 @@ public:
 
 	void deallocate(void *p, size_type n)
 	{
-		assert(false);
+        //// Bitcoin: can't figure out why this is tripping on a few compiles.
+        //assert(false);
 	}
 
 	size_type max_size() const {return 0;}

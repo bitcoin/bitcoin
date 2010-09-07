@@ -91,7 +91,7 @@ vector<unsigned char> GenerateNewKey()
     CKey key;
     key.MakeNewKey();
     if (!AddKey(key))
-        throw runtime_error("GenerateNewKey() : AddKey failed\n");
+        throw runtime_error("GenerateNewKey() : AddKey failed");
     return key.GetPubKey();
 }
 
@@ -487,21 +487,25 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
 
 
 
-bool CTransaction::AcceptTransaction(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (IsCoinBase())
-        return error("AcceptTransaction() : coinbase as individual tx");
+        return error("AcceptToMemoryPool() : coinbase as individual tx");
 
     if (!CheckTransaction())
-        return error("AcceptTransaction() : CheckTransaction failed");
+        return error("AcceptToMemoryPool() : CheckTransaction failed");
 
     // To help v0.1.5 clients who would see it as a negative number
     if ((int64)nLockTime > INT_MAX)
-        return error("AcceptTransaction() : not accepting nLockTime beyond 2038 yet");
+        return error("AcceptToMemoryPool() : not accepting nLockTime beyond 2038 yet");
+
+    // Rather not work on nonstandard transactions
+    if (GetSigOpCount() > 2 || ::GetSerializeSize(*this, SER_NETWORK) < 100)
+        return error("AcceptToMemoryPool() : nonstandard transaction");
 
     // Do we already have it?
     uint256 hash = GetHash();
@@ -545,7 +549,7 @@ bool CTransaction::AcceptTransaction(CTxDB& txdb, bool fCheckInputs, bool* pfMis
     {
         if (pfMissingInputs)
             *pfMissingInputs = true;
-        return error("AcceptTransaction() : ConnectInputs failed %s", hash.ToString().substr(0,6).c_str());
+        return error("AcceptToMemoryPool() : ConnectInputs failed %s", hash.ToString().substr(0,6).c_str());
     }
 
     // Store transaction in memory
@@ -553,10 +557,10 @@ bool CTransaction::AcceptTransaction(CTxDB& txdb, bool fCheckInputs, bool* pfMis
     {
         if (ptxOld)
         {
-            printf("AcceptTransaction() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
+            printf("AcceptToMemoryPool() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
             ptxOld->RemoveFromMemoryPool();
         }
-        AddToMemoryPool();
+        AddToMemoryPoolUnchecked();
     }
 
     ///// are we sure this is ok when loading transactions or restoring block txes
@@ -564,15 +568,15 @@ bool CTransaction::AcceptTransaction(CTxDB& txdb, bool fCheckInputs, bool* pfMis
     if (ptxOld)
         EraseFromWallet(ptxOld->GetHash());
 
-    printf("AcceptTransaction(): accepted %s\n", hash.ToString().substr(0,6).c_str());
+    printf("AcceptToMemoryPool(): accepted %s\n", hash.ToString().substr(0,6).c_str());
     return true;
 }
 
 
-bool CTransaction::AddToMemoryPool()
+bool CTransaction::AddToMemoryPoolUnchecked()
 {
     // Add to memory pool without checking anything.  Don't call this directly,
-    // call AcceptTransaction to properly check the transaction first.
+    // call AcceptToMemoryPool to properly check the transaction first.
     CRITICAL_BLOCK(cs_mapTransactions)
     {
         uint256 hash = GetHash();
@@ -637,17 +641,17 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptTransaction(CTxDB& txdb, bool fCheckInputs)
+bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
 {
     if (fClient)
     {
         if (!IsInMainChain() && !ClientConnectInputs())
             return false;
-        return CTransaction::AcceptTransaction(txdb, false);
+        return CTransaction::AcceptToMemoryPool(txdb, false);
     }
     else
     {
-        return CTransaction::AcceptTransaction(txdb, fCheckInputs);
+        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs);
     }
 }
 
@@ -657,19 +661,19 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
 {
     CRITICAL_BLOCK(cs_mapTransactions)
     {
+        // Add previous supporting transactions first
         foreach(CMerkleTx& tx, vtxPrev)
         {
             if (!tx.IsCoinBase())
             {
                 uint256 hash = tx.GetHash();
                 if (!mapTransactions.count(hash) && !txdb.ContainsTx(hash))
-                    tx.AcceptTransaction(txdb, fCheckInputs);
+                    tx.AcceptToMemoryPool(txdb, fCheckInputs);
             }
         }
-        if (!IsCoinBase())
-            return AcceptTransaction(txdb, fCheckInputs);
+        return AcceptToMemoryPool(txdb, fCheckInputs);
     }
-    return true;
+    return false;
 }
 
 void ReacceptWalletTransactions()
@@ -1046,6 +1050,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
         if (nTxFee < nMinFee)
             return false;
         nFees += nTxFee;
+        if (!MoneyRange(nFees))
+            return error("ConnectInputs() : nFees out of range");
     }
 
     if (fBlock)
@@ -1098,6 +1104,9 @@ bool CTransaction::ClientConnectInputs()
             // txPrev.vout[prevout.n].posNext = posThisTx;
 
             nValueIn += txPrev.vout[prevout.n].nValue;
+
+            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+                return error("ClientConnectInputs() : txin values out of range");
         }
         if (GetValueOut() > nValueIn)
             return false;
@@ -1251,7 +1260,7 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     foreach(CTransaction& tx, vResurrect)
-        tx.AcceptTransaction(txdb, false);
+        tx.AcceptToMemoryPool(txdb, false);
 
     // Delete redundant memory transactions that are in the connected branch
     foreach(CTransaction& tx, vDelete)
@@ -1365,7 +1374,7 @@ bool CBlock::CheckBlock() const
     // that can be verified before saving an orphan block.
 
     // Size limits
-    if (vtx.empty() || vtx.size() > MAX_SIZE || ::GetSerializeSize(*this, SER_DISK) > MAX_SIZE)
+    if (vtx.empty() || vtx.size() > MAX_SIZE || ::GetSerializeSize(*this, SER_NETWORK) > MAX_SIZE)
         return error("CheckBlock() : size limits failed");
 
     // Check timestamp
@@ -1407,6 +1416,15 @@ bool CBlock::AcceptBlock()
     if (mi == mapBlockIndex.end())
         return error("AcceptBlock() : prev block not found");
     CBlockIndex* pindexPrev = (*mi).second;
+    int nHeight = pindexPrev->nHeight+1;
+
+    // Check size
+    if (nHeight > 79400 && ::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
+        return error("AcceptBlock() : over size limit");
+
+    // Check that it's not full of nonstandard transactions
+    if (nHeight > 79400 && GetSigOpCount() > MAX_BLOCK_SIGOPS)
+        return error("AcceptBlock() : too many nonstandard transactions");
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -1414,7 +1432,7 @@ bool CBlock::AcceptBlock()
 
     // Check that all transactions are finalized
     foreach(const CTransaction& tx, vtx)
-        if (!tx.IsFinal(pindexPrev->nHeight+1, GetBlockTime()))
+        if (!tx.IsFinal(nHeight, GetBlockTime()))
             return error("AcceptBlock() : contains a non-final transaction");
 
     // Check proof of work
@@ -1422,12 +1440,12 @@ bool CBlock::AcceptBlock()
         return error("AcceptBlock() : incorrect proof of work");
 
     // Check that the block chain matches the known block chain up to a checkpoint
-    if ((pindexPrev->nHeight+1 == 11111 && hash != uint256("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")) ||
-        (pindexPrev->nHeight+1 == 33333 && hash != uint256("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")) ||
-        (pindexPrev->nHeight+1 == 68555 && hash != uint256("0x00000000001e1b4903550a0b96e9a9405c8a95f387162e4944e8d9fbe501cd6a")) ||
-        (pindexPrev->nHeight+1 == 70567 && hash != uint256("0x00000000006a49b14bcf27462068f1264c961f11fa2e0eddd2be0791e1d4124a")) ||
-        (pindexPrev->nHeight+1 == 74000 && hash != uint256("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")))
-        return error("AcceptBlock() : rejected by checkpoint lockin at %d", pindexPrev->nHeight+1);
+    if ((nHeight == 11111 && hash != uint256("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")) ||
+        (nHeight == 33333 && hash != uint256("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")) ||
+        (nHeight == 68555 && hash != uint256("0x00000000001e1b4903550a0b96e9a9405c8a95f387162e4944e8d9fbe501cd6a")) ||
+        (nHeight == 70567 && hash != uint256("0x00000000006a49b14bcf27462068f1264c961f11fa2e0eddd2be0791e1d4124a")) ||
+        (nHeight == 74000 && hash != uint256("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")))
+        return error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight);
 
     // Scanback checkpoint lockin
     for (CBlockIndex* pindex = pindexPrev; pindex->nHeight >= 74000; pindex = pindex->pprev)
@@ -2012,13 +2030,13 @@ bool ProcessMessages(CNode* pfrom)
             }
             else
             {
-                PrintException(&e, "ProcessMessage()");
+                PrintExceptionContinue(&e, "ProcessMessage()");
             }
         }
         catch (std::exception& e) {
-            PrintException(&e, "ProcessMessage()");
+            PrintExceptionContinue(&e, "ProcessMessage()");
         } catch (...) {
-            PrintException(NULL, "ProcessMessage()");
+            PrintExceptionContinue(NULL, "ProcessMessage()");
         }
 
         if (!fRet)
@@ -2165,7 +2183,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     multimap<uint256, CNode*> mapMix;
                     foreach(CNode* pnode, vNodes)
                         mapMix.insert(make_pair(hashRand = Hash(BEGIN(hashRand), END(hashRand)), pnode));
-                    int nRelayNodes = 4;
+                    int nRelayNodes = 2;
                     for (multimap<uint256, CNode*>::iterator mi = mapMix.begin(); mi != mapMix.end() && nRelayNodes-- > 0; ++mi)
                         ((*mi).second)->PushAddress(addr);
                 }
@@ -2313,7 +2331,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         bool fMissingInputs = false;
-        if (tx.AcceptTransaction(true, &fMissingInputs))
+        if (tx.AcceptToMemoryPool(true, &fMissingInputs))
         {
             AddToWalletIfMine(tx, NULL);
             RelayMessage(inv, vMsg);
@@ -2333,7 +2351,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     CDataStream(vMsg) >> tx;
                     CInv inv(MSG_TX, tx.GetHash());
 
-                    if (tx.AcceptTransaction(true))
+                    if (tx.AcceptToMemoryPool(true))
                     {
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,6).c_str());
                         AddToWalletIfMine(tx, NULL);
@@ -2809,8 +2827,9 @@ void BitcoinMiner()
             map<uint256, CTxIndex> mapTestPool;
             vector<char> vfAlreadyAdded(mapTransactions.size());
             bool fFoundSomething = true;
-            uint64 nBlockSize = 0;
-            while (fFoundSomething && nBlockSize < MAX_SIZE/2)
+            uint64 nBlockSize = 10000;
+            int nBlockSigOps = 100;
+            while (fFoundSomething)
             {
                 fFoundSomething = false;
                 unsigned int n = 0;
@@ -2822,7 +2841,10 @@ void BitcoinMiner()
                     if (tx.IsCoinBase() || !tx.IsFinal())
                         continue;
                     unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK);
-                    if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE - 10000)
+                    if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE)
+                        continue;
+                    int nTxSigOps = tx.GetSigOpCount();
+                    if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                         continue;
 
                     // Transaction fee based on block size
@@ -2835,6 +2857,7 @@ void BitcoinMiner()
 
                     pblock->vtx.push_back(tx);
                     nBlockSize += nTxSize;
+                    nBlockSigOps += nTxSigOps;
                     vfAlreadyAdded[n] = true;
                     fFoundSomething = true;
                 }
@@ -3297,7 +3320,7 @@ bool CommitTransaction(CWalletTx& wtxNew, const CKey& key)
 
             // Add the change's private key to wallet
             if (!key.IsNull() && !AddKey(key))
-                throw runtime_error("CommitTransaction() : AddKey failed\n");
+                throw runtime_error("CommitTransaction() : AddKey failed");
 
             // Add tx to wallet, because if it has change it's also ours,
             // otherwise just for transaction history.
@@ -3320,7 +3343,7 @@ bool CommitTransaction(CWalletTx& wtxNew, const CKey& key)
             mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptTransaction())
+        if (!wtxNew.AcceptToMemoryPool())
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("CommitTransaction() : Error: Transaction not valid");

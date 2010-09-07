@@ -820,10 +820,15 @@ void BackupWallet(const string& strDest)
                 mapFileUseCount.erase(strFile);
 
                 // Copy wallet.dat
+                filesystem::path pathSrc(GetDataDir() + "/" + strFile);
                 filesystem::path pathDest(strDest);
                 if (filesystem::is_directory(pathDest))
                     pathDest = pathDest / strFile;
-                filesystem::copy_file(filesystem::path(GetDataDir() + "/" + strFile), pathDest, filesystem::copy_option::overwrite_if_exists);
+#if BOOST_VERSION >= 104000
+                filesystem::copy_file(pathSrc, pathDest, filesystem::copy_option::overwrite_if_exists);
+#else
+                filesystem::copy_file(pathSrc, pathDest);
+#endif
                 printf("copied wallet.dat to %s\n", pathDest.string().c_str());
 
                 return;
