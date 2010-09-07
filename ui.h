@@ -305,8 +305,8 @@ public:
             y += 46 + wxString(strMessage2).Freq('\n') * 14;
         }
 #ifndef __WXMSW__
-        x *= 1.14;
-        y *= 1.14;
+        x = x * 114 / 100;
+        y = y * 114 / 100;
 #endif
         SetSize(x, y);
     }

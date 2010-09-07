@@ -297,7 +297,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (!strErrors.empty())
     {
-        wxMessageBox(strErrors, "Bitcoin");
+        wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
         return false;
     }
 
@@ -374,7 +374,7 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
         if (nTransactionFee > 1 * COIN)
-            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin");
+            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
     }
 
     //

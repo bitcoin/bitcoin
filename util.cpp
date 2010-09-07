@@ -79,7 +79,7 @@ instance_of_cinit;
 void RandAddSeed()
 {
     // Seed with CPU performance counter
-    int64 nCounter = PerformanceCounter();
+    int64 nCounter = GetPerformanceCounter();
     RAND_add(&nCounter, sizeof(nCounter), 1.5);
     memset(&nCounter, 0, sizeof(nCounter));
 }
@@ -499,23 +499,47 @@ void FormatException(char* pszMessage, std::exception* pex, const char* pszThrea
 
 void LogException(std::exception* pex, const char* pszThread)
 {
-    char pszMessage[1000];
+    char pszMessage[10000];
     FormatException(pszMessage, pex, pszThread);
     printf("\n%s", pszMessage);
 }
 
 void PrintException(std::exception* pex, const char* pszThread)
 {
-    char pszMessage[1000];
+    char pszMessage[10000];
     FormatException(pszMessage, pex, pszThread);
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
+    strMiscWarning = pszMessage;
 #ifdef GUI
     if (wxTheApp && !fDaemon)
-        MyMessageBox(pszMessage, "Error", wxOK | wxICON_ERROR);
+        MyMessageBox(pszMessage, "Bitcoin", wxOK | wxICON_ERROR);
 #endif
     throw;
-    //DebugBreak();
+}
+
+void ThreadOneMessageBox(string strMessage)
+{
+    // Skip message boxes if one is already open
+    static bool fMessageBoxOpen;
+    if (fMessageBoxOpen)
+        return;
+    fMessageBoxOpen = true;
+    ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
+    fMessageBoxOpen = false;
+}
+
+void PrintExceptionContinue(std::exception* pex, const char* pszThread)
+{
+    char pszMessage[10000];
+    FormatException(pszMessage, pex, pszThread);
+    printf("\n\n************************\n%s\n", pszMessage);
+    fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
+    strMiscWarning = pszMessage;
+#ifdef GUI
+    if (wxTheApp && !fDaemon)
+        boost::thread(bind(ThreadOneMessageBox, string(pszMessage)));
+#endif
 }
 
 
@@ -749,7 +773,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
             if (!fMatch && !fDone)
             {
                 fDone = true;
-                string strMessage = _("Warning: Check your system date and time, you may not be able to generate or receive the most recent blocks!");
+                string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
                 strMiscWarning = strMessage;
                 printf("*** %s\n", strMessage.c_str());
                 boost::thread(bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));

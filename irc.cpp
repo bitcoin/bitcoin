@@ -6,6 +6,9 @@
 
 int nGotIRCAddresses = 0;
 
+void ThreadIRCSeed2(void* parg);
+
+
 
 
 #pragma pack(push, 1)
@@ -128,6 +131,7 @@ int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const cha
     loop
     {
         string strLine;
+        strLine.reserve(10000);
         if (!RecvLineIRC(hSocket, strLine))
             return 0;
         printf("IRC %s\n", strLine.c_str());
@@ -157,6 +161,21 @@ bool Wait(int nSeconds)
 
 
 void ThreadIRCSeed(void* parg)
+{
+    IMPLEMENT_RANDOMIZE_STACK(ThreadIRCSeed(parg));
+    try
+    {
+        ThreadIRCSeed2(parg);
+    }
+    catch (std::exception& e) {
+        PrintExceptionContinue(&e, "ThreadIRCSeed()");
+    } catch (...) {
+        PrintExceptionContinue(NULL, "ThreadIRCSeed()");
+    }
+    printf("ThreadIRCSeed exiting\n");
+}
+
+void ThreadIRCSeed2(void* parg)
 {
     if (mapArgs.count("-connect"))
         return;
@@ -236,6 +255,7 @@ void ThreadIRCSeed(void* parg)
 
         int64 nStart = GetTime();
         string strLine;
+        strLine.reserve(10000);
         while (!fShutdown && RecvLineIRC(hSocket, strLine))
         {
             if (strLine.empty() || strLine.size() > 900 || strLine[0] != ':')

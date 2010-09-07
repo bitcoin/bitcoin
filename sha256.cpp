@@ -87,6 +87,8 @@ static inline void dumpreg(__m128i x, char *msg) {
 #else
 #define dumpstate()
 #endif
+
+
 void Double_BlockSHA256(const void* pin, void* pad, const void *pre, unsigned int thash[9][NPAR], const void *init)
 {
     unsigned int* In = (unsigned int*)pin;
