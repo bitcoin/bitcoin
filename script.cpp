@@ -59,6 +59,13 @@ void MakeSameSize(valtype& vch1, valtype& vch2)
 //
 #define stacktop(i)  (stack.at(stack.size()+(i)))
 #define altstacktop(i)  (altstack.at(altstack.size()+(i)))
+static inline void popstack(vector<valtype>& stack)
+{
+    if (stack.empty())
+        throw runtime_error("popstack() : stack empty");
+    stack.pop_back();
+}
+
 
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
@@ -66,6 +73,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
     CScript::const_iterator pbegincodehash = script.begin();
+    opcodetype opcode;
+    valtype vchPushValue;
     vector<bool> vfExec;
     vector<valtype> altstack;
     if (script.size() > 10000)
@@ -82,13 +91,11 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
             //
             // Read instruction
             //
-            opcodetype opcode;
-            valtype vchPushValue;
             if (!script.GetOp(pc, opcode, vchPushValue))
                 return false;
             if (vchPushValue.size() > 520)
                 return false;
-            if (opcode > OP_16 && nOpCount++ > 200)
+            if (opcode > OP_16 && ++nOpCount > 201)
                 return false;
 
             if (opcode == OP_CAT ||
@@ -108,7 +115,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 opcode == OP_RSHIFT)
                 return false;
 
-            if (fExec && opcode <= OP_PUSHDATA4)
+            if (fExec && 0 <= opcode && opcode <= OP_PUSHDATA4)
                 stack.push_back(vchPushValue);
             else if (fExec || (OP_IF <= opcode && opcode <= OP_ENDIF))
             switch (opcode)
@@ -149,14 +156,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 break;
 
-                case OP_VER:
-                case OP_VERIF:
-                case OP_VERNOTIF:
-                {
-                    return false;
-                }
-                break;
-
                 case OP_IF:
                 case OP_NOTIF:
                 {
@@ -170,7 +169,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         fValue = CastToBool(vch);
                         if (opcode == OP_NOTIF)
                             fValue = !fValue;
-                        stack.pop_back();
+                        popstack(stack);
                     }
                     vfExec.push_back(fValue);
                 }
@@ -200,7 +199,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         return false;
                     bool fValue = CastToBool(stacktop(-1));
                     if (fValue)
-                        stack.pop_back();
+                        popstack(stack);
                     else
                         return false;
                 }
@@ -221,7 +220,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (stack.size() < 1)
                         return false;
                     altstack.push_back(stacktop(-1));
-                    stack.pop_back();
+                    popstack(stack);
                 }
                 break;
 
@@ -230,15 +229,17 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (altstack.size() < 1)
                         return false;
                     stack.push_back(altstacktop(-1));
-                    altstack.pop_back();
+                    popstack(altstack);
                 }
                 break;
 
                 case OP_2DROP:
                 {
                     // (x1 x2 -- )
-                    stack.pop_back();
-                    stack.pop_back();
+                    if (stack.size() < 2)
+                        return false;
+                    popstack(stack);
+                    popstack(stack);
                 }
                 break;
 
@@ -327,7 +328,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // (x -- )
                     if (stack.size() < 1)
                         return false;
-                    stack.pop_back();
+                    popstack(stack);
                 }
                 break;
 
@@ -368,7 +369,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (stack.size() < 2)
                         return false;
                     int n = CastToBigNum(stacktop(-1)).getint();
-                    stack.pop_back();
+                    popstack(stack);
                     if (n < 0 || n >= stack.size())
                         return false;
                     valtype vch = stacktop(-n-1);
@@ -421,7 +422,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     valtype& vch1 = stacktop(-2);
                     valtype& vch2 = stacktop(-1);
                     vch1.insert(vch1.end(), vch2.begin(), vch2.end());
-                    stack.pop_back();
+                    popstack(stack);
                     if (stacktop(-1).size() > 520)
                         return false;
                 }
@@ -443,8 +444,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         nEnd = vch.size();
                     vch.erase(vch.begin() + nEnd, vch.end());
                     vch.erase(vch.begin(), vch.begin() + nBegin);
-                    stack.pop_back();
-                    stack.pop_back();
+                    popstack(stack);
+                    popstack(stack);
                 }
                 break;
 
@@ -464,7 +465,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         vch.erase(vch.begin() + nSize, vch.end());
                     else
                         vch.erase(vch.begin(), vch.end() - nSize);
-                    stack.pop_back();
+                    popstack(stack);
                 }
                 break;
 
@@ -518,7 +519,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         for (int i = 0; i < vch1.size(); i++)
                             vch1[i] ^= vch2[i];
                     }
-                    stack.pop_back();
+                    popstack(stack);
                 }
                 break;
 
@@ -537,13 +538,13 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // zero bytes after it (numerically, 0x01 == 0x0001 == 0x000001)
                     //if (opcode == OP_NOTEQUAL)
                     //    fEqual = !fEqual;
-                    stack.pop_back();
-                    stack.pop_back();
+                    popstack(stack);
+                    popstack(stack);
                     stack.push_back(fEqual ? vchTrue : vchFalse);
                     if (opcode == OP_EQUALVERIFY)
                     {
                         if (fEqual)
-                            stack.pop_back();
+                            popstack(stack);
                         else
                             return false;
                     }
@@ -578,7 +579,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     case OP_NOT:        bn = (bn == bnZero); break;
                     case OP_0NOTEQUAL:  bn = (bn != bnZero); break;
                     }
-                    stack.pop_back();
+                    popstack(stack);
                     stack.push_back(bn.getvch());
                 }
                 break;
@@ -657,14 +658,14 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     case OP_MIN:                 bn = (bn1 < bn2 ? bn1 : bn2); break;
                     case OP_MAX:                 bn = (bn1 > bn2 ? bn1 : bn2); break;
                     }
-                    stack.pop_back();
-                    stack.pop_back();
+                    popstack(stack);
+                    popstack(stack);
                     stack.push_back(bn.getvch());
 
                     if (opcode == OP_NUMEQUALVERIFY)
                     {
                         if (CastToBool(stacktop(-1)))
-                            stack.pop_back();
+                            popstack(stack);
                         else
                             return false;
                     }
@@ -680,9 +681,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     CBigNum bn2 = CastToBigNum(stacktop(-2));
                     CBigNum bn3 = CastToBigNum(stacktop(-1));
                     bool fValue = (bn2 <= bn1 && bn1 < bn3);
-                    stack.pop_back();
-                    stack.pop_back();
-                    stack.pop_back();
+                    popstack(stack);
+                    popstack(stack);
+                    popstack(stack);
                     stack.push_back(fValue ? vchTrue : vchFalse);
                 }
                 break;
@@ -718,7 +719,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         uint256 hash = Hash(vch.begin(), vch.end());
                         memcpy(&vchHash[0], &hash, sizeof(hash));
                     }
-                    stack.pop_back();
+                    popstack(stack);
                     stack.push_back(vchHash);
                 }
                 break;
@@ -752,13 +753,13 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                     bool fSuccess = CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType);
 
-                    stack.pop_back();
-                    stack.pop_back();
+                    popstack(stack);
+                    popstack(stack);
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
                     if (opcode == OP_CHECKSIGVERIFY)
                     {
                         if (fSuccess)
-                            stack.pop_back();
+                            popstack(stack);
                         else
                             return false;
                     }
@@ -822,13 +823,13 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     }
 
                     while (i-- > 0)
-                        stack.pop_back();
+                        popstack(stack);
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
 
                     if (opcode == OP_CHECKMULTISIGVERIFY)
                     {
                         if (fSuccess)
-                            stack.pop_back();
+                            popstack(stack);
                         else
                             return false;
                     }
@@ -855,8 +856,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
     return true;
 }
-
-#undef top
 
 
 
@@ -945,10 +944,7 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
         return false;
     vchSig.pop_back();
 
-    if (key.Verify(SignatureHash(scriptCode, txTo, nIn, nHashType), vchSig))
-        return true;
-
-    return false;
+    return key.Verify(SignatureHash(scriptCode, txTo, nIn, nHashType), vchSig);
 }
 
 
@@ -986,21 +982,19 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
         CScript::const_iterator pc2 = script2.begin();
         loop
         {
-            bool f1 = script1.GetOp(pc1, opcode1, vch1);
-            bool f2 = script2.GetOp(pc2, opcode2, vch2);
-            if (!f1 && !f2)
+            if (pc1 == script1.end() && pc2 == script2.end())
             {
-                // Success
+                // Found a match
                 reverse(vSolutionRet.begin(), vSolutionRet.end());
                 return true;
             }
-            else if (f1 != f2)
-            {
+            if (!script1.GetOp(pc1, opcode1, vch1))
                 break;
-            }
-            else if (opcode2 == OP_PUBKEY)
+            if (!script2.GetOp(pc2, opcode2, vch2))
+                break;
+            if (opcode2 == OP_PUBKEY)
             {
-                if (vch1.size() <= sizeof(uint256))
+                if (vch1.size() < 33)
                     break;
                 vSolutionRet.push_back(make_pair(opcode2, vch1));
             }
@@ -1010,7 +1004,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
                     break;
                 vSolutionRet.push_back(make_pair(opcode2, vch1));
             }
-            else if (opcode1 != opcode2)
+            else if (opcode1 != opcode2 || vch1 != vch2)
             {
                 break;
             }
@@ -1067,6 +1061,10 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
                     vchSig.push_back((unsigned char)nHashType);
                     scriptSigRet << vchSig << vchPubKey;
                 }
+            }
+            else
+            {
+                return false;
             }
         }
     }
