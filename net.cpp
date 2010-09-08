@@ -1163,6 +1163,8 @@ void ThreadMessageHandler2(void* parg)
         // Wait and allow messages to bunch up
         vnThreadsRunning[2]--;
         Sleep(100);
+        if (fRequestShutdown)
+            Shutdown(NULL);
         vnThreadsRunning[2]++;
         if (fShutdown)
             return;

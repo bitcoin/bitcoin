@@ -140,6 +140,7 @@ extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugger;
 extern char pszSetDataDir[MAX_PATH];
+extern bool fRequestShutdown;
 extern bool fShutdown;
 extern bool fDaemon;
 extern bool fCommandLine;
