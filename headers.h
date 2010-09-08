@@ -99,6 +99,7 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <fcntl.h>
+#include <signal.h>
 #endif
 #ifdef BSD
 #include <netinet/in.h>
