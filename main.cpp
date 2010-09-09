@@ -2767,6 +2767,68 @@ inline void SHA256Transform(void* pstate, void* pinput, const void* pinit)
 static const int NPAR = 32;
 extern void Double_BlockSHA256(const void* pin, void* pout, const void* pinit, unsigned int hash[8][NPAR], const void* init2);
 
+#ifdef __GNUC__
+void CallCPUID(int in, int& aret, int& cret)
+{
+    int a, c;
+    asm (
+        "mov %2, %%eax; " // in into eax
+        "cpuid;"
+        "mov %%eax, %0;" // eax into ret
+        "mov %%ecx, %1;" // eax into ret
+        :"=r"(a),"=r"(c) /* output */
+        :"r"(in) /* input */
+        :"%eax","%ecx" /* clobbered register */
+    );
+    aret = a;
+    cret = c;
+}
+
+bool Detect128BitSSE2()
+{
+    int a, c, nBrand;
+    CallCPUID(0, a, nBrand);
+    bool fIntel = (nBrand == 0x6c65746e); // ntel
+    bool fAMD = (nBrand == 0x444d4163); // cAMD
+
+    struct
+    {
+        unsigned int nStepping : 4;
+        unsigned int nModel : 4;
+        unsigned int nFamily : 4;
+        unsigned int nProcessorType : 2;
+        unsigned int nUnused : 2;
+        unsigned int nExtendedModel : 4;
+        unsigned int nExtendedFamily : 8;
+    }
+    cpu;
+    CallCPUID(1, a, c);
+    memcpy(&cpu, &a, sizeof(cpu));
+    int nFamily = cpu.nExtendedFamily + cpu.nFamily;
+    int nModel = cpu.nExtendedModel*16 + cpu.nModel;
+
+    // We need Intel Nehalem or AMD K10 or better for 128bit SSE2
+    // Nehalem = i3/i5/i7 and some Xeon
+    // K10 = Opterons with 4 or more cores, Phenom, Phenom II, Athlon II
+    //  Intel Core i5  family 6, model 26 or 30
+    //  Intel Core i7  family 6, model 26 or 30
+    //  Intel Core i3  family 6, model 37
+    //  AMD Phenom    family 16, model 10
+    bool fUseSSE2 = ((fIntel && nFamily * 10000 + nModel >=  60026) ||
+                     (fAMD   && nFamily * 10000 + nModel >= 160010));
+
+    static bool fPrinted;
+    if (!fPrinted)
+    {
+        fPrinted = true;
+        printf("CPUID %08x family %d, model %d, stepping %d, fUseSSE2=%d\n", nBrand, nFamily, nModel, cpu.nStepping, fUseSSE2);
+    }
+    return fUseSSE2;
+}
+#else
+bool Detect128BitSSE2() { return false; }
+#endif
+
 
 
 
@@ -2774,6 +2836,9 @@ void BitcoinMiner()
 {
     printf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
+    bool f4WaySSE2 = Detect128BitSSE2();
+    if (mapArgs.count("-4way"))
+        f4WaySSE2 = (mapArgs["-4way"] != "0");
 
     CKey key;
     key.MakeNewKey();
@@ -2913,7 +2978,6 @@ void BitcoinMiner()
         //
         // Search
         //
-        bool f4WaySSE2 = mapArgs.count("-4way");
         int64 nStart = GetTime();
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hashbuf[2];
