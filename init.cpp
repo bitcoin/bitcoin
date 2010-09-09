@@ -10,7 +10,6 @@
 
 
 
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -55,6 +54,11 @@ void Shutdown(void* parg)
         Sleep(100);
         ExitThread(0);
     }
+}
+
+void HandleSIGTERM(int)
+{
+    fRequestShutdown = true;
 }
 
 
@@ -129,6 +133,14 @@ bool AppInit2(int argc, char* argv[])
 #endif
 #ifndef __WXMSW__
     umask(077);
+#endif
+#ifndef __WXMSW__
+    // Clean shutdown on SIGTERM
+    struct sigaction sa;
+    sa.sa_handler = HandleSIGTERM;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGTERM, &sa, NULL);
 #endif
 
     //

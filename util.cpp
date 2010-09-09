@@ -11,6 +11,7 @@ bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
 char pszSetDataDir[MAX_PATH] = "";
+bool fRequestShutdown = false;
 bool fShutdown = false;
 bool fDaemon = false;
 bool fCommandLine = false;
