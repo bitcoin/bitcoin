@@ -2767,15 +2767,15 @@ inline void SHA256Transform(void* pstate, void* pinput, const void* pinit)
 static const int NPAR = 32;
 extern void Double_BlockSHA256(const void* pin, void* pout, const void* pinit, unsigned int hash[8][NPAR], const void* init2);
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && defined(CRYPTOPP_X86_ASM_AVAILABLE)
 void CallCPUID(int in, int& aret, int& cret)
 {
     int a, c;
     asm (
         "mov %2, %%eax; " // in into eax
         "cpuid;"
-        "mov %%eax, %0;" // eax into ret
-        "mov %%ecx, %1;" // eax into ret
+        "mov %%eax, %0;" // eax into a
+        "mov %%ecx, %1;" // eax into c
         :"=r"(a),"=r"(c) /* output */
         :"r"(in) /* input */
         :"%eax","%ecx" /* clobbered register */
@@ -3311,7 +3311,8 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                     wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
 
                 // Fill a vout back to self with any change
-                if (nValueIn > nTotalValue)
+                int64 nChange = nValueIn - nTotalValue;
+                if (nChange >= CENT)
                 {
                     // Note: We use a new key here to keep it from being obvious which side is the change.
                     //  The drawback is that by not reusing a previous key, the change may be lost if a
@@ -3330,7 +3331,7 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                         scriptChange.SetBitcoinAddress(keyRet.GetPubKey());
                     else
                         scriptChange << keyRet.GetPubKey() << OP_CHECKSIG;
-                    wtxNew.vout.push_back(CTxOut(nValueIn - nTotalValue, scriptChange));
+                    wtxNew.vout.push_back(CTxOut(nChange, scriptChange));
                 }
 
                 // Fill a vout to the payee
