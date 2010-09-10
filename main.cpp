@@ -2767,7 +2767,7 @@ inline void SHA256Transform(void* pstate, void* pinput, const void* pinit)
 static const int NPAR = 32;
 extern void Double_BlockSHA256(const void* pin, void* pout, const void* pinit, unsigned int hash[8][NPAR], const void* init2);
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && defined(CRYPTOPP_X86_ASM_AVAILABLE)
 void CallCPUID(int in, int& aret, int& cret)
 {
     int a, c;
