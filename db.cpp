@@ -77,7 +77,6 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
                              DB_INIT_MPOOL |
                              DB_INIT_TXN   |
                              DB_THREAD     |
-                             DB_PRIVATE    |
                              DB_RECOVER,
                              S_IRUSR | S_IWUSR);
             if (ret > 0)
