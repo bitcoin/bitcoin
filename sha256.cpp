@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+// tcatm's 4-way 128-bit SSE2 SHA-256
+
 #ifdef FOURWAYSSE2
 
 #include <string.h>
@@ -12,6 +14,8 @@
 #include <stdio.h>
 
 #define NPAR 32
+
+extern void DoubleBlockSHA256(const void* pin, void* pout, const void* pinit, unsigned int hash[8][NPAR], const void* init2);
 
 static const unsigned int sha256_consts[] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, /*  0 */
@@ -88,8 +92,54 @@ static inline void dumpreg(__m128i x, char *msg) {
 #define dumpstate()
 #endif
 
+// Align by increasing pointer, must have extra space at end of buffer
+template <size_t nBytes, typename T>
+T* alignup(T* p)
+{
+    union
+    {
+        T* ptr;
+        size_t n;
+    } u;
+    u.ptr = p;
+    u.n = (u.n + (nBytes-1)) & ~(nBytes-1);
+    return u.ptr;
+}
 
-void Double_BlockSHA256(const void* pin, void* pad, const void *pre, unsigned int thash[9][NPAR], const void *init)
+static const unsigned int pSHA256InitState[8] =
+{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+
+
+unsigned int ScanHash_4WaySSE2(char* pmidstate, char* pblock, char* phash1, char* phash, unsigned int& nHashesDone)
+{
+    unsigned int& nNonce = *(unsigned int*)(pblock + 12);
+    for (;;)
+    {
+        nNonce += NPAR;
+        unsigned int thashbuf[9][NPAR];
+        unsigned int (&thash)[9][NPAR] = *alignup<16>(&thashbuf);
+        DoubleBlockSHA256(pblock, phash1, pmidstate, thash, pSHA256InitState);
+
+        for (int j = 0; j < NPAR; j++)
+        {
+            if (thash[7][j] == 0)
+            {
+                for (int i = 0; i < 32/4; i++)
+                    ((unsigned int*)phash)[i] = thash[i][j];
+                return nNonce + j;
+            }
+        }
+
+        if ((nNonce & 0xffff) == 0)
+        {
+            nHashesDone = 0xffff+1;
+            return -1;
+        }
+    }
+}
+
+
+void DoubleBlockSHA256(const void* pin, void* pad, const void *pre, unsigned int thash[9][NPAR], const void *init)
 {
     unsigned int* In = (unsigned int*)pin;
     unsigned int* Pad = (unsigned int*)pad;

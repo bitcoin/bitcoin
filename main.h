@@ -15,6 +15,7 @@ class CWalletTx;
 class CKeyItem;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
+static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
@@ -475,7 +476,7 @@ public:
             return error("CTransaction::CheckTransaction() : vin or vout empty");
 
         // Size limits
-        if (::GetSerializeSize(*this, SER_NETWORK) > MAX_SIZE)
+        if (::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
             return error("CTransaction::CheckTransaction() : size limits failed");
 
         // Check for negative or overflow output values
