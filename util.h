@@ -160,9 +160,11 @@ string FormatMoney(int64 n, bool fPlus=false);
 bool ParseMoney(const string& str, int64& nRet);
 bool ParseMoney(const char* pszIn, int64& nRet);
 vector<unsigned char> ParseHex(const char* psz);
-vector<unsigned char> ParseHex(const std::string& str);
+vector<unsigned char> ParseHex(const string& str);
 void ParseParameters(int argc, char* argv[]);
 const char* wxGetTranslation(const char* psz);
+bool WildcardMatch(const char* psz, const char* mask);
+bool WildcardMatch(const string& str, const string& mask);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
 string GetConfigFile();
@@ -173,6 +175,7 @@ string MyGetSpecialFolderPath(int nFolder, bool fCreate);
 string GetDefaultDataDir();
 string GetDataDir();
 void ShrinkDebugFile();
+int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
 int64 GetAdjustedTime();
@@ -397,6 +400,20 @@ inline bool IsSwitchChar(char c)
 #else
     return c == '-';
 #endif
+}
+
+inline string GetArg(const string& strArg, const string& strDefault)
+{
+    if (mapArgs.count(strArg))
+        return mapArgs[strArg];
+    return strDefault;
+}
+
+inline int64 GetArg(const string& strArg, int64 nDefault)
+{
+    if (mapArgs.count(strArg))
+        return atoi64(mapArgs[strArg]);
+    return nDefault;
 }
 
 
