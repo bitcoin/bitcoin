@@ -23,7 +23,7 @@ class CAutoFile;
 static const unsigned int MAX_SIZE = 0x02000000;
 
 static const int VERSION = 312;
-static const char* pszSubVer = ".4";
+static const char* pszSubVer = ".5";
 
 
 

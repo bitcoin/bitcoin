@@ -2392,13 +2392,11 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "getaddr")
     {
-        // This includes all nodes that are currently online,
-        // since they rebroadcast an addr every 24 hours
+        // Nodes rebroadcast an addr every 24 hours
         pfrom->vAddrToSend.clear();
-        int64 nSince = GetAdjustedTime() - 12 * 60 * 60; // in the last 12 hours
+        int64 nSince = GetAdjustedTime() - 6 * 60 * 60; // in the last 6 hours
         CRITICAL_BLOCK(cs_mapAddresses)
         {
-            unsigned int nSize = mapAddresses.size();
             foreach(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
             {
                 if (fShutdown)
@@ -2738,35 +2736,6 @@ void ThreadBitcoinMiner(void* parg)
     printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[3]);
 }
 
-int FormatHashBlocks(void* pbuffer, unsigned int len)
-{
-    unsigned char* pdata = (unsigned char*)pbuffer;
-    unsigned int blocks = 1 + ((len + 8) / 64);
-    unsigned char* pend = pdata + 64 * blocks;
-    memset(pdata + len, 0, 64 * blocks - len);
-    pdata[len] = 0x80;
-    unsigned int bits = len * 8;
-    pend[-1] = (bits >> 0) & 0xff;
-    pend[-2] = (bits >> 8) & 0xff;
-    pend[-3] = (bits >> 16) & 0xff;
-    pend[-4] = (bits >> 24) & 0xff;
-    return blocks;
-}
-
-using CryptoPP::ByteReverse;
-
-static const unsigned int pSHA256InitState[8] =
-{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
-
-inline void SHA256Transform(void* pstate, void* pinput, const void* pinit)
-{
-    memcpy(pstate, pinit, 32);
-    CryptoPP::SHA256::Transform((CryptoPP::word32*)pstate, (CryptoPP::word32*)pinput);
-}
-
-static const int NPAR = 32;
-extern void Double_BlockSHA256(const void* pin, void* pout, const void* pinit, unsigned int hash[8][NPAR], const void* init2);
-
 #if defined(__GNUC__) && defined(CRYPTOPP_X86_ASM_AVAILABLE)
 void CallCPUID(int in, int& aret, int& cret)
 {
@@ -2829,6 +2798,67 @@ bool Detect128BitSSE2()
 bool Detect128BitSSE2() { return false; }
 #endif
 
+int FormatHashBlocks(void* pbuffer, unsigned int len)
+{
+    unsigned char* pdata = (unsigned char*)pbuffer;
+    unsigned int blocks = 1 + ((len + 8) / 64);
+    unsigned char* pend = pdata + 64 * blocks;
+    memset(pdata + len, 0, 64 * blocks - len);
+    pdata[len] = 0x80;
+    unsigned int bits = len * 8;
+    pend[-1] = (bits >> 0) & 0xff;
+    pend[-2] = (bits >> 8) & 0xff;
+    pend[-3] = (bits >> 16) & 0xff;
+    pend[-4] = (bits >> 24) & 0xff;
+    return blocks;
+}
+
+using CryptoPP::ByteReverse;
+
+static const unsigned int pSHA256InitState[8] =
+{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+
+inline void SHA256Transform(void* pstate, void* pinput, const void* pinit)
+{
+    memcpy(pstate, pinit, 32);
+    CryptoPP::SHA256::Transform((CryptoPP::word32*)pstate, (CryptoPP::word32*)pinput);
+}
+
+//
+// ScanHash scans nonces looking for a hash with at least some zero bits.
+// It operates on big endian data.  Caller does the byte reversing.
+// All input buffers are 16-byte aligned.  nNonce is usually preserved
+// between calls, but periodically or if nNonce is above 0xff000000,
+// the block is rebuilt and nNonce starts over at zero.
+//
+unsigned int ScanHash_CryptoPP(char* pmidstate, char* pblock, char* phash1, char* phash, unsigned int& nHashesDone)
+{
+    unsigned int& nNonce = *(unsigned int*)(pblock + 12);
+    for (;;)
+    {
+        // Crypto++ SHA-256
+        // Hash pblock using pmidstate as the starting state into
+        // preformatted buffer phash1, then hash phash1 into phash
+        nNonce++;
+        SHA256Transform(phash1, pblock, pmidstate);
+        SHA256Transform(phash, phash1, pSHA256InitState);
+
+        // Return the nonce if the hash has at least some zero bits,
+        // caller will check if it has enough to reach the target
+        if (((unsigned short*)phash)[14] == 0)
+            return nNonce;
+
+        // If nothing found after trying for a while, return -1
+        if ((nNonce & 0xffff) == 0)
+        {
+            nHashesDone = 0xffff+1;
+            return -1;
+        }
+    }
+}
+
+extern unsigned int ScanHash_4WaySSE2(char* pmidstate, char* pblock, char* phash1, char* phash, unsigned int& nHashesDone);
+
 
 
 
@@ -2883,7 +2913,7 @@ void BitcoinMiner()
         // Add our coinbase tx as first transaction
         pblock->vtx.push_back(txNew);
 
-        // Collect the latest transactions into the block
+        // Collect memory pool transactions into the block
         int64 nFees = 0;
         CRITICAL_BLOCK(cs_main)
         CRITICAL_BLOCK(cs_mapTransactions)
@@ -2891,9 +2921,9 @@ void BitcoinMiner()
             CTxDB txdb("r");
             map<uint256, CTxIndex> mapTestPool;
             vector<char> vfAlreadyAdded(mapTransactions.size());
-            bool fFoundSomething = true;
             uint64 nBlockSize = 10000;
             int nBlockSigOps = 100;
+            bool fFoundSomething = true;
             while (fFoundSomething)
             {
                 fFoundSomething = false;
@@ -2984,46 +3014,28 @@ void BitcoinMiner()
         uint256& hash = *alignup<16>(hashbuf);
         loop
         {
+            unsigned int nHashesDone = 0;
+            unsigned int nNonceFound;
+
 #ifdef FOURWAYSSE2
             if (f4WaySSE2)
-            {
-                // tcatm's 4-way SSE2 SHA-256
-                tmp.block.nNonce += NPAR;
-                unsigned int thashbuf[9][NPAR];
-                unsigned int (&thash)[9][NPAR] = *alignup<16>(&thashbuf);
-                Double_BlockSHA256((char*)&tmp.block + 64, &tmp.hash1, &midstate, thash, pSHA256InitState);
-                ((unsigned short*)&hash)[14] = 0xffff;
-                for (int j = 0; j < NPAR; j++)
-                {
-                    if (thash[7][j] == 0)
-                    {
-                        for (int i = 0; i < sizeof(hash)/4; i++)
-                            ((unsigned int*)&hash)[i] = thash[i][j];
-                        pblock->nNonce = ByteReverse(tmp.block.nNonce + j);
-                    }
-                }
-            }
+                // tcatm's 4-way 128-bit SSE2 SHA-256
+                nNonceFound = ScanHash_4WaySSE2((char*)&midstate, (char*)&tmp.block + 64, (char*)&tmp.hash1, (char*)&hash, nHashesDone);
             else
 #endif
-            {
                 // Crypto++ SHA-256
-                tmp.block.nNonce++;
-                SHA256Transform(&tmp.hash1, (char*)&tmp.block + 64, &midstate);
-                SHA256Transform(&hash, &tmp.hash1, pSHA256InitState);
-            }
+                nNonceFound = ScanHash_CryptoPP((char*)&midstate, (char*)&tmp.block + 64, (char*)&tmp.hash1, (char*)&hash, nHashesDone);
 
-            if (((unsigned short*)&hash)[14] == 0)
+            // Check if something found
+            if (nNonceFound != -1)
             {
-                // Byte swap the result after preliminary check
                 for (int i = 0; i < sizeof(hash)/4; i++)
                     ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
 
                 if (hash <= hashTarget)
                 {
-#ifdef FOURWAYSSE2
-                    if (!f4WaySSE2)
-#endif
-                        pblock->nNonce = ByteReverse(tmp.block.nNonce);
+                    // Found a solution
+                    pblock->nNonce = ByteReverse(nNonceFound);
                     assert(hash == pblock->GetHash());
 
                         //// debug print
@@ -3059,62 +3071,57 @@ void BitcoinMiner()
                 }
             }
 
-            // Update nTime every few seconds
-            const unsigned int nMask = 0xffff;
-            const int nHashesPerCycle = (nMask+1);
-            if ((tmp.block.nNonce & nMask) == 0)
+            // Meter hashes/sec
+            static int64 nHashCounter;
+            if (nHPSTimerStart == 0)
             {
-                // Meter hashes/sec
-                static int nCycleCounter;
-                if (nHPSTimerStart == 0)
+                nHPSTimerStart = GetTimeMillis();
+                nHashCounter = 0;
+            }
+            else
+                nHashCounter += nHashesDone;
+            if (GetTimeMillis() - nHPSTimerStart > 4000)
+            {
+                static CCriticalSection cs;
+                CRITICAL_BLOCK(cs)
                 {
-                    nHPSTimerStart = GetTimeMillis();
-                    nCycleCounter = 0;
-                }
-                else
-                    nCycleCounter++;
-                if (GetTimeMillis() - nHPSTimerStart > 4000)
-                {
-                    static CCriticalSection cs;
-                    CRITICAL_BLOCK(cs)
+                    if (GetTimeMillis() - nHPSTimerStart > 4000)
                     {
-                        if (GetTimeMillis() - nHPSTimerStart > 4000)
+                        dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
+                        nHPSTimerStart = GetTimeMillis();
+                        nHashCounter = 0;
+                        string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
+                        UIThreadCall(bind(CalledSetStatusBar, strStatus, 0));
+                        static int64 nLogTime;
+                        if (GetTime() - nLogTime > 30 * 60)
                         {
-                            dHashesPerSec = 1000.0 * nHashesPerCycle * nCycleCounter / (GetTimeMillis() - nHPSTimerStart);
-                            nHPSTimerStart = GetTimeMillis();
-                            nCycleCounter = 0;
-                            string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
-                            UIThreadCall(bind(CalledSetStatusBar, strStatus, 0));
-                            static int64 nLogTime;
-                            if (GetTime() - nLogTime > 30 * 60)
-                            {
-                                nLogTime = GetTime();
-                                printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
-                                printf("hashmeter %3d CPUs %6.0f khash/s\n", vnThreadsRunning[3], dHashesPerSec/1000.0);
-                            }
+                            nLogTime = GetTime();
+                            printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
+                            printf("hashmeter %3d CPUs %6.0f khash/s\n", vnThreadsRunning[3], dHashesPerSec/1000.0);
                         }
                     }
                 }
-
-                // Check for stop or if block needs to be rebuilt
-                if (fShutdown)
-                    return;
-                if (!fGenerateBitcoins)
-                    return;
-                if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
-                    return;
-                if (vNodes.empty())
-                    break;
-                if (tmp.block.nNonce == 0)
-                    break;
-                if (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60)
-                    break;
-                if (pindexPrev != pindexBest)
-                    break;
-
-                pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-                tmp.block.nTime = ByteReverse(pblock->nTime);
             }
+
+            // Check for stop or if block needs to be rebuilt
+            if (fShutdown)
+                return;
+            if (!fGenerateBitcoins)
+                return;
+            if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
+                return;
+            if (vNodes.empty())
+                break;
+            if (tmp.block.nNonce >= 0xff000000)
+                break;
+            if (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60)
+                break;
+            if (pindexPrev != pindexBest)
+                break;
+
+            // Update nTime every few seconds
+            pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+            tmp.block.nTime = ByteReverse(pblock->nTime);
         }
     }
 }
@@ -3351,6 +3358,10 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CK
                         if (pcoin->vout[nOut].IsMine())
                             if (!SignSignature(*pcoin, wtxNew, nIn++))
                                 return false;
+
+                // Limit size
+                if (::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK) >= MAX_BLOCK_SIZE_GEN/5)
+                    return false;
 
                 // Check that enough fee is included
                 if (nFee < wtxNew.GetMinFee())
