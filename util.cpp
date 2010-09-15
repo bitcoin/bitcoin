@@ -127,6 +127,11 @@ uint64 GetRand(uint64 nMax)
     return (nRand % nMax);
 }
 
+int GetRandInt(int nMax)
+{
+    return GetRand(nMax);
+}
+
 
 
 
@@ -405,7 +410,7 @@ vector<unsigned char> ParseHex(const char* psz)
     return vch;
 }
 
-vector<unsigned char> ParseHex(const std::string& str)
+vector<unsigned char> ParseHex(const string& str)
 {
     return ParseHex(str.c_str());
 }
@@ -473,6 +478,34 @@ const char* wxGetTranslation(const char* pszEnglish)
 }
 
 
+bool WildcardMatch(const char* psz, const char* mask)
+{
+    loop
+    {
+        switch (*mask)
+        {
+        case '\0':
+            return (*psz == '\0');
+        case '*':
+            return WildcardMatch(psz, mask+1) || (*psz && WildcardMatch(psz+1, mask));
+        case '?':
+            if (*psz == '\0')
+                return false;
+            break;
+        default:
+            if (*psz != *mask)
+                return false;
+            break;
+        }
+        psz++;
+        mask++;
+    }
+}
+
+bool WildcardMatch(const string& str, const string& mask)
+{
+    return WildcardMatch(str.c_str(), mask.c_str());
+}
 
 
 
@@ -650,7 +683,7 @@ string GetDataDir()
 string GetConfigFile()
 {
     namespace fs = boost::filesystem;
-    fs::path pathConfig(mapArgs.count("-conf") ? mapArgs["-conf"] : string("bitcoin.conf"));
+    fs::path pathConfig(GetArg("-conf", "bitcoin.conf"));
     if (!pathConfig.is_complete())
         pathConfig = fs::path(GetDataDir()) / pathConfig;
     return pathConfig.string();
@@ -718,13 +751,10 @@ void ShrinkDebugFile()
 
 //
 // "Never go to sea with two chronometers; take one or three."
-// Our three chronometers are:
+// Our three time sources are:
 //  - System clock
-//  - Median of other server's clocks
-//  - NTP servers
-//
-// note: NTP isn't implemented yet, so until then we just use the median
-//  of other nodes clocks to correct ours.
+//  - Median of other nodes's clocks
+//  - The user (asking the user to fix the system clock if the first two disagree)
 //
 int64 GetTime()
 {
@@ -768,7 +798,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
             // If nobody else has the same time as us, give a warning
             bool fMatch = false;
             foreach(int64 nOffset, vTimeOffsets)
-                if (nOffset != 0 && abs64(nOffset) < 10 * 60)
+                if (nOffset != 0 && abs64(nOffset) < 5 * 60)
                     fMatch = true;
             static bool fDone;
             if (!fMatch && !fDone)
