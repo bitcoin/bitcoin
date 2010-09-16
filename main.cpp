@@ -3170,11 +3170,6 @@ int64 GetBalance()
 }
 
 
-int GetRandInt(int nMax)
-{
-    return GetRand(nMax);
-}
-
 bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
 {
     setCoinsRet.clear();
