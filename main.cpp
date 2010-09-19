@@ -1374,8 +1374,12 @@ bool CBlock::CheckBlock() const
     // that can be verified before saving an orphan block.
 
     // Size limits
-    if (vtx.empty() || vtx.size() > MAX_SIZE || ::GetSerializeSize(*this, SER_NETWORK) > MAX_SIZE)
+    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
         return error("CheckBlock() : size limits failed");
+
+    // Check proof of work matches claimed amount
+    if (!CheckProofOfWork(GetHash(), nBits))
+        return error("CheckBlock() : proof of work failed");
 
     // Check timestamp
     if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
@@ -1393,9 +1397,9 @@ bool CBlock::CheckBlock() const
         if (!tx.CheckTransaction())
             return error("CheckBlock() : CheckTransaction failed");
 
-    // Check proof of work matches claimed amount
-    if (!CheckProofOfWork(GetHash(), nBits))
-        return error("CheckBlock() : proof of work failed");
+    // Check that it's not full of nonstandard transactions
+    if (GetSigOpCount() > MAX_BLOCK_SIGOPS)
+        return error("CheckBlock() : too many nonstandard transactions");
 
     // Check merkleroot
     if (hashMerkleRoot != BuildMerkleTree())
@@ -1418,13 +1422,9 @@ bool CBlock::AcceptBlock()
     CBlockIndex* pindexPrev = (*mi).second;
     int nHeight = pindexPrev->nHeight+1;
 
-    // Check size
-    if (nHeight > 79400 && ::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
-        return error("AcceptBlock() : over size limit");
-
-    // Check that it's not full of nonstandard transactions
-    if (nHeight > 79400 && GetSigOpCount() > MAX_BLOCK_SIGOPS)
-        return error("AcceptBlock() : too many nonstandard transactions");
+    // Check proof of work
+    if (nBits != GetNextWorkRequired(pindexPrev))
+        return error("AcceptBlock() : incorrect proof of work");
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -1434,10 +1434,6 @@ bool CBlock::AcceptBlock()
     foreach(const CTransaction& tx, vtx)
         if (!tx.IsFinal(nHeight, GetBlockTime()))
             return error("AcceptBlock() : contains a non-final transaction");
-
-    // Check proof of work
-    if (nBits != GetNextWorkRequired(pindexPrev))
-        return error("AcceptBlock() : incorrect proof of work");
 
     // Check that the block chain matches the known block chain up to a checkpoint
     if ((nHeight == 11111 && hash != uint256("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")) ||
@@ -2415,6 +2411,12 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CWalletTx order;
         vRecv >> hashReply >> order;
 
+        if (!mapArgs.count("-allowreceivebyip") || mapArgs["-allowreceivebyip"] == "0")
+        {
+            pfrom->PushMessage("reply", hashReply, (int)2, string(""));
+            return true;
+        }
+
         /// we have a chance to check the order here
 
         // Keep giving the same key to the same ip until they use it
@@ -2434,6 +2436,12 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CWalletTx wtxNew;
         vRecv >> hashReply >> wtxNew;
         wtxNew.fFromMe = false;
+
+        if (!mapArgs.count("-allowreceivebyip") || mapArgs["-allowreceivebyip"] == "0")
+        {
+            pfrom->PushMessage("reply", hashReply, (int)2);
+            return true;
+        }
 
         // Broadcast
         if (!wtxNew.AcceptWalletTransaction())
