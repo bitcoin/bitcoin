@@ -2186,8 +2186,12 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
         if (nRet > 0)
         {
             string strMessage;
-            vRecv >> strMessage;
-            Error(_("Transfer was not accepted"));
+            if (!vRecv.empty())
+                vRecv >> strMessage;
+            if (nRet == 2)
+                Error(_("Recipient is not accepting transactions sent by IP address"));
+            else
+                Error(_("Transfer was not accepted"));
             //// todo: enlarge the window and enable a hidden white box to put seller's message
             return;
         }
