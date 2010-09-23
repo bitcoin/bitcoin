@@ -565,15 +565,16 @@ public:
     {
         // Base fee is 1 cent per kilobyte
         unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK);
+        unsigned int nNewBlockSize = nBlockSize + nBytes;
         int64 nMinFee = (1 + (int64)nBytes / 1000) * CENT;
 
-        // Transactions under 60K are free as long as block size is under 80K
-        // (about 27,000bc if made of 50bc inputs)
-        if (nBytes < 60000 && nBlockSize < 80000)
+        // Transactions under 25K are free as long as block size is under 40K
+        // (about 11,000bc if made of 50bc inputs)
+        if (nBytes < 25000 && nNewBlockSize < 40000)
             nMinFee = 0;
 
-        // Transactions under 3K are free as long as block size is under 200K
-        if (nBytes < 3000 && nBlockSize < 200000)
+        // Transactions under 3K are free as long as block size is under 50K
+        if (nBytes < 3000 && nNewBlockSize < 50000)
             nMinFee = 0;
 
         // To limit dust spam, require a 0.01 fee if any output is less than 0.01
@@ -583,11 +584,15 @@ public:
                     nMinFee = CENT;
 
         // Raise the price as the block approaches full
-        if (MAX_BLOCK_SIZE/2 <= nBlockSize && nBlockSize < MAX_BLOCK_SIZE)
-            nMinFee *= MAX_BLOCK_SIZE / (MAX_BLOCK_SIZE - nBlockSize);
+        if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
+        {
+            if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
+                return MAX_MONEY;
+            nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
+        }
+
         if (!MoneyRange(nMinFee))
             nMinFee = MAX_MONEY;
-
         return nMinFee;
     }
 
@@ -1186,9 +1191,11 @@ public:
 
     CBigNum GetBlockWork() const
     {
-        if (CBigNum().SetCompact(nBits) <= 0)
+        CBigNum bnTarget;
+        bnTarget.SetCompact(nBits);
+        if (bnTarget <= 0)
             return 0;
-        return (CBigNum(1)<<256) / (CBigNum().SetCompact(nBits)+1);
+        return (CBigNum(1)<<256) / (bnTarget+1);
     }
 
     bool IsInMainChain() const
@@ -1470,10 +1477,10 @@ public:
     //// todo: add something to note what created it (user, getnewaddress, change)
     ////   maybe should have a map<string, string> property map
 
-    CWalletKey(int64 nTimeExpiresIn=0)
+    CWalletKey(int64 nExpires=0)
     {
-        nTimeCreated = (nTimeExpiresIn ? GetTime() : 0);
-        nTimeExpires = nTimeExpiresIn;
+        nTimeCreated = (nExpires ? GetTime() : 0);
+        nTimeExpires = nExpires;
     }
 
     IMPLEMENT_SERIALIZE

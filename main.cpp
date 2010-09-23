@@ -2929,7 +2929,7 @@ void BitcoinMiner()
             CTxDB txdb("r");
             map<uint256, CTxIndex> mapTestPool;
             vector<char> vfAlreadyAdded(mapTransactions.size());
-            uint64 nBlockSize = 10000;
+            uint64 nBlockSize = 1000;
             int nBlockSigOps = 100;
             bool fFoundSomething = true;
             while (fFoundSomething)
@@ -2944,7 +2944,7 @@ void BitcoinMiner()
                     if (tx.IsCoinBase() || !tx.IsFinal())
                         continue;
                     unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK);
-                    if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE)
+                    if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE_GEN)
                         continue;
                     int nTxSigOps = tx.GetSigOpCount();
                     if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
