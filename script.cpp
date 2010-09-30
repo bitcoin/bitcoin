@@ -778,6 +778,14 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     int nKeysCount = CastToBigNum(stacktop(-i)).getint();
                     if (nKeysCount < 0)
                         return false;
+                    if (nBestHeight > 84000)
+                    {
+                        if (nKeysCount > 20)
+                            return false;
+                        nOpCount += nKeysCount;
+                        if (nOpCount > 201)
+                            return false;
+                    }
                     int ikey = ++i;
                     i += nKeysCount;
                     if (stack.size() < i)

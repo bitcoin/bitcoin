@@ -351,8 +351,8 @@ msgstr "&Réduire à la fermeture"
 
 #: ../../../ui.cpp:1610
 #, c-format
-msgid "version %d.%d.%d beta"
-msgstr "version %d.%d.%d beta"
+msgid "version %s%s beta"
+msgstr "version %s%s beta"
 
 #: ../../../ui.cpp:1696
 msgid "Will appear as \"From: Unknown\""
