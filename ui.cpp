@@ -109,6 +109,8 @@ void SetItemTextColour(wxListCtrl* listCtrl, int nIndex, const wxColour& colour)
     // so don't want to set it unless it's different.  Default colour has
     // alpha 0 transparent, so our colours don't match using operator==.
     wxColour c1 = listCtrl->GetItemTextColour(nIndex);
+    if (!c1.IsOk())
+        c1 = wxColour(0,0,0);
     if (colour.Red() != c1.Red() || colour.Green() != c1.Green() || colour.Blue() != c1.Blue())
         listCtrl->SetItemTextColour(nIndex, colour);
 }
