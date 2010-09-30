@@ -320,8 +320,8 @@ msgstr "&Minimalizeer bij sluiten"
 
 #: ../../../ui.cpp:1595
 #, c-format
-msgid "version 0.%d.%d beta"
-msgstr "versie 0.%d.%d beta"
+msgid "version %s%s beta"
+msgstr "versie %s%s beta"
 
 #: ../../../ui.cpp:1681
 msgid "Will appear as \"From: Unknown\""

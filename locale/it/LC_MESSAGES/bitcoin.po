@@ -319,8 +319,8 @@ msgstr "&Minimizza se chiuso"
 
 #: ../../../ui.cpp:1595
 #, c-format
-msgid "version 0.%d.%d beta"
-msgstr "versione 0.%d.%d beta"
+msgid "version %s%s beta"
+msgstr "versione %s%s beta"
 
 #: ../../../ui.cpp:1681
 msgid "Will appear as \"From: Unknown\""

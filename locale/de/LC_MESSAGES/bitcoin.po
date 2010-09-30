@@ -321,8 +321,8 @@ msgstr "Beim schließen &Minimieren"
 
 #: ../../../ui.cpp:1595
 #, c-format
-msgid "version 0.%d.%d beta"
-msgstr "Version 0.%d.%d Beta"
+msgid "version %s%s beta"
+msgstr "Version %s%s Beta"
 
 #: ../../../ui.cpp:1681
 msgid "Will appear as \"From: Unknown\""

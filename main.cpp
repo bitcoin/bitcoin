@@ -487,17 +487,55 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
 
 
 
+bool CTransaction::CheckTransaction() const
+{
+    // Basic checks that don't depend on any context
+    if (vin.empty() || vout.empty())
+        return error("CTransaction::CheckTransaction() : vin or vout empty");
+
+    // Size limits
+    if (::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
+        return error("CTransaction::CheckTransaction() : size limits failed");
+
+    // Check for negative or overflow output values
+    int64 nValueOut = 0;
+    foreach(const CTxOut& txout, vout)
+    {
+        if (txout.nValue < 0)
+            return error("CTransaction::CheckTransaction() : txout.nValue negative");
+        if (txout.nValue > MAX_MONEY)
+            return error("CTransaction::CheckTransaction() : txout.nValue too high");
+        nValueOut += txout.nValue;
+        if (!MoneyRange(nValueOut))
+            return error("CTransaction::CheckTransaction() : txout total out of range");
+    }
+
+    if (IsCoinBase())
+    {
+        if (vin[0].scriptSig.size() < 2 || vin[0].scriptSig.size() > 100)
+            return error("CTransaction::CheckTransaction() : coinbase script size");
+    }
+    else
+    {
+        foreach(const CTxIn& txin, vin)
+            if (txin.prevout.IsNull())
+                return error("CTransaction::CheckTransaction() : prevout is null");
+    }
+
+    return true;
+}
+
 bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
+    if (!CheckTransaction())
+        return error("AcceptToMemoryPool() : CheckTransaction failed");
+
     // Coinbase is only valid in a block, not as a loose transaction
     if (IsCoinBase())
         return error("AcceptToMemoryPool() : coinbase as individual tx");
-
-    if (!CheckTransaction())
-        return error("AcceptToMemoryPool() : CheckTransaction failed");
 
     // To help v0.1.5 clients who would see it as a negative number
     if ((int64)nLockTime > INT_MAX)
@@ -815,7 +853,7 @@ uint256 GetOrphanRoot(const CBlock* pblock)
     return pblock->GetHash();
 }
 
-int64 CBlock::GetBlockValue(int nHeight, int64 nFees) const
+int64 GetBlockValue(int nHeight, int64 nFees)
 {
     int64 nSubsidy = 50 * COIN;
 
@@ -1024,6 +1062,11 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             if (!txindex.vSpent[prevout.n].IsNull())
                 return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,6).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
 
+            // Check for negative or overflow input values
+            nValueIn += txPrev.vout[prevout.n].nValue;
+            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+                return error("ConnectInputs() : txin values out of range");
+
             // Mark outpoints as spent
             txindex.vSpent[prevout.n] = posThisTx;
 
@@ -1032,12 +1075,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
                 txdb.UpdateTxIndex(prevout.hash, txindex);
             else if (fMiner)
                 mapTestPool[prevout.hash] = txindex;
-
-            nValueIn += txPrev.vout[prevout.n].nValue;
-
-            // Check for negative or overflow input values
-            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-                return error("ConnectInputs() : txin values out of range");
         }
 
         if (nValueIn < GetValueOut())
@@ -2967,7 +3004,7 @@ void BitcoinMiner()
             }
         }
         pblock->nBits = nBits;
-        pblock->vtx[0].vout[0].nValue = pblock->GetBlockValue(pindexPrev->nHeight+1, nFees);
+        pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
         printf("Running BitcoinMiner with %d transactions in block\n", pblock->vtx.size());
 
 
@@ -3169,6 +3206,8 @@ int64 GetBalance()
             CWalletTx* pcoin = &(*it).second;
             if (!pcoin->IsFinal() || pcoin->fSpent)
                 continue;
+            if (pcoin->GetDepthInMainChain() < 1 && pcoin->GetDebit() <= 0)
+                continue;
             nTotal += pcoin->GetCredit(true);
         }
     }
@@ -3199,6 +3238,8 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
        foreach(CWalletTx* pcoin, vCoins)
        {
             if (!pcoin->IsFinal() || pcoin->fSpent)
+                continue;
+            if (pcoin->GetDepthInMainChain() < 1 && pcoin->GetDebit() <= 0)
                 continue;
             int64 n = pcoin->GetCredit();
             if (n <= 0)
