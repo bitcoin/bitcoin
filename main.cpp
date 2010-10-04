@@ -2831,6 +2831,10 @@ bool Detect128BitSSE2()
     bool fUseSSE2 = ((fIntel && nFamily * 10000 + nModel >=  60026) ||
                      (fAMD   && nFamily * 10000 + nModel >= 160010));
 
+    // AMD reports a lower model number in 64-bit mode
+    if (fAMD && sizeof(void*) > 4 && nFamily * 10000 + nModel >= 160000)
+        fUseSSE2 = true;
+
     static bool fPrinted;
     if (!fPrinted)
     {
