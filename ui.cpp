@@ -502,10 +502,9 @@ bool CMainFrame::DeleteLine(uint256 hashKey)
     return nIndex != -1;
 }
 
-string FormatTxStatus(const CWalletTx& wtx, bool& fConfirmed)
+string FormatTxStatus(const CWalletTx& wtx)
 {
     // Status
-    fConfirmed = false;
     if (!wtx.IsFinal())
     {
         if (wtx.nLockTime < 500000000)
@@ -516,8 +515,6 @@ string FormatTxStatus(const CWalletTx& wtx, bool& fConfirmed)
     else
     {
         int nDepth = wtx.GetDepthInMainChain();
-        if (nDepth >= 1 || wtx.GetDebit() > 0)
-            fConfirmed = true;
         if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
             return strprintf(_("%d/offline?"), nDepth);
         else if (nDepth < 6)
@@ -525,12 +522,6 @@ string FormatTxStatus(const CWalletTx& wtx, bool& fConfirmed)
         else
             return strprintf(_("%d confirmations"), nDepth);
     }
-}
-
-string FormatTxStatus(const CWalletTx& wtx)
-{
-    bool fConfirmed;
-    return FormatTxStatus(wtx, fConfirmed);
 }
 
 string SingleLine(const string& strIn)
@@ -561,9 +552,8 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
     int64 nDebit = wtx.GetDebit();
     int64 nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
-    bool fConfirmed;
-    string strStatus = FormatTxStatus(wtx, fConfirmed);
-    wtx.fConfirmedDisplayed = fConfirmed;
+    string strStatus = FormatTxStatus(wtx);
+    bool fConfirmed = wtx.fConfirmedDisplayed = wtx.IsConfirmed();
     wxColour colour = (fConfirmed ? wxColour(0,0,0) : wxColour(128,128,128));
     map<string, string> mapValue = wtx.mapValue;
     wtx.nLinesDisplayed = 1;
@@ -914,16 +904,16 @@ void CMainFrame::RefreshStatusColumn()
                 continue;
             }
             CWalletTx& wtx = (*mi).second;
-            bool fConfirmed;
-            string strStatus = FormatTxStatus(wtx, fConfirmed);
-            if (wtx.IsCoinBase() || wtx.GetTxTime() != wtx.nTimeDisplayed || fConfirmed != wtx.fConfirmedDisplayed)
+            if (wtx.IsCoinBase() ||
+                wtx.GetTxTime() != wtx.nTimeDisplayed ||
+                wtx.IsConfirmed() != wtx.fConfirmedDisplayed)
             {
                 if (!InsertTransaction(wtx, false, nIndex))
                     m_listCtrl->DeleteItem(nIndex--);
             }
             else
             {
-                m_listCtrl->SetItem(nIndex, 2, strStatus);
+                m_listCtrl->SetItem(nIndex, 2, FormatTxStatus(wtx));
             }
         }
     }
