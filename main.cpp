@@ -143,7 +143,7 @@ bool AddToWallet(const CWalletTx& wtxIn)
         }
 
         //// debug print
-        printf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString().substr(0,6).c_str(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+        printf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString().substr(0,10).c_str(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
         // Write to disk
         if (fInsertedNew || fUpdated)
@@ -587,7 +587,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     {
         if (pfMissingInputs)
             *pfMissingInputs = true;
-        return error("AcceptToMemoryPool() : ConnectInputs failed %s", hash.ToString().substr(0,6).c_str());
+        return error("AcceptToMemoryPool() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
     }
 
     // Store transaction in memory
@@ -606,7 +606,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     if (ptxOld)
         EraseFromWallet(ptxOld->GetHash());
 
-    printf("AcceptToMemoryPool(): accepted %s\n", hash.ToString().substr(0,6).c_str());
+    printf("AcceptToMemoryPool(): accepted %s\n", hash.ToString().substr(0,10).c_str());
     return true;
 }
 
@@ -775,7 +775,7 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
         uint256 hash = GetHash();
         if (!txdb.ContainsTx(hash))
         {
-            printf("Relaying wtx %s\n", hash.ToString().substr(0,6).c_str());
+            printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
             RelayMessage(CInv(MSG_TX, hash), (CTransaction)*this);
         }
     }
@@ -985,7 +985,8 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb)
             txindex.vSpent[prevout.n].SetNull();
 
             // Write back
-            txdb.UpdateTxIndex(prevout.hash, txindex);
+            if (!txdb.UpdateTxIndex(prevout.hash, txindex))
+                return error("DisconnectInputs() : UpdateTxIndex failed");
         }
     }
 
@@ -1022,7 +1023,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
                 fFound = txdb.ReadTxIndex(prevout.hash, txindex);
             }
             if (!fFound && (fBlock || fMiner))
-                return fMiner ? false : error("ConnectInputs() : %s prev tx %s index entry not found", GetHash().ToString().substr(0,6).c_str(),  prevout.hash.ToString().substr(0,6).c_str());
+                return fMiner ? false : error("ConnectInputs() : %s prev tx %s index entry not found", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
 
             // Read txPrev
             CTransaction txPrev;
@@ -1032,7 +1033,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
                 CRITICAL_BLOCK(cs_mapTransactions)
                 {
                     if (!mapTransactions.count(prevout.hash))
-                        return error("ConnectInputs() : %s mapTransactions prev not found %s", GetHash().ToString().substr(0,6).c_str(),  prevout.hash.ToString().substr(0,6).c_str());
+                        return error("ConnectInputs() : %s mapTransactions prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
                     txPrev = mapTransactions[prevout.hash];
                 }
                 if (!fFound)
@@ -1042,11 +1043,11 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             {
                 // Get prev tx from disk
                 if (!txPrev.ReadFromDisk(txindex.pos))
-                    return error("ConnectInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,6).c_str(),  prevout.hash.ToString().substr(0,6).c_str());
+                    return error("ConnectInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
             }
 
             if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
-                return error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,6).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,6).c_str(), txPrev.ToString().c_str());
+                return error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str());
 
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
@@ -1056,11 +1057,11 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
 
             // Verify signature
             if (!VerifySignature(txPrev, *this, i))
-                return error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,6).c_str());
+                return error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
 
             // Check for conflicts
             if (!txindex.vSpent[prevout.n].IsNull())
-                return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,6).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
+                return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
 
             // Check for negative or overflow input values
             nValueIn += txPrev.vout[prevout.n].nValue;
@@ -1072,18 +1073,23 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
 
             // Write back
             if (fBlock)
-                txdb.UpdateTxIndex(prevout.hash, txindex);
+            {
+                if (!txdb.UpdateTxIndex(prevout.hash, txindex))
+                    return error("ConnectInputs() : UpdateTxIndex failed");
+            }
             else if (fMiner)
+            {
                 mapTestPool[prevout.hash] = txindex;
+            }
         }
 
         if (nValueIn < GetValueOut())
-            return error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,6).c_str());
+            return error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str());
 
         // Tally transaction fees
         int64 nTxFee = nValueIn - GetValueOut();
         if (nTxFee < 0)
-            return error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,6).c_str());
+            return error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,10).c_str());
         if (nTxFee < nMinFee)
             return false;
         nFees += nTxFee;
@@ -1168,7 +1174,8 @@ bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     {
         CDiskBlockIndex blockindexPrev(pindex->pprev);
         blockindexPrev.hashNext = 0;
-        txdb.WriteBlockIndex(blockindexPrev);
+        if (!txdb.WriteBlockIndex(blockindexPrev))
+            return error("DisconnectBlock() : WriteBlockIndex failed");
     }
 
     return true;
@@ -1203,7 +1210,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     {
         CDiskBlockIndex blockindexPrev(pindex->pprev);
         blockindexPrev.hashNext = pindex->GetBlockHash();
-        txdb.WriteBlockIndex(blockindexPrev);
+        if (!txdb.WriteBlockIndex(blockindexPrev))
+            return error("ConnectBlock() : WriteBlockIndex failed");
     }
 
     // Watch for transactions paying to me
@@ -1282,8 +1290,9 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
         return error("Reorganize() : WriteHashBestChain failed");
 
-    // Commit now because resurrecting could take some time
-    txdb.TxnCommit();
+    // Make sure it's successfully written to disk before changing memory structure
+    if (!txdb.TxnCommit())
+        return error("Reorganize() : TxnCommit failed");
 
     // Disconnect shorter branch
     foreach(CBlockIndex* pindex, vDisconnect)
@@ -1314,8 +1323,10 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     txdb.TxnBegin();
     if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
     {
-        pindexGenesisBlock = pindexNew;
         txdb.WriteHashBestChain(hash);
+        if (!txdb.TxnCommit())
+            return error("SetBestChain() : TxnCommit failed");
+        pindexGenesisBlock = pindexNew;
     }
     else if (hashPrevBlock == hashBestChain)
     {
@@ -1326,7 +1337,10 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
             InvalidChainFound(pindexNew);
             return error("SetBestChain() : ConnectBlock failed");
         }
-        txdb.TxnCommit();
+        if (!txdb.TxnCommit())
+            return error("SetBestChain() : TxnCommit failed");
+
+        // Add to current best branch
         pindexNew->pprev->pnext = pindexNew;
 
         // Delete redundant memory transactions
@@ -1343,7 +1357,6 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
             return error("SetBestChain() : Reorganize failed");
         }
     }
-    txdb.TxnCommit();
 
     // New best block
     hashBestChain = hash;
@@ -2126,6 +2139,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Disconnect if we connected to ourself
         if (nNonce == nLocalHostNonce && nNonce > 1)
         {
+            printf("connected to self at %s, disconnecting\n", pfrom->addr.ToString().c_str());
             pfrom->fDisconnect = true;
             return true;
         }
@@ -2386,7 +2400,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
                     if (tx.AcceptToMemoryPool(true))
                     {
-                        printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,6).c_str());
+                        printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
                         AddToWalletIfMine(tx, NULL);
                         RelayMessage(inv, vMsg);
                         mapAlreadyAskedFor.erase(inv);
@@ -2400,7 +2414,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         else if (fMissingInputs)
         {
-            printf("storing orphan tx %s\n", inv.hash.ToString().substr(0,6).c_str());
+            printf("storing orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
             AddOrphanTx(vMsg);
         }
     }
@@ -3208,9 +3222,7 @@ int64 GetBalance()
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             CWalletTx* pcoin = &(*it).second;
-            if (!pcoin->IsFinal() || pcoin->fSpent)
-                continue;
-            if (pcoin->GetDepthInMainChain() < 1 && pcoin->GetDebit() <= 0)
+            if (!pcoin->IsFinal() || pcoin->fSpent || !pcoin->IsConfirmed())
                 continue;
             nTotal += pcoin->GetCredit(true);
         }
@@ -3241,9 +3253,7 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
 
        foreach(CWalletTx* pcoin, vCoins)
        {
-            if (!pcoin->IsFinal() || pcoin->fSpent)
-                continue;
-            if (pcoin->GetDepthInMainChain() < 1 && pcoin->GetDebit() <= 0)
+            if (!pcoin->IsFinal() || pcoin->fSpent || !pcoin->IsConfirmed())
                 continue;
             int64 n = pcoin->GetCredit();
             if (n <= 0)
