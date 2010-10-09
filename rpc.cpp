@@ -275,7 +275,7 @@ Value getnewaddress(const Array& params, bool fHelp)
         strLabel = params[0].get_str();
 
     // Generate a new key that is added to wallet
-    string strAddress = PubKeyToAddress(GenerateNewKey());
+    string strAddress = PubKeyToAddress(CWalletDB().GetKeyFromKeyPool());
 
     SetAddressBookName(strAddress, strLabel);
     return strAddress;

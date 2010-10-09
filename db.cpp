@@ -576,6 +576,9 @@ bool LoadAddresses()
 // CWalletDB
 //
 
+static set<int64> setKeyPool;
+static CCriticalSection cs_setKeyPool;
+
 bool CWalletDB::LoadWallet()
 {
     vchDefaultKey.clear();
@@ -653,6 +656,12 @@ bool CWalletDB::LoadWallet()
             else if (strType == "defaultkey")
             {
                 ssValue >> vchDefaultKey;
+            }
+            else if (strType == "pool")
+            {
+                int64 nIndex;
+                ssKey >> nIndex;
+                setKeyPool.insert(nIndex);
             }
             else if (strType == "version")
             {
@@ -835,4 +844,60 @@ void BackupWallet(const string& strDest)
         }
         Sleep(100);
     }
+}
+
+void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
+{
+    nIndex = -1;
+    keypool.vchPubKey.clear();
+    CRITICAL_BLOCK(cs_setKeyPool)
+    {
+        // Top up key pool
+        int64 nTargetSize = max(GetArg("-keypool", 100), (int64)0);
+        while (setKeyPool.size() < nTargetSize+1)
+        {
+            int64 nEnd = 1;
+            if (!setKeyPool.empty())
+                nEnd = *(--setKeyPool.end()) + 1;
+            if (!Write(make_pair(string("pool"), nEnd), CKeyPool(GenerateNewKey())))
+                throw runtime_error("ReserveKeyFromKeyPool() : writing generated key failed");
+            setKeyPool.insert(nEnd);
+            printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
+        }
+
+        // Get the oldest key
+        assert(!setKeyPool.empty());
+        nIndex = *(setKeyPool.begin());
+        setKeyPool.erase(setKeyPool.begin());
+        if (!Read(make_pair(string("pool"), nIndex), keypool))
+            throw runtime_error("ReserveKeyFromKeyPool() : read failed");
+        if (!mapKeys.count(keypool.vchPubKey))
+            throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
+        assert(!keypool.vchPubKey.empty());
+        printf("keypool reserve %"PRI64d"\n", nIndex);
+    }
+}
+
+void CWalletDB::KeepKey(int64 nIndex)
+{
+    // Remove from key pool
+    Erase(make_pair(string("pool"), nIndex));
+    printf("keypool keep %"PRI64d"\n", nIndex);
+}
+
+void CWalletDB::ReturnKey(int64 nIndex)
+{
+    // Return to key pool
+    CRITICAL_BLOCK(cs_setKeyPool)
+        setKeyPool.insert(nIndex);
+    printf("keypool return %"PRI64d"\n", nIndex);
+}
+
+vector<unsigned char> CWalletDB::GetKeyFromKeyPool()
+{
+    int64 nIndex = 0;
+    CKeyPool keypool;
+    ReserveKeyFromKeyPool(nIndex, keypool);
+    KeepKey(nIndex);
+    return keypool.vchPubKey;
 }

@@ -308,6 +308,35 @@ bool LoadAddresses();
 
 
 
+class CKeyPool
+{
+public:
+    int64 nTime;
+    vector<unsigned char> vchPubKey;
+
+    CKeyPool()
+    {
+        nTime = GetTime();
+    }
+
+    CKeyPool(const vector<unsigned char>& vchPubKeyIn)
+    {
+        nTime = GetTime();
+        vchPubKey = vchPubKeyIn;
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+        READWRITE(nTime);
+        READWRITE(vchPubKey);
+    )
+};
+
+
+
+
 class CWalletDB : public CDB
 {
 public:
@@ -396,6 +425,13 @@ public:
     }
 
     bool LoadWallet();
+protected:
+    void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
+    void KeepKey(int64 nIndex);
+    static void ReturnKey(int64 nIndex);
+    friend class CReserveKey;
+public:
+    vector<unsigned char> GetKeyFromKeyPool();
 };
 
 bool LoadWallet(bool& fFirstRunRet);
@@ -405,3 +441,48 @@ inline bool SetAddressBookName(const string& strAddress, const string& strName)
 {
     return CWalletDB().WriteName(strAddress, strName);
 }
+
+class CReserveKey
+{
+protected:
+    int64 nIndex;
+    vector<unsigned char> vchPubKey;
+public:
+    CReserveKey()
+    {
+        nIndex = -1;
+    }
+
+    ~CReserveKey()
+    {
+        ReturnKey();
+    }
+
+    vector<unsigned char> GetReservedKey()
+    {
+        if (nIndex == -1)
+        {
+            CKeyPool keypool;
+            CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
+            vchPubKey = keypool.vchPubKey;
+        }
+        assert(!vchPubKey.empty());
+        return vchPubKey;
+    }
+
+    void KeepKey()
+    {
+        if (nIndex != -1)
+            CWalletDB().KeepKey(nIndex);
+        nIndex = -1;
+        vchPubKey.clear();
+    }
+
+    void ReturnKey()
+    {
+        if (nIndex != -1)
+            CWalletDB::ReturnKey(nIndex);
+        nIndex = -1;
+        vchPubKey.clear();
+    }
+};
