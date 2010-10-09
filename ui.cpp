@@ -1170,7 +1170,7 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
     string strName = dialog.GetValue();
 
     // Generate new key
-    string strAddress = PubKeyToAddress(GenerateNewKey());
+    string strAddress = PubKeyToAddress(CWalletDB().GetKeyFromKeyPool());
 
     // Save
     SetAddressBookName(strAddress, strName);
@@ -1425,7 +1425,10 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                 if (txout.IsMine())
                     strHTML += "<b>Credit:</b> " + FormatMoney(txout.GetCredit()) + "<br>";
 
-            strHTML += "<b>Inputs:</b><br>";
+            strHTML += "<br><b>Transaction:</b><br>";
+            strHTML += HtmlEscape(wtx.ToString(), true);
+
+            strHTML += "<br><b>Inputs:</b><br>";
             CRITICAL_BLOCK(cs_mapWallet)
             {
                 foreach(const CTxIn& txin, wtx.vin)
@@ -1444,9 +1447,6 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                     }
                 }
             }
-
-            strHTML += "<br><hr><br><b>Transaction:</b><br>";
-            strHTML += HtmlEscape(wtx.ToString(), true);
         }
 
 
@@ -2245,9 +2245,9 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             Error(_("Insufficient funds"));
             return;
         }
-        CKey key;
+        CReserveKey reservekey;
         int64 nFeeRequired;
-        if (!CreateTransaction(scriptPubKey, nPrice, wtx, key, nFeeRequired))
+        if (!CreateTransaction(scriptPubKey, nPrice, wtx, reservekey, nFeeRequired))
         {
             if (nPrice + nFeeRequired > GetBalance())
                 Error(strprintf(_("This is an oversized transaction that requires a transaction fee of %s"), FormatMoney(nFeeRequired).c_str()));
@@ -2287,7 +2287,7 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             return;
 
         // Commit
-        if (!CommitTransaction(wtx, key))
+        if (!CommitTransaction(wtx, reservekey))
         {
             Error(_("The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."));
             return;
@@ -2565,7 +2565,7 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
         strName = dialog.GetValue();
 
         // Generate new key
-        strAddress = PubKeyToAddress(GenerateNewKey());
+        strAddress = PubKeyToAddress(CWalletDB().GetKeyFromKeyPool());
     }
 
     // Add to list and select it

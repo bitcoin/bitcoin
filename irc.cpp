@@ -126,7 +126,7 @@ bool RecvLineIRC(SOCKET hSocket, string& strLine)
     }
 }
 
-int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const char* psz3=NULL)
+int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const char* psz3=NULL, const char* psz4=NULL)
 {
     loop
     {
@@ -141,6 +141,8 @@ int RecvUntil(SOCKET hSocket, const char* psz1, const char* psz2=NULL, const cha
             return 2;
         if (psz3 && strLine.find(psz3) != -1)
             return 3;
+        if (psz4 && strLine.find(psz4) != -1)
+            return 4;
     }
 }
 
@@ -210,7 +212,7 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
 
-        if (!RecvUntil(hSocket, "Found your hostname", "using your IP address instead", "Couldn't look up your hostname"))
+        if (!RecvUntil(hSocket, "Found your hostname", "using your IP address instead", "Couldn't look up your hostname", "ignoring hostname"))
         {
             closesocket(hSocket);
             hSocket = INVALID_SOCKET;
