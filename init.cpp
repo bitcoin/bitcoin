@@ -175,7 +175,21 @@ bool AppInit2(int argc, char* argv[])
             "  -connect=<ip>   \t  " + _("Connect only to the specified node\n") +
             "  -server         \t  " + _("Accept command line and JSON-RPC commands\n") +
             "  -daemon         \t  " + _("Run in the background as a daemon and accept commands\n") +
+            "  -rpcuser        \t  " + _("Username for JSON-RPC connection\n") +
+            "  -rpcpassword    \t  " + _("Password for JSON-RPC connection\n") +
+            "  -rpcport=<port> \t  " + _("Listen for JSON-RPC connections on <port>\n") +
+            "  -rpcallowip=<ip>\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
+            "  -rpcconnect=<ip>\t  " + _("Send commands to node running on <ip>\n") +
             "  -?              \t  " + _("This help message\n");
+
+#ifdef USE_SSL
+        strUsage += string() +
+            _("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)\n") +
+            "  -rpcssl=1                             \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
+            "  -rpcsslcertificatchainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
+            "  -rpcsslprivatekeyfile=<file.pem>      \t  " + _("Server private key (default: server.pem)\n") +
+            "  -rpcsslciphers=<ciphers>              \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
+#endif
 
 #if defined(__WXMSW__) && defined(GUI)
         // Tabs make the columns line up in the message box

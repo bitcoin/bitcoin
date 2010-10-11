@@ -22,9 +22,10 @@ LIBS= -dead_strip \
  $(DEPSDIR)/lib/libboost_filesystem.a \
  $(DEPSDIR)/lib/libboost_program_options.a \
  $(DEPSDIR)/lib/libboost_thread.a \
+ $(DEPSDIR)/lib/libssl.a \
  $(DEPSDIR)/lib/libcrypto.a 
 
-DEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0
+DEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0 -DUSE_SSL
 
 DEBUGFLAGS=-g -DwxDEBUG_LEVEL=0
 # ppc doesn't work because we don't support big-endian
