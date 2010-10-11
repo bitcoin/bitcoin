@@ -572,7 +572,7 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     strMiscWarning = pszMessage;
 #ifdef GUI
     if (wxTheApp && !fDaemon)
-        boost::thread(bind(ThreadOneMessageBox, string(pszMessage)));
+        boost::thread(boost::bind(ThreadOneMessageBox, string(pszMessage)));
 #endif
 }
 
@@ -807,7 +807,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
                 string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
                 strMiscWarning = strMessage;
                 printf("*** %s\n", strMessage.c_str());
-                boost::thread(bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
+                boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
             }
         }
         foreach(int64 n, vTimeOffsets)

@@ -23,11 +23,12 @@ LIBS= \
    -l boost_program_options \
    -l boost_thread \
    -l db_cxx \
+   -l ssl \
    -l crypto \
  -Wl,-Bdynamic \
    -l gthread-2.0
 
-DEFS=-D__WXGTK__ -DNOPCH -DFOURWAYSSE2
+DEFS=-D__WXGTK__ -DNOPCH -DFOURWAYSSE2 -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \

@@ -2433,15 +2433,20 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         // Nodes rebroadcast an addr every 24 hours
         pfrom->vAddrToSend.clear();
-        int64 nSince = GetAdjustedTime() - 6 * 60 * 60; // in the last 6 hours
+        int64 nSince = GetAdjustedTime() - 3 * 60 * 60; // in the last 3 hours
         CRITICAL_BLOCK(cs_mapAddresses)
         {
+            unsigned int nCount = 0;
             foreach(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
             {
-                if (fShutdown)
-                    return true;
                 const CAddress& addr = item.second;
                 if (addr.nTime > nSince)
+                    nCount++;
+            }
+            foreach(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
+            {
+                const CAddress& addr = item.second;
+                if (addr.nTime > nSince && GetRand(nCount) < 2000)
                     pfrom->PushAddress(addr);
             }
         }
@@ -2780,7 +2785,7 @@ void ThreadBitcoinMiner(void* parg)
         vnThreadsRunning[3]--;
         PrintException(NULL, "ThreadBitcoinMiner()");
     }
-    UIThreadCall(bind(CalledSetStatusBar, "", 0));
+    UIThreadCall(boost::bind(CalledSetStatusBar, "", 0));
     nHPSTimerStart = 0;
     if (vnThreadsRunning[3] == 0)
         dHashesPerSec = 0;
@@ -3143,7 +3148,7 @@ void BitcoinMiner()
                         nHPSTimerStart = GetTimeMillis();
                         nHashCounter = 0;
                         string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
-                        UIThreadCall(bind(CalledSetStatusBar, strStatus, 0));
+                        UIThreadCall(boost::bind(CalledSetStatusBar, strStatus, 0));
                         static int64 nLogTime;
                         if (GetTime() - nLogTime > 30 * 60)
                         {
