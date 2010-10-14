@@ -26,7 +26,9 @@ LIBS= \
    -l ssl \
    -l crypto \
  -Wl,-Bdynamic \
-   -l gthread-2.0
+   -l gthread-2.0 \
+   -l z \
+   -l dl
 
 DEFS=-D__WXGTK__ -DNOPCH -DFOURWAYSSE2 -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
