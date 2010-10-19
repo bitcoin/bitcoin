@@ -22,7 +22,6 @@ static const int64 CENT = 1000000;
 static const int64 MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int COINBASE_MATURITY = 100;
-static const CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 
 
 
@@ -31,7 +30,8 @@ static const CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 
 extern CCriticalSection cs_main;
 extern map<uint256, CBlockIndex*> mapBlockIndex;
-extern const uint256 hashGenesisBlock;
+extern uint256 hashGenesisBlock;
+extern CBigNum bnProofOfWorkLimit;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
 extern CBigNum bnBestChainWork;

@@ -763,6 +763,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                            SingleLine(strDescription),
                            FormatMoney(-nValue, true),
                            "");
+                nIndex = -1;
                 wtx.nLinesDisplayed++;
             }
         }

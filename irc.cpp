@@ -252,8 +252,8 @@ void ThreadIRCSeed2(void* parg)
         }
         Sleep(500);
 
-        Send(hSocket, "JOIN #bitcoin\r");
-        Send(hSocket, "WHO #bitcoin\r");
+        Send(hSocket, fTestNet ? "JOIN #bitcoinTEST\r" : "JOIN #bitcoin\r");
+        Send(hSocket, fTestNet ? "WHO #bitcoinTEST\r"  : "WHO #bitcoin\r");
 
         int64 nStart = GetTime();
         string strLine;
