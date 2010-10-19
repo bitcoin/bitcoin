@@ -152,7 +152,7 @@ inline bool DecodeBase58Check(const string& str, vector<unsigned char>& vchRet)
 
 
 
-static const unsigned char ADDRESSVERSION = 0;
+#define ADDRESSVERSION   ((unsigned char)(fTestNet ? 111 : 0))
 
 inline string Hash160ToAddress(uint160 hash160)
 {

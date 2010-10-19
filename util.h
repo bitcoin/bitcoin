@@ -145,6 +145,7 @@ extern bool fShutdown;
 extern bool fDaemon;
 extern bool fCommandLine;
 extern string strMiscWarning;
+extern bool fTestNet;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
@@ -621,3 +622,27 @@ inline void ExitThread(unsigned int nExitCode)
     pthread_exit((void*)nExitCode);
 }
 #endif
+
+
+
+
+
+inline bool AffinityBugWorkaround(void(*pfn)(void*))
+{
+#ifdef __WXMSW__
+    // Sometimes after a few hours affinity gets stuck on one processor
+    DWORD dwProcessAffinityMask = -1;
+    DWORD dwSystemAffinityMask = -1;
+    GetProcessAffinityMask(GetCurrentProcess(), &dwProcessAffinityMask, &dwSystemAffinityMask);
+    DWORD dwPrev1 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
+    DWORD dwPrev2 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
+    if (dwPrev2 != dwProcessAffinityMask)
+    {
+        printf("AffinityBugWorkaround() : SetThreadAffinityMask=%d, ProcessAffinityMask=%d, restarting thread\n", dwPrev2, dwProcessAffinityMask);
+        if (!CreateThread(pfn, NULL))
+            printf("Error: CreateThread() failed\n");
+        return true;
+    }
+#endif
+    return false;
+}

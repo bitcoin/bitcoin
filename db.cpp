@@ -846,10 +846,13 @@ void BackupWallet(const string& strDest)
     }
 }
 
+
 void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
 {
     nIndex = -1;
     keypool.vchPubKey.clear();
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_setKeyPool)
     {
         // Top up key pool
@@ -881,7 +884,11 @@ void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
 void CWalletDB::KeepKey(int64 nIndex)
 {
     // Remove from key pool
-    Erase(make_pair(string("pool"), nIndex));
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        Erase(make_pair(string("pool"), nIndex));
+    }
     printf("keypool keep %"PRI64d"\n", nIndex);
 }
 

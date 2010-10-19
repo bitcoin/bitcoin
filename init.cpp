@@ -165,22 +165,22 @@ bool AppInit2(int argc, char* argv[])
             "  bitcoin [options] help              \t\t  " + _("List commands\n") +
             "  bitcoin [options] help <command>    \t\t  " + _("Get help for a command\n") +
           _("Options:\n") +
-            "  -conf=<file>     \t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
-            "  -gen             \t  " + _("Generate coins\n") +
-            "  -gen=0           \t  " + _("Don't generate coins\n") +
-            "  -min             \t  " + _("Start minimized\n") +
-            "  -datadir=<dir>   \t  " + _("Specify data directory\n") +
-            "  -proxy=<ip:port> \t  " + _("Connect through socks4 proxy\n") +
-            "  -addnode=<ip>    \t  " + _("Add a node to connect to\n") +
-            "  -connect=<ip>    \t  " + _("Connect only to the specified node\n") +
-            "  -server          \t  " + _("Accept command line and JSON-RPC commands\n") +
-            "  -daemon          \t  " + _("Run in the background as a daemon and accept commands\n") +
-            "  -rpcuser=<user>  \t  " + _("Username for JSON-RPC connections\n") +
-            "  -rpcpassword=<pw>\t  " + _("Password for JSON-RPC connections\n") +
-            "  -rpcport=<port>  \t  " + _("Listen for JSON-RPC connections on <port>\n") +
-            "  -rpcallowip=<ip> \t  " + _("Allow JSON-RPC connections from specified IP address\n") +
-            "  -rpcconnect=<ip> \t  " + _("Send commands to node running on <ip>\n") +
-            "  -?               \t  " + _("This help message\n");
+            "  -conf=<file>     \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
+            "  -gen             \t\t  " + _("Generate coins\n") +
+            "  -gen=0           \t\t  " + _("Don't generate coins\n") +
+            "  -min             \t\t  " + _("Start minimized\n") +
+            "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
+            "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
+            "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
+            "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
+            "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
+            "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
+            "  -testnet         \t\t  " + _("Use the test network\n") +
+            "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
+            "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
+            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port>\n") +
+            "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
+            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip>\n");
 
 #ifdef USE_SSL
         strUsage += string() +
@@ -190,6 +190,9 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcsslprivatekeyfile=<file.pem>      \t  " + _("Server private key (default: server.pem)\n") +
             "  -rpcsslciphers=<ciphers>              \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
 #endif
+
+        strUsage += string() +
+            "  -?               \t\t  " + _("This help message\n");
 
 #if defined(__WXMSW__) && defined(GUI)
         // Tabs make the columns line up in the message box
@@ -207,6 +210,9 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-printtodebugger"))
         fPrintToDebugger = true;
+
+    if (mapArgs.count("-testnet"))
+        fTestNet = true;
 
     if (fCommandLine)
     {

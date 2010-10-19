@@ -16,6 +16,7 @@ bool fShutdown = false;
 bool fDaemon = false;
 bool fCommandLine = false;
 string strMiscWarning;
+bool fTestNet = false;
 
 
 
@@ -649,15 +650,11 @@ string GetDefaultDataDir()
 void GetDataDir(char* pszDir)
 {
     // pszDir must be at least MAX_PATH length.
+    int nVariation;
     if (pszSetDataDir[0] != 0)
     {
         strlcpy(pszDir, pszSetDataDir, MAX_PATH);
-        static bool fMkdirDone;
-        if (!fMkdirDone)
-        {
-            fMkdirDone = true;
-            filesystem::create_directory(pszDir);
-        }
+        nVariation = 0;
     }
     else
     {
@@ -665,11 +662,23 @@ void GetDataDir(char* pszDir)
         // value so we don't have to do memory allocations after that.
         static char pszCachedDir[MAX_PATH];
         if (pszCachedDir[0] == 0)
-        {
             strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
-            filesystem::create_directory(pszCachedDir);
-        }
         strlcpy(pszDir, pszCachedDir, MAX_PATH);
+        nVariation = 1;
+    }
+    if (fTestNet)
+    {
+        char* p = pszDir + strlen(pszDir);
+        if (p > pszDir && p[-1] != '/' && p[-1] != '\\')
+            *p++ = '/';
+        strcpy(p, "testnet");
+        nVariation += 2;
+    }
+    static bool pfMkdir[4];
+    if (!pfMkdir[nVariation])
+    {
+        pfMkdir[nVariation] = true;
+        filesystem::create_directory(pszDir);
     }
 }
 
