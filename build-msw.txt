@@ -12,12 +12,8 @@ WINDOWS BUILD NOTES
 Compilers Supported
 -------------------
 MinGW GCC (recommended)
-
-MSVC 6.0 SP6: You'll need Boost version 1.34 because they dropped support
-for MSVC 6.0 after that.  However, they didn't add Asio until 1.35.
-You should still be able to build with MSVC 6.0 by adding Asio to 1.34 by
-unpacking boost_asio_*.zip into the boost directory:
-http://sourceforge.net/projects/asio/files/asio
+http://tdm-gcc.tdragon.net/ has an easy installer.  Go back a few versions
+for a little older gcc like gcc 4.4.?.
 
 MSVC 8.0 (2005) SP1 has been tested.  Note: MSVC 7.0 and up have a habit of
 linking to runtime DLLs that are not installed on XP by default.

@@ -12,7 +12,7 @@ extern int nBestHeight;
 
 
 
-static const unsigned short DEFAULT_PORT = 0x8d20; // htons(8333)
+inline unsigned short GetDefaultPort() { return fTestNet ? htons(18333) : htons(8333); }
 static const unsigned int PUBLISH_HOPS = 5;
 enum
 {
@@ -150,11 +150,11 @@ public:
         Init();
     }
 
-    CAddress(unsigned int ipIn, unsigned short portIn=DEFAULT_PORT, uint64 nServicesIn=NODE_NETWORK)
+    CAddress(unsigned int ipIn, unsigned short portIn=0, uint64 nServicesIn=NODE_NETWORK)
     {
         Init();
         ip = ipIn;
-        port = portIn;
+        port = (portIn == 0 ? GetDefaultPort() : portIn);
         nServices = nServicesIn;
     }
 
@@ -185,7 +185,7 @@ public:
         nServices = NODE_NETWORK;
         memcpy(pchReserved, pchIPv4, sizeof(pchReserved));
         ip = INADDR_NONE;
-        port = DEFAULT_PORT;
+        port = GetDefaultPort();
         nTime = GetAdjustedTime();
         nLastTry = 0;
     }
@@ -193,7 +193,7 @@ public:
     bool SetAddress(const char* pszIn)
     {
         ip = INADDR_NONE;
-        port = DEFAULT_PORT;
+        port = GetDefaultPort();
         char psz[100];
         strlcpy(psz, pszIn, sizeof(psz));
         unsigned int a=0, b=0, c=0, d=0, e=0;
