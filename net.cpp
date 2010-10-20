@@ -20,7 +20,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect);
 //
 bool fClient = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
-CAddress addrLocalHost(0, DEFAULT_PORT, nLocalServices);
+CAddress addrLocalHost(0, 0, nLocalServices);
 CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 array<int, 10> vnThreadsRunning;
@@ -1006,7 +1006,7 @@ void ThreadOpenConnections2(void* parg)
 
                 // Randomize the order in a deterministic way, putting the standard port first
                 int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
-                if (addr.port != DEFAULT_PORT)
+                if (addr.port != GetDefaultPort())
                     nRandomizer += 2 * 60 * 60;
 
                 // Last seen  Base retry frequency
@@ -1185,6 +1185,7 @@ bool BindListenPort(string& strError)
 {
     strError = "";
     int nOne = 1;
+    addrLocalHost.port = GetDefaultPort();
 
 #ifdef __WXMSW__
     // Initialize Windows Sockets
@@ -1236,12 +1237,12 @@ bool BindListenPort(string& strError)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
-    sockaddr.sin_port = DEFAULT_PORT;
+    sockaddr.sin_port = GetDefaultPort();
     if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf("Unable to bind to port %d on this computer.  Bitcoin is probably already running.", ntohs(sockaddr.sin_port));
+            strError = strprintf(_("Unable to bind to port %d on this computer.  Bitcoin is probably already running."), ntohs(sockaddr.sin_port));
         else
             strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
         printf("%s\n", strError.c_str());
@@ -1278,7 +1279,7 @@ void StartNode(void* parg)
                 printf("host ip %d: %s\n", i, CAddress(*(unsigned int*)phostent->h_addr_list[i]).ToStringIP().c_str());
             for (int i = 0; phostent->h_addr_list[i] != NULL; i++)
             {
-                CAddress addr(*(unsigned int*)phostent->h_addr_list[i], DEFAULT_PORT, nLocalServices);
+                CAddress addr(*(unsigned int*)phostent->h_addr_list[i], GetDefaultPort(), nLocalServices);
                 if (addr.IsValid() && addr.GetByte(3) != 127)
                 {
                     addrLocalHost = addr;
@@ -1306,7 +1307,7 @@ void StartNode(void* parg)
                     printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
 
                 // Take the first IP that isn't loopback 127.x.x.x
-                CAddress addr(*(unsigned int*)&s4->sin_addr, DEFAULT_PORT, nLocalServices);
+                CAddress addr(*(unsigned int*)&s4->sin_addr, GetDefaultPort(), nLocalServices);
                 if (addr.IsValid() && addr.GetByte(3) != 127)
                 {
                     addrLocalHost = addr;
