@@ -261,6 +261,8 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
+    obj.push_back(Pair("testnet",       fTestNet));
+    obj.push_back(Pair("keypoololdest", (boost::int64_t)CWalletDB().GetOldestKeyPoolTime()));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
@@ -767,12 +769,22 @@ string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeader
     return s.str();
 }
 
+string rfc1123Time()
+{
+    char buffer[32];
+    time_t now;
+    time(&now);
+    struct tm* now_gmt = gmtime(&now);
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S %Z", now_gmt);
+    return string(buffer);
+}
+
 string HTTPReply(int nStatus, const string& strMsg)
 {
     if (nStatus == 401)
-        return "HTTP/1.0 401 Authorization Required\r\n"
-            "Server: HTTPd/1.0\r\n"
-            "Date: Sat, 08 Jul 2006 12:04:08 GMT\r\n"
+        return strprintf("HTTP/1.0 401 Authorization Required\r\n"
+            "Date: %s\r\n"
+            "Server: bitcoin-json-rpc\r\n"
             "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
             "Content-Type: text/html\r\n"
             "Content-Length: 311\r\n"
@@ -785,7 +797,7 @@ string HTTPReply(int nStatus, const string& strMsg)
             "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=ISO-8859-1'>\r\n"
             "</HEAD>\r\n"
             "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
-            "</HTML>\r\n";
+            "</HTML>\r\n", rfc1123Time().c_str());
     string strStatus;
          if (nStatus == 200) strStatus = "OK";
     else if (nStatus == 400) strStatus = "Bad Request";
@@ -793,15 +805,16 @@ string HTTPReply(int nStatus, const string& strMsg)
     else if (nStatus == 500) strStatus = "Internal Server Error";
     return strprintf(
             "HTTP/1.1 %d %s\r\n"
+            "Date: %s\r\n"
             "Connection: close\r\n"
             "Content-Length: %d\r\n"
             "Content-Type: application/json\r\n"
-            "Date: Sat, 08 Jul 2006 12:04:08 GMT\r\n"
-            "Server: json-rpc/1.0\r\n"
+            "Server: bitcoin-json-rpc/1.0\r\n"
             "\r\n"
             "%s",
         nStatus,
         strStatus.c_str(),
+        rfc1123Time().c_str(),
         strMsg.size(),
         strMsg.c_str());
 }

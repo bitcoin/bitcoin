@@ -908,3 +908,12 @@ vector<unsigned char> CWalletDB::GetKeyFromKeyPool()
     KeepKey(nIndex);
     return keypool.vchPubKey;
 }
+
+int64 CWalletDB::GetOldestKeyPoolTime()
+{
+    int64 nIndex = 0;
+    CKeyPool keypool;
+    ReserveKeyFromKeyPool(nIndex, keypool);
+    ReturnKey(nIndex);
+    return keypool.nTime;
+}

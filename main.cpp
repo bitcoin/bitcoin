@@ -2987,7 +2987,7 @@ void BitcoinMiner()
         txNew.vin.resize(1);
         txNew.vin[0].prevout.SetNull();
         int64 nNow = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-        if (nNow > nPrevTime+1 && ++nExtraNonce >= 0x7f)
+        if (++nExtraNonce >= 0x7f && nNow > nPrevTime+1)
         {
             nExtraNonce = 1;
             nPrevTime = nNow;
