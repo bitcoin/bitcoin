@@ -298,6 +298,7 @@ private:
     void operator=(const CAddrDB&);
 public:
     bool WriteAddress(const CAddress& addr);
+    bool EraseAddress(const CAddress& addr);
     bool LoadAddresses();
 };
 

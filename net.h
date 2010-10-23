@@ -24,7 +24,7 @@ enum
 
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet);
 bool GetMyExternalIP(unsigned int& ipRet);
-bool AddAddress(CAddress addr);
+bool AddAddress(CAddress addr, int64 nTimePenalty=0);
 void AddressCurrentlyConnected(const CAddress& addr);
 CNode* FindNode(unsigned int ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
@@ -139,7 +139,7 @@ public:
     unsigned int ip;
     unsigned short port;
 
-    // disk only
+    // disk and network only
     unsigned int nTime;
 
     // memory only
@@ -186,7 +186,7 @@ public:
         memcpy(pchReserved, pchIPv4, sizeof(pchReserved));
         ip = INADDR_NONE;
         port = GetDefaultPort();
-        nTime = GetAdjustedTime();
+        nTime = 100000000;
         nLastTry = 0;
     }
 
@@ -218,11 +218,12 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
+        if (fRead)
+            const_cast<CAddress*>(this)->Init();
         if (nType & SER_DISK)
-        {
             READWRITE(nVersion);
+        if ((nType & SER_DISK) || (nVersion >= 31402 && !(nType & SER_GETHASH)))
             READWRITE(nTime);
-        }
         READWRITE(nServices);
         READWRITE(FLATDATA(pchReserved)); // for IPv6
         READWRITE(ip);
@@ -415,7 +416,7 @@ public:
     const char* GetCommand() const
     {
         if (!IsKnownType())
-            throw std::out_of_range(strprintf("CInv::GetCommand() : type=% unknown type", type));
+            throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
         return ppszTypeName[type];
     }
 
@@ -730,13 +731,6 @@ public:
             EndMessage();
         else
             AbortMessage();
-    }
-
-    const char* GetMessageCommand() const
-    {
-        if (nHeaderStart == -1)
-            return "";
-        return &vSend[nHeaderStart] + offsetof(CMessageHeader, pchCommand);
     }
 
 

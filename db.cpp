@@ -503,6 +503,11 @@ bool CAddrDB::WriteAddress(const CAddress& addr)
     return Write(make_pair(string("addr"), addr.GetKey()), addr);
 }
 
+bool CAddrDB::EraseAddress(const CAddress& addr)
+{
+    return Erase(make_pair(string("addr"), addr.GetKey()));
+}
+
 bool CAddrDB::LoadAddresses()
 {
     CRITICAL_BLOCK(cs_mapAddresses)
@@ -554,11 +559,6 @@ bool CAddrDB::LoadAddresses()
         pcursor->close();
 
         printf("Loaded %d addresses\n", mapAddresses.size());
-
-        // Fix for possible bug that manifests in mapAddresses.count in irc.cpp,
-        // just need to call count here and it doesn't happen there.  The bug was the
-        // pack pragma in irc.cpp and has been fixed, but I'm not in a hurry to delete this.
-        mapAddresses.count(vector<unsigned char>(18));
     }
 
     return true;

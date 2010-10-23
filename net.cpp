@@ -144,7 +144,7 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
                 }
             }
             closesocket(hSocket);
-            if (strLine.find("<"))
+            if (strLine.find("<") != -1)
                 strLine = strLine.substr(0, strLine.find("<"));
             strLine = strLine.substr(strspn(strLine.c_str(), " \t\n\r"));
             while (strLine.size() > 0 && isspace(strLine[strLine.size()-1]))
@@ -224,12 +224,13 @@ bool GetMyExternalIP(unsigned int& ipRet)
 
 
 
-bool AddAddress(CAddress addr)
+bool AddAddress(CAddress addr, int64 nTimePenalty)
 {
     if (!addr.IsRoutable())
         return false;
     if (addr.ip == addrLocalHost.ip)
         return false;
+    addr.nTime = max((int64)0, (int64)addr.nTime - nTimePenalty);
     CRITICAL_BLOCK(cs_mapAddresses)
     {
         map<vector<unsigned char>, CAddress>::iterator it = mapAddresses.find(addr.GetKey());
@@ -1072,25 +1073,6 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
     if (!pnode)
         return false;
     pnode->fNetworkNode = true;
-
-    if (addrLocalHost.IsRoutable() && !fUseProxy)
-    {
-        // Advertise our address
-        vector<CAddress> vAddr;
-        vAddr.push_back(addrLocalHost);
-        pnode->PushMessage("addr", vAddr);
-    }
-
-    // Get as many addresses as we can
-    pnode->PushMessage("getaddr");
-    pnode->fGetAddr = true; // don't relay the results of the getaddr
-
-    ////// should the one on the receiving end do this too?
-    // Subscribe our local subscription list
-    const unsigned int nHops = 0;
-    for (unsigned int nChannel = 0; nChannel < pnodeLocalHost->vfSubscribe.size(); nChannel++)
-        if (pnodeLocalHost->vfSubscribe[nChannel])
-            pnode->PushMessage("subscribe", nChannel, nHops);
 
     return true;
 }
