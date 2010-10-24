@@ -84,18 +84,31 @@ bool RecvLine(SOCKET hSocket, string& strLine)
         }
         else if (nBytes <= 0)
         {
+            if (fShutdown)
+                return false;
+            if (nBytes < 0)
+            {
+                int nErr = WSAGetLastError();
+                if (nErr == WSAEMSGSIZE)
+                    continue;
+                if (nErr == WSAEWOULDBLOCK || nErr == WSAEINTR || nErr == WSAEINPROGRESS)
+                {
+                    Sleep(10);
+                    continue;
+                }
+            }
             if (!strLine.empty())
                 return true;
-            // socket closed
-            printf("IRC socket closed\n");
-            return false;
-        }
-        else
-        {
-            // socket error
-            int nErr = WSAGetLastError();
-            if (nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+            if (nBytes == 0)
             {
+                // socket closed
+                printf("IRC socket closed\n");
+                return false;
+            }
+            else
+            {
+                // socket error
+                int nErr = WSAGetLastError();
                 printf("IRC recv failed: %d\n", nErr);
                 return false;
             }
@@ -293,8 +306,8 @@ void ThreadIRCSeed2(void* parg)
                 CAddress addr;
                 if (DecodeAddress(pszName, addr))
                 {
-                    addr.nTime = GetAdjustedTime() - 51 * 60;
-                    if (AddAddress(addr))
+                    addr.nTime = GetAdjustedTime();
+                    if (AddAddress(addr, 51 * 60))
                         printf("IRC got new address\n");
                     nGotIRCAddresses++;
                 }

@@ -929,7 +929,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 
 bool IsInitialBlockDownload()
 {
-    if (pindexBest == NULL)
+    if (pindexBest == NULL || nBestHeight < 74000)
         return true;
     static int64 nLastUpdate;
     static CBlockIndex* pindexLastBest;
@@ -2172,6 +2172,24 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion < 209)
             pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
 
+        if (!pfrom->fInbound)
+        {
+            // Advertise our address
+            if (addrLocalHost.IsRoutable() && !fUseProxy)
+            {
+                CAddress addr(addrLocalHost);
+                addr.nTime = GetAdjustedTime();
+                pfrom->PushAddress(addr);
+            }
+
+            // Get recent addresses
+            if (pfrom->nVersion >= 31402 || mapAddresses.size() < 1000)
+            {
+                pfrom->PushMessage("getaddr");
+                pfrom->fGetAddr = true;
+            }
+        }
+
         // Ask the first connected node for block updates
         static int nAskedForBlocks;
         if (!pfrom->fClient && (nAskedForBlocks < 1 || vNodes.size() <= 1))
@@ -2208,14 +2226,18 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CAddress> vAddr;
         vRecv >> vAddr;
-        if (pfrom->nVersion < 200) // don't want addresses from 0.1.5
+
+        // Don't want addr from older versions unless seeding
+        if (pfrom->nVersion < 209)
             return true;
-        if (pfrom->nVersion < 209 && mapAddresses.size() > 1000) // don't want addr from 0.2.0 unless seeding
+        if (pfrom->nVersion < 31402 && mapAddresses.size() > 1000)
             return true;
         if (vAddr.size() > 1000)
             return error("message addr size() = %d", vAddr.size());
 
         // Store the new addresses
+        int64 nNow = GetAdjustedTime();
+        int64 nSince = nNow - 10 * 60;
         foreach(CAddress& addr, vAddr)
         {
             if (fShutdown)
@@ -2223,12 +2245,11 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             // ignore IPv6 for now, since it isn't implemented anyway
             if (!addr.IsIPv4())
                 continue;
-            addr.nTime = GetAdjustedTime() - 2 * 60 * 60;
-            if (pfrom->fGetAddr || vAddr.size() > 10)
-                addr.nTime -= 5 * 24 * 60 * 60;
-            AddAddress(addr);
+            if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
+                addr.nTime = nNow - 5 * 24 * 60 * 60;
+            AddAddress(addr, 2 * 60 * 60);
             pfrom->AddAddressKnown(addr);
-            if (!pfrom->fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
+            if (addr.nTime > nSince && !pfrom->fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
             {
                 // Relay to a limited number of other nodes
                 CRITICAL_BLOCK(cs_vNodes)
@@ -2243,6 +2264,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     multimap<uint256, CNode*> mapMix;
                     foreach(CNode* pnode, vNodes)
                     {
+                        if (pnode->nVersion < 31402)
+                            continue;
                         unsigned int nPointer;
                         memcpy(&nPointer, &pnode, sizeof(nPointer));
                         uint256 hashKey = hashRand ^ nPointer;
@@ -2610,9 +2633,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty())
             pto->PushMessage("ping");
 
+        // Resend wallet transactions that haven't gotten in a block yet
+        ResendWalletTransactions();
+
         // Address refresh broadcast
         static int64 nLastRebroadcast;
-        if (GetTime() - nLastRebroadcast > 24 * 60 * 60) // every 24 hours
+        if (GetTime() - nLastRebroadcast > 24 * 60 * 60)
         {
             nLastRebroadcast = GetTime();
             CRITICAL_BLOCK(cs_vNodes)
@@ -2624,13 +2650,42 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
                     // Rebroadcast our address
                     if (addrLocalHost.IsRoutable() && !fUseProxy)
-                        pnode->PushAddress(addrLocalHost);
+                    {
+                        CAddress addr(addrLocalHost);
+                        addr.nTime = GetAdjustedTime();
+                        pnode->PushAddress(addr);
+                    }
                 }
             }
         }
 
-        // Resend wallet transactions that haven't gotten in a block yet
-        ResendWalletTransactions();
+        // Clear out old addresses periodically so it's not too much work at once
+        static int64 nLastClear;
+        if (nLastClear == 0)
+            nLastClear = GetTime();
+        if (GetTime() - nLastClear > 10 * 60 && vNodes.size() >= 3)
+        {
+            nLastClear = GetTime();
+            CRITICAL_BLOCK(cs_mapAddresses)
+            {
+                CAddrDB addrdb;
+                int64 nSince = GetAdjustedTime() - 14 * 24 * 60 * 60;
+                for (map<vector<unsigned char>, CAddress>::iterator mi = mapAddresses.begin();
+                     mi != mapAddresses.end();)
+                {
+                    const CAddress& addr = (*mi).second;
+                    if (addr.nTime < nSince)
+                    {
+                        if (mapAddresses.size() < 1000 || GetTime() > nLastClear + 20)
+                            break;
+                        addrdb.EraseAddress(addr);
+                        mapAddresses.erase(mi++);
+                    }
+                    else
+                        mi++;
+                }
+            }
+        }
 
 
         //
