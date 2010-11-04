@@ -929,7 +929,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 
 bool IsInitialBlockDownload()
 {
-    if (pindexBest == NULL || nBestHeight < 74000)
+    if (pindexBest == NULL || (!fTestNet && nBestHeight < 74000))
         return true;
     static int64 nLastUpdate;
     static CBlockIndex* pindexLastBest;
