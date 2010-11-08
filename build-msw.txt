@@ -63,8 +63,7 @@ nmake -f makefile.vc
 
 OpenSSL
 -------
-Bitcoin does not use any encryption.  If you want to do a no-everything
-build of OpenSSL to exclude encryption routines, a few patches are required.
+If you want to exclude unused optional algorithms, a few patches are required.
 (instructions for OpenSSL v0.9.8k)
 
 Edit engines\e_gmp.c and engines\e_capi.c and add this #ifndef around
@@ -88,7 +87,7 @@ Build
   cd \openssl
   ms\mingw32.bat
 
-If you want to use it with MSVC, generate the .lib file
+If you're using MSVC, generate the .lib file
   lib /machine:i386 /def:ms\libeay32.def /out:out\libeay32.lib
 
 

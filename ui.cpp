@@ -196,7 +196,7 @@ int ThreadSafeMessageBox(const string& message, const string& caption, int style
 
 bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
 {
-    if (nFeeRequired < CENT || fDaemon)
+    if (nFeeRequired < CENT || nFeeRequired <= nTransactionFee || fDaemon)
         return true;
     string strMessage = strprintf(
         _("This transaction is over the size limit.  You can still send it for a fee of %s, "
@@ -1966,8 +1966,13 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
             string strError = SendMoney(scriptPubKey, nValue, wtx, true);
             if (strError == "")
                 wxMessageBox(_("Payment sent  "), _("Sending..."));
-            else if (strError != "ABORTED")
+            else if (strError == "ABORTED")
+                return; // leave send dialog open
+            else
+            {
                 wxMessageBox(strError + "  ", _("Sending..."));
+                EndModal(false);
+            }
         }
         else
         {
