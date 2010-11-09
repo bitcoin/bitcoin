@@ -3400,7 +3400,7 @@ int64 GetBalance()
 }
 
 
-bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
+bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<CWalletTx*>& setCoinsRet)
 {
     setCoinsRet.clear();
 
@@ -3422,6 +3422,11 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
        {
             if (!pcoin->IsFinal() || pcoin->fSpent || !pcoin->IsConfirmed())
                 continue;
+
+            int nDepth = pcoin->GetDepthInMainChain();
+            if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
+                continue;
+
             int64 n = pcoin->GetCredit();
             if (n <= 0)
                 continue;
@@ -3504,6 +3509,13 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
     }
 
     return true;
+}
+
+bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
+{
+    return (SelectCoinsMinConf(nTargetValue, 1, 6, setCoinsRet) ||
+            SelectCoinsMinConf(nTargetValue, 1, 1, setCoinsRet) ||
+            SelectCoinsMinConf(nTargetValue, 0, 1, setCoinsRet));
 }
 
 

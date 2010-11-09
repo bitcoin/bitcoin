@@ -487,6 +487,11 @@ public:
         return false;
     }
 
+    bool IsFromMe() const
+    {
+        return (GetDebit() > 0);
+    }
+
     int64 GetDebit() const
     {
         int64 nDebit = 0;
@@ -789,8 +794,23 @@ public:
         return nCreditCached;
     }
 
+    bool IsFromMe() const
+    {
+        return (GetDebit() > 0);
+    }
+
     bool IsConfirmed() const
     {
+        // Quick answer in most cases
+        if (!IsFinal())
+            return false;
+        if (GetDepthInMainChain() >= 1)
+            return true;
+        if (!IsFromMe()) // using wtx's cached debit
+            return false;
+
+        // If no confirmations but it's from us, we can still
+        // consider it confirmed if all dependencies are confirmed
         map<uint256, const CMerkleTx*> mapPrev;
         vector<const CMerkleTx*> vWorkQueue;
         vWorkQueue.reserve(vtxPrev.size()+1);
@@ -803,7 +823,7 @@ public:
                 return false;
             if (ptx->GetDepthInMainChain() >= 1)
                 return true;
-            if (ptx->GetDebit() <= 0)
+            if (!ptx->IsFromMe())
                 return false;
 
             if (mapPrev.empty())
