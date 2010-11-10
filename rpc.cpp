@@ -263,6 +263,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)CWalletDB().GetOldestKeyPoolTime()));
+    obj.push_back(Pair("paytxfee",      (double)nTransactionFee / (double)COIN));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
