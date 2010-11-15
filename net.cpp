@@ -128,7 +128,7 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
     string strLine;
     while (RecvLine(hSocket, strLine))
     {
-        if (strLine.empty())
+        if (strLine.empty()) // HTTP response is separated from headers by blank line
         {
             loop
             {
@@ -137,6 +137,8 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
                     closesocket(hSocket);
                     return false;
                 }
+                if (pszKeyword == NULL)
+                    break;
                 if (strLine.find(pszKeyword) != -1)
                 {
                     strLine = strLine.substr(strLine.find(pszKeyword) + strlen(pszKeyword));
@@ -176,26 +178,26 @@ bool GetMyExternalIP(unsigned int& ipRet)
     {
         if (nHost == 1)
         {
-            addrConnect = CAddress("70.86.96.218:80"); // www.ipaddressworld.com
+            addrConnect = CAddress("72.233.89.199:80"); // www.whatismyip.com
 
             if (nLookup == 1)
             {
-                struct hostent* phostent = gethostbyname("www.ipaddressworld.com");
+                struct hostent* phostent = gethostbyname("www.whatismyip.com");
                 if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
                     addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(80));
             }
 
-            pszGet = "GET /ip.php HTTP/1.1\r\n"
-                     "Host: www.ipaddressworld.com\r\n"
-                     "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)\r\n"
+            pszGet = "GET /automation/n09230945.asp HTTP/1.1\r\n"
+                     "Host: www.whatismyip.com\r\n"
+                     "User-Agent: Bitcoin/1.0 (see www.bitcoin.org)\r\n"
                      "Connection: close\r\n"
                      "\r\n";
 
-            pszKeyword = "IP:";
+            pszKeyword = NULL; // Returns just IP address
         }
         else if (nHost == 2)
         {
-            addrConnect = CAddress("208.78.68.70:80"); // checkip.dyndns.org
+            addrConnect = CAddress("91.198.22.70:80"); // checkip.dyndns.org
 
             if (nLookup == 1)
             {
