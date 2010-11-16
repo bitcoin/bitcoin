@@ -157,10 +157,19 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     else
     {
         // print to debug.log
-        char pszFile[MAX_PATH+100];
-        GetDataDir(pszFile);
-        strlcat(pszFile, "/debug.log", sizeof(pszFile));
-        FILE* fileout = fopen(pszFile, "a");
+        static FILE* fileout = NULL;
+        static int64 nOpenTime = 0;
+
+        if (GetTime()-nOpenTime > 10 * 60)
+        {
+            if (fileout)
+                fclose(fileout);
+            char pszFile[MAX_PATH+100];
+            GetDataDir(pszFile);
+            strlcat(pszFile, "/debug.log", sizeof(pszFile));
+            fileout = fopen(pszFile, "a");
+            nOpenTime = GetTime();
+        }
         if (fileout)
         {
             //// Debug print useful for profiling
@@ -169,7 +178,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);
             va_end(arg_ptr);
-            fclose(fileout);
+            fflush(fileout);
         }
     }
 
