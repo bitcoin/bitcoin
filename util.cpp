@@ -145,6 +145,8 @@ int GetRandInt(int nMax)
 
 inline int OutputDebugStringF(const char* pszFormat, ...)
 {
+    static CCriticalSection cs_OutputDebugStringF;
+
     int ret = 0;
     if (fPrintToConsole)
     {
@@ -156,29 +158,32 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     }
     else
     {
-        // print to debug.log
-        static FILE* fileout = NULL;
-        static int64 nOpenTime = 0;
+        CRITICAL_BLOCK(cs_OutputDebugStringF)
+        {
+            // print to debug.log
+            static FILE* fileout = NULL;
+            static int64 nOpenTime = 0;
 
-        if (GetTime()-nOpenTime > 10 * 60)
-        {
+            if (GetTime()-nOpenTime > 10 * 60)
+            {
+                if (fileout)
+                    fclose(fileout);
+                char pszFile[MAX_PATH+100];
+                GetDataDir(pszFile);
+                strlcat(pszFile, "/debug.log", sizeof(pszFile));
+                fileout = fopen(pszFile, "a");
+                nOpenTime = GetTime();
+            }
             if (fileout)
-                fclose(fileout);
-            char pszFile[MAX_PATH+100];
-            GetDataDir(pszFile);
-            strlcat(pszFile, "/debug.log", sizeof(pszFile));
-            fileout = fopen(pszFile, "a");
-            nOpenTime = GetTime();
-        }
-        if (fileout)
-        {
-            //// Debug print useful for profiling
-            //fprintf(fileout, " %"PRI64d" ", GetTimeMillis());
-            va_list arg_ptr;
-            va_start(arg_ptr, pszFormat);
-            ret = vfprintf(fileout, pszFormat, arg_ptr);
-            va_end(arg_ptr);
-            fflush(fileout);
+            {
+                //// Debug print useful for profiling
+                //fprintf(fileout, " %"PRI64d" ", GetTimeMillis());
+                va_list arg_ptr;
+                va_start(arg_ptr, pszFormat);
+                ret = vfprintf(fileout, pszFormat, arg_ptr);
+                va_end(arg_ptr);
+                fflush(fileout);
+            }
         }
     }
 
@@ -186,7 +191,6 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     if (fPrintToDebugger)
     {
         // accumulate a line at a time
-        static CCriticalSection cs_OutputDebugStringF;
         CRITICAL_BLOCK(cs_OutputDebugStringF)
         {
             static char pszBuffer[50000];
