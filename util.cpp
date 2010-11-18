@@ -158,17 +158,14 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     {
         // print to debug.log
         static FILE* fileout = NULL;
-        static int64 nOpenTime = 0;
 
-        if (GetTime()-nOpenTime > 10 * 60)
+        if (!fileout)
         {
-            if (fileout)
-                fclose(fileout);
             char pszFile[MAX_PATH+100];
             GetDataDir(pszFile);
             strlcat(pszFile, "/debug.log", sizeof(pszFile));
             fileout = fopen(pszFile, "a");
-            nOpenTime = GetTime();
+            setbuf(fileout, NULL); // unbuffered
         }
         if (fileout)
         {
@@ -178,15 +175,15 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);
             va_end(arg_ptr);
-            fflush(fileout);
         }
     }
 
 #ifdef __WXMSW__
     if (fPrintToDebugger)
     {
-        // accumulate a line at a time
         static CCriticalSection cs_OutputDebugStringF;
+
+        // accumulate a line at a time
         CRITICAL_BLOCK(cs_OutputDebugStringF)
         {
             static char pszBuffer[50000];
