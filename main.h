@@ -528,21 +528,24 @@ public:
         return nValueOut;
     }
 
-    int64 GetMinFee(unsigned int nBlockSize=1) const
+    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true) const
     {
         // Base fee is 1 cent per kilobyte
         unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK);
         unsigned int nNewBlockSize = nBlockSize + nBytes;
         int64 nMinFee = (1 + (int64)nBytes / 1000) * CENT;
 
-        // Transactions under 25K are free as long as block size is under 40K
-        // (about 11,000bc if made of 50bc inputs)
-        if (nBytes < 25000 && nNewBlockSize < 40000)
-            nMinFee = 0;
+        if (fAllowFree)
+        {
+            // Transactions under 25K are free as long as block size is under 40K
+            // (about 11,000bc if made of 50bc inputs)
+            if (nBytes < 25000 && nNewBlockSize < 40000)
+                nMinFee = 0;
 
-        // Transactions under 3K are free as long as block size is under 50K
-        if (nBytes < 3000 && nNewBlockSize < 50000)
-            nMinFee = 0;
+            // Transactions under 3K are free as long as block size is under 50K
+            if (nBytes < 3000 && nNewBlockSize < 50000)
+                nMinFee = 0;
+        }
 
         // To limit dust spam, require a 0.01 fee if any output is less than 0.01
         if (nMinFee < CENT)

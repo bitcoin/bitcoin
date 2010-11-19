@@ -3197,6 +3197,7 @@ void BitcoinMiner()
             while (!mapPriority.empty())
             {
                 // Take highest priority transaction off priority queue
+                double dPriority = (*mapPriority.begin()).first;
                 CTransaction& tx = *(*mapPriority.begin()).second;
                 mapPriority.erase(mapPriority.begin());
 
@@ -3208,8 +3209,9 @@ void BitcoinMiner()
                 if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                     continue;
 
-                // Transaction fee based on block size
-                int64 nMinFee = tx.GetMinFee(nBlockSize);
+                // Transaction fee required depends on block size
+                bool fAllowFree = (nBlockSize + nTxSize < 4000 || dPriority > COIN * 144 / 250);
+                int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree);
 
                 // Connecting shouldn't fail due to dependency on other memory pool transactions
                 // because we're already processing them in order of dependency
