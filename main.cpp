@@ -3197,7 +3197,7 @@ void BitcoinMiner()
             while (!mapPriority.empty())
             {
                 // Take highest priority transaction off priority queue
-                double dPriority = (*mapPriority.begin()).first;
+                double dPriority = -(*mapPriority.begin()).first;
                 CTransaction& tx = *(*mapPriority.begin()).second;
                 mapPriority.erase(mapPriority.begin());
 
