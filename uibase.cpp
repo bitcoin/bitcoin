@@ -352,28 +352,6 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	bSizer69->Add( 0, 16, 0, wxEXPAND, 5 );
 	
-	m_staticText32 = new wxStaticText( m_panelMain, wxID_ANY, _("Optional transaction fee you give to the nodes that process your transactions."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText32->Wrap( -1 );
-	m_staticText32->Hide();
-	
-	bSizer69->Add( m_staticText32, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	wxBoxSizer* bSizer56;
-	bSizer56 = new wxBoxSizer( wxHORIZONTAL );
-	
-	m_staticText31 = new wxStaticText( m_panelMain, wxID_ANY, _("Transaction fee:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText31->Wrap( -1 );
-	m_staticText31->Hide();
-	
-	bSizer56->Add( m_staticText31, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
-	
-	m_textCtrlTransactionFee = new wxTextCtrl( m_panelMain, wxID_TRANSACTIONFEE, wxEmptyString, wxDefaultPosition, wxSize( 70,-1 ), 0 );
-	m_textCtrlTransactionFee->Hide();
-	
-	bSizer56->Add( m_textCtrlTransactionFee, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
-	
-	bSizer69->Add( bSizer56, 0, wxEXPAND, 5 );
-	
 	wxBoxSizer* bSizer71;
 	bSizer71 = new wxBoxSizer( wxHORIZONTAL );
 	
@@ -435,6 +413,25 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	bSizer69->Add( bSizer103, 1, wxEXPAND, 5 );
 	
+	
+	bSizer69->Add( 0, 1, 0, 0, 5 );
+	
+	m_staticText32 = new wxStaticText( m_panelMain, wxID_ANY, _("Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText32->Wrap( 365 );
+	bSizer69->Add( m_staticText32, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxRIGHT|wxLEFT, 5 );
+	
+	wxBoxSizer* bSizer56;
+	bSizer56 = new wxBoxSizer( wxHORIZONTAL );
+	
+	m_staticText31 = new wxStaticText( m_panelMain, wxID_ANY, _("Pay transaction fee:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText31->Wrap( -1 );
+	bSizer56->Add( m_staticText31, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
+	
+	m_textCtrlTransactionFee = new wxTextCtrl( m_panelMain, wxID_TRANSACTIONFEE, wxEmptyString, wxDefaultPosition, wxSize( 70,-1 ), 0 );
+	bSizer56->Add( m_textCtrlTransactionFee, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	bSizer69->Add( bSizer56, 0, wxEXPAND, 5 );
+	
 	m_panelMain->SetSizer( bSizer69 );
 	m_panelMain->Layout();
 	bSizer69->Fit( m_panelMain );
@@ -486,12 +483,12 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	// Connect Events
 	m_listBox->Connect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
-	m_textCtrlTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_checkBoxLimitProcessors->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
 	m_checkBoxMinimizeToTray->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_checkBoxUseProxy->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
 	m_textCtrlProxyIP->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
 	m_textCtrlProxyPort->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
+	m_textCtrlTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_buttonOK->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
 	m_buttonApply->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );
@@ -501,12 +498,12 @@ COptionsDialogBase::~COptionsDialogBase()
 {
 	// Disconnect Events
 	m_listBox->Disconnect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
-	m_textCtrlTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_checkBoxLimitProcessors->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
 	m_checkBoxMinimizeToTray->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_checkBoxUseProxy->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
 	m_textCtrlProxyIP->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
 	m_textCtrlProxyPort->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
+	m_textCtrlTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_buttonOK->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
 	m_buttonApply->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );
