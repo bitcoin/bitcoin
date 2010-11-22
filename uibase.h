@@ -47,9 +47,9 @@
 #define wxID_TEXTCTRLADDRESS 1004
 #define wxID_BUTTONNEW 1005
 #define wxID_BUTTONCOPY 1006
-#define wxID_TRANSACTIONFEE 1007
-#define wxID_PROXYIP 1008
-#define wxID_PROXYPORT 1009
+#define wxID_PROXYIP 1007
+#define wxID_PROXYPORT 1008
+#define wxID_TRANSACTIONFEE 1009
 #define wxID_TEXTCTRLPAYTO 1010
 #define wxID_BUTTONPASTE 1011
 #define wxID_BUTTONADDRESSBOOK 1012
@@ -163,9 +163,6 @@ class COptionsDialogBase : public wxDialog
 		wxScrolledWindow* m_scrolledWindow;
 		wxPanel* m_panelMain;
 		
-		wxStaticText* m_staticText32;
-		wxStaticText* m_staticText31;
-		wxTextCtrl* m_textCtrlTransactionFee;
 		wxCheckBox* m_checkBoxLimitProcessors;
 		wxSpinCtrl* m_spinCtrlLimitProcessors;
 		wxStaticText* m_staticText35;
@@ -178,6 +175,10 @@ class COptionsDialogBase : public wxDialog
 		wxTextCtrl* m_textCtrlProxyIP;
 		wxStaticText* m_staticTextProxyPort;
 		wxTextCtrl* m_textCtrlProxyPort;
+		
+		wxStaticText* m_staticText32;
+		wxStaticText* m_staticText31;
+		wxTextCtrl* m_textCtrlTransactionFee;
 		wxPanel* m_panelTest2;
 		
 		wxStaticText* m_staticText321;
@@ -188,11 +189,11 @@ class COptionsDialogBase : public wxDialog
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnListBox( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnKillFocusTransactionFee( wxFocusEvent& event ){ event.Skip(); }
 		virtual void OnCheckBoxLimitProcessors( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnCheckBoxMinimizeToTray( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnCheckBoxUseProxy( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnKillFocusProxy( wxFocusEvent& event ){ event.Skip(); }
+		virtual void OnKillFocusTransactionFee( wxFocusEvent& event ){ event.Skip(); }
 		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
 		virtual void OnButtonApply( wxCommandEvent& event ){ event.Skip(); }

@@ -702,14 +702,6 @@ bool CWalletDB::LoadWallet()
     printf("addrProxy = %s\n", addrProxy.ToString().c_str());
 
 
-    // The transaction fee setting won't be needed for many years to come.
-    // Setting it to zero here in case they set it to something in an earlier version.
-    if (nTransactionFee != 0)
-    {
-        nTransactionFee = 0;
-        WriteSetting("nTransactionFee", nTransactionFee);
-    }
-
     // Upgrade
     if (nFileVersion < VERSION)
     {

@@ -537,14 +537,19 @@ public:
 
         if (fAllowFree)
         {
-            // Transactions under 25K are free as long as block size is under 40K
-            // (about 11,000bc if made of 50bc inputs)
-            if (nBytes < 25000 && nNewBlockSize < 40000)
-                nMinFee = 0;
-
-            // Transactions under 3K are free as long as block size is under 50K
-            if (nBytes < 3000 && nNewBlockSize < 50000)
-                nMinFee = 0;
+            if (nBlockSize == 1)
+            {
+                // Transactions under 10K are free
+                // (about 4500bc if made of 50bc inputs)
+                if (nBytes < 10000)
+                    nMinFee = 0;
+            }
+            else
+            {
+                // Free transaction area
+                if (nNewBlockSize < 27000)
+                    nMinFee = 0;
+            }
         }
 
         // To limit dust spam, require a 0.01 fee if any output is less than 0.01
