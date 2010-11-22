@@ -11,6 +11,8 @@ class CUser;
 class CReview;
 class CAddress;
 class CWalletTx;
+class CAccount;
+class CAccountingEntry;
 
 extern map<string, string> mapAddressBook;
 extern CCriticalSection cs_mapAddressBook;
@@ -341,7 +343,9 @@ public:
 class CWalletDB : public CDB
 {
 public:
-    CWalletDB(const char* pszMode="r+") : CDB("wallet.dat", pszMode) { }
+    CWalletDB(const char* pszMode="r+") : CDB("wallet.dat", pszMode)
+    {
+    }
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
@@ -424,6 +428,11 @@ public:
         nWalletDBUpdated++;
         return Write(make_pair(string("setting"), strKey), value);
     }
+
+    bool ReadAccount(const string& strAccount, CAccount& account);
+    bool WriteAccount(const string& strAccount, const CAccount& account);
+    bool WriteAccountingEntry(const string& strAccount, const CAccountingEntry& acentry);
+    int64 GetAccountCreditDebit(const string& strAccount);
 
     bool LoadWallet();
 protected:

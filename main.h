@@ -717,11 +717,12 @@ public:
     vector<CMerkleTx> vtxPrev;
     map<string, string> mapValue;
     vector<pair<string, string> > vOrderForm;
-    unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived;  // time received by this node
     char fFromMe;
     char fSpent;
-    //// probably need to sign the order info so know it came from payer
+    char fTimeReceivedIsTxTime;
+    char fUnused;
+    string strFromAccount;
 
     // memory only
     mutable char fDebitCached;
@@ -752,10 +753,11 @@ public:
 
     void Init()
     {
-        fTimeReceivedIsTxTime = false;
         nTimeReceived = 0;
         fFromMe = false;
         fSpent = false;
+        fTimeReceivedIsTxTime = false;
+        fUnused = false;
         fDebitCached = false;
         fCreditCached = false;
         nDebitCached = 0;
@@ -767,14 +769,21 @@ public:
     IMPLEMENT_SERIALIZE
     (
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion, ser_action);
-        nVersion = this->nVersion;
         READWRITE(vtxPrev);
         READWRITE(mapValue);
         READWRITE(vOrderForm);
-        READWRITE(fTimeReceivedIsTxTime);
+        READWRITE(nVersion);
+        if (fRead && nVersion < 100)
+            const_cast<CWalletTx*>(this)->fTimeReceivedIsTxTime = nVersion;
         READWRITE(nTimeReceived);
         READWRITE(fFromMe);
         READWRITE(fSpent);
+        if (nVersion >= 31404)
+        {
+            READWRITE(fTimeReceivedIsTxTime);
+            READWRITE(fUnused);
+            READWRITE(strFromAccount);
+        }
     )
 
     int64 GetDebit() const
@@ -1530,6 +1539,79 @@ public:
         READWRITE(strComment);
     )
 };
+
+
+
+
+
+
+//
+// Account information.
+// Stored in wallet with key "acc"+string account name
+//
+class CAccount
+{
+public:
+    vector<unsigned char> vchPubKey;
+
+    CAccount()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        vchPubKey.clear();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+        READWRITE(vchPubKey);
+    )
+};
+
+
+
+//
+// Internal transfers.
+// Database key is acentry<account><counter>
+//
+class CAccountingEntry
+{
+public:
+    int64 nCreditDebit;
+    int64 nTime;
+    string strOtherAccount;
+    string strComment;
+
+    CAccountingEntry()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        nCreditDebit = 0;
+        nTime = 0;
+        strOtherAccount.clear();
+        strComment.clear();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+        READWRITE(nCreditDebit);
+        READWRITE(nTime);
+        READWRITE(strOtherAccount);
+        READWRITE(strComment);
+    )
+};
+
+
+
 
 
 

@@ -58,6 +58,17 @@ void PrintConsole(const char* format, ...)
 }
 
 
+int64 AmountFromValue(const Value& value)
+{
+    double dAmount = value.get_real();
+    if (dAmount <= 0.0 || dAmount > 21000000.0)
+        throw JSONRPCError(-3, "Invalid amount");
+    int64 nAmount = roundint64(dAmount * 100.00) * CENT;
+    if (!MoneyRange(nAmount))
+        throw JSONRPCError(-3, "Invalid amount");
+    return nAmount;
+}
+
 
 
 
@@ -86,7 +97,8 @@ Value help(const Array& params, bool fHelp)
         string strMethod = (*mi).first;
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod == "getamountreceived" ||
-            strMethod == "getallreceived")
+            strMethod == "getallreceived" ||
+            (strMethod.find("label") != string::npos))
             continue;
         if (strCommand != "" && strMethod != strCommand)
             continue;
@@ -183,17 +195,6 @@ Value getdifficulty(const Array& params, bool fHelp)
 }
 
 
-Value getbalance(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "getbalance\n"
-            "Returns the server's available balance.");
-
-    return ((double)GetBalance() / (double)COIN);
-}
-
-
 Value getgenerate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -273,71 +274,120 @@ Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getnewaddress [label]\n"
+            "getnewaddress [account]\n"
             "Returns a new bitcoin address for receiving payments.  "
-            "If [label] is specified (recommended), it is added to the address book "
-            "so payments received with the address will be labeled.");
+            "If [account] is specified (recommended), it is added to the address book "
+            "so payments received with the address will be credited to [account].");
 
-    // Parse the label first so we don't generate a key if there's an error
-    string strLabel;
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount;
     if (params.size() > 0)
-        strLabel = params[0].get_str();
+        strAccount = params[0].get_str();
 
     // Generate a new key that is added to wallet
     string strAddress = PubKeyToAddress(CWalletDB().GetKeyFromKeyPool());
 
-    SetAddressBookName(strAddress, strLabel);
+    SetAddressBookName(strAddress, strAccount);
     return strAddress;
 }
 
 
-Value setlabel(const Array& params, bool fHelp)
+Value getaccountaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getaccountaddress <account>\n"
+            "Returns the current bitcoin address for receiving payments to this account.");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount = params[0].get_str();
+
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        CWalletDB walletdb;
+        walletdb.TxnBegin();
+
+        CAccount account;
+        walletdb.ReadAccount(strAccount, account);
+
+        // Check if the current key has been used
+        if (!account.vchPubKey.empty())
+        {
+            CScript scriptPubKey;
+            scriptPubKey.SetBitcoinAddress(account.vchPubKey);
+            for (map<uint256, CWalletTx>::iterator it = mapWallet.begin();
+                 it != mapWallet.end() && !account.vchPubKey.empty();
+                 ++it)
+            {
+                const CWalletTx& wtx = (*it).second;
+                foreach(const CTxOut& txout, wtx.vout)
+                    if (txout.scriptPubKey == scriptPubKey)
+                        account.vchPubKey.clear();
+            }
+        }
+
+        // Generate a new key
+        if (account.vchPubKey.empty())
+        {
+            account.vchPubKey = CWalletDB().GetKeyFromKeyPool();
+            string strAddress = PubKeyToAddress(account.vchPubKey);
+            SetAddressBookName(strAddress, strAccount);
+            walletdb.WriteAccount(strAccount, account);
+        }
+
+        walletdb.TxnCommit();
+        return PubKeyToAddress(account.vchPubKey);
+    }
+}
+
+
+Value setaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "setlabel <bitcoinaddress> <label>\n"
-            "Sets the label associated with the given address.");
+            "setaccount <bitcoinaddress> <account>\n"
+            "Sets the account associated with the given address.");
 
     string strAddress = params[0].get_str();
-    string strLabel;
+    string strAccount;
     if (params.size() > 1)
-        strLabel = params[1].get_str();
+        strAccount = params[1].get_str();
 
-    SetAddressBookName(strAddress, strLabel);
+    SetAddressBookName(strAddress, strAccount);
     return Value::null;
 }
 
 
-Value getlabel(const Array& params, bool fHelp)
+Value getaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getlabel <bitcoinaddress>\n"
-            "Returns the label associated with the given address.");
+            "getaccount <bitcoinaddress>\n"
+            "Returns the account associated with the given address.");
 
     string strAddress = params[0].get_str();
 
-    string strLabel;
+    string strAccount;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         map<string, string>::iterator mi = mapAddressBook.find(strAddress);
         if (mi != mapAddressBook.end() && !(*mi).second.empty())
-            strLabel = (*mi).second;
+            strAccount = (*mi).second;
     }
-    return strLabel;
+    return strAccount;
 }
 
 
-Value getaddressesbylabel(const Array& params, bool fHelp)
+Value getaddressesbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getaddressesbylabel <label>\n"
-            "Returns the list of addresses with the given label.");
+            "getaddressesbyaccount <account>\n"
+            "Returns the list of addresses for the given account.");
 
-    string strLabel = params[0].get_str();
+    string strAccount = params[0].get_str();
 
-    // Find all addresses that have the given label
+    // Find all addresses that have the given account
     Array ret;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
@@ -345,7 +395,7 @@ Value getaddressesbylabel(const Array& params, bool fHelp)
         {
             const string& strAddress = item.first;
             const string& strName = item.second;
-            if (strName == strLabel)
+            if (strName == strAccount)
             {
                 // We're only adding valid bitcoin addresses and not ip addresses
                 CScript scriptPubKey;
@@ -357,7 +407,6 @@ Value getaddressesbylabel(const Array& params, bool fHelp)
     return ret;
 }
 
-
 Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
@@ -368,9 +417,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
 
     // Amount
-    if (params[1].get_real() <= 0.0 || params[1].get_real() > 21000000.0)
-        throw JSONRPCError(-3, "Invalid amount");
-    int64 nAmount = roundint64(params[1].get_real() * 100.00) * CENT;
+    int64 nAmount = AmountFromValue(params[1]);
 
     // Wallet comments
     CWalletTx wtx;
@@ -382,7 +429,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(-4, strError);
-    return "sent";
+    return wtx.GetHash().GetHex();
 }
 
 
@@ -448,15 +495,20 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 }
 
 
-Value getreceivedbylabel(const Array& params, bool fHelp)
+Value getreceivedbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getreceivedbylabel <label> [minconf=1]\n"
-            "Returns the total amount received by addresses with <label> in transactions with at least [minconf] confirmations.");
+            "getreceivedbyaccount <account> [minconf=1]\n"
+            "Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.");
+
+    // Minimum confirmations
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
 
     // Get the set of pub keys that have the label
-    string strLabel = params[0].get_str();
+    string strAccount = params[0].get_str();
     set<CScript> setPubKey;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
@@ -464,7 +516,7 @@ Value getreceivedbylabel(const Array& params, bool fHelp)
         {
             const string& strAddress = item.first;
             const string& strName = item.second;
-            if (strName == strLabel)
+            if (strName == strAccount)
             {
                 // We're only counting our own valid bitcoin addresses and not ip addresses
                 CScript scriptPubKey;
@@ -474,11 +526,6 @@ Value getreceivedbylabel(const Array& params, bool fHelp)
             }
         }
     }
-
-    // Minimum confirmations
-    int nMinDepth = 1;
-    if (params.size() > 1)
-        nMinDepth = params[1].get_int();
 
     // Tally
     int64 nAmount = 0;
@@ -501,6 +548,194 @@ Value getreceivedbylabel(const Array& params, bool fHelp)
 }
 
 
+int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
+{
+    // Get the set of pub keys that have the account
+    set<CScript> setPubKey;
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
+        {
+            const string& strAddress = item.first;
+            const string& strName = item.second;
+            if (strName == strAccount)
+            {
+                // We're only counting our own valid bitcoin addresses and not ip addresses
+                CScript scriptPubKey;
+                if (scriptPubKey.SetBitcoinAddress(strAddress))
+                    if (IsMine(scriptPubKey))
+                        setPubKey.insert(scriptPubKey);
+            }
+        }
+    }
+
+    int64 nBalance = 0;
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        // Tally wallet transactions
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            if (!wtx.IsFinal())
+                continue;
+
+            // Count generated blocks to account ""
+            if (wtx.IsCoinBase() && strAccount == "" && wtx.GetBlocksToMaturity() == 0)
+            {
+                nBalance += wtx.GetCredit();
+                continue;
+            }
+
+            // Tally received
+            foreach(const CTxOut& txout, wtx.vout)
+                if (setPubKey.count(txout.scriptPubKey))
+                    if (wtx.GetDepthInMainChain() >= nMinDepth)
+                        nBalance += txout.nValue;
+
+            // Tally sent
+            if (wtx.strFromAccount == strAccount)
+            {
+                int64 nNet = wtx.GetCredit() - wtx.GetDebit();
+                if (nNet < 0)
+                    nBalance += nNet;
+            }
+        }
+
+        // Tally internal accounting entries
+        nBalance += walletdb.GetAccountCreditDebit(strAccount);
+    }
+
+    return nBalance;
+}
+
+int64 GetAccountBalance(const string& strAccount, int nMinDepth)
+{
+    CWalletDB walletdb;
+    return GetAccountBalance(walletdb, strAccount, nMinDepth);
+}
+
+
+Value getbalance(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 0 || params.size() > 2)
+        throw runtime_error(
+            "getbalance [account] [minconf=1]\n"
+            "If [account] is not specified, returns the server's total available balance.\n"
+            "If [account] is specified, returns the balance in the account.");
+
+    if (params.size() == 0)
+        return ((double)GetBalance() / (double)COIN);
+
+    string strAccount = params[0].get_str();
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
+
+    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+
+    return (double)nBalance / (double)COIN;
+}
+
+
+Value movecmd(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 3 || params.size() > 5)
+        throw runtime_error(
+            "move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
+            "Move from one account in your wallet to another.");
+
+    string strFrom = params[0].get_str();
+    string strTo = params[1].get_str();
+    int64 nAmount = AmountFromValue(params[2]);
+    int nMinDepth = 1;
+    if (params.size() > 3)
+        nMinDepth = params[3].get_int();
+    string strComment;
+    if (params.size() > 4)
+        strComment = params[4].get_str();
+
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        CWalletDB walletdb;
+        walletdb.TxnBegin();
+
+        // Check funds
+        if (!strFrom.empty())
+        {
+            int64 nBalance = GetAccountBalance(walletdb, strFrom, nMinDepth);
+            if (nAmount > nBalance)
+                throw JSONRPCError(-6, "Account has insufficient funds");
+        }
+        else
+        {
+            // move from "" account special case
+            int64 nBalance = GetAccountBalance(walletdb, strTo, nMinDepth);
+            if (nAmount > GetBalance() - nBalance)
+                throw JSONRPCError(-6, "Account has insufficient funds");
+        }
+
+        int64 nNow = GetAdjustedTime();
+
+        // Debit
+        CAccountingEntry debit;
+        debit.nCreditDebit = -nAmount;
+        debit.nTime = nNow;
+        debit.strOtherAccount = strTo;
+        debit.strComment = strComment;
+        walletdb.WriteAccountingEntry(strFrom, debit);
+
+        // Credit
+        CAccountingEntry credit;
+        credit.nCreditDebit = nAmount;
+        credit.nTime = nNow;
+        credit.strOtherAccount = strFrom;
+        credit.strComment = strComment;
+        walletdb.WriteAccountingEntry(strTo, credit);
+
+        walletdb.TxnCommit();
+    }
+    return true;
+}
+
+
+Value sendfrom(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 3 || params.size() > 6)
+        throw runtime_error(
+            "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.01");
+
+    string strAccount = params[0].get_str();
+    string strAddress = params[1].get_str();
+    int64 nAmount = AmountFromValue(params[2]);
+    int nMinDepth = 1;
+    if (params.size() > 3)
+        nMinDepth = params[3].get_int();
+
+    CWalletTx wtx;
+    wtx.strFromAccount = strAccount;
+    if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
+        wtx.mapValue["message"] = params[4].get_str();
+    if (params.size() > 5 && params[5].type() != null_type && !params[5].get_str().empty())
+        wtx.mapValue["to"]      = params[5].get_str();
+
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        // Check funds
+        int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+        if (nAmount > nBalance)
+            throw JSONRPCError(-6, "Account has insufficient funds");
+
+        // Send
+        string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+        if (strError != "")
+            throw JSONRPCError(-4, strError);
+    }
+
+    return wtx.GetHash().GetHex();
+}
+
+
 
 struct tallyitem
 {
@@ -513,7 +748,7 @@ struct tallyitem
     }
 };
 
-Value ListReceived(const Array& params, bool fByLabels)
+Value ListReceived(const Array& params, bool fByAccounts)
 {
     // Minimum confirmations
     int nMinDepth = 1;
@@ -555,13 +790,13 @@ Value ListReceived(const Array& params, bool fByLabels)
 
     // Reply
     Array ret;
-    map<string, tallyitem> mapLabelTally;
+    map<string, tallyitem> mapAccountTally;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
         {
             const string& strAddress = item.first;
-            const string& strLabel = item.second;
+            const string& strAccount = item.second;
             uint160 hash160;
             if (!AddressToHash160(strAddress, hash160))
                 continue;
@@ -577,9 +812,9 @@ Value ListReceived(const Array& params, bool fByLabels)
                 nConf = (*it).second.nConf;
             }
 
-            if (fByLabels)
+            if (fByAccounts)
             {
-                tallyitem& item = mapLabelTally[strLabel];
+                tallyitem& item = mapAccountTally[strAccount];
                 item.nAmount += nAmount;
                 item.nConf = min(item.nConf, nConf);
             }
@@ -587,7 +822,8 @@ Value ListReceived(const Array& params, bool fByLabels)
             {
                 Object obj;
                 obj.push_back(Pair("address",       strAddress));
-                obj.push_back(Pair("label",         strLabel));
+                obj.push_back(Pair("account",       strAccount));
+                obj.push_back(Pair("label",         strAccount)); // deprecated
                 obj.push_back(Pair("amount",        (double)nAmount / (double)COIN));
                 obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
                 ret.push_back(obj);
@@ -595,14 +831,15 @@ Value ListReceived(const Array& params, bool fByLabels)
         }
     }
 
-    if (fByLabels)
+    if (fByAccounts)
     {
-        for (map<string, tallyitem>::iterator it = mapLabelTally.begin(); it != mapLabelTally.end(); ++it)
+        for (map<string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
         {
             int64 nAmount = (*it).second.nAmount;
             int nConf = (*it).second.nConf;
             Object obj;
-            obj.push_back(Pair("label",         (*it).first));
+            obj.push_back(Pair("account",       (*it).first));
+            obj.push_back(Pair("label",         (*it).first)); // deprecated
             obj.push_back(Pair("amount",        (double)nAmount / (double)COIN));
             obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
             ret.push_back(obj);
@@ -621,23 +858,23 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
             "[includeempty] whether to include addresses that haven't received any payments.\n"
             "Returns an array of objects containing:\n"
             "  \"address\" : receiving address\n"
-            "  \"label\" : the label of the receiving address\n"
+            "  \"account\" : the account of the receiving address\n"
             "  \"amount\" : total amount received by the address\n"
             "  \"confirmations\" : number of confirmations of the most recent transaction included");
 
     return ListReceived(params, false);
 }
 
-Value listreceivedbylabel(const Array& params, bool fHelp)
+Value listreceivedbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
-            "listreceivedbylabel [minconf=1] [includeempty=false]\n"
+            "listreceivedbyaccount [minconf=1] [includeempty=false]\n"
             "[minconf] is the minimum number of confirmations before payments are included.\n"
-            "[includeempty] whether to include labels that haven't received any payments.\n"
+            "[includeempty] whether to include accounts that haven't received any payments.\n"
             "Returns an array of objects containing:\n"
-            "  \"label\" : the label of the receiving addresses\n"
-            "  \"amount\" : total amount received by addresses with this label\n"
+            "  \"account\" : the account of the receiving addresses\n"
+            "  \"amount\" : total amount received by addresses with this account\n"
             "  \"confirmations\" : number of confirmations of the most recent transaction included");
 
     return ListReceived(params, true);
@@ -675,8 +912,14 @@ Value validateaddress(const Array& params, bool fHelp)
     {
         // Call Hash160ToAddress() so we always return current ADDRESSVERSION
         // version of the address:
-        ret.push_back(Pair("address", Hash160ToAddress(hash160)));
+        string currentAddress = Hash160ToAddress(hash160);
+        ret.push_back(Pair("address", currentAddress));
         ret.push_back(Pair("ismine", (mapPubKeys.count(hash160) > 0)));
+        CRITICAL_BLOCK(cs_mapAddressBook)
+        {
+            if (mapAddressBook.count(currentAddress))
+                ret.push_back(Pair("account", mapAddressBook[currentAddress]));
+        }
     }
     return ret;
 }
@@ -703,24 +946,32 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getblocknumber",        &getblocknumber),
     make_pair("getconnectioncount",    &getconnectioncount),
     make_pair("getdifficulty",         &getdifficulty),
-    make_pair("getbalance",            &getbalance),
     make_pair("getgenerate",           &getgenerate),
     make_pair("setgenerate",           &setgenerate),
     make_pair("gethashespersec",       &gethashespersec),
     make_pair("getinfo",               &getinfo),
     make_pair("getnewaddress",         &getnewaddress),
-    make_pair("setlabel",              &setlabel),
-    make_pair("getlabel",              &getlabel),
-    make_pair("getaddressesbylabel",   &getaddressesbylabel),
+    make_pair("getaccountaddress",     &getaccountaddress),
+    make_pair("setaccount",            &setaccount),
+    make_pair("setlabel",              &setaccount), // deprecated
+    make_pair("getaccount",            &getaccount),
+    make_pair("getlabel",              &getaccount), // deprecated
+    make_pair("getaddressesbyaccount", &getaddressesbyaccount),
+    make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",         &sendtoaddress),
     make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
     make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
     make_pair("getreceivedbyaddress",  &getreceivedbyaddress),
-    make_pair("getreceivedbylabel",    &getreceivedbylabel),
+    make_pair("getreceivedbyaccount",  &getreceivedbyaccount),
+    make_pair("getreceivedbylabel",    &getreceivedbyaccount), // deprecated
     make_pair("listreceivedbyaddress", &listreceivedbyaddress),
-    make_pair("listreceivedbylabel",   &listreceivedbylabel),
+    make_pair("listreceivedbyaccount", &listreceivedbyaccount),
+    make_pair("listreceivedbylabel",   &listreceivedbyaccount), // deprecated
     make_pair("backupwallet",          &backupwallet),
     make_pair("validateaddress",       &validateaddress),
+    make_pair("getbalance",            &getbalance),
+    make_pair("move",                  &movecmd),
+    make_pair("sendfrom",              &sendfrom),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -737,9 +988,12 @@ string pAllowInSafeMode[] =
     "gethashespersec",
     "getinfo",
     "getnewaddress",
+    "getaccountaddress",
     "setlabel",
-    "getlabel",
-    "getaddressesbylabel",
+    "getaccount",
+    "getlabel", // deprecated
+    "getaddressesbyaccount",
+    "getaddressesbylabel", // deprecated
     "backupwallet",
     "validateaddress",
 };
@@ -1339,13 +1593,21 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "getreceivedbylabel"     && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "getreceivedbylabel"     && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getallreceived"         && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
         if (strMethod == "getallreceived"         && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "listreceivedbyaddress"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "listreceivedbyaddress"  && n > 1) ConvertTo<bool>(params[1]);
-        if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]);
-        if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "listreceivedbyaccount"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "listreceivedbyaccount"  && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
+        if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]); // deprecated
+        if (strMethod == "getbalance"             && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "move"                   && n > 2) ConvertTo<double>(params[2]);
+        if (strMethod == "move"                   && n > 3) ConvertTo<boost::int64_t>(params[3]);
+        if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
+        if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);

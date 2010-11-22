@@ -8,7 +8,7 @@ void ThreadFlushWalletDB(void* parg);
 
 
 unsigned int nWalletDBUpdated;
-
+uint64 nAccountingEntryNumber = 0;
 
 
 
@@ -579,6 +579,66 @@ bool LoadAddresses()
 static set<int64> setKeyPool;
 static CCriticalSection cs_setKeyPool;
 
+bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
+{
+    account.SetNull();
+    return Read(make_pair(string("acc"), strAccount), account);
+}
+
+bool CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
+{
+    return Write(make_pair(string("acc"), strAccount), account);
+}
+
+bool CWalletDB::WriteAccountingEntry(const string& strAccount, const CAccountingEntry& acentry)
+{
+    return Write(make_pair(string("acentry"), make_pair(strAccount, ++nAccountingEntryNumber)), acentry);
+}
+
+int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
+{
+    int64 nCreditDebit = 0;
+
+    Dbc* pcursor = GetCursor();
+    if (!pcursor)
+        throw runtime_error("CWalletDB::GetAccountCreditDebit() : cannot create DB cursor");
+    unsigned int fFlags = DB_SET_RANGE;
+    loop
+    {
+        // Read next record
+        CDataStream ssKey;
+        if (fFlags == DB_SET_RANGE)
+            ssKey << make_pair(string("acentry"), make_pair(strAccount, uint64(0)));
+        CDataStream ssValue;
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
+        fFlags = DB_NEXT;
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+        {
+            pcursor->close();
+            throw runtime_error("CWalletDB::GetAccountCreditDebit() : error scanning DB");
+        }
+
+        // Unserialize
+        string strType;
+        ssKey >> strType;
+        if (strType != "acentry")
+            break;
+        string strAccountName;
+        ssKey >> strAccountName;
+        if (strAccountName != strAccount)
+            break;
+
+        CAccountingEntry acentry;
+        ssValue >> acentry;
+        nCreditDebit += acentry.nCreditDebit;
+    }
+
+    pcursor->close();
+    return nCreditDebit;
+}
+
 bool CWalletDB::LoadWallet()
 {
     vchDefaultKey.clear();
@@ -639,6 +699,15 @@ bool CWalletDB::LoadWallet()
                 //    DateTimeStrFormat("%x %H:%M:%S", wtx.GetBlockTime()).c_str(),
                 //    wtx.hashBlock.ToString().substr(0,20).c_str(),
                 //    wtx.mapValue["message"].c_str());
+            }
+            else if (strType == "acentry")
+            {
+                string strAccount;
+                ssKey >> strAccount;
+                uint64 nNumber;
+                ssKey >> nNumber;
+                if (nNumber > nAccountingEntryNumber)
+                    nAccountingEntryNumber = nNumber;
             }
             else if (strType == "key" || strType == "wkey")
             {
@@ -894,18 +963,20 @@ void CWalletDB::ReturnKey(int64 nIndex)
 
 vector<unsigned char> CWalletDB::GetKeyFromKeyPool()
 {
+    CWalletDB walletdb;
     int64 nIndex = 0;
     CKeyPool keypool;
-    ReserveKeyFromKeyPool(nIndex, keypool);
-    KeepKey(nIndex);
+    walletdb.ReserveKeyFromKeyPool(nIndex, keypool);
+    walletdb.KeepKey(nIndex);
     return keypool.vchPubKey;
 }
 
 int64 CWalletDB::GetOldestKeyPoolTime()
 {
+    CWalletDB walletdb;
     int64 nIndex = 0;
     CKeyPool keypool;
-    ReserveKeyFromKeyPool(nIndex, keypool);
-    ReturnKey(nIndex);
+    walletdb.ReserveKeyFromKeyPool(nIndex, keypool);
+    walletdb.ReturnKey(nIndex);
     return keypool.nTime;
 }
