@@ -961,7 +961,7 @@ void CWalletDB::ReturnKey(int64 nIndex)
     printf("keypool return %"PRI64d"\n", nIndex);
 }
 
-vector<unsigned char> CWalletDB::GetKeyFromKeyPool()
+vector<unsigned char> GetKeyFromKeyPool()
 {
     CWalletDB walletdb;
     int64 nIndex = 0;
@@ -971,7 +971,7 @@ vector<unsigned char> CWalletDB::GetKeyFromKeyPool()
     return keypool.vchPubKey;
 }
 
-int64 CWalletDB::GetOldestKeyPoolTime()
+int64 GetOldestKeyPoolTime()
 {
     CWalletDB walletdb;
     int64 nIndex = 0;

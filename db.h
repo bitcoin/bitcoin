@@ -26,6 +26,8 @@ extern DbEnv dbenv;
 
 
 extern void DBFlush(bool fShutdown);
+extern vector<unsigned char> GetKeyFromKeyPool();
+extern int64 GetOldestKeyPoolTime();
 
 
 
@@ -440,9 +442,8 @@ protected:
     void KeepKey(int64 nIndex);
     static void ReturnKey(int64 nIndex);
     friend class CReserveKey;
-public:
-    vector<unsigned char> GetKeyFromKeyPool();
-    int64 GetOldestKeyPoolTime();
+    friend vector<unsigned char> GetKeyFromKeyPool();
+    friend int64 GetOldestKeyPoolTime();
 };
 
 bool LoadWallet(bool& fFirstRunRet);

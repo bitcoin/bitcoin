@@ -3,6 +3,7 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
+#include "cryptopp/sha.h"
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>
@@ -50,6 +51,7 @@ void PrintConsole(const char* format, ...)
         ret = limit - 1;
         buffer[limit-1] = 0;
     }
+    printf("%s", buffer);
 #if defined(__WXMSW__) && defined(GUI)
     MyMessageBox(buffer, "Bitcoin", wxOK | wxICON_EXCLAMATION);
 #else
@@ -263,7 +265,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("testnet",       fTestNet));
-    obj.push_back(Pair("keypoololdest", (boost::int64_t)CWalletDB().GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoololdest", (boost::int64_t)GetOldestKeyPoolTime()));
     obj.push_back(Pair("paytxfee",      (double)nTransactionFee / (double)COIN));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
@@ -285,7 +287,7 @@ Value getnewaddress(const Array& params, bool fHelp)
         strAccount = params[0].get_str();
 
     // Generate a new key that is added to wallet
-    string strAddress = PubKeyToAddress(CWalletDB().GetKeyFromKeyPool());
+    string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
 
     SetAddressBookName(strAddress, strAccount);
     return strAddress;
@@ -329,7 +331,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
         // Generate a new key
         if (account.vchPubKey.empty())
         {
-            account.vchPubKey = CWalletDB().GetKeyFromKeyPool();
+            account.vchPubKey = GetKeyFromKeyPool();
             string strAddress = PubKeyToAddress(account.vchPubKey);
             SetAddressBookName(strAddress, strAccount);
             walletdb.WriteAccount(strAccount, account);
@@ -925,6 +927,112 @@ Value validateaddress(const Array& params, bool fHelp)
 }
 
 
+Value getwork(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "getwork [data]\n"
+            "If [data] is not specified, returns formatted hash data to work on:\n"
+            "  \"midstate\" : precomputed hash state after hashing the first half of the data\n"
+            "  \"data\" : block data\n"
+            "  \"hash1\" : formatted hash buffer for second hash\n"
+            "  \"target\" : little endian hash target\n"
+            "If [data] is specified, tries to solve the block and returns true if it was successful.");
+
+    if (vNodes.empty())
+        throw JSONRPCError(-9, "Bitcoin is not connected!");
+
+    if (IsInitialBlockDownload())
+        throw JSONRPCError(-10, "Bitcoin is downloading blocks...");
+
+    static map<uint256, pair<CBlock*, unsigned int> > mapNewBlock;
+    static vector<CBlock*> vNewBlock;
+    static CReserveKey reservekey;
+
+    if (params.size() == 0)
+    {
+        // Update block
+        static unsigned int nTransactionsUpdatedLast;
+        static CBlockIndex* pindexPrev;
+        static int64 nStart;
+        static CBlock* pblock;
+        if (pindexPrev != pindexBest ||
+            (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60))
+        {
+            if (pindexPrev != pindexBest)
+            {
+                // Deallocate old blocks since they're obsolete now
+                mapNewBlock.clear();
+                foreach(CBlock* pblock, vNewBlock)
+                    delete pblock;
+                vNewBlock.clear();
+            }
+            nTransactionsUpdatedLast = nTransactionsUpdated;
+            pindexPrev = pindexBest;
+            nStart = GetTime();
+
+            // Create new block
+            pblock = CreateNewBlock(reservekey);
+            if (!pblock)
+                throw JSONRPCError(-7, "Out of memory");
+            vNewBlock.push_back(pblock);
+        }
+
+        // Update nTime
+        pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+        pblock->nNonce = 0;
+
+        // Update nExtraNonce
+        static unsigned int nExtraNonce = 0;
+        static int64 nPrevTime = 0;
+        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, nPrevTime);
+
+        // Save
+        mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, nExtraNonce);
+
+        // Prebuild hash buffers
+        char pmidstate[32];
+        char pdata[128];
+        char phash1[64];
+        FormatHashBuffers(pblock, pmidstate, pdata, phash1);
+
+        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
+
+        Object result;
+        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate))));
+        result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
+        result.push_back(Pair("hash1",    HexStr(BEGIN(phash1), END(phash1))));
+        result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
+        return result;
+    }
+    else
+    {
+        // Parse parameters
+        vector<unsigned char> vchData = ParseHex(params[0].get_str());
+        if (vchData.size() != 128)
+            throw JSONRPCError(-8, "Invalid parameter");
+        CBlock* pdata = (CBlock*)&vchData[0];
+
+        // Byte reverse
+        for (int i = 0; i < 128/4; i++)
+            ((unsigned int*)pdata)[i] = CryptoPP::ByteReverse(((unsigned int*)pdata)[i]);
+
+        // Get saved block
+        if (!mapNewBlock.count(pdata->hashMerkleRoot))
+            return false;
+        CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
+        unsigned int nExtraNonce = mapNewBlock[pdata->hashMerkleRoot].second;
+
+        pblock->nTime = pdata->nTime;
+        pblock->nNonce = pdata->nNonce;
+        pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nBits << CBigNum(nExtraNonce);
+        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+
+        return CheckWork(pblock, reservekey);
+    }
+}
+
+
 
 
 
@@ -972,6 +1080,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getbalance",            &getbalance),
     make_pair("move",                  &movecmd),
     make_pair("sendfrom",              &sendfrom),
+    make_pair("getwork",               &getwork),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -996,6 +1105,7 @@ string pAllowInSafeMode[] =
     "getaddressesbylabel", // deprecated
     "backupwallet",
     "validateaddress",
+    "getwork",
 };
 set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
 
@@ -1418,7 +1528,8 @@ void ThreadRPCServer2(void* parg)
             if (valMethod.type() != str_type)
                 throw JSONRPCError(-32600, "Method must be a string");
             string strMethod = valMethod.get_str();
-            printf("ThreadRPCServer method=%s\n", strMethod.c_str());
+            if (strMethod != "getwork")
+                printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
             // Parse params
             Value valParams = find_value(request, "params");
