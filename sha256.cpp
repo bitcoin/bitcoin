@@ -110,15 +110,15 @@ static const unsigned int pSHA256InitState[8] =
 {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
 
-unsigned int ScanHash_4WaySSE2(char* pmidstate, char* pblock, char* phash1, char* phash, unsigned int& nHashesDone)
+unsigned int ScanHash_4WaySSE2(char* pmidstate, char* pdata, char* phash1, char* phash, unsigned int& nHashesDone)
 {
-    unsigned int& nNonce = *(unsigned int*)(pblock + 12);
+    unsigned int& nNonce = *(unsigned int*)(pdata + 12);
     for (;;)
     {
         nNonce += NPAR;
         unsigned int thashbuf[9][NPAR];
         unsigned int (&thash)[9][NPAR] = *alignup<16>(&thashbuf);
-        DoubleBlockSHA256(pblock, phash1, pmidstate, thash, pSHA256InitState);
+        DoubleBlockSHA256(pdata, phash1, pmidstate, thash, pSHA256InitState);
 
         for (int j = 0; j < NPAR; j++)
         {

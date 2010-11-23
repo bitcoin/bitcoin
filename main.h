@@ -83,6 +83,10 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
 string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
+CBlock* CreateNewBlock(CReserveKey& reservekey);
+void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime);
+void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
+bool CheckWork(CBlock* pblock, CReserveKey& reservekey);
 void BitcoinMiner();
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 bool IsInitialBlockDownload();
@@ -753,21 +757,28 @@ public:
 
     void Init()
     {
+        vtxPrev.clear();
+        mapValue.clear();
+        vOrderForm.clear();
         nTimeReceived = 0;
         fFromMe = false;
         fSpent = false;
         fTimeReceivedIsTxTime = false;
         fUnused = false;
+        strFromAccount.clear();
         fDebitCached = false;
         fCreditCached = false;
         nDebitCached = 0;
         nCreditCached = 0;
         nTimeDisplayed = 0;
         nLinesDisplayed = 0;
+        fConfirmedDisplayed = false;
     }
 
     IMPLEMENT_SERIALIZE
     (
+        if (fRead)
+            const_cast<CWalletTx*>(this)->Init();
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion, ser_action);
         READWRITE(vtxPrev);
         READWRITE(mapValue);

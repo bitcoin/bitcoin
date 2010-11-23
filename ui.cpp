@@ -1171,7 +1171,7 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
     string strName = dialog.GetValue();
 
     // Generate new key
-    string strAddress = PubKeyToAddress(CWalletDB().GetKeyFromKeyPool());
+    string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
 
     // Save
     SetAddressBookName(strAddress, strName);
@@ -2575,7 +2575,7 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
         strName = dialog.GetValue();
 
         // Generate new key
-        strAddress = PubKeyToAddress(CWalletDB().GetKeyFromKeyPool());
+        strAddress = PubKeyToAddress(GetKeyFromKeyPool());
     }
 
     // Add to list and select it
