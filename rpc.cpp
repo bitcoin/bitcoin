@@ -628,6 +628,8 @@ Value getbalance(const Array& params, bool fHelp)
     if (params.size() == 0)
         return ((double)GetBalance() / (double)COIN);
 
+    throw runtime_error("under construction"); //// to be released soon
+
     string strAccount = params[0].get_str();
     int nMinDepth = 1;
     if (params.size() > 1)
