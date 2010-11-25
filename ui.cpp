@@ -1631,6 +1631,9 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     //m_listBox->Append(_("Test 2"));
     m_listBox->SetSelection(0);
     SelectPage(0);
+#ifndef __WXMSW__
+    SetSize(1.0 * GetSize().GetWidth(), 1.2 * GetSize().GetHeight());
+#endif
 #if defined(__WXGTK__) || defined(__WXMAC_OSX__)
     m_checkBoxStartOnSystemStartup->SetLabel(_("&Start Bitcoin on window system startup"));
     if (!mapArgs.count("-minimizetotray"))

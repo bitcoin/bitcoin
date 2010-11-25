@@ -648,6 +648,8 @@ Value movecmd(const Array& params, bool fHelp)
             "move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
             "Move from one account in your wallet to another.");
 
+    throw runtime_error("under construction");
+
     string strFrom = params[0].get_str();
     string strTo = params[1].get_str();
     int64 nAmount = AmountFromValue(params[2]);
@@ -708,6 +710,8 @@ Value sendfrom(const Array& params, bool fHelp)
         throw runtime_error(
             "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.01");
+
+    throw runtime_error("under construction");
 
     string strAccount = params[0].get_str();
     string strAddress = params[1].get_str();
