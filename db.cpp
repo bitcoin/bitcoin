@@ -592,7 +592,7 @@ bool CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
 
 bool CWalletDB::WriteAccountingEntry(const string& strAccount, const CAccountingEntry& acentry)
 {
-    return Write(make_pair(string("acentry"), make_pair(strAccount, ++nAccountingEntryNumber)), acentry);
+    return Write(make_tuple(string("acentry"), strAccount, ++nAccountingEntryNumber), acentry);
 }
 
 int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
@@ -608,7 +608,7 @@ int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
         // Read next record
         CDataStream ssKey;
         if (fFlags == DB_SET_RANGE)
-            ssKey << make_pair(string("acentry"), make_pair(strAccount, uint64(0)));
+            ssKey << make_tuple(string("acentry"), strAccount, uint64(0));
         CDataStream ssValue;
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;

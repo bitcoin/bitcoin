@@ -7,6 +7,9 @@
 #include <map>
 #include <set>
 #include <boost/type_traits/is_fundamental.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+#include <boost/tuple/tuple_io.hpp>
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 typedef __int64  int64;
 typedef unsigned __int64  uint64;
@@ -22,7 +25,7 @@ class CDataStream;
 class CAutoFile;
 static const unsigned int MAX_SIZE = 0x02000000;
 
-static const int VERSION = 31700;
+static const int VERSION = 31701;
 static const char* pszSubVer = "";
 
 
@@ -338,6 +341,16 @@ template<typename K, typename T> unsigned int GetSerializeSize(const std::pair<K
 template<typename Stream, typename K, typename T> void Serialize(Stream& os, const std::pair<K, T>& item, int nType, int nVersion=VERSION);
 template<typename Stream, typename K, typename T> void Unserialize(Stream& is, std::pair<K, T>& item, int nType, int nVersion=VERSION);
 
+// 3 tuple
+template<typename T0, typename T1, typename T2> unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2>& item, int nType, int nVersion=VERSION);
+template<typename Stream, typename T0, typename T1, typename T2> void Serialize(Stream& os, const boost::tuple<T0, T1, T2>& item, int nType, int nVersion=VERSION);
+template<typename Stream, typename T0, typename T1, typename T2> void Unserialize(Stream& is, boost::tuple<T0, T1, T2>& item, int nType, int nVersion=VERSION);
+
+// 4 tuple
+template<typename T0, typename T1, typename T2, typename T3> unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion=VERSION);
+template<typename Stream, typename T0, typename T1, typename T2, typename T3> void Serialize(Stream& os, const boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion=VERSION);
+template<typename Stream, typename T0, typename T1, typename T2, typename T3> void Unserialize(Stream& is, boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion=VERSION);
+
 // map
 template<typename K, typename T, typename Pred, typename A> unsigned int GetSerializeSize(const std::map<K, T, Pred, A>& m, int nType, int nVersion=VERSION);
 template<typename Stream, typename K, typename T, typename Pred, typename A> void Serialize(Stream& os, const std::map<K, T, Pred, A>& m, int nType, int nVersion=VERSION);
@@ -550,6 +563,71 @@ void Unserialize(Stream& is, std::pair<K, T>& item, int nType, int nVersion)
 {
     Unserialize(is, item.first, nType, nVersion);
     Unserialize(is, item.second, nType, nVersion);
+}
+
+
+
+//
+// 3 tuple
+//
+template<typename T0, typename T1, typename T2>
+unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2>& item, int nType, int nVersion)
+{
+    unsigned int nSize = 0;
+    nSize += GetSerializeSize(get<0>(item), nType, nVersion);
+    nSize += GetSerializeSize(get<1>(item), nType, nVersion);
+    nSize += GetSerializeSize(get<2>(item), nType, nVersion);
+    return nSize;
+}
+
+template<typename Stream, typename T0, typename T1, typename T2>
+void Serialize(Stream& os, const boost::tuple<T0, T1, T2>& item, int nType, int nVersion)
+{
+    Serialize(os, get<0>(item), nType, nVersion);
+    Serialize(os, get<1>(item), nType, nVersion);
+    Serialize(os, get<2>(item), nType, nVersion);
+}
+
+template<typename Stream, typename T0, typename T1, typename T2>
+void Unserialize(Stream& is, boost::tuple<T0, T1, T2>& item, int nType, int nVersion)
+{
+    Unserialize(is, get<0>(item), nType, nVersion);
+    Unserialize(is, get<1>(item), nType, nVersion);
+    Unserialize(is, get<2>(item), nType, nVersion);
+}
+
+
+
+//
+// 4 tuple
+//
+template<typename T0, typename T1, typename T2, typename T3>
+unsigned int GetSerializeSize(const boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion)
+{
+    unsigned int nSize = 0;
+    nSize += GetSerializeSize(get<0>(item), nType, nVersion);
+    nSize += GetSerializeSize(get<1>(item), nType, nVersion);
+    nSize += GetSerializeSize(get<2>(item), nType, nVersion);
+    nSize += GetSerializeSize(get<3>(item), nType, nVersion);
+    return nSize;
+}
+
+template<typename Stream, typename T0, typename T1, typename T2, typename T3>
+void Serialize(Stream& os, const boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion)
+{
+    Serialize(os, get<0>(item), nType, nVersion);
+    Serialize(os, get<1>(item), nType, nVersion);
+    Serialize(os, get<2>(item), nType, nVersion);
+    Serialize(os, get<3>(item), nType, nVersion);
+}
+
+template<typename Stream, typename T0, typename T1, typename T2, typename T3>
+void Unserialize(Stream& is, boost::tuple<T0, T1, T2, T3>& item, int nType, int nVersion)
+{
+    Unserialize(is, get<0>(item), nType, nVersion);
+    Unserialize(is, get<1>(item), nType, nVersion);
+    Unserialize(is, get<2>(item), nType, nVersion);
+    Unserialize(is, get<3>(item), nType, nVersion);
 }
 
 
