@@ -21,7 +21,8 @@ or Boost 1.37: sudo apt-get install libboost1.37-dev
 
 If using Boost 1.37, append -mt to the boost libraries in the makefile.
 
-We're now using wxWidgets 2.9, which uses UTF-8.  Don't try 2.8, it won't work.
+We're using wxWidgets 2.9.0, which uses UTF-8.  Don't try 2.8, it won't work.
+The build hasn't been updated to work with wxWidgets 2.9.1 yet.
 
 You need to download wxWidgets from http://www.wxwidgets.org/downloads/
 and build it yourself.  See the build instructions and configure parameters
