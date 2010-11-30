@@ -71,6 +71,18 @@ int64 AmountFromValue(const Value& value)
     return nAmount;
 }
 
+Value ValueFromAmount(int64 amount)
+{
+    return (double)amount / (double)COIN;
+}
+
+void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
+{
+    entry.push_back(Pair("confirmations", wtx.GetDepthInMainChain()));
+    entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
+    foreach(const PAIRTYPE(string,string)& item, wtx.mapValue)
+        entry.push_back(Pair(item.first, item.second));
+}
 
 
 
@@ -435,27 +447,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
 }
 
 
-Value listtransactions(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() > 2)
-        throw runtime_error(
-            "listtransactions [count=10] [includegenerated=false]\n"
-            "Returns up to [count] most recent transactions.");
-
-    int64 nCount = 10;
-    if (params.size() > 0)
-        nCount = params[0].get_int64();
-    bool fGenerated = false;
-    if (params.size() > 1)
-        fGenerated = params[1].get_bool();
-
-    Array ret;
-    //// not finished
-    ret.push_back("not implemented yet");
-    return ret;
-}
-
-
 Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
@@ -497,21 +488,8 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 }
 
 
-Value getreceivedbyaccount(const Array& params, bool fHelp)
+void GetAccountPubKeys(string strAccount, set<CScript>& setPubKey)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
-        throw runtime_error(
-            "getreceivedbyaccount <account> [minconf=1]\n"
-            "Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.");
-
-    // Minimum confirmations
-    int nMinDepth = 1;
-    if (params.size() > 1)
-        nMinDepth = params[1].get_int();
-
-    // Get the set of pub keys that have the label
-    string strAccount = params[0].get_str();
-    set<CScript> setPubKey;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
@@ -528,6 +506,25 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
             }
         }
     }
+}
+
+
+Value getreceivedbyaccount(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "getreceivedbyaccount <account> [minconf=1]\n"
+            "Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.");
+
+    // Minimum confirmations
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
+
+    // Get the set of pub keys that have the label
+    string strAccount = params[0].get_str();
+    set<CScript> setPubKey;
+    GetAccountPubKeys(strAccount, setPubKey);
 
     // Tally
     int64 nAmount = 0;
@@ -552,24 +549,8 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
 int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
 {
-    // Get the set of pub keys that have the account
     set<CScript> setPubKey;
-    CRITICAL_BLOCK(cs_mapAddressBook)
-    {
-        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
-        {
-            const string& strAddress = item.first;
-            const string& strName = item.second;
-            if (strName == strAccount)
-            {
-                // We're only counting our own valid bitcoin addresses and not ip addresses
-                CScript scriptPubKey;
-                if (scriptPubKey.SetBitcoinAddress(strAddress))
-                    if (IsMine(scriptPubKey))
-                        setPubKey.insert(scriptPubKey);
-            }
-        }
-    }
+    GetAccountPubKeys(strAccount, setPubKey);
 
     int64 nBalance = 0;
     CRITICAL_BLOCK(cs_mapWallet)
@@ -581,26 +562,12 @@ int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinD
             if (!wtx.IsFinal())
                 continue;
 
-            // Count generated blocks to account ""
-            if (wtx.IsCoinBase() && strAccount == "" && wtx.GetBlocksToMaturity() == 0)
-            {
-                nBalance += wtx.GetCredit();
-                continue;
-            }
+            int64 nGenerated, nReceived, nSent, nFee;
+            wtx.GetAccountAmounts(strAccount, setPubKey, nGenerated, nReceived, nSent, nFee);
 
-            // Tally received
-            foreach(const CTxOut& txout, wtx.vout)
-                if (setPubKey.count(txout.scriptPubKey))
-                    if (wtx.GetDepthInMainChain() >= nMinDepth)
-                        nBalance += txout.nValue;
-
-            // Tally sent
-            if (wtx.strFromAccount == strAccount)
-            {
-                int64 nNet = wtx.GetCredit() - wtx.GetDebit();
-                if (nNet < 0)
-                    nBalance += nNet;
-            }
+            if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+                nBalance += nReceived;
+            nBalance += nGenerated - nSent - nFee;
         }
 
         // Tally internal accounting entries
@@ -628,8 +595,6 @@ Value getbalance(const Array& params, bool fHelp)
     if (params.size() == 0)
         return ((double)GetBalance() / (double)COIN);
 
-    throw runtime_error("under construction"); //// to be released soon
-
     string strAccount = params[0].get_str();
     int nMinDepth = 1;
     if (params.size() > 1)
@@ -647,8 +612,6 @@ Value movecmd(const Array& params, bool fHelp)
         throw runtime_error(
             "move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
             "Move from one account in your wallet to another.");
-
-    throw runtime_error("under construction");
 
     string strFrom = params[0].get_str();
     string strTo = params[1].get_str();
@@ -710,8 +673,6 @@ Value sendfrom(const Array& params, bool fHelp)
         throw runtime_error(
             "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.01");
-
-    throw runtime_error("under construction");
 
     string strAccount = params[0].get_str();
     string strAddress = params[1].get_str();
@@ -886,6 +847,131 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
             "  \"confirmations\" : number of confirmations of the most recent transaction included");
 
     return ListReceived(params, true);
+}
+
+void ListAccountTransactions(CWalletDB& walletdb, const string& strAccount, int nMinDepth, multimap<int64, Object>& ret)
+{
+    set<CScript> setPubKey;
+    GetAccountPubKeys(strAccount, setPubKey);
+
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        // Wallet: generate/send/receive transactions
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            if (!wtx.IsFinal())
+                continue;
+
+            int64 nGenerated, nReceived, nSent, nFee;
+            wtx.GetAccountAmounts(strAccount, setPubKey, nGenerated, nReceived, nSent, nFee);
+
+            // Generated blocks count to account ""
+            if (nGenerated != 0)
+            {
+                Object entry;
+                entry.push_back(Pair("category", "generate"));
+                entry.push_back(Pair("amount", ValueFromAmount(nGenerated)));
+                WalletTxToJSON(wtx, entry);
+                ret.insert(make_pair(wtx.GetTxTime(), entry));
+            }
+
+            // Sent
+            if (nSent != 0 || nFee != 0)
+            {
+                Object entry;
+                entry.push_back(Pair("category", "send"));
+                entry.push_back(Pair("amount", ValueFromAmount(-nSent)));
+                entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+                WalletTxToJSON(wtx, entry);
+                ret.insert(make_pair(wtx.GetTxTime(), entry));
+            }
+
+            // Received
+            if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+            {
+                Object entry;
+                entry.push_back(Pair("category", "receive"));
+                entry.push_back(Pair("amount", ValueFromAmount(nReceived)));
+                WalletTxToJSON(wtx, entry);
+                ret.insert(make_pair(wtx.GetTxTime(), entry));
+            }
+        }
+
+        // Internal accounting entries
+        list<CAccountingEntry> acentries;
+        walletdb.ListAccountCreditDebit(strAccount, acentries);
+        foreach (const CAccountingEntry& acentry, acentries)
+        {
+            Object entry;
+            entry.push_back(Pair("category", "move"));
+            entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
+            entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
+            ret.insert(make_pair(acentry.nTime, entry));
+        }
+    }
+}
+
+Value listtransactions(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "listtransactions <account> [count=10]\n"
+            "Returns up to [count] most recent transactions for account <account>.");
+
+    string strAccount = params[0].get_str();
+    int nCount = 10;
+    if (params.size() > 1)
+        nCount = params[1].get_int();
+
+    CWalletDB walletdb;
+    multimap<int64, Object> mapByTime;  // keys are transaction time
+    ListAccountTransactions(walletdb, strAccount, 0, mapByTime);
+
+    // Return only last nCount items:
+    int nToErase = mapByTime.size()-nCount;
+    if (nToErase > 0)
+    {
+        multimap<int64, Object>::iterator end = mapByTime.begin();
+        std::advance(end, nToErase);
+        mapByTime.erase(mapByTime.begin(), end);
+    }
+
+    Array ret;
+    foreach(const PAIRTYPE(int64, Object)& item, mapByTime)
+        ret.push_back(item.second);
+    return ret;
+}
+
+Value gettransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "gettransaction <txid>\n"
+            "Get detailed information about <txid>");
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    Object entry;
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        if (!mapWallet.count(hash))
+            throw JSONRPCError(-5, "Invalid transaction id");
+        const CWalletTx& wtx = mapWallet[hash];
+
+        int64 nCredit = wtx.GetCredit();
+        int64 nDebit = wtx.GetDebit();
+        int64 nNet = nCredit - nDebit;
+        int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
+
+        entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+        if (wtx.IsFromMe())
+            entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+        WalletTxToJSON(mapWallet[hash], entry);
+    }
+
+    return entry;
 }
 
 
@@ -1086,6 +1172,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getbalance",            &getbalance),
     make_pair("move",                  &movecmd),
     make_pair("sendfrom",              &sendfrom),
+    make_pair("gettransaction",        &gettransaction),
+    make_pair("listtransactions",      &listtransactions),
     make_pair("getwork",               &getwork),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
@@ -1706,8 +1794,6 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "listtransactions"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
-        if (strMethod == "listtransactions"       && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
@@ -1725,6 +1811,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "move"                   && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
+        if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);

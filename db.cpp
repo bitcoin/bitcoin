@@ -597,11 +597,23 @@ bool CWalletDB::WriteAccountingEntry(const string& strAccount, const CAccounting
 
 int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
+    list<CAccountingEntry> entries;
+    ListAccountCreditDebit(strAccount, entries);
+
+    int64 nCreditDebit = 0;
+    foreach (const CAccountingEntry& entry, entries)
+        nCreditDebit += entry.nCreditDebit;
+
+    return nCreditDebit;
+}
+
+void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& entries)
+{
     int64 nCreditDebit = 0;
 
     Dbc* pcursor = GetCursor();
     if (!pcursor)
-        throw runtime_error("CWalletDB::GetAccountCreditDebit() : cannot create DB cursor");
+        throw runtime_error("CWalletDB::ListAccountCreditDebit() : cannot create DB cursor");
     unsigned int fFlags = DB_SET_RANGE;
     loop
     {
@@ -617,7 +629,7 @@ int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
         else if (ret != 0)
         {
             pcursor->close();
-            throw runtime_error("CWalletDB::GetAccountCreditDebit() : error scanning DB");
+            throw runtime_error("CWalletDB::ListAccountCreditDebit() : error scanning DB");
         }
 
         // Unserialize
@@ -632,11 +644,10 @@ int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
 
         CAccountingEntry acentry;
         ssValue >> acentry;
-        nCreditDebit += acentry.nCreditDebit;
+        entries.push_back(acentry);
     }
 
     pcursor->close();
-    return nCreditDebit;
 }
 
 bool CWalletDB::LoadWallet()

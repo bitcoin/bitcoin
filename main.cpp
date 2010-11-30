@@ -3492,7 +3492,7 @@ int64 GetBalance()
             CWalletTx* pcoin = &(*it).second;
             if (!pcoin->IsFinal() || pcoin->fSpent || !pcoin->IsConfirmed())
                 continue;
-            nTotal += pcoin->GetCredit(true);
+            nTotal += pcoin->GetCredit();
         }
     }
 

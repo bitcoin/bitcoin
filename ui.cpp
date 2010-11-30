@@ -697,16 +697,13 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
         if (fAllFromMe && fAllToMe)
         {
             // Payment to self
-            int64 nValue = wtx.vout[0].nValue;
+            int64 nChange = wtx.GetChange();
             InsertLine(fNew, nIndex, hash, strSort, colour,
                        strStatus,
                        nTime ? DateTimeStr(nTime) : "",
                        _("Payment to yourself"),
-                       "",
-                       "");
-            /// issue: can't tell which is the payment and which is the change anymore
-            //           FormatMoney(nNet - nValue, true),
-            //           FormatMoney(nValue, true));
+                       FormatMoney(-(nDebit - nChange), true),
+                       FormatMoney(nCredit - nChange, true));
         }
         else if (fAllFromMe)
         {
@@ -1376,10 +1373,10 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                 if (fAllToMe)
                 {
                     // Payment to self
-                    /// issue: can't tell which is the payment and which is the change anymore
-                    //int64 nValue = wtx.vout[0].nValue;
-                    //strHTML += _("<b>Debit:</b> ") + FormatMoney(-nValue) + "<br>";
-                    //strHTML += _("<b>Credit:</b> ") + FormatMoney(nValue) + "<br>";
+                    int64 nChange = wtx.GetChange();
+                    int64 nValue = nCredit - nChange;
+                    strHTML += _("<b>Debit:</b> ") + FormatMoney(-nValue) + "<br>";
+                    strHTML += _("<b>Credit:</b> ") + FormatMoney(nValue) + "<br>";
                 }
 
                 int64 nTxFee = nDebit - wtx.GetValueOut();
