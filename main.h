@@ -345,9 +345,25 @@ public:
     {
         if (!MoneyRange(nValue))
             throw runtime_error("CTxOut::GetCredit() : value out of range");
-        if (IsMine())
-            return nValue;
-        return 0;
+        return (IsMine() ? nValue : 0);
+    }
+
+    bool IsChange() const
+    {
+        // On a debit transaction, a txout that's mine but isn't in the address book is change
+        vector<unsigned char> vchPubKey;
+        if (ExtractPubKey(scriptPubKey, true, vchPubKey))
+            CRITICAL_BLOCK(cs_mapAddressBook)
+                if (!mapAddressBook.count(PubKeyToAddress(vchPubKey)))
+                    return true;
+        return false;
+    }
+
+    int64 GetChange() const
+    {
+        if (!MoneyRange(nValue))
+            throw runtime_error("CTxOut::GetChange() : value out of range");
+        return (IsChange() ? nValue : 0);
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -518,6 +534,20 @@ public:
                 throw runtime_error("CTransaction::GetCredit() : value out of range");
         }
         return nCredit;
+    }
+
+    int64 GetChange() const
+    {
+        if (IsCoinBase())
+            return 0;
+        int64 nChange = 0;
+        foreach(const CTxOut& txout, vout)
+        {
+            nChange += txout.GetChange();
+            if (!MoneyRange(nChange))
+                throw runtime_error("CTransaction::GetChange() : value out of range");
+        }
+        return nChange;
     }
 
     int64 GetValueOut() const
@@ -731,8 +761,10 @@ public:
     // memory only
     mutable char fDebitCached;
     mutable char fCreditCached;
+    mutable char fChangeCached;
     mutable int64 nDebitCached;
     mutable int64 nCreditCached;
+    mutable int64 nChangeCached;
 
     // memory only UI hints
     mutable unsigned int nTimeDisplayed;
@@ -768,8 +800,10 @@ public:
         strFromAccount.clear();
         fDebitCached = false;
         fCreditCached = false;
+        fChangeCached = false;
         nDebitCached = 0;
         nCreditCached = 0;
+        nChangeCached = 0;
         nTimeDisplayed = 0;
         nLinesDisplayed = 0;
         fConfirmedDisplayed = false;
@@ -808,7 +842,7 @@ public:
         return nDebitCached;
     }
 
-    int64 GetCredit(bool fUseCache=false) const
+    int64 GetCredit(bool fUseCache=true) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if (IsCoinBase() && GetBlocksToMaturity() > 0)
@@ -822,9 +856,49 @@ public:
         return nCreditCached;
     }
 
+    int64 GetChange() const
+    {
+        if (fChangeCached)
+            return nChangeCached;
+        nChangeCached = CTransaction::GetChange();
+        fChangeCached = true;
+        return nChangeCached;
+    }
+
     bool IsFromMe() const
     {
         return (GetDebit() > 0);
+    }
+
+    void GetAccountAmounts(string strAccount, const set<CScript>& setPubKey,
+                           int64& nGenerated, int64& nReceived, int64& nSent, int64& nFee) const
+    {
+        nGenerated = nReceived = nSent = nFee = 0;
+
+        // Generated blocks count to account ""
+        if (IsCoinBase())
+        {
+            if (strAccount == "" && GetBlocksToMaturity() == 0)
+                nGenerated = GetCredit();
+            return;
+        }
+
+        // Received
+        foreach(const CTxOut& txout, vout)
+            if (setPubKey.count(txout.scriptPubKey))
+                nReceived += txout.nValue;
+
+        // Sent
+        if (strFromAccount == strAccount)
+        {
+            int64 nDebit = GetDebit();
+            if (nDebit > 0)
+            {
+                int64 nValueOut = GetValueOut();
+                nFee = nDebit - nValueOut;
+                nSent = nValueOut - GetChange();
+            }
+        }
     }
 
     bool IsConfirmed() const

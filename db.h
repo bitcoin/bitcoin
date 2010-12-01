@@ -435,6 +435,7 @@ public:
     bool WriteAccount(const string& strAccount, const CAccount& account);
     bool WriteAccountingEntry(const string& strAccount, const CAccountingEntry& acentry);
     int64 GetAccountCreditDebit(const string& strAccount);
+    void ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& acentries);
 
     bool LoadWallet();
 protected:
