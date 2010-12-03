@@ -1891,7 +1891,7 @@ string GetWarnings(string strFor)
     int nPriority = 0;
     string strStatusBar;
     string strRPC;
-    if (mapArgs.count("-testsafemode"))
+    if (GetBoolArg("-testsafemode"))
         strRPC = "test";
 
     // Misc warnings like out of disk space and clock is wrong
@@ -3123,7 +3123,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
                 dPriority += (double)nValueIn * nConf;
 
-                if (fDebug && mapArgs.count("-printpriority"))
+                if (fDebug && GetBoolArg("-printpriority"))
                     printf("priority     nValueIn=%-12I64d nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
             }
 
@@ -3135,7 +3135,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             else
                 mapPriority.insert(make_pair(-dPriority, &(*mi).second));
 
-            if (fDebug && mapArgs.count("-printpriority"))
+            if (fDebug && GetBoolArg("-printpriority"))
             {
                 printf("priority %-20.1f %s\n%s", dPriority, tx.GetHash().ToString().substr(0,10).c_str(), tx.ToString().c_str());
                 if (porphan)
@@ -3312,7 +3312,7 @@ void BitcoinMiner()
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     bool f4WaySSE2 = Detect128BitSSE2();
     if (mapArgs.count("-4way"))
-        f4WaySSE2 = (mapArgs["-4way"] != "0");
+        f4WaySSE2 = GetBoolArg(mapArgs["-4way"]);
 
     // Each thread has its own key and counter
     CReserveKey reservekey;

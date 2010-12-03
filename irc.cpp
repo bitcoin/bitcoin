@@ -194,7 +194,7 @@ void ThreadIRCSeed2(void* parg)
 {
     if (mapArgs.count("-connect"))
         return;
-    if (mapArgs.count("-noirc"))
+    if (GetBoolArg("-noirc"))
         return;
     printf("ThreadIRCSeed started\n");
     int nErrorWait = 10;

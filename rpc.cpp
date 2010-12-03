@@ -1525,7 +1525,7 @@ void ThreadRPCServer2(void* parg)
         return;
     }
 
-    bool fUseSSL = (mapArgs.count("-rpcssl") > 0);
+    bool fUseSSL = GetBoolArg("-rpcssl");
     asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
 
     asio::io_service io_service;
@@ -1552,7 +1552,7 @@ void ThreadRPCServer2(void* parg)
     }
 #else
     if (fUseSSL)
-        throw runtime_error("-rpcssl=true, but bitcoin compiled without full openssl libraries.");
+        throw runtime_error("-rpcssl=1, but bitcoin compiled without full openssl libraries.");
 #endif
 
     loop
@@ -1642,7 +1642,7 @@ void ThreadRPCServer2(void* parg)
 
             // Observe safe mode
             string strWarning = GetWarnings("rpc");
-            if (strWarning != "" && !mapArgs.count("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+            if (strWarning != "" && !GetBoolArg("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
                 throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
 
             try
@@ -1692,7 +1692,7 @@ Object CallRPC(const string& strMethod, const Array& params)
                 GetConfigFile().c_str()));
 
     // Connect to localhost
-    bool fUseSSL = (mapArgs.count("-rpcssl") > 0);
+    bool fUseSSL = GetBoolArg("-rpcssl");
 #ifdef USE_SSL
     asio::io_service io_service;
     ssl::context context(io_service, ssl::context::sslv23);
@@ -1704,7 +1704,7 @@ Object CallRPC(const string& strMethod, const Array& params)
         throw runtime_error("couldn't connect to server");
 #else
     if (fUseSSL)
-        throw runtime_error("-rpcssl=true, but bitcoin compiled without full openssl libraries.");
+        throw runtime_error("-rpcssl=1, but bitcoin compiled without full openssl libraries.");
 
     ip::tcp::iostream stream(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", "8332"));
     if (stream.fail())

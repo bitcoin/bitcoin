@@ -391,7 +391,7 @@ void CMainFrame::OnIconize(wxIconizeEvent& event)
     if (!event.Iconized())
         fClosedToTray = false;
 #if defined(__WXGTK__) || defined(__WXMAC_OSX__)
-    if (mapArgs.count("-minimizetotray")) {
+    if (GetBoolArg("-minimizetotray")) {
 #endif
     // The tray icon sometimes disappears on ubuntu karmic
     // Hiding the taskbar button doesn't work cleanly on ubuntu lucid
@@ -1633,7 +1633,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 #endif
 #if defined(__WXGTK__) || defined(__WXMAC_OSX__)
     m_checkBoxStartOnSystemStartup->SetLabel(_("&Start Bitcoin on window system startup"));
-    if (!mapArgs.count("-minimizetotray"))
+    if (!GetBoolArg("-minimizetotray"))
     {
         // Minimize to tray is just too buggy on Linux
         fMinimizeToTray = false;
@@ -2741,10 +2741,10 @@ wxMenu* CMyTaskBarIcon::CreatePopupMenu()
 void CreateMainWindow()
 {
     pframeMain = new CMainFrame(NULL);
-    if (mapArgs.count("-min"))
+    if (GetBoolArg("-min"))
         pframeMain->Iconize(true);
 #if defined(__WXGTK__) || defined(__WXMAC_OSX__)
-    if (!mapArgs.count("-minimizetotray"))
+    if (!GetBoolArg("-minimizetotray"))
         fMinimizeToTray = false;
 #endif
     pframeMain->Show(true);  // have to show first to get taskbar button to hide
