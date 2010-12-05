@@ -870,6 +870,11 @@ void ResendWalletTransactions()
 
 bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
 {
+    if (!fReadTransactions)
+    {
+        *this = pindex->GetBlockHeader();
+        return true;
+    }
     if (!ReadFromDisk(pindex->nFile, pindex->nBlockPos, fReadTransactions))
         return false;
     if (GetHash() != pindex->GetBlockHash())
@@ -1425,7 +1430,10 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     pindexNew->bnChainWork = (pindexNew->pprev ? pindexNew->pprev->bnChainWork : 0) + pindexNew->GetBlockWork();
 
     CTxDB txdb;
+    txdb.TxnBegin();
     txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
+    if (!txdb.TxnCommit())
+        return false;
 
     // New best
     if (pindexNew->bnChainWork > bnBestChainWork)
@@ -1529,9 +1537,9 @@ bool CBlock::AcceptBlock()
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))
         return error("AcceptBlock() : out of disk space");
-    unsigned int nFile;
-    unsigned int nBlockPos;
-    if (!WriteToDisk(!fClient, nFile, nBlockPos))
+    unsigned int nFile = -1;
+    unsigned int nBlockPos = 0;
+    if (!WriteToDisk(nFile, nBlockPos))
         return error("AcceptBlock() : WriteToDisk failed");
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
@@ -1777,7 +1785,7 @@ bool LoadBlockIndex(bool fAllowNew)
         // Start new block file
         unsigned int nFile;
         unsigned int nBlockPos;
-        if (!block.WriteToDisk(!fClient, nFile, nBlockPos))
+        if (!block.WriteToDisk(nFile, nBlockPos))
             return error("LoadBlockIndex() : writing genesis block to disk failed");
         if (!block.AddToBlockIndex(nFile, nBlockPos))
             return error("LoadBlockIndex() : genesis block not accepted");
@@ -2181,11 +2189,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
-        if (pfrom->fClient)
-        {
-            pfrom->vSend.nType |= SER_BLOCKHEADERONLY;
-            pfrom->vRecv.nType |= SER_BLOCKHEADERONLY;
-        }
 
         AddTimeData(pfrom->addr.ip, nTime);
 
@@ -2359,9 +2362,8 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
                 if (mi != mapBlockIndex.end())
                 {
-                    //// could optimize this to send header straight from blockindex for client
                     CBlock block;
-                    block.ReadFromDisk((*mi).second, !pfrom->fClient);
+                    block.ReadFromDisk((*mi).second);
                     pfrom->PushMessage("block", block);
 
                     // Trigger them to send a getblocks request for the next batch of inventory
@@ -2405,7 +2407,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         uint256 hashStop;
         vRecv >> locator >> hashStop;
 
-        // Find the first block the caller has in the main chain
+        // Find the last block the caller has in the main chain
         CBlockIndex* pindex = locator.GetBlockIndex();
 
         // Send the rest of the chain
@@ -2430,6 +2432,42 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 break;
             }
         }
+    }
+
+
+    else if (strCommand == "getheaders")
+    {
+        CBlockLocator locator;
+        uint256 hashStop;
+        vRecv >> locator >> hashStop;
+
+        CBlockIndex* pindex = NULL;
+        if (locator.IsNull())
+        {
+            // If locator is null, return the hashStop block
+            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashStop);
+            if (mi == mapBlockIndex.end())
+                return true;
+            pindex = (*mi).second;
+        }
+        else
+        {
+            // Find the last block the caller has in the main chain
+            pindex = locator.GetBlockIndex();
+            if (pindex)
+                pindex = pindex->pnext;
+        }
+
+        vector<CBlock> vHeaders;
+        int nLimit = 2000 + locator.GetDistanceBack();
+        printf("getheaders %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
+        for (; pindex; pindex = pindex->pnext)
+        {
+            vHeaders.push_back(pindex->GetBlockHeader());
+            if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
+                break;
+        }
+        pfrom->PushMessage("headers", vHeaders);
     }
 
 
@@ -2488,17 +2526,16 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "block")
     {
-        auto_ptr<CBlock> pblock(new CBlock);
-        vRecv >> *pblock;
+        CBlock block;
+        vRecv >> block;
 
-        //// debug print
-        printf("received block %s\n", pblock->GetHash().ToString().substr(0,20).c_str());
-        // pblock->print();
+        printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
+        // block.print();
 
-        CInv inv(MSG_BLOCK, pblock->GetHash());
+        CInv inv(MSG_BLOCK, block.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if (ProcessBlock(pfrom, pblock.get()))
+        if (ProcessBlock(pfrom, &block))
             mapAlreadyAskedFor.erase(inv);
     }
 

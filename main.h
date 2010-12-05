@@ -865,11 +865,6 @@ public:
         return nChangeCached;
     }
 
-    bool IsFromMe() const
-    {
-        return (GetDebit() > 0);
-    }
-
     void GetAccountAmounts(string strAccount, const set<CScript>& setPubKey,
                            int64& nGenerated, int64& nReceived, int64& nSent, int64& nFee) const
     {
@@ -899,6 +894,11 @@ public:
                 nSent = nValueOut - GetChange();
             }
         }
+    }
+
+    bool IsFromMe() const
+    {
+        return (GetDebit() > 0);
     }
 
     bool IsConfirmed() const
@@ -1158,14 +1158,12 @@ public:
     }
 
 
-    bool WriteToDisk(bool fWriteTransactions, unsigned int& nFileRet, unsigned int& nBlockPosRet)
+    bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
     {
         // Open history file to append
         CAutoFile fileout = AppendBlockFile(nFileRet);
         if (!fileout)
             return error("CBlock::WriteToDisk() : AppendBlockFile failed");
-        if (!fWriteTransactions)
-            fileout.nType |= SER_BLOCKHEADERONLY;
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
@@ -1308,6 +1306,19 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+    }
+
+    CBlock GetBlockHeader() const
+    {
+        CBlock block;
+        block.nVersion       = nVersion;
+        if (pprev)
+            block.hashPrevBlock = pprev->GetBlockHash();
+        block.hashMerkleRoot = hashMerkleRoot;
+        block.nTime          = nTime;
+        block.nBits          = nBits;
+        block.nNonce         = nNonce;
+        return block;
     }
 
     uint256 GetBlockHash() const
@@ -1510,6 +1521,16 @@ public:
             READWRITE(nVersion);
         READWRITE(vHave);
     )
+
+    void SetNull()
+    {
+        vHave.clear();
+    }
+
+    bool IsNull()
+    {
+        return vHave.empty();
+    }
 
     void Set(const CBlockIndex* pindex)
     {

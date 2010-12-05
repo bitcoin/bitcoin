@@ -132,6 +132,8 @@ void CDB::Close()
 
     // Flush database activity from memory pool to disk log
     unsigned int nMinutes = 0;
+    if (fReadOnly)
+        nMinutes = 1;
     if (strFile == "addr.dat")
         nMinutes = 2;
     if (strFile == "blkindex.dat" && IsInitialBlockDownload() && nBestHeight % 500 != 0)
