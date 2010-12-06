@@ -751,11 +751,10 @@ public:
     vector<CMerkleTx> vtxPrev;
     map<string, string> mapValue;
     vector<pair<string, string> > vOrderForm;
+    unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived;  // time received by this node
     char fFromMe;
     char fSpent;
-    char fTimeReceivedIsTxTime;
-    char fUnused;
     string strFromAccount;
 
     // memory only
@@ -792,11 +791,10 @@ public:
         vtxPrev.clear();
         mapValue.clear();
         vOrderForm.clear();
+        fTimeReceivedIsTxTime = false;
         nTimeReceived = 0;
         fFromMe = false;
         fSpent = false;
-        fTimeReceivedIsTxTime = false;
-        fUnused = false;
         strFromAccount.clear();
         fDebitCached = false;
         fCreditCached = false;
@@ -811,24 +809,23 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
+        CWalletTx* pthis = const_cast<CWalletTx*>(this);
         if (fRead)
-            const_cast<CWalletTx*>(this)->Init();
+            pthis->Init();
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion, ser_action);
         READWRITE(vtxPrev);
+
+        pthis->mapValue["fromaccount"] = pthis->strFromAccount;
         READWRITE(mapValue);
+        pthis->strFromAccount = pthis->mapValue["fromaccount"];
+        pthis->mapValue.erase("fromaccount");
+        pthis->mapValue.erase("version");
+
         READWRITE(vOrderForm);
-        READWRITE(nVersion);
-        if (fRead && nVersion < 100)
-            const_cast<CWalletTx*>(this)->fTimeReceivedIsTxTime = nVersion;
+        READWRITE(fTimeReceivedIsTxTime);
         READWRITE(nTimeReceived);
         READWRITE(fFromMe);
         READWRITE(fSpent);
-        if (nVersion >= 31404)
-        {
-            READWRITE(fTimeReceivedIsTxTime);
-            READWRITE(fUnused);
-            READWRITE(strFromAccount);
-        }
     )
 
     int64 GetDebit() const
