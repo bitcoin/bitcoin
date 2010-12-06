@@ -751,11 +751,10 @@ public:
     vector<CMerkleTx> vtxPrev;
     map<string, string> mapValue;
     vector<pair<string, string> > vOrderForm;
+    unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived;  // time received by this node
     char fFromMe;
     char fSpent;
-    char fTimeReceivedIsTxTime;
-    char fUnused;
     string strFromAccount;
 
     // memory only
@@ -792,11 +791,10 @@ public:
         vtxPrev.clear();
         mapValue.clear();
         vOrderForm.clear();
+        fTimeReceivedIsTxTime = false;
         nTimeReceived = 0;
         fFromMe = false;
         fSpent = false;
-        fTimeReceivedIsTxTime = false;
-        fUnused = false;
         strFromAccount.clear();
         fDebitCached = false;
         fCreditCached = false;
@@ -811,24 +809,23 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
+        CWalletTx* pthis = const_cast<CWalletTx*>(this);
         if (fRead)
-            const_cast<CWalletTx*>(this)->Init();
+            pthis->Init();
         nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion, ser_action);
         READWRITE(vtxPrev);
+
+        pthis->mapValue["fromaccount"] = pthis->strFromAccount;
         READWRITE(mapValue);
+        pthis->strFromAccount = pthis->mapValue["fromaccount"];
+        pthis->mapValue.erase("fromaccount");
+        pthis->mapValue.erase("version");
+
         READWRITE(vOrderForm);
-        READWRITE(nVersion);
-        if (fRead && nVersion < 100)
-            const_cast<CWalletTx*>(this)->fTimeReceivedIsTxTime = nVersion;
+        READWRITE(fTimeReceivedIsTxTime);
         READWRITE(nTimeReceived);
         READWRITE(fFromMe);
         READWRITE(fSpent);
-        if (nVersion >= 31404)
-        {
-            READWRITE(fTimeReceivedIsTxTime);
-            READWRITE(fUnused);
-            READWRITE(strFromAccount);
-        }
     )
 
     int64 GetDebit() const
@@ -865,11 +862,6 @@ public:
         return nChangeCached;
     }
 
-    bool IsFromMe() const
-    {
-        return (GetDebit() > 0);
-    }
-
     void GetAccountAmounts(string strAccount, const set<CScript>& setPubKey,
                            int64& nGenerated, int64& nReceived, int64& nSent, int64& nFee) const
     {
@@ -899,6 +891,11 @@ public:
                 nSent = nValueOut - GetChange();
             }
         }
+    }
+
+    bool IsFromMe() const
+    {
+        return (GetDebit() > 0);
     }
 
     bool IsConfirmed() const
@@ -1158,14 +1155,12 @@ public:
     }
 
 
-    bool WriteToDisk(bool fWriteTransactions, unsigned int& nFileRet, unsigned int& nBlockPosRet)
+    bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
     {
         // Open history file to append
         CAutoFile fileout = AppendBlockFile(nFileRet);
         if (!fileout)
             return error("CBlock::WriteToDisk() : AppendBlockFile failed");
-        if (!fWriteTransactions)
-            fileout.nType |= SER_BLOCKHEADERONLY;
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
@@ -1308,6 +1303,19 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+    }
+
+    CBlock GetBlockHeader() const
+    {
+        CBlock block;
+        block.nVersion       = nVersion;
+        if (pprev)
+            block.hashPrevBlock = pprev->GetBlockHash();
+        block.hashMerkleRoot = hashMerkleRoot;
+        block.nTime          = nTime;
+        block.nBits          = nBits;
+        block.nNonce         = nNonce;
+        return block;
     }
 
     uint256 GetBlockHash() const
@@ -1510,6 +1518,16 @@ public:
             READWRITE(nVersion);
         READWRITE(vHave);
     )
+
+    void SetNull()
+    {
+        vHave.clear();
+    }
+
+    bool IsNull()
+    {
+        return vHave.empty();
+    }
 
     void Set(const CBlockIndex* pindex)
     {

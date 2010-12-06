@@ -206,14 +206,11 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
-    if (mapArgs.count("-debug"))
-        fDebug = true;
+    fDebug = GetBoolArg("-debug");
 
-    if (mapArgs.count("-printtodebugger"))
-        fPrintToDebugger = true;
+    fPrintToDebugger = GetBoolArg("-printtodebugger");
 
-    if (mapArgs.count("-testnet"))
-        fTestNet = true;
+    fTestNet = GetBoolArg("-testnet");
 
     if (fCommandLine)
     {
@@ -232,7 +229,7 @@ bool AppInit2(int argc, char* argv[])
 #endif
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
-    if (mapArgs.count("-loadblockindextest"))
+    if (GetBoolArg("-loadblockindextest"))
     {
         CTxDB txdb("r");
         txdb.LoadBlockIndex();
@@ -348,7 +345,7 @@ bool AppInit2(int argc, char* argv[])
     //
     // Parameters
     //
-    if (mapArgs.count("-printblockindex") || mapArgs.count("-printblocktree"))
+    if (GetBoolArg("-printblockindex") || GetBoolArg("-printblocktree"))
     {
         PrintBlockTree();
         return false;
@@ -377,13 +374,7 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
-    if (mapArgs.count("-gen"))
-    {
-        if (mapArgs["-gen"].empty())
-            fGenerateBitcoins = true;
-        else
-            fGenerateBitcoins = (atoi(mapArgs["-gen"].c_str()) != 0);
-    }
+    fGenerateBitcoins = GetBoolArg("-gen");
 
     if (mapArgs.count("-proxy"))
     {
@@ -434,7 +425,7 @@ bool AppInit2(int argc, char* argv[])
     if (!CreateThread(StartNode, NULL))
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
-    if (mapArgs.count("-server") || fDaemon)
+    if (GetBoolArg("-server") || fDaemon)
         CreateThread(ThreadRPCServer, NULL);
 
 #if defined(__WXMSW__) && defined(GUI)

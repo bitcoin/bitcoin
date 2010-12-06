@@ -173,6 +173,68 @@ bool Wait(int nSeconds)
     return true;
 }
 
+bool RecvCodeLine(SOCKET hSocket, const char* psz1, string& strRet)
+{
+    strRet.clear();
+    loop
+    {
+        string strLine;
+        if (!RecvLineIRC(hSocket, strLine))
+            return false;
+
+        vector<string> vWords;
+        ParseString(strLine, ' ', vWords);
+        if (vWords.size() < 2)
+            continue;
+
+        if (vWords[1] == psz1)
+        {
+            printf("IRC %s\n", strLine.c_str());
+            strRet = strLine;
+            return true;
+        }
+    }
+}
+
+bool GetIPFromIRC(SOCKET hSocket, string strMyName, unsigned int& ipRet)
+{
+    Send(hSocket, strprintf("USERHOST %s\r", strMyName.c_str()).c_str());
+
+    string strLine;
+    if (!RecvCodeLine(hSocket, "302", strLine))
+        return false;
+
+    vector<string> vWords;
+    ParseString(strLine, ' ', vWords);
+    if (vWords.size() < 4)
+        return false;
+
+    string str = vWords[3];
+    if (str.rfind("@") == string::npos)
+        return false;
+    string strHost = str.substr(str.rfind("@")+1);
+
+    unsigned int a=0, b=0, c=0, d=0;
+    if (sscanf(strHost.c_str(), "%u.%u.%u.%u", &a, &b, &c, &d) == 4 &&
+        inet_addr(strHost.c_str()) != INADDR_NONE)
+    {
+        printf("GetIPFromIRC() userhost is IP %s\n", strHost.c_str());
+        ipRet = CAddress(strHost).ip;
+    }
+    else
+    {
+        printf("GetIPFromIRC() got userhost %s\n", strHost.c_str());
+        if (fUseProxy)
+            return false;
+        struct hostent* phostent = gethostbyname(strHost.c_str());
+        if (!phostent || !phostent->h_addr_list || !phostent->h_addr_list[0])
+            return false;
+        ipRet = *(u_long*)phostent->h_addr_list[0];
+    }
+
+    return true;
+}
+
 
 
 void ThreadIRCSeed(void* parg)
@@ -194,7 +256,7 @@ void ThreadIRCSeed2(void* parg)
 {
     if (mapArgs.count("-connect"))
         return;
-    if (mapArgs.count("-noirc"))
+    if (GetBoolArg("-noirc"))
         return;
     printf("ThreadIRCSeed started\n");
     int nErrorWait = 10;
@@ -264,6 +326,20 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
         Sleep(500);
+
+        // Get my external IP from IRC server
+        CAddress addrFromIRC;
+        if (GetIPFromIRC(hSocket, strMyName, addrFromIRC.ip))
+        {
+            // Just using it as a backup for now
+            printf("GetIPFromIRC() returned %s\n", addrFromIRC.ToStringIP().c_str());
+            if (addrFromIRC.IsRoutable() && !fUseProxy && !addrLocalHost.IsRoutable())
+            {
+                addrLocalHost.ip = addrFromIRC.ip;
+                strMyName = EncodeAddress(addrLocalHost);
+                Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
+            }
+        }
 
         Send(hSocket, fTestNet ? "JOIN #bitcoinTEST\r" : "JOIN #bitcoin\r");
         Send(hSocket, fTestNet ? "WHO #bitcoinTEST\r"  : "WHO #bitcoin\r");

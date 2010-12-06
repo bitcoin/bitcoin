@@ -132,6 +132,8 @@ void CDB::Close()
 
     // Flush database activity from memory pool to disk log
     unsigned int nMinutes = 0;
+    if (fReadOnly)
+        nMinutes = 1;
     if (strFile == "addr.dat")
         nMinutes = 2;
     if (strFile == "blkindex.dat" && IsInitialBlockDownload() && nBestHeight % 500 != 0)
@@ -654,6 +656,7 @@ bool CWalletDB::LoadWallet()
 {
     vchDefaultKey.clear();
     int nFileVersion = 0;
+    vector<uint256> vWalletUpgrade;
 
     // Modify defaults
 #ifndef __WXMSW__
@@ -702,6 +705,25 @@ bool CWalletDB::LoadWallet()
 
                 if (wtx.GetHash() != hash)
                     printf("Error in wallet.dat, hash mismatch\n");
+
+                // Undo serialize changes in 31600
+                if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
+                {
+                    if (!ssValue.empty())
+                    {
+                        char fTmp;
+                        char fUnused;
+                        ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
+                        printf("LoadWallet() upgrading tx ver=%d %d '%s' %s\n", wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount.c_str(), hash.ToString().c_str());
+                        wtx.fTimeReceivedIsTxTime = fTmp;
+                    }
+                    else
+                    {
+                        printf("LoadWallet() repairing tx ver=%d %s\n", wtx.fTimeReceivedIsTxTime, hash.ToString().c_str());
+                        wtx.fTimeReceivedIsTxTime = 0;
+                    }
+                    vWalletUpgrade.push_back(hash);
+                }
 
                 //// debug print
                 //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
@@ -772,6 +794,9 @@ bool CWalletDB::LoadWallet()
         pcursor->close();
     }
 
+    foreach(uint256 hash, vWalletUpgrade)
+        WriteTx(hash, mapWallet[hash]);
+
     printf("nFileVersion = %d\n", nFileVersion);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
     printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
@@ -791,6 +816,7 @@ bool CWalletDB::LoadWallet()
 
         WriteVersion(VERSION);
     }
+
 
     return true;
 }

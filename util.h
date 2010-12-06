@@ -417,6 +417,17 @@ inline int64 GetArg(const string& strArg, int64 nDefault)
     return nDefault;
 }
 
+inline bool GetBoolArg(const string& strArg)
+{
+    if (mapArgs.count(strArg))
+    {
+        if (mapArgs[strArg].empty())
+            return true;
+        return (atoi(mapArgs[strArg]) != 0);
+    }
+    return false;
+}
+
 inline string FormatVersion(int nVersion)
 {
     if (nVersion%100 == 0)
