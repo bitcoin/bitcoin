@@ -1076,6 +1076,13 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
 }
 
 
+bool IsStandard(const CScript& scriptPubKey)
+{
+    vector<pair<opcodetype, valtype> > vSolution;
+    return Solver(scriptPubKey, vSolution);
+}
+
+
 bool IsMine(const CScript& scriptPubKey)
 {
     CScript scriptSig;

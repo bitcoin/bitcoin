@@ -1,8 +1,8 @@
-// Copyright (c) 2010 Satoshi Nakamoto
+// Copyright (c) 2010 Nils Schneider
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-// tcatm's 4-way 128-bit SSE2 SHA-256
+// 4-way 128-bit SSE2 SHA-256
 
 #ifdef FOURWAYSSE2
 
