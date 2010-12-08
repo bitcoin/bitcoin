@@ -997,7 +997,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
                 break;
             if (opcode2 == OP_PUBKEY)
             {
-                if (vch1.size() < 33)
+                if (vch1.size() < 33 || vch1.size() > 120)
                     break;
                 vSolutionRet.push_back(make_pair(opcode2, vch1));
             }
