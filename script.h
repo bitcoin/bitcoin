@@ -597,6 +597,23 @@ public:
     }
 
 
+    bool IsPushOnly() const
+    {
+        if (size() > 200)
+            return false;
+        const_iterator pc = begin();
+        while (pc < end())
+        {
+            opcodetype opcode;
+            if (!GetOp(pc, opcode))
+                return false;
+            if (opcode > OP_16)
+                return false;
+        }
+        return true;
+    }
+
+
     uint160 GetBitcoinAddressHash160() const
     {
         opcodetype opcode;
@@ -684,6 +701,7 @@ public:
 
 
 uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CScript& scriptPubKey);
 bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned char>& vchPubKeyRet);
 bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret);

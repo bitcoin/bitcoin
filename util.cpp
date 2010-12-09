@@ -175,7 +175,6 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);
             va_end(arg_ptr);
-            fflush(fileout);
         }
     }
 
@@ -406,11 +405,11 @@ vector<unsigned char> ParseHex(const char* psz)
         while (isspace(*psz))
             psz++;
         char c = phexdigit[(unsigned char)*psz++];
-        if (c == -1)
+        if (c == (char)-1)
             break;
         unsigned char n = (c << 4);
         c = phexdigit[(unsigned char)*psz++];
-        if (c == -1)
+        if (c == (char)-1)
             break;
         n |= c;
         vch.push_back(n);

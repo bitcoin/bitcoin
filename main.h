@@ -499,6 +499,17 @@ public:
         return n;
     }
 
+    bool IsStandard() const
+    {
+        foreach(const CTxIn& txin, vin)
+            if (!txin.scriptSig.IsPushOnly())
+                return error("nonstandard txin: %s", txin.scriptSig.ToString().c_str());
+        foreach(const CTxOut& txout, vout)
+            if (!::IsStandard(txout.scriptPubKey))
+                return error("nonstandard txout: %s", txout.scriptPubKey.ToString().c_str());
+        return true;
+    }
+
     bool IsMine() const
     {
         foreach(const CTxOut& txout, vout)
