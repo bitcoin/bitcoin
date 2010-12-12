@@ -1178,6 +1178,31 @@ pair<string, rpcfn_type> pCallTable[] =
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
+string pAllowInSafeMode[] =
+{
+    "help",
+    "stop",
+    "getblockcount",
+    "getblocknumber",
+    "getconnectioncount",
+    "getdifficulty",
+    "getgenerate",
+    "setgenerate",
+    "gethashespersec",
+    "getinfo",
+    "getnewaddress",
+    "getaccountaddress",
+    "setlabel",
+    "getaccount",
+    "getlabel", // deprecated
+    "getaddressesbyaccount",
+    "getaddressesbylabel", // deprecated
+    "backupwallet",
+    "validateaddress",
+    "getwork",
+};
+set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
+
 
 
 
@@ -1614,6 +1639,11 @@ void ThreadRPCServer2(void* parg)
             map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
             if (mi == mapCallTable.end())
                 throw JSONRPCError(-32601, "Method not found");
+
+            // Observe safe mode
+            string strWarning = GetWarnings("rpc");
+            if (strWarning != "" && !GetBoolArg("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+                throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
 
             try
             {

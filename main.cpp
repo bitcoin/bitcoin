@@ -1953,7 +1953,6 @@ string GetWarnings(string strFor)
             {
                 nPriority = alert.nPriority;
                 strStatusBar = alert.strStatusBar;
-                strRPC = alert.strRPCError;
             }
         }
     }
