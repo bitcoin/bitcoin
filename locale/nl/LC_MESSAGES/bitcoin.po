@@ -320,8 +320,8 @@ msgstr "&Minimalizeer bij sluiten"
 
 #: ../../../ui.cpp:1595
 #, c-format
-msgid "version %s%s beta"
-msgstr "versie %s%s beta"
+msgid "version %s%s BETA"
+msgstr "versie %s%s BETA"
 
 #: ../../../ui.cpp:1681
 msgid "Will appear as \"From: Unknown\""
@@ -697,7 +697,7 @@ msgstr "versie"
 
 #: ../../../uibase.cpp:563
 msgid ""
-"Copyright (c) 2009-2010 Satoshi Nakamoto.\n"
+"Copyright (c) 2009-2010 Bitcoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -708,7 +708,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com)."
 msgstr ""
-"Copyright (c) 2009-2010 Satoshi Nakamoto.\n"
+"Copyright (c) 2009-2010 Bitcoin Developers\n"
 "\n"
 "Dit is experimentele software.\n"
 "\n"
