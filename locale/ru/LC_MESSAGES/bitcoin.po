@@ -383,7 +383,7 @@ msgstr "&Сворачивать при закрытии"
 
 #: ../../../ui.cpp:1798
 #, c-format
-msgid "version %s%s beta"
+msgid "version %s%s BETA"
 msgstr "версия %s%s бета"
 
 #: ../../../ui.cpp:1884
@@ -760,7 +760,7 @@ msgstr "версия"
 
 #: ../../../uibase.cpp:557
 msgid ""
-"Copyright (c) 2009-2010 Satoshi Nakamoto.\n"
+"Copyright (c) 2009-2010 Bitcoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -771,7 +771,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com)."
 msgstr ""
-"Все права защищены (c) 2009-2010 Satoshi Nakamoto.\n"
+"Все права защищены (c) 2009-2010 Bitcoin Developers\n"
 "\n"
 "Это экспериментальное ПО.\n"
 "\n"
