@@ -1733,6 +1733,8 @@ public:
 
 
 //
+// Alerts are for notifying old versions if they become too obsolete and
+// need to upgrade.  The message is displayed in the status bar.
 // Alert messages are broadcast as a vector of signed data.  Unserializing may
 // not read the entire buffer if the alert is for a newer version, but older
 // versions can still relay the original data.

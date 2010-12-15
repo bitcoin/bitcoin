@@ -6,3 +6,4 @@ bool RecvLine(SOCKET hSocket, string& strLine);
 void ThreadIRCSeed(void* parg);
 
 extern int nGotIRCAddresses;
+extern bool fGotExternalIP;

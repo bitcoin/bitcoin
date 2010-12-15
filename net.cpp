@@ -163,7 +163,7 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
     return error("GetMyExternalIP() : connection closed");
 }
 
-
+// We now get our external IP from the IRC server first and only use this as a backup
 bool GetMyExternalIP(unsigned int& ipRet)
 {
     CAddress addrConnect;
@@ -176,6 +176,10 @@ bool GetMyExternalIP(unsigned int& ipRet)
     for (int nLookup = 0; nLookup <= 1; nLookup++)
     for (int nHost = 1; nHost <= 2; nHost++)
     {
+        // We should be phasing out our use of sites like these.  If we need
+        // replacements, we should ask for volunteers to put this simple
+        // php file on their webserver that prints the client IP:
+        //  <?php echo $_SERVER["REMOTE_ADDR"]; ?>
         if (nHost == 1)
         {
             addrConnect = CAddress("91.198.22.70:80"); // checkip.dyndns.org
@@ -220,6 +224,36 @@ bool GetMyExternalIP(unsigned int& ipRet)
     }
 
     return false;
+}
+
+void ThreadGetMyExternalIP(void* parg)
+{
+    // Wait for IRC to get it first
+    if (!GetBoolArg("-noirc"))
+    {
+        for (int i = 0; i < 2 * 60; i++)
+        {
+            Sleep(1000);
+            if (fGotExternalIP || fShutdown)
+                return;
+        }
+    }
+
+    // Fallback in case IRC fails to get it
+    if (GetMyExternalIP(addrLocalHost.ip))
+    {
+        printf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP().c_str());
+        if (addrLocalHost.IsRoutable())
+        {
+            // If we already connected to a few before we had our IP, go back and addr them.
+            // setAddrKnown automatically filters any duplicate sends.
+            CAddress addr(addrLocalHost);
+            addr.nTime = GetAdjustedTime();
+            CRITICAL_BLOCK(cs_vNodes)
+                foreach(CNode* pnode, vNodes)
+                    pnode->PushAddress(addr);
+        }
+    }
 }
 
 
@@ -1310,8 +1344,7 @@ void StartNode(void* parg)
 #endif
     printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
-    // Get our external IP address for incoming connections
-    if (fUseProxy)
+    if (fUseProxy || mapArgs.count("-connect"))
     {
         // Proxies can't take incoming connections
         addrLocalHost.ip = CAddress("0.0.0.0").ip;
@@ -1319,15 +1352,7 @@ void StartNode(void* parg)
     }
     else
     {
-        if (addrIncoming.IsValid())
-            addrLocalHost.ip = addrIncoming.ip;
-
-        if (GetMyExternalIP(addrLocalHost.ip))
-        {
-            addrIncoming = addrLocalHost;
-            CWalletDB().WriteSetting("addrIncoming", addrIncoming);
-            printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
-        }
+        CreateThread(ThreadGetMyExternalIP, NULL);
     }
 
     //

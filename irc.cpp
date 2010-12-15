@@ -5,6 +5,7 @@
 #include "headers.h"
 
 int nGotIRCAddresses = 0;
+bool fGotExternalIP = false;
 
 void ThreadIRCSeed2(void* parg);
 
@@ -223,6 +224,8 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, unsigned int& ipRet)
     }
     else
     {
+        // Hybrid IRC used by lfnet always returns IP when you userhost yourself,
+        // but in case another IRC is ever used this should work.
         printf("GetIPFromIRC() got userhost %s\n", strHost.c_str());
         if (fUseProxy)
             return false;
@@ -327,14 +330,15 @@ void ThreadIRCSeed2(void* parg)
         }
         Sleep(500);
 
-        // Get my external IP from IRC server
+        // Get our external IP from the IRC server and re-nick before joining the channel
         CAddress addrFromIRC;
         if (GetIPFromIRC(hSocket, strMyName, addrFromIRC.ip))
         {
-            // Just using it as a backup for now
             printf("GetIPFromIRC() returned %s\n", addrFromIRC.ToStringIP().c_str());
-            if (addrFromIRC.IsRoutable() && !fUseProxy && !addrLocalHost.IsRoutable())
+            if (!fUseProxy && addrFromIRC.IsRoutable())
             {
+                // IRC lets you to re-nick
+                fGotExternalIP = true;
                 addrLocalHost.ip = addrFromIRC.ip;
                 strMyName = EncodeAddress(addrLocalHost);
                 Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
