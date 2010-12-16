@@ -678,7 +678,11 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
 
     // Safety limits
     unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK);
-    if (GetSigOpCount() > 2 || nSize < 100)
+    // Checking ECDSA signatures is a CPU bottleneck, so to avoid denial-of-service
+    // attacks disallow transactions with more than one SigOp per 34 bytes.
+    // 34 bytes because a TxOut is:
+    //   20-byte address + 8 byte bitcoin amount + 5 bytes of ops + 1 byte script length
+    if (GetSigOpCount() > nSize / 34 || nSize < 100)
         return error("AcceptToMemoryPool() : nonstandard transaction");
 
     // Rather not work on nonstandard transactions
@@ -3846,8 +3850,18 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
 
 
 
-bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
 {
+    int64 nValue = 0;
+    foreach (const PAIRTYPE(CScript, int64)& s, vecSend)
+    {
+        if (nValue < 0)
+            return false;
+        nValue += s.second;
+    }
+    if (vecSend.empty() || nValue < 0)
+        return false;
+
     CRITICAL_BLOCK(cs_main)
     {
         // txdb must be opened before the mapWallet lock
@@ -3860,11 +3874,12 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
                 wtxNew.fFromMe = true;
-                if (nValue < 0)
-                    return false;
-                int64 nValueOut = nValue;
+
                 int64 nTotalValue = nValue + nFeeRet;
                 double dPriority = 0;
+                // vouts to the payees
+                foreach (const PAIRTYPE(CScript, int64)& s, vecSend)
+                    wtxNew.vout.push_back(CTxOut(s.second, s.first));
 
                 // Choose coins to use
                 set<CWalletTx*> setCoins;
@@ -3877,11 +3892,6 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                     nValueIn += nCredit;
                     dPriority += (double)nCredit * pcoin->GetDepthInMainChain();
                 }
-
-                // Fill a vout to the payee
-                bool fChangeFirst = GetRand(2);
-                if (!fChangeFirst)
-                    wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
 
                 // Fill a vout back to self with any change
                 int64 nChange = nValueIn - nTotalValue;
@@ -3900,18 +3910,17 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
 
                     // Fill a vout to ourself, using same address type as the payment
                     CScript scriptChange;
-                    if (scriptPubKey.GetBitcoinAddressHash160() != 0)
+                    if (vecSend[0].first.GetBitcoinAddressHash160() != 0)
                         scriptChange.SetBitcoinAddress(vchPubKey);
                     else
                         scriptChange << vchPubKey << OP_CHECKSIG;
-                    wtxNew.vout.push_back(CTxOut(nChange, scriptChange));
+
+                    // Insert change txn at random position:
+                    vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size());
+                    wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
                 }
                 else
                     reservekey.ReturnKey();
-
-                // Fill a vout to the payee
-                if (fChangeFirst)
-                    wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
 
                 // Fill vin
                 foreach(CWalletTx* pcoin, setCoins)
@@ -3952,6 +3961,13 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
         }
     }
     return true;
+}
+
+bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+{
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, nValue));
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet);
 }
 
 // Call after CreateTransaction unless you want to abort
