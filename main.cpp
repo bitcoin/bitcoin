@@ -394,6 +394,63 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
+void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listReceived,
+                           int64& nSent, int64& nFee, string& strSentAccount) const
+{
+    nGenerated = nSent = nFee = 0;
+
+    if (IsCoinBase())
+    {
+        if (GetBlocksToMaturity() == 0)
+            nGenerated = GetCredit();
+        return;
+    }
+
+    // Received.  Standard client will never generate a send-to-multiple-recipients,
+    // but non-standard clients might (so return a list of address/amount pairs)
+    foreach(const CTxOut& txout, vout)
+    {
+        vector<unsigned char> vchPubKey;
+        if (ExtractPubKey(txout.scriptPubKey, true, vchPubKey))
+            listReceived.push_back(make_pair(PubKeyToAddress(vchPubKey), txout.nValue));
+    }
+
+    // Sent
+    int64 nDebit = GetDebit();
+    if (nDebit > 0)
+    {
+        int64 nValueOut = GetValueOut();
+        nFee = nDebit - nValueOut;
+        nSent = nValueOut - GetChange();
+        strSentAccount = strFromAccount;
+    }
+}
+
+void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
+                                  int64& nSent, int64& nFee) const
+{
+    nGenerated = nReceived = nSent = nFee = 0;
+
+    int64 allGenerated, allSent, allFee;
+    allGenerated = allSent = allFee = 0;
+    string strSentAccount;
+    list<pair<string, int64> > listReceived;
+    GetAmounts(allGenerated, listReceived, allSent, allFee, strSentAccount);
+
+    if (strAccount == "")
+        nGenerated = allGenerated;
+    if (strAccount == strSentAccount)
+    {
+        nSent = allSent;
+        nFee = allFee;
+    }
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        foreach(const PAIRTYPE(string,int64)& r, listReceived)
+            if (mapAddressBook.count(r.first) && mapAddressBook[r.first] == strAccount)
+                nReceived += r.second;
+    }
+}
 
 
 
