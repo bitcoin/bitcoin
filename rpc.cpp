@@ -80,6 +80,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     entry.push_back(Pair("confirmations", wtx.GetDepthInMainChain()));
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
+    entry.push_back(Pair("time", wtx.GetTxTime()));
     foreach(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
@@ -245,6 +246,8 @@ Value setgenerate(const Array& params, bool fHelp)
         CWalletDB().WriteSetting("fLimitProcessors", fLimitProcessors);
         if (nGenProcLimit != -1)
             CWalletDB().WriteSetting("nLimitProcessors", nLimitProcessors = nGenProcLimit);
+        if (nGenProcLimit == 0)
+            fGenerate = false;
     }
 
     GenerateBitcoins(fGenerate);
@@ -891,10 +894,10 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         CRITICAL_BLOCK(cs_mapAddressBook)
         {
             foreach(const PAIRTYPE(string, int64)& r, listReceived)
-                if (mapAddressBook.count(r.first) && (fAllAccounts || r.first == strAccount))
+                if (mapAddressBook.count(r.first) && (fAllAccounts || mapAddressBook[r.first] == strAccount))
                 {
                     Object entry;
-                    entry.push_back(Pair("account", r.first));
+                    entry.push_back(Pair("account", mapAddressBook[r.first]));
                     entry.push_back(Pair("category", "receive"));
                     entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                     WalletTxToJSON(wtx, entry);
