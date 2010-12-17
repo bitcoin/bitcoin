@@ -80,7 +80,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     entry.push_back(Pair("confirmations", wtx.GetDepthInMainChain()));
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
-    entry.push_back(Pair("time", wtx.GetTxTime()));
+    entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
     foreach(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
