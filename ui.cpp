@@ -1466,8 +1466,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
 
 void CTxDetailsDialog::OnButtonOK(wxCommandEvent& event)
 {
-    Close();
-    //Destroy();
+    EndModal(false);
 }
 
 
@@ -1736,12 +1735,12 @@ void COptionsDialog::OnKillFocusProxy(wxFocusEvent& event)
 void COptionsDialog::OnButtonOK(wxCommandEvent& event)
 {
     OnButtonApply(event);
-    Close();
+    EndModal(false);
 }
 
 void COptionsDialog::OnButtonCancel(wxCommandEvent& event)
 {
-    Close();
+    EndModal(false);
 }
 
 void COptionsDialog::OnButtonApply(wxCommandEvent& event)
@@ -1828,7 +1827,7 @@ CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 
 void CAboutDialog::OnButtonOK(wxCommandEvent& event)
 {
-    Close();
+    EndModal(false);
 }
 
 
