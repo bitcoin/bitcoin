@@ -874,7 +874,7 @@ public:
     }
 
     void GetAmounts(int64& nGenerated, list<pair<string /* address */, int64> >& listReceived,
-                    int64& nSent, int64& nFee, string& strSentAccount) const;
+                    list<pair<string /* address */, int64> >& listSent, int64& nFee, string& strSentAccount) const;
 
     void GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
                            int64& nSent, int64& nFee) const;
