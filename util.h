@@ -146,6 +146,7 @@ extern bool fDaemon;
 extern bool fCommandLine;
 extern string strMiscWarning;
 extern bool fTestNet;
+extern bool fNoListen;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
