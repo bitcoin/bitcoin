@@ -859,10 +859,11 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
 
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, Array& ret)
 {
-    int64 nGenerated, nSent, nFee;
+    int64 nGenerated, nFee;
     string strSentAccount;
     list<pair<string, int64> > listReceived;
-    wtx.GetAmounts(nGenerated, listReceived, nSent, nFee, strSentAccount);
+    list<pair<string, int64> > listSent;
+    wtx.GetAmounts(nGenerated, listReceived, listSent, nFee, strSentAccount);
 
     bool fAllAccounts = (strAccount == string("*"));
 
@@ -878,15 +879,19 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     }
 
     // Sent
-    if ((nSent != 0 || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
+    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
-        Object entry;
-        entry.push_back(Pair("account", strSentAccount));
-        entry.push_back(Pair("category", "send"));
-        entry.push_back(Pair("amount", ValueFromAmount(-nSent)));
-        entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
-        WalletTxToJSON(wtx, entry);
-        ret.push_back(entry);
+        foreach(const PAIRTYPE(string, int64)& s, listSent)
+        {
+            Object entry;
+            entry.push_back(Pair("account", strSentAccount));
+            entry.push_back(Pair("address", s.first));
+            entry.push_back(Pair("category", "send"));
+            entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
+            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            WalletTxToJSON(wtx, entry);
+            ret.push_back(entry);
+        }
     }
 
     // Received
@@ -894,15 +899,21 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         CRITICAL_BLOCK(cs_mapAddressBook)
         {
             foreach(const PAIRTYPE(string, int64)& r, listReceived)
-                if (mapAddressBook.count(r.first) && (fAllAccounts || mapAddressBook[r.first] == strAccount))
+            {
+                string account;
+                if (mapAddressBook.count(r.first))
+                    account = mapAddressBook[r.first];
+                if (fAllAccounts || (account == strAccount))
                 {
                     Object entry;
-                    entry.push_back(Pair("account", mapAddressBook[r.first]));
+                    entry.push_back(Pair("account", account));
+                    entry.push_back(Pair("address", r.first));
                     entry.push_back(Pair("category", "receive"));
                     entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                     WalletTxToJSON(wtx, entry);
                     ret.push_back(entry);
                 }
+            }
         }
 
 }
@@ -1007,11 +1018,14 @@ Value listaccounts(const Array& params, bool fHelp)
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            int64 nGenerated, nSent, nFee;
+            int64 nGenerated, nFee;
             string strSentAccount;
             list<pair<string, int64> > listReceived;
-            wtx.GetAmounts(nGenerated, listReceived, nSent, nFee, strSentAccount);
-            mapAccountBalances[strSentAccount] -= nSent+nFee;
+            list<pair<string, int64> > listSent;
+            wtx.GetAmounts(nGenerated, listReceived, listSent, nFee, strSentAccount);
+            mapAccountBalances[strSentAccount] -= nFee;
+            foreach(const PAIRTYPE(string, int64)& s, listSent)
+                mapAccountBalances[strSentAccount] -= s.second;
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
                 mapAccountBalances[""] += nGenerated;
