@@ -1353,6 +1353,8 @@ string HTTPReply(int nStatus, const string& strMsg)
             "Date: %s\r\n"
             "Server: bitcoin-json-rpc\r\n"
             "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
+            "Access-Control-Allow-Origin: *\r\n"
+            "Access-Control-Allow-Headers: Authorization, Content-Type\r\n"
             "Content-Type: text/html\r\n"
             "Content-Length: 296\r\n"
             "\r\n"
@@ -1377,6 +1379,8 @@ string HTTPReply(int nStatus, const string& strMsg)
             "Content-Length: %d\r\n"
             "Content-Type: application/json\r\n"
             "Server: bitcoin-json-rpc/1.0\r\n"
+            "Access-Control-Allow-Origin: *\r\n"
+            "Access-Control-Allow-Headers: Authorization, Content-Type\r\n"
             "\r\n"
             "%s",
         nStatus,
