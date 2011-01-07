@@ -857,7 +857,7 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
     return ListReceived(params, true);
 }
 
-void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, Array& ret)
+void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nGenerated, nFee;
     string strSentAccount;
@@ -874,7 +874,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         entry.push_back(Pair("account", string("")));
         entry.push_back(Pair("category", "generate"));
         entry.push_back(Pair("amount", ValueFromAmount(nGenerated)));
-        WalletTxToJSON(wtx, entry);
+        if (fLong)
+            WalletTxToJSON(wtx, entry);
         ret.push_back(entry);
     }
 
@@ -889,7 +890,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
-            WalletTxToJSON(wtx, entry);
+            if (fLong)
+                WalletTxToJSON(wtx, entry);
             ret.push_back(entry);
         }
     }
@@ -910,7 +912,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                     entry.push_back(Pair("address", r.first));
                     entry.push_back(Pair("category", "receive"));
                     entry.push_back(Pair("amount", ValueFromAmount(r.second)));
-                    WalletTxToJSON(wtx, entry);
+                    if (fLong)
+                        WalletTxToJSON(wtx, entry);
                     ret.push_back(entry);
                 }
             }
@@ -976,7 +979,7 @@ Value listtransactions(const Array& params, bool fHelp)
         {
             CWalletTx *const pwtx = (*it).second.first;
             if (pwtx != 0)
-                ListTransactions(*pwtx, strAccount, 0, ret);
+                ListTransactions(*pwtx, strAccount, 0, true, ret);
             CAccountingEntry *const pacentry = (*it).second.second;
             if (pacentry != 0)
                 AcentryToJSON(*pacentry, strAccount, ret);
@@ -1063,7 +1066,7 @@ Value gettransaction(const Array& params, bool fHelp)
     CRITICAL_BLOCK(cs_mapWallet)
     {
         if (!mapWallet.count(hash))
-            throw JSONRPCError(-5, "Invalid transaction id");
+            throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
         const CWalletTx& wtx = mapWallet[hash];
 
         int64 nCredit = wtx.GetCredit();
@@ -1074,7 +1077,12 @@ Value gettransaction(const Array& params, bool fHelp)
         entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
         if (wtx.IsFromMe())
             entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+
         WalletTxToJSON(mapWallet[hash], entry);
+
+        Array details;
+        ListTransactions(mapWallet[hash], "*", 0, false, details);
+        entry.push_back(Pair("details", details));
     }
 
     return entry;
