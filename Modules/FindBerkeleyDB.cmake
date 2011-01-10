@@ -15,7 +15,6 @@ FIND_PATH(BerkeleyDB_INCLUDE_DIR db_cxx.h
 /usr/local/include
 /usr/include/db4
 /usr/include
-/usr/local/BerkeleyDB.4.7/include
 )
 
 SET(BerkeleyDB_NAMES ${BerkeleyDB_NAMES} db db_cxx)
@@ -38,7 +37,7 @@ endif (NAME_EXTENSION)
 foreach(NAME ${BerkeleyDB_NAMES})
   FIND_LIBRARY(BerkeleyDB_LIBRARY${NAME}
     NAMES ${NAME}
-    PATHS /usr/lib /usr/local/lib /usr/local/BerkeleyDB.4.7/lib
+    PATHS /usr/lib /usr/local/lib
     )
   
   SET(BerkeleyDB_LIBRARIES ${BerkeleyDB_LIBRARIES} ${BerkeleyDB_LIBRARY${NAME}})
