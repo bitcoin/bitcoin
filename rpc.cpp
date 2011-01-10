@@ -1009,8 +1009,8 @@ Value listaccounts(const Array& params, bool fHelp)
             "Returns Object that has account names as keys, account balances as values.");
 
     int nMinDepth = 1;
-    if (params.size() > 1)
-        nMinDepth = params[1].get_int();
+    if (params.size() > 0)
+        nMinDepth = params[0].get_int();
 
     map<string, int64> mapAccountBalances;
     CRITICAL_BLOCK(cs_mapWallet)
@@ -1934,7 +1934,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "listaccounts"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);
