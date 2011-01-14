@@ -315,15 +315,9 @@ Value getnewaddress(const Array& params, bool fHelp)
 }
 
 
-Value getaccountaddress(const Array& params, bool fHelp)
+string GetAccountAddress(string strAccount, bool bForceNew=false)
 {
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getaccountaddress <account>\n"
-            "Returns the current bitcoin address for receiving payments to this account.");
-
-    // Parse the account first so we don't generate a key if there's an error
-    string strAccount = AccountFromValue(params[0]);
+    string strAddress;
 
     CRITICAL_BLOCK(cs_mapWallet)
     {
@@ -350,7 +344,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
         }
 
         // Generate a new key
-        if (account.vchPubKey.empty())
+        if (account.vchPubKey.empty() || bForceNew)
         {
             account.vchPubKey = GetKeyFromKeyPool();
             string strAddress = PubKeyToAddress(account.vchPubKey);
@@ -359,9 +353,24 @@ Value getaccountaddress(const Array& params, bool fHelp)
         }
 
         walletdb.TxnCommit();
-        return PubKeyToAddress(account.vchPubKey);
+        strAddress = PubKeyToAddress(account.vchPubKey);
     }
+    return strAddress;
 }
+
+Value getaccountaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getaccountaddress <account>\n"
+            "Returns the current bitcoin address for receiving payments to this account.");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount = AccountFromValue(params[0]);
+
+    return GetAccountAddress(strAccount);
+}
+
 
 
 Value setaccount(const Array& params, bool fHelp)
@@ -375,6 +384,17 @@ Value setaccount(const Array& params, bool fHelp)
     string strAccount;
     if (params.size() > 1)
         strAccount = AccountFromValue(params[1]);
+
+    // Detect when changing the account of an address that is the 'unused current key' of another account:
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        if (mapAddressBook.count(strAddress))
+        {
+            string strOldAccount = mapAddressBook[strAddress];
+            if (strAddress == GetAccountAddress(strOldAccount))
+                GetAccountAddress(strOldAccount, true);
+        }
+    }
 
     SetAddressBookName(strAddress, strAccount);
     return Value::null;
