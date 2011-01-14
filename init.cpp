@@ -182,6 +182,7 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port>\n") +
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip>\n") +
+            "  -keypool=<n>     \t  "   + _("Set key pool size to <n>\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside");
 
 #ifdef USE_SSL
