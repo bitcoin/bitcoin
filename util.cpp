@@ -17,7 +17,7 @@ bool fDaemon = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
-
+bool fNoListen = false;
 
 
 

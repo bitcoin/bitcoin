@@ -181,7 +181,9 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
             "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port>\n") +
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
-            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip>\n");
+            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip>\n") +
+            "  -keypool=<n>     \t  "   + _("Set key pool size to <n>\n") +
+            "  -nolisten        \t  "   + _("Don't accept connections from outside");
 
 #ifdef USE_SSL
         strUsage += string() +
@@ -211,6 +213,8 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
+    
+    fNoListen = GetBoolArg("-nolisten");
 
     if (fCommandLine)
     {
@@ -290,10 +294,13 @@ bool AppInit2(int argc, char* argv[])
 
     // Bind to the port early so we can tell if another instance is already running.
     string strErrors;
-    if (!BindListenPort(strErrors))
+    if (!fNoListen)
     {
-        wxMessageBox(strErrors, "Bitcoin");
-        return false;
+        if (!BindListenPort(strErrors))
+        {
+            wxMessageBox(strErrors, "Bitcoin");
+            return false;
+        }
     }
 
     //

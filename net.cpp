@@ -643,7 +643,9 @@ void ThreadSocketHandler2(void* parg)
         FD_ZERO(&fdsetSend);
         FD_ZERO(&fdsetError);
         SOCKET hSocketMax = 0;
-        FD_SET(hListenSocket, &fdsetRecv);
+
+        if(hListenSocket != INVALID_SOCKET)
+            FD_SET(hListenSocket, &fdsetRecv);
         hSocketMax = max(hSocketMax, hListenSocket);
         CRITICAL_BLOCK(cs_vNodes)
         {
@@ -680,7 +682,7 @@ void ThreadSocketHandler2(void* parg)
         //
         // Accept new connections
         //
-        if (FD_ISSET(hListenSocket, &fdsetRecv))
+        if (hListenSocket != INVALID_SOCKET && FD_ISSET(hListenSocket, &fdsetRecv))
         {
             struct sockaddr_in sockaddr;
             socklen_t len = sizeof(sockaddr);
@@ -1344,7 +1346,7 @@ void StartNode(void* parg)
 #endif
     printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
-    if (fUseProxy || mapArgs.count("-connect"))
+    if (fUseProxy || mapArgs.count("-connect") || fNoListen)
     {
         // Proxies can't take incoming connections
         addrLocalHost.ip = CAddress("0.0.0.0").ip;
