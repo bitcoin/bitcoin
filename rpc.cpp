@@ -621,6 +621,30 @@ Value getbalance(const Array& params, bool fHelp)
     if (params.size() == 0)
         return ((double)GetBalance() / (double)COIN);
 
+    if (params[0].get_str() == "*") {
+        // Calculate total balance a different way from GetBalance()
+        // (GetBalance() sums up all unspent TxOuts)
+        // getbalance and getbalance '*' should always return the same number.
+        int64 nBalance = 0;
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            int64 allGenerated, allFee;
+            allGenerated = allFee = 0;
+            string strSentAccount;
+            list<pair<string, int64> > listReceived;
+            list<pair<string, int64> > listSent;
+            wtx.GetAmounts(allGenerated, listReceived, listSent, allFee, strSentAccount);
+            foreach(const PAIRTYPE(string,int64)& r, listReceived)
+                nBalance += r.second;
+            foreach(const PAIRTYPE(string,int64)& r, listSent)
+                nBalance -= r.second;
+            nBalance -= allFee;
+            nBalance += allGenerated;
+        }
+        return (double)nBalance / (double)COIN;
+    }
+
     string strAccount = AccountFromValue(params[0]);
     int nMinDepth = 1;
     if (params.size() > 1)
