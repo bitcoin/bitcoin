@@ -315,15 +315,9 @@ Value getnewaddress(const Array& params, bool fHelp)
 }
 
 
-Value getaccountaddress(const Array& params, bool fHelp)
+string GetAccountAddress(string strAccount, bool bForceNew=false)
 {
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getaccountaddress <account>\n"
-            "Returns the current bitcoin address for receiving payments to this account.");
-
-    // Parse the account first so we don't generate a key if there's an error
-    string strAccount = AccountFromValue(params[0]);
+    string strAddress;
 
     CRITICAL_BLOCK(cs_mapWallet)
     {
@@ -350,7 +344,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
         }
 
         // Generate a new key
-        if (account.vchPubKey.empty())
+        if (account.vchPubKey.empty() || bForceNew)
         {
             account.vchPubKey = GetKeyFromKeyPool();
             string strAddress = PubKeyToAddress(account.vchPubKey);
@@ -359,9 +353,24 @@ Value getaccountaddress(const Array& params, bool fHelp)
         }
 
         walletdb.TxnCommit();
-        return PubKeyToAddress(account.vchPubKey);
+        strAddress = PubKeyToAddress(account.vchPubKey);
     }
+    return strAddress;
 }
+
+Value getaccountaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getaccountaddress <account>\n"
+            "Returns the current bitcoin address for receiving payments to this account.");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount = AccountFromValue(params[0]);
+
+    return GetAccountAddress(strAccount);
+}
+
 
 
 Value setaccount(const Array& params, bool fHelp)
@@ -375,6 +384,17 @@ Value setaccount(const Array& params, bool fHelp)
     string strAccount;
     if (params.size() > 1)
         strAccount = AccountFromValue(params[1]);
+
+    // Detect when changing the account of an address that is the 'unused current key' of another account:
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        if (mapAddressBook.count(strAddress))
+        {
+            string strOldAccount = mapAddressBook[strAddress];
+            if (strAddress == GetAccountAddress(strOldAccount))
+                GetAccountAddress(strOldAccount, true);
+        }
+    }
 
     SetAddressBookName(strAddress, strAccount);
     return Value::null;
@@ -857,7 +877,7 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
     return ListReceived(params, true);
 }
 
-void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, Array& ret)
+void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nGenerated, nFee;
     string strSentAccount;
@@ -874,7 +894,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         entry.push_back(Pair("account", string("")));
         entry.push_back(Pair("category", "generate"));
         entry.push_back(Pair("amount", ValueFromAmount(nGenerated)));
-        WalletTxToJSON(wtx, entry);
+        if (fLong)
+            WalletTxToJSON(wtx, entry);
         ret.push_back(entry);
     }
 
@@ -889,7 +910,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
-            WalletTxToJSON(wtx, entry);
+            if (fLong)
+                WalletTxToJSON(wtx, entry);
             ret.push_back(entry);
         }
     }
@@ -910,7 +932,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                     entry.push_back(Pair("address", r.first));
                     entry.push_back(Pair("category", "receive"));
                     entry.push_back(Pair("amount", ValueFromAmount(r.second)));
-                    WalletTxToJSON(wtx, entry);
+                    if (fLong)
+                        WalletTxToJSON(wtx, entry);
                     ret.push_back(entry);
                 }
             }
@@ -976,7 +999,7 @@ Value listtransactions(const Array& params, bool fHelp)
         {
             CWalletTx *const pwtx = (*it).second.first;
             if (pwtx != 0)
-                ListTransactions(*pwtx, strAccount, 0, ret);
+                ListTransactions(*pwtx, strAccount, 0, true, ret);
             CAccountingEntry *const pacentry = (*it).second.second;
             if (pacentry != 0)
                 AcentryToJSON(*pacentry, strAccount, ret);
@@ -1006,8 +1029,8 @@ Value listaccounts(const Array& params, bool fHelp)
             "Returns Object that has account names as keys, account balances as values.");
 
     int nMinDepth = 1;
-    if (params.size() > 1)
-        nMinDepth = params[1].get_int();
+    if (params.size() > 0)
+        nMinDepth = params[0].get_int();
 
     map<string, int64> mapAccountBalances;
     CRITICAL_BLOCK(cs_mapWallet)
@@ -1063,7 +1086,7 @@ Value gettransaction(const Array& params, bool fHelp)
     CRITICAL_BLOCK(cs_mapWallet)
     {
         if (!mapWallet.count(hash))
-            throw JSONRPCError(-5, "Invalid transaction id");
+            throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
         const CWalletTx& wtx = mapWallet[hash];
 
         int64 nCredit = wtx.GetCredit();
@@ -1074,7 +1097,12 @@ Value gettransaction(const Array& params, bool fHelp)
         entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
         if (wtx.IsFromMe())
             entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+
         WalletTxToJSON(mapWallet[hash], entry);
+
+        Array details;
+        ListTransactions(mapWallet[hash], "*", 0, false, details);
+        entry.push_back(Pair("details", details));
     }
 
     return entry;
@@ -1926,7 +1954,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "listaccounts"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);
