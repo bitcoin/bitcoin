@@ -330,6 +330,13 @@ bool AppInit2(int argc, char* argv[])
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
+    if (GetBoolArg("-rescan"))
+    {
+        nStart = GetTimeMillis();
+        ScanForWalletTransactions(pindexGenesisBlock);
+        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    }
+
     printf("Done loading\n");
 
         //// debug print
@@ -345,9 +352,6 @@ bool AppInit2(int argc, char* argv[])
         wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
         return false;
     }
-
-    if (GetBoolArg("-rescan"))
-        ScanForWalletTransactions(pindexGenesisBlock);
 
     // Add wallet transactions that aren't already in a block to mapTransactions
     ReacceptWalletTransactions();
