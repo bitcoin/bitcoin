@@ -173,6 +173,7 @@ bool AppInit2(int argc, char* argv[])
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
+            "  -nolisten        \t  "   + _("Don't accept connections from outside") +
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
@@ -183,7 +184,7 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
             "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-            "  -nolisten        \t  "   + _("Don't accept connections from outside");
+            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
 
 #ifdef USE_SSL
         strUsage += string() +
