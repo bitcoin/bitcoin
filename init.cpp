@@ -188,10 +188,10 @@ bool AppInit2(int argc, char* argv[])
 #ifdef USE_SSL
         strUsage += string() +
             _("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)\n") +
-            "  -rpcssl=1                             \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
-            "  -rpcsslcertificatchainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
-            "  -rpcsslprivatekeyfile=<file.pem>      \t  " + _("Server private key (default: server.pem)\n") +
-            "  -rpcsslciphers=<ciphers>              \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
+            "  -rpcssl=1                              \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
+            "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
+            "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)\n") +
+            "  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
 #endif
 
         strUsage += string() +
