@@ -210,6 +210,7 @@ bool AppInit2(int argc, char* argv[])
 
     fDebug = GetBoolArg("-debug");
 
+    fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
