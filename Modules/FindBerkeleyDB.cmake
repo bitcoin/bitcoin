@@ -44,7 +44,6 @@ find_path(DB_INCLUDE_DIR NAMES db_cxx.h
           PATH_SUFFIXES include db${NAME_EXTENSION}
           )
 
-message("db include dir ${DB_INCLUDE_DIR}")
 if (MSVC)
     if (CMAKE_CL_64)
         set(_db_lib_path_SUFFIXES_DEBUG Debug_AMD64)
