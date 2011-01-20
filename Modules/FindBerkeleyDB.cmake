@@ -1,31 +1,37 @@
-# -*- cmake -*-
+# Copyright 2010, Dimitri Kaparis <kaparis.dimitri at gmail dot com>
 
-# - Find BerkeleyDB
-# Find the BerkeleyDB includes and library
-# This module defines
-#  DB_INCLUDE_DIR, where to find db.h, etc.
-#  DB_LIBRARIES, the libraries needed to use BerkeleyDB.
-#  DB_FOUND, If false, do not try to use BerkeleyDB.
-# also defined, but not for general use are
-#  DB_LIBRARY, where to find the BerkeleyDB library.
+# CMake module to find Berkeley DB
 
+# For MSVC, only static libraries are used (with 's' suffix)
 
-FIND_PATH(BerkeleyDB_INCLUDE_DIR db_cxx.h
-/usr/local/include/db4
-/usr/local/include
-/usr/include/db4
-/usr/include
-)
+# This module uses:
+#
+# DB_ROOT_DIR - set to BerkeleyDB's root directory
 
-SET(BerkeleyDB_NAMES ${BerkeleyDB_NAMES} db db_cxx)
-
+# This module defines:
+# DB_FOUND - True if BerkleyDB is found
+# DB_INCLUDE_DIR - BerkeleyDB's include directory
+# DB_LIBRARIES - Libraries needed to use Berkeley DB
 
 if (BerkeleyDB_FIND_VERSION_MAJOR AND BerkeleyDB_FIND_VERSION_MINOR)
-  set(NAME_EXTENSION -${BerkeleyDB_FIND_VERSION_MAJOR}.${BerkeleyDB_FIND_VERSION_MINOR})
+  if (MSVC)
+    set(NAME_EXTENSION ${BerkeleyDB_FIND_VERSION_MAJOR}${BerkeleyDB_FIND_VERSION_MINOR})
+  else (MSVC)
+    set(NAME_EXTENSION -${BerkeleyDB_FIND_VERSION_MAJOR}.${BerkeleyDB_FIND_VERSION_MINOR})
+  endif(MSVC)
+    
 elseif (BerkeleyDB_FIND_VERSION_MAJOR)
-  set(NAME_EXTENSION -${BerkeleyDB_FIND_VERSION_MAJOR})
+  if (MSVC)
+    set(NAME_EXTENSION ${BerkeleyDB_FIND_VERSION_MAJOR})
+  else (MSVC)
+    set(NAME_EXTENSION -${BerkeleyDB_FIND_VERSION_MAJOR})
+  endif(MSVC)
 endif(BerkeleyDB_FIND_VERSION_MAJOR AND BerkeleyDB_FIND_VERSION_MINOR)
 
+#library names
+SET(BerkeleyDB_NAMES ${BerkeleyDB_NAMES} db db_cxx)
+
+#If a specific version is required append the extension.  
 if (NAME_EXTENSION)
   foreach (NAME ${BerkeleyDB_NAMES})
     set(NEW_NAMES ${NEW_NAMES} "${NAME}${NAME_EXTENSION}")
@@ -33,25 +39,47 @@ if (NAME_EXTENSION)
   set (BerkeleyDB_NAMES ${NEW_NAMES})
 endif (NAME_EXTENSION)
 
+find_path(DB_INCLUDE_DIR NAMES db_cxx.h
+          PATHS ${DB_ROOT_DIR} $ENV{DBROOTDIR}
+          PATH_SUFFIXES include db${NAME_EXTENSION}
+          )
 
-foreach(NAME ${BerkeleyDB_NAMES})
-  FIND_LIBRARY(BerkeleyDB_LIBRARY${NAME}
-    NAMES ${NAME}
-    PATHS /usr/lib /usr/local/lib
-    )
-  
-  SET(BerkeleyDB_LIBRARIES ${BerkeleyDB_LIBRARIES} ${BerkeleyDB_LIBRARY${NAME}})
-endforeach(NAME)
+message("db include dir ${DB_INCLUDE_DIR}")
+if (MSVC)
+    if (CMAKE_CL_64)
+        set(_db_lib_path_SUFFIXES_DEBUG Debug_AMD64)
+        set(_db_lib_path_SUFFIXES_RELEASE Release_AMD64)
+    else (CMAKE_CL_64)
+        set(_db_lib_path_SUFFIXES_DEBUG Debug)
+        set(_db_lib_path_SUFFIXES_RELEASE Release)
+    endif (CMAKE_CL_64)
+    find_library(DBLIB_STATIC_RELEASE libdb${NAME_EXTENSION}s
+                 PATHS ${DB_ROOT_DIR} $ENV{DBROOTDIR} ${DB_INCLUDE_DIR}
+                 PATH_SUFFIXES ${_db_lib_path_SUFFIXES_RELEASE} lib)
+    find_library(DBLIB_STATIC_DEBUG libdb${NAME_EXTENSION}sd
+                 PATHS ${DB_ROOT_DIR} $ENV{DBROOTDIR} ${DB_INCLUDE_DIR}
+                 PATH_SUFFIXES ${_db_lib_path_SUFFIXES_DEBUG} lib)
+    set(DB_LIBRARIES optimized ${DBLIB_STATIC_RELEASE}
+                     debug ${DBLIB_STATIC_DEBUG})
 
-# handle the QUIETLY and REQUIRED arguments and set JPEG_FOUND to TRUE if 
-# all listed variables are TRUE
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(BerkeleyDB DEFAULT_MSG BerkeleyDB_LIBRARIES BerkeleyDB_INCLUDE_DIR)
+else(MSVC)
+    find_library(DB_LIB db${NAME_EXTENSION}
+                 PATHS ${DB_ROOT_DIR} $ENV{DBROOTDIR} ${DB_INCLUDE_DIR}
+                       /usr/local/lib
+                 PATH_SUFFIXES lib
+                               db${NAME_EXTENSION})
+    find_library(DB_LIBCXX db_cxx${NAME_EXTENSION}
+                 PATHS ${DB_ROOT_DIR} $ENV{DBROOTDIR} ${DB_INCLUDE_DIR}
+                       /usr/local/lib
+                 PATH_SUFFIXES lib db${NAME_EXTENSION})
+    set(DB_LIBRARIES ${DB_LIB})
+    if (DB_LIBCXX)
+        list(APPEND DB_LIBRARIES ${DB_LIBCXX})
+    endif (DB_LIBCXX)
+endif (MSVC)
 
-
-# Deprecated declarations.
-SET (NATIVE_BerkeleyDB_INCLUDE_PATH ${BerkeleyDB_INCLUDE_DIR} )
-#GET_FILENAME_COMPONENT (NATIVE_BerkeleyDB_LIB_PATH ${BerkeleyDB_LIBRARY} PATH)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(DB DEFAULT_MSG DB_INCLUDE_DIR DB_LIBRARIES)
 
 MARK_AS_ADVANCED(
   BerkeleyDB_LIBRARIES
