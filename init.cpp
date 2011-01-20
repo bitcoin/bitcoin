@@ -346,6 +346,9 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
+    if (GetBoolArg("-rescan"))
+        ScanForWalletTransactions(pindexGenesisBlock);
+
     // Add wallet transactions that aren't already in a block to mapTransactions
     ReacceptWalletTransactions();
 

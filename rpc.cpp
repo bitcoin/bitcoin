@@ -626,6 +626,7 @@ Value getbalance(const Array& params, bool fHelp)
         // (GetBalance() sums up all unspent TxOuts)
         // getbalance and getbalance '*' should always return the same number.
         int64 nBalance = 0;
+        vector<string> vAccounts;
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
@@ -636,12 +637,17 @@ Value getbalance(const Array& params, bool fHelp)
             list<pair<string, int64> > listSent;
             wtx.GetAmounts(allGenerated, listReceived, listSent, allFee, strSentAccount);
             foreach(const PAIRTYPE(string,int64)& r, listReceived)
+            {
                 nBalance += r.second;
+                if (!count(vAccounts.begin(), vAccounts.end(), r.first))
+                    vAccounts.push_back(r.first);
+            }
             foreach(const PAIRTYPE(string,int64)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
             nBalance += allGenerated;
         }
+        printf("Found %d accounts\n", vAccounts.size());
         return (double)nBalance / (double)COIN;
     }
 
@@ -1080,6 +1086,8 @@ Value listaccounts(const Array& params, bool fHelp)
                 foreach(const PAIRTYPE(string, int64)& r, listReceived)
                     if (mapAddressBook.count(r.first))
                         mapAccountBalances[mapAddressBook[r.first]] += r.second;
+                    else
+                        mapAccountBalances[""] += r.second;
             }
         }
     }

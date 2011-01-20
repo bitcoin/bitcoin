@@ -442,8 +442,13 @@ void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listRe
         else if (ExtractPubKey(txout.scriptPubKey, false, vchPubKey))
             address = PubKeyToAddress(vchPubKey);
         else
-            address = " unknown "; // some type of weird non-standard transaction?
+        {
+            printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+                   this->GetHash().ToString().c_str());
+            address = " unknown ";
+        }
 
+        // Don't report 'change' txouts
         if (nDebit > 0 && txout.IsChange())
             continue;
 
@@ -479,8 +484,19 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         foreach(const PAIRTYPE(string,int64)& r, listReceived)
-            if (mapAddressBook.count(r.first) && mapAddressBook[r.first] == strAccount)
+        {
+            if (mapAddressBook.count(r.first))
+            {
+                if (mapAddressBook[r.first] == strAccount)
+                {
+                    nReceived += r.second;
+                }
+            }
+            else if (strAccount.empty())
+            {
                 nReceived += r.second;
+            }
+        }
     }
 }
 
