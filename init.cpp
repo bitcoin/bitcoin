@@ -158,8 +158,9 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
+        string beta = VERSION_IS_BETA ? _(" beta") : "";
         string strUsage = string() +
-          "bitcoin version " + FormatVersion(VERSION).c_str() + " beta\n" +
+          _("Bitcoin version") + " " + FormatVersion(VERSION) + pszSubVer + beta + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
             "  bitcoin [options]                   \t  " + "\n" +
             "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
@@ -228,7 +229,7 @@ bool AppInit2(int argc, char* argv[])
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %s%s beta\n", FormatVersion(VERSION).c_str(), pszSubVer);
+    printf("Bitcoin version %s%s%s\n", FormatVersion(VERSION).c_str(), pszSubVer, VERSION_IS_BETA ? _(" beta") : "");
 #ifdef GUI
     printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
     printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
