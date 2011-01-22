@@ -3127,7 +3127,7 @@ void CallCPUID(int in, int& aret, int& cret)
         "mov %%ecx, %1;" // ecx into c
         :"=r"(a),"=r"(c) /* output */
         :"r"(in) /* input */
-        :"%eax","%ecx" /* clobbered register */
+        :"%eax","%ebx","%ecx","%edx" /* clobbered register */
     );
     aret = a;
     cret = c;
