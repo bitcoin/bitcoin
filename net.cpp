@@ -1022,7 +1022,7 @@ void ThreadOpenConnections2(void* parg)
                 {
                     foreach(PAIRTYPE(const vector<unsigned char>, CAddress)& item, mapAddresses)
                     {
-                        if (setSeed.count(item.second.ip))
+                        if (setSeed.count(item.second.ip) && item.second.nTime != 0)
                         {
                             item.second.nTime = 0;
                             CAddrDB().WriteAddress(item.second);
