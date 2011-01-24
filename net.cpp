@@ -688,12 +688,25 @@ void ThreadSocketHandler2(void* parg)
             socklen_t len = sizeof(sockaddr);
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
             CAddress addr(sockaddr);
+            bool fLimitConnections = false;
+            int nInbound = 0;
+
+            if (mapArgs.count("-maxconnections"))
+                fLimitConnections = true;
+
+            if (fLimitConnections)
+            {
+                CRITICAL_BLOCK(cs_vNodes)
+                    foreach(CNode* pnode, vNodes)
+                    if (pnode->fInbound)
+                        nInbound++;
+            }
             if (hSocket == INVALID_SOCKET)
             {
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
                     printf("socket error accept failed: %d\n", WSAGetLastError());
             }
-            else if (mapArgs.count("-maxconnections") && (int)vNodes.size() >= atoi(mapArgs["-maxconnections"]) - MAX_OUTBOUND_CONNECTIONS)
+            else if (fLimitConnections && nInbound >= atoi(mapArgs["-maxconnections"]) - MAX_OUTBOUND_CONNECTIONS)
             {
                 closesocket(hSocket);
             }

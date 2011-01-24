@@ -187,6 +187,19 @@ bool AddToWalletIfMine(const CTransaction& tx, const CBlock* pblock)
     return true;
 }
 
+bool AddToWalletIfFromMe(const CTransaction& tx, const CBlock* pblock)
+{
+    if (tx.IsFromMe() || mapWallet.count(tx.GetHash()))
+    {
+        CWalletTx wtx(tx);
+        // Get merkle branch if transaction was found in a block
+        if (pblock)
+            wtx.SetMerkleBranch(pblock);
+        return AddToWallet(wtx);
+    }
+    return true;
+}
+
 bool EraseFromWallet(uint256 hash)
 {
     CRITICAL_BLOCK(cs_mapWallet)
@@ -404,7 +417,7 @@ void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listRe
 
     if (IsCoinBase())
     {
-        if (GetBlocksToMaturity() == 0)
+        if (GetDepthInMainChain() >= COINBASE_MATURITY)
             nGenerated = GetCredit();
         return;
     }
@@ -429,8 +442,13 @@ void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listRe
         else if (ExtractPubKey(txout.scriptPubKey, false, vchPubKey))
             address = PubKeyToAddress(vchPubKey);
         else
-            address = " unknown "; // some type of weird non-standard transaction?
+        {
+            printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+                   this->GetHash().ToString().c_str());
+            address = " unknown ";
+        }
 
+        // Don't report 'change' txouts
         if (nDebit > 0 && txout.IsChange())
             continue;
 
@@ -466,8 +484,19 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         foreach(const PAIRTYPE(string,int64)& r, listReceived)
-            if (mapAddressBook.count(r.first) && mapAddressBook[r.first] == strAccount)
+        {
+            if (mapAddressBook.count(r.first))
+            {
+                if (mapAddressBook[r.first] == strAccount)
+                {
+                    nReceived += r.second;
+                }
+            }
+            else if (strAccount.empty())
+            {
                 nReceived += r.second;
+            }
+        }
     }
 }
 
@@ -849,11 +878,50 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
     return false;
 }
 
+int ScanForWalletTransactions(CBlockIndex* pindexStart)
+{
+    int ret = 0;
+
+    CBlockIndex* pindex = pindexStart;
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        while (pindex)
+        {
+            CBlock block;
+            block.ReadFromDisk(pindex, true);
+            foreach(CTransaction& tx, block.vtx)
+            {
+                uint256 hash = tx.GetHash();
+                if (mapWallet.count(hash)) continue;
+                AddToWalletIfMine(tx, &block);
+                if (mapWallet.count(hash))
+                {
+                    ++ret;
+                    printf("Added missing RECEIVE %s\n", hash.ToString().c_str());
+                    continue;
+                }
+                AddToWalletIfFromMe(tx, &block);
+                if (mapWallet.count(hash))
+                {
+                    ++ret;
+                    printf("Added missing SEND %s\n", hash.ToString().c_str());
+                    continue;
+                }
+            }
+            pindex = pindex->pnext;
+        }
+    }
+    return ret;
+}
+
 void ReacceptWalletTransactions()
 {
     CTxDB txdb("r");
-    CRITICAL_BLOCK(cs_mapWallet)
+    bool fRepeat = true;
+    while (fRepeat) CRITICAL_BLOCK(cs_mapWallet)
     {
+        fRepeat = false;
+        vector<CDiskTxPos> vMissingTx;
         foreach(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
@@ -875,11 +943,14 @@ void ReacceptWalletTransactions()
                     {
                         if (!txindex.vSpent[i].IsNull() && wtx.vout[i].IsMine())
                         {
-                            printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
                             wtx.fSpent = true;
-                            wtx.WriteToDisk();
-                            break;
+                            vMissingTx.push_back(txindex.vSpent[i]);
                         }
+                    }
+                    if (wtx.fSpent)
+                    {
+                        printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                        wtx.WriteToDisk();
                     }
                 }
             }
@@ -889,6 +960,12 @@ void ReacceptWalletTransactions()
                 if (!wtx.IsCoinBase())
                     wtx.AcceptWalletTransaction(txdb, false);
             }
+        }
+        if (!vMissingTx.empty())
+        {
+            // TODO: optimize this to scan just part of the block chain?
+            if (ScanForWalletTransactions(pindexGenesisBlock))
+                fRepeat = true;  // Found missing transactions: re-do Reaccept.
         }
     }
 }
@@ -1360,8 +1437,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     return true;
 }
-
-
 
 bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 {
@@ -3052,7 +3127,7 @@ void CallCPUID(int in, int& aret, int& cret)
         "mov %%ecx, %1;" // ecx into c
         :"=r"(a),"=r"(c) /* output */
         :"r"(in) /* input */
-        :"%eax","%ecx" /* clobbered register */
+        :"%eax","%ebx","%ecx","%edx" /* clobbered register */
     );
     aret = a;
     cret = c;
@@ -3455,7 +3530,7 @@ void BitcoinMiner()
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     bool f4WaySSE2 = Detect128BitSSE2();
     if (mapArgs.count("-4way"))
-        f4WaySSE2 = GetBoolArg(mapArgs["-4way"]);
+        f4WaySSE2 = GetBoolArg("-4way");
 
     // Each thread has its own key and counter
     CReserveKey reservekey;

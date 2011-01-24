@@ -282,7 +282,7 @@
                 </object>
             </object>
             <object class="wxStatusBar" expanded="1">
-                <property name="bg">240,240,240</property>
+                <property name="bg"></property>
                 <property name="context_help"></property>
                 <property name="enabled">1</property>
                 <property name="fg"></property>

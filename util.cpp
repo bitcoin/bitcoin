@@ -165,7 +165,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
             GetDataDir(pszFile);
             strlcat(pszFile, "/debug.log", sizeof(pszFile));
             fileout = fopen(pszFile, "a");
-            setbuf(fileout, NULL); // unbuffered
+            if (fileout) setbuf(fileout, NULL); // unbuffered
         }
         if (fileout)
         {
