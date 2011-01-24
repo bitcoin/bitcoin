@@ -24,6 +24,11 @@ endif (${Boost_VERSION} EQUAL 104400 AND MSVC_VERSION EQUAL 1600)
 
 # Use wxWidgets module built into CMake
 IF(BITCOIN_BUILD_GUI)
+        if (APPLE)
+          # If we don't do that, OS X's built-in wxWidgets library will be used, and it's too old.
+          set(wxWidgets_CONFIG_EXECUTABLE "../../deps/bin/wx-config")
+        endif (APPLE)
+        
 	SET(wxWidgets_USE_DEBUG OFF)
 	SET(wxWidgets_USE_UNICODE ON)
 	SET(wxWidgets_USE_UNIVERSAL ON)
@@ -35,6 +40,11 @@ IF(BITCOIN_BUILD_GUI)
 		INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
 	ENDIF(wxWidgets_FOUND)
  
+        if (APPLE)
+          set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0 -DUSE_SSL")
+        endif (APPLE)
+
+
 ENDIF(BITCOIN_BUILD_GUI)
 
 if (MSVC)
