@@ -19,6 +19,7 @@ uint64 nAccountingEntryNumber = 0;
 static CCriticalSection cs_db;
 static bool fDbEnvInit = false;
 DbEnv dbenv(0);
+static bool fDbUseEncryption = false;
 static map<string, int> mapFileUseCount;
 static map<string, Db*> mapDb;
 
@@ -70,7 +71,15 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
             dbenv.set_lk_max_objects(10000);
             dbenv.set_errfile(fopen(strErrorFile.c_str(), "a")); /// debug
             dbenv.set_flags(DB_AUTO_COMMIT, 1);
-            ret = dbenv.open(strDataDir.c_str(),
+            const string strDbPassword = mapArgs["-dbpassword"];
+            if (strDbPassword != "")
+            {
+                dbenv.set_encrypt(strDbPassword.c_str(), DB_ENCRYPT_AES);
+                fDbUseEncryption = true;
+            }
+            try
+            {
+                ret = dbenv.open(strDataDir.c_str(),
                              DB_CREATE     |
                              DB_INIT_LOCK  |
                              DB_INIT_LOG   |
@@ -79,6 +88,10 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
                              DB_THREAD     |
                              DB_RECOVER,
                              S_IRUSR | S_IWUSR);
+            } catch (DbRunRecoveryException e)
+            {
+                throw runtime_error("Wrong dbpassword or corrupted database");
+            }
             if (ret > 0)
                 throw runtime_error(strprintf("CDB() : error %d opening database environment", ret));
             fDbEnvInit = true;
@@ -90,6 +103,8 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
         if (pdb == NULL)
         {
             pdb = new Db(&dbenv, 0);
+            if (fDbUseEncryption)
+                pdb->set_flags(DB_ENCRYPT);
 
             ret = pdb->open(NULL,      // Txn pointer
                             pszFile,   // Filename
