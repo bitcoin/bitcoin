@@ -3750,15 +3750,15 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
             int64 n = pcoin->GetCredit();
             if (n <= 0)
                 continue;
-            if (n < nTargetValue)
-            {
-                vValue.push_back(make_pair(n, pcoin));
-                nTotalLower += n;
-            }
-            else if (n == nTargetValue)
+            if (n == nTargetValue)
             {
                 setCoinsRet.insert(pcoin);
                 return true;
+            }
+            else if (n < nTargetValue + CENT)
+            {
+                vValue.push_back(make_pair(n, pcoin));
+                nTotalLower += n;
             }
             else if (n < nLowestLarger)
             {
@@ -3768,13 +3768,23 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
         }
     }
 
-    if (nTotalLower < nTargetValue)
+    if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
+    {
+        for (int i = 0; i < vValue.size(); ++i)
+            setCoinsRet.insert(vValue[i].second);
+        return true;
+    }
+
+    if (nTotalLower < nTargetValue + (pcoinLowestLarger ? CENT : 0))
     {
         if (pcoinLowestLarger == NULL)
             return false;
         setCoinsRet.insert(pcoinLowestLarger);
         return true;
     }
+
+    if (nTotalLower >= nTargetValue + CENT)
+        nTargetValue += CENT;
 
     // Solve subset sum by stochastic approximation
     sort(vValue.rbegin(), vValue.rend());
