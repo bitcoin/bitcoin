@@ -60,12 +60,16 @@ void PrintConsole(const char* format, ...)
 }
 
 
-int64 AmountFromValue(const Value& value)
+int64 AmountFromValue(const Value& value, bool bAmountRounding=true)
 {
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(-3, "Invalid amount");
-    int64 nAmount = roundint64(dAmount * 100.00) * CENT;
+    int64 nAmount = 0;
+    if (bAmountRounding)
+        nAmount = roundint64(dAmount * 100.00) * CENT;
+    else
+        nAmount = roundint64(dAmount * COIN);
     if (!MoneyRange(nAmount))
         throw JSONRPCError(-3, "Invalid amount");
     return nAmount;
@@ -671,7 +675,7 @@ Value movecmd(const Array& params, bool fHelp)
 
     string strFrom = AccountFromValue(params[0]);
     string strTo = AccountFromValue(params[1]);
-    int64 nAmount = AmountFromValue(params[2]);
+    int64 nAmount = AmountFromValue(params[2], false);
     int nMinDepth = 1;
     if (params.size() > 3)
         nMinDepth = params[3].get_int();
