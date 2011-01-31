@@ -431,6 +431,13 @@ bool CTxDB::LoadBlockIndex()
     }
     pcursor->close();
 
+    if (pindexGenesisBlock == NULL && !mapBlockIndex.empty())
+    {
+        printf("LoadBlockIndex: genesis block changed\n");
+        mapBlockIndex.erase(mapBlockIndex.begin(), mapBlockIndex.end());
+        return true;
+    }
+
     // Calculate bnChainWork
     vector<pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(mapBlockIndex.size());
