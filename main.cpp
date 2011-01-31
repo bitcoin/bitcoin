@@ -1110,9 +1110,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
     // Limit adjustment step
     int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
     printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
-    if (!fTestNet && nActualTimespan < nTargetTimespan/4)
+    if (nActualTimespan < nTargetTimespan/4)
         nActualTimespan = nTargetTimespan/4;
-    if (nActualTimespan > nTargetTimespan*4)
+    if (!fTestNet && nActualTimespan > nTargetTimespan*4)
         nActualTimespan = nTargetTimespan*4;
 
     // Retarget
