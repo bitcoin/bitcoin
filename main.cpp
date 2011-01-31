@@ -1082,9 +1082,16 @@ int64 GetBlockValue(int nHeight, int64 nFees)
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
 {
-    const int64 nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-    const int64 nTargetSpacing = 10 * 60;
-    const int64 nInterval = nTargetTimespan / nTargetSpacing;
+    int64 nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+    int64 nTargetSpacing = 10 * 60;
+    int64 nInterval = nTargetTimespan / nTargetSpacing;
+
+    if (fTestNet)
+    {
+        nTargetTimespan = 21 * 60 * 60; // 21 hours
+        nTargetSpacing = 10 * 60;
+        nInterval = nTargetTimespan / nTargetSpacing;
+    }
 
     // Genesis block
     if (pindexLast == NULL)
@@ -1103,7 +1110,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast)
     // Limit adjustment step
     int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
     printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
-    if (nActualTimespan < nTargetTimespan/4)
+    if (!fTestNet && nActualTimespan < nTargetTimespan/4)
         nActualTimespan = nTargetTimespan/4;
     if (nActualTimespan > nTargetTimespan*4)
         nActualTimespan = nTargetTimespan*4;
@@ -1897,7 +1904,7 @@ bool LoadBlockIndex(bool fAllowNew)
 {
     if (fTestNet)
     {
-        hashGenesisBlock = uint256("0x0000000224b1593e3ff16a0e3b61285bbc393a39f78c8aa48c456142671f7110");
+        hashGenesisBlock = uint256("000000029f843d528f8995928cac2e1f6e6d60d403379f33adf62c0f68a801e0");
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 28);
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -1947,9 +1954,9 @@ bool LoadBlockIndex(bool fAllowNew)
 
         if (fTestNet)
         {
-            block.nTime    = 1279232055;
+            block.nTime    = 1296421804; // testnet reset 30 Jan 2011
             block.nBits    = 0x1d07fff8;
-            block.nNonce   = 81622180;
+            block.nNonce   = 834485925;
         }
 
         //// debug print
