@@ -9,6 +9,14 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 UNIX BUILD NOTES
 ================
 
+To Build
+--------
+
+make -f makefile.unix            # Bitcoin with wxWidgets GUI
+  or
+make -f makefile.unix bitcoind   # Headless bitcoin
+
+
 Dependencies
 ------------
 sudo apt-get install build-essential

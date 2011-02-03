@@ -810,19 +810,24 @@ void AddTimeData(unsigned int ip, int64 nTime)
         else
         {
             nTimeOffset = 0;
-            // If nobody else has the same time as us, give a warning
-            bool fMatch = false;
-            foreach(int64 nOffset, vTimeOffsets)
-                if (nOffset != 0 && abs64(nOffset) < 5 * 60)
-                    fMatch = true;
+
             static bool fDone;
-            if (!fMatch && !fDone)
+            if (!fDone)
             {
-                fDone = true;
-                string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
-                strMiscWarning = strMessage;
-                printf("*** %s\n", strMessage.c_str());
-                boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
+                // If nobody has a time different than ours but within 5 minutes of ours, give a warning
+                bool fMatch = false;
+                foreach(int64 nOffset, vTimeOffsets)
+                    if (nOffset != 0 && abs64(nOffset) < 5 * 60)
+                        fMatch = true;
+
+                if (!fMatch)
+                {
+                    fDone = true;
+                    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
+                    strMiscWarning = strMessage;
+                    printf("*** %s\n", strMessage.c_str());
+                    boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
+                }
             }
         }
         foreach(int64 n, vTimeOffsets)
