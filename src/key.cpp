@@ -120,6 +120,148 @@ err:
     return ret;
 }
 
+// Split a secp256k1 exponent k into two smaller ones k1 and k2 such that for any point Y,
+// k*Y = k1*Y + k2*Y', where Y' = lambda*Y is very fast
+int static secp256k1Splitk (BIGNUM *bnk1, BIGNUM *bnk2, const BIGNUM *bnk, const BIGNUM *bnn, BN_CTX *ctx)
+{
+    BIGNUM *bnc1 = BN_new();
+    BIGNUM *bnc2 = BN_new();
+    BIGNUM *bnt1 = BN_new();
+    BIGNUM *bnt2 = BN_new();
+    BIGNUM *bnn2 = BN_new();
+    static unsigned char a1b2[] = {
+        0x30, 0x86, 0xd2, 0x21, 0xa7, 0xd4, 0x6b, 0xcd,
+        0xe8, 0x6c, 0x90, 0xe4, 0x92, 0x84, 0xeb, 0x15,
+    };
+    static unsigned char b1m[] = {
+        0xe4, 0x43, 0x7e, 0xd6, 0x01, 0x0e, 0x88, 0x28,
+        0x6f, 0x54, 0x7f, 0xa9, 0x0a, 0xbf, 0xe4, 0xc3,
+    };
+    static unsigned char a2[] = {
+        0x01, 0x14, 0xca, 0x50, 0xf7, 0xa8, 0xe2, 0xf3,
+        0xf6, 0x57, 0xc1, 0x10, 0x8d, 0x9d, 0x44, 0xcf,
+        0xd8,
+    };
+    BIGNUM *bna1b2 = BN_bin2bn(a1b2, sizeof(a1b2), NULL);
+    BIGNUM *bnb1m = BN_bin2bn(b1m, sizeof(b1m), NULL);
+    BIGNUM *bna2 = BN_bin2bn(a2, sizeof(a2), NULL);
+
+    BN_rshift1(bnn2, bnn);
+    BN_mul(bnc1, bnk, bna1b2, ctx);
+    BN_add(bnc1, bnc1, bnn2);
+    BN_div(bnc1, NULL, bnc1, bnn, ctx);
+    BN_mul(bnc2, bnk, bnb1m, ctx);
+    BN_add(bnc2, bnc2, bnn2);
+    BN_div(bnc2, NULL, bnc2, bnn, ctx);
+
+    BN_mul(bnt1, bnc1, bna1b2, ctx);
+    BN_mul(bnt2, bnc2, bna2, ctx);
+    BN_add(bnt1, bnt1, bnt2);
+    BN_sub(bnk1, bnk, bnt1);
+    BN_mul(bnt1, bnc1, bnb1m, ctx);
+    BN_mul(bnt2, bnc2, bna1b2, ctx);
+    BN_sub(bnk2, bnt1, bnt2);
+
+    BN_free(bnc1);
+    BN_free(bnc2);
+    BN_free(bnt1);
+    BN_free(bnt2);
+    BN_free(bnn2);
+    BN_free(bna1b2);
+    BN_free(bnb1m);
+    BN_free(bna2);
+    return 0;
+}
+
+bool static secp256k1Verify(const unsigned char hash[32], const unsigned char *dersig, size_t sigsize, const EC_KEY *pkey)
+{
+    bool rslt = false;;
+    const EC_GROUP *group = EC_KEY_get0_group(pkey);
+    const EC_POINT *Y = EC_KEY_get0_public_key(pkey);
+    const EC_POINT *G = EC_GROUP_get0_generator(group);
+    EC_POINT *Glam = EC_POINT_new(group);
+    EC_POINT *Ylam = EC_POINT_new(group);
+    EC_POINT *R = EC_POINT_new(group);
+    const EC_POINT *Points[3];
+    const BIGNUM *bnexps[3];
+    BIGNUM *bnp = BN_new();
+    BIGNUM *bnn = BN_new();
+    BIGNUM *bnx = BN_new();
+    BIGNUM *bny = BN_new();
+    BIGNUM *bnk = BN_new();
+    BIGNUM *bnk1 = BN_new();
+    BIGNUM *bnk2 = BN_new();
+    BIGNUM *bnk1a = BN_new();
+    BIGNUM *bnk2a = BN_new();
+    BIGNUM *bnsinv = BN_new();
+    BIGNUM *bnh = BN_bin2bn(hash, 32, NULL);
+    static unsigned char beta[] = {
+        0x7a, 0xe9, 0x6a, 0x2b, 0x65, 0x7c, 0x07, 0x10,
+        0x6e, 0x64, 0x47, 0x9e, 0xac, 0x34, 0x34, 0xe9,
+        0x9c, 0xf0, 0x49, 0x75, 0x12, 0xf5, 0x89, 0x95,
+        0xc1, 0x39, 0x6c, 0x28, 0x71, 0x95, 0x01, 0xee,
+    };
+    BIGNUM *bnbeta = BN_bin2bn(beta, 32, NULL);
+    BN_CTX *ctx = BN_CTX_new();
+    ECDSA_SIG *sig = d2i_ECDSA_SIG(NULL, &dersig, sigsize);
+
+    if (sig == NULL)
+        goto done;
+
+    EC_GROUP_get_curve_GFp(group, bnp, NULL, NULL, ctx);
+    EC_GROUP_get_order(group, bnn, ctx);
+
+    if (BN_is_zero(sig->r) || BN_is_negative(sig->r) || BN_ucmp(sig->r, bnn) >= 0
+        || BN_is_zero(sig->s) || BN_is_negative(sig->s) || BN_ucmp(sig->s, bnn) >= 0)
+        goto done;
+
+    EC_POINT_get_affine_coordinates_GFp(group, G, bnx, bny, ctx);
+    BN_mod_mul(bnx, bnx, bnbeta, bnp, ctx);
+    EC_POINT_set_affine_coordinates_GFp(group, Glam, bnx, bny, ctx);
+    EC_POINT_get_affine_coordinates_GFp(group, Y, bnx, bny, ctx);
+    BN_mod_mul(bnx, bnx, bnbeta, bnp, ctx);
+    EC_POINT_set_affine_coordinates_GFp(group, Ylam, bnx, bny, ctx);
+
+    Points[0] = Glam;
+    Points[1] = Y;
+    Points[2] = Ylam;
+
+    BN_mod_inverse(bnsinv, sig->s, bnn, ctx);
+    BN_mod_mul(bnk, bnh, bnsinv, bnn, ctx);
+    secp256k1Splitk(bnk1, bnk2, bnk, bnn, ctx);
+    bnexps[0] = bnk2;
+    BN_mod_mul(bnk, sig->r, bnsinv, bnn, ctx);
+    secp256k1Splitk(bnk1a, bnk2a, bnk, bnn, ctx);
+    bnexps[1] = bnk1a;
+    bnexps[2] = bnk2a;
+
+    EC_POINTs_mul(group, R, bnk1, 3, Points, bnexps, ctx);
+    EC_POINT_get_affine_coordinates_GFp(group, R, bnx, NULL, ctx);
+    BN_mod(bnx, bnx, bnn, ctx);
+    rslt = (BN_cmp(bnx, sig->r) == 0);
+
+    ECDSA_SIG_free(sig);
+done:
+    EC_POINT_free(Glam);
+    EC_POINT_free(Ylam);
+    EC_POINT_free(R);
+    BN_free(bnp);
+    BN_free(bnn);
+    BN_free(bnx);
+    BN_free(bny);
+    BN_free(bnk);
+    BN_free(bnk1);
+    BN_free(bnk2);
+    BN_free(bnk1a);
+    BN_free(bnk2a);
+    BN_free(bnsinv);
+    BN_free(bnh);
+    BN_free(bnbeta);
+    BN_CTX_free(ctx);
+
+    return rslt;
+}
+
 void CKey::SetCompressedPubKey(bool fCompressed)
 {
     EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
@@ -372,11 +514,7 @@ bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& v
 
 bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
 {
-    // -1 = error, 0 = bad sig, 1 = good
-    if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
-        return false;
-
-    return true;
+    return secp256k1Verify((unsigned char*)&hash, &vchSig[0], vchSig.size(), pkey);
 }
 
 bool CKey::VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig)
