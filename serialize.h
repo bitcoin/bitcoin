@@ -25,8 +25,17 @@ class CDataStream;
 class CAutoFile;
 static const unsigned int MAX_SIZE = 0x02000000;
 
+/*
+ * Protocol version. This should only be incremented if the protocol breaks
+ * backward compatibility.
+ */
 static const int VERSION = 32000;
-static const char* pszSubVer = "";
+
+/*
+ * Client version string. Identifies both the client name and the current
+ * version.
+ */
+static const char* pszSubVer = "Mainline 0.3.20";
 static const bool VERSION_IS_BETA = true;
 
 
