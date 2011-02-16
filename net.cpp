@@ -688,25 +688,18 @@ void ThreadSocketHandler2(void* parg)
             socklen_t len = sizeof(sockaddr);
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
             CAddress addr(sockaddr);
-            bool fLimitConnections = false;
             int nInbound = 0;
 
-            if (mapArgs.count("-maxconnections"))
-                fLimitConnections = true;
-
-            if (fLimitConnections)
-            {
-                CRITICAL_BLOCK(cs_vNodes)
-                    foreach(CNode* pnode, vNodes)
-                    if (pnode->fInbound)
-                        nInbound++;
-            }
+            CRITICAL_BLOCK(cs_vNodes)
+                foreach(CNode* pnode, vNodes)
+                if (pnode->fInbound)
+                    nInbound++;
             if (hSocket == INVALID_SOCKET)
             {
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
                     printf("socket error accept failed: %d\n", WSAGetLastError());
             }
-            else if (fLimitConnections && nInbound >= atoi(mapArgs["-maxconnections"]) - MAX_OUTBOUND_CONNECTIONS)
+            else if (nInbound >= GetArg("-maxconnections", 125) - MAX_OUTBOUND_CONNECTIONS)
             {
                 closesocket(hSocket);
             }
@@ -988,8 +981,7 @@ void ThreadOpenConnections2(void* parg)
                     if (!pnode->fInbound)
                         nOutbound++;
             int nMaxOutboundConnections = MAX_OUTBOUND_CONNECTIONS;
-            if (mapArgs.count("-maxconnections"))
-                nMaxOutboundConnections = min(nMaxOutboundConnections, atoi(mapArgs["-maxconnections"]));
+            nMaxOutboundConnections = min(nMaxOutboundConnections, (int)GetArg("-maxconnections", 125));
             if (nOutbound < nMaxOutboundConnections)
                 break;
             Sleep(2000);
