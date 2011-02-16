@@ -748,31 +748,38 @@ void ThreadSocketHandler2(void* parg)
                     CDataStream& vRecv = pnode->vRecv;
                     unsigned int nPos = vRecv.size();
 
-                    // typical socket buffer is 8K-64K
-                    char pchBuf[0x10000];
-                    int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
-                    if (nBytes > 0)
-                    {
-                        vRecv.resize(nPos + nBytes);
-                        memcpy(&vRecv[nPos], pchBuf, nBytes);
-                        pnode->nLastRecv = GetTime();
-                    }
-                    else if (nBytes == 0)
-                    {
-                        // socket closed gracefully
+                    if (nPos > 1000*GetArg("-maxreceivebuffer", 2*1000)) {
                         if (!pnode->fDisconnect)
-                            printf("socket closed\n");
+                            printf("socket recv flood control disconnect (%d bytes)\n", vRecv.size());
                         pnode->CloseSocketDisconnect();
                     }
-                    else if (nBytes < 0)
-                    {
-                        // error
-                        int nErr = WSAGetLastError();
-                        if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+                    else {
+                        // typical socket buffer is 8K-64K
+                        char pchBuf[0x10000];
+                        int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+                        if (nBytes > 0)
                         {
+                            vRecv.resize(nPos + nBytes);
+                            memcpy(&vRecv[nPos], pchBuf, nBytes);
+                            pnode->nLastRecv = GetTime();
+                        }
+                        else if (nBytes == 0)
+                        {
+                            // socket closed gracefully
                             if (!pnode->fDisconnect)
-                                printf("socket recv error %d\n", nErr);
+                                printf("socket closed\n");
                             pnode->CloseSocketDisconnect();
+                        }
+                        else if (nBytes < 0)
+                        {
+                            // error
+                            int nErr = WSAGetLastError();
+                            if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+                            {
+                                if (!pnode->fDisconnect)
+                                    printf("socket recv error %d\n", nErr);
+                                pnode->CloseSocketDisconnect();
+                            }
                         }
                     }
                 }
@@ -805,6 +812,11 @@ void ThreadSocketHandler2(void* parg)
                                 printf("socket send error %d\n", nErr);
                                 pnode->CloseSocketDisconnect();
                             }
+                        }
+                        if (vSend.size() > 1000*GetArg("-maxsendbuffer", 256)) {
+                            if (!pnode->fDisconnect)
+                                printf("socket send flood control disconnect (%d bytes)\n", vSend.size());
+                            pnode->CloseSocketDisconnect();
                         }
                     }
                 }
