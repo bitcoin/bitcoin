@@ -11,11 +11,14 @@ WINDOWS BUILD NOTES
 
 Compilers Supported
 -------------------
-MinGW GCC
-http://tdm-gcc.tdragon.net/ has an easy installer.  Go back a few versions
-for a little older gcc like gcc 4.4.?.
+MinGW GCC  http://tdm-gcc.tdragon.net/
+   TDM-GCC with gcc 4.5.1 was used to build this release.
+MSYS 1.0.11 was also used (sh needed to compile some dependencies)
 
-MSVC 10.0 (2010) was used to build this release.
+
+Candidate releases were built with MSVC 10.0 (2010), but
+compiling with Visual C++ caused rendering artifacts when
+bitcoin was run.
 
 
 Dependencies
@@ -23,10 +26,10 @@ Dependencies
 Libraries you need to download separately and build:
 
                 default path  download
-wxWidgets       \wxwidgets   http://www.wxwidgets.org/downloads/
-OpenSSL         \openssl     http://www.openssl.org/source/
-Berkeley DB     \db          http://www.oracle.com/technology/software/products/berkeley-db/index.html
-Boost           \boost       http://www.boost.org/users/download/
+wxWidgets       \wxwidgets-2.9.1-mgw   http://www.wxwidgets.org/downloads/
+OpenSSL         \openssl-1.0.0c-mgw    http://www.openssl.org/source/
+Berkeley DB     \db-4.7.25.NC-mgw      http://www.oracle.com/technology/software/products/berkeley-db/index.html
+Boost           \boost-1.43.0-mgw      http://www.boost.org/users/download/
 
 Their licenses:
 wxWidgets      LGPL 2.1 with very liberal exceptions
@@ -38,7 +41,7 @@ Versions used in this release:
 wxWidgets    2.9.1
 OpenSSL      1.0.0c
 Berkeley DB  4.7.25.NC
-Boost        1.45.0
+Boost        1.43.0
 
 
 Notes
@@ -47,33 +50,50 @@ The UI layout is edited with wxFormBuilder.  The project file is
 uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
 classes that do the rote work of constructing all the UI elements.
 
-This release was built with a Visual C++ 10.0 toolchain (nmake); previous
-releases were built using mingw.
-
 wxWidgets
 ---------
-cd \wxwidgets\build\msw
-nmake -f makefile.vc SHARED=0 MONOLITHIC=1 BUILD=release UNICODE=1 CFB=Unicode
-
+DOS shell:
+cd \wxWidgets-2.9.1-mgw\build\msw
+mingw32-make -f makefile.gcc
 
 OpenSSL
 -------
-cd c:\openssl\src\openssl-1.0.0c
-perl Configure VC-WIN32 --prefix=c:/openssl
-ms\do_ms.bat
-nmake -f ms\nt.mak
-nmake -f ms\nt.mak install
+MSYS shell:
+un-tar sources with MSYS 'tar xfz' to avoid issue with symlinks (OpenSSL ticket 2377)
+change 'MAKE' env. variable from 'C:\MinGW32\bin\mingw32-make.exe' to '/c/MinGW32/bin/mingw32-make.exe'
+
+cd /c/openssl-1.0.0c-mgw
+./config
+make
+
+perl util/mkdef.pl 32 libeay enable-static-engine > libeay32.def
+dllwrap --dllname libeay32.dll --output-lib libeay32.a --def libeay32.def libcrypto.a -lws2_32 -lgdi32
+
+after that openssl libeay is in main source dir (openssl-1.0.0c-mgw)
 
 Berkeley DB
 -----------
-Built in Visual C++ Express (project files had to be converted
-using Visual C++ Pro and then copied to build environment)
-Compiled Release db_static project in Visual Studio Express.
+MSYS shell:
+cd /c/db-4.7.25.NC-mgw/build_unix
+sh ../dist/configure --enable-mingw --enable-cxx
+make
+
 
 Boost
 -----
-download bjam.exe from
-http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=72941
-cd \boost
-bjam toolset=msvc --build-type=complete stage
+DOS prompt:
+downloaded boost jam 3.1.18
+cd \boost-1.43.0-mgw
+bjam toolset=gcc --build-type=complete stage
 
+Note:
+building with boost 1.45.0 failed because of boost ticket 4614, 4258
+builds fine with boost 1.43.0
+
+Bitcoin
+-------
+DOS prompt:
+cd \bitcoin
+mingw32-make bitcoin.exe bitcoind.exe -f makefile.mingw
+strip bitcoin.exe
+strip bitcoind.exe
