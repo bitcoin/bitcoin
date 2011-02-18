@@ -60,8 +60,7 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File bitcoin.exe
-    File msvcp100.dll
-    File msvcr100.dll
+    File libeay32.dll
     File license.txt
     File readme.txt
     SetOutPath $INSTDIR\daemon
@@ -109,8 +108,7 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\bitcoin.exe
-    Delete /REBOOTOK $INSTDIR\msvcp100.dll
-    Delete /REBOOTOK $INSTDIR\msvcr100.dll
+    Delete /REBOOTOK $INSTDIR\libeay32.dll
     Delete /REBOOTOK $INSTDIR\license.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
