@@ -166,7 +166,6 @@ class CSendDialog : public CSendDialogBase
 protected:
     // Event handlers
     void OnKeyDown(wxKeyEvent& event) { HandleCtrlA(event); }
-    void OnTextAddress(wxCommandEvent& event);
     void OnKillFocusAmount(wxFocusEvent& event);
     void OnButtonAddressBook(wxCommandEvent& event);
     void OnButtonPaste(wxCommandEvent& event);
