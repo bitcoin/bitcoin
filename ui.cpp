@@ -1854,7 +1854,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     if (fontTmp.GetPointSize() > 9);
         fontTmp.SetPointSize(9);
     m_staticTextInstructions->SetFont(fontTmp);
-    SetSize(725, 380);
+    SetSize(725, 180);
 #endif
 
     // Set Icon
@@ -1862,42 +1862,10 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
     SetIcon(iconSend);
 
-    wxCommandEvent event;
-    OnTextAddress(event);
-
     // Fixup the tab order
     m_buttonPaste->MoveAfterInTabOrder(m_buttonCancel);
     m_buttonAddress->MoveAfterInTabOrder(m_buttonPaste);
     this->Layout();
-}
-
-void CSendDialog::OnTextAddress(wxCommandEvent& event)
-{
-    // Check mark
-    event.Skip();
-    bool fBitcoinAddress = IsValidBitcoinAddress(m_textCtrlAddress->GetValue());
-    m_bitmapCheckMark->Show(fBitcoinAddress);
-
-    // Grey out message if bitcoin address
-    bool fEnable = !fBitcoinAddress;
-    m_staticTextFrom->Enable(fEnable);
-    m_textCtrlFrom->Enable(fEnable);
-    m_staticTextMessage->Enable(fEnable);
-    m_textCtrlMessage->Enable(fEnable);
-    m_textCtrlMessage->SetBackgroundColour(wxSystemSettings::GetColour(fEnable ? wxSYS_COLOUR_WINDOW : wxSYS_COLOUR_BTNFACE));
-    if (!fEnable && fEnabledPrev)
-    {
-        strFromSave    = m_textCtrlFrom->GetValue();
-        strMessageSave = m_textCtrlMessage->GetValue();
-        m_textCtrlFrom->SetValue(_("n/a"));
-        m_textCtrlMessage->SetValue(_("Can't include a message when sending to a Bitcoin address"));
-    }
-    else if (fEnable && !fEnabledPrev)
-    {
-        m_textCtrlFrom->SetValue(strFromSave);
-        m_textCtrlMessage->SetValue(strMessageSave);
-    }
-    fEnabledPrev = fEnable;
 }
 
 void CSendDialog::OnKillFocusAmount(wxFocusEvent& event)
@@ -1993,8 +1961,6 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
 
             // Message
             wtx.mapValue["to"] = strAddress;
-            wtx.mapValue["from"] = m_textCtrlFrom->GetValue();
-            wtx.mapValue["message"] = m_textCtrlMessage->GetValue();
 
             // Send to IP address
             CSendingDialog* pdialog = new CSendingDialog(this, addr, nValue, wtx);
