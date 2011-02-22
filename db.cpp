@@ -843,7 +843,7 @@ bool LoadWallet(bool& fFirstRunRet)
         keyUser.MakeNewKey();
         if (!AddKey(keyUser))
             return false;
-        if (!SetAddressBookName(PubKeyToAddress(keyUser.GetPubKey()), "Your Address"))
+        if (!SetAddressBookName(PubKeyToAddress(keyUser.GetPubKey()), ""))
             return false;
         CWalletDB().WriteDefaultKey(keyUser.GetPubKey());
     }
