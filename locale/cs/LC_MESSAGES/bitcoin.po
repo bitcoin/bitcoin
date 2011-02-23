@@ -1,0 +1,945 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-11-08 23:35+0100\n"
+"PO-Revision-Date: 2010-11-09 00:56+0100\n"
+"Last-Translator: Michal Breškovec <michal@breskovec.cz>\n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../rpc.cpp:1043
+#: ../../../rpc.cpp:1045
+#, c-format
+msgid "To use the %s option"
+msgstr "Pro použití volby %s"
+
+#: ../../../rpc.cpp:1047
+#, c-format
+msgid ""
+"Warning: %s, you must set rpcpassword=<password>\n"
+"in the configuration file: %s\n"
+"If the file does not exist, create it with owner-readable-only file permissions.\n"
+msgstr ""
+"Varování: %s, musíte nastavit rpcpassword=<heslo>\n"
+"v konfiguračním souboru: %s\n"
+"Pokud soubor neexistuje, vytvořte ho s právy jen-pro-čtení pro vlastníka.\n"
+
+#: ../../../rpc.cpp:1216
+#, c-format
+msgid ""
+"You must set rpcpassword=<password> in the configuration file:\n"
+"%s\n"
+"If the file does not exist, create it with owner-readable-only file permissions."
+msgstr ""
+"Musíte nastavit rpcpassword=<heslo> v konfiguračním souboru:\n"
+"%s\n"
+"Pokud soubor neexistuje, vytvořte ho s právy jen-pro-čtení pro vlastníka."
+
+#: ../../../main.cpp:1635
+msgid "Warning: Disk space is low  "
+msgstr "Varování: Málo místa na disku  "
+
+#: ../../../main.cpp:3535
+#, c-format
+msgid "Error: This is an oversized transaction that requires a transaction fee of %s  "
+msgstr "Chyba: Tato transakce překročila limit a vyžaduje transakční poplatek ve výši %s  "
+
+#: ../../../main.cpp:3537
+msgid "Error: Transaction creation failed  "
+msgstr "Chyba: Vytvoření transakce selhalo  "
+
+#: ../../../main.cpp:3542
+#: ../../../ui.cpp:1965
+#: ../../../ui.cpp:1967
+#: ../../../ui.cpp:2108
+#: ../../../ui.cpp:2261
+msgid "Sending..."
+msgstr "Odesílám..."
+
+#: ../../../main.cpp:3546
+msgid "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Chyba: Transakce byla odmítnuta. Toto se může stát, pokud již byly některé mince ve vaší peněžence utraceny, např. pokud používáte kopii souboru wallet.dat a mince byly utraceny v kopii, ale nebyly označeny jako utracené zde."
+
+#: ../../../main.cpp:3558
+msgid "Invalid amount"
+msgstr "Neplatná částka"
+
+#: ../../../main.cpp:3560
+#: ../../../ui.cpp:2175
+#: ../../../ui.cpp:2246
+msgid "Insufficient funds"
+msgstr "Nedostatečná hotovost"
+
+#: ../../../main.cpp:3565
+msgid "Invalid bitcoin address"
+msgstr "Neplatná Bitcoin adresa"
+
+#: ../../../net.cpp:1245
+#, c-format
+msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
+msgstr "Na tomto počítači se nelze připojit na port %d. Bitcoin již pravděpodobně běží."
+
+#: ../../../ui.cpp:202
+#, c-format
+msgid "This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?"
+msgstr "Tato transakce přesahuje limit. Může být odeslána za poplatek %s, který půjde uzlům, které zpracují vaši transakci a pomůže podpořit síť. Přejete si zaplatit poplatek?"
+
+#: ../../../ui.cpp:301
+msgid "Status"
+msgstr "Stav"
+
+#: ../../../ui.cpp:302
+msgid "Date"
+msgstr "Datum"
+
+#: ../../../ui.cpp:303
+msgid "Description"
+msgstr "Popis"
+
+#: ../../../ui.cpp:304
+msgid "Debit"
+msgstr "Debet"
+
+#: ../../../ui.cpp:305
+msgid "Credit"
+msgstr "Kredit"
+
+#: ../../../ui.cpp:511
+#, c-format
+msgid "Open for %d blocks"
+msgstr "Otevřeno pro %d bloků"
+
+#: ../../../ui.cpp:513
+#, c-format
+msgid "Open until %s"
+msgstr "Otevřeno do %s"
+
+#: ../../../ui.cpp:519
+#, c-format
+msgid "%d/offline?"
+msgstr "%d/offline?"
+
+#: ../../../ui.cpp:521
+#, c-format
+msgid "%d/unconfirmed"
+msgstr "%d/nepotvrzeno"
+
+#: ../../../ui.cpp:523
+#, c-format
+msgid "%d confirmations"
+msgstr "%d potvrzení"
+
+#: ../../../ui.cpp:608
+msgid "Generated"
+msgstr "Vygenerováno"
+
+#: ../../../ui.cpp:616
+#, c-format
+msgid "Generated (%s matures in %d more blocks)"
+msgstr "Vygenerováno (%s dozraje v %d dalších bloků)"
+
+#: ../../../ui.cpp:620
+msgid "Generated - Warning: This block was not received by any other nodes and will probably not be accepted!"
+msgstr "Vygenerováno - Varování: Tento blok nebyl obdržen žádným uzlem a pravděpodobně nebude akceptován!"
+
+#: ../../../ui.cpp:624
+msgid "Generated (not accepted)"
+msgstr "Vygenerováno (neakceptováno)"
+
+#: ../../../ui.cpp:634
+msgid "From: "
+msgstr "Od: "
+
+#: ../../../ui.cpp:658
+msgid "Received with: "
+msgstr "Obdrženo s: "
+
+#: ../../../ui.cpp:704
+msgid "Payment to yourself"
+msgstr "Platba sobě"
+
+#: ../../../ui.cpp:741
+msgid "To: "
+msgstr "Komu: "
+
+#: ../../../ui.cpp:1050
+msgid "    Generating"
+msgstr "    Generuji"
+
+#: ../../../ui.cpp:1052
+msgid "(not connected)"
+msgstr "(nepřipojeno)"
+
+#: ../../../ui.cpp:1055
+#, c-format
+msgid "     %d connections     %d blocks     %d transactions"
+msgstr "     %d spojení     %d bloků     %d transakcí"
+
+#: ../../../ui.cpp:1166
+#: ../../../ui.cpp:2561
+msgid "New Receiving Address"
+msgstr "Nově přijatá adresa"
+
+#: ../../../ui.cpp:1167
+#: ../../../ui.cpp:2562
+msgid ""
+"You should use a new address for each payment you receive.\n"
+"\n"
+"Label"
+msgstr ""
+"Pro každou obdrženou platbu by se měla použít nová adresa.\n"
+"\n"
+"Popis"
+
+#: ../../../ui.cpp:1236
+msgid "<b>Status:</b> "
+msgstr "<b>Stav:</b> "
+
+#: ../../../ui.cpp:1241
+msgid ", has not been successfully broadcast yet"
+msgstr ", nebyl zatím úspěšně odvysílán"
+
+#: ../../../ui.cpp:1243
+#, c-format
+msgid ", broadcast through %d node"
+msgstr ", vysílání přes %d uzel"
+
+#: ../../../ui.cpp:1245
+#, c-format
+msgid ", broadcast through %d nodes"
+msgstr ", vysílání přes %d uzlů"
+
+#: ../../../ui.cpp:1249
+msgid "<b>Date:</b> "
+msgstr "<b>Datum:</b> "
+
+#: ../../../ui.cpp:1257
+msgid "<b>Source:</b> Generated<br>"
+msgstr "<b>Zdroj:</b> Vygenerován<br>"
+
+#: ../../../ui.cpp:1263
+#: ../../../ui.cpp:1281
+msgid "<b>From:</b> "
+msgstr "<b>Od:</b> "
+
+#: ../../../ui.cpp:1281
+msgid "unknown"
+msgstr "neznámý"
+
+#: ../../../ui.cpp:1282
+#: ../../../ui.cpp:1306
+#: ../../../ui.cpp:1365
+msgid "<b>To:</b> "
+msgstr "<b>Komu:</b> "
+
+#: ../../../ui.cpp:1285
+msgid " (yours, label: "
+msgstr " (váš, popis: "
+
+#: ../../../ui.cpp:1287
+msgid " (yours)"
+msgstr " (váš)"
+
+#: ../../../ui.cpp:1324
+#: ../../../ui.cpp:1336
+#: ../../../ui.cpp:1399
+msgid "<b>Credit:</b> "
+msgstr "<b>Kredit:</b> "
+
+#: ../../../ui.cpp:1326
+#, c-format
+msgid "(%s matures in %d more blocks)"
+msgstr "(%s dozraje v %d dalších bloků)"
+
+#: ../../../ui.cpp:1328
+msgid "(not accepted)"
+msgstr "(neakceptovány)"
+
+#: ../../../ui.cpp:1373
+#: ../../../ui.cpp:1396
+msgid "<b>Debit:</b> "
+msgstr "<b>Debet:</b> "
+
+#: ../../../ui.cpp:1387
+msgid "<b>Transaction fee:</b> "
+msgstr "<b>Transakční poplatek:</b> "
+
+#: ../../../ui.cpp:1403
+msgid "<b>Net amount:</b> "
+msgstr "<b>Čistý obnos:</b> "
+
+#: ../../../ui.cpp:1410
+msgid "Message:"
+msgstr "Zpráva:"
+
+#: ../../../ui.cpp:1413
+msgid "Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours."
+msgstr "Vygenerované mince musí počkat 120 bloků, než mohou být utraceny. Když jste tento blok vygenerovali byl odvysílán do sítě, aby byl přidán do řetězce bloků. Pokud přidání do řetězce selže, změní se na \"neakceptovány\" a nebude možné je utratit. Toto se může příležitostně stát, pokud jiný uzel vygeneruje blok během několika po vašem."
+
+#: ../../../ui.cpp:1594
+msgid "Cannot write autostart/bitcoin.desktop file"
+msgstr "Nemohu zapsat do souboru autostart/bitcoin.desktop"
+
+#: ../../../ui.cpp:1630
+msgid "Main"
+msgstr "Hlavní"
+
+#: ../../../ui.cpp:1635
+msgid "&Start Bitcoin on window system startup"
+msgstr "&Spustit Bitcoin při startu okenního manažeru"
+
+#: ../../../ui.cpp:1642
+msgid "&Minimize on close"
+msgstr "&Minimalizovat při zavření"
+
+#: ../../../ui.cpp:1799
+#, c-format
+msgid "version %s%s beta"
+msgstr "verze %s%s beta"
+
+#: ../../../ui.cpp:1885
+msgid "n/a"
+msgstr "n/a"
+
+#: ../../../ui.cpp:1886
+msgid "Can't include a message when sending to a Bitcoin address"
+msgstr "Nemohu připojit zprávu při odesílání na Bitcoin adresu"
+
+#: ../../../ui.cpp:1939
+msgid "Error in amount  "
+msgstr "Chyba v částce  "
+
+#: ../../../ui.cpp:1939
+#: ../../../ui.cpp:1944
+#: ../../../ui.cpp:1949
+#: ../../../ui.cpp:1975
+#: ../../../uibase.cpp:59
+msgid "Send Coins"
+msgstr "Poslat mince"
+
+#: ../../../ui.cpp:1944
+msgid "Amount exceeds your balance  "
+msgstr "Částka překročila váš zůstatek  "
+
+#: ../../../ui.cpp:1949
+msgid "Total exceeds your balance when the "
+msgstr "Celková částka překročila váš zůstatek, když "
+
+#: ../../../ui.cpp:1949
+msgid " transaction fee is included  "
+msgstr " transakční poplatek je zahrnut  "
+
+#: ../../../ui.cpp:1965
+msgid "Payment sent  "
+msgstr "Platba odeslána  "
+
+#: ../../../ui.cpp:1975
+msgid "Invalid address  "
+msgstr "Neplatná adresa  "
+
+#: ../../../ui.cpp:2029
+#, c-format
+msgid "Sending %s to %s"
+msgstr "Odesílám %s na %s"
+
+#: ../../../ui.cpp:2102
+#: ../../../ui.cpp:2135
+msgid "CANCELLED"
+msgstr "ZRUŠENO"
+
+#: ../../../ui.cpp:2106
+msgid "Cancelled"
+msgstr "Zrušeno"
+
+#: ../../../ui.cpp:2108
+msgid "Transfer cancelled  "
+msgstr "Transfer zrušen  "
+
+#: ../../../ui.cpp:2161
+msgid "Error: "
+msgstr "Chyba: "
+
+#: ../../../ui.cpp:2180
+msgid "Connecting..."
+msgstr "Připojuji se..."
+
+#: ../../../ui.cpp:2185
+msgid "Unable to connect"
+msgstr "Nemohu se připojit"
+
+#: ../../../ui.cpp:2190
+msgid "Requesting public key..."
+msgstr "Požaduji veřejný klíč..."
+
+#: ../../../ui.cpp:2202
+msgid "Received public key..."
+msgstr "Obdržen veřejný klíč..."
+
+#: ../../../ui.cpp:2216
+msgid "Recipient is not accepting transactions sent by IP address"
+msgstr "Příjemce neakceptuje transakce zaslané IP adresou."
+
+#: ../../../ui.cpp:2218
+msgid "Transfer was not accepted"
+msgstr "Transfer nebyl akceptován"
+
+#: ../../../ui.cpp:2227
+msgid "Invalid response received"
+msgstr "Obdržena neplatná odpověď"
+
+#: ../../../ui.cpp:2242
+msgid "Creating transaction..."
+msgstr "Vytvářím transakci..."
+
+#: ../../../ui.cpp:2254
+#, c-format
+msgid "This is an oversized transaction that requires a transaction fee of %s"
+msgstr "Tato transakce překročila limit a  vyžaduje transakční poplatek %s"
+
+#: ../../../ui.cpp:2256
+msgid "Transaction creation failed"
+msgstr "Vytvoření transakce selhalo"
+
+#: ../../../ui.cpp:2263
+msgid "Transaction aborted"
+msgstr "Transakce zrušena"
+
+#: ../../../ui.cpp:2271
+msgid "Lost connection, transaction cancelled"
+msgstr "Spojení bylo ztraceno, transakce zrušena"
+
+#: ../../../ui.cpp:2287
+msgid "Sending payment..."
+msgstr "Odesílám platbu..."
+
+#: ../../../ui.cpp:2293
+msgid "The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Transakce byla odmítnuta. Toto se může stát, pokud již byly některé mince ve vaší peněžence utraceny, např. pokud používáte kopii souboru wallet.dat a mince byly utraceny v kopii, ale nebyly označeny jako utracené zde."
+
+#: ../../../ui.cpp:2302
+msgid "Waiting for confirmation..."
+msgstr "Čekám na potvrzení..."
+
+#: ../../../ui.cpp:2320
+msgid ""
+"The payment was sent, but the recipient was unable to verify it.\n"
+"The transaction is recorded and will credit to the recipient,\n"
+"but the comment information will be blank."
+msgstr ""
+"Platba byla odeslána, ale příjemce ji nemohl potvrdit.\n"
+"Transakce je zaznamenána a bude příjemci připsána,\n"
+"ale komentář bude prázdný."
+
+#: ../../../ui.cpp:2329
+msgid "Payment was sent, but an invalid response was received"
+msgstr "Platba byla odeslána, ale vrátila se neplatná odpověď"
+
+#: ../../../ui.cpp:2335
+msgid "Payment completed"
+msgstr "Platba dokončena"
+
+#: ../../../ui.cpp:2366
+#: ../../../ui.cpp:2512
+#: ../../../ui.cpp:2549
+msgid "Name"
+msgstr "Jméno"
+
+#: ../../../ui.cpp:2367
+#: ../../../ui.cpp:2512
+#: ../../../ui.cpp:2549
+msgid "Address"
+msgstr "Adresa"
+
+#: ../../../ui.cpp:2369
+#: ../../../ui.cpp:2524
+msgid "Label"
+msgstr "Popis"
+
+#: ../../../ui.cpp:2370
+#: ../../../uibase.cpp:902
+msgid "Bitcoin Address"
+msgstr "Bitcoin adresa"
+
+#: ../../../ui.cpp:2494
+msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
+msgstr "Toto je jedna z vašich adres pro přijímání plateb a nemůže být zadána do adresáře.  "
+
+#: ../../../ui.cpp:2512
+#: ../../../ui.cpp:2518
+msgid "Edit Address"
+msgstr "Upravit adresu"
+
+#: ../../../ui.cpp:2524
+msgid "Edit Address Label"
+msgstr "Upravit popis adresy"
+
+#: ../../../ui.cpp:2549
+#: ../../../ui.cpp:2555
+msgid "Add Address"
+msgstr "Přidat adresu"
+
+#: ../../../ui.cpp:2631
+msgid "Bitcoin"
+msgstr "Bitcoin"
+
+#: ../../../ui.cpp:2633
+msgid "Bitcoin - Generating"
+msgstr "Bitcoin - Generuje"
+
+#: ../../../ui.cpp:2635
+msgid "Bitcoin - (not connected)"
+msgstr "Bitcoin - (nepřipojen)"
+
+#: ../../../ui.cpp:2712
+msgid "&Open Bitcoin"
+msgstr "&Otevřít Bitcoin"
+
+#: ../../../ui.cpp:2713
+msgid "O&ptions..."
+msgstr "&Možnosti..."
+
+#: ../../../ui.cpp:2714
+#: ../../../uibase.cpp:32
+msgid "&Generate Coins"
+msgstr "&Generovat mince"
+
+#: ../../../ui.cpp:2717
+#: ../../../uibase.cpp:25
+msgid "E&xit"
+msgstr "&Ukončit"
+
+#: ../../../ui.cpp:2932
+msgid "Program has crashed and will terminate.  "
+msgstr "Program selhal a bude ukončen.  "
+
+#: ../../../uibase.cpp:28
+msgid "&File"
+msgstr "&Soubor"
+
+#: ../../../uibase.cpp:36
+msgid "&Your Receiving Addresses..."
+msgstr "&Vaše přijímající adresa..."
+
+#: ../../../uibase.cpp:40
+msgid "&Options..."
+msgstr "&Možnosti..."
+
+#: ../../../uibase.cpp:43
+msgid "&Settings"
+msgstr "N&astavení"
+
+#: ../../../uibase.cpp:47
+msgid "&About..."
+msgstr "&O aplikaci..."
+
+#: ../../../uibase.cpp:50
+msgid "&Help"
+msgstr "&Nápověda"
+
+#: ../../../uibase.cpp:60
+msgid "Address Book"
+msgstr "Adresář"
+
+#: ../../../uibase.cpp:75
+msgid "Your Bitcoin Address:"
+msgstr "Vaše Bitcoin adresa:"
+
+#: ../../../uibase.cpp:82
+msgid " &New... "
+msgstr " &Nová... "
+
+#: ../../../uibase.cpp:85
+#: ../../../uibase.cpp:845
+#: ../../../uibase.cpp:948
+msgid " &Copy to Clipboard "
+msgstr " &Kopírovat do schránky "
+
+#: ../../../uibase.cpp:99
+msgid "Balance:"
+msgstr "Zůstatek:"
+
+#: ../../../uibase.cpp:115
+msgid " All"
+msgstr " Všechny"
+
+#: ../../../uibase.cpp:115
+msgid " Sent"
+msgstr " Odeslané"
+
+#: ../../../uibase.cpp:115
+msgid " Received"
+msgstr " Přijaté"
+
+#: ../../../uibase.cpp:115
+msgid " In Progress"
+msgstr " Probíhající"
+
+#: ../../../uibase.cpp:136
+msgid "All Transactions"
+msgstr "Všechny transakce"
+
+#: ../../../uibase.cpp:147
+msgid "Sent/Received"
+msgstr "Odeslané/Přijaté"
+
+#: ../../../uibase.cpp:158
+msgid "Sent"
+msgstr "Odeslané"
+
+#: ../../../uibase.cpp:169
+msgid "Received"
+msgstr "Přijaté"
+
+#: ../../../uibase.cpp:312
+#: ../../../uibase.cpp:473
+#: ../../../uibase.cpp:574
+#: ../../../uibase.cpp:787
+#: ../../../uibase.cpp:848
+#: ../../../uibase.cpp:957
+#: ../../../uibase.cpp:1046
+msgid "OK"
+msgstr "OK"
+
+#: ../../../uibase.cpp:355
+msgid "Optional transaction fee you give to the nodes that process your transactions."
+msgstr "Volitelný transakční poplatek pro uzly, které zpracovávají vaši transakci."
+
+#: ../../../uibase.cpp:364
+msgid "Transaction fee:"
+msgstr "Transakční poplatek:"
+
+#: ../../../uibase.cpp:380
+msgid "&Limit coin generation to"
+msgstr "&Omezit generování mincí na"
+
+#: ../../../uibase.cpp:387
+msgid "processors"
+msgstr "procesor(y)"
+
+#: ../../../uibase.cpp:393
+msgid "&Start Bitcoin on system startup"
+msgstr "&Spustit Bitcoin při startu systému"
+
+#: ../../../uibase.cpp:397
+msgid "&Minimize to the tray instead of the taskbar"
+msgstr "&Minimalizovat do systémového panelu místo do správce úloh"
+
+#: ../../../uibase.cpp:401
+msgid "M&inimize to the tray on close"
+msgstr "Při zavření m&inimalizovat do systémového panelu"
+
+#: ../../../uibase.cpp:408
+msgid "&Connect through socks4 proxy: "
+msgstr "&Připojit přes socks4 proxy: "
+
+#: ../../../uibase.cpp:420
+msgid "Proxy &IP:"
+msgstr "Proxy &IP:"
+
+#: ../../../uibase.cpp:428
+msgid " &Port:"
+msgstr " &Port:"
+
+#: ../../../uibase.cpp:450
+msgid "// [don't translate] Test panel 2 for future expansion"
+msgstr ""
+
+#: ../../../uibase.cpp:454
+msgid "// [don't translate] Let's not start multiple pages until the first page is filled up"
+msgstr ""
+
+#: ../../../uibase.cpp:476
+#: ../../../uibase.cpp:729
+#: ../../../uibase.cpp:792
+#: ../../../uibase.cpp:851
+#: ../../../uibase.cpp:960
+#: ../../../uibase.cpp:1049
+msgid "Cancel"
+msgstr "Zrušit"
+
+#: ../../../uibase.cpp:479
+msgid "&Apply"
+msgstr "&Použít"
+
+#: ../../../uibase.cpp:540
+msgid "Bitcoin "
+msgstr "Bitcoin "
+
+#: ../../../uibase.cpp:546
+msgid "version"
+msgstr "verze"
+
+#: ../../../uibase.cpp:557
+msgid ""
+"Copyright (c) 2009-2010 Satoshi Nakamoto.\n"
+"\n"
+"This is experimental software.\n"
+"\n"
+"Distributed under the MIT/X11 software license, see the accompanying file \n"
+"license.txt or http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"This product includes software developed by the OpenSSL Project for use in the \n"
+"OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
+"Eric Young (eay@cryptsoft.com)."
+msgstr ""
+"Copyright (c) 2009-2010 Satoshi Nakamoto.\n"
+"\n"
+"Toto je experimentální software.\n"
+"\n"
+"Distribuováno pod softwarovou licencí MIT/X11, viz přiložený soubor \n"
+"license.txt nebo http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"Tento produkt zahrnuje software vyvinutý v OpenSSL Project pro použití \n"
+"v OpenSSL Toolkit (http://www.openssl.org/) a kryptografický software, \n"
+"který naprogramoval Eric Young (eay@cryptsoft.com)."
+
+#: ../../../uibase.cpp:613
+msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) or IP address (e.g. 123.45.6.7)"
+msgstr "Zadejte Bitcoin adresu (např. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) nebo IP adresu (např. 123.45.6.7)"
+
+#: ../../../uibase.cpp:627
+msgid "Pay &To:"
+msgstr "Komu &Zaplatit:"
+
+#: ../../../uibase.cpp:642
+msgid "&Paste"
+msgstr "&Vložit"
+
+#: ../../../uibase.cpp:645
+msgid " Address &Book..."
+msgstr "&Adresář..."
+
+#: ../../../uibase.cpp:652
+msgid "&Amount:"
+msgstr "Čá&stka:"
+
+#: ../../../uibase.cpp:662
+msgid "T&ransfer:"
+msgstr "&Převod:"
+
+#: ../../../uibase.cpp:668
+msgid " Standard"
+msgstr " Standardní"
+
+#: ../../../uibase.cpp:690
+msgid "&From:"
+msgstr "O&d:"
+
+#: ../../../uibase.cpp:707
+msgid "&Message:"
+msgstr "&Zpráva:"
+
+#: ../../../uibase.cpp:724
+msgid "&Send"
+msgstr "&Odeslat"
+
+#: ../../../uibase.cpp:776
+msgid ""
+"\n"
+"\n"
+"Connecting..."
+msgstr ""
+"\n"
+"\n"
+"Připojuji se..."
+
+#: ../../../uibase.cpp:826
+msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Toto jsou vaše Bitcoin adresy pro příjem plateb. Můžete chtít použít pro každého odesilatele jinou, abyste mohli sledovat, kdo vám platí. Zvýrazněná adresa je zobrazena v hlavním okně."
+
+#: ../../../uibase.cpp:839
+#: ../../../uibase.cpp:951
+msgid "&Edit..."
+msgstr "&Upravit..."
+
+#: ../../../uibase.cpp:842
+#: ../../../uibase.cpp:954
+msgid " &New Address... "
+msgstr " &Nová adresa... "
+
+#: ../../../uibase.cpp:914
+msgid "Sending"
+msgstr "Odesílám"
+
+#: ../../../uibase.cpp:922
+msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Toto jsou vaše Bitcoin adresy pro příjem plateb. Pokud chcete sledovat kdo vám platí, můžete pro každého odesilatele použít jinou. Zvýrazněná adresa bude použita v hlavním okně."
+
+#: ../../../uibase.cpp:935
+msgid "Receiving"
+msgstr "Přijímám"
+
+#: ../../../uibase.cpp:945
+msgid "&Delete"
+msgstr "&Smazat"
+
+#: ../../../init.cpp:162
+msgid "Usage:"
+msgstr "Použití:"
+
+#: ../../../init.cpp:164
+msgid "Send command to -server or bitcoind\n"
+msgstr "Odeslat příkaz pro -server nebo bitcoind\n"
+
+#: ../../../init.cpp:165
+msgid "List commands\n"
+msgstr "Vypsat příkazy\n"
+
+#: ../../../init.cpp:166
+msgid "Get help for a command\n"
+msgstr "Získat nápovědu pro příkaz\n"
+
+#: ../../../init.cpp:167
+msgid "Options:\n"
+msgstr "Možnosti:\n"
+
+#: ../../../init.cpp:168
+msgid "Specify configuration file (default: bitcoin.conf)\n"
+msgstr "Určete konfigurační soubor (výchozí: bitcoin.conf)\n"
+
+#: ../../../init.cpp:169
+msgid "Generate coins\n"
+msgstr "Generovat mince\n"
+
+#: ../../../init.cpp:170
+msgid "Don't generate coins\n"
+msgstr "Negenerovat mince\n"
+
+#: ../../../init.cpp:171
+msgid "Start minimized\n"
+msgstr "Spustit minimalizovaně\n"
+
+#: ../../../init.cpp:172
+msgid "Specify data directory\n"
+msgstr "Zvolit složku s daty\n"
+
+#: ../../../init.cpp:173
+msgid "Connect through socks4 proxy\n"
+msgstr "Připojit skrz socks4 proxy\n"
+
+#: ../../../init.cpp:174
+msgid "Add a node to connect to\n"
+msgstr "Přidat uzel pro připojení k\n"
+
+#: ../../../init.cpp:175
+msgid "Connect only to the specified node\n"
+msgstr "Připojení jen k určenému uzlu\n"
+
+#: ../../../init.cpp:176
+msgid "Accept command line and JSON-RPC commands\n"
+msgstr "Akceptovat příkazy z příkazové řádky a JSON-RPC\n"
+
+#: ../../../init.cpp:177
+msgid "Run in the background as a daemon and accept commands\n"
+msgstr "Spustit na pozadí jako daemon a akceptovat příkazy\n"
+
+#: ../../../init.cpp:178
+msgid "Use the test network\n"
+msgstr "Použít testovací síť\n"
+
+#: ../../../init.cpp:179
+msgid "Username for JSON-RPC connections\n"
+msgstr "Uživatelské jméno pro JSON-RPC spojení\n"
+
+#: ../../../init.cpp:180
+msgid "Password for JSON-RPC connections\n"
+msgstr "Heslo pro JSON-RPC spojení\n"
+
+#: ../../../init.cpp:181
+msgid "Listen for JSON-RPC connections on <port>\n"
+msgstr "Naslouchám pro JSON-RPC spojení na <port>\n"
+
+#: ../../../init.cpp:182
+msgid "Allow JSON-RPC connections from specified IP address\n"
+msgstr "Povolit JSON-RPC spojení z určené IP adresy\n"
+
+#: ../../../init.cpp:183
+msgid "Send commands to node running on <ip>\n"
+msgstr "Poslat příkazy uzlu běžícímu na <ip>\n"
+
+#: ../../../init.cpp:187
+msgid ""
+"\n"
+"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+msgstr ""
+"\n"
+"SSL volby: (pro instrukce jak nastavit SSL se podívejte na Bitcoin Wiki)\n"
+
+#: ../../../init.cpp:188
+msgid "Use OpenSSL (https) for JSON-RPC connections\n"
+msgstr "Použít OpenSSL (https) pro JSON-RPC spojení\n"
+
+#: ../../../init.cpp:189
+msgid "Server certificate file (default: server.cert)\n"
+msgstr "Soubor s certifikátem Serveru (výchozí: server.cert)\n"
+
+#: ../../../init.cpp:190
+msgid "Server private key (default: server.pem)\n"
+msgstr "Privátní klíč Serveru (výchozí: server.pem)\n"
+
+#: ../../../init.cpp:191
+msgid "Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+msgstr "Akceptovatelné šifry (výchozí: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+
+#: ../../../init.cpp:195
+msgid "This help message\n"
+msgstr "Tato nápověda\n"
+
+#: ../../../init.cpp:289
+#, c-format
+msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
+msgstr "Nemohu získat zámek na datovou složku %s.  Bitcoin je již pravděpodobně spuštěn."
+
+#: ../../../init.cpp:312
+msgid "Error loading addr.dat      \n"
+msgstr "Chyba při nahrávání addr.dat      \n"
+
+#: ../../../init.cpp:318
+msgid "Error loading blkindex.dat      \n"
+msgstr "Chyba při nahrávání blkindex.dat      \n"
+
+#: ../../../init.cpp:325
+msgid "Error loading wallet.dat      \n"
+msgstr "Chyba při nahrávání wallet.dat      \n"
+
+#: ../../../init.cpp:393
+msgid "Invalid -proxy address"
+msgstr "Neplatná -proxy adresa"
+
+#: ../../../init.cpp:413
+msgid "Invalid amount for -paytxfee=<amount>"
+msgstr "Neplatná částka pro -paytxfee=<částka>"
+
+#: ../../../init.cpp:417
+msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
+msgstr "Varování: -paytxfee je nastaven velmi vysoko.  Toto je transakční poplatek, který zaplatíte, pokud odešlete transakci."
+
+#: ../../../util.cpp:816
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
+msgstr "Varování: Prosím zkontrolujte, zda má váš počítač správně nastaven datum a čas.  Pokud vaše hodiny nejsou korektně nastaveny Bitcoin nebude fungovat správně."
+
+#: ../../../uibase.h:149
+msgid "Transaction Details"
+msgstr "Detaily transakce"
+
+#: ../../../uibase.h:202
+msgid "Options"
+msgstr "Nastavení"
+
+#: ../../../uibase.h:230
+msgid "About Bitcoin"
+msgstr "O aplikaci Bitcoin"
+
+#: ../../../uibase.h:340
+msgid "Your Bitcoin Addresses"
+msgstr "Vaše Bitcoin adresa"
+
