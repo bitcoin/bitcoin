@@ -1710,6 +1710,8 @@ void ThreadRPCServer2(void* parg)
     ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
     ip::tcp::acceptor acceptor(io_service, endpoint);
 
+    acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+
 #ifdef USE_SSL
     ssl::context context(io_service, ssl::context::sslv23);
     if (fUseSSL)
