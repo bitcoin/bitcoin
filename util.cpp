@@ -343,7 +343,7 @@ bool ParseMoney(const string& str, int64& nRet)
 bool ParseMoney(const char* pszIn, int64& nRet)
 {
     string strWhole;
-    int64 nCents = 0;
+    int64 nUnits = 0;
     const char* p = pszIn;
     while (isspace(*p))
         p++;
@@ -354,11 +354,11 @@ bool ParseMoney(const char* pszIn, int64& nRet)
         if (*p == '.')
         {
             p++;
-            if (isdigit(*p))
+            int64 nMult = CENT*10;
+            while (isdigit(*p) && (nMult > 0))
             {
-                nCents = 10 * (*p++ - '0');
-                if (isdigit(*p))
-                    nCents += (*p++ - '0');
+                nUnits += nMult * (*p++ - '0');
+                nMult /= 10;
             }
             break;
         }
@@ -373,15 +373,11 @@ bool ParseMoney(const char* pszIn, int64& nRet)
             return false;
     if (strWhole.size() > 14)
         return false;
-    if (nCents < 0 || nCents > 99)
+    if (nUnits < 0 || nUnits > COIN)
         return false;
     int64 nWhole = atoi64(strWhole);
-    int64 nPreValue = nWhole * 100 + nCents;
-    int64 nValue = nPreValue * CENT;
-    if (nValue / CENT != nPreValue)
-        return false;
-    if (nValue / COIN != nWhole)
-        return false;
+    int64 nValue = nWhole*COIN + nUnits;
+
     nRet = nValue;
     return true;
 }
