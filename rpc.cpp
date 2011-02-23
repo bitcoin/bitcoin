@@ -65,7 +65,7 @@ int64 AmountFromValue(const Value& value)
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(-3, "Invalid amount");
-    int64 nAmount = roundint64(dAmount * 100.00) * CENT;
+    int64 nAmount = roundint64(dAmount * COIN);
     if (!MoneyRange(nAmount))
         throw JSONRPCError(-3, "Invalid amount");
     return nAmount;
