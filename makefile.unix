@@ -2,18 +2,11 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+CXX=g++
 
-INCLUDEPATHS= \
- -I"/usr/local/include/wx-2.9" \
- -I"/usr/local/lib/wx/include/gtk2-unicode-debug-static-2.9"
+WXINCLUDEPATHS:=$(shell wx-config --cppflags)
 
-# for wxWidgets 2.9.1, add -l Xxf86vm
-WXLIBS= \
- -Wl,-Bstatic \
-   -l wx_gtk2ud-2.9 \
- -Wl,-Bdynamic \
-   -l gtk-x11-2.0 \
-   -l SM
+WXLIBS:=$(shell wx-config --libs)
 
 # for boost 1.37, add -mt to the boost libraries
 LIBS= \
@@ -30,9 +23,9 @@ LIBS= \
    -l z \
    -l dl
 
-DEFS=-D__WXGTK__ -DNOPCH -DFOURWAYSSE2 -DUSE_SSL
+DEFS:=$(shell wx-config --cxxflags) -DNOPCH -DFOURWAYSSE2 -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
-CFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(WXINCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h
 
@@ -53,23 +46,23 @@ all: bitcoin
 
 
 obj/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -DGUI -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -DGUI -o $@ $<
 
 cryptopp/obj/%.o: cryptopp/%.cpp
-	g++ -c $(CFLAGS) -O3 -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -O3 -o $@ $<
 
 obj/sha256.o: sha256.cpp
-	g++ -c $(CFLAGS) -msse2 -O3 -march=amdfam10 -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -msse2 -O3 -march=amdfam10 -o $@ $<
 
 bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha256.o
-	g++ $(CFLAGS) -o $@ $^ $(WXLIBS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha256.o
-	g++ $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 
 clean:
@@ -77,3 +70,5 @@ clean:
 	-rm -f obj/nogui/*.o
 	-rm -f cryptopp/obj/*.o
 	-rm -f headers.h.gch
+	-rm -f bitcoin
+	-rm -f bitcoind
