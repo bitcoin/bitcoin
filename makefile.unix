@@ -3,17 +3,9 @@
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 
-INCLUDEPATHS= \
- -I"/usr/local/include/wx-2.9" \
- -I"/usr/local/lib/wx/include/gtk2-unicode-debug-static-2.9"
+INCLUDEPATHS=$(shell wx-config --cflags)
 
-# for wxWidgets 2.9.1, add -l Xxf86vm
-WXLIBS= \
- -Wl,-Bstatic \
-   -l wx_gtk2ud-2.9 \
- -Wl,-Bdynamic \
-   -l gtk-x11-2.0 \
-   -l SM
+WXLIBS=$(shell wx-config --libs)
 
 # for boost 1.37, add -mt to the boost libraries
 LIBS= \
