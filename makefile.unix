@@ -4,9 +4,9 @@
 
 CXX=g++
 
-WXINCLUDEPATHS:=$(shell wx-config --cxxflags)
+WXINCLUDEPATHS=$(shell wx-config --cxxflags)
 
-WXLIBS:=$(shell wx-config --libs)
+WXLIBS=$(shell wx-config --libs)
 
 # for boost 1.37, add -mt to the boost libraries
 LIBS= \
