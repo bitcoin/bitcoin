@@ -313,9 +313,18 @@ void ParseString(const string& str, char c, vector<string>& v)
 
 string FormatMoney(int64 n, bool fPlus)
 {
-    n /= CENT;
-    string str = strprintf("%"PRI64d".%02"PRI64d, (n > 0 ? n : -n)/100, (n > 0 ? n : -n)%100);
-    for (int i = 6; i < str.size(); i += 4)
+    string str = strprintf("%.08f", double(n > 0 ? n : -n)/double(COIN));
+
+    // Right-trim excess 0's before the decimal point:
+    int nTrim = 0;
+    for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
+        ++nTrim;
+    if (nTrim)
+        str.erase(str.size()-nTrim, nTrim);
+
+    // Insert thousands-separators:
+    size_t point = str.find(".");
+    for (int i = (str.size()-point)+3; i < str.size(); i += 4)
         if (isdigit(str[str.size() - i - 1]))
             str.insert(str.size() - i, 1, ',');
     if (n < 0)
@@ -334,7 +343,7 @@ bool ParseMoney(const string& str, int64& nRet)
 bool ParseMoney(const char* pszIn, int64& nRet)
 {
     string strWhole;
-    int64 nCents = 0;
+    int64 nUnits = 0;
     const char* p = pszIn;
     while (isspace(*p))
         p++;
@@ -345,11 +354,11 @@ bool ParseMoney(const char* pszIn, int64& nRet)
         if (*p == '.')
         {
             p++;
-            if (isdigit(*p))
+            int64 nMult = CENT*10;
+            while (isdigit(*p) && (nMult > 0))
             {
-                nCents = 10 * (*p++ - '0');
-                if (isdigit(*p))
-                    nCents += (*p++ - '0');
+                nUnits += nMult * (*p++ - '0');
+                nMult /= 10;
             }
             break;
         }
@@ -364,15 +373,11 @@ bool ParseMoney(const char* pszIn, int64& nRet)
             return false;
     if (strWhole.size() > 14)
         return false;
-    if (nCents < 0 || nCents > 99)
+    if (nUnits < 0 || nUnits > COIN)
         return false;
     int64 nWhole = atoi64(strWhole);
-    int64 nPreValue = nWhole * 100 + nCents;
-    int64 nValue = nPreValue * CENT;
-    if (nValue / CENT != nPreValue)
-        return false;
-    if (nValue / COIN != nWhole)
-        return false;
+    int64 nValue = nWhole*COIN + nUnits;
+
     nRet = nValue;
     return true;
 }
