@@ -65,7 +65,7 @@ int64 AmountFromValue(const Value& value)
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(-3, "Invalid amount");
-    int64 nAmount = roundint64(dAmount * 100.00) * CENT;
+    int64 nAmount = roundint64(dAmount * COIN);
     if (!MoneyRange(nAmount))
         throw JSONRPCError(-3, "Invalid amount");
     return nAmount;
@@ -277,7 +277,7 @@ Value getinfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("version",       (int)VERSION));
-    obj.push_back(Pair("balance",       (double)GetBalance() / (double)COIN));
+    obj.push_back(Pair("balance",       ValueFromAmount(GetBalance())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
@@ -287,7 +287,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)GetOldestKeyPoolTime()));
-    obj.push_back(Pair("paytxfee",      (double)nTransactionFee / (double)COIN));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
@@ -513,7 +513,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
         }
     }
 
-    return (double)nAmount / (double)COIN;
+    return  ValueFromAmount(nAmount);
 }
 
 
@@ -619,7 +619,7 @@ Value getbalance(const Array& params, bool fHelp)
             "If [account] is specified, returns the balance in the account.");
 
     if (params.size() == 0)
-        return ((double)GetBalance() / (double)COIN);
+        return  ValueFromAmount(GetBalance());
 
     if (params[0].get_str() == "*") {
         // Calculate total balance a different way from GetBalance()
@@ -648,7 +648,7 @@ Value getbalance(const Array& params, bool fHelp)
             nBalance += allGenerated;
         }
         printf("Found %d accounts\n", vAccounts.size());
-        return (double)nBalance / (double)COIN;
+        return  ValueFromAmount(nBalance);
     }
 
     string strAccount = AccountFromValue(params[0]);
@@ -658,7 +658,7 @@ Value getbalance(const Array& params, bool fHelp)
 
     int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
 
-    return (double)nBalance / (double)COIN;
+    return ValueFromAmount(nBalance);
 }
 
 
@@ -851,7 +851,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
                 obj.push_back(Pair("address",       strAddress));
                 obj.push_back(Pair("account",       strAccount));
                 obj.push_back(Pair("label",         strAccount)); // deprecated
-                obj.push_back(Pair("amount",        (double)nAmount / (double)COIN));
+                obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
                 obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
                 ret.push_back(obj);
             }
@@ -867,7 +867,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             Object obj;
             obj.push_back(Pair("account",       (*it).first));
             obj.push_back(Pair("label",         (*it).first)); // deprecated
-            obj.push_back(Pair("amount",        (double)nAmount / (double)COIN));
+            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
             ret.push_back(obj);
         }
