@@ -287,7 +287,7 @@ void EraseOrphanTx(uint256 hash)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// CTransaction
+// CTransaction and CTxIndex
 //
 
 bool CTransaction::ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txindexRet)
@@ -1032,6 +1032,22 @@ void ResendWalletTransactions()
             wtx.RelayWalletTransaction(txdb);
         }
     }
+}
+
+int CTxIndex::GetDepthInMainChain() const
+{
+    // Read block header
+    CBlock block;
+    if (!block.ReadFromDisk(pos.nFile, pos.nBlockPos, false))
+        return 0;
+    // Find the block in the index
+    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.GetHash());
+    if (mi == mapBlockIndex.end())
+        return 0;
+    CBlockIndex* pindex = (*mi).second;
+    if (!pindex || !pindex->IsInMainChain())
+        return 0;
+    return 1 + nBestHeight - pindex->nHeight;
 }
 
 
@@ -3327,18 +3343,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
 
                 // Read block header
-                int nConf = 0;
-                CBlock block;
-                if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                {
-                    map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(block.GetHash());
-                    if (it != mapBlockIndex.end())
-                    {
-                        CBlockIndex* pindex = (*it).second;
-                        if (pindex->IsInMainChain())
-                            nConf = 1 + nBestHeight - pindex->nHeight;
-                    }
-                }
+                int nConf = txindex.GetDepthInMainChain();
 
                 dPriority += (double)nValueIn * nConf;
 
@@ -3383,7 +3388,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 continue;
 
             // Transaction fee required depends on block size
-            bool fAllowFree = (nBlockSize + nTxSize < 4000 || dPriority > COIN * 144 / 250);
+            bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
             int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree);
 
             // Connecting shouldn't fail due to dependency on other memory pool transactions
@@ -3859,6 +3864,7 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                     return false;
                 int64 nValueOut = nValue;
                 int64 nTotalValue = nValue + nFeeRet;
+                double dPriority = 0;
 
                 // Choose coins to use
                 set<CWalletTx*> setCoins;
@@ -3866,7 +3872,11 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                     return false;
                 int64 nValueIn = 0;
                 foreach(CWalletTx* pcoin, setCoins)
-                    nValueIn += pcoin->GetCredit();
+                {
+                    int64 nCredit = pcoin->GetCredit();
+                    nValueIn += nCredit;
+                    dPriority += (double)nCredit * pcoin->GetDepthInMainChain();
+                }
 
                 // Fill a vout to the payee
                 bool fChangeFirst = GetRand(2);
@@ -3921,10 +3931,12 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                 unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
                 if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
                     return false;
+                dPriority /= nBytes;
 
                 // Check that enough fee is included
                 int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                int64 nMinFee = wtxNew.GetMinFee();
+                bool fAllowFree = CTransaction::AllowFree(dPriority);
+                int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
                     nFeeRet = max(nPayFee, nMinFee);
