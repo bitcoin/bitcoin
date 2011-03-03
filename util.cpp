@@ -158,6 +158,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     {
         // print to debug.log
         static FILE* fileout = NULL;
+        static int logged_lines = 0;
 
         if (!fileout)
         {
@@ -169,12 +170,19 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         }
         if (fileout)
         {
-            //// Debug print useful for profiling
-            //fprintf(fileout, " %"PRI64d" ", GetTimeMillis());
+            // timestamp each line
+            fprintf(fileout, " %"PRI64d" ", GetTimeMillis());
+
             va_list arg_ptr;
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);
             va_end(arg_ptr);
+
+            // periodically re-open debug log, to permit rotation
+            if (++logged_lines >= 2000) {
+                fclose(fileout);
+                fileout = NULL;
+            }
         }
     }
 
