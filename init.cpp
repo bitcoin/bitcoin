@@ -199,9 +199,10 @@ bool AppInit2(int argc, char* argv[])
     else
         fServer = GetBoolArg("-server");
 
-    /* force fServer when running without GUI */
+    /* force fServer and fDaemon when running without GUI */
 #ifndef GUI
     fServer = true;
+    fDaemon = true;
 #endif
 
     fPrintToConsole = GetBoolArg("-printtoconsole");
