@@ -1064,10 +1064,8 @@ void ThreadOpenConnections2(void* parg)
                 int64 nSinceLastSeen = GetAdjustedTime() - addr.nTime;
                 int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;
 
-                // Randomize the order in a deterministic way, putting the standard port first
+                // Randomize the order in a deterministic way
                 int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
-                if (addr.port != GetDefaultPort())
-                    nRandomizer += 2 * 60 * 60;
 
                 // Last seen  Base retry frequency
                 //   <1 hour   10 min
