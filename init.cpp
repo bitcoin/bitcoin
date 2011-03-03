@@ -156,8 +156,10 @@ bool AppInit2(int argc, char* argv[])
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
+#ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
+#endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
