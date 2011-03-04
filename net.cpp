@@ -1064,10 +1064,8 @@ void ThreadOpenConnections2(void* parg)
                 int64 nSinceLastSeen = GetAdjustedTime() - addr.nTime;
                 int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;
 
-                // Randomize the order in a deterministic way, putting the standard port first
+                // Randomize the order in a deterministic way
                 int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
-                if (addr.port != GetDefaultPort())
-                    nRandomizer += 2 * 60 * 60;
 
                 // Last seen  Base retry frequency
                 //   <1 hour   10 min
@@ -1219,14 +1217,17 @@ void ThreadMessageHandler2(void* parg)
 
 
 
-
+unsigned short GetListenPort()
+{
+    return (mapArgs.count("-port") ? htons(atoi(mapArgs["-port"])) : GetDefaultPort());
+}
 
 
 bool BindListenPort(string& strError)
 {
     strError = "";
     int nOne = 1;
-    addrLocalHost.port = GetDefaultPort();
+    addrLocalHost.port = GetListenPort();
 
 #ifdef __WXMSW__
     // Initialize Windows Sockets
@@ -1278,7 +1279,7 @@ bool BindListenPort(string& strError)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
-    sockaddr.sin_port = GetDefaultPort();
+    sockaddr.sin_port = GetListenPort();
     if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
@@ -1320,7 +1321,7 @@ void StartNode(void* parg)
                 printf("host ip %d: %s\n", i, CAddress(*(unsigned int*)phostent->h_addr_list[i]).ToStringIP().c_str());
             for (int i = 0; phostent->h_addr_list[i] != NULL; i++)
             {
-                CAddress addr(*(unsigned int*)phostent->h_addr_list[i], GetDefaultPort(), nLocalServices);
+                CAddress addr(*(unsigned int*)phostent->h_addr_list[i], GetListenPort(), nLocalServices);
                 if (addr.IsValid() && addr.GetByte(3) != 127)
                 {
                     addrLocalHost = addr;
@@ -1348,7 +1349,7 @@ void StartNode(void* parg)
                     printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
 
                 // Take the first IP that isn't loopback 127.x.x.x
-                CAddress addr(*(unsigned int*)&s4->sin_addr, GetDefaultPort(), nLocalServices);
+                CAddress addr(*(unsigned int*)&s4->sin_addr, GetListenPort(), nLocalServices);
                 if (addr.IsValid() && addr.GetByte(3) != 127)
                 {
                     addrLocalHost = addr;
