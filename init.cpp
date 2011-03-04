@@ -9,6 +9,7 @@
 
 
 
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -171,7 +172,6 @@ bool AppInit2(int argc, char* argv[])
             "  -gen=0           \t\t  " + _("Don't generate coins\n") +
             "  -min             \t\t  " + _("Start minimized\n") +
             "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
-            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (instead of 8333)\n") +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
