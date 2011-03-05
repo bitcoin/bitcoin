@@ -381,6 +381,12 @@ Value setaccount(const Array& params, bool fHelp)
             "Sets the account associated with the given address.");
 
     string strAddress = params[0].get_str();
+    uint160 hash160;
+    bool isValid = AddressToHash160(strAddress, hash160);
+    if (!isValid)
+        throw runtime_error("provided address is not valid");
+
+
     string strAccount;
     if (params.size() > 1)
         strAccount = AccountFromValue(params[1]);
