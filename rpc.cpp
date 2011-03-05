@@ -384,7 +384,7 @@ Value setaccount(const Array& params, bool fHelp)
     uint160 hash160;
     bool isValid = AddressToHash160(strAddress, hash160);
     if (!isValid)
-        throw runtime_error("provided address is not valid");
+        throw JSONRPCError(-5, "Invalid bitcoin address");
 
 
     string strAccount;
