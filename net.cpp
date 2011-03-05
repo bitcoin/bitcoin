@@ -741,7 +741,7 @@ void ThreadSocketHandler2(void* parg)
                     CDataStream& vRecv = pnode->vRecv;
                     unsigned int nPos = vRecv.size();
 
-                    if (nPos > 1000*GetArg("-maxreceivebuffer", 2*1000)) {
+                    if (nPos > 1000*GetArg("-maxreceivebuffer", 10*1000)) {
                         if (!pnode->fDisconnect)
                             printf("socket recv flood control disconnect (%d bytes)\n", vRecv.size());
                         pnode->CloseSocketDisconnect();
@@ -806,7 +806,7 @@ void ThreadSocketHandler2(void* parg)
                                 pnode->CloseSocketDisconnect();
                             }
                         }
-                        if (vSend.size() > 1000*GetArg("-maxsendbuffer", 256)) {
+                        if (vSend.size() > 1000*GetArg("-maxsendbuffer", 10*1000)) {
                             if (!pnode->fDisconnect)
                                 printf("socket send flood control disconnect (%d bytes)\n", vSend.size());
                             pnode->CloseSocketDisconnect();
