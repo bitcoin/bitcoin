@@ -416,6 +416,9 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
+    if (mapArgs.count("-dnsseed"))
+        DNSAddressSeed();
+
     if (mapArgs.count("-paytxfee"))
     {
         if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
