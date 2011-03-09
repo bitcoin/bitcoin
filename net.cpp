@@ -883,7 +883,7 @@ void DNSAddressSeed()
         }
     }
 
-    printf("%d addresses found from DNS seeds\n");
+    printf("%d addresses found from DNS seeds\n", found);
 }
 
 
