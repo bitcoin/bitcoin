@@ -21,7 +21,8 @@ LIBS= \
  -Wl,-Bdynamic \
    -l gthread-2.0 \
    -l z \
-   -l dl
+   -l dl \
+   -l curl
 
 DEFS=-DNOPCH -DFOURWAYSSE2 -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
@@ -38,6 +39,7 @@ OBJS= \
     obj/main.o \
     obj/rpc.o \
     obj/init.o \
+    obj/resolv.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 

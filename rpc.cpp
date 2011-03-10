@@ -21,6 +21,9 @@ typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 // a certain size around 145MB.  If we need access to json_spirit outside this
 // file, we could use the compiled json_spirit option.
 
+// name resolution service
+#include "resolv.h"
+
 using namespace boost::asio;
 using namespace json_spirit;
 
@@ -456,6 +459,21 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     return ret;
 }
 
+
+string DoSendToAddress(const string& strAddress, int64 nAmount)
+{
+    // Wallet comments
+    CWalletTx wtx;
+    /*if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
+        wtx.mapValue["comment"] = params[2].get_str();
+    if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
+        wtx.mapValue["to"]      = params[3].get_str(); */
+    string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+    if (strError != "")
+        throw JSONRPCError(-4, strError);
+    return wtx.GetHash().GetHex();
+}
+
 Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
@@ -464,23 +482,91 @@ Value sendtoaddress(const Array& params, bool fHelp)
             "<amount> is a real and is rounded to the nearest 0.01");
 
     string strAddress = params[0].get_str();
-
-    // Amount
     int64 nAmount = AmountFromValue(params[1]);
-
-    // Wallet comments
-    CWalletTx wtx;
-    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
-        wtx.mapValue["comment"] = params[2].get_str();
-    if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-        wtx.mapValue["to"]      = params[3].get_str();
-
-    string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
-    if (strError != "")
-        throw JSONRPCError(-4, strError);
-    return wtx.GetHash().GetHex();
+    return DoSendToAddress(strAddress, nAmount);
 }
 
+Value sendtoname(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "sendtoname <name@domain> <amount>\n"
+            "<amount> is a real and is rounded to the nearest 0.01");
+
+    NameResolutionService ns;
+    string strName = params[0].get_str(), strAddy;
+    int64 nAmount = AmountFromValue(params[1]);
+    string strError = ns.FetchAddress(strName, strAddy);
+    if (strError != "")
+        throw JSONRPCError(-4, strError);
+
+    Value valRequest;
+    if (!read_string(strAddy, valRequest) || valRequest.type() != obj_type)
+        throw JSONRPCError(-32700, "Parse error");
+    const Object& request = valRequest.get_obj();
+    const Value& error  = find_value(request, "error");
+    if (error.type() != null_type)          
+        throw JSONRPCError(-4, error.get_str());
+    const Value& address = find_value(request, "address");
+    if (address.type() != str_type)
+        throw JSONRPCError(-32600, "Server responded with malformed reply.");
+    // @GENJIX this should actually send!
+    return address.get_str();
+}
+
+Value setnameaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+            "setnameaddress <name@domain> <password> [address]\n"
+            "Sets an address for your named account.");
+
+    string strName = params[0].get_str(), strPass = params[1].get_str(), strAddy, strStatus;
+    if (params.size() == 3)
+        strAddy = params[2].get_str();
+        // @GENJIX should check address for validity
+    else
+        // random address
+        strAddy = GetAccountAddress("");
+
+    NameResolutionService ns;
+    string strError = ns.PushAddress(strName, strPass, strAddy, strStatus);
+    if (strError != "")
+        throw JSONRPCError(-4, strError);
+
+    Value valRequest;
+    if (!read_string(strStatus, valRequest) || valRequest.type() != obj_type)
+        throw JSONRPCError(-32700, "Parse error");
+    const Object& request = valRequest.get_obj();
+    const Value& error  = find_value(request, "error");
+    if (error.type() != null_type)          
+        throw JSONRPCError(-4, error.get_str());
+    return strStatus;
+}
+
+Value setnamepassword(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+            "setnamepassword <name@domain> <password> <newpassword>\n"
+            "Sets the password for your named account.");
+
+    NameResolutionService ns;
+    string strName = params[0].get_str(), strAddy, strStatus;
+    int64 nAmount = AmountFromValue(params[1]);
+    //string strError = ns.ChangePassword(strName, strAddy, strStatus);
+    //if (strError != "")
+    //    throw JSONRPCError(-4, strError);
+
+    Value valRequest;
+    if (!read_string(strStatus, valRequest) || valRequest.type() != obj_type)
+        throw JSONRPCError(-32700, "Parse error");
+    const Object& request = valRequest.get_obj();
+    const Value& error  = find_value(request, "error");
+    if (error.type() != null_type)          
+        throw JSONRPCError(-4, error.get_str());
+    return strStatus;
+}
 
 Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
@@ -1331,6 +1417,9 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getaddressesbyaccount", &getaddressesbyaccount),
     make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",         &sendtoaddress),
+    make_pair("sendtoname",            &sendtoname),
+    make_pair("setnameaddress",        &setnameaddress),
+    make_pair("setnamepassword",       &setnamepassword),
     make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
     make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
     make_pair("getreceivedbyaddress",  &getreceivedbyaddress),
@@ -1976,6 +2065,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "sendtoname"             && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
