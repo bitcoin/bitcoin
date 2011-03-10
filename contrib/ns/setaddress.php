@@ -11,7 +11,9 @@ else if (!isset($_POST['address'])) {
 else {
     require 'db.php';
     $nickname = strtolower(escapestr($_POST['nickname']));
-    $address = escapestr($_POST['address']);
+    $address = $_POST['address'];
+    # bitcoin address can only be alphanumeric so no need to strip them...
+    $address = preg_replace("/[^a-zA-Z0-9]/", "", $address);
     $passhash = hash('sha512', $_POST['password']);
 
     $query = "SELECT passhash FROM lookup WHERE nickname='$nickname';";
