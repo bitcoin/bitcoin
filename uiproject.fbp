@@ -3345,7 +3345,7 @@
                                                 <property name="font"></property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
-                                                <property name="label">Copyright (c) 2009-2010 Bitcoin Developers&#x0A;&#x0A;This is experimental software.&#x0A;&#x0A;Distributed under the MIT/X11 software license, see the accompanying file &#x0A;license.txt or http://www.opensource.org/licenses/mit-license.php.&#x0A;&#x0A;This product includes software developed by the OpenSSL Project for use in the &#x0A;OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by &#x0A;Eric Young (eay@cryptsoft.com).</property>
+                                                <property name="label">Copyright (c) 2009-2011 Bitcoin Developers&#x0A;&#x0A;This is experimental software.&#x0A;&#x0A;Distributed under the MIT/X11 software license, see the accompanying file &#x0A;license.txt or http://www.opensource.org/licenses/mit-license.php.&#x0A;&#x0A;This product includes software developed by the OpenSSL Project for use in the &#x0A;OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by &#x0A;Eric Young (eay@cryptsoft.com).</property>
                                                 <property name="maximum_size"></property>
                                                 <property name="minimum_size"></property>
                                                 <property name="name">m_staticTextMain</property>
