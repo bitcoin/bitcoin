@@ -1,0 +1,1 @@
+CREATE TABLE lookup(nickname VARCHAR(100) NOT NULL, PRIMARY KEY(nickname), passhash VARCHAR(128) NOT NULL, address VARCHAR(44) NOT NULL);
