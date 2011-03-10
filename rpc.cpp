@@ -460,42 +460,36 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 }
 
 
-string DoSendToAddress(const string& strAddress, int64 nAmount)
+Value sendtoaddress(const Array& params, bool fHelp)
 {
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "sendtoaddress <address> <amount> [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.01");
+
+    string strAddress = params[0].get_str();
+    int64 nAmount = AmountFromValue(params[1]);
+
     // Wallet comments
     CWalletTx wtx;
-    /*if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
+    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
         wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-        wtx.mapValue["to"]      = params[3].get_str(); */
+        wtx.mapValue["to"]      = params[3].get_str(); 
+
     string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(-4, strError);
     return wtx.GetHash().GetHex();
 }
 
-Value sendtoaddress(const Array& params, bool fHelp)
+const string CollectAddress(const string& strIn)
 {
-    if (fHelp || params.size() < 2 || params.size() > 4)
-        throw runtime_error(
-            "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.01");
-
-    string strAddress = params[0].get_str();
-    int64 nAmount = AmountFromValue(params[1]);
-    return DoSendToAddress(strAddress, nAmount);
-}
-
-Value sendtoname(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 2)
-        throw runtime_error(
-            "sendtoname <name@domain> <amount>\n"
-            "<amount> is a real and is rounded to the nearest 0.01");
-
+    if (strIn.find('@') == (size_t)-1)
+        return strIn;
+    
     NameResolutionService ns;
-    string strName = params[0].get_str(), strAddy;
-    int64 nAmount = AmountFromValue(params[1]);
+    string strName = strIn, strAddy;
     string strError = ns.FetchAddress(strName, strAddy);
     if (strError != "")
         throw JSONRPCError(-4, strError);
@@ -510,8 +504,25 @@ Value sendtoname(const Array& params, bool fHelp)
     const Value& address = find_value(request, "address");
     if (address.type() != str_type)
         throw JSONRPCError(-32600, "Server responded with malformed reply.");
-    // @GENJIX this should actually send!
     return address.get_str();
+}
+
+// Named this way to prevent possible conflicts.
+Value rpc_send(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "send <name@domain or address> <amount>\n"
+            "<amount> is a real and is rounded to the nearest 0.01");
+    
+    string strAddy = CollectAddress(params[0].get_str());
+    int64 nAmount = AmountFromValue(params[1]);
+    // @GENJIX this should actually send!
+    return strAddy.c_str();
+    //string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+    //if (strError != "")
+    //    throw JSONRPCError(-4, strError);
+    //return wtx.GetHash().GetHex();
 }
 
 Value setnameaddress(const Array& params, bool fHelp)
@@ -546,17 +557,16 @@ Value setnameaddress(const Array& params, bool fHelp)
 
 Value setnamepassword(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 3)
+    if (fHelp || params.size() != 3)
         throw runtime_error(
             "setnamepassword <name@domain> <password> <newpassword>\n"
             "Sets the password for your named account.");
 
     NameResolutionService ns;
-    string strName = params[0].get_str(), strAddy, strStatus;
-    int64 nAmount = AmountFromValue(params[1]);
-    //string strError = ns.ChangePassword(strName, strAddy, strStatus);
-    //if (strError != "")
-    //    throw JSONRPCError(-4, strError);
+    string strName = params[0].get_str(), strPass = params[1].get_str(), strNewPass = params[2].get_str(), strStatus;
+    string strError = ns.ChangePassword(strName, strPass, strNewPass, strStatus);
+    if (strError != "")
+        throw JSONRPCError(-4, strError);
 
     Value valRequest;
     if (!read_string(strStatus, valRequest) || valRequest.type() != obj_type)
@@ -1417,7 +1427,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getaddressesbyaccount", &getaddressesbyaccount),
     make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",         &sendtoaddress),
-    make_pair("sendtoname",            &sendtoname),
+    make_pair("send",                  &rpc_send),
     make_pair("setnameaddress",        &setnameaddress),
     make_pair("setnamepassword",       &setnamepassword),
     make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
@@ -2065,7 +2075,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "sendtoname"             && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "send"                   && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);

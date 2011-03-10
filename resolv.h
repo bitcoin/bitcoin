@@ -16,6 +16,17 @@ public:
     string PushAddress(const string& strRef, const string& strPassword, const string& strNewaddy, string& strStatus);
     string ChangePassword(const string& strRef, const string& strPassword, const string& strNewPassword, string& strStatus);
 private:
+    class PostVariables
+    {
+    public:
+        PostVariables();
+        ~PostVariables();
+        bool Add(const string& strKey, const string& strVal);
+        curl_httppost* operator()() const;
+    private:
+        curl_httppost *pBegin, *pEnd;
+    };
+
     static void ExplodeRef(const string& strRef, string& strNickname, string& strDomain);
     bool Perform();
 

@@ -62,13 +62,26 @@ string NameResolutionService::FetchAddress(const string& strRef, string& strAddy
     strAddy = strBuffer;
     return "";  // no error
 }
+
 string NameResolutionService::PushAddress(const string& strRef, const string& strPassword, const string& strNewaddy, string& strStatus)
 {
     if (!curl)
         return pErrorBuffer;
     string strNickname, strDomain;
     ExplodeRef(strRef, strNickname, strDomain);
-    std::cout << "PushAddress(" << strNickname << "," << strDomain << "," << strPassword << "," << strNewaddy << ")\n";
+    string strRequestUrl = strDomain + "/setaddress.php";
+    curl_easy_setopt(curl, CURLOPT_URL, strRequestUrl.c_str());  
+    PostVariables PostRequest;
+    if (!PostRequest.Add("nickname", strNickname) ||
+        !PostRequest.Add("password", strPassword) ||
+        !PostRequest.Add("address", strNewaddy))
+        return "Internal error constructing POST request.";
+    curl_easy_setopt(curl, CURLOPT_POST, 1);
+    curl_easy_setopt(curl, CURLOPT_HTTPPOST, PostRequest()); 
+    if (Perform()) {
+        return pErrorBuffer;
+    }
+    strStatus = strBuffer;
     return "";  // no error
 }
 string NameResolutionService::ChangePassword(const string& strRef, const string& strPassword, const string& strNewPassword, string& strStatus)
@@ -77,6 +90,38 @@ string NameResolutionService::ChangePassword(const string& strRef, const string&
         return pErrorBuffer;
     string strNickname, strDomain;
     ExplodeRef(strRef, strNickname, strDomain);
+    string strRequestUrl = strDomain + "/setpassword.php";
+    curl_easy_setopt(curl, CURLOPT_URL, strRequestUrl.c_str());  
+    PostVariables PostRequest;
+    if (!PostRequest.Add("nickname", strNickname) ||
+        !PostRequest.Add("password", strPassword) ||
+        !PostRequest.Add("newpassword", strNewPassword))
+        return "Internal error constructing POST request.";
+    curl_easy_setopt(curl, CURLOPT_POST, 1);
+    curl_easy_setopt(curl, CURLOPT_HTTPPOST, PostRequest()); 
+    if (Perform()) {
+        return pErrorBuffer;
+    }
+    strStatus = strBuffer;
     return "";  // no error
+}
+
+NameResolutionService::PostVariables::PostVariables()
+{
+    pBegin = NULL;
+    pEnd = NULL;
+}
+NameResolutionService::PostVariables::~PostVariables()
+{
+    curl_formfree(pBegin);
+}
+bool NameResolutionService::PostVariables::Add(const string& strKey, const string& strVal)
+{
+    return curl_formadd(&pBegin, &pEnd, CURLFORM_COPYNAME, strKey.c_str(), CURLFORM_COPYCONTENTS, strVal.c_str(), CURLFORM_END) == CURL_FORMADD_OK;
+}
+
+curl_httppost* NameResolutionService::PostVariables::operator()() const
+{
+    return pBegin;
 }
 
