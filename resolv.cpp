@@ -61,7 +61,7 @@ string NameResolutionService::FetchAddress(const string& strHandle, string& strA
     if (!pszEncodedNick)
         return "Unable to encode nickname.";
     // construct url for GET request
-    string strRequestUrl = strDomain + "/getaddress.php?nickname=" + pszEncodedNick;
+    string strRequestUrl = strDomain + "/getaddress/?nickname=" + pszEncodedNick;
     // Pass URL to CURL
     curl_easy_setopt(curl, CURLOPT_URL, strRequestUrl.c_str());  
     if (!Perform())
@@ -80,7 +80,7 @@ string NameResolutionService::MakeRequest(const string& strHandle, const string&
     string strNickname, strDomain;
     ExplodeHandle(strHandle, strNickname, strDomain);
     // Construct URL for POST request
-    string strRequestUrl = strDomain + "/set" + strReqname + ".php";
+    string strRequestUrl = strDomain + "/set" + strReqname;
     // Pass URL to CURL
     curl_easy_setopt(curl, CURLOPT_URL, strRequestUrl.c_str());  
     // Create our variables for POST
@@ -107,7 +107,7 @@ string NameResolutionService::UpdateAddress(const string& strHandle, const strin
 }
 string NameResolutionService::ChangePassword(const string& strHandle, const string& strPassword, const string& strNewPassword, string& strStatus)
 {
-    return MakeRequest(strHandle, strPassword, "password", strNewPassword, strStatus);
+    return MakeRequest(strHandle, strPassword, "newpassword", strNewPassword, strStatus);
 }
 
 NameResolutionService::PostVariables::PostVariables()

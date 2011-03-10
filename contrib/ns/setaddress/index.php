@@ -9,7 +9,8 @@ else if (!isset($_POST['address'])) {
     die('{"error": "No address received"}');
 }
 else {
-    require 'db.php';
+    require '../db.php';
+    # nicknames are case insensitive to limit impersonation attacks
     $nickname = strtolower(escapestr($_POST['nickname']));
     $address = $_POST['address'];
     # bitcoin address can only be alphanumeric so no need to strip them...

@@ -3,7 +3,8 @@ if (!isset($_REQUEST['nickname'])) {
     die('{"error": "No nickname received."}');
 }
 else {
-    require 'db.php';
+    require '../db.php';
+    # nicknames are case insensitive to limit impersonation attacks
     $nickname = strtolower(escapestr($_REQUEST['nickname']));
 
     $query = "SELECT address FROM lookup WHERE nickname='$nickname';";

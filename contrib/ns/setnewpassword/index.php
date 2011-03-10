@@ -9,7 +9,8 @@ else if (!isset($_POST['newpassword'])) {
     die('{"error": "No new password received"}');
 }
 else {
-    require 'db.php';
+    require '../db.php';
+    # nicknames are case insensitive to limit impersonation attacks
     $nickname = strtolower(escapestr($_POST['nickname']));
     $oldpasshash = hash('sha512', $_POST['password']);
     $newpasshash = hash('sha512', $_POST['newpassword']);
@@ -17,6 +18,7 @@ else {
     $query = "SELECT passhash FROM lookup WHERE nickname='$nickname';";
     $result = do_query($query);
     if (has_results($result)) {
+        # found a user by that name
         $row = mysql_fetch_array($result);
         if (isset($row['passhash']) && $oldpasshash == $row['passhash']) {
             $query = "UPDATE lookup SET passhash='$newpasshash' WHERE nickname='$nickname' AND passhash='$oldpasshash';";
