@@ -2,7 +2,7 @@
 # File should contain these lines:
 #   mysql_connect('localhost', 'login', 'oass') or die(mysql_error());
 #   mysql_select_db('database_name') or die(mysql_error());
-require '/var/db.bitnomo.inc';
+require '/var/db.bitnom.inc';
 
 function fail($error)
 {
