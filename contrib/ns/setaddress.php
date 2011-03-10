@@ -23,7 +23,7 @@ else {
         if (isset($row['passhash']) && $passhash == $row['passhash']) {
             $query = "UPDATE lookup SET address='$address' WHERE nickname='$nickname' AND passhash='$passhash';";
             do_query($query);
-            echo '{"status": "Address changed."}';
+            echo '{"status": "Address changed.", "address": "'.$address.'"}';
         }
         else {
             die('{"error": "Incorrect password."}');
