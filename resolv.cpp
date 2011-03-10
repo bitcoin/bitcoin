@@ -42,7 +42,6 @@ bool NameResolutionService::Perform()
     return (result != CURLE_OK);
 }
 
-#include <iostream>
 string NameResolutionService::FetchAddress(const string& strRef, string& strAddy)
 {
     if (!curl)
@@ -63,18 +62,19 @@ string NameResolutionService::FetchAddress(const string& strRef, string& strAddy
     return "";  // no error
 }
 
-string NameResolutionService::PushAddress(const string& strRef, const string& strPassword, const string& strNewaddy, string& strStatus)
+string NameResolutionService::MakeRequest(const string& strRef, const string& strPassword, const string& strReqname, const string& strArgument, string& strStatus)
 {
     if (!curl)
         return pErrorBuffer;
     string strNickname, strDomain;
     ExplodeRef(strRef, strNickname, strDomain);
-    string strRequestUrl = strDomain + "/setaddress.php";
+    string strRequestUrl = strDomain + "/set" + strReqname + ".php";
     curl_easy_setopt(curl, CURLOPT_URL, strRequestUrl.c_str());  
     PostVariables PostRequest;
+    const string& strKeyname = (strReqname == "address") ? "address" : "newpassword";
     if (!PostRequest.Add("nickname", strNickname) ||
         !PostRequest.Add("password", strPassword) ||
-        !PostRequest.Add("address", strNewaddy))
+        !PostRequest.Add(strKeyname, strArgument))
         return "Internal error constructing POST request.";
     curl_easy_setopt(curl, CURLOPT_POST, 1);
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, PostRequest()); 
@@ -84,26 +84,13 @@ string NameResolutionService::PushAddress(const string& strRef, const string& st
     strStatus = strBuffer;
     return "";  // no error
 }
+string NameResolutionService::PushAddress(const string& strRef, const string& strPassword, const string& strNewaddy, string& strStatus)
+{
+    return MakeRequest(strRef, strPassword, "address", strNewaddy, strStatus);
+}
 string NameResolutionService::ChangePassword(const string& strRef, const string& strPassword, const string& strNewPassword, string& strStatus)
 {
-    if (!curl)
-        return pErrorBuffer;
-    string strNickname, strDomain;
-    ExplodeRef(strRef, strNickname, strDomain);
-    string strRequestUrl = strDomain + "/setpassword.php";
-    curl_easy_setopt(curl, CURLOPT_URL, strRequestUrl.c_str());  
-    PostVariables PostRequest;
-    if (!PostRequest.Add("nickname", strNickname) ||
-        !PostRequest.Add("password", strPassword) ||
-        !PostRequest.Add("newpassword", strNewPassword))
-        return "Internal error constructing POST request.";
-    curl_easy_setopt(curl, CURLOPT_POST, 1);
-    curl_easy_setopt(curl, CURLOPT_HTTPPOST, PostRequest()); 
-    if (Perform()) {
-        return pErrorBuffer;
-    }
-    strStatus = strBuffer;
-    return "";  // no error
+    return MakeRequest(strRef, strPassword, "password", strNewPassword, strStatus);
 }
 
 NameResolutionService::PostVariables::PostVariables()

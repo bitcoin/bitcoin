@@ -29,6 +29,7 @@ private:
 
     static void ExplodeRef(const string& strRef, string& strNickname, string& strDomain);
     bool Perform();
+    string MakeRequest(const string& strRef, const string& strPassword, const string& strReqname, const string& strArgument, string& strStatus);
 
     char pErrorBuffer[CURL_ERROR_SIZE];  
     string strBuffer;

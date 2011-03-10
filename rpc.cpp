@@ -483,6 +483,18 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+const Object CheckMaybeThrow(const string& strJsonIn)
+{
+    Value valRequest;
+    if (!read_string(strJsonIn, valRequest) || valRequest.type() != obj_type)
+        throw JSONRPCError(-32700, "Parse error");
+    const Object& request = valRequest.get_obj();
+    const Value& error  = find_value(request, "error");
+    if (error.type() != null_type)          
+        throw JSONRPCError(-4, error.get_str());
+    return request;
+}
+
 const string CollectAddress(const string& strIn)
 {
     if (strIn.find('@') == (size_t)-1)
@@ -494,13 +506,7 @@ const string CollectAddress(const string& strIn)
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
-    Value valRequest;
-    if (!read_string(strAddy, valRequest) || valRequest.type() != obj_type)
-        throw JSONRPCError(-32700, "Parse error");
-    const Object& request = valRequest.get_obj();
-    const Value& error  = find_value(request, "error");
-    if (error.type() != null_type)          
-        throw JSONRPCError(-4, error.get_str());
+    const Object& request(CheckMaybeThrow(strAddy));
     const Value& address = find_value(request, "address");
     if (address.type() != str_type)
         throw JSONRPCError(-32600, "Server responded with malformed reply.");
@@ -545,13 +551,7 @@ Value setnameaddress(const Array& params, bool fHelp)
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
-    Value valRequest;
-    if (!read_string(strStatus, valRequest) || valRequest.type() != obj_type)
-        throw JSONRPCError(-32700, "Parse error");
-    const Object& request = valRequest.get_obj();
-    const Value& error  = find_value(request, "error");
-    if (error.type() != null_type)          
-        throw JSONRPCError(-4, error.get_str());
+    CheckMaybeThrow(strStatus);
     return strStatus;
 }
 
@@ -568,13 +568,7 @@ Value setnamepassword(const Array& params, bool fHelp)
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
-    Value valRequest;
-    if (!read_string(strStatus, valRequest) || valRequest.type() != obj_type)
-        throw JSONRPCError(-32700, "Parse error");
-    const Object& request = valRequest.get_obj();
-    const Value& error  = find_value(request, "error");
-    if (error.type() != null_type)          
-        throw JSONRPCError(-4, error.get_str());
+    CheckMaybeThrow(strStatus);
     return strStatus;
 }
 
