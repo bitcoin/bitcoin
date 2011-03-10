@@ -80,18 +80,17 @@ string NameResolutionService::MakeRequest(const string& strHandle, const string&
     string strNickname, strDomain;
     ExplodeHandle(strHandle, strNickname, strDomain);
     // Construct URL for POST request
-    string strRequestUrl = strDomain + "/set" + strReqname;
+    string strRequestUrl = strDomain + "/set" + strReqname + "/";
     // Pass URL to CURL
     curl_easy_setopt(curl, CURLOPT_URL, strRequestUrl.c_str());  
     // Create our variables for POST
     PostVariables PostRequest;
     // This method is used by:
     //    setaddress  which takes a value called address
-    //    setpassword which takes a value called newpassword
-    const string& strKeyname = (strReqname == "address") ? "address" : "newpassword";
+    //    setnewpassword which takes a value called newpassword
     if (!PostRequest.Add("nickname", strNickname) ||
         !PostRequest.Add("password", strPassword) ||
-        !PostRequest.Add(strKeyname, strArgument))
+        !PostRequest.Add(strReqname, strArgument))
         return "Internal error constructing POST request.";
     curl_easy_setopt(curl, CURLOPT_POST, 1);
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, PostRequest()); 

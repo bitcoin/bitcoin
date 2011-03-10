@@ -33,7 +33,7 @@ else {
     else {
         $query = "INSERT INTO lookup(nickname, passhash, address) VALUES ('$nickname', '$passhash', '$address');";
         do_query($query);
-        echo '{"status": "New user created."}';
+        echo '{"status": "New user created.", "address": "'.$address.'"}';
     }
 }
 ?>
