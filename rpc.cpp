@@ -485,28 +485,36 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 const Object CheckMaybeThrow(const string& strJsonIn)
 {
+    // Parse input JSON
     Value valRequest;
     if (!read_string(strJsonIn, valRequest) || valRequest.type() != obj_type)
         throw JSONRPCError(-32700, "Parse error");
     const Object& request = valRequest.get_obj();
+    // Now check for a key called "error"
     const Value& error  = find_value(request, "error");
+    // It's an error JSON! so propagate the error.
     if (error.type() != null_type)          
         throw JSONRPCError(-4, error.get_str());
+    // Return JSON object
     return request;
 }
 
 const string CollectAddress(const string& strIn)
 {
+    // If the handle does not have an @ in it, then it's a normal base58 bitcoin address
     if (strIn.find('@') == (size_t)-1)
         return strIn;
     
+    // Open the lookup service
     NameResolutionService ns;
-    string strName = strIn, strAddy;
-    string strError = ns.FetchAddress(strName, strAddy);
-    if (strError != "")
+    // We established that the input string is not a BTC address, so we use it as a handle now.
+    string strHandle = strIn, strAddy;
+    string strError = ns.FetchAddress(strHandle, strAddy);
+    if (strError.empty())
         throw JSONRPCError(-4, strError);
 
     const Object& request(CheckMaybeThrow(strAddy));
+    // Get the BTC address from the JSON
     const Value& address = find_value(request, "address");
     if (address.type() != str_type)
         throw JSONRPCError(-32600, "Server responded with malformed reply.");
@@ -521,53 +529,56 @@ Value rpc_send(const Array& params, bool fHelp)
             "send <name@domain or address> <amount>\n"
             "<amount> is a real and is rounded to the nearest 0.01");
     
+    // Intelligent function which looks up address given handle, or returns address
     string strAddy = CollectAddress(params[0].get_str());
     int64 nAmount = AmountFromValue(params[1]);
-    // @GENJIX this should actually send!
-    return strAddy.c_str();
-    //string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
-    //if (strError != "")
-    //    throw JSONRPCError(-4, strError);
-    //return wtx.GetHash().GetHex();
+    // Do the send
+    CWalletTx wtx;
+    string strError = SendMoneyToBitcoinAddress(strAddy, nAmount, wtx);
+    if (strError.empty())
+        throw JSONRPCError(-4, strError);
+    return wtx.GetHash().GetHex();
 }
 
-Value setnameaddress(const Array& params, bool fHelp)
+Value updatens(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-            "setnameaddress <name@domain> <password> [address]\n"
-            "Sets an address for your named account.");
+            "updatens <name@domain> <password> [address]\n"
+            "Updates name lookup server with an address.");
 
-    string strName = params[0].get_str(), strPass = params[1].get_str(), strAddy, strStatus;
+    string strHandle = params[0].get_str(), strPass = params[1].get_str(), strAddy, strStatus;
     if (params.size() == 3)
         strAddy = params[2].get_str();
         // @GENJIX should check address for validity
     else
-        // random address
+        // select random address
         strAddy = GetAccountAddress("");
 
     NameResolutionService ns;
-    string strError = ns.PushAddress(strName, strPass, strAddy, strStatus);
-    if (strError != "")
+    string strError = ns.UpdateAddress(strHandle, strPass, strAddy, strStatus);
+    if (strError.empty())
         throw JSONRPCError(-4, strError);
 
+    // Throw if strStatus JSON contains an error key
     CheckMaybeThrow(strStatus);
     return strStatus;
 }
 
-Value setnamepassword(const Array& params, bool fHelp)
+Value setnspassword(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-            "setnamepassword <name@domain> <password> <newpassword>\n"
+            "setnspassword <name@domain> <password> <newpassword>\n"
             "Sets the password for your named account.");
 
     NameResolutionService ns;
-    string strName = params[0].get_str(), strPass = params[1].get_str(), strNewPass = params[2].get_str(), strStatus;
-    string strError = ns.ChangePassword(strName, strPass, strNewPass, strStatus);
-    if (strError != "")
+    string strHandle = params[0].get_str(), strPass = params[1].get_str(), strNewPass = params[2].get_str(), strStatus;
+    string strError = ns.ChangePassword(strHandle, strPass, strNewPass, strStatus);
+    if (strError.empty())
         throw JSONRPCError(-4, strError);
 
+    // Throw if strStatus JSON contains an error key
     CheckMaybeThrow(strStatus);
     return strStatus;
 }
@@ -1422,8 +1433,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",         &sendtoaddress),
     make_pair("send",                  &rpc_send),
-    make_pair("setnameaddress",        &setnameaddress),
-    make_pair("setnamepassword",       &setnamepassword),
+    make_pair("updatens",              &updatens),
+    make_pair("setnspassword",         &setnspassword),
     make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
     make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
     make_pair("getreceivedbyaddress",  &getreceivedbyaddress),
