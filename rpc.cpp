@@ -510,7 +510,7 @@ const string CollectAddress(const string& strIn)
     // We established that the input string is not a BTC address, so we use it as a handle now.
     string strHandle = strIn, strAddy;
     string strError = ns.FetchAddress(strHandle, strAddy);
-    if (strError.empty())
+    if (!strError.empty())
         throw JSONRPCError(-4, strError);
 
     const Object& request(CheckMaybeThrow(strAddy));
@@ -535,7 +535,7 @@ Value rpc_send(const Array& params, bool fHelp)
     // Do the send
     CWalletTx wtx;
     string strError = SendMoneyToBitcoinAddress(strAddy, nAmount, wtx);
-    if (strError.empty())
+    if (!strError.empty())
         throw JSONRPCError(-4, strError);
     return wtx.GetHash().GetHex();
 }
@@ -557,7 +557,7 @@ Value updatens(const Array& params, bool fHelp)
 
     NameResolutionService ns;
     string strError = ns.UpdateAddress(strHandle, strPass, strAddy, strStatus);
-    if (strError.empty())
+    if (!strError.empty())
         throw JSONRPCError(-4, strError);
 
     // Throw if strStatus JSON contains an error key
@@ -575,7 +575,7 @@ Value setnspassword(const Array& params, bool fHelp)
     NameResolutionService ns;
     string strHandle = params[0].get_str(), strPass = params[1].get_str(), strNewPass = params[2].get_str(), strStatus;
     string strError = ns.ChangePassword(strHandle, strPass, strNewPass, strStatus);
-    if (strError.empty())
+    if (!strError.empty())
         throw JSONRPCError(-4, strError);
 
     // Throw if strStatus JSON contains an error key
