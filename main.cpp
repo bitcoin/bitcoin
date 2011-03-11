@@ -738,19 +738,22 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         if (nFees < GetMinFee(1000))
             return error("AcceptToMemoryPool() : not enough fees");
 
-        // Limit free transactions per 10 minutes
-        if (nFees < CENT && GetBoolArg("-limitfreerelay"))
+        // Continuously rate-limit free transactions
+        if (nFees < CENT)
         {
-            static int64 nNextReset;
-            static int64 nFreeCount;
-            if (GetTime() > nNextReset)
-            {
-                nNextReset = GetTime() + 10 * 60;
-                nFreeCount = 0;
-            }
-            if (nFreeCount > 150000 && !IsFromMe())
+            static double dFreeCount;
+            static int64 nLastTime;
+            int64 nNow = GetTime();
+            // Use an exponentially decaying ~10-minute window:
+            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+            nLastTime = nNow;
+            // -limitfreerelay unit is thousand-bytes-per-minute
+            // At default rate it would take over a month to fill 1GB
+            if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000 && !IsFromMe())
                 return error("AcceptToMemoryPool() : free transaction rejected by rate limiter");
-            nFreeCount += nSize;
+            if (fDebug)
+                printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+            dFreeCount += nSize;
         }
     }
 
