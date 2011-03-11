@@ -8,8 +8,6 @@ WXINCLUDEPATHS=$(shell wx-config --cxxflags)
 
 WXLIBS=$(shell wx-config --libs)
 
-USE_UPNP:=1
-
 # for boost 1.37, add -mt to the boost libraries
 LIBS= \
  -Wl,-Bstatic \
