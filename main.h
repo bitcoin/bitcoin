@@ -894,7 +894,7 @@ public:
         vfSpent[nOut] = true;
     }
 
-    bool IsSpent(unsigned int nOut)
+    bool IsSpent(unsigned int nOut) const
     {
         if (nOut >= vout.size())
             throw runtime_error("CWalletTx::IsSpent() : nOut out of range");
