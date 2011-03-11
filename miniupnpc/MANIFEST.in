@@ -1,5 +1,0 @@
-include README
-include miniupnpcmodule.c
-include setup.py
-include *.h
-include libminiupnpc.a
