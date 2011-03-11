@@ -8,6 +8,8 @@ WXINCLUDEPATHS=$(shell wx-config --cxxflags)
 
 WXLIBS=$(shell wx-config --libs)
 
+USE_UPNP:=1
+
 # for boost 1.37, add -mt to the boost libraries
 LIBS= \
  -Wl,-Bstatic \
@@ -18,7 +20,6 @@ LIBS= \
    -l db_cxx \
    -l ssl \
    -l crypto \
-   -l miniupnpc \
  -Wl,-Bdynamic \
    -l gthread-2.0 \
    -l z \
@@ -42,6 +43,10 @@ OBJS= \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
+ifdef USE_UPNP
+	LIBS += -l miniupnpc
+	DEFS += -DUSE_UPNP=$(USE_UPNP)
+endif
 
 all: bitcoin
 

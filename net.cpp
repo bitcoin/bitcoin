@@ -3,17 +3,22 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
+
+#ifdef USE_UPNP
 #include "miniupnpc/miniwget.h"
 #include "miniupnpc/miniupnpc.h"
 #include "miniupnpc/upnpcommands.h"
 #include "miniupnpc/upnperrors.h"
+#endif
 
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
 
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
 void ThreadOpenConnections2(void* parg);
+#ifdef USE_UPNP
 void ThreadMapPort2(void* parg);
+#endif
 bool OpenNetworkConnection(const CAddress& addrConnect);
 
 
@@ -862,6 +867,7 @@ void ThreadSocketHandler2(void* parg)
 
 
 
+#ifdef USE_UPNP
 void ThreadMapPort(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadMapPort(parg));
@@ -934,6 +940,7 @@ void ThreadMapPort2(void* parg)
         }
     }
 }
+#endif
 
 
 
@@ -1467,12 +1474,18 @@ void StartNode(void* parg)
     // Start threads
     //
 
+#ifdef USE_UPNP
     // Map ports with UPnP
+#if USE_UPNP
     if (!GetBoolArg("-noupnp"))
+#else
+    if (GetBoolArg("-upnp"))
+#endif
     {
         if (!CreateThread(ThreadMapPort, NULL))
             printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
     }
+#endif
 
     // Get addresses from IRC and advertise ours
     if (!CreateThread(ThreadIRCSeed, NULL))
@@ -1499,7 +1512,11 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
-    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0 || vnThreadsRunning[5] > 0)
+    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0
+#ifdef USE_UPNP
+        || vnThreadsRunning[5] > 0
+#endif
+    )
     {
         if (GetTime() - nStart > 20)
             break;
@@ -1510,7 +1527,9 @@ bool StopNode()
     if (vnThreadsRunning[2] > 0) printf("ThreadMessageHandler still running\n");
     if (vnThreadsRunning[3] > 0) printf("ThreadBitcoinMiner still running\n");
     if (vnThreadsRunning[4] > 0) printf("ThreadRPCServer still running\n");
+#ifdef USE_UPNP
     if (vnThreadsRunning[5] > 0) printf("ThreadMapPort still running\n");
+#endif
     while (vnThreadsRunning[2] > 0 || vnThreadsRunning[4] > 0)
         Sleep(20);
     Sleep(50);
