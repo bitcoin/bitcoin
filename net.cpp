@@ -885,6 +885,9 @@ void ThreadMapPort2(void* parg)
 {
     printf("ThreadMapPort started\n");
 
+    char port[6];
+    sprintf(port, "%d", GetDefaultPort());
+
     const char * rootdescurl = 0;
     const char * multicastif = 0;
     const char * minissdpdpath = 0;
@@ -895,7 +898,7 @@ void ThreadMapPort2(void* parg)
 
     struct UPNPUrls urls;
     struct IGDdatas data;
-int r;
+    int r;
 
     if (UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr)) == 1)
     {
@@ -903,22 +906,22 @@ int r;
         char intPort[6];
 
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        "8333", "8333", lanaddr, 0, "TCP", 0);
+	                        port, port, lanaddr, 0, "TCP", 0);
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                "8333", "8333", lanaddr, r, strupnperror(r));
+                port, port, lanaddr, r, strupnperror(r));
         else
             printf("UPnP Port Mapping successful.\n");
         loop {
             if (fShutdown)
             {
-                r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, "8333", "TCP", 0);
+                r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port, "TCP", 0);
                 printf("UPNP_DeletePortMapping() returned : %d\n", r);
                 freeUPNPDevlist(devlist); devlist = 0;
                 FreeUPNPUrls(&urls);
                 return;
             }
-            Sleep(20);
+            Sleep(2000);
         }
     } else {
         printf("No valid UPnP IGDs found\n");
@@ -927,7 +930,7 @@ int r;
         loop {
             if (fShutdown)
                 return;
-            Sleep(20);
+            Sleep(2000);
         }
     }
 }
@@ -1465,8 +1468,11 @@ void StartNode(void* parg)
     //
 
     // Map ports with UPnP
-    if (!CreateThread(ThreadMapPort, NULL))
-        printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
+    if (!GetBoolArg("-noupnp"))
+    {
+        if (!CreateThread(ThreadMapPort, NULL))
+            printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
+    }
 
     // Get addresses from IRC and advertise ours
     if (!CreateThread(ThreadIRCSeed, NULL))
