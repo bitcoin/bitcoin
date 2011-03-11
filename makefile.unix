@@ -18,6 +18,7 @@ LIBS= \
    -l db_cxx \
    -l ssl \
    -l crypto \
+   -l miniupnpc \
  -Wl,-Bdynamic \
    -l gthread-2.0 \
    -l z \

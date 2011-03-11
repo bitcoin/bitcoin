@@ -1,0 +1,371 @@
+$Id: Changelog.txt,v 1.125 2010/12/21 16:13:13 nanard Exp $
+miniUPnP client Changelog.
+
+2010/12/21:
+  use NO_GETADDRINFO macro to disable the use of getaddrinfo/freeaddrinfo
+
+2010/12/11:
+  Improvements on getHTTPResponse() code.
+
+2010/12/09:
+  new code for miniwget that handle Chunked transfer encoding
+  using getHTTPResponse() in SOAP call code
+  Adding MANIFEST.in for 'python setup.py bdist_rpm'
+
+2010/11/25:
+  changes to minissdpc.c to compile under Win32.
+  see http://miniupnp.tuxfamily.org/forum/viewtopic.php?t=729
+
+2010/09/17:
+  Various improvement to Makefile from Michał Górny
+
+2010/08/05:
+  Adding the script "external-ip.sh" from Reuben Hawkins
+
+2010/06/09:
+  update to python module to match modification made on 2010/04/05
+  update to Java test code to match modification made on 2010/04/05
+  all UPNP_* function now return an error if the SOAP request failed
+  at HTTP level.
+
+2010/04/17:
+  Using GetBestRoute() under win32 in order to find the
+  right interface to use.
+
+2010/04/12:
+  Retrying with HTTP/1.1 if HTTP/1.0 failed. see
+  http://miniupnp.tuxfamily.org/forum/viewtopic.php?p=1703
+
+2010/04/07:
+  avoid returning duplicates in upnpDiscover()
+
+2010/04/05:
+  Create a connecthostport.h/.c with connecthostport() function
+  and use it in miniwget and miniupnpc.
+  Use getnameinfo() instead of inet_ntop or inet_ntoa
+  Work to make miniupnpc IPV6 compatible...
+  Add java test code.
+  Big changes in order to support device having both WANIPConnection
+  and WANPPPConnection.
+
+2010/04/04:
+  Use getaddrinfo() instead of gethostbyname() in miniwget.
+
+2010/01/06:
+  #define _DARWIN_C_SOURCE for Mac OS X
+
+2009/12/19:
+  Improve MinGW32 build
+
+2009/12/11:
+  adding a MSVC9 project to build the static library and executable
+
+2009/12/10:
+  Fixing some compilation stuff for Windows/MinGW
+
+2009/12/07:
+  adaptations in Makefile and updateminiupnpcstring.sh for AmigaOS
+  some fixes for Windows when using virtual ethernet adapters (it is the
+  case with VMWare installed).
+
+2009/12/04:
+  some fixes for AmigaOS compilation
+  Changed HTTP version to HTTP/1.0 for Soap too (to prevent chunked
+  transfer encoding)
+
+2009/12/03:
+  updating printIDG and testigddescparse.c for debug.
+  modifications to compile under AmigaOS
+  adding a testminiwget program
+  Changed miniwget to advertise itself as HTTP/1.0 to prevent chunked
+  transfer encoding
+
+2009/11/26:
+  fixing updateminiupnpcstrings.sh to take into account
+  which command that does not return an error code.
+
+VERSION 1.4 : released 2009/10/30
+
+2009/10/16:
+  using Py_BEGIN_ALLOW_THREADS and Py_END_ALLOW_THREADS in python module.
+
+2009/10/10:
+  Some fixes for compilation under Solaris
+  compilation fixes : http://miniupnp.tuxfamily.org/forum/viewtopic.php?p=1464
+
+2009/09/21:
+  fixing the code to ignore EINTR during connect() calls.
+
+2009/08/07:
+  Set socket timeout for connect()
+  Some cleanup in miniwget.c
+
+2009/08/04:
+  remove multiple redirections with -d in upnpc.c
+  Print textual error code in upnpc.c
+  Ignore EINTR during the connect() and poll() calls.
+
+2009/07/29:
+  fix in updateminiupnpcstrings.sh if OS name contains "/"
+  Sending a correct value for MX: field in SSDP request
+
+2009/07/20:
+  Change the Makefile to compile under Mac OS X
+  Fixed a stackoverflow in getDevicesFromMiniSSDPD()
+
+2009/07/09:
+  Compile under Haiku
+  generate miniupnpcstrings.h.in from miniupnpcstrings.h
+
+2009/06/04:
+  patching to compile under CygWin and cross compile for minGW
+
+VERSION 1.3 :
+
+2009/04/17:
+  updating python module
+  Use strtoull() when using C99
+
+2009/02/28:
+  Fixed miniwget.c for compiling under sun
+
+2008/12/18:
+  cleanup in Makefile (thanks to Paul de Weerd)
+  minissdpc.c : win32 compatibility
+  miniupnpc.c : changed xmlns prefix from 'm' to 'u'
+  Removed NDEBUG (using DEBUG)
+
+2008/10/14:
+  Added the ExternalHost argument to DeletePortMapping()
+
+2008/10/11:
+  Added the ExternalHost argument to AddPortMapping()
+  Put a correct User-Agent: header in HTTP requests.
+
+VERSION 1.2 :
+
+2008/10/07:
+  Update docs
+
+2008/09/25:
+  Integrated sameport patch from Dario Meloni : Added a "sameport"
+  argument to upnpDiscover().
+
+2008/07/18:
+  small modif to make Clang happy :)
+
+2008/07/17:
+  #define SOAPPREFIX "s" in miniupnpc.c in order to remove SOAP-ENV... 
+
+2008/07/14:
+  include declspec.h in installation (to /usr/include/miniupnpc)
+
+VERSION 1.1 :
+
+2008/07/04:
+  standard options for install/ln instead of gnu-specific stuff.
+
+2008/07/03:
+  now builds a .dll and .lib with win32. (mingw32)
+
+2008/04/28:
+  make install now install the binary of the upnpc tool
+
+2008/04/27:
+  added testupnpigd.py
+  added error strings for miniupnpc "internal" errors
+  improved python module error/exception reporting.
+
+2008/04/23:
+  Completely rewrite igd_desc_parse.c in order to be compatible with 
+  Linksys WAG200G
+  Added testigddescparse
+  updated python module
+
+VERSION 1.0 :
+
+2008/02/21:
+  put some #ifdef DEBUG around DisplayNameValueList()
+
+2008/02/18:
+  Improved error reporting in upnpcommands.c
+  UPNP_GetStatusInfo() returns LastConnectionError
+
+2008/02/16:
+  better error handling in minisoap.c
+  improving display of "valid IGD found" in upnpc.c
+
+2008/02/03:
+  Fixing UPNP_GetValidIGD()
+  improved make install :)
+
+2007/12/22:
+  Adding upnperrors.c/h to provide a strupnperror() function 
+  used to translate UPnP error codes to string.
+
+2007/12/19:
+  Fixing getDevicesFromMiniSSDPD()
+  improved error reporting of UPnP functions
+
+2007/12/18:
+  It is now possible to specify a different location for MiniSSDPd socket.
+  working with MiniSSDPd is now more efficient.
+  python module improved.
+
+2007/12/16:
+  improving error reporting
+
+2007/12/13:
+  Try to improve compatibility by using HTTP/1.0 instead of 1.1 and
+  XML a bit different for SOAP.
+
+2007/11/25:
+  fixed select() call for linux
+
+2007/11/15:
+  Added -fPIC to CFLAG for better shared library code.
+
+2007/11/02:
+  Fixed a potential socket leak in miniwget2()
+
+2007/10/16:
+  added a parameter to upnpDiscover() in order to allow the use of another
+  interface than the default multicast interface.
+
+2007/10/12:
+  Fixed the creation of symbolic link in Makefile
+
+2007/10/08:
+  Added man page
+
+2007/10/02:
+  fixed memory bug in GetUPNPUrls()
+
+2007/10/01:
+  fixes in the Makefile
+  Added UPNP_GetIGDFromUrl() and adapted the sample program accordingly.
+  Added SONAME in the shared library to please debian :)
+  fixed MS Windows compilation (minissdpd is not available under MS Windows).
+
+2007/09/25:
+  small change to Makefile to be able to install in a different location
+  (default is /usr)
+
+2007/09/24:
+  now compiling both shared and static library
+
+2007/09/19:
+  Cosmetic changes on upnpc.c
+
+2007/09/02:
+  adapting to new miniSSDPd (release version ?)
+
+2007/08/31:
+  Usage of miniSSDPd to skip discovery process.
+
+2007/08/27:
+  fixed python module to allow compilation with Python older than Python 2.4
+
+2007/06/12:
+  Added a python module.
+
+2007/05/19:
+  Fixed compilation under MinGW
+
+2007/05/15:
+  fixed a memory leak in AddPortMapping()
+  Added testupnpreplyparse executable to check the parsing of
+  upnp soap messages
+  minixml now ignore namespace prefixes.
+
+2007/04/26:
+  upnpc now displays external ip address with -s or -l
+
+2007/04/11:
+  changed MINIUPNPC_URL_MAXSIZE to 128 to accomodate the "BT Voyager 210"
+
+2007/03/19:
+  cleanup in miniwget.c
+
+2007/03/01:
+  Small typo fix...
+
+2007/01/30:
+  Now parsing the HTTP header from SOAP responses in order to
+  get content-length value.
+
+2007/01/29:
+  Fixed the Soap Query to speedup the HTTP request.
+  added some Win32 DLL stuff...
+
+2007/01/27:
+  Fixed some WIN32 compatibility issues
+
+2006/12/14:
+  Added UPNPIGD_IsConnected() function in miniupnp.c/.h
+  Added UPNP_GetValidIGD() in miniupnp.c/.h
+  cleaned upnpc.c main(). now using UPNP_GetValidIGD()
+
+2006/12/07:
+  Version 1.0-RC1 released
+
+2006/12/03:
+  Minor changes to compile under SunOS/Solaris
+
+2006/11/30:
+  made a minixml parser validator program
+  updated minixml to handle attributes correctly
+
+2006/11/22:
+  Added a -r option to the upnpc sample thanks to Alexander Hubmann.
+
+2006/11/19:
+  Cleanup code to make it more ANSI C compliant
+
+2006/11/10:
+  detect and display local lan address.
+
+2006/11/04:
+  Packets and Bytes Sent/Received are now unsigned int.
+
+2006/11/01:
+  Bug fix thanks to Giuseppe D'Angelo
+
+2006/10/31:
+  C++ compatibility for .h files.
+  Added a way to get ip Address on the LAN used to reach the IGD.
+
+2006/10/25:
+  Added M-SEARCH to the services in the discovery process.
+
+2006/10/22:
+  updated the Makefile to use makedepend, added a "make install"
+  update Makefile
+
+2006/10/20:
+  fixing the description url parsing thanks to patch sent by
+  Wayne Dawe.
+  Fixed/translated some comments.
+  Implemented a better discover process, first looking
+  for IGD then for root devices (as some devices only reply to
+  M-SEARCH for root devices).
+
+2006/09/02:
+  added freeUPNPDevlist() function.
+
+2006/08/04:
+  More command line arguments checking
+
+2006/08/01:
+  Added the .bat file to compile under Win32 with minGW32
+
+2006/07/31:
+  Fixed the rootdesc parser (igd_desc_parse.c)
+
+2006/07/20:
+  parseMSEARCHReply() is now returning the ST: line as well
+  starting changes to detect several UPnP devices on the network
+
+2006/07/19:
+  using GetCommonLinkProperties to get down/upload bitrate
+

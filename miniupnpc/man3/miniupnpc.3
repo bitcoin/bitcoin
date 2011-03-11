@@ -1,0 +1,52 @@
+\" $Id: miniupnpc.3,v 1.2 2008/10/07 13:51:55 nanard Exp $
+.TH miniupnpc 3
+.SH NAME
+miniupnpc \- UPnP client library
+.SH SYNOPSIS
+.SH DESCRIPTION
+The miniupnpc library implement the UPnP protocol defined
+to dialog with Internet Gateway Devices. It also has
+the ability to use data gathered by minissdpd(1) about
+UPnP devices up on the network in order to skip the
+long UPnP device discovery process.
+.PP
+At first, upnpDiscover(3) has to be used to discover UPnP IGD present
+on the network. Then UPNP_GetValidIGD(3) to select the right one.
+Alternatively, UPNP_GetIGDFromUrl(3) could be used to bypass discovery
+process if the root description url of the device to use is known.
+Then all the UPNP_* functions can be used, such as
+UPNP_GetConnectionTypeInfo(3), UPNP_AddPortMapping(3), etc...
+.SH "HEADER FILES"
+.IP miniupnpc.h
+That's the main header file for the miniupnpc library API.
+It contains all the functions and structures related to device discovery.
+.IP upnpcommands.h
+This header file contain the UPnP IGD methods that are accessible
+through the miniupnpc API. The name of the C functions are matching
+the UPnP methods names. ie: GetGenericPortMappingEntry is
+UPNP_GetGenericPortMappingEntry.
+.SH "API FUNCTIONS"
+.IP "struct UPNPDev * upnpDiscover(int delay, const char * multicastif, const char * minissdpdsock, int sameport);"
+execute the discovery process.
+delay (in millisecond) is the maximum time for waiting any device response.
+If available, device list will be obtained from MiniSSDPd.
+Default path for minissdpd socket will be used if minissdpdsock argument is NULL.
+If multicastif is not NULL, it will be used instead of the default multicast interface for sending SSDP discover packets.
+If sameport is not null, SSDP packets will be sent from the source port 1900 (same as destination port) otherwise system assign a source port.
+.IP "void freeUPNPDevlist(struct UPNPDev * devlist);"
+free the list returned by upnpDiscover().
+.IP "int UPNP_GetValidIGD(struct UPNPDev * devlist, struct UPNPUrls * urls, struct IGDdatas * data, char * lanaddr, int lanaddrlen);"
+browse the list of device returned by upnpDiscover(), find
+a live UPnP internet gateway device and fill structures passed as arguments
+with data used for UPNP methods invokation.
+.IP "int UPNP_GetIGDFromUrl(const char * rootdescurl, struct UPNPUrls * urls, struct IGDdatas * data, char * lanaddr, int lanaddrlen);"
+permit to bypass the upnpDiscover() call if the xml root description
+URL of the UPnP IGD is known.
+Fill structures passed as arguments
+with data used for UPNP methods invokation.
+.IP "void GetUPNPUrls(struct UPNPUrls *, struct IGDdatas *, const char *);"
+.IP "void FreeUPNPUrls(struct UPNPUrls *);"
+
+.SH "SEE ALSO"
+minissdpd(1)
+.SH BUGS

@@ -1,0 +1,31 @@
+LIBRARY
+; miniupnpc library
+
+EXPORTS
+; miniupnpc
+   upnpDiscover
+   freeUPNPDevlist
+   parserootdesc
+   UPNP_GetValidIGD
+   UPNP_GetIGDFromUrl
+   GetUPNPUrls
+   FreeUPNPUrls
+; miniwget
+   miniwget
+   miniwget_getaddr
+; upnpcommands
+   UPNP_GetTotalBytesSent
+   UPNP_GetTotalBytesReceived
+   UPNP_GetTotalPacketsSent
+   UPNP_GetTotalPacketsReceived
+   UPNP_GetStatusInfo
+   UPNP_GetConnectionTypeInfo
+   UPNP_GetExternalIPAddress
+   UPNP_GetLinkLayerMaxBitRates
+   UPNP_AddPortMapping
+   UPNP_DeletePortMapping
+   UPNP_GetPortMappingNumberOfEntries
+   UPNP_GetSpecificPortMappingEntry
+   UPNP_GetGenericPortMappingEntry 
+; upnperrors
+   strupnperror

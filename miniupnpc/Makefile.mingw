@@ -1,0 +1,88 @@
+# $Id: Makefile.mingw,v 1.13 2010/04/17 22:07:59 nanard Exp $
+# Miniupnp project.
+# http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
+# (c) 2005-2008 Thomas Bernard
+# This Makefile is made for MinGW
+#
+CC = gcc
+#CFLAGS = -Wall -g -DDEBUG
+CFLAGS = -Wall -Os -DNDEBUG
+LDLIBS = -lws2_32 -liphlpapi
+# -lwsock32
+# -liphlpapi is used for GetBestRoute()
+PYTHON=\utils\python25\python
+OBJS=miniwget.o minixml.o igd_desc_parse.o minisoap.o \
+     miniupnpc.o upnpreplyparse.o upnpcommands.o upnperrors.o \
+     connecthostport.o
+OBJSDLL=$(addprefix dll/, $(OBJS))
+
+all:	init upnpc-static upnpc-shared testminixml libminiupnpc.a miniupnpc.dll
+
+init:
+	mkdir dll
+	echo init > init
+
+clean:
+	del upnpc testminixml *.o
+	del dll\*.o
+	del *.exe
+	del miniupnpc.dll
+	del libminiupnpc.a
+
+libminiupnpc.a:	$(OBJS)
+	$(AR) cr $@ $?
+
+pythonmodule:	libminiupnpc.a
+	$(PYTHON) setupmingw32.py build --compiler=mingw32
+	$(PYTHON) setupmingw32.py install --skip-build
+
+miniupnpc.dll:	libminiupnpc.a $(OBJSDLL)
+	dllwrap -k --driver-name gcc --def miniupnpc.def \
+	--output-def miniupnpc.dll.def --implib miniupnpc.lib -o $@ \
+	$(OBJSDLL) $(LDLIBS)
+
+miniupnpc.lib:	miniupnpc.dll
+	echo $@ generated with $<
+
+dll/upnpc.o:	upnpc.o
+	echo $@ generated with $<
+
+.c.o:
+	$(CC) $(CFLAGS) -DSTATICLIB -c -o $@ $<
+	$(CC) $(CFLAGS) -DMINIUPNP_EXPORTS -c -o dll/$@ $<
+
+upnpc.o:
+	$(CC) $(CFLAGS) -DSTATICLIB -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o dll/$@ $<
+
+upnpc-static:	upnpc.o libminiupnpc.a
+	$(CC) -o $@ $^ $(LDLIBS)
+
+upnpc-shared:	dll/upnpc.o miniupnpc.lib
+	$(CC) -o $@ $^ $(LDLIBS)
+
+wingenminiupnpcstrings:	wingenminiupnpcstrings.o
+
+wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
+
+miniupnpcstrings.h: miniupnpcstrings.h.in wingenminiupnpcstrings
+	wingenminiupnpcstrings $< $@
+
+minixml.o:	minixml.c minixml.h miniupnpcstrings.h
+
+upnpc.o:	upnpc.c miniwget.h minisoap.h miniupnpc.h igd_desc_parse.h upnpreplyparse.h upnpcommands.h
+
+miniwget.o:	miniwget.c miniwget.h miniupnpcstrings.h
+
+minisoap.o:	minisoap.c minisoap.h
+
+miniupnpc.o:	miniupnpc.c miniupnpc.h minisoap.h miniwget.h minixml.h
+
+igd_desc_parse.o:	igd_desc_parse.c igd_desc_parse.h
+
+testminixml:	minixml.o igd_desc_parse.o testminixml.c
+
+upnpreplyparse.o:	upnpreplyparse.c upnpreplyparse.h minixml.h
+
+upnpcommands.o:	upnpcommands.c upnpcommands.h upnpreplyparse.h miniupnpc.h
+
