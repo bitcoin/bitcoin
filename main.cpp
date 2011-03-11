@@ -217,10 +217,10 @@ void WalletUpdateSpent(const COutPoint& prevout)
         if (mi != mapWallet.end())
         {
             CWalletTx& wtx = (*mi).second;
-            if (!wtx.vfSpent[prevout.n] && wtx.vout[prevout.n].IsMine())
+            if (!wtx.IsSpent(prevout.n) && wtx.vout[prevout.n].IsMine())
             {
                 printf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
-                wtx.vfSpent[prevout.n] = true;
+                wtx.MarkSpent(prevout.n);
                 wtx.WriteToDisk();
                 vWalletUpdated.push_back(prevout.hash);
             }
@@ -938,7 +938,7 @@ void ReacceptWalletTransactions()
                 {
                     if (!txindex.vSpent[i].IsNull() && wtx.vout[i].IsMine())
                     {
-                        wtx.vfSpent[i] = true;
+                        wtx.MarkSpent(i);
                         fUpdated = true;
                         vMissingTx.push_back(txindex.vSpent[i]);
                     }
@@ -3746,7 +3746,7 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
 
             for (int i = 0; i < pcoin->vout.size(); i++)
             {
-                if (pcoin->vfSpent[i] || !pcoin->vout[i].IsMine())
+                if (pcoin->IsSpent(i) || !pcoin->vout[i].IsMine())
                     continue;
 
                 int64 n = pcoin->vout[i].nValue;
@@ -3974,7 +3974,7 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             foreach(const CTxIn& txin, wtxNew.vin)
             {
                 CWalletTx &pcoin = mapWallet[txin.prevout.hash];
-                pcoin.vfSpent[txin.prevout.n] = true;
+                pcoin.MarkSpent(txin.prevout.n);
                 pcoin.WriteToDisk();
                 vWalletUpdated.push_back(pcoin.GetHash());
             }

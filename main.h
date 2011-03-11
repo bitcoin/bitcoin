@@ -792,13 +792,11 @@ public:
     CWalletTx(const CMerkleTx& txIn) : CMerkleTx(txIn)
     {
         Init();
-        vfSpent.assign(vout.size(), false);
     }
 
     CWalletTx(const CTransaction& txIn) : CMerkleTx(txIn)
     {
         Init();
-        vfSpent.assign(vout.size(), false);
     }
 
     void Init()
@@ -870,7 +868,7 @@ public:
 
     // marks certain txout's as spent
     // returns true if any update took place
-    bool UpdateSpent(vector<char> vfNewSpent)
+    bool UpdateSpent(const vector<char>& vfNewSpent)
     {
         bool fReturn;
         for (int i=0; i < vfNewSpent.size(); i++)
@@ -887,6 +885,23 @@ public:
         return fReturn;
     }
 
+
+    void MarkSpent(unsigned int nOut)
+    {
+        if (nOut >= vout.size())
+            throw runtime_error("CWalletTx::MarkSpent() : nOut out of range");
+        vfSpent.resize(vout.size());
+        vfSpent[nOut] = true;
+    }
+
+    bool IsSpent(unsigned int nOut)
+    {
+        if (nOut >= vout.size())
+            throw runtime_error("CWalletTx::IsSpent() : nOut out of range");
+        if (nOut >= vfSpent.size())
+            return false;
+        return (!!vfSpent[nOut]);
+    }
 
     int64 GetDebit() const
     {
@@ -918,12 +933,12 @@ public:
         int64 nCredit = 0;
         for (int i = 0; i < vout.size(); i++)
         {
-            if (!vfSpent[i])
+            if (!IsSpent(i))
             {
                 const CTxOut &txout = vout[i];
                 nCredit += txout.GetCredit();
                 if (!MoneyRange(nCredit))
-                    throw runtime_error("CTransaction::GetAvailableCredit() : value out of range");
+                    throw runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
             }
         }
         return nCredit;
