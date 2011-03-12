@@ -921,8 +921,8 @@ void ReacceptWalletTransactions()
         foreach(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
-//            if (wtx.fSpent && wtx.IsCoinBase())
-//                continue;
+            if (wtx.IsCoinBase() && wtx.IsSpent(0))
+                continue;
 
             CTxIndex txindex;
             bool fUpdated;

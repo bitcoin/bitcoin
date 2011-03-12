@@ -930,6 +930,10 @@ public:
 
     int64 GetAvailableCredit() const
     {
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+            return 0;
+
         int64 nCredit = 0;
         for (int i = 0; i < vout.size(); i++)
         {
