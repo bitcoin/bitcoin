@@ -882,6 +882,7 @@ public:
             {
                 vfSpent[i] = true;
                 fReturn = true;
+                fAvailableCreditCached = false;
             }
         }
         return fReturn;
@@ -900,7 +901,11 @@ public:
         if (nOut >= vout.size())
             throw runtime_error("CWalletTx::MarkSpent() : nOut out of range");
         vfSpent.resize(vout.size());
-        vfSpent[nOut] = true;
+        if (!vfSpent[nOut])
+        {
+            vfSpent[nOut] = true;
+            fAvailableCreditCached = false;
+        }
     }
 
     bool IsSpent(unsigned int nOut) const
