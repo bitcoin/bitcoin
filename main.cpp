@@ -3750,6 +3750,9 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
                 if (pcoin->IsSpent(i) || !pcoin->vout[i].IsMine())
                     continue;
 
+                if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+                    continue;
+
                 int64 n = pcoin->vout[i].nValue;
 
                 if (n <= 0)
