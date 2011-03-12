@@ -784,7 +784,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             InsertLine(fNew, nIndex, hash, strSort, colour,
                        strStatus,
                        nTime ? DateTimeStr(nTime) : "",
-                       "",
+                       "Mixed transaction",
                        FormatMoney(nNet, true),
                        "");
         }
