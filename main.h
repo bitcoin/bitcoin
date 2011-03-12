@@ -928,10 +928,10 @@ public:
         return nCreditCached;
     }
 
-    int64 GetAvailableCredit() const
+    int64 GetAvailableCredit(bool fProspected=false) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
-        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+        if (!fProspected && IsCoinBase() && GetBlocksToMaturity() > 0)
             return 0;
 
         int64 nCredit = 0;
