@@ -892,6 +892,7 @@ int ScanForWalletTransactions(CBlockIndex* pindexStart)
                 AddToWalletIfMine(tx, &block);
                 if (mapWallet.count(hash))
                 {
+                    tx.MarkDirty();
                     ++ret;
                     printf("Added missing RECEIVE %s\n", hash.ToString().c_str());
                     continue;
@@ -899,6 +900,7 @@ int ScanForWalletTransactions(CBlockIndex* pindexStart)
                 AddToWalletIfFromMe(tx, &block);
                 if (mapWallet.count(hash))
                 {
+                    tx.MarkDirty();
                     ++ret;
                     printf("Added missing SEND %s\n", hash.ToString().c_str());
                     continue;

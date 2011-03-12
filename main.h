@@ -773,9 +773,11 @@ public:
     // memory only
     mutable char fDebitCached;
     mutable char fCreditCached;
+    mutable char fAvailableCreditCached;
     mutable char fChangeCached;
     mutable int64 nDebitCached;
     mutable int64 nCreditCached;
+    mutable int64 nAvailableCreditCached;
     mutable int64 nChangeCached;
 
     // memory only UI hints
@@ -885,6 +887,13 @@ public:
         return fReturn;
     }
 
+    void MarkDirty()
+    {
+        fCreditCached = false;
+        fAvailableCreditCached = false;
+        fDebitCached = false;
+        fChangeCached = false;
+    }
 
     void MarkSpent(unsigned int nOut)
     {
@@ -928,11 +937,14 @@ public:
         return nCreditCached;
     }
 
-    int64 GetAvailableCredit(bool fProspected=false) const
+    int64 GetAvailableCredit(bool fUseCache=true) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
-        if (!fProspected && IsCoinBase() && GetBlocksToMaturity() > 0)
+        if (IsCoinBase() && GetBlocksToMaturity() > 0)
             return 0;
+
+        if (fUseCache && fAvailableCreditCached)
+            return nAvailableCreditCached;
 
         int64 nCredit = 0;
         for (int i = 0; i < vout.size(); i++)
@@ -945,6 +957,9 @@ public:
                     throw runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
             }
         }
+
+        nAvailableCreditCached = nCredit;
+        fAvailableCreditCached = true;
         return nCredit;
     }
 
