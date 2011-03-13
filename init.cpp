@@ -74,32 +74,11 @@ void HandleSIGTERM(int)
 #ifndef GUI
 int main(int argc, char* argv[])
 {
-    for (int i = 1; i < argc; i++)
-        if (!IsSwitchChar(argv[i][0]))
-            fCommandLine = true;
-    fDaemon = !fCommandLine;
+    bool fRet = false;
+    fRet = AppInit(argc, argv);
 
-#ifdef __WXGTK__
-    if (!fCommandLine)
-    {
-        // Daemonize
-        pid_t pid = fork();
-        if (pid < 0)
-        {
-            fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
-            return 1;
-        }
-        if (pid > 0)
-            pthread_exit((void*)0);
-    }
-#endif
-
-    if (!AppInit(argc, argv))
-        return 1;
-
-    while (!fShutdown)
-        Sleep(1000000);
-    return 0;
+    if (fRet && fDaemon)
+        pthread_exit((void*)0);
 }
 #endif
 
@@ -177,8 +156,10 @@ bool AppInit2(int argc, char* argv[])
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
+#ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
+#endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
@@ -213,6 +194,19 @@ bool AppInit2(int argc, char* argv[])
 
     fDebug = GetBoolArg("-debug");
 
+    fDaemon = GetBoolArg("-daemon");
+
+    if (fDaemon)
+        fServer = true;
+    else
+        fServer = GetBoolArg("-server");
+
+    /* force fServer and fDaemon when running without GUI */
+#ifndef GUI
+    fServer = true;
+    fDaemon = true;
+#endif
+
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
@@ -220,11 +214,30 @@ bool AppInit2(int argc, char* argv[])
     
     fNoListen = GetBoolArg("-nolisten");
 
+    for (int i = 1; i < argc; i++)
+        if (!IsSwitchChar(argv[i][0]))
+            fCommandLine = true;
+
     if (fCommandLine)
     {
         int ret = CommandLineRPC(argc, argv);
         exit(ret);
     }
+
+#ifndef GUI
+    if (fDaemon)
+    {
+        // Daemonize
+        pid_t pid = fork();
+        if (pid < 0)
+        {
+            fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+            return false;
+        }
+        if (pid > 0)
+            return true;
+    }
+#endif
 
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
@@ -443,7 +456,7 @@ bool AppInit2(int argc, char* argv[])
     if (!CreateThread(StartNode, NULL))
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
-    if (GetBoolArg("-server") || fDaemon)
+    if (fServer)
         CreateThread(ThreadRPCServer, NULL);
 
 #if defined(__WXMSW__) && defined(GUI)
