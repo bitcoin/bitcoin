@@ -3888,11 +3888,10 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                 int64 nValueIn = 0;
                 if (!SelectCoins(nTotalValue, setCoins, nValueIn))
                     return false;
-                foreach(CWalletTx* pcoin, setCoins)
+                foreach(PAIRTYPE(CWalletTx*, unsigned int) pcoin, setCoins)
                 {
-                    int64 nCredit = pcoin->GetCredit();
-                    nValueIn += nCredit;
-                    dPriority += (double)nCredit * pcoin->GetDepthInMainChain();
+                    int64 nCredit = pcoin.first->vout[pcoin.second].nValue;
+                    dPriority += (double)nCredit * pcoin.first->GetDepthInMainChain();
                 }
 
                 // Fill a vout to the payee
