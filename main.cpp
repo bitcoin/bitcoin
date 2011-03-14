@@ -2396,6 +2396,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return true;
         }
 
+        // Be shy and don't send version until we hear
+        if (pfrom->fInbound)
+            pfrom->PushVersion();
+
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
 
         AddTimeData(pfrom->addr.ip, nTime);
