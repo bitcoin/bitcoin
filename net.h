@@ -30,6 +30,7 @@ CNode* FindNode(unsigned int ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
 void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
+void DNSAddressSeed();
 bool BindListenPort(string& strError=REF(string()));
 void StartNode(void* parg);
 bool StopNode();
@@ -571,14 +572,9 @@ public:
         fGetAddr = false;
         vfSubscribe.assign(256, false);
 
-        // Push a version message
-        /// when NTP implemented, change to just nTime = GetAdjustedTime()
-        int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
-        CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
-        CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
-        RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe,
-                    nLocalHostNonce, string(pszSubVer), nBestHeight);
+        // Be shy and don't send version until we hear
+        if (!fInbound)
+            PushVersion();
     }
 
     ~CNode()
@@ -731,6 +727,19 @@ public:
             EndMessage();
         else
             AbortMessage();
+    }
+
+
+
+    void PushVersion()
+    {
+        /// when NTP implemented, change to just nTime = GetAdjustedTime()
+        int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
+        CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
+        CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
+        RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
+        PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe,
+                nLocalHostNonce, string(pszSubVer), nBestHeight);
     }
 
 
