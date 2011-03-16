@@ -148,6 +148,7 @@ extern bool fCommandLine;
 extern string strMiscWarning;
 extern bool fTestNet;
 extern bool fNoListen;
+extern bool fLogTimestamps;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();

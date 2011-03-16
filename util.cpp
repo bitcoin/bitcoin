@@ -19,6 +19,7 @@ bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
 bool fNoListen = false;
+bool fLogTimestamps = false;
 
 
 
@@ -170,9 +171,16 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         }
         if (fileout)
         {
+            static bool fStartedNewLine = true;
+
             // Debug print useful for profiling
-            if (GetBoolArg("-logtimestamps"))
+            if (fLogTimestamps && fStartedNewLine)
                 fprintf(fileout, "%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+            if (pszFormat[strlen(pszFormat) - 1] == '\n')
+                fStartedNewLine = true;
+            else
+                fStartedNewLine = false;
+
             va_list arg_ptr;
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);

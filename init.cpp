@@ -211,8 +211,8 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
-    
     fNoListen = GetBoolArg("-nolisten");
+    fLogTimestamps = GetBoolArg("-logtimestamps");
 
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))
