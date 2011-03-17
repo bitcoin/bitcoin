@@ -3739,14 +3739,16 @@ int64 GetBalance()
 }
 
 
-bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<CWalletTx*>& setCoinsRet)
+bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<pair<CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet)
 {
     setCoinsRet.clear();
+    nValueRet = 0;
 
     // List of values less than target
-    int64 nLowestLarger = INT64_MAX;
-    CWalletTx* pcoinLowestLarger = NULL;
-    vector<pair<int64, CWalletTx*> > vValue;
+    pair<int64, pair<CWalletTx*,unsigned int> > coinLowestLarger;
+    coinLowestLarger.first = INT64_MAX;
+    coinLowestLarger.second.first = NULL;
+    vector<pair<int64, pair<CWalletTx*,unsigned int> > > vValue;
     int64 nTotalLower = 0;
 
     CRITICAL_BLOCK(cs_mapWallet)
@@ -3769,23 +3771,33 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
             if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
                 continue;
 
-            int64 n = pcoin->GetAvailableCredit();
-            if (n <= 0)
-                continue;
-            if (n == nTargetValue)
+            for (int i = 0; i < pcoin->vout.size(); i++)
             {
-                setCoinsRet.insert(pcoin);
-                return true;
-            }
-            else if (n < nTargetValue + CENT)
-            {
-                vValue.push_back(make_pair(n, pcoin));
-                nTotalLower += n;
-            }
-            else if (n < nLowestLarger)
-            {
-                nLowestLarger = n;
-                pcoinLowestLarger = pcoin;
+                if (pcoin->IsSpent(i) || !pcoin->vout[i].IsMine())
+                    continue;
+
+                int64 n = pcoin->vout[i].nValue;
+
+                if (n <= 0)
+                    continue;
+
+                pair<int64,pair<CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin,i));
+
+                if (n == nTargetValue)
+                {
+                    setCoinsRet.insert(coin.second);
+                    nValueRet += coin.first;
+                    return true;
+                }
+                else if (n < nTargetValue + CENT)
+                {
+                    vValue.push_back(coin);
+                    nTotalLower += n;
+                }
+                else if (n < coinLowestLarger.first)
+                {
+                    coinLowestLarger = coin;
+                }
             }
         }
     }
@@ -3793,15 +3805,19 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
     if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
     {
         for (int i = 0; i < vValue.size(); ++i)
+        {
             setCoinsRet.insert(vValue[i].second);
+            nValueRet += vValue[i].first;
+        }
         return true;
     }
 
-    if (nTotalLower < nTargetValue + (pcoinLowestLarger ? CENT : 0))
+    if (nTotalLower < nTargetValue + (coinLowestLarger.second.first ? CENT : 0))
     {
-        if (pcoinLowestLarger == NULL)
+        if (coinLowestLarger.second.first == NULL)
             return false;
-        setCoinsRet.insert(pcoinLowestLarger);
+        setCoinsRet.insert(coinLowestLarger.second);
+        nValueRet += coinLowestLarger.first;
         return true;
     }
 
@@ -3844,13 +3860,18 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
     }
 
     // If the next larger is still closer, return it
-    if (pcoinLowestLarger && nLowestLarger - nTargetValue <= nBest - nTargetValue)
-        setCoinsRet.insert(pcoinLowestLarger);
-    else
+    if (coinLowestLarger.second.first && coinLowestLarger.first - nTargetValue <= nBest - nTargetValue)
     {
+        setCoinsRet.insert(coinLowestLarger.second);
+        nValueRet += coinLowestLarger.first;
+    }
+    else {
         for (int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
+            {
                 setCoinsRet.insert(vValue[i].second);
+                nValueRet += vValue[i].first;
+            }
 
         //// debug print
         printf("SelectCoins() best subset: ");
@@ -3863,11 +3884,11 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
     return true;
 }
 
-bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
+bool SelectCoins(int64 nTargetValue, set<pair<CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet)
 {
-    return (SelectCoinsMinConf(nTargetValue, 1, 6, setCoinsRet) ||
-            SelectCoinsMinConf(nTargetValue, 1, 1, setCoinsRet) ||
-            SelectCoinsMinConf(nTargetValue, 0, 1, setCoinsRet));
+    return (SelectCoinsMinConf(nTargetValue, 1, 6, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue, 1, 1, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue, 0, 1, setCoinsRet, nValueRet));
 }
 
 
@@ -3905,15 +3926,14 @@ bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& 
                     wtxNew.vout.push_back(CTxOut(s.second, s.first));
 
                 // Choose coins to use
-                set<CWalletTx*> setCoins;
-                if (!SelectCoins(nTotalValue, setCoins))
-                    return false;
+                set<pair<CWalletTx*,unsigned int> > setCoins;
                 int64 nValueIn = 0;
-                foreach(CWalletTx* pcoin, setCoins)
+                if (!SelectCoins(nTotalValue, setCoins, nValueIn))
+                    return false;
+                foreach(PAIRTYPE(CWalletTx*, unsigned int) pcoin, setCoins)
                 {
-                    int64 nCredit = pcoin->GetCredit();
-                    nValueIn += nCredit;
-                    dPriority += (double)nCredit * pcoin->GetDepthInMainChain();
+                    int64 nCredit = pcoin.first->vout[pcoin.second].nValue;
+                    dPriority += (double)nCredit * pcoin.first->GetDepthInMainChain();
                 }
 
                 // Fill a vout back to self with any change
@@ -3946,18 +3966,14 @@ bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& 
                     reservekey.ReturnKey();
 
                 // Fill vin
-                foreach(CWalletTx* pcoin, setCoins)
-                    for (int nOut = 0; nOut < pcoin->vout.size(); nOut++)
-                        if (pcoin->vout[nOut].IsMine())
-                            wtxNew.vin.push_back(CTxIn(pcoin->GetHash(), nOut));
+                foreach(const PAIRTYPE(CWalletTx*,unsigned int)& coin, setCoins)
+                    wtxNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
 
                 // Sign
                 int nIn = 0;
-                foreach(CWalletTx* pcoin, setCoins)
-                    for (int nOut = 0; nOut < pcoin->vout.size(); nOut++)
-                        if (pcoin->vout[nOut].IsMine())
-                            if (!SignSignature(*pcoin, wtxNew, nIn++))
-                                return false;
+                foreach(const PAIRTYPE(CWalletTx*,unsigned int)& coin, setCoins)
+                    if (!SignSignature(*coin.first, wtxNew, nIn++))
+                        return false;
 
                 // Limit size
                 unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
