@@ -136,11 +136,7 @@ bool AddToWallet(const CWalletTx& wtxIn)
                 wtx.fFromMe = wtxIn.fFromMe;
                 fUpdated = true;
             }
-            if (wtxIn.fSpent && wtxIn.fSpent != wtx.fSpent)
-            {
-                wtx.fSpent = wtxIn.fSpent;
-                fUpdated = true;
-            }
+            fUpdated |= wtx.UpdateSpent(wtxIn.vfSpent);
         }
 
         //// debug print
@@ -221,10 +217,10 @@ void WalletUpdateSpent(const COutPoint& prevout)
         if (mi != mapWallet.end())
         {
             CWalletTx& wtx = (*mi).second;
-            if (!wtx.fSpent && wtx.vout[prevout.n].IsMine())
+            if (!wtx.IsSpent(prevout.n) && wtx.vout[prevout.n].IsMine())
             {
                 printf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
-                wtx.fSpent = true;
+                wtx.MarkSpent(prevout.n);
                 wtx.WriteToDisk();
                 vWalletUpdated.push_back(prevout.hash);
             }
@@ -939,33 +935,33 @@ void ReacceptWalletTransactions()
         foreach(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
-            if (wtx.fSpent && wtx.IsCoinBase())
+            if (wtx.IsCoinBase() && wtx.IsSpent(0))
                 continue;
 
             CTxIndex txindex;
+            bool fUpdated = false;
             if (txdb.ReadTxIndex(wtx.GetHash(), txindex))
             {
                 // Update fSpent if a tx got spent somewhere else by a copy of wallet.dat
-                if (!wtx.fSpent)
+                if (txindex.vSpent.size() != wtx.vout.size())
                 {
-                    if (txindex.vSpent.size() != wtx.vout.size())
+                    printf("ERROR: ReacceptWalletTransactions() : txindex.vSpent.size() %d != wtx.vout.size() %d\n", txindex.vSpent.size(), wtx.vout.size());
+                    continue;
+                }
+                for (int i = 0; i < txindex.vSpent.size(); i++)
+                {
+                    if (!txindex.vSpent[i].IsNull() && wtx.vout[i].IsMine())
                     {
-                        printf("ERROR: ReacceptWalletTransactions() : txindex.vSpent.size() %d != wtx.vout.size() %d\n", txindex.vSpent.size(), wtx.vout.size());
-                        continue;
+                        wtx.MarkSpent(i);
+                        fUpdated = true;
+                        vMissingTx.push_back(txindex.vSpent[i]);
                     }
-                    for (int i = 0; i < txindex.vSpent.size(); i++)
-                    {
-                        if (!txindex.vSpent[i].IsNull() && wtx.vout[i].IsMine())
-                        {
-                            wtx.fSpent = true;
-                            vMissingTx.push_back(txindex.vSpent[i]);
-                        }
-                    }
-                    if (wtx.fSpent)
-                    {
-                        printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
-                        wtx.WriteToDisk();
-                    }
+                }
+                if (fUpdated)
+                {
+                    printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                    wtx.MarkDirty();
+                    wtx.WriteToDisk();
                 }
             }
             else
@@ -3732,9 +3728,9 @@ int64 GetBalance()
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             CWalletTx* pcoin = &(*it).second;
-            if (!pcoin->IsFinal() || pcoin->fSpent || !pcoin->IsConfirmed())
+            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
                 continue;
-            nTotal += pcoin->GetCredit();
+            nTotal += pcoin->GetAvailableCredit();
         }
     }
 
@@ -3763,14 +3759,17 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
 
        foreach(CWalletTx* pcoin, vCoins)
        {
-            if (!pcoin->IsFinal() || pcoin->fSpent || !pcoin->IsConfirmed())
+            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+                continue;
+
+            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain();
             if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
                 continue;
 
-            int64 n = pcoin->GetCredit();
+            int64 n = pcoin->GetAvailableCredit();
             if (n <= 0)
                 continue;
             if (n == nTargetValue)
@@ -4017,12 +4016,11 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             // Mark old coins as spent
             set<CWalletTx*> setCoins;
             foreach(const CTxIn& txin, wtxNew.vin)
-                setCoins.insert(&mapWallet[txin.prevout.hash]);
-            foreach(CWalletTx* pcoin, setCoins)
             {
-                pcoin->fSpent = true;
-                pcoin->WriteToDisk();
-                vWalletUpdated.push_back(pcoin->GetHash());
+                CWalletTx &pcoin = mapWallet[txin.prevout.hash];
+                pcoin.MarkSpent(txin.prevout.n);
+                pcoin.WriteToDisk();
+                vWalletUpdated.push_back(pcoin.GetHash());
             }
         }
 
