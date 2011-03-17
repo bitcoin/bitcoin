@@ -3764,6 +3764,9 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
             if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
                 continue;
 
+            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+                continue;
+
             int nDepth = pcoin->GetDepthInMainChain();
             if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
                 continue;
@@ -3771,9 +3774,6 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
             for (int i = 0; i < pcoin->vout.size(); i++)
             {
                 if (pcoin->IsSpent(i) || !pcoin->vout[i].IsMine())
-                    continue;
-
-                if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
                     continue;
 
                 int64 n = pcoin->vout[i].nValue;
