@@ -1136,7 +1136,9 @@ Value listaccounts(const Array& params, bool fHelp)
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         foreach(const PAIRTYPE(string, string)& entry, mapAddressBook)
-            mapAccountBalances[entry.second] = 0;
+            uint160 hash160;
+            if(AddressToHash160(entry.first, hash160) && mapPubKeys.count(hash1
+                mapAccountBalances[entry.second] = 0;
 
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
