@@ -1150,8 +1150,11 @@ Value listaccounts(const Array& params, bool fHelp)
     CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
-        foreach(const PAIRTYPE(string, string)& entry, mapAddressBook)
-            mapAccountBalances[entry.second] = 0;
+        foreach(const PAIRTYPE(string, string)& entry, mapAddressBook) {
+            uint160 hash160;
+            if(AddressToHash160(entry.first, hash160) && mapPubKeys.count(hash160)) // This address belongs to me
+                mapAccountBalances[entry.second] = 0;
+        }
 
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
