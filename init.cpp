@@ -186,7 +186,10 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
             "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
+            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n") +
+            "  -loglevel=<level>\t  "   + _("Set the log verbosity level. Use '-loglevel=?' to get a list of levels (default: Warning)\n") +
+            "  -logcontexts=<contexts>\t  "  + _("Set the context(s) to log. Use '-logcontexts=?' to get a list of contexts(default: All)\n");
+    
 
 #ifdef USE_SSL
         strUsage += string() +
@@ -212,6 +215,27 @@ bool AppInit2(int argc, char* argv[])
     }
 
     fDebug = GetBoolArg("-debug");
+    if ( fDebug )
+    {
+        SetLogVerbosity( VL_Debug );
+    }
+
+    if (mapArgs.count("-loglevel"))
+    {
+        SetLogVerbosity(ParseVerbosity(mapArgs["-loglevel"]));
+    }
+    if (mapArgs.count("-logcontexts"))
+    {
+        SetLogOutput(ParseLogContext(mapArgs["-logcontexts"]));
+    }
+    // These output log messages can be used to test context & verbosity
+    //OutputLogMessageF(LC_Params, VL_Verbose, "This is a verbose message\n");
+    //OutputLogMessageF(LC_Params, VL_Debug, "This is a debug message\n");
+    //OutputLogMessageF(LC_Params, VL_Warning, "This is a warning message\n");
+    //OutputLogMessageF(LC_Params, VL_Error, "This is an error message\n");
+    //OutputLogMessageF(LC_Params, VL_Critical, "This is a critical message\n");
+    //OutputLogMessageF(LC_Params, VL_Off, "This is an off message (yes, I know, that doesn't make sense). Contexts: 0x%08x\n", TurnOnLogOutput(LC_NoChange));
+    OutputLogMessageF(LC_Params|LC_Gen, VL_Debug, "This message should appear with -logcontexts=Gen, -logcontexts=Params, or -logcontexts=Gen,Params (and -loglevel=debug)\n");
 
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
@@ -219,6 +243,10 @@ bool AppInit2(int argc, char* argv[])
     fTestNet = GetBoolArg("-testnet");
     
     fNoListen = GetBoolArg("-nolisten");
+    if ( GetBoolArg("-printpriority") )
+    {
+        TurnOnLogOutput( LC_Priority );
+    }
 
     if (fCommandLine)
     {

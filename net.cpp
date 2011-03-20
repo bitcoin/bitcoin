@@ -516,8 +516,7 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        if (fDebug)
-            printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+        printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
         printf("disconnecting node %s\n", addr.ToStringLog().c_str());
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;

@@ -144,7 +144,7 @@ bool AddToWallet(const CWalletTx& wtxIn)
         }
 
         //// debug print
-        printf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString().substr(0,10).c_str(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+        OutputLogMessageF(LC_Wallet, VL_Debug, "AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString().substr(0,10).c_str(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
         // Write to disk
         if (fInsertedNew || fUpdated)
@@ -223,7 +223,7 @@ void WalletUpdateSpent(const COutPoint& prevout)
             CWalletTx& wtx = (*mi).second;
             if (!wtx.fSpent && wtx.vout[prevout.n].IsMine())
             {
-                printf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                OutputLogMessageF(LC_Wallet, VL_Debug, "WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
                 wtx.fSpent = true;
                 wtx.WriteToDisk();
                 vWalletUpdated.push_back(prevout.hash);
@@ -443,7 +443,7 @@ void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listRe
             address = PubKeyToAddress(vchPubKey);
         else
         {
-            printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+            OutputLogMessageF(LC_Wallet, VL_Warning, "CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                    this->GetHash().ToString().c_str());
             address = " unknown ";
         }
@@ -534,7 +534,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         {
             vMerkleBranch.clear();
             nIndex = -1;
-            printf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
+            OutputLogMessageF(LC_Wallet|LC_Transaction, VL_Error, "ERROR: SetMerkleBranch() : couldn't find tx in block\n");
             return 0;
         }
 
@@ -595,7 +595,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
                 }
                 else
                 {
-                    printf("ERROR: AddSupportingTransactions() : unsupported transaction\n");
+                    OutputLogMessageF(LC_Transaction, VL_Error, "ERROR: AddSupportingTransactions() : unsupported transaction\n");
                     continue;
                 }
 
@@ -759,7 +759,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     {
         if (ptxOld)
         {
-            printf("AcceptToMemoryPool() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
+            OutputLogMessageF(LC_Transaction, VL_Debug, "AcceptToMemoryPool() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
             ptxOld->RemoveFromMemoryPool();
         }
         AddToMemoryPoolUnchecked();
@@ -770,7 +770,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     if (ptxOld)
         EraseFromWallet(ptxOld->GetHash());
 
-    printf("AcceptToMemoryPool(): accepted %s\n", hash.ToString().substr(0,10).c_str());
+    OutputLogMessageF(LC_Transaction, VL_Debug, "AcceptToMemoryPool(): accepted %s\n", hash.ToString().substr(0,10).c_str());
     return true;
 }
 
@@ -2218,7 +2218,6 @@ bool ProcessMessages(CNode* pfrom)
     CDataStream& vRecv = pfrom->vRecv;
     if (vRecv.empty())
         return true;
-    //if (fDebug)
     //    printf("ProcessMessages(%u bytes)\n", vRecv.size());
 
     //
@@ -2338,8 +2337,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     static map<unsigned int, vector<unsigned char> > mapReuseKey;
     RandAddSeedPerfmon();
-    if (fDebug)
-        printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+    printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
     printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {

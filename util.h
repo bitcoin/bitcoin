@@ -24,7 +24,6 @@ typedef unsigned long long  uint64;
 #define UBEGIN(a)           ((unsigned char*)&(a))
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
-#define printf              OutputDebugStringF
 
 #ifdef snprintf
 #undef snprintf
@@ -126,13 +125,93 @@ inline const char* _(const char* psz)
 #endif
 
 
+// enumLogContext constants can be bitwise-ORed together, both when setting log context
+// and when calling OutputLogStringF. For example, a particular operation may apply to
+// both Block and Chaining, so you can call OutputLogStringF(LC_Block|LC_Chaining, <etc.>
+// This list is not intended to be complete and final. It is merely my
+// (Jim Hyslop's) first pass at organizing the debug messages. Feel free
+// to revise, merge, expand, etc. this list. Just keep in mind that there is
+// no guarantee that an enum can be > 32 bits on all compilers, so don't
+// add any values > 0x80000000.
+enum enumLogContext
+{
+    LC_NoChange    =          0,
+    LC_None        =          0,
+    LC_All         = 0xffffffff,
+    LC_Accept      = 0x00000001,
+    LC_Account     = 0x00000002,
+    LC_Alert       = 0x00000004, 
+    LC_Bitcoin     = 0x00000008,
+    LC_Block       = 0x00000010,
+    LC_Chain       = 0x00000020,
+    LC_Coins       = 0x00000040,
+    LC_DB          = 0x00000080,
+    LC_Gen         = 0x00000100,
+    LC_HashRate    = 0x00000200,
+    LC_IRC         = 0x00000400,
+    LC_Main        = 0x00000800,
+    LC_Message     = 0x00001000,
+    LC_Net         = 0x00002000,
+    LC_Orphan      = 0x00004000,
+    LC_Params      = 0x00008000,
+    LC_Priority    = 0x00010000,
+    LC_RPC         = 0x00020000,
+    LC_Send        = 0x00040000,
+    LC_Sha         = 0x00080000,
+    LC_Sys         = 0x00100000,
+    LC_Test        = 0x00200000,
+    LC_Thread      = 0x00400000,
+    LC_Time        = 0x00800000,
+    LC_Transaction = 0x01000000,
+    LC_Util        = 0x02000000,
+    LC_Wallet      = 0x04000000,
+    LC_TBD1        = 0x08000000,
+    LC_TBD2        = 0x10000000,
+    LC_TBD3        = 0x20000000,
+    LC_TBD4        = 0x40000000,
+    LC_Legacy      = 0x80000000,
+};
 
+enum enumVerbosityLevel
+{
+  VL_Off,
+  VL_Critical,
+  VL_Error,
+  VL_Warning,
+  VL_Info,
+  VL_Debug,
+  VL_Verbose
+};
 
+// Utility function to make OR-ing the log context enums easier
+inline enumLogContext operator | (enumLogContext e1, enumLogContext e2 )
+{
+    return static_cast<enumLogContext>( (int)e1|(int)e2 );
+}
 
+// Returns the new log output mask. Pass LC_NoChange if all you want to do is query the current mask.
+enumLogContext TurnOnLogOutput(enumLogContext groupsToAdd);
+// Returns the new log output mask. Pass LC_NoChange if all you want to do is query the current mask.
+enumLogContext TurnOffLogOutput(enumLogContext groupsToRemove);
+// Discard current groups, and use these ones instead.
+void SetLogOutput(enumLogContext groupsToLog);
+// Returns the previous log verbosity
+enumVerbosityLevel SetLogVerbosity(enumVerbosityLevel verbosity);
+bool IsLogVerbosity(enumVerbosityLevel);
 
+// Utility functions to parse a list of log groups and the verbosity level out of a text
+// string, which would come from either the command-line or an RPC command (RPC command TODO).
+enumLogContext ParseLogContext(const std::string & groups);
+enumVerbosityLevel ParseVerbosity(const std::string & verbosity);
 
+// Revised function accepting the group and verbosity
+int OutputLogMessageF(enumLogContext group, enumVerbosityLevel verbosity, const char* pszFormat, ...);
+// Deprecated function, kept for backwards compatibility. Prefer the overloaded function above.
+int OutputDebugStringF(const char* pszFormat, ...);
 
-
+// This macro is also deprecated. Eventually all instances of 'printf' in the source code should
+// be changed to OutputDebugStringF
+#define printf OutputDebugStringF
 
 extern map<string, string> mapArgs;
 extern map<string, vector<string> > mapMultiArgs;
@@ -150,13 +229,31 @@ extern bool fNoListen;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
-int OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
 string strprintf(const char* format, ...);
+
+// Error and exception logging functions - rewored to use new enumLogContext
+bool error(enumLogContext logGroup, const char* format, ...);
+void LogException(enumLogContext group, std::exception* pex, const char* pszThread);
+void PrintException(enumLogContext group, std::exception* pex, const char* pszThread);
+void PrintExceptionContinue(enumLogContext group, std::exception* pex, const char* pszThread);
+// Old functions, retained for backwards compatibility. Prefer the overloaded versions accepting enumLogContext
+// Note: some of these are declared inline to avoid compiler errors, otherwise we'd need to
+// put them in a different file.
 bool error(const char* format, ...);
-void LogException(std::exception* pex, const char* pszThread);
-void PrintException(std::exception* pex, const char* pszThread);
-void PrintExceptionContinue(std::exception* pex, const char* pszThread);
+inline void LogException(std::exception* pex, const char* pszThread)
+{
+    LogException(LC_All, pex, pszThread);
+}
+inline void PrintException(std::exception* pex, const char* pszThread)
+{
+    PrintException(LC_All, pex, pszThread);
+}
+inline void PrintExceptionContinue(std::exception* pex, const char* pszThread)
+{
+    PrintExceptionContinue(LC_All, pex, pszThread);
+}
+
 void ParseString(const string& str, char c, vector<string>& v);
 string FormatMoney(int64 n, bool fPlus=false);
 bool ParseMoney(const string& str, int64& nRet);
@@ -350,14 +447,27 @@ inline string HexNumStr(const vector<unsigned char>& vch, bool f0x=true)
 }
 
 template<typename T>
-void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
+void PrintHex(enumLogContext group, enumVerbosityLevel verbosity, const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
 {
-    printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
+    OutputLogMessageF(group, verbosity, pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
 }
 
+// Maintained for backward compatibility. Prefer the overloaded version.
+template<typename T>
+void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSpaces=true)
+{
+    PrintHex(LC_All, VL_Verbose, pbegin, pend, pszFormat, fSpaces);
+}
+
+inline void PrintHex(enumLogContext group, enumVerbosityLevel verbosity, const vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
+{
+    OutputLogMessageF(group, verbosity, pszFormat, HexStr(vch, fSpaces).c_str());
+}
+
+// Maintained for backward compatibility. Prefer the overloaded version.
 inline void PrintHex(const vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
 {
-    printf(pszFormat, HexStr(vch, fSpaces).c_str());
+    PrintHex(LC_All, VL_Verbose, vch, pszFormat, fSpaces);
 }
 
 inline int64 GetPerformanceCounter()
