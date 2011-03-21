@@ -236,6 +236,10 @@ bool AppInit2(int argc, char* argv[])
         }
         if (pid > 0)
             return true;
+
+        pid_t sid = setsid();
+        if (sid < 0)
+            fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
     }
 #endif
 
@@ -466,6 +470,10 @@ bool AppInit2(int argc, char* argv[])
     if (fFirstRun)
         SetStartOnSystemStartup(true);
 #endif
+    
+    if (fDaemon)
+        while (!fShutdown)
+            Sleep(5000);
 
     return true;
 }
