@@ -120,6 +120,9 @@ bool AppInit2(int argc, char* argv[])
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGSEGV, &sa, NULL);
 #endif
 
     //
