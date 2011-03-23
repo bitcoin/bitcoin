@@ -306,12 +306,11 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     }
 
     // Init status bar
-    int pnWidths[3] = { -100, 88, 300 };
+    int pnWidths[3] = { -188, 300 };
 #ifndef __WXMSW__
     pnWidths[1] = pnWidths[1] * 1.1 * dResize;
-    pnWidths[2] = pnWidths[2] * 1.1 * dResize;
 #endif
-    m_statusBar->SetFieldsCount(3, pnWidths);
+    m_statusBar->SetFieldsCount(2, pnWidths);
 
     // Fill your address text box
     vector<unsigned char> vchPubKey;
@@ -1048,15 +1047,8 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
         m_statusBar->SetStatusText("", 0);
     strPrevWarning = strWarning;
 
-    string strGen = "";
-    if (fGenerateBitcoins)
-        strGen = _("    Generating");
-    if (fGenerateBitcoins && vNodes.empty())
-        strGen = _("(not connected)");
-    m_statusBar->SetStatusText(strGen, 1);
-
     string strStatus = strprintf(_("     %d connections     %d blocks     %d transactions"), vNodes.size(), nBestHeight, nTransactionCount);
-    m_statusBar->SetStatusText(strStatus, 2);
+    m_statusBar->SetStatusText(strStatus, 1);
 
     // Update receiving address
     string strDefaultAddress = PubKeyToAddress(vchDefaultKey);
@@ -1092,17 +1084,6 @@ void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
 {
     // File->Exit
     Close(true);
-}
-
-void CMainFrame::OnMenuOptionsGenerate(wxCommandEvent& event)
-{
-    // Options->Generate Coins
-    GenerateBitcoins(event.IsChecked());
-}
-
-void CMainFrame::OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event)
-{
-    event.Check(fGenerateBitcoins);
 }
 
 void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
@@ -1655,13 +1636,6 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 
     // Init values
     m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
-    m_checkBoxLimitProcessors->SetValue(fLimitProcessors);
-    m_spinCtrlLimitProcessors->Enable(fLimitProcessors);
-    m_spinCtrlLimitProcessors->SetValue(nLimitProcessors);
-    int nProcessors = wxThread::GetCPUCount();
-    if (nProcessors < 1)
-        nProcessors = 999;
-    m_spinCtrlLimitProcessors->SetRange(1, nProcessors);
     m_checkBoxStartOnSystemStartup->SetValue(fTmpStartOnSystemStartup = GetStartOnSystemStartup());
     m_checkBoxMinimizeToTray->SetValue(fMinimizeToTray);
     m_checkBoxMinimizeOnClose->SetValue(fMinimizeOnClose);
@@ -1696,11 +1670,6 @@ void COptionsDialog::OnKillFocusTransactionFee(wxFocusEvent& event)
     int64 nTmp = nTransactionFee;
     ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
     m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
-}
-
-void COptionsDialog::OnCheckBoxLimitProcessors(wxCommandEvent& event)
-{
-    m_spinCtrlLimitProcessors->Enable(event.IsChecked());
 }
 
 void COptionsDialog::OnCheckBoxUseProxy(wxCommandEvent& event)
@@ -1750,20 +1719,6 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
     int64 nPrevTransactionFee = nTransactionFee;
     if (ParseMoney(m_textCtrlTransactionFee->GetValue(), nTransactionFee) && nTransactionFee != nPrevTransactionFee)
         walletdb.WriteSetting("nTransactionFee", nTransactionFee);
-
-    int nPrevMaxProc = (fLimitProcessors ? nLimitProcessors : INT_MAX);
-    if (fLimitProcessors != m_checkBoxLimitProcessors->GetValue())
-    {
-        fLimitProcessors = m_checkBoxLimitProcessors->GetValue();
-        walletdb.WriteSetting("fLimitProcessors", fLimitProcessors);
-    }
-    if (nLimitProcessors != m_spinCtrlLimitProcessors->GetValue())
-    {
-        nLimitProcessors = m_spinCtrlLimitProcessors->GetValue();
-        walletdb.WriteSetting("nLimitProcessors", nLimitProcessors);
-    }
-    if (fGenerateBitcoins && (fLimitProcessors ? nLimitProcessors : INT_MAX) > nPrevMaxProc)
-        GenerateBitcoins(fGenerateBitcoins);
 
     if (fTmpStartOnSystemStartup != m_checkBoxStartOnSystemStartup->GetValue())
     {
@@ -2600,8 +2555,6 @@ BEGIN_EVENT_TABLE(CMyTaskBarIcon, wxTaskBarIcon)
     EVT_TASKBAR_LEFT_DCLICK(CMyTaskBarIcon::OnLeftButtonDClick)
     EVT_MENU(ID_TASKBAR_RESTORE, CMyTaskBarIcon::OnMenuRestore)
     EVT_MENU(ID_TASKBAR_OPTIONS, CMyTaskBarIcon::OnMenuOptions)
-    EVT_MENU(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnMenuGenerate)
-    EVT_UPDATE_UI(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnUpdateUIGenerate)
     EVT_MENU(ID_TASKBAR_EXIT, CMyTaskBarIcon::OnMenuExit)
 END_EVENT_TABLE()
 
@@ -2611,9 +2564,7 @@ void CMyTaskBarIcon::Show(bool fShow)
     if (fShow)
     {
         string strTooltip = _("Bitcoin");
-        if (fGenerateBitcoins)
-            strTooltip = _("Bitcoin - Generating");
-        if (fGenerateBitcoins && vNodes.empty())
+        if (vNodes.empty())
             strTooltip = _("Bitcoin - (not connected)");
 
         // Optimization, only update when changed, using char array to be reentrant
@@ -2667,16 +2618,6 @@ void CMyTaskBarIcon::Restore()
     pframeMain->Raise();
 }
 
-void CMyTaskBarIcon::OnMenuGenerate(wxCommandEvent& event)
-{
-    GenerateBitcoins(event.IsChecked());
-}
-
-void CMyTaskBarIcon::OnUpdateUIGenerate(wxUpdateUIEvent& event)
-{
-    event.Check(fGenerateBitcoins);
-}
-
 void CMyTaskBarIcon::OnMenuExit(wxCommandEvent& event)
 {
     pframeMain->Close(true);
@@ -2693,7 +2634,6 @@ wxMenu* CMyTaskBarIcon::CreatePopupMenu()
     wxMenu* pmenu = new wxMenu;
     pmenu->Append(ID_TASKBAR_RESTORE, _("&Open Bitcoin"));
     pmenu->Append(ID_TASKBAR_OPTIONS, _("O&ptions..."));
-    pmenu->AppendCheckItem(ID_TASKBAR_GENERATE, _("&Generate Coins"))->Check(fGenerateBitcoins);
 #ifndef __WXMAC_OSX__ // Mac has built-in quit menu
     pmenu->AppendSeparator();
     pmenu->Append(ID_TASKBAR_EXIT, _("E&xit"));

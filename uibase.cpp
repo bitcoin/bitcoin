@@ -28,10 +28,6 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_menubar->Append( m_menuFile, _("&File") );
 	
 	m_menuOptions = new wxMenu();
-	wxMenuItem* m_menuOptionsGenerateBitcoins;
-	m_menuOptionsGenerateBitcoins = new wxMenuItem( m_menuOptions, wxID_OPTIONSGENERATEBITCOINS, wxString( _("&Generate Coins") ) , wxEmptyString, wxITEM_CHECK );
-	m_menuOptions->Append( m_menuOptionsGenerateBitcoins );
-	
 	wxMenuItem* m_menuOptionsChangeYourAddress;
 	m_menuOptionsChangeYourAddress = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( _("&Your Receiving Addresses...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsChangeYourAddress );
@@ -190,8 +186,6 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	this->Connect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEvents ) );
 	this->Connect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaint ) );
 	this->Connect( m_menuFileExit->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuFileExit ) );
-	this->Connect( m_menuOptionsGenerateBitcoins->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsGenerate ) );
-	this->Connect( m_menuOptionsGenerateBitcoins->GetId(), wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIOptionsGenerate ) );
 	this->Connect( m_menuOptionsChangeYourAddress->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsChangeYourAddress ) );
 	this->Connect( m_menuOptionsOptions->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsOptions ) );
 	this->Connect( m_menuHelpAbout->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuHelpAbout ) );
@@ -250,8 +244,6 @@ CMainFrameBase::~CMainFrameBase()
 	this->Disconnect( wxEVT_MOUSEWHEEL, wxMouseEventHandler( CMainFrameBase::OnMouseEvents ) );
 	this->Disconnect( wxEVT_PAINT, wxPaintEventHandler( CMainFrameBase::OnPaint ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuFileExit ) );
-	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsGenerate ) );
-	this->Disconnect( wxID_ANY, wxEVT_UPDATE_UI, wxUpdateUIEventHandler( CMainFrameBase::OnUpdateUIOptionsGenerate ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsChangeYourAddress ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuOptionsOptions ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( CMainFrameBase::OnMenuHelpAbout ) );
@@ -349,21 +341,6 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	
 	bSizer69->Add( 0, 16, 0, wxEXPAND, 5 );
-	
-	wxBoxSizer* bSizer71;
-	bSizer71 = new wxBoxSizer( wxHORIZONTAL );
-	
-	m_checkBoxLimitProcessors = new wxCheckBox( m_panelMain, wxID_ANY, _("&Limit coin generation to"), wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer71->Add( m_checkBoxLimitProcessors, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	m_spinCtrlLimitProcessors = new wxSpinCtrl( m_panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 48,-1 ), wxSP_ARROW_KEYS, 1, 999, 1 );
-	bSizer71->Add( m_spinCtrlLimitProcessors, 0, wxALIGN_CENTER_VERTICAL, 5 );
-	
-	m_staticText35 = new wxStaticText( m_panelMain, wxID_ANY, _("processors"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText35->Wrap( -1 );
-	bSizer71->Add( m_staticText35, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	bSizer69->Add( bSizer71, 0, 0, 5 );
 	
 	m_checkBoxStartOnSystemStartup = new wxCheckBox( m_panelMain, wxID_ANY, _("&Start Bitcoin on system startup"), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer69->Add( m_checkBoxStartOnSystemStartup, 0, wxALL, 5 );
@@ -476,7 +453,6 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	// Connect Events
 	m_listBox->Connect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
-	m_checkBoxLimitProcessors->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
 	m_checkBoxMinimizeToTray->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_checkBoxUseProxy->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
 	m_textCtrlProxyIP->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
@@ -491,7 +467,6 @@ COptionsDialogBase::~COptionsDialogBase()
 {
 	// Disconnect Events
 	m_listBox->Disconnect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
-	m_checkBoxLimitProcessors->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxLimitProcessors ), NULL, this );
 	m_checkBoxMinimizeToTray->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_checkBoxUseProxy->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
 	m_textCtrlProxyIP->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );

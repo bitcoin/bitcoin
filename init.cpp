@@ -409,8 +409,6 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
-    fGenerateBitcoins = GetBoolArg("-gen");
-
     if (mapArgs.count("-proxy"))
     {
         fUseProxy = true;

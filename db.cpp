@@ -778,14 +778,9 @@ bool CWalletDB::LoadWallet()
                 string strKey;
                 ssKey >> strKey;
 
-                // Menu state
-                if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
-
                 // Options
                 if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;
                 if (strKey == "addrIncoming")       ssValue >> addrIncoming;
-                if (strKey == "fLimitProcessors")   ssValue >> fLimitProcessors;
-                if (strKey == "nLimitProcessors")   ssValue >> nLimitProcessors;
                 if (strKey == "fMinimizeToTray")    ssValue >> fMinimizeToTray;
                 if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
                 if (strKey == "fUseProxy")          ssValue >> fUseProxy;
@@ -800,7 +795,6 @@ bool CWalletDB::LoadWallet()
         WriteTx(hash, mapWallet[hash]);
 
     printf("nFileVersion = %d\n", nFileVersion);
-    printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
     printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
     printf("addrIncoming = %s\n", addrIncoming.ToString().c_str());
     printf("fMinimizeToTray = %d\n", fMinimizeToTray);

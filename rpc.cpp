@@ -216,57 +216,6 @@ Value getdifficulty(const Array& params, bool fHelp)
 }
 
 
-Value getgenerate(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "getgenerate\n"
-            "Returns true or false.");
-
-    return (bool)fGenerateBitcoins;
-}
-
-
-Value setgenerate(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 1 || params.size() > 2)
-        throw runtime_error(
-            "setgenerate <generate> [genproclimit]\n"
-            "<generate> is true or false to turn generation on or off.\n"
-            "Generation is limited to [genproclimit] processors, -1 is unlimited.");
-
-    bool fGenerate = true;
-    if (params.size() > 0)
-        fGenerate = params[0].get_bool();
-
-    if (params.size() > 1)
-    {
-        int nGenProcLimit = params[1].get_int();
-        fLimitProcessors = (nGenProcLimit != -1);
-        CWalletDB().WriteSetting("fLimitProcessors", fLimitProcessors);
-        if (nGenProcLimit != -1)
-            CWalletDB().WriteSetting("nLimitProcessors", nLimitProcessors = nGenProcLimit);
-        if (nGenProcLimit == 0)
-            fGenerate = false;
-    }
-
-    GenerateBitcoins(fGenerate);
-    return Value::null;
-}
-
-
-Value gethashespersec(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "gethashespersec\n"
-            "Returns a recent hashes per second performance measurement while generating.");
-
-    if (GetTimeMillis() - nHPSTimerStart > 8000)
-        return (boost::int64_t)0;
-    return (boost::int64_t)dHashesPerSec;
-}
-
 
 Value getinfo(const Array& params, bool fHelp)
 {
@@ -281,10 +230,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
-    obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
-    obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)GetOldestKeyPoolTime()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
@@ -1381,9 +1327,6 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getblocknumber",        &getblocknumber),
     make_pair("getconnectioncount",    &getconnectioncount),
     make_pair("getdifficulty",         &getdifficulty),
-    make_pair("getgenerate",           &getgenerate),
-    make_pair("setgenerate",           &setgenerate),
-    make_pair("gethashespersec",       &gethashespersec),
     make_pair("getinfo",               &getinfo),
     make_pair("getnewaddress",         &getnewaddress),
     make_pair("getaccountaddress",     &getaccountaddress),
@@ -1423,9 +1366,6 @@ string pAllowInSafeMode[] =
     "getblocknumber",
     "getconnectioncount",
     "getdifficulty",
-    "getgenerate",
-    "setgenerate",
-    "gethashespersec",
     "getinfo",
     "getnewaddress",
     "getaccountaddress",
@@ -2037,8 +1977,6 @@ int CommandLineRPC(int argc, char *argv[])
         //
         // Special case non-string parameter types
         //
-        if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
-        if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);

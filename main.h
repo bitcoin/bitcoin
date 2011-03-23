@@ -44,15 +44,10 @@ extern CCriticalSection cs_mapRequestCount;
 extern map<string, string> mapAddressBook;
 extern CCriticalSection cs_mapAddressBook;
 extern vector<unsigned char> vchDefaultKey;
-extern double dHashesPerSec;
-extern int64 nHPSTimerStart;
 
 // Settings
-extern int fGenerateBitcoins;
 extern int64 nTransactionFee;
 extern CAddress addrIncoming;
-extern int fLimitProcessors;
-extern int nLimitProcessors;
 extern int fMinimizeToTray;
 extern int fMinimizeOnClose;
 
@@ -83,7 +78,6 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 bool BroadcastTransaction(CWalletTx& wtxNew);
 string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
-void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 CBlock* CreateNewBlock(CReserveKey& reservekey);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime);
