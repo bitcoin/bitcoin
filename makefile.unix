@@ -23,7 +23,7 @@ LIBS= \
    -l z \
    -l dl
 
-DEFS=-DNOPCH -DFOURWAYSSE2 -DUSE_SSL
+DEFS=-DNOPCH -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
 CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
