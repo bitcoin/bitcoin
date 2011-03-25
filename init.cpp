@@ -122,7 +122,6 @@ bool AppInit2(int argc, char* argv[])
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGHUP, &sa, NULL);
-    sigaction(SIGSEGV, &sa, NULL);
 #endif
 
     //
