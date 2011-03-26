@@ -51,6 +51,7 @@ extern CCriticalSection cs_mapAddressBook;
 extern vector<unsigned char> vchDefaultKey;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
+extern CCrypter cWalletCrypter;
 
 // Settings
 extern int fGenerateBitcoins;

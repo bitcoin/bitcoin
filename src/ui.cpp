@@ -1107,6 +1107,46 @@ void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
         return;
 }
 
+void CMainFrame::OnMenuOptionsChangeWalletPassword(wxCommandEvent& event)
+{
+    // Options->Change Wallet Password
+    if (!GetBoolArg("-nocrypt"))
+    {
+        wxString strWalletPass = "";
+        strWalletPass.reserve(100);
+#ifdef __WXMSW__
+        VirtualLock(&strWalletPass, strWalletPass.capacity());
+#else
+        mlock(&strWalletPass, strWalletPass.capacity());
+#endif
+
+        // obtain new wallet encrypt/decrypt key, from passphrase
+        strWalletPass = wxGetPasswordFromUser(_("Enter a new password to reencrypt all encrypted addresses.\nWARNING: If you lose this password, no one, not even the Bitcoin developers can get you your Bitcoins back."),
+                                                  _("Password"));
+
+        if (!strWalletPass.size())
+        {
+            wxMessageBox(_("Please supply a new wallet encryption/decryption password."), "Bitcoin");
+            return;
+        }
+
+        CCrypter cNewWalletCrypter;
+        if (!cNewWalletCrypter.SetKey(strWalletPass.ToStdString()))
+        {
+            wxMessageBox(_("Wallet decryption setup failed"), "Bitcoin");
+            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+            return;
+        }
+        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+
+        ChangeWalletPass(cNewWalletCrypter);
+
+        wxMessageBox(_("Wallet password updated."), "Bitcoin");
+
+        cWalletCrypter = cNewWalletCrypter;
+    }
+}
+
 void CMainFrame::OnMenuOptionsOptions(wxCommandEvent& event)
 {
     // Options->Options

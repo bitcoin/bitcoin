@@ -54,6 +54,7 @@ protected:
     void OnMenuFileExit(wxCommandEvent& event);
     void OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event);
     void OnMenuOptionsChangeYourAddress(wxCommandEvent& event);
+    void OnMenuOptionsChangeWalletPassword(wxCommandEvent& event);
     void OnMenuOptionsOptions(wxCommandEvent& event);
     void OnMenuHelpAbout(wxCommandEvent& event);
     void OnButtonSend(wxCommandEvent& event);
