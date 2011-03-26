@@ -157,6 +157,13 @@ bool AppInit2(int argc, char* argv[])
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
+#ifdef USE_UPNP
+#if USE_UPNP
+            "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
+#else
+            "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
+#endif
+#endif
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
 #ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
@@ -447,6 +454,17 @@ bool AppInit2(int argc, char* argv[])
         }
         if (nTransactionFee > 0.25 * COIN)
             wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+    }
+
+    if (fHaveUPnP)
+    {
+#if USE_UPNP
+    if (GetBoolArg("-noupnp"))
+        fUseUPnP = false;
+#else
+    if (GetBoolArg("-upnp"))
+        fUseUPnP = true;
+#endif
     }
 
     //

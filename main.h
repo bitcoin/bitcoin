@@ -22,6 +22,11 @@ static const int64 CENT = 1000000;
 static const int64 MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int COINBASE_MATURITY = 100;
+#ifdef USE_UPNP
+static const int fHaveUPnP = true;
+#else
+static const int fHaveUPnP = false;
+#endif
 
 
 
@@ -55,6 +60,7 @@ extern int fLimitProcessors;
 extern int nLimitProcessors;
 extern int fMinimizeToTray;
 extern int fMinimizeOnClose;
+extern int fUseUPnP;
 
 
 

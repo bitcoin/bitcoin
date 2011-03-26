@@ -170,6 +170,7 @@ class COptionsDialogBase : public wxDialog
 		wxStaticText* m_staticText35;
 		wxCheckBox* m_checkBoxStartOnSystemStartup;
 		wxCheckBox* m_checkBoxMinimizeToTray;
+		wxCheckBox* m_checkBoxUseUPnP;
 		wxCheckBox* m_checkBoxMinimizeOnClose;
 		wxCheckBox* m_checkBoxUseProxy;
 		
