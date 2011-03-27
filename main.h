@@ -882,7 +882,7 @@ public:
         return nChangeCached;
     }
 
-    void GetAmounts(int64& nGenerated, list<pair<string /* address */, int64> >& listReceived,
+    void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, list<pair<string /* address */, int64> >& listReceived,
                     list<pair<string /* address */, int64> >& listSent, int64& nFee, string& strSentAccount) const;
 
     void GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
