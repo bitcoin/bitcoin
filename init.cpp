@@ -119,6 +119,8 @@ bool AppInit2(int argc, char* argv[])
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
 #endif
 
     //
@@ -210,8 +212,8 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
-    
     fNoListen = GetBoolArg("-nolisten");
+    fLogTimestamps = GetBoolArg("-logtimestamps");
 
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))
@@ -235,6 +237,10 @@ bool AppInit2(int argc, char* argv[])
         }
         if (pid > 0)
             return true;
+
+        pid_t sid = setsid();
+        if (sid < 0)
+            fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
     }
 #endif
 
@@ -428,6 +434,9 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
+    if (mapArgs.count("-dnsseed"))
+        DNSAddressSeed();
+
     if (mapArgs.count("-paytxfee"))
     {
         if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
@@ -462,6 +471,10 @@ bool AppInit2(int argc, char* argv[])
     if (fFirstRun)
         SetStartOnSystemStartup(true);
 #endif
+    
+    if (fDaemon)
+        while (!fShutdown)
+            Sleep(5000);
 
     return true;
 }

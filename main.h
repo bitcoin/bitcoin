@@ -77,6 +77,7 @@ bool ProcessMessages(CNode* pfrom);
 bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 int64 GetBalance();
+bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 bool BroadcastTransaction(CWalletTx& wtxNew);
@@ -574,6 +575,13 @@ public:
         return nValueOut;
     }
 
+    static bool AllowFree(double dPriority)
+    {
+        // Large (in bytes) low-priority (new, small-coin) transactions
+        // need a fee.
+        return dPriority > COIN * 144 / 250;
+    }
+
     int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true) const
     {
         // Base fee is 1 cent per kilobyte
@@ -998,6 +1006,7 @@ public:
     {
         return !(a == b);
     }
+    int GetDepthInMainChain() const;
 };
 
 
