@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version Apr 16 2008)
+// C++ code generated with wxFormBuilder (version Dec 21 2009)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO "NOT" EDIT THIS FILE!
@@ -93,28 +93,28 @@ class CMainFrameBase : public wxFrame
 		wxPanel* m_panel93;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
-		virtual void OnIconize( wxIconizeEvent& event ){ event.Skip(); }
-		virtual void OnIdle( wxIdleEvent& event ){ event.Skip(); }
-		virtual void OnMouseEvents( wxMouseEvent& event ){ event.Skip(); }
-		virtual void OnPaint( wxPaintEvent& event ){ event.Skip(); }
-		virtual void OnMenuFileExit( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnMenuOptionsGenerate( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnUpdateUIOptionsGenerate( wxUpdateUIEvent& event ){ event.Skip(); }
-		virtual void OnMenuOptionsChangeYourAddress( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnMenuOptionsOptions( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnMenuHelpAbout( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonSend( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonAddressBook( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnKeyDown( wxKeyEvent& event ){ event.Skip(); }
-		virtual void OnMouseEventsAddress( wxMouseEvent& event ){ event.Skip(); }
-		virtual void OnSetFocusAddress( wxFocusEvent& event ){ event.Skip(); }
-		virtual void OnButtonNew( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCopy( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnNotebookPageChanged( wxNotebookEvent& event ){ event.Skip(); }
-		virtual void OnListColBeginDrag( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
-		virtual void OnPaintListCtrl( wxPaintEvent& event ){ event.Skip(); }
+		virtual void OnClose( wxCloseEvent& event ) { event.Skip(); }
+		virtual void OnIconize( wxIconizeEvent& event ) { event.Skip(); }
+		virtual void OnIdle( wxIdleEvent& event ) { event.Skip(); }
+		virtual void OnMouseEvents( wxMouseEvent& event ) { event.Skip(); }
+		virtual void OnPaint( wxPaintEvent& event ) { event.Skip(); }
+		virtual void OnMenuFileExit( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnMenuOptionsGenerate( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnUpdateUIOptionsGenerate( wxUpdateUIEvent& event ) { event.Skip(); }
+		virtual void OnMenuOptionsChangeYourAddress( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnMenuOptionsOptions( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnMenuHelpAbout( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonSend( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonAddressBook( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnKeyDown( wxKeyEvent& event ) { event.Skip(); }
+		virtual void OnMouseEventsAddress( wxMouseEvent& event ) { event.Skip(); }
+		virtual void OnSetFocusAddress( wxFocusEvent& event ) { event.Skip(); }
+		virtual void OnButtonNew( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCopy( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnNotebookPageChanged( wxNotebookEvent& event ) { event.Skip(); }
+		virtual void OnListColBeginDrag( wxListEvent& event ) { event.Skip(); }
+		virtual void OnListItemActivated( wxListEvent& event ) { event.Skip(); }
+		virtual void OnPaintListCtrl( wxPaintEvent& event ) { event.Skip(); }
 		
 	
 	public:
@@ -125,6 +125,7 @@ class CMainFrameBase : public wxFrame
 		wxListCtrl* m_listCtrlSentReceived;
 		wxListCtrl* m_listCtrlSent;
 		wxListCtrl* m_listCtrlReceived;
+		
 		CMainFrameBase( wxWindow* parent, wxWindowID id = wxID_MAINFRAME, const wxString& title = _("Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 723,484 ), long style = wxDEFAULT_FRAME_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
 		~CMainFrameBase();
 	
@@ -142,10 +143,11 @@ class CTxDetailsDialogBase : public wxDialog
 		wxButton* m_buttonOK;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
+		
 		CTxDetailsDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Transaction Details"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 620,450 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER );
 		~CTxDetailsDialogBase();
 	
@@ -188,18 +190,19 @@ class COptionsDialogBase : public wxDialog
 		wxButton* m_buttonApply;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnListBox( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckBoxLimitProcessors( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckBoxMinimizeToTray( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnCheckBoxUseProxy( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnKillFocusProxy( wxFocusEvent& event ){ event.Skip(); }
-		virtual void OnKillFocusTransactionFee( wxFocusEvent& event ){ event.Skip(); }
-		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonApply( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnListBox( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnCheckBoxLimitProcessors( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnCheckBoxMinimizeToTray( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnCheckBoxUseProxy( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnKillFocusProxy( wxFocusEvent& event ) { event.Skip(); }
+		virtual void OnKillFocusTransactionFee( wxFocusEvent& event ) { event.Skip(); }
+		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCancel( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonApply( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
+		
 		COptionsDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Options"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 540,360 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~COptionsDialogBase();
 	
@@ -223,11 +226,12 @@ class CAboutDialogBase : public wxDialog
 		wxButton* m_buttonOK;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
 		wxStaticText* m_staticTextVersion;
+		
 		CAboutDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("About Bitcoin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 532,333 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~CAboutDialogBase();
 	
@@ -256,26 +260,23 @@ class CSendDialogBase : public wxDialog
 		wxChoice* m_choiceTransferType;
 		
 		
-		wxStaticText* m_staticTextFrom;
-		wxTextCtrl* m_textCtrlFrom;
-		wxStaticText* m_staticTextMessage;
-		wxTextCtrl* m_textCtrlMessage;
 		
 		wxButton* m_buttonSend;
 		wxButton* m_buttonCancel;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnKeyDown( wxKeyEvent& event ){ event.Skip(); }
-		virtual void OnTextAddress( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonPaste( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonAddressBook( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnKillFocusAmount( wxFocusEvent& event ){ event.Skip(); }
-		virtual void OnButtonSend( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnKeyDown( wxKeyEvent& event ) { event.Skip(); }
+		virtual void OnTextAddress( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonPaste( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonAddressBook( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnKillFocusAmount( wxFocusEvent& event ) { event.Skip(); }
+		virtual void OnButtonSend( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCancel( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
-		CSendDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Send Coins"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 675,298 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER );
+		
+		CSendDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Send Coins"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 498,157 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER );
 		~CSendDialogBase();
 	
 };
@@ -295,13 +296,14 @@ class CSendingDialogBase : public wxDialog
 		wxButton* m_buttonCancel;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
-		virtual void OnPaint( wxPaintEvent& event ){ event.Skip(); }
-		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnClose( wxCloseEvent& event ) { event.Skip(); }
+		virtual void OnPaint( wxPaintEvent& event ) { event.Skip(); }
+		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCancel( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
+		
 		CSendingDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Sending..."), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 442,151 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~CSendingDialogBase();
 	
@@ -326,18 +328,19 @@ class CYourAddressDialogBase : public wxDialog
 		wxButton* m_buttonCancel;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
-		virtual void OnListEndLabelEdit( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemSelected( wxListEvent& event ){ event.Skip(); }
-		virtual void OnButtonRename( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonNew( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCopy( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnClose( wxCloseEvent& event ) { event.Skip(); }
+		virtual void OnListEndLabelEdit( wxListEvent& event ) { event.Skip(); }
+		virtual void OnListItemActivated( wxListEvent& event ) { event.Skip(); }
+		virtual void OnListItemSelected( wxListEvent& event ) { event.Skip(); }
+		virtual void OnButtonRename( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonNew( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCopy( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCancel( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
+		
 		CYourAddressDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Your Bitcoin Addresses"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 610,390 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER );
 		~CYourAddressDialogBase();
 	
@@ -369,21 +372,22 @@ class CAddressBookDialogBase : public wxDialog
 		wxButton* m_buttonOK;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
-		virtual void OnNotebookPageChanged( wxNotebookEvent& event ){ event.Skip(); }
-		virtual void OnListEndLabelEdit( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemActivated( wxListEvent& event ){ event.Skip(); }
-		virtual void OnListItemSelected( wxListEvent& event ){ event.Skip(); }
-		virtual void OnButtonDelete( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCopy( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonEdit( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonNew( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnClose( wxCloseEvent& event ) { event.Skip(); }
+		virtual void OnNotebookPageChanged( wxNotebookEvent& event ) { event.Skip(); }
+		virtual void OnListEndLabelEdit( wxListEvent& event ) { event.Skip(); }
+		virtual void OnListItemActivated( wxListEvent& event ) { event.Skip(); }
+		virtual void OnListItemSelected( wxListEvent& event ) { event.Skip(); }
+		virtual void OnButtonDelete( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCopy( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonEdit( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonNew( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCancel( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
 		wxButton* m_buttonCancel;
+		
 		CAddressBookDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Address Book"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 610,390 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER );
 		~CAddressBookDialogBase();
 	
@@ -408,13 +412,14 @@ class CGetTextFromUserDialogBase : public wxDialog
 		wxButton* m_buttonCancel;
 		
 		// Virtual event handlers, overide them in your derived class
-		virtual void OnClose( wxCloseEvent& event ){ event.Skip(); }
-		virtual void OnKeyDown( wxKeyEvent& event ){ event.Skip(); }
-		virtual void OnButtonOK( wxCommandEvent& event ){ event.Skip(); }
-		virtual void OnButtonCancel( wxCommandEvent& event ){ event.Skip(); }
+		virtual void OnClose( wxCloseEvent& event ) { event.Skip(); }
+		virtual void OnKeyDown( wxKeyEvent& event ) { event.Skip(); }
+		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnButtonCancel( wxCommandEvent& event ) { event.Skip(); }
 		
 	
 	public:
+		
 		CGetTextFromUserDialogBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 440,138 ), long style = wxDEFAULT_DIALOG_STYLE );
 		~CGetTextFromUserDialogBase();
 	

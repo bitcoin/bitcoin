@@ -287,7 +287,7 @@ void EraseOrphanTx(uint256 hash)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// CTransaction
+// CTransaction and CTxIndex
 //
 
 bool CTransaction::ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txindexRet)
@@ -678,7 +678,11 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
 
     // Safety limits
     unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK);
-    if (GetSigOpCount() > 2 || nSize < 100)
+    // Checking ECDSA signatures is a CPU bottleneck, so to avoid denial-of-service
+    // attacks disallow transactions with more than one SigOp per 34 bytes.
+    // 34 bytes because a TxOut is:
+    //   20-byte address + 8 byte bitcoin amount + 5 bytes of ops + 1 byte script length
+    if (GetSigOpCount() > nSize / 34 || nSize < 100)
         return error("AcceptToMemoryPool() : nonstandard transaction");
 
     // Rather not work on nonstandard transactions
@@ -738,19 +742,29 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         if (nFees < GetMinFee(1000))
             return error("AcceptToMemoryPool() : not enough fees");
 
-        // Limit free transactions per 10 minutes
-        if (nFees < CENT && GetBoolArg("-limitfreerelay"))
+        // Continuously rate-limit free transactions
+        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+        // be annoying or make other's transactions take longer to confirm.
+        if (nFees < CENT)
         {
-            static int64 nNextReset;
-            static int64 nFreeCount;
-            if (GetTime() > nNextReset)
+            static CCriticalSection cs;
+            static double dFreeCount;
+            static int64 nLastTime;
+            int64 nNow = GetTime();
+
+            CRITICAL_BLOCK(cs)
             {
-                nNextReset = GetTime() + 10 * 60;
-                nFreeCount = 0;
+                // Use an exponentially decaying ~10-minute window:
+                dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+                nLastTime = nNow;
+                // -limitfreerelay unit is thousand-bytes-per-minute
+                // At default rate it would take over a month to fill 1GB
+                if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000 && !IsFromMe())
+                    return error("AcceptToMemoryPool() : free transaction rejected by rate limiter");
+                if (fDebug)
+                    printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+                dFreeCount += nSize;
             }
-            if (nFreeCount > 150000 && !IsFromMe())
-                return error("AcceptToMemoryPool() : free transaction rejected by rate limiter");
-            nFreeCount += nSize;
         }
     }
 
@@ -1032,6 +1046,22 @@ void ResendWalletTransactions()
             wtx.RelayWalletTransaction(txdb);
         }
     }
+}
+
+int CTxIndex::GetDepthInMainChain() const
+{
+    // Read block header
+    CBlock block;
+    if (!block.ReadFromDisk(pos.nFile, pos.nBlockPos, false))
+        return 0;
+    // Find the block in the index
+    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.GetHash());
+    if (mi == mapBlockIndex.end())
+        return 0;
+    CBlockIndex* pindex = (*mi).second;
+    if (!pindex || !pindex->IsInMainChain())
+        return 0;
+    return 1 + nBestHeight - pindex->nHeight;
 }
 
 
@@ -2366,6 +2396,10 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return true;
         }
 
+        // Be shy and don't send version until we hear
+        if (pfrom->fInbound)
+            pfrom->PushVersion();
+
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
 
         AddTimeData(pfrom->addr.ip, nTime);
@@ -3327,18 +3361,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
 
                 // Read block header
-                int nConf = 0;
-                CBlock block;
-                if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                {
-                    map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(block.GetHash());
-                    if (it != mapBlockIndex.end())
-                    {
-                        CBlockIndex* pindex = (*it).second;
-                        if (pindex->IsInMainChain())
-                            nConf = 1 + nBestHeight - pindex->nHeight;
-                    }
-                }
+                int nConf = txindex.GetDepthInMainChain();
 
                 dPriority += (double)nValueIn * nConf;
 
@@ -3383,7 +3406,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 continue;
 
             // Transaction fee required depends on block size
-            bool fAllowFree = (nBlockSize + nTxSize < 4000 || dPriority > COIN * 144 / 250);
+            bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
             int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree);
 
             // Connecting shouldn't fail due to dependency on other memory pool transactions
@@ -3750,15 +3773,15 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
             int64 n = pcoin->GetCredit();
             if (n <= 0)
                 continue;
-            if (n < nTargetValue)
-            {
-                vValue.push_back(make_pair(n, pcoin));
-                nTotalLower += n;
-            }
-            else if (n == nTargetValue)
+            if (n == nTargetValue)
             {
                 setCoinsRet.insert(pcoin);
                 return true;
+            }
+            else if (n < nTargetValue + CENT)
+            {
+                vValue.push_back(make_pair(n, pcoin));
+                nTotalLower += n;
             }
             else if (n < nLowestLarger)
             {
@@ -3768,13 +3791,23 @@ bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<
         }
     }
 
-    if (nTotalLower < nTargetValue)
+    if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
+    {
+        for (int i = 0; i < vValue.size(); ++i)
+            setCoinsRet.insert(vValue[i].second);
+        return true;
+    }
+
+    if (nTotalLower < nTargetValue + (pcoinLowestLarger ? CENT : 0))
     {
         if (pcoinLowestLarger == NULL)
             return false;
         setCoinsRet.insert(pcoinLowestLarger);
         return true;
     }
+
+    if (nTotalLower >= nTargetValue + CENT)
+        nTargetValue += CENT;
 
     // Solve subset sum by stochastic approximation
     sort(vValue.rbegin(), vValue.rend());
@@ -3841,8 +3874,18 @@ bool SelectCoins(int64 nTargetValue, set<CWalletTx*>& setCoinsRet)
 
 
 
-bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
 {
+    int64 nValue = 0;
+    foreach (const PAIRTYPE(CScript, int64)& s, vecSend)
+    {
+        if (nValue < 0)
+            return false;
+        nValue += s.second;
+    }
+    if (vecSend.empty() || nValue < 0)
+        return false;
+
     CRITICAL_BLOCK(cs_main)
     {
         // txdb must be opened before the mapWallet lock
@@ -3855,10 +3898,12 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
                 wtxNew.fFromMe = true;
-                if (nValue < 0)
-                    return false;
-                int64 nValueOut = nValue;
+
                 int64 nTotalValue = nValue + nFeeRet;
+                double dPriority = 0;
+                // vouts to the payees
+                foreach (const PAIRTYPE(CScript, int64)& s, vecSend)
+                    wtxNew.vout.push_back(CTxOut(s.second, s.first));
 
                 // Choose coins to use
                 set<CWalletTx*> setCoins;
@@ -3866,12 +3911,11 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                     return false;
                 int64 nValueIn = 0;
                 foreach(CWalletTx* pcoin, setCoins)
-                    nValueIn += pcoin->GetCredit();
-
-                // Fill a vout to the payee
-                bool fChangeFirst = GetRand(2);
-                if (!fChangeFirst)
-                    wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
+                {
+                    int64 nCredit = pcoin->GetCredit();
+                    nValueIn += nCredit;
+                    dPriority += (double)nCredit * pcoin->GetDepthInMainChain();
+                }
 
                 // Fill a vout back to self with any change
                 int64 nChange = nValueIn - nTotalValue;
@@ -3890,18 +3934,17 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
 
                     // Fill a vout to ourself, using same address type as the payment
                     CScript scriptChange;
-                    if (scriptPubKey.GetBitcoinAddressHash160() != 0)
+                    if (vecSend[0].first.GetBitcoinAddressHash160() != 0)
                         scriptChange.SetBitcoinAddress(vchPubKey);
                     else
                         scriptChange << vchPubKey << OP_CHECKSIG;
-                    wtxNew.vout.push_back(CTxOut(nChange, scriptChange));
+
+                    // Insert change txn at random position:
+                    vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size());
+                    wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
                 }
                 else
                     reservekey.ReturnKey();
-
-                // Fill a vout to the payee
-                if (fChangeFirst)
-                    wtxNew.vout.push_back(CTxOut(nValueOut, scriptPubKey));
 
                 // Fill vin
                 foreach(CWalletTx* pcoin, setCoins)
@@ -3921,10 +3964,12 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
                 unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
                 if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
                     return false;
+                dPriority /= nBytes;
 
                 // Check that enough fee is included
                 int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                int64 nMinFee = wtxNew.GetMinFee();
+                bool fAllowFree = CTransaction::AllowFree(dPriority);
+                int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
                     nFeeRet = max(nPayFee, nMinFee);
@@ -3940,6 +3985,13 @@ bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CR
         }
     }
     return true;
+}
+
+bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
+{
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, nValue));
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet);
 }
 
 // Call after CreateTransaction unless you want to abort
