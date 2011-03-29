@@ -677,7 +677,7 @@ public:
 
     void BeginMessage(const char* pszCommand)
     {
-        cs_vSend.Enter();
+        cs_vSend.Enter("cs_vSend", __FILE__, __LINE__);
         if (nHeaderStart != -1)
             AbortMessage();
         nHeaderStart = vSend.size();
