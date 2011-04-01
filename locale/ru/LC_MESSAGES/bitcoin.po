@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Bitcoin 0.3.20\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-23 11:32+0300\n"
-"PO-Revision-Date: 2011-02-23 14:33+0300\n"
+"PO-Revision-Date: 2011-04-02 00:52+0400\n"
 "Last-Translator: eurekafag <eurekafag@eureka7.ru>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -440,7 +440,7 @@ msgstr "<b>Комиссия:</b> "
 
 #: ../../../ui.cpp:1406
 msgid "<b>Net amount:</b> "
-msgstr "<b>Количество сети:</b> "
+msgstr "<b>Сумма нетто:</b> "
 
 #: ../../../ui.cpp:1413
 msgid "Message:"
