@@ -747,6 +747,25 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
     }
 }
 
+string GetPidFile()
+{
+    namespace fs = boost::filesystem;
+    fs::path pathConfig(GetArg("-pid", "bitcoind.pid"));
+    if (!pathConfig.is_complete())
+        pathConfig = fs::path(GetDataDir()) / pathConfig;
+    return pathConfig.string();
+}
+
+void CreatePidFile(string pidFile, pid_t pid)
+{
+    FILE* file;
+    if (file = fopen(pidFile.c_str(), "w"))
+    {
+        fprintf(file, "%d\n", pid);
+        fclose(file);
+    }
+}
+
 int GetFilesize(FILE* file)
 {
     int nSavePos = ftell(file);
