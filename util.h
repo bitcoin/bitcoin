@@ -172,6 +172,8 @@ bool WildcardMatch(const string& str, const string& mask);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
 string GetConfigFile();
+string GetPidFile();
+void CreatePidFile(string pidFile, pid_t pid);
 void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<string> >& mapMultiSettingsRet);
 #ifdef __WXMSW__
 string MyGetSpecialFolderPath(int nFolder, bool fCreate);
