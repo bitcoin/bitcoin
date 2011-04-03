@@ -41,6 +41,7 @@ void Shutdown(void* parg)
         DBFlush(false);
         StopNode();
         DBFlush(true);
+        boost::filesystem::remove(GetPidFile());
         CreateThread(ExitTimeout, NULL);
         Sleep(50);
         printf("Bitcoin exiting\n\n");
