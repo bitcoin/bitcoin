@@ -315,46 +315,45 @@ Value getnewaddress(const Array& params, bool fHelp)
 }
 
 
+// requires cs_main, cs_mapWallet locks
 string GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     string strAddress;
 
-    CRITICAL_BLOCK(cs_mapWallet)
+    CWalletDB walletdb;
+    walletdb.TxnBegin();
+
+    CAccount account;
+    walletdb.ReadAccount(strAccount, account);
+
+    // Check if the current key has been used
+    if (!account.vchPubKey.empty())
     {
-        CWalletDB walletdb;
-        walletdb.TxnBegin();
-
-        CAccount account;
-        walletdb.ReadAccount(strAccount, account);
-
-        // Check if the current key has been used
-        if (!account.vchPubKey.empty())
+        CScript scriptPubKey;
+        scriptPubKey.SetBitcoinAddress(account.vchPubKey);
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin();
+             it != mapWallet.end() && !account.vchPubKey.empty();
+             ++it)
         {
-            CScript scriptPubKey;
-            scriptPubKey.SetBitcoinAddress(account.vchPubKey);
-            for (map<uint256, CWalletTx>::iterator it = mapWallet.begin();
-                 it != mapWallet.end() && !account.vchPubKey.empty();
-                 ++it)
-            {
-                const CWalletTx& wtx = (*it).second;
-                foreach(const CTxOut& txout, wtx.vout)
-                    if (txout.scriptPubKey == scriptPubKey)
-                        account.vchPubKey.clear();
-            }
+            const CWalletTx& wtx = (*it).second;
+            foreach(const CTxOut& txout, wtx.vout)
+                if (txout.scriptPubKey == scriptPubKey)
+                    account.vchPubKey.clear();
         }
-
-        // Generate a new key
-        if (account.vchPubKey.empty() || bForceNew)
-        {
-            account.vchPubKey = GetKeyFromKeyPool();
-            string strAddress = PubKeyToAddress(account.vchPubKey);
-            SetAddressBookName(strAddress, strAccount);
-            walletdb.WriteAccount(strAccount, account);
-        }
-
-        walletdb.TxnCommit();
-        strAddress = PubKeyToAddress(account.vchPubKey);
     }
+
+    // Generate a new key
+    if (account.vchPubKey.empty() || bForceNew)
+    {
+        account.vchPubKey = GetKeyFromKeyPool();
+        string strAddress = PubKeyToAddress(account.vchPubKey);
+        SetAddressBookName(strAddress, strAccount);
+        walletdb.WriteAccount(strAccount, account);
+    }
+
+    walletdb.TxnCommit();
+    strAddress = PubKeyToAddress(account.vchPubKey);
+
     return strAddress;
 }
 
@@ -368,7 +367,15 @@ Value getaccountaddress(const Array& params, bool fHelp)
     // Parse the account first so we don't generate a key if there's an error
     string strAccount = AccountFromValue(params[0]);
 
-    return GetAccountAddress(strAccount);
+    Value ret;
+
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        ret = GetAccountAddress(strAccount);
+    }
+
+    return ret;
 }
 
 
@@ -392,6 +399,8 @@ Value setaccount(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[1]);
 
     // Detect when changing the account of an address that is the 'unused current key' of another account:
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         if (mapAddressBook.count(strAddress))
@@ -475,9 +484,13 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["to"]      = params[3].get_str();
 
-    string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
-    if (strError != "")
-        throw JSONRPCError(-4, strError);
+    CRITICAL_BLOCK(cs_main)
+    {
+        string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+        if (strError != "")
+            throw JSONRPCError(-4, strError);
+    }
+
     return wtx.GetHash().GetHex();
 }
 
@@ -752,6 +765,7 @@ Value sendfrom(const Array& params, bool fHelp)
     if (params.size() > 5 && params[5].type() != null_type && !params[5].get_str().empty())
         wtx.mapValue["to"]      = params[5].get_str();
 
+    CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
     {
         // Check funds
@@ -808,6 +822,7 @@ Value sendmany(const Array& params, bool fHelp)
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
     }
 
+    CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
     {
         // Check funds

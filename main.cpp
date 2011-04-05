@@ -4046,35 +4046,35 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
 
 
+// requires cs_main lock
 string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
 {
-    CRITICAL_BLOCK(cs_main)
+    CReserveKey reservekey;
+    int64 nFeeRequired;
+    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
     {
-        CReserveKey reservekey;
-        int64 nFeeRequired;
-        if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
-        {
-            string strError;
-            if (nValue + nFeeRequired > GetBalance())
-                strError = strprintf(_("Error: This is an oversized transaction that requires a transaction fee of %s  "), FormatMoney(nFeeRequired).c_str());
-            else
-                strError = _("Error: Transaction creation failed  ");
-            printf("SendMoney() : %s", strError.c_str());
-            return strError;
-        }
-
-        if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
-            return "ABORTED";
-
-        if (!CommitTransaction(wtxNew, reservekey))
-            return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+        string strError;
+        if (nValue + nFeeRequired > GetBalance())
+            strError = strprintf(_("Error: This is an oversized transaction that requires a transaction fee of %s  "), FormatMoney(nFeeRequired).c_str());
+        else
+            strError = _("Error: Transaction creation failed  ");
+        printf("SendMoney() : %s", strError.c_str());
+        return strError;
     }
+
+    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
+        return "ABORTED";
+
+    if (!CommitTransaction(wtxNew, reservekey))
+        return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+
     MainFrameRepaint();
     return "";
 }
 
 
 
+// requires cs_main lock
 string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
 {
     // Check amount
