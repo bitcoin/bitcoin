@@ -859,6 +859,7 @@ void ThreadSocketHandler2(void* parg)
 
 static const char *strDNSSeed[] = {
     "bitseed.xf2.org",
+    "bitseed.bitcoin.org.uk",
 };
 
 void DNSAddressSeed()
