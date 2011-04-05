@@ -1934,20 +1934,23 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
 
         if (fBitcoinAddress)
         {
-            // Send to bitcoin address
-            CScript scriptPubKey;
-            scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
+	    CRITICAL_BLOCK(cs_main)
+	    {
+                // Send to bitcoin address
+                CScript scriptPubKey;
+                scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
 
-            string strError = SendMoney(scriptPubKey, nValue, wtx, true);
-            if (strError == "")
-                wxMessageBox(_("Payment sent  "), _("Sending..."));
-            else if (strError == "ABORTED")
-                return; // leave send dialog open
-            else
-            {
-                wxMessageBox(strError + "  ", _("Sending..."));
-                EndModal(false);
-            }
+                string strError = SendMoney(scriptPubKey, nValue, wtx, true);
+                if (strError == "")
+                    wxMessageBox(_("Payment sent  "), _("Sending..."));
+                else if (strError == "ABORTED")
+                    return; // leave send dialog open
+                else
+                {
+                    wxMessageBox(strError + "  ", _("Sending..."));
+                    EndModal(false);
+                }
+	    }
         }
         else
         {
