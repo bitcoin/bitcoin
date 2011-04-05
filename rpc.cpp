@@ -822,6 +822,7 @@ Value sendmany(const Array& params, bool fHelp)
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
     }
 
+    CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
     {
         // Check funds
