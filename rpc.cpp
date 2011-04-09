@@ -1486,7 +1486,7 @@ string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeader
 
 string rfc1123Time()
 {
-    char buffer[32];
+    char buffer[64];
     time_t now;
     time(&now);
     struct tm* now_gmt = gmtime(&now);
