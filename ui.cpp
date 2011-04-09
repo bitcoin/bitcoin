@@ -2808,6 +2808,10 @@ bool CMyApp::Initialize(int& argc, wxChar** argv)
             }
             if (pid > 0)
                 pthread_exit((void*)0);
+
+            pid_t sid = setsid();
+            if (sid < 0)
+                fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
         }
 
         return true;
