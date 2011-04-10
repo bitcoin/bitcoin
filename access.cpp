@@ -1,88 +1,7 @@
-#include <string>
-#include <exception>
-using std::string;
-
-//typedef struct RSA;
-#include <openssl/rsa.h>
-
-class ReadError : public std::exception
-{
-public:
-    virtual const char* what() const throw();
-};
-
-class NoKeypairLoaded : public std::exception
-{
-public:
-    virtual const char* what() const throw();
-};
-
-class SignError : public std::exception
-{
-public:
-    virtual const char* what() const throw();
-};
-
-class AccessCard
-{
-public:
-    AccessCard();
-    ~AccessCard();
-    void Generate();
-    void Load(const string& pem, const string& pass);
-    void PublicKey(string& pem) const;
-    void PrivateKey(string& pem, const string& passphrase) const;
-    string Sign(const string& msg);
-    bool Verify(const string& msg, const string& sig);
-
-private:
-    void CheckKey() const;
-
-    RSA* keypair;
-};
-
-class BioBox
-{
-public:
-    struct Buffer
-    {
-        void* buf;
-        int size;
-    };
-
-    BioBox();
-    ~BioBox();
-    void ConstructSink(const string& str);
-    void NewBuffer();
-    BIO* Bio() const;
-    Buffer ReadAll();
-protected:
-    BIO* bio;
-    Buffer buf;
-};
-
-class Base64 : public BioBox
-{
-public:
-    Base64();
-    ~Base64();
-    Buffer Encode(const string& message);
-private:
-    BIO* b64;
-};
-
-class EvpBox
-{
-public:
-    EvpBox(RSA* keyp);
-    ~EvpBox();
-    EVP_PKEY* Key();
-private:
-    EVP_PKEY* evpkey;
-};
-
-//--------------------
+#include <openssl/sha.h>
 #include <openssl/pem.h>
+
+#include "access.h"
 
 const char* ReadError::what() const throw()
 {
@@ -94,7 +13,11 @@ const char* NoKeypairLoaded::what() const throw()
 }
 const char* SignError::what() const throw()
 {
-    return "No keypair loaded.";
+    return "Error signing.";
+}
+const char* HashFailed::what() const throw()
+{
+    return "Unable to generate hash.";
 }
 
 AccessCard::AccessCard()
@@ -129,6 +52,11 @@ static void* StringAsVoid(const string& str)
     return reinterpret_cast<void*>(LoseStringConst(str));
 }
 typedef unsigned char uchar;
+template <typename T>
+static T* CastString(const string& str)
+{
+    return reinterpret_cast<T*>(const_cast<char*>(str.c_str()));
+}
 
 BioBox::BioBox()
  : bio(NULL)
@@ -263,60 +191,92 @@ void AccessCard::PrivateKey(string& pem, const string& passphrase) const
     const BioBox::Buffer& buf = bio.ReadAll();
     pem = string(reinterpret_cast<const char*>(buf.buf), buf.size);
 }
-string AccessCard::Sign(const string& msg)
+
+static void Hash(const char* data, size_t datlen, uchar* digest)
 {
-    const uchar* m = reinterpret_cast<const uchar*>(msg.c_str());
-    uchar* sigret = new uchar[RSA_size(keypair)];
-    unsigned int siglen = 0;
-    if (!RSA_sign(NID_sha512, m, msg.size(), sigret, &siglen, keypair)) {
-        delete[] sigret;
-        throw SignError();
-    }
-    string sig(reinterpret_cast<const char*>(sigret), siglen);
-    delete[] sigret;
-    return sig;
-}
-bool AccessCard::Verify(const string& msg, const string& sig)
-{
-    const uchar* m = reinterpret_cast<const uchar*>(msg.c_str());
-    uchar* sigbuf = reinterpret_cast<uchar*>(LoseStringConst(sig));
-    return RSA_verify(NID_sha512, m, msg.size(), sigbuf, sig.size(), keypair);
+    SHA512_CTX sha_ctx = { 0 };
+
+    if (SHA512_Init(&sha_ctx) != 1)
+        throw HashFailed();
+
+    if (SHA512_Update(&sha_ctx, data, datlen) != 1)
+        throw HashFailed();
+
+    if (SHA512_Final(digest, &sha_ctx) != 1)
+        throw HashFailed();
 }
 
-//#ifdef TESTACC
+string AccessCard::Sign(const string& msg)
+{
+    uchar *sig = NULL;
+    unsigned int sig_len = 0;
+
+    uchar digest[SHA512_DIGEST_LENGTH];
+    Hash((const char*)msg.c_str(), msg.size(), digest);
+
+    sig = new uchar[RSA_size(keypair)];
+    if (!sig)
+        throw SignError();
+
+    if (RSA_sign(NID_sha512, digest, sizeof digest, sig, &sig_len, keypair) != 1) {
+        delete [] sig;
+        throw SignError();
+    }
+
+    string sigret(reinterpret_cast<char*>(sig), sig_len);
+    delete [] sig;
+
+    // now base64 encode the signature
+    Base64 b64;
+    Base64::Buffer b = b64.Encode(sigret);
+    string encsig(reinterpret_cast<char*>(b.buf), b.size);
+    return encsig;
+}
+#if 0
+bool AccessCard::Verify(const string& msg, const string& sig)
+{
+    //uchar* digest = Hash(msg.c_str(), msg.size());
+    uchar* digest;
+    uchar* sigbuf = CastString<uchar>(msg);
+    const uchar* msgbuf = CastString<uchar>(msg);
+    return RSA_verify(NID_sha512, msgbuf, msg.size(), sigbuf, sig.size(), keypair);
+}
+#endif
+
+#ifdef TEST_ACCESS
 //-------------------------------------------------------------------
 // this wont be in the final file... it's our unit test
 //-------------------------------------------------------------------
 #include <iostream>
-#include <assert.h>
 using std::cout;
+// http://www.bmt-online.org/geekisms/RSA_verify
 
 int main()
 {
+    void* pemarr = malloc(1900);
+    FILE* pemf = fopen("privkey.pem", "r");
+    size_t pemlen = fread(pemarr, sizeof(char), 1900, pemf);
+    string pemstr(reinterpret_cast<char*>(pemarr), pemlen);
+
     AccessCard acc;                                                    
+    acc.Load(pemstr, "hello");
     // New key
-    acc.Generate();
+    //acc.Generate();
     string pem;
     // Get public key
     acc.PublicKey(pem);
-    cout << pem << "\n";
+    //cout << pem << "\n";
     // Get private key
     acc.PrivateKey(pem, "hello");
-    cout << pem << "\n";
+    //cout << pem << "\n";
     // Load a private key using pass 'hello'
-    acc.Load(pem, "hello");
     acc.PublicKey(pem);
-    cout << pem << "\n";
-    string msg = "hellothere";
-    const string sig = acc.Sign(msg);
-    cout << acc.Verify(msg, sig) << "\n";
-    Base64 bio;
-    const BioBox::Buffer& buf = bio.Encode(sig);
-    pem = string(reinterpret_cast<const char*>(buf.buf), buf.size);
-    cout << "signature = " << pem << "\n";
-    msg = "hellother";
-    cout << acc.Verify(msg, sig) << "\n";
+    //cout << pem << "\n";
+    string msg = "hello";
+
+    string sign = acc.Sign("hello");
+    std::cout << sign;
     return 0;
 }
-//#endif
+#endif
 
