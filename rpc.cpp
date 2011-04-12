@@ -649,12 +649,12 @@ Value getbalance(const Array& params, bool fHelp)
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            int64 allGenerated, allFee;
-            allGenerated = allFee = 0;
+            int64 allGeneratedImmature, allGeneratedMature, allFee;
+            allGeneratedImmature = allGeneratedMature = allFee = 0;
             string strSentAccount;
             list<pair<string, int64> > listReceived;
             list<pair<string, int64> > listSent;
-            wtx.GetAmounts(allGenerated, listReceived, listSent, allFee, strSentAccount);
+            wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
             foreach(const PAIRTYPE(string,int64)& r, listReceived)
             {
                 nBalance += r.second;
@@ -664,7 +664,7 @@ Value getbalance(const Array& params, bool fHelp)
             foreach(const PAIRTYPE(string,int64)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
-            nBalance += allGenerated;
+            nBalance += allGeneratedMature;
         }
         printf("Found %d accounts\n", vAccounts.size());
         return  ValueFromAmount(nBalance);
@@ -993,21 +993,29 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
 
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
-    int64 nGenerated, nFee;
+    int64 nGeneratedImmature, nGeneratedMature, nFee;
     string strSentAccount;
     list<pair<string, int64> > listReceived;
     list<pair<string, int64> > listSent;
-    wtx.GetAmounts(nGenerated, listReceived, listSent, nFee, strSentAccount);
+    wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
 
     bool fAllAccounts = (strAccount == string("*"));
 
     // Generated blocks assigned to account ""
-    if (nGenerated != 0 && (fAllAccounts || strAccount == ""))
+    if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == ""))
     {
         Object entry;
         entry.push_back(Pair("account", string("")));
-        entry.push_back(Pair("category", "generate"));
-        entry.push_back(Pair("amount", ValueFromAmount(nGenerated)));
+        if (nGeneratedImmature)
+        {
+            entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
+            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedImmature)));
+        }
+        else
+        {
+            entry.push_back(Pair("category", "generate"));
+            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedMature)));
+        }
         if (fLong)
             WalletTxToJSON(wtx, entry);
         ret.push_back(entry);
@@ -1159,17 +1167,17 @@ Value listaccounts(const Array& params, bool fHelp)
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            int64 nGenerated, nFee;
+            int64 nGeneratedImmature, nGeneratedMature, nFee;
             string strSentAccount;
             list<pair<string, int64> > listReceived;
             list<pair<string, int64> > listSent;
-            wtx.GetAmounts(nGenerated, listReceived, listSent, nFee, strSentAccount);
+            wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
             mapAccountBalances[strSentAccount] -= nFee;
             foreach(const PAIRTYPE(string, int64)& s, listSent)
                 mapAccountBalances[strSentAccount] -= s.second;
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
-                mapAccountBalances[""] += nGenerated;
+                mapAccountBalances[""] += nGeneratedMature;
                 foreach(const PAIRTYPE(string, int64)& r, listReceived)
                     if (mapAddressBook.count(r.first))
                         mapAccountBalances[mapAddressBook[r.first]] += r.second;

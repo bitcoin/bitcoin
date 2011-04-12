@@ -411,18 +411,20 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
-void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listReceived,
+void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, list<pair<string, int64> >& listReceived,
                            list<pair<string, int64> >& listSent, int64& nFee, string& strSentAccount) const
 {
-    nGenerated = nFee = 0;
+    nGeneratedImmature = nGeneratedMature = nFee = 0;
     listReceived.clear();
     listSent.clear();
     strSentAccount = strFromAccount;
 
     if (IsCoinBase())
     {
-        if (GetDepthInMainChain() >= COINBASE_MATURITY)
-            nGenerated = GetCredit();
+        if (GetBlocksToMaturity() > 0)
+            nGeneratedImmature = CTransaction::GetCredit();
+        else
+            nGeneratedMature = GetCredit();
         return;
     }
 
@@ -470,15 +472,15 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
 {
     nGenerated = nReceived = nSent = nFee = 0;
 
-    int64 allGenerated, allFee;
-    allGenerated = allFee = 0;
+    int64 allGeneratedImmature, allGeneratedMature, allFee;
+    allGeneratedImmature = allGeneratedMature = allFee = 0;
     string strSentAccount;
     list<pair<string, int64> > listReceived;
     list<pair<string, int64> > listSent;
-    GetAmounts(allGenerated, listReceived, listSent, allFee, strSentAccount);
+    GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
 
     if (strAccount == "")
-        nGenerated = allGenerated;
+        nGenerated = allGeneratedMature;
     if (strAccount == strSentAccount)
     {
         foreach(const PAIRTYPE(string,int64)& s, listSent)
