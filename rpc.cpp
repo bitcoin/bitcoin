@@ -537,6 +537,15 @@ Value rpc_send(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+Value publickey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "publickey\n"
+            "Get your public key in PEM format used for name addressing.");
+    return "blaa";
+}
+
 Value updatens(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
@@ -1493,8 +1502,9 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",         &sendtoaddress),
     make_pair("send",                  &rpc_send),
-    make_pair("updatens",              &updatens),
-    make_pair("setnspassword",         &setnspassword),
+    //make_pair("updatens",              &updatens),
+    //make_pair("setnspassword",         &setnspassword),
+    make_pair("publickey",             &publickey),
     make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
     make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
     make_pair("getreceivedbyaddress",  &getreceivedbyaddress),
