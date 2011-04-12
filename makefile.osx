@@ -16,6 +16,8 @@ LIBPATHS= \
 
 WXLIBS=$(shell $(DEPSDIR)/bin/wx-config --libs --static)
 
+USE_UPNP:=0
+
 LIBS= -dead_strip \
  $(DEPSDIR)/lib/libdb_cxx-4.8.a \
  $(DEPSDIR)/lib/libboost_system.a \
@@ -44,6 +46,11 @@ OBJS= \
     obj/init.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
+
+ifdef USE_UPNP
+	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
+	DEFS += -DUSE_UPNP=$(USE_UPNP)
+endif
 	
 
 all: bitcoin

@@ -3,7 +3,8 @@ Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
 the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
-cryptographic software written by Eric Young (eay@cryptsoft.com).
+cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
+software written by Thomas Bernard.
 
 
 Mac OS X build instructions
@@ -108,9 +109,49 @@ file lib/libcrypto.a
 
 output should look like this:
 
-ib/libcrypto.a: Mach-O universal binary with 2 architectures
+lib/libcrypto.a: Mach-O universal binary with 2 architectures
 lib/libcrypto.a (for architecture i386):	current ar archive random library
 lib/libcrypto.a (for architecture x86_64):	current ar archive random library
+
+
+miniupnpc
+---------
+
+The process for miniupnpc (optional) is similar to that of OpenSSL.
+
+Download from http://miniupnp.tuxfamily.org/files/.
+
+cd ~/bitcoin/deps
+tar xvf ~/Downloads/miniupnpc-1.5.tar
+mv miniupnpc-1.5 miniupnpc-1.5-x86_64
+tar xvf ~/Downloads/miniupnpc-1.5.tar
+mv miniupnpc-1.5 miniupnpc-1.5-i386
+# build x86_64 (64 bit intel) binary
+cd miniupnpc-1.5-x86_64
+export CFLAGS="-arch x86_64"
+export LDFLAGS="-arch x86_64"
+export PREFIX="/Users/macuser/bitcoin/deps"
+make && make install
+# build i386 (32 bit intel) binary
+cd miniupnpc-1.5-i386
+export CFLAGS="-arch i386"
+export LDFLAGS="-arch i386"
+export PREFIX="/Users/macuser/bitcoin/deps"
+make
+
+# combine the libs
+cd ~/bitcoin/deps
+lipo -arch i386 miniupnpc-1.5-i386/libminiupnpc.a -arch x86_64 miniupnpc-1.5-x86_64/libminiupnpc.a -o lib/libminiupnpc.a -create
+
+Verify your binaries
+
+file lib/libminiupnpc.a
+
+output should look like this:
+
+lib/libminiupnpc.a: Mach-O universal binary with 2 architectures
+lib/libminiupnpc.a (for architecture i386):	current ar archive random library
+lib/libminiupnpc.a (for architecture x86_64):	current ar archive random library
 
 
 Berkeley DB

@@ -65,6 +65,14 @@ int fLimitProcessors = false;
 int nLimitProcessors = 1;
 int fMinimizeToTray = true;
 int fMinimizeOnClose = true;
+#ifdef USE_UPNP
+#if USE_UPNP
+int fUseUPnP = true;
+#else
+int fUseUPnP = false;
+#endif
+#endif
+
 
 
 

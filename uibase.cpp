@@ -371,6 +371,9 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	m_checkBoxMinimizeToTray = new wxCheckBox( m_panelMain, wxID_ANY, _("&Minimize to the tray instead of the taskbar"), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer69->Add( m_checkBoxMinimizeToTray, 0, wxALL, 5 );
 	
+	m_checkBoxUseUPnP = new wxCheckBox( m_panelMain, wxID_ANY, _("Map port using &UPnP"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer69->Add( m_checkBoxUseUPnP, 0, wxALL, 5 );
+	
 	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, _("M&inimize to the tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer69->Add( m_checkBoxMinimizeOnClose, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 	
@@ -544,7 +547,7 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	
 	bSizer631->Add( 0, 4, 0, wxEXPAND, 5 );
 	
-	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright (c) 2009-2011 Bitcoin Developers\n\nThis is experimental software.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright (c) 2009-2011 Bitcoin Developers\n\nThis is experimental software.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticTextMain->Wrap( -1 );
 	bSizer631->Add( m_staticTextMain, 0, wxALL, 5 );
 	

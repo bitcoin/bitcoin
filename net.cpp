@@ -4,11 +4,21 @@
 
 #include "headers.h"
 
+#ifdef USE_UPNP
+#include <miniupnpc/miniwget.h>
+#include <miniupnpc/miniupnpc.h>
+#include <miniupnpc/upnpcommands.h>
+#include <miniupnpc/upnperrors.h>
+#endif
+
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
 
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
 void ThreadOpenConnections2(void* parg);
+#ifdef USE_UPNP
+void ThreadMapPort2(void* parg);
+#endif
 bool OpenNetworkConnection(const CAddress& addrConnect);
 
 
@@ -857,6 +867,109 @@ void ThreadSocketHandler2(void* parg)
 
 
 
+#ifdef USE_UPNP
+void ThreadMapPort(void* parg)
+{
+    IMPLEMENT_RANDOMIZE_STACK(ThreadMapPort(parg));
+    try
+    {
+        vnThreadsRunning[5]++;
+        ThreadMapPort2(parg);
+        vnThreadsRunning[5]--;
+    }
+    catch (std::exception& e) {
+        vnThreadsRunning[5]--;
+        PrintException(&e, "ThreadMapPort()");
+    } catch (...) {
+        vnThreadsRunning[5]--;
+        PrintException(NULL, "ThreadMapPort()");
+    }
+    printf("ThreadMapPort exiting\n");
+}
+
+void ThreadMapPort2(void* parg)
+{
+    printf("ThreadMapPort started\n");
+
+    char port[6];
+    sprintf(port, "%d", ntohs(GetDefaultPort()));
+
+    const char * rootdescurl = 0;
+    const char * multicastif = 0;
+    const char * minissdpdpath = 0;
+    struct UPNPDev * devlist = 0;
+    char lanaddr[64];
+
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
+
+    struct UPNPUrls urls;
+    struct IGDdatas data;
+    int r;
+
+    if (UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr)) == 1)
+    {
+        char intClient[16];
+        char intPort[6];
+
+#ifndef __WXMSW__
+        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+	                        port, port, lanaddr, 0, "TCP", 0);
+#else
+        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+	                        port, port, lanaddr, 0, "TCP", 0, "0");
+#endif
+        if(r!=UPNPCOMMAND_SUCCESS)
+            printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
+                port, port, lanaddr, r, strupnperror(r));
+        else
+            printf("UPnP Port Mapping successful.\n");
+        loop {
+            if (fShutdown || !fUseUPnP)
+            {
+                r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port, "TCP", 0);
+                printf("UPNP_DeletePortMapping() returned : %d\n", r);
+                freeUPNPDevlist(devlist); devlist = 0;
+                FreeUPNPUrls(&urls);
+                return;
+            }
+            Sleep(2000);
+        }
+    } else {
+        printf("No valid UPnP IGDs found\n");
+        freeUPNPDevlist(devlist); devlist = 0;
+        FreeUPNPUrls(&urls);
+        loop {
+            if (fShutdown)
+                return;
+            Sleep(2000);
+        }
+    }
+}
+
+void MapPort(bool fMapPort)
+{
+    if (fUseUPnP != fMapPort)
+    {
+        fUseUPnP = fMapPort;
+        CWalletDB().WriteSetting("fUseUPnP", fUseUPnP);
+    }
+    if (fUseUPnP && vnThreadsRunning[5] < 1)
+    {
+        if (!CreateThread(ThreadMapPort, NULL))
+            printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
+    }
+}
+#endif
+
+
+
+
+
+
+
+
+
+
 static const char *strDNSSeed[] = {
     "bitseed.xf2.org",
     "bitseed.bitcoin.org.uk",
@@ -1410,6 +1523,10 @@ void StartNode(void* parg)
     // Start threads
     //
 
+    // Map ports with UPnP
+    if (fHaveUPnP)
+        MapPort(fUseUPnP);
+
     // Get addresses from IRC and advertise ours
     if (!CreateThread(ThreadIRCSeed, NULL))
         printf("Error: CreateThread(ThreadIRCSeed) failed\n");
@@ -1435,7 +1552,11 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
-    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0)
+    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0
+#ifdef USE_UPNP
+        || vnThreadsRunning[5] > 0
+#endif
+    )
     {
         if (GetTime() - nStart > 20)
             break;
@@ -1446,6 +1567,7 @@ bool StopNode()
     if (vnThreadsRunning[2] > 0) printf("ThreadMessageHandler still running\n");
     if (vnThreadsRunning[3] > 0) printf("ThreadBitcoinMiner still running\n");
     if (vnThreadsRunning[4] > 0) printf("ThreadRPCServer still running\n");
+    if (fHaveUPnP && vnThreadsRunning[5] > 0) printf("ThreadMapPort still running\n");
     while (vnThreadsRunning[2] > 0 || vnThreadsRunning[4] > 0)
         Sleep(20);
     Sleep(50);
