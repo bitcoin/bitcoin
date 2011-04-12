@@ -98,6 +98,18 @@ bool AppInit(int argc, char* argv[])
     return fRet;
 }
 
+void LoadKeypairFile()
+{
+    namespace fs = boost::filesystem;
+    fs::path keyp_file(GetDataDir());
+    keyp_file /= "keypair.rsa";
+    if (!keyp_file.good()) {
+        // keypair file does not yet exist so create a new one and save it.
+    }
+    // load it.
+    std::cout << keyp_file << "\n";
+}
+
 bool AppInit2(int argc, char* argv[])
 {
 #ifdef _MSC_VER
@@ -463,6 +475,9 @@ bool AppInit2(int argc, char* argv[])
 
     if (!CreateThread(StartNode, NULL))
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
+
+    // Should be before the RPC server is started.
+    LoadKeypairFile();
 
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
