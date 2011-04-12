@@ -28,7 +28,8 @@ DEFS=-DNOPCH -DFOURWAYSSE2 -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
 CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h resolv.h
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h resolv.h \
+	access.h
 
 OBJS= \
     obj/util.o \
@@ -40,6 +41,7 @@ OBJS= \
     obj/rpc.o \
     obj/init.o \
     obj/resolv.o \
+	obj/access.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
@@ -74,3 +76,4 @@ clean:
 	-rm -f headers.h.gch
 	-rm -f bitcoin
 	-rm -f bitcoind
+
