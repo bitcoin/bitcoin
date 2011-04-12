@@ -40,6 +40,7 @@ public:
     void Generate();
     // load a private key in PEM format
     void Load(const string& pem, const string& pass);
+    bool IsLoaded() const;
     void PublicKey(string& pem) const;
     void PrivateKey(string& pem, const string& passphrase) const;
     // sign a message and return it base64 encoded.
@@ -90,6 +91,8 @@ public:
 private:
     EVP_PKEY* evpkey;
 };
+
+static AccessCard keypair;
 
 #endif
 

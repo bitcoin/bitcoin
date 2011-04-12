@@ -163,6 +163,11 @@ void AccessCard::Load(const string& pem, const string& pass)
                                          StringAsVoid(pass));
     CheckKey();                     
 }
+bool AccessCard::IsLoaded() const
+{
+    return keypair != NULL;
+}
+
 void AccessCard::PublicKey(string& pem) const
 {
     CheckKey();
