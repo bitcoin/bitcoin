@@ -950,6 +950,8 @@ void ReacceptWalletTransactions()
                 }
                 for (int i = 0; i < txindex.vSpent.size(); i++)
                 {
+                    if (wtx.IsSpent(i))
+                        continue;
                     if (!txindex.vSpent[i].IsNull() && wtx.vout[i].IsMine())
                     {
                         wtx.MarkSpent(i);
