@@ -59,7 +59,10 @@ cd ~/bitcoin/deps
 tar xvjf ~/Downloads/boost_1_42_0.tar.bz2
 cd boost_1_42_0
 ./bootstrap.sh
-./bjam architecture=combined address-model=32_64 macosx-version=10.6 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/bitcoin/deps install
+./bjam architecture=combined address-model=32_64 macosx-version=10.5 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/bitcoin/deps install
+
+If you're using Snow Leopard, you will need to specify 10.6 as your Mac OS X
+version instead of 10.5.
 
 This part takes a while.. use your judgement and fix it if something doesn't
 build for some reason.
@@ -90,12 +93,12 @@ tar xvf ~/Downloads/openssl-1.0.0.tar
 mv openssl-1.0.0 openssl-1.0.0-x86_64
 # build i386 (32 bit intel) binary
 cd openssl-1.0.0-i386
-./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/deps/openssl darwin-i386-cc && make
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin-i386-cc && make
 make install # only do this on one of the architectures, to install the headers
 cd ..
 # build x86_64 (64 bit intel) binary
 cd openssl-1.0.0-x86_64
-./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/deps/openssl darwin64-x86_64-cc && make
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin64-x86_64-cc && make
 cd ..
 
 # combine the libs
