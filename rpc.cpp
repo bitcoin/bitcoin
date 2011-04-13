@@ -23,6 +23,7 @@ typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 
 // name resolution service
 #include "resolv.h"
+#include "access.h"
 
 using namespace boost::asio;
 using namespace json_spirit;
@@ -543,7 +544,11 @@ Value publickey(const Array& params, bool fHelp)
         throw runtime_error(
             "publickey\n"
             "Get your public key in PEM format used for name addressing.");
-    return "blaa";
+    if (!keypair.IsLoaded())
+        return "";
+    string pem;
+    keypair.PublicKey(pem);
+    return pem;
 }
 
 Value updatens(const Array& params, bool fHelp)
