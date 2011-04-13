@@ -372,10 +372,21 @@ bool AppInit2(int argc, char* argv[])
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
+    CBlockIndex *pindexRescan = pindexBest;
     if (GetBoolArg("-rescan"))
+        pindexRescan = pindexGenesisBlock;
+    else
     {
+        CWalletDB walletdb;
+        CBlockLocator locator;
+        if (walletdb.ReadBestBlock(locator))
+            pindexRescan = locator.GetBlockIndex();
+    }
+    if (pindexBest != pindexRescan)
+    {
+        printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
-        ScanForWalletTransactions(pindexGenesisBlock);
+        ScanForWalletTransactions(pindexRescan);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
 
