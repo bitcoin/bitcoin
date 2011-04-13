@@ -1611,6 +1611,15 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
         }
     }
 
+    // Update best block in wallet (so we can detect restored wallets)
+    if (!IsInitialBlockDownload())
+    {
+        CWalletDB walletdb;
+        const CBlockLocator locator(pindexNew);
+        if (!walletdb.WriteBestBlock(locator))
+            return error("SetBestChain() : WriteWalletBest failed");
+    }
+
     // New best block
     hashBestChain = hash;
     pindexBest = pindexNew;

@@ -13,6 +13,7 @@ class CAddress;
 class CWalletTx;
 class CAccount;
 class CAccountingEntry;
+class CBlockLocator;
 
 extern map<string, string> mapAddressBook;
 extern CCriticalSection cs_mapAddressBook;
@@ -403,6 +404,17 @@ public:
     {
         nWalletDBUpdated++;
         return Write(make_pair(string("key"), vchPubKey), vchPrivKey, false);
+    }
+
+    bool WriteBestBlock(const CBlockLocator& locator)
+    {
+        nWalletDBUpdated++;
+        return Write(string("bestblock"), locator);
+    }
+
+    bool ReadBestBlock(CBlockLocator& locator)
+    {
+        return Read(string("bestblock"), locator);
     }
 
     bool ReadDefaultKey(vector<unsigned char>& vchPubKey)
