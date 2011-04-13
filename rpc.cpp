@@ -1480,7 +1480,7 @@ string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeader
 {
     ostringstream s;
     s << "POST / HTTP/1.1\r\n"
-      << "User-Agent: json-rpc/1.0\r\n"
+      << "User-Agent: bitcoin-json-rpc/" << FormatFullVersion() << "\r\n"
       << "Host: 127.0.0.1\r\n"
       << "Content-Type: application/json\r\n"
       << "Content-Length: " << strMsg.size() << "\r\n"
@@ -1507,7 +1507,7 @@ string HTTPReply(int nStatus, const string& strMsg)
     if (nStatus == 401)
         return strprintf("HTTP/1.0 401 Authorization Required\r\n"
             "Date: %s\r\n"
-            "Server: bitcoin-json-rpc\r\n"
+            "Server: bitcoin-json-rpc/%s\r\n"
             "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
             "Content-Type: text/html\r\n"
             "Content-Length: 296\r\n"
@@ -1520,7 +1520,7 @@ string HTTPReply(int nStatus, const string& strMsg)
             "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=ISO-8859-1'>\r\n"
             "</HEAD>\r\n"
             "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
-            "</HTML>\r\n", rfc1123Time().c_str());
+            "</HTML>\r\n", rfc1123Time().c_str(), FormatFullVersion().c_str());
     string strStatus;
          if (nStatus == 200) strStatus = "OK";
     else if (nStatus == 400) strStatus = "Bad Request";
@@ -1532,13 +1532,14 @@ string HTTPReply(int nStatus, const string& strMsg)
             "Connection: close\r\n"
             "Content-Length: %d\r\n"
             "Content-Type: application/json\r\n"
-            "Server: bitcoin-json-rpc/1.0\r\n"
+            "Server: bitcoin-json-rpc/%s\r\n"
             "\r\n"
             "%s",
         nStatus,
         strStatus.c_str(),
         rfc1123Time().c_str(),
         strMsg.size(),
+        FormatFullVersion().c_str(),
         strMsg.c_str());
 }
 
