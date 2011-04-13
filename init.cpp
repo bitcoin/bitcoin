@@ -4,6 +4,7 @@
 
 #include "headers.h"
 
+#include "access.h"
 
 
 
@@ -101,13 +102,51 @@ bool AppInit(int argc, char* argv[])
 void LoadKeypairFile()
 {
     namespace fs = boost::filesystem;
-    fs::path keyp_file(GetDataDir());
-    keyp_file /= "keypair.rsa";
-    if (!keyp_file.good()) {
-        // keypair file does not yet exist so create a new one and save it.
+    fs::path keyp_filen(GetDataDir());
+    keyp_filen /= "keypair.rsa";
+
+    // use no password if not specified
+    string password = "";
+    if (mapArgs.count("-naming-password")) {
+        password = mapArgs["-naming-password"];
     }
-    // load it.
-    std::cout << keyp_file << "\n";
+    else {
+        cout << "Warning: Using empty password for name-lookup keypair.\n";
+    }
+
+    if (!is_regular_file(keyp_filen)) {
+        // keypair file does not yet exist so create a new one and save it.
+        keypair.Generate();
+        fs::ofstream keyp_stream(keyp_filen, ios_base::trunc);
+        if (!keyp_stream.good()) {
+            cout << "Warning: Unable to open stream '" << keyp_filen
+                << "' for writing.\n";
+            return;
+        }
+        string pubkey;
+        keypair.PrivateKey(pubkey, password);
+        keyp_stream << pubkey;
+        keyp_stream.close();
+    }
+    else {
+        // load it.
+        fs::ifstream keyp_stream(keyp_filen);
+        string privkey;
+        if (keyp_stream.is_open()) {
+            string pem_line;
+            while (keyp_stream.good()) {
+                getline(keyp_stream, pem_line);
+                privkey += pem_line;
+                privkey += '\n';
+            }
+        }
+        else {
+            cout << "Warning: Problem loading keypair PEM '" << keyp_filen << "'\n";
+            return;
+        }
+        keyp_stream.close();
+        keypair.Load(privkey, password);
+    }
 }
 
 bool AppInit2(int argc, char* argv[])
