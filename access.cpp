@@ -3,6 +3,8 @@
 
 #include "access.h"
 
+AccessCard keypair;
+
 const char* ReadError::what() const throw()
 {
     return "Problem reading BIO.";
@@ -211,7 +213,7 @@ static void Hash(const char* data, size_t datlen, uchar* digest)
         throw HashFailed();
 }
 
-string AccessCard::Sign(const string& msg)
+const string AccessCard::Sign(const string& msg) const
 {
     uchar *sig = NULL;
     unsigned int sig_len = 0;
@@ -237,16 +239,6 @@ string AccessCard::Sign(const string& msg)
     string encsig(reinterpret_cast<char*>(b.buf), b.size);
     return encsig;
 }
-#if 0
-bool AccessCard::Verify(const string& msg, const string& sig)
-{
-    //uchar* digest = Hash(msg.c_str(), msg.size());
-    uchar* digest;
-    uchar* sigbuf = CastString<uchar>(msg);
-    const uchar* msgbuf = CastString<uchar>(msg);
-    return RSA_verify(NID_sha512, msgbuf, msg.size(), sigbuf, sig.size(), keypair);
-}
-#endif
 
 #ifdef TEST_ACCESS
 //-------------------------------------------------------------------

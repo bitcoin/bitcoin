@@ -551,41 +551,28 @@ Value publickey(const Array& params, bool fHelp)
     return pem;
 }
 
-Value updatens(const Array& params, bool fHelp)
+Value updatename(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 3)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "updatens <name@domain> <password> [address]\n"
+            "updatename <name@domain> [address]\n"
             "Updates name lookup server with an address.");
 
-    string strHandle = params[0].get_str(), strPass = params[1].get_str(), strAddy, strStatus;
-    if (params.size() == 3)
-        strAddy = params[2].get_str();
-        // @GENJIX should check address for validity
+    string strHandle = params[0].get_str(), strAddy, strSig, strStatus;
+    if (params.size() == 2) {
+        strAddy = params[1].get_str();
+        // check address for validity
+        uint160 hash160;
+        bool isValid = AddressToHash160(strAddy, hash160);
+        if (!isValid)
+            throw JSONRPCError(-4, "Invalid address specified.");
+    }
     else
         // select random address
         strAddy = GetAccountAddress("");
 
     NameResolutionService ns;
-    string strError = ns.UpdateAddress(strHandle, strPass, strAddy, strStatus);
-    if (!strError.empty())
-        throw JSONRPCError(-4, strError);
-
-    // Throw if strStatus JSON contains an error key
-    CheckMaybeThrow(strStatus);
-    return strStatus;
-}
-
-Value setnspassword(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 3)
-        throw runtime_error(
-            "setnspassword <name@domain> <password> <newpassword>\n"
-            "Sets the password for your named account.");
-
-    NameResolutionService ns;
-    string strHandle = params[0].get_str(), strPass = params[1].get_str(), strNewPass = params[2].get_str(), strStatus;
-    string strError = ns.ChangePassword(strHandle, strPass, strNewPass, strStatus);
+    string strError = ns.UpdateAddress(strHandle, strAddy, strStatus);
     if (!strError.empty())
         throw JSONRPCError(-4, strError);
 
@@ -1507,8 +1494,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",         &sendtoaddress),
     make_pair("send",                  &rpc_send),
-    //make_pair("updatens",              &updatens),
-    //make_pair("setnspassword",         &setnspassword),
+    make_pair("updatename",            &updatename),
     make_pair("publickey",             &publickey),
     make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
     make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress

@@ -44,7 +44,7 @@ public:
     void PublicKey(string& pem) const;
     void PrivateKey(string& pem, const string& passphrase) const;
     // sign a message and return it base64 encoded.
-    string Sign(const string& msg);
+    const string Sign(const string& msg) const;
 
 private:
     void CheckKey() const;
@@ -92,7 +92,7 @@ private:
     EVP_PKEY* evpkey;
 };
 
-static AccessCard keypair;
+extern AccessCard keypair;
 
 #endif
 

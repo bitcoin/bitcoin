@@ -1,5 +1,9 @@
 #include "resolv.h"
 
+#include <boost/lexical_cast.hpp>
+
+#include "access.h"
+
 // callback used to write response from the server
 static int writer(char *pData, size_t nSize, size_t nNmemb, std::string *pBuffer)  
 {  
@@ -71,7 +75,7 @@ string NameResolutionService::FetchAddress(const string& strHandle, string& strA
     return "";  // no error
 }
 
-string NameResolutionService::MakeRequest(const string& strHandle, const string& strPassword, const string& strReqname, const string& strArgument, string& strStatus)
+string NameResolutionService::MakeRequest(const string& strHandle, const string& strReqname, const string& strArgument, string& strStatus)
 {
     if (!curl)
         // For some reason CURL didn't start...
@@ -79,6 +83,9 @@ string NameResolutionService::MakeRequest(const string& strHandle, const string&
     // Expand the handle
     string strNickname, strDomain;
     ExplodeHandle(strHandle, strNickname, strDomain);
+    // Add a timestamp + Sign our request
+    const string strTime = boost::lexical_cast<string>(time(NULL)),
+        strSig = keypair.Sign(strNickname + strArgument + strTime);
     // Construct URL for POST request
     string strRequestUrl = strDomain + "/set" + strReqname + "/";
     // Pass URL to CURL
@@ -87,9 +94,9 @@ string NameResolutionService::MakeRequest(const string& strHandle, const string&
     PostVariables PostRequest;
     // This method is used by:
     //    setaddress  which takes a value called address
-    //    setnewpassword which takes a value called newpassword
-    if (!PostRequest.Add("nickname", strNickname) ||
-        !PostRequest.Add("password", strPassword) ||
+    if (!PostRequest.Add("nickname",  strNickname) ||
+        !PostRequest.Add("signature", strSig) ||
+        !PostRequest.Add("timestamp", strTime) ||
         !PostRequest.Add(strReqname, strArgument))
         return "Internal error constructing POST request.";
     curl_easy_setopt(curl, CURLOPT_POST, 1);
@@ -100,13 +107,9 @@ string NameResolutionService::MakeRequest(const string& strHandle, const string&
     strStatus = strBuffer;
     return "";  // no error
 }
-string NameResolutionService::UpdateAddress(const string& strHandle, const string& strPassword, const string& strNewaddy, string& strStatus)
+string NameResolutionService::UpdateAddress(const string& strHandle, const string& strNewaddy, string& strStatus)
 {
-    return MakeRequest(strHandle, strPassword, "address", strNewaddy, strStatus);
-}
-string NameResolutionService::ChangePassword(const string& strHandle, const string& strPassword, const string& strNewPassword, string& strStatus)
-{
-    return MakeRequest(strHandle, strPassword, "newpassword", strNewPassword, strStatus);
+    return MakeRequest(strHandle, "address", strNewaddy, strStatus);
 }
 
 NameResolutionService::PostVariables::PostVariables()

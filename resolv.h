@@ -19,6 +19,7 @@ Most characters are valid for the username + password (and handled accordingly),
    genjix@bar.com/path/to/
 
 */
+
 class NameResolutionService
 {
 public:
@@ -28,8 +29,8 @@ public:
     // Three main methods map to RPC actions.
     string FetchAddress(const string& strHandle, string& strAddy);
     // Push new address to the server
-    string UpdateAddress(const string& strHandle, const string& strPassword, const string& strNewaddy, string& strStatus);
-    string ChangePassword(const string& strHandle, const string& strPassword, const string& strNewPassword, string& strStatus);
+    string UpdateAddress(const string& strHandle, const string& strNewaddy, string& strStatus);
+
 private:
     // A POST block
     class PostVariables
@@ -50,7 +51,7 @@ private:
     // Perform the HTTP request. Returns true on success.
     bool Perform();
     // Make a POST request that will modify the specified variable (strReqname) on the server.
-    string MakeRequest(const string& strHandle, const string& strPassword, const string& strReqname, const string& strArgument, string& strStatus);
+    string MakeRequest(const string& strHandle, const string& strReqname, const string& strArgument, string& strStatus);
 
     // CURL error message
     char pErrorBuffer[CURL_ERROR_SIZE];  
