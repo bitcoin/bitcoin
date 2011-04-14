@@ -939,7 +939,7 @@ void ThreadMapPort2(void* parg)
         freeUPNPDevlist(devlist); devlist = 0;
         FreeUPNPUrls(&urls);
         loop {
-            if (fShutdown)
+            if (fShutdown || !fUseUPnP)
                 return;
             Sleep(2000);
         }
