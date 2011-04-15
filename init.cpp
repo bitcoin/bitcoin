@@ -349,7 +349,7 @@ bool AppInit2(int argc, char* argv[])
     strErrors = "";
     int64 nStart;
     
-    if (GetBoolArg("-nicestart"))
+    if (!fDaemon | GetBoolArg("-nicestart"))
     {
         // lower the process priority while loading all files so that we don't slow down people that launch bitcoin at startup
         // TODO: can we do the same on Unix systems without being run as superuser?
@@ -385,7 +385,7 @@ bool AppInit2(int argc, char* argv[])
     }
     
     #ifdef __WXMSW__
-        // return to normal priority
+        // return to normal priority (if we're not in background mode then it's a no-op)
         SetPriorityClass(GetCurrentProcess(), PROCESS_MODE_BACKGROUND_END);
     #endif
 
