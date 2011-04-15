@@ -1,0 +1,3 @@
+SUBDIRS = src
+
+AC_LOCAL_AMFLAGS = -I m4
