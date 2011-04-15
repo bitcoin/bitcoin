@@ -855,3 +855,32 @@ void AddTimeData(unsigned int ip, int64 nTime)
         printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
     }
 }
+
+
+
+
+
+
+
+
+
+string FormatVersion(int nVersion)
+{
+    if (nVersion%100 == 0)
+        return strprintf("%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100);
+    else
+        return strprintf("%d.%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100, nVersion%100);
+}
+
+string FormatFullVersion()
+{
+    string s = FormatVersion(VERSION) + pszSubVer;
+    if (VERSION_IS_BETA)
+        s += _("-beta");
+    return s;
+}
+
+
+
+
+
