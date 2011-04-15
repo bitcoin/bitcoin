@@ -36,7 +36,15 @@ dnl Libtool
 AC_PROG_LIBTOOL
 
 dnl Advanced network address translating functions
-AC_CHECK_FUNCS(inet_pton inet_ntop)
+AC_CHECK_FUNCS(inet_ntop)
+
+dnl Checks for libraries
+AC_CHECK_LIB(crypto, MD5_Init, CRYPTO_LIBS=-lcrypto)
+AX_BOOST_BASE
+AX_BOOST_SYSTEM
+AX_BOOST_FILESYSTEM
+AX_BOOST_PROGRAM_OPTIONS
+AX_BOOST_THREAD
 
 dnl Support BSD4.4 "sa_len" extension when calculating sockaddrs arrays
 AC_CHECK_MEMBERS(struct sockaddr.sa_len, , , [#include <sys/types.h>

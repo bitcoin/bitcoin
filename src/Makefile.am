@@ -5,7 +5,7 @@ bin_PROGRAMS = bitcoind
 
 bitcoind_SOURCES = util.cpp script.cpp db.cpp net.cpp irc.cpp \
 			main.cpp rpc.cpp init.cpp
-
+bitcoind_CXXFLAGS = -O2 -Wno-invalid-offsetof -Wformat
 bitcoind_LDADD = cryptopp/libcryptopp.la \
    -lpthread \
    -lboost_system \
