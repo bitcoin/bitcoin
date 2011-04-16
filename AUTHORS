@@ -1,0 +1,19 @@
+
+Bitcoin was written by Satoshi Nakamoto
+
+Current maintainer: Gavin Andresen
+
+Includes code contributions by (alphabetic order)
+
+Chris Moore, Daniel Folkinshteyn, Dan Loewenherz, David Francois,
+devrandom, Eric Swanson, gjs278, Jaromil, Jeff Garzik, laszloh,
+Luke-jr, Marius Hanne, Matt Corallo, Matt Giuca, ojab, Pieter Wuille,
+sandos, Santiago M. Mola, sirius-m, Sven Slootweg, tcatm, Witchspace
+
+Redistributes the following statically linked libraries:
+
+ - Cryptopp library by Wei Dai
+
+ - JSON_Spirit by John W. Wilkinson
+
+
