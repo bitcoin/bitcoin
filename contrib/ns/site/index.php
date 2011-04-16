@@ -1,5 +1,5 @@
 <?php
-require 'util.php';
+require '../util.php';
 require 'header.php';
 
 function add_nickname()

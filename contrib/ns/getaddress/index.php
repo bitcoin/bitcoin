@@ -1,24 +1,28 @@
 <?php
-if (!isset($_REQUEST['nickname'])) {
-    die('{"error": "No nickname received."}');
-}
-else {
-    require '../db.php';
-    # nicknames are case insensitive to limit impersonation attacks
-    $nickname = strtolower(escapestr($_REQUEST['nickname']));
+require '../util.php';
+require '../errors.php';
 
-    $query = "SELECT address FROM lookup WHERE nickname='$nickname';";
-    $result = do_query($query);
-    if (has_results($result)) {
-        $row = mysql_fetch_array($result);
-        if (!isset($row['address']))
-            die('{"error": "Internal error."}');
-        $address = $row['address'];
-        echo '{"address": "'.$address.'"}';
-    }
-    else {
-        die('{"error": "No such nickname exists."}');
-    }
+try {
+    $nickname = geten('nickname');
+    $query = "
+        SELECT
+            addr
+        FROM
+            nicknames
+        WHERE
+            nickname='$nickname'
+        ";
+    $result = do_queryn($query);
+    if (!has_results($result))
+        throw new ErrorJson(RECORD_NOT_FOUND);
+    $row = mysql_fetch_assoc($result);
+    if (!isset($row['addr']))
+        throw new ErrorJson(NO_ADDR_SET);
+
+    $json = array('address' => $row['addr']);
+    echo json_encode($json);
 }
-?>
+catch (ErrorJson $e) {
+    echo $e->getMessage();
+}
 
