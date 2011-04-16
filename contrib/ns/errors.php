@@ -37,7 +37,7 @@ function error_json($errcode, $params=array())
             break;
 
         case NO_ADDR_SET:
-            $json['error'] = 'Internal error occurred.';
+            $json['error'] = 'No address set for this nickname.';
             break;
 
         default:
