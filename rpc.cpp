@@ -491,7 +491,7 @@ const Object CheckMaybeThrow(const string& strJsonIn)
     // Now check for a key called "error"
     const Value& error  = find_value(request, "error");
     // It's an error JSON! so propagate the error.
-    if (error.type() != null_type)          
+    if (error.type() != null_type)   
         throw JSONRPCError(-4, error.get_str());
     // Return JSON object
     return request;
