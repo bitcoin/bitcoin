@@ -1,0 +1,13 @@
+Ingredients: LAMP
+
+1. Create the database:
+
+  $ mysql -u root -p
+  > CREATE DATABASE bitnom;
+
+2. Import the database.
+
+  $ mysql -u root -p bitnom < DATABASE
+
+3. Copy /var/db.bitnom.inc and edit the details.
+
