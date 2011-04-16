@@ -35,6 +35,8 @@ AC_PROG_MAKE_SET
 dnl Libtool
 AC_PROG_LIBTOOL
 
+AC_CHECK_HEADERS([stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h])
+
 dnl Advanced network address translating functions
 AC_CHECK_FUNCS(inet_ntop)
 
@@ -45,17 +47,21 @@ AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_THREAD
+BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
+AC_SUBST(BOOST_LIBS)
 
-dnl Support BSD4.4 "sa_len" extension when calculating sockaddrs arrays
-AC_CHECK_MEMBERS(struct sockaddr.sa_len, , , [#include <sys/types.h>
-#include <sys/socket.h>])
+PKG_CHECK_MODULES(SSL, libssl >= 0.9, :,
+		  AC_MSG_ERROR([ SSL development library not found]))
 
-dnl Check if it is available the RFC2292 IPv4 extension and in_port_t.
-AC_CHECK_TYPES([struct in_pktinfo, in_port_t], , , [#include <sys/types.h>
-#include <netinet/in.h>])
+PKG_CHECK_MODULES(CRYPTO, libcrypto, :,
+		  AC_MSG_ERROR([ Crypto development library not found]))
 
-AC_CHECK_HEADERS([stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h])
+PKG_CHECK_MODULES(GTHREAD2, gthread-2.0, :,
+		  AC_MSG_ERROR([ GThread-2 development library not found]))
 
+dnl TODO: make sure of those on all platforms
+COMMON_LIBS="-lpthread -lz -ldl -ldb_cxx"
+AC_SUBST(COMMON_LIBS)
 
 dnl ==============================================================
 dnl compile with full warnings and debugging symbols
