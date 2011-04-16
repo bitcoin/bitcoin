@@ -1,7 +1,7 @@
 <?php
 require 'openid.php';
 require 'header.php';
-require '../util.php';
+require 'util.php';
 
 try {
     $openid = new LightOpenID;
