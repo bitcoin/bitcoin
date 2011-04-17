@@ -158,21 +158,32 @@ dnl ==============================================================
 dnl enable UPNP
 dnl ==============================================================
 AC_ARG_ENABLE(upnp,
-	AS_HELP_STRING([--enable-upnp],[compile with UPNP support linking to miniupnp]),
+	AS_HELP_STRING([--enable-upnp],[compile with UPNP support (on/off to set default behaviour)]),
 	[have_upnp=$enableval],
-	[have_upnp=no])
+	[have_upnp=omit])
 AC_MSG_CHECKING([if UPNP support (miniupnp) is enabled])
 UPNP_LIBS=""
 if test x$have_upnp = xyes; then
-   AC_MSG_RESULT(yes)
+# this is the default behaviour for --enable-upnp with no arguments
+   AC_MSG_RESULT([compiled - on by default])
    AC_DEFINE(USE_UPNP,1,[Define if building support for UPNP functions via miniupnp])
+elif test x$have_upnp = xon; then
+   AC_MSG_RESULT([compiled - on by default])
+   AC_DEFINE(USE_UPNP,1,[Define if building support for UPNP functions via miniupnp])
+elif test x$have_upnp = xoff; then
+   AC_MSG_RESULT([compiled - off by default])
+   AC_DEFINE(USE_UPNP,0,[Define if building support for UPNP functions via miniupnp])
+else
+   AC_MSG_RESULT(no)
+fi
+if test x$have_upnp != xomit; then
    if test x$have_linux = xyes; then
       UPNP_LIBS="-lminiupnpc"
    fi
    # TODO OSX and WIN
-else
-   AC_MSG_RESULT(no)
 fi
+
+
 AC_SUBST(UPNP_LIBS)
 
 dnl ==============================================================
