@@ -893,7 +893,7 @@ string FormatVersion(int nVersion)
 
 string FormatFullVersion()
 {
-    string s = FormatVersion(VERSION) + pszSubVer;
+    string s = FormatVersion(BITCOIN_VERSION) + pszSubVer;
     if (VERSION_IS_BETA)
         s += _("-beta");
     return s;

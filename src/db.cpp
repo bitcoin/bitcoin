@@ -112,7 +112,7 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
             {
                 bool fTmp = fReadOnly;
                 fReadOnly = false;
-                WriteVersion(VERSION);
+                WriteVersion(BITCOIN_VERSION);
                 fReadOnly = fTmp;
             }
 
@@ -812,13 +812,13 @@ bool CWalletDB::LoadWallet()
 
 
     // Upgrade
-    if (nFileVersion < VERSION)
+    if (nFileVersion < BITCOIN_VERSION)
     {
         // Get rid of old debug.log file in current directory
         if (nFileVersion <= 105 && !pszSetDataDir[0])
             unlink("debug.log");
 
-        WriteVersion(VERSION);
+        WriteVersion(BITCOIN_VERSION);
     }
 
 

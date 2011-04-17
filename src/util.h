@@ -527,7 +527,7 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
 }
 
 template<typename T>
-uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=VERSION)
+uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=BITCOIN_VERSION)
 {
     // Most of the time is spent allocating and deallocating CDataStream's
     // buffer.  If this ever needs to be optimized further, make a CStaticStream

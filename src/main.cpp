@@ -2416,9 +2416,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Change version
         if (pfrom->nVersion >= 209)
             pfrom->PushMessage("verack");
-        pfrom->vSend.SetVersion(min(pfrom->nVersion, VERSION));
+        pfrom->vSend.SetVersion(min(pfrom->nVersion, BITCOIN_VERSION));
         if (pfrom->nVersion < 209)
-            pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
+            pfrom->vRecv.SetVersion(min(pfrom->nVersion, BITCOIN_VERSION));
 
         if (!pfrom->fInbound)
         {
@@ -2466,7 +2466,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "verack")
     {
-        pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
+        pfrom->vRecv.SetVersion(min(pfrom->nVersion, BITCOIN_VERSION));
     }
 
 
