@@ -1,6 +1,10 @@
-dnl ==============================================================
-dnl Process this file with autoconf to produce a configure script.
-dnl ==============================================================
+dnl ==================================================
+dnl Autotools build-system for Bitcoin
+dnl Run 'autoreconf -i' to produce a configure script.
+dnl ==================================================
+dnl Copyleft (c) 2011 by Jaromil
+dnl Distributed under the GNU GPLv3 license
+dnl =======================================
 
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
@@ -75,6 +79,7 @@ case "$host_os" in
   ;;
 
   *win*)
+    have_mswin=yes
     AC_MSG_RESULT([MS/Windows (TODO)])
     # TODO
   ;;
@@ -170,6 +175,52 @@ else
 fi
 AC_SUBST(UPNP_LIBS)
 
+dnl ==============================================================
+dnl enable WxGUI
+dnl ==============================================================
+AC_ARG_ENABLE(gui,
+	AS_HELP_STRING([--enable-gui],[compile a graphical user interface: wx or none]),
+	[have_gui=$enableval],
+	[have_gui=none])
+AC_MSG_CHECKING([which GUI is selected])
+GUI_LIBS=""
+case "$have_gui" in
+     wx)
+	AC_MSG_RESULT(WxWidgets)
+	AC_DEFINE(GUI,1,[Define if building a graphical user interface])
+
+	if test x$have_linux = xyes; then
+	   AM_OPTIONS_WXCONFIG
+	   AM_PATH_WXCONFIG(2.9.1, have_wx=yes)
+	   if test x$have_wx != xyes; then
+	      AC_MSG_ERROR([WxWidget GUI selected, but wx-config version 2.9.1 is not found])
+	   else
+	      AC_DEFINE(__WXGTK__,1,[Define if building the WX GUI on GNU/Linux using GTK])
+	      GUI_CPPFLAGS="$WX_CPPFLAGS"
+	      GUI_CXXFLAGS="$WX_CXXFLAGS_ONLY"
+	      GUI_LIBS="$WX_LIBS"
+	   fi
+	fi
+
+	if test x$have_osx = xyes; then
+	   # TODO
+	   AC_DEFINE(__WXMAC_OSX__,1,[Define if building the WX GUI on Apple/OSX])	
+	fi
+
+	if test x$have_mswin = xyes; then
+	   # TODO
+	   AC_DEFINE(__WXMSW__,1,[Define if building the WX GUI on MS/Windows])	
+	fi
+     ;;
+     none)
+	AC_MSG_RESULT(none)
+     ;;
+esac
+AC_SUBST(GUI_LIBS)
+AC_SUBST(GUI_CXXFLAGS)
+AC_SUBST(GUI_CPPFLAGS)
+
+
 
 dnl ==============================================================
 dnl compile with full warnings and debugging symbols
@@ -190,5 +241,4 @@ src/Makefile
 src/cryptopp/Makefile
 ])
 AC_OUTPUT
-
 
