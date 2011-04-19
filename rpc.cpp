@@ -640,40 +640,39 @@ Value getbalance(const Array& params, bool fHelp)
     if (params.size() == 0)
         return  ValueFromAmount(GetBalance());
 
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
+
     if (params[0].get_str() == "*") {
         // Calculate total balance a different way from GetBalance()
         // (GetBalance() sums up all unspent TxOuts)
         // getbalance and getbalance '*' should always return the same number.
         int64 nBalance = 0;
-        vector<string> vAccounts;
         for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
+            if (!wtx.IsFinal())
+                continue;
+
             int64 allGeneratedImmature, allGeneratedMature, allFee;
             allGeneratedImmature = allGeneratedMature = allFee = 0;
             string strSentAccount;
             list<pair<string, int64> > listReceived;
             list<pair<string, int64> > listSent;
             wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
-            foreach(const PAIRTYPE(string,int64)& r, listReceived)
-            {
-                nBalance += r.second;
-                if (!count(vAccounts.begin(), vAccounts.end(), r.first))
-                    vAccounts.push_back(r.first);
-            }
+            if (wtx.GetDepthInMainChain() >= nMinDepth)
+                foreach(const PAIRTYPE(string,int64)& r, listReceived)
+                    nBalance += r.second;
             foreach(const PAIRTYPE(string,int64)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
             nBalance += allGeneratedMature;
         }
-        printf("Found %d accounts\n", vAccounts.size());
         return  ValueFromAmount(nBalance);
     }
 
     string strAccount = AccountFromValue(params[0]);
-    int nMinDepth = 1;
-    if (params.size() > 1)
-        nMinDepth = params[1].get_int();
 
     int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
 
