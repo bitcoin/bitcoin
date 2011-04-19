@@ -21,6 +21,9 @@ typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 // a certain size around 145MB.  If we need access to json_spirit outside this
 // file, we could use the compiled json_spirit option.
 
+// name resolution service
+#include "resolv.h"
+
 using namespace boost::asio;
 using namespace json_spirit;
 
@@ -491,6 +494,63 @@ Value sendtoaddress(const Array& params, bool fHelp)
             throw JSONRPCError(-4, strError);
     }
 
+    return wtx.GetHash().GetHex();
+}
+
+const Object CheckMaybeThrow(const string& strJsonIn)
+{
+    // Parse input JSON
+    Value valRequest;
+    if (!read_string(strJsonIn, valRequest) || valRequest.type() != obj_type)
+        throw JSONRPCError(-32700, "Parse error");
+    const Object& request = valRequest.get_obj();
+    // Now check for a key called "error"
+    const Value& error  = find_value(request, "error");
+    // It's an error JSON! so propagate the error.
+    if (error.type() != null_type)   
+        throw JSONRPCError(-4, error.get_str());
+    // Return JSON object
+    return request;
+}
+
+const string CollectAddress(const string& strIn)
+{
+    // If the handle does not have an @ in it, then it's a normal base58 bitcoin address
+    if (strIn.find('@') == (size_t)-1)
+        return strIn;
+    
+    // Open the lookup service
+    NameResolutionService ns;
+    // We established that the input string is not a BTC address, so we use it as a handle now.
+    string strHandle = strIn, strAddy;
+    string strError = ns.FetchAddress(strHandle, strAddy);
+    if (!strError.empty())
+        throw JSONRPCError(-4, strError);
+
+    const Object& request(CheckMaybeThrow(strAddy));
+    // Get the BTC address from the JSON
+    const Value& address = find_value(request, "address");
+    if (address.type() != str_type)
+        throw JSONRPCError(-32600, "Server responded with malformed reply.");
+    return address.get_str();
+}
+
+// Named this way to prevent possible conflicts.
+Value rpc_send(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "send <name@domain or address> <amount>\n"
+            "<amount> is a real and is rounded to the nearest 0.01");
+    
+    // Intelligent function which looks up address given handle, or returns address
+    string strAddy = CollectAddress(params[0].get_str());
+    int64 nAmount = AmountFromValue(params[1]);
+    // Do the send
+    CWalletTx wtx;
+    string strError = SendMoneyToBitcoinAddress(strAddy, nAmount, wtx);
+    if (!strError.empty())
+        throw JSONRPCError(-4, strError);
     return wtx.GetHash().GetHex();
 }
 
@@ -1419,6 +1479,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getaddressesbyaccount", &getaddressesbyaccount),
     make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",         &sendtoaddress),
+    make_pair("send",                  &rpc_send),
     make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
     make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
     make_pair("getreceivedbyaddress",  &getreceivedbyaddress),
@@ -2069,6 +2130,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "send"                   && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
