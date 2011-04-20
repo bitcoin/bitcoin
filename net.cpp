@@ -3,6 +3,10 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_writer_template.h"
+#include "json/json_spirit_utils.h"
+using namespace json_spirit;
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniwget.h>
@@ -266,8 +270,135 @@ void ThreadGetMyExternalIP(void* parg)
     }
 }
 
+bool GetHTTPRequest(const CAddress& addrConnect, const char* pszGet, const char* pszKeyword, string& sRet)
+{
+    SOCKET hSocket;
+    if (!ConnectSocket(addrConnect, hSocket))
+        return error("GetHTTPRequest() : connection to %s failed", addrConnect.ToString().c_str());
 
+    send(hSocket, pszGet, strlen(pszGet), MSG_NOSIGNAL);
 
+    string strLine;
+    while (RecvLine(hSocket, strLine))
+    {
+        if (strLine.empty()) // HTTP response is separated from headers by blank line
+        {
+            loop
+            {
+                if (!RecvLine(hSocket, strLine))
+                {
+                    closesocket(hSocket);
+                    return false;
+                }
+                if (pszKeyword == NULL)
+                    break;
+                if (strLine.find(pszKeyword) != -1)
+                {
+                    strLine = strLine.substr(strLine.find(pszKeyword) + strlen(pszKeyword));
+                    break;
+                }
+            }
+            closesocket(hSocket);
+            sRet = strLine;
+            return true;
+            
+            /*if (strLine.find("<") != -1)
+                strLine = strLine.substr(0, strLine.find("<"));
+            strLine = strLine.substr(strspn(strLine.c_str(), " \t\n\r"));
+            while (strLine.size() > 0 && isspace(strLine[strLine.size()-1]))
+                strLine.resize(strLine.size()-1);
+            CAddress addr(strLine.c_str());
+            printf("GetMyExternalIP() received [%s] %s\n", strLine.c_str(), addr.ToString().c_str());
+            if (addr.ip == 0 || addr.ip == INADDR_NONE || !addr.IsRoutable())
+                return false;
+            ipRet = addr.ip;
+            return true;*/
+        }
+    }
+    closesocket(hSocket);
+    return error("GetHTTPRequest() : connection closed");
+}
+
+void GetBitcoinAddressFromURL(string strUrl, string& strLabel, string& strAddress)
+{
+    size_t nPosA, nPosB;
+    string strDomain, strRequestUri, strReturn;
+    
+    // verify if url
+    if (strUrl.substr(0, 4) != "http")
+        return;
+
+    // parse url
+    nPosA = strUrl.find(':') + 3;
+    nPosB = strUrl.find('/', nPosA);
+    if (nPosB != -1)
+    {
+        strDomain = strUrl.substr(nPosA, nPosB - nPosA);
+        strRequestUri = strUrl.substr(nPosB, strUrl.length() - nPosB);
+    }
+    else
+    {
+        strDomain = strUrl.substr(nPosA, strUrl.length() - nPosA);
+        strRequestUri = "/";
+    }
+
+    // default request for a domain name
+    if (strRequestUri == "/")
+    {
+        strRequestUri.append("bitcoin-address.txt");
+    }
+    
+    // get ip address
+    CAddress addrConnect;
+    const char* pszGet;
+    const char* pszKeyword;
+    struct hostent* phostent = gethostbyname(strDomain.c_str());
+    if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
+        addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(80));
+    else
+        return;
+    
+    // make request and ask for json
+    ostringstream s;
+    s << "GET " << strRequestUri << " HTTP/1.1\r\n"
+      << "Host: " << strDomain << "\r\n"
+      << "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)\r\n"
+      << "Accept: application/json\r\n"
+      << "Connection: close\r\n"
+      << "\r\n";
+    pszKeyword = NULL;
+    GetHTTPRequest(addrConnect, s.str().c_str(), pszKeyword, strReturn);
+
+    Value valReturn;
+    if (!read_string(strReturn, valReturn) || valReturn.type() != obj_type)
+    {
+        // check for "default" subdomain www as fallback
+        if(strDomain.substr(0, 4) != "www.")
+        {
+            strUrl.insert(nPosA, "www.");
+            GetBitcoinAddressFromURL(strUrl, strLabel, strAddress);
+        }
+        return;
+    }
+    
+    // convert response to object
+    const Object& request = valReturn.get_obj();
+    
+    // return if error exists
+    Value valError = find_value(request, "error");
+    if (valError.type() != null_type & valError.get_str() != "")
+        return;
+
+    // set address if exists
+    Value valAddress = find_value(request, "address");
+    if (valAddress.type() != null_type)
+        strAddress = valAddress.get_str().c_str();
+    
+    // set label if exists
+    Value valLabel = find_value(request, "label");
+    if (valLabel.type() != null_type)
+        strLabel = valLabel.get_str().c_str();
+}
 
 
 bool AddAddress(CAddress addr, int64 nTimePenalty)
