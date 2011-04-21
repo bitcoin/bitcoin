@@ -24,7 +24,6 @@ enum
 
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet);
 bool GetMyExternalIP(unsigned int& ipRet);
-bool GetHTTPRequest(const CAddress& addrConnect, const char* pszGet, const char* pszKeyword, string& sRet);
 void GetBitcoinAddressFromURL(string strUrl, string& strLabel, string& strAddress);
 bool AddAddress(CAddress addr, int64 nTimePenalty=0);
 void AddressCurrentlyConnected(const CAddress& addr);

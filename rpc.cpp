@@ -2016,7 +2016,39 @@ Object CallRPC(const string& strMethod, const Array& params)
     return reply;
 }
 
+int RequestHTTPS(const string strDomain, const string strRequest, string& strReturn)
+{
+#ifndef USE_SSL
+	return 0;
+#else
+	// check if domain has an ip
+	CAddress addrConnect;
+    struct hostent* phostent = gethostbyname(strDomain.c_str());
+    if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
+        addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(80));
+    else
+        return 0;
 
+    // Connect to addrConnect
+    asio::io_service io_service;
+    ssl::context context(io_service, ssl::context::sslv23);
+    context.set_options(ssl::context::no_sslv2);
+    SSLStream sslStream(io_service, context);
+    SSLIOStreamDevice d(sslStream, true);
+    iostreams::stream<SSLIOStreamDevice> stream(d);
+    if (!d.connect(addrConnect.ToStringIP(), "443"))
+        return 0;
+#endif
+
+    // Send request
+    stream << strRequest << std::flush;
+
+    // Receive reply
+    map<string, string> mapHeaders;
+    int nStatus = ReadHTTP(stream, mapHeaders, strReturn);
+
+	return nStatus;
+}
 
 
 template<typename T>

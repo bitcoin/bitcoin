@@ -1959,7 +1959,7 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
                 if (nPosA != -1 && strAddress.find(".", nPosA) != -1)
                 {
                     strAddress = "http://" + strAddress.substr(nPosA + 1, strAddress.length() - nPosA - 1)
-                        + "/bitcoin-address-" + strAddress.substr(0, nPosA) + ".txt";
+                        + "/bitcoin-address/" + strAddress.substr(0, nPosA) + ".json";
                 }
                 // domain name
                 else if (nPosA == -1 && strAddress.find(".") != -1)
