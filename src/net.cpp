@@ -53,6 +53,10 @@ CAddress addrProxy("127.0.0.1",9050);
 
 
 
+unsigned short GetListenPort()
+{
+    return (unsigned short)(GetArg("-port", GetDefaultPort()));
+}
 
 void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 {
@@ -962,7 +966,7 @@ void ThreadMapPort2(void* parg)
     printf("ThreadMapPort started\n");
 
     char port[6];
-    sprintf(port, "%d", GetDefaultPort());
+    sprintf(port, "%d", GetListenPort());
 
     const char * rootdescurl = 0;
     const char * multicastif = 0;
@@ -1432,14 +1436,11 @@ void ThreadMessageHandler2(void* parg)
 
 
 
-
-
-
 bool BindListenPort(string& strError)
 {
     strError = "";
     int nOne = 1;
-    addrLocalHost.port = htons(GetDefaultPort());
+    addrLocalHost.port = htons(GetListenPort());
 
 #ifdef __WXMSW__
     // Initialize Windows Sockets
@@ -1491,7 +1492,7 @@ bool BindListenPort(string& strError)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
-    sockaddr.sin_port = htons(GetDefaultPort());
+    sockaddr.sin_port = htons(GetListenPort());
     if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
@@ -1553,7 +1554,7 @@ void StartNode(void* parg)
                     printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
 
                 // Take the first IP that isn't loopback 127.x.x.x
-                CAddress addr(*(unsigned int*)&s4->sin_addr, 0, nLocalServices);
+                CAddress addr(*(unsigned int*)&s4->sin_addr, GetListenPort(), nLocalServices);
                 if (addr.IsValid() && addr.GetByte(3) != 127)
                 {
                     addrLocalHost = addr;
