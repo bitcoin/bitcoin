@@ -108,7 +108,7 @@ AM_INIT_AUTOMAKE([dist-bzip2 subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_SRCDIR([src])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([auto-config.h])
 
 dnl Checks for programs.
 AC_PROG_CXX

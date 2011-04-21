@@ -10,7 +10,7 @@
 
 #else
 
-#include <settings.h>
+#include "config.h"
 
 #ifdef CRYPTOPP_MSVC6PP_OR_LATER
 	#include <emmintrin.h>

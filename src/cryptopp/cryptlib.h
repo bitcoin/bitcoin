@@ -79,7 +79,7 @@ and getting me started with this manual.
 #ifndef CRYPTOPP_CRYPTLIB_H
 #define CRYPTOPP_CRYPTLIB_H
 
-#include <settings.h>
+#include "config.h"
 #include "stdcpp.h"
 
 NAMESPACE_BEGIN(CryptoPP)
