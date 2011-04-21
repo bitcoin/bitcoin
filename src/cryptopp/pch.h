@@ -7,7 +7,7 @@
 
 #else
 
-	#include "config.h"
+	#include <settings.h>
 
 	#ifdef USE_PRECOMPILED_HEADERS
 		#include "simple.h"

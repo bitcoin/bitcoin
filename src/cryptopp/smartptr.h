@@ -1,7 +1,7 @@
 #ifndef CRYPTOPP_SMARTPTR_H
 #define CRYPTOPP_SMARTPTR_H
 
-#include "config.h"
+#include <settings.h>
 #include <algorithm>
 
 NAMESPACE_BEGIN(CryptoPP)

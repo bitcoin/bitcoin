@@ -7,8 +7,6 @@
 #include <crtdbg.h>
 #endif
 
-
-
 DEFINE_EVENT_TYPE(wxEVT_UITHREADCALL)
 
 CMainFrame* pframeMain = NULL;
@@ -2931,3 +2929,4 @@ void CMyApp::OnFatalException()
 {
     wxMessageBox(_("Program has crashed and will terminate.  "), "Bitcoin", wxOK | wxICON_ERROR);
 }
+

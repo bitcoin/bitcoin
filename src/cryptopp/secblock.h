@@ -3,7 +3,7 @@
 #ifndef CRYPTOPP_SECBLOCK_H
 #define CRYPTOPP_SECBLOCK_H
 
-#include "config.h"
+#include <settings.h>
 #include "misc.h"
 #include <assert.h>
 

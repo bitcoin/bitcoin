@@ -276,7 +276,7 @@ Value getinfo(const Array& params, bool fHelp)
             "Returns an object containing various state info.");
 
     Object obj;
-    obj.push_back(Pair("version",       (int)VERSION));
+    obj.push_back(Pair("version",       (int)BITCOIN_VERSION));
     obj.push_back(Pair("balance",       ValueFromAmount(GetBalance())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));

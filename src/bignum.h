@@ -334,19 +334,19 @@ public:
         return ToString(16);
     }
 
-    unsigned int GetSerializeSize(int nType=0, int nVersion=VERSION) const
+    unsigned int GetSerializeSize(int nType=0, int nVersion=BITCOIN_VERSION) const
     {
         return ::GetSerializeSize(getvch(), nType, nVersion);
     }
 
     template<typename Stream>
-    void Serialize(Stream& s, int nType=0, int nVersion=VERSION) const
+    void Serialize(Stream& s, int nType=0, int nVersion=BITCOIN_VERSION) const
     {
         ::Serialize(s, getvch(), nType, nVersion);
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s, int nType=0, int nVersion=VERSION)
+    void Unserialize(Stream& s, int nType=0, int nVersion=BITCOIN_VERSION)
     {
         vector<unsigned char> vch;
         ::Unserialize(s, vch, nType, nVersion);

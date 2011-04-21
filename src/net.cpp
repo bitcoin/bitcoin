@@ -11,6 +11,7 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
+
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
 
 void ThreadMessageHandler2(void* parg);

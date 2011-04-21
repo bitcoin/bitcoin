@@ -1,3 +1,5 @@
+# NullSoft Installer
+
 Name Bitcoin
 
 RequestExecutionLevel highest

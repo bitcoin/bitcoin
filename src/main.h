@@ -1993,7 +1993,7 @@ public:
 
     bool AppliesToMe() const
     {
-        return AppliesTo(VERSION, ::pszSubVer);
+        return AppliesTo(BITCOIN_VERSION, ::pszSubVer);
     }
 
     bool RelayTo(CNode* pnode) const
