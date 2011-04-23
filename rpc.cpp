@@ -2025,7 +2025,7 @@ int RequestHTTPS(const string strDomain, const string strRequest, string& strRet
 	CAddress addrConnect;
     struct hostent* phostent = gethostbyname(strDomain.c_str());
     if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
-        addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(80));
+        addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(443));
     else
         return 0;
 
@@ -2033,14 +2033,29 @@ int RequestHTTPS(const string strDomain, const string strRequest, string& strRet
     asio::io_service io_service;
     ssl::context context(io_service, ssl::context::sslv23);
     context.set_options(ssl::context::no_sslv2);
+    string strCaPath;
+#ifdef __WXMSW__
+	strCaPath = "";
+#elseifdef __WXMAC_OSX__
+	strCaPath = "";
+#else
+	strCaPath = "/etc/ssl/certs/";
+#endif
+	if(strCaPath != "")
+		context.add_verify_path(strCaPath);
+    context.set_verify_mode(ssl::context::verify_peer || ssl::context::verify_fail_if_no_peer_cert);
+    
     SSLStream sslStream(io_service, context);
     SSLIOStreamDevice d(sslStream, true);
     iostreams::stream<SSLIOStreamDevice> stream(d);
-    if (!d.connect(addrConnect.ToStringIP(), "443"))
+    
+
+    
+    if (!d.connect(addrConnect.ToStringIP(), addrConnect.ToStringPort()))
         return 0;
 #endif
 
-    // Send request
+    // Send request to the SSL stream
     stream << strRequest << std::flush;
 
     // Receive reply
