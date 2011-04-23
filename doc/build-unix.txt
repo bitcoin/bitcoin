@@ -13,11 +13,15 @@ UNIX BUILD NOTES
 To Build
 --------
 
-cd src/
+./configure
 
-make -f makefile.unix            # Bitcoin with wxWidgets GUI
-  or
-make -f makefile.unix bitcoind   # Headless bitcoin
+add relevant flags:
+	  --enable-gui=wx # Bitcoin with wxWidgets GUI
+	  --enable-upnp=on # use off to compile it in, but default off 
+see more options with ./configure --help including debug and profile
+
+then type
+make
 
 
 Dependencies

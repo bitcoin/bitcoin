@@ -6,7 +6,6 @@ the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
 cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
 software written by Thomas Bernard.
 
-
 WINDOWS BUILD NOTES
 ===================
 
@@ -101,7 +100,14 @@ Get miniupnpc-1.5.20110215.tar.gz and copy *.h to \upnpc-exe-win32-20110215\mini
 Bitcoin
 -------
 DOS prompt:
-cd \bitcoin\src
-mingw32-make bitcoin.exe bitcoind.exe -f makefile.mingw
+Substitute mingw32msvc with the executable prefix of the mingw compiler installed
+Substitute bitcoin-mingw32-libs with the path to the libraries
+To Fine tune see ./configure --help
+
+cd \bitcoin
+./configure --host=i586-mingw32msvc --with-boost-libdir=bitcoin-mingw32-libs/lib --with-boost=bitcoin-mingw32-libs
+mingw32-make
+
+To eliminate debugging symbols from executables:
 strip bitcoin.exe
 strip bitcoind.exe
