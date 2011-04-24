@@ -2839,9 +2839,6 @@ bool CMyApp::OnInit()
     extern int g_isPainting;
     g_isPainting = 10000;
 #endif
-#ifdef GUI
-    wxImage::AddHandler(new wxPNGHandler);
-#endif
 #if defined(__WXMSW__ ) || defined(__WXMAC_OSX__)
     SetAppName("Bitcoin");
 #else
