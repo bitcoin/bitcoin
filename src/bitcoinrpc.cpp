@@ -526,6 +526,70 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+Value signmessage(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "signmessage <bitcoinaddress> <message>\n"
+            "Sign a message with the private key of an address");
+
+    string strAddress = params[0].get_str();
+    string strMessage = params[1].get_str();
+    strMessage.insert(0, "Padding text - ");
+    
+    uint160 hash160;
+    if(!AddressToHash160(strAddress, hash160))
+        throw JSONRPCError(-3, "Invalid address");
+    
+    vector<unsigned char>& vchPubKey = mapPubKeys[hash160];
+    CKey key;
+    if(!key.SetPubKey(vchPubKey))
+        throw JSONRPCError(-3, "Public key not found");
+    strMessage.insert(0, HexStr(vchPubKey.begin(), vchPubKey.end()).c_str());
+
+    vector<unsigned char> vchMsg(strMessage.begin(), strMessage.end());
+    vector<unsigned char> vchSig;
+    if (!CKey::Sign(mapKeys[vchPubKey], Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+        throw JSONRPCError(-3, "Sign failed");
+
+    Object obj;
+    obj.push_back(Pair("address",       strAddress));
+    obj.push_back(Pair("pubkey",        HexStr(vchPubKey.begin(), vchPubKey.end()).c_str()));
+    obj.push_back(Pair("sign",          HexStr(vchSig.begin(), vchSig.end()).c_str()));
+
+    return obj;
+}
+
+Value verifymessage(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "verifymessage <pubkey> <sign> <message>\n"
+            "Verify a signed message with the public key");
+
+    string strPubKey  = params[0].get_str();
+    string strSign    = params[1].get_str();
+    string strMessage = params[2].get_str();
+    strMessage.insert(0, "Padding text - ");
+    strMessage.insert(0, strPubKey.c_str());
+
+    vector<unsigned char> vchPubKey = ParseHex(strPubKey);
+    vector<unsigned char> vchSig = ParseHex(strSign);
+    vector<unsigned char> vchMsg(strMessage.begin(), strMessage.end());
+
+    CKey key;
+    if(!key.SetPubKey(vchPubKey))
+        throw JSONRPCError(-3, "Invalid pubkey");
+    
+    if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+        throw JSONRPCError(-3, "Verify failed");
+    
+    Object obj;
+    obj.push_back(Pair("address",       PubKeyToAddress(vchPubKey)));
+    obj.push_back(Pair("pubkey",        strPubKey.c_str()));
+    return obj;
+}
+
 
 Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
@@ -1636,6 +1700,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("sendmany",               &sendmany),
     make_pair("gettransaction",         &gettransaction),
     make_pair("listtransactions",       &listtransactions),
+    make_pair("signmessage",           &signmessage),
+    make_pair("verifymessage",         &verifymessage),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
