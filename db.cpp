@@ -807,8 +807,10 @@ bool CWalletDB::LoadWallet()
     printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);
     printf("fUseProxy = %d\n", fUseProxy);
     printf("addrProxy = %s\n", addrProxy.ToString().c_str());
+#ifdef USE_UPNP
     if (fHaveUPnP)
         printf("fUseUPnP = %d\n", fUseUPnP);
+#endif
 
 
     // Upgrade
