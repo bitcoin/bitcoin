@@ -43,4 +43,4 @@ script: |
   cp $OUTDIR/src/license.txt $OUTDIR
   PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin bitcoind
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
-  cp bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
+  install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
