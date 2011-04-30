@@ -18,20 +18,29 @@ remotes:
   "dir": "bitcoin"
 files:
 - "wxWidgets-2.9.1.tar.bz2"
+- "miniupnpc-1.5.tar.gz"
 script: |
   INSTDIR="$HOME/install"
   export LIBRARY_PATH="$INSTDIR/lib"
+  #
+  tar xzf miniupnpc-1.5.tar.gz
+  cd miniupnpc-1.5
+  INSTALLPREFIX=$INSTDIR make $MAKEOPTS install
+  cd ..
+  #
   tar xjf wxWidgets-2.9.1.tar.bz2
   cd wxWidgets-2.9.1
   ./configure --prefix=$INSTDIR --enable-monolithic --disable-shared
   perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
   make $MAKEOPTS install
-  cd ../bitcoin
+  cd ..
+  #
+  cd bitcoin
   mkdir -p $OUTDIR/src
   cp -a . $OUTDIR/src
   rm -rf $OUTDIR/src/.git
   mv $OUTDIR/src/locale $OUTDIR
   cp $OUTDIR/src/license.txt $OUTDIR
-  make -f makefile.unix $MAKEOPTS  WXLIBS="-Wl,-Bstatic -l wx_gtk2u-2.9 -Wl,-Bdynamic -l gtk-x11-2.0 -l SM -l Xxf86vm" INCLUDEPATHS="`$INSTDIR/bin/wx-config --cflags`" bitcoin bitcoind
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin bitcoind
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
-  cp bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
+  install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
