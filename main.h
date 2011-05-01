@@ -1028,7 +1028,7 @@ public:
             if (!ptx->IsFinal())
                 return false;
             if (ptx->GetDepthInMainChain() >= 1)
-                return true;
+                continue;
             if (!ptx->IsFromMe())
                 return false;
 
