@@ -73,7 +73,7 @@ tar -xzvf wxWidgets-2.9.0.tar.gz
 cd wxWidgets-2.9.0
 mkdir buildgtk
 cd buildgtk
-../configure --with-gtk --enable-debug --disable-shared --enable-monolithic
+../configure --with-gtk --enable-debug --disable-shared --enable-monolithic --without-libpng --disable-svg
 make
 sudo su
 make install
