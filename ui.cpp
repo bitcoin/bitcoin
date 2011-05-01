@@ -2605,6 +2605,7 @@ void CAddressBookDialog::OnClose(wxCloseEvent& event)
 enum
 {
     ID_TASKBAR_RESTORE = 10001,
+    ID_TASKBAR_SEND,
     ID_TASKBAR_OPTIONS,
     ID_TASKBAR_GENERATE,
     ID_TASKBAR_EXIT,
@@ -2613,6 +2614,7 @@ enum
 BEGIN_EVENT_TABLE(CMyTaskBarIcon, wxTaskBarIcon)
     EVT_TASKBAR_LEFT_DCLICK(CMyTaskBarIcon::OnLeftButtonDClick)
     EVT_MENU(ID_TASKBAR_RESTORE, CMyTaskBarIcon::OnMenuRestore)
+    EVT_MENU(ID_TASKBAR_SEND, CMyTaskBarIcon::OnMenuSend)
     EVT_MENU(ID_TASKBAR_OPTIONS, CMyTaskBarIcon::OnMenuOptions)
     EVT_MENU(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnMenuGenerate)
     EVT_UPDATE_UI(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnUpdateUIGenerate)
@@ -2665,6 +2667,13 @@ void CMyTaskBarIcon::OnMenuRestore(wxCommandEvent& event)
     Restore();
 }
 
+void CMyTaskBarIcon::OnMenuSend(wxCommandEvent& event)
+{
+    // Taskbar: Send
+    CSendDialog dialog(pframeMain);
+    dialog.ShowModal();
+}
+
 void CMyTaskBarIcon::OnMenuOptions(wxCommandEvent& event)
 {
     // Since it's modal, get the main window to do it
@@ -2706,6 +2715,7 @@ wxMenu* CMyTaskBarIcon::CreatePopupMenu()
 {
     wxMenu* pmenu = new wxMenu;
     pmenu->Append(ID_TASKBAR_RESTORE, _("&Open Bitcoin"));
+    pmenu->Append(ID_TASKBAR_SEND, _("&Send Bitcoins"));
     pmenu->Append(ID_TASKBAR_OPTIONS, _("O&ptions..."));
     pmenu->AppendCheckItem(ID_TASKBAR_GENERATE, _("&Generate Coins"))->Check(fGenerateBitcoins);
 #ifndef __WXMAC_OSX__ // Mac has built-in quit menu

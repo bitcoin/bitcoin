@@ -323,6 +323,7 @@ protected:
     // Event handlers
     void OnLeftButtonDClick(wxTaskBarIconEvent& event);
     void OnMenuRestore(wxCommandEvent& event);
+    void OnMenuSend(wxCommandEvent& event);
     void OnMenuOptions(wxCommandEvent& event);
     void OnUpdateUIGenerate(wxUpdateUIEvent& event);
     void OnMenuGenerate(wxCommandEvent& event);
