@@ -1859,6 +1859,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     m_bitmapCheckMark->Show(false);
     fEnabledPrev = true;
     m_textCtrlAddress->SetFocus();
+    
     //// todo: should add a display of your balance for convenience
 #ifndef __WXMSW__
     wxFont fontTmp = m_staticTextInstructions->GetFont();
@@ -1867,7 +1868,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     m_staticTextInstructions->SetFont(fontTmp);
     SetSize(725, 180);
 #endif
-
+    
     // Set Icon
     wxIcon iconSend;
     iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
@@ -2626,9 +2627,9 @@ void CMyTaskBarIcon::Show(bool fShow)
     static char pszPrevTip[200];
     if (fShow)
     {
-        string strTooltip = _("Bitcoin");
+        string strTooltip = _("Balance: ") + FormatMoney(GetBalance());
         if (fGenerateBitcoins)
-            strTooltip = _("Bitcoin - Generating");
+            strTooltip = _("Bitcoin - Generating (Balance: ") + FormatMoney(GetBalance()) + ")";
         if (fGenerateBitcoins && vNodes.empty())
             strTooltip = _("Bitcoin - (not connected)");
 
