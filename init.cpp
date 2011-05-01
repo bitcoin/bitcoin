@@ -326,7 +326,7 @@ bool AppInit2(int argc, char* argv[])
     // Make sure only a single bitcoin process is using the data directory.
     string strLockFile = GetDataDir() + "/.lock";
     FILE* file = fopen(strLockFile.c_str(), "a"); // empty lock file; created if it doesn't exist.
-    fclose(file);
+    if (file) fclose(file);
     static boost::interprocess::file_lock lock(strLockFile.c_str());
     if (!lock.try_lock())
     {
