@@ -32,7 +32,8 @@ LIBS+= \
  -Wl,-Bdynamic \
    -l gthread-2.0 \
    -l z \
-   -l dl
+   -l dl \
+   -l pthread
 
 
 DEBUGFLAGS=-g -D__WXDEBUG__
