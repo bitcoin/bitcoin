@@ -2627,9 +2627,9 @@ void CMyTaskBarIcon::Show(bool fShow)
     static char pszPrevTip[200];
     if (fShow)
     {
-        string strTooltip = _("Balance: ") + FormatMoney(GetBalance());
+        string strTooltip = strprintf(_("Balance: %s"), FormatMoney(GetBalance()).c_str());
         if (fGenerateBitcoins)
-            strTooltip = _("Bitcoin - Generating (Balance: ") + FormatMoney(GetBalance()) + ")";
+            strTooltip = strprintf(_("Bitcoin - Generating (Balance: %s)"), FormatMoney(GetBalance()).c_str());
         if (fGenerateBitcoins && vNodes.empty())
             strTooltip = _("Bitcoin - (not connected)");
 
