@@ -556,11 +556,6 @@ msgstr "&Abrir Bitcoin"
 msgid "O&ptions..."
 msgstr "O&pciones"
 
-#: ../../../ui.cpp:2521
-#: ../../../uibase.cpp:32
-msgid "&Generate Coins"
-msgstr "&Generar monedas"
-
 #: ../../../ui.cpp:2524
 #: ../../../uibase.cpp:25
 msgid "E&xit"
