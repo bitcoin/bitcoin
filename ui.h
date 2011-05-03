@@ -52,7 +52,6 @@ protected:
     void OnPaint(wxPaintEvent& event);
     void OnPaintListCtrl(wxPaintEvent& event);
     void OnMenuFileExit(wxCommandEvent& event);
-    void OnMenuOptionsGenerate(wxCommandEvent& event);
     void OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event);
     void OnMenuOptionsChangeYourAddress(wxCommandEvent& event);
     void OnMenuOptionsOptions(wxCommandEvent& event);
