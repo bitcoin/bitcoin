@@ -1094,12 +1094,6 @@ void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
     Close(true);
 }
 
-void CMainFrame::OnMenuOptionsGenerate(wxCommandEvent& event)
-{
-    // Options->Generate Coins
-    GenerateBitcoins(event.IsChecked());
-}
-
 void CMainFrame::OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event)
 {
     event.Check(fGenerateBitcoins);
@@ -1766,9 +1760,6 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
         nLimitProcessors = m_spinCtrlLimitProcessors->GetValue();
         walletdb.WriteSetting("nLimitProcessors", nLimitProcessors);
     }
-    if (fGenerateBitcoins && (fLimitProcessors ? nLimitProcessors : INT_MAX) > nPrevMaxProc)
-        GenerateBitcoins(fGenerateBitcoins);
-
     if (fTmpStartOnSystemStartup != m_checkBoxStartOnSystemStartup->GetValue())
     {
         fTmpStartOnSystemStartup = m_checkBoxStartOnSystemStartup->GetValue();
@@ -2617,7 +2608,6 @@ BEGIN_EVENT_TABLE(CMyTaskBarIcon, wxTaskBarIcon)
     EVT_MENU(ID_TASKBAR_RESTORE, CMyTaskBarIcon::OnMenuRestore)
     EVT_MENU(ID_TASKBAR_SEND, CMyTaskBarIcon::OnMenuSend)
     EVT_MENU(ID_TASKBAR_OPTIONS, CMyTaskBarIcon::OnMenuOptions)
-    EVT_MENU(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnMenuGenerate)
     EVT_UPDATE_UI(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnUpdateUIGenerate)
     EVT_MENU(ID_TASKBAR_EXIT, CMyTaskBarIcon::OnMenuExit)
 END_EVENT_TABLE()
@@ -2691,11 +2681,6 @@ void CMyTaskBarIcon::Restore()
     pframeMain->Raise();
 }
 
-void CMyTaskBarIcon::OnMenuGenerate(wxCommandEvent& event)
-{
-    GenerateBitcoins(event.IsChecked());
-}
-
 void CMyTaskBarIcon::OnUpdateUIGenerate(wxUpdateUIEvent& event)
 {
     event.Check(fGenerateBitcoins);
@@ -2718,7 +2703,6 @@ wxMenu* CMyTaskBarIcon::CreatePopupMenu()
     pmenu->Append(ID_TASKBAR_RESTORE, _("&Open Bitcoin"));
     pmenu->Append(ID_TASKBAR_SEND, _("&Send Bitcoins"));
     pmenu->Append(ID_TASKBAR_OPTIONS, _("O&ptions..."));
-    pmenu->AppendCheckItem(ID_TASKBAR_GENERATE, _("&Generate Coins"))->Check(fGenerateBitcoins);
 #ifndef __WXMAC_OSX__ // Mac has built-in quit menu
     pmenu->AppendSeparator();
     pmenu->Append(ID_TASKBAR_EXIT, _("E&xit"));
