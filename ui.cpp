@@ -1859,6 +1859,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     m_bitmapCheckMark->Show(false);
     fEnabledPrev = true;
     m_textCtrlAddress->SetFocus();
+    
     //// todo: should add a display of your balance for convenience
 #ifndef __WXMSW__
     wxFont fontTmp = m_staticTextInstructions->GetFont();
@@ -1867,7 +1868,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     m_staticTextInstructions->SetFont(fontTmp);
     SetSize(725, 180);
 #endif
-
+    
     // Set Icon
     wxIcon iconSend;
     iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
@@ -2605,6 +2606,7 @@ void CAddressBookDialog::OnClose(wxCloseEvent& event)
 enum
 {
     ID_TASKBAR_RESTORE = 10001,
+    ID_TASKBAR_SEND,
     ID_TASKBAR_OPTIONS,
     ID_TASKBAR_GENERATE,
     ID_TASKBAR_EXIT,
@@ -2613,6 +2615,7 @@ enum
 BEGIN_EVENT_TABLE(CMyTaskBarIcon, wxTaskBarIcon)
     EVT_TASKBAR_LEFT_DCLICK(CMyTaskBarIcon::OnLeftButtonDClick)
     EVT_MENU(ID_TASKBAR_RESTORE, CMyTaskBarIcon::OnMenuRestore)
+    EVT_MENU(ID_TASKBAR_SEND, CMyTaskBarIcon::OnMenuSend)
     EVT_MENU(ID_TASKBAR_OPTIONS, CMyTaskBarIcon::OnMenuOptions)
     EVT_MENU(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnMenuGenerate)
     EVT_UPDATE_UI(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnUpdateUIGenerate)
@@ -2624,9 +2627,9 @@ void CMyTaskBarIcon::Show(bool fShow)
     static char pszPrevTip[200];
     if (fShow)
     {
-        string strTooltip = _("Bitcoin");
+        string strTooltip = strprintf(_("Balance: %s"), FormatMoney(GetBalance()).c_str());
         if (fGenerateBitcoins)
-            strTooltip = _("Bitcoin - Generating");
+            strTooltip = strprintf(_("Bitcoin - Generating (Balance: %s)"), FormatMoney(GetBalance()).c_str());
         if (fGenerateBitcoins && vNodes.empty())
             strTooltip = _("Bitcoin - (not connected)");
 
@@ -2663,6 +2666,13 @@ void CMyTaskBarIcon::OnLeftButtonDClick(wxTaskBarIconEvent& event)
 void CMyTaskBarIcon::OnMenuRestore(wxCommandEvent& event)
 {
     Restore();
+}
+
+void CMyTaskBarIcon::OnMenuSend(wxCommandEvent& event)
+{
+    // Taskbar: Send
+    CSendDialog dialog(pframeMain);
+    dialog.ShowModal();
 }
 
 void CMyTaskBarIcon::OnMenuOptions(wxCommandEvent& event)
@@ -2706,6 +2716,7 @@ wxMenu* CMyTaskBarIcon::CreatePopupMenu()
 {
     wxMenu* pmenu = new wxMenu;
     pmenu->Append(ID_TASKBAR_RESTORE, _("&Open Bitcoin"));
+    pmenu->Append(ID_TASKBAR_SEND, _("&Send Bitcoins"));
     pmenu->Append(ID_TASKBAR_OPTIONS, _("O&ptions..."));
     pmenu->AppendCheckItem(ID_TASKBAR_GENERATE, _("&Generate Coins"))->Check(fGenerateBitcoins);
 #ifndef __WXMAC_OSX__ // Mac has built-in quit menu
