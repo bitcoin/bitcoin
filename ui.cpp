@@ -1649,13 +1649,6 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 
     // Init values
     m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
-    m_checkBoxLimitProcessors->SetValue(fLimitProcessors);
-    m_spinCtrlLimitProcessors->Enable(fLimitProcessors);
-    m_spinCtrlLimitProcessors->SetValue(nLimitProcessors);
-    int nProcessors = wxThread::GetCPUCount();
-    if (nProcessors < 1)
-        nProcessors = 999;
-    m_spinCtrlLimitProcessors->SetRange(1, nProcessors);
     m_checkBoxStartOnSystemStartup->SetValue(fTmpStartOnSystemStartup = GetStartOnSystemStartup());
     m_checkBoxMinimizeToTray->SetValue(fMinimizeToTray);
     m_checkBoxMinimizeOnClose->SetValue(fMinimizeOnClose);
@@ -1694,11 +1687,6 @@ void COptionsDialog::OnKillFocusTransactionFee(wxFocusEvent& event)
     int64 nTmp = nTransactionFee;
     ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
     m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
-}
-
-void COptionsDialog::OnCheckBoxLimitProcessors(wxCommandEvent& event)
-{
-    m_spinCtrlLimitProcessors->Enable(event.IsChecked());
 }
 
 void COptionsDialog::OnCheckBoxUseProxy(wxCommandEvent& event)
@@ -1749,17 +1737,6 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
     if (ParseMoney(m_textCtrlTransactionFee->GetValue(), nTransactionFee) && nTransactionFee != nPrevTransactionFee)
         walletdb.WriteSetting("nTransactionFee", nTransactionFee);
 
-    int nPrevMaxProc = (fLimitProcessors ? nLimitProcessors : INT_MAX);
-    if (fLimitProcessors != m_checkBoxLimitProcessors->GetValue())
-    {
-        fLimitProcessors = m_checkBoxLimitProcessors->GetValue();
-        walletdb.WriteSetting("fLimitProcessors", fLimitProcessors);
-    }
-    if (nLimitProcessors != m_spinCtrlLimitProcessors->GetValue())
-    {
-        nLimitProcessors = m_spinCtrlLimitProcessors->GetValue();
-        walletdb.WriteSetting("nLimitProcessors", nLimitProcessors);
-    }
     if (fTmpStartOnSystemStartup != m_checkBoxStartOnSystemStartup->GetValue())
     {
         fTmpStartOnSystemStartup = m_checkBoxStartOnSystemStartup->GetValue();
