@@ -34,36 +34,34 @@
 #include <wx/dialog.h>
 #include <wx/listbox.h>
 #include <wx/checkbox.h>
-#include <wx/spinctrl.h>
 #include <wx/scrolwin.h>
 #include <wx/statbmp.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
 #define wxID_MAINFRAME 1000
-#define wxID_OPTIONSGENERATEBITCOINS 1001
-#define wxID_BUTTONSEND 1002
-#define wxID_BUTTONRECEIVE 1003
-#define wxID_TEXTCTRLADDRESS 1004
-#define wxID_BUTTONNEW 1005
-#define wxID_BUTTONCOPY 1006
-#define wxID_PROXYIP 1007
-#define wxID_PROXYPORT 1008
-#define wxID_TRANSACTIONFEE 1009
-#define wxID_TEXTCTRLPAYTO 1010
-#define wxID_BUTTONPASTE 1011
-#define wxID_BUTTONADDRESSBOOK 1012
-#define wxID_TEXTCTRLAMOUNT 1013
-#define wxID_CHOICETRANSFERTYPE 1014
-#define wxID_LISTCTRL 1015
-#define wxID_BUTTONRENAME 1016
-#define wxID_PANELSENDING 1017
-#define wxID_LISTCTRLSENDING 1018
-#define wxID_PANELRECEIVING 1019
-#define wxID_LISTCTRLRECEIVING 1020
-#define wxID_BUTTONDELETE 1021
-#define wxID_BUTTONEDIT 1022
-#define wxID_TEXTCTRL 1023
+#define wxID_BUTTONSEND 1001
+#define wxID_BUTTONRECEIVE 1002
+#define wxID_TEXTCTRLADDRESS 1003
+#define wxID_BUTTONNEW 1004
+#define wxID_BUTTONCOPY 1005
+#define wxID_PROXYIP 1006
+#define wxID_PROXYPORT 1007
+#define wxID_TRANSACTIONFEE 1008
+#define wxID_TEXTCTRLPAYTO 1009
+#define wxID_BUTTONPASTE 1010
+#define wxID_BUTTONADDRESSBOOK 1011
+#define wxID_TEXTCTRLAMOUNT 1012
+#define wxID_CHOICETRANSFERTYPE 1013
+#define wxID_LISTCTRL 1014
+#define wxID_BUTTONRENAME 1015
+#define wxID_PANELSENDING 1016
+#define wxID_LISTCTRLSENDING 1017
+#define wxID_PANELRECEIVING 1018
+#define wxID_LISTCTRLRECEIVING 1019
+#define wxID_BUTTONDELETE 1020
+#define wxID_BUTTONEDIT 1021
+#define wxID_TEXTCTRL 1022
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class CMainFrameBase
@@ -99,7 +97,6 @@ class CMainFrameBase : public wxFrame
 		virtual void OnMouseEvents( wxMouseEvent& event ) { event.Skip(); }
 		virtual void OnPaint( wxPaintEvent& event ) { event.Skip(); }
 		virtual void OnMenuFileExit( wxCommandEvent& event ) { event.Skip(); }
-		virtual void OnUpdateUIOptionsGenerate( wxUpdateUIEvent& event ) { event.Skip(); }
 		virtual void OnMenuOptionsChangeYourAddress( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnMenuOptionsOptions( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnMenuHelpAbout( wxCommandEvent& event ) { event.Skip(); }
@@ -164,9 +161,6 @@ class COptionsDialogBase : public wxDialog
 		wxScrolledWindow* m_scrolledWindow;
 		wxPanel* m_panelMain;
 		
-		wxCheckBox* m_checkBoxLimitProcessors;
-		wxSpinCtrl* m_spinCtrlLimitProcessors;
-		wxStaticText* m_staticText35;
 		wxCheckBox* m_checkBoxStartOnSystemStartup;
 		wxCheckBox* m_checkBoxMinimizeToTray;
 		wxCheckBox* m_checkBoxUseUPnP;
@@ -191,7 +185,6 @@ class COptionsDialogBase : public wxDialog
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnListBox( wxCommandEvent& event ) { event.Skip(); }
-		virtual void OnCheckBoxLimitProcessors( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnCheckBoxMinimizeToTray( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnCheckBoxUseProxy( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnKillFocusProxy( wxFocusEvent& event ) { event.Skip(); }
