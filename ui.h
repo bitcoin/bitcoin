@@ -126,7 +126,6 @@ protected:
     // Event handlers
     void OnListBox(wxCommandEvent& event);
     void OnKillFocusTransactionFee(wxFocusEvent& event);
-    void OnCheckBoxLimitProcessors(wxCommandEvent& event);
     void OnCheckBoxUseProxy(wxCommandEvent& event);
     void OnKillFocusProxy(wxFocusEvent& event);
 
