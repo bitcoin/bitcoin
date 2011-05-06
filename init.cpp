@@ -174,6 +174,7 @@ bool AppInit2(int argc, char* argv[])
 #endif
 #ifndef __WXMSW__
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
+            "  -nobackground    \t\t  " + _("Don't run bitcoin with background priority\n") +
 #endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
@@ -352,6 +353,10 @@ bool AppInit2(int argc, char* argv[])
         fprintf(stdout, "bitcoin server starting\n");
     strErrors = "";
     int64 nStart;
+    
+    // run bitcoin with background priority unless instructed otherwise
+    if (!GetBoolArg("-nobackground"))
+        SetThreadBackground(true);
 
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
@@ -389,7 +394,7 @@ bool AppInit2(int argc, char* argv[])
         ScanForWalletTransactions(pindexRescan);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
-
+    
     printf("Done loading\n");
 
         //// debug print

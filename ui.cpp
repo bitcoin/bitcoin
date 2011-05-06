@@ -941,6 +941,7 @@ int64 nRepaintInterval = 500;
 
 void ThreadDelayedRepaint(void* parg)
 {
+    SetThreadBackground(false); // make sure the GUI thread isn't running with background priority
     while (!fShutdown)
     {
         if (nLastRepaint != nNeedRepaint && GetTimeMillis() - nLastRepaintTime >= nRepaintInterval)

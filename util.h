@@ -6,6 +6,7 @@
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 typedef __int64  int64;
 typedef unsigned __int64  uint64;
+#define __thread __declspec(thread)
 #else
 typedef long long  int64;
 typedef unsigned long long  uint64;
@@ -590,7 +591,38 @@ inline void SetThreadPriority(int nPriority)
 {
     SetThreadPriority(GetCurrentThread(), nPriority);
 }
+
+inline int GetThreadPriority()
+{
+    return GetThreadPriority(GetCurrentThread());
+}
+
+inline bool SetThreadBackground(bool background)
+{
+    static __thread bool inBackground = false;
+    if (background)
+    {
+        if (SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN))
+            inBackground = true;
+        else if (GetLastError() == ERROR_THREAD_MODE_ALREADY_BACKGROUND)
+            assert(inBackground == true);
+        /*  if a different error occurred (e.g. couldn't exit background mode) we assume that 
+            the value of inBackground represents if we are in background mode or not     */
+    }
+    else
+    {
+        if (SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_END))
+            inBackground = false;
+        else if (GetLastError() == ERROR_THREAD_MODE_NOT_BACKGROUND)
+            assert(inBackground == false);
+        /*  if a different error occurred (e.g. couldn't exit background mode) we assume that 
+            the value of inBackground represents if we are in background mode or not     */
+    }
+    return inBackground;
+}
+
 #else
+
 inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
 {
     pthread_t hthread = 0;
@@ -621,6 +653,22 @@ inline void SetThreadPriority(int nPriority)
 #endif
 }
 
+inline int GetThreadPriority()
+{
+#ifdef PRIO_THREAD
+    return getpriority(PRIO_THREAD, 0);
+#else
+    return getpriority(PRIO_PROCESS, 0);
+#endif
+}
+
+inline bool SetThreadBackground(bool background)
+{
+    static __thread bool inBackground = false;
+    // TODO how do we emulate this?
+    return inBackground;
+}
+
 inline bool TerminateThread(pthread_t hthread, unsigned int nExitCode)
 {
     return (pthread_cancel(hthread) == 0);
@@ -630,6 +678,7 @@ inline void ExitThread(unsigned int nExitCode)
 {
     pthread_exit((void*)nExitCode);
 }
+
 #endif
 
 
