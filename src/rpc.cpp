@@ -702,21 +702,6 @@ Value movecmd(const Array& params, bool fHelp)
         CWalletDB walletdb;
         walletdb.TxnBegin();
 
-        // Check funds
-        if (!strFrom.empty())
-        {
-            int64 nBalance = GetAccountBalance(walletdb, strFrom, nMinDepth);
-            if (nAmount > nBalance)
-                throw JSONRPCError(-6, "Account has insufficient funds");
-        }
-        else
-        {
-            // move from "" account special case
-            int64 nBalance = GetAccountBalance(walletdb, strTo, nMinDepth);
-            if (nAmount > GetBalance() - nBalance)
-                throw JSONRPCError(-6, "Account has insufficient funds");
-        }
-
         int64 nNow = GetAdjustedTime();
 
         // Debit
