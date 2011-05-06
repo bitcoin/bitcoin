@@ -63,17 +63,14 @@ obj/%.o: %.cpp $(HEADERS)
 cryptopp/obj/%.o: cryptopp/%.cpp
 	$(CXX) -c $(CXXFLAGS) -O3 -o $@ $<
 
-obj/sha256.o: sha256.cpp
-	$(CXX) -c $(CXXFLAGS) -msse2 -O3 -march=amdfam10 -o $@ $<
-
-bitcoin: $(OBJS) obj/ui.o obj/uibase.o obj/sha256.o
+bitcoin: $(OBJS) obj/ui.o obj/uibase.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/sha256.o
+bitcoind: $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 
