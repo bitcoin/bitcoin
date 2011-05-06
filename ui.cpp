@@ -1929,6 +1929,7 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
                 {
                     wxMessageBox(strError + "  ", _("Sending..."));
                     EndModal(false);
+                    return;
                 }
 	    }
         }
