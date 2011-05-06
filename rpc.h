@@ -4,3 +4,4 @@
 
 void ThreadRPCServer(void* parg);
 int CommandLineRPC(int argc, char *argv[]);
+int RequestHTTPS(const string strDomain, const string strRequest, string& strReturn);

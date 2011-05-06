@@ -3,6 +3,11 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_writer_template.h"
+#include "json/json_spirit_utils.h"
+#include <boost/xpressive/xpressive_dynamic.hpp>
+using namespace json_spirit;
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniwget.h>
@@ -266,8 +271,84 @@ void ThreadGetMyExternalIP(void* parg)
     }
 }
 
+void GetBitcoinAddressFromURL(string strUrl, string& strLabel, string& strAddress)
+{
+    size_t nPosA, nPosB;
+    string strDomain, strRequestUri, strReturn;
+    
+    // verify if url
+    if (strUrl.substr(0, 4) != "http")
+        return;
 
+    // parse url
+    nPosA = strUrl.find(':') + 3;
+    nPosB = strUrl.find('/', nPosA);
+    if (nPosB != -1)
+    {
+        strDomain = strUrl.substr(nPosA, nPosB - nPosA);
+        strRequestUri = strUrl.substr(nPosB, strUrl.length() - nPosB);
+    }
+    else
+    {
+        strDomain = strUrl.substr(nPosA, strUrl.length() - nPosA);
+        strRequestUri = "/";
+    }
+    
+    // check domain name
+    using namespace boost::xpressive;
+    sregex re = sregex::compile("^[a-z._-]+([a-z])+$", regex_constants::icase);
+    if (!regex_search(strDomain, re))
+		return;
 
+    // default request for a domain name
+    if (strRequestUri == "/")
+    {
+        strRequestUri.append("bitcoin-address-domain.json");
+    }
+    
+    // make request and ask for json
+    ostringstream sRequest;
+    sRequest << "GET " << strRequestUri << " HTTP/1.1\r\n"
+      << "Host: " << strDomain << "\r\n"
+      << "User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)\r\n"
+      << "Accept: application/json\r\n"
+      << "Connection: close\r\n"
+      << "\r\n";
+    int nStatus = RequestHTTPS(strDomain.c_str(), sRequest.str(), strReturn);
+    
+    if(nStatus < 200 || nStatus >= 300)
+    {
+        // check for "default" subdomain www as fallback
+        if(strDomain.substr(0, 4) != "www." && nStatus != 0)
+        {
+            strUrl.insert(nPosA, "www.");
+            GetBitcoinAddressFromURL(strUrl, strLabel, strAddress);
+        }
+        return;
+	}
+    
+    Value valReturn;
+    if (!read_string(strReturn, valReturn) || valReturn.type() != obj_type)
+        return;
+    
+    // convert response to object
+    const Object& request = valReturn.get_obj();
+    
+    // return if error exists
+    Value valError = find_value(request, "error");
+    if (valError.type() != null_type & valError.get_str() != "")
+        return;
+
+    // set address if exists
+    Value valAddress = find_value(request, "address");
+    if (valAddress.type() != null_type)
+        strAddress = valAddress.get_str().c_str();
+    
+    // set label if exists
+    Value valLabel = find_value(request, "label");
+    if (valLabel.type() != null_type)
+        strLabel = valLabel.get_str().c_str();
+}
 
 
 bool AddAddress(CAddress addr, int64 nTimePenalty)
