@@ -37,9 +37,12 @@ You need to download wxWidgets from http://www.wxwidgets.org/downloads/
 and build it yourself.  See the build instructions and configure parameters
 below.
 
-Requires miniupnpc for UPnP port mapping.  To compile with UPnP support,
-install miniupnpc and compile after setting USE_UPNP.  It can be downloaded
-from http://miniupnp.tuxfamily.org/files/.  
+Requires miniupnpc for UPnP port mapping.  It can be downloaded from
+http://miniupnp.tuxfamily.org/files/.  UPnP support is compiled in and
+turned off by default.  Set USE_UPNP to a different value to control this:
+USE_UPNP=   no UPnP support, miniupnp not required;
+USE_UPNP=0  (the default) UPnP support turned off by default at runtime;
+USE_UPNP=1  UPnP support turned on by default at runtime.
 
 Licenses of statically linked libraries:
 wxWidgets      LGPL 2.1 with very liberal exceptions
