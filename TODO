@@ -1,0 +1,50 @@
+Toolbar:
+  Send coins
+  Address book
+
+- "Your bitcoin address" label
+- address field
+- "New..."
+- Copy to Clipboard
+
+Balance: XXX 
+
+Tabs:
+    All transactions
+    Sent/Received
+    Sent
+    Received
+
+Table [columns]:
+    Status
+    Date
+    Description
+    Debit
+    Credit
+
+    ** Table should be the same in all tabs. Do we really need different widgets?
+
+Status bar:
+  Permanent status indicators:
+    < actions_crystal_project: connect_established.png / connect_no.png >
+  N connections
+  M blocks
+  O transactions
+
+SendCoinDialog
+AddressesDialog (Address book)
+    Receiving/Sending
+
+OptionsDialog
+    Tabs at the left
+AboutDialog
+
+
+- Move resources to res/
+
+  - Send icon
+
+  - Address Book icon
+
+
+- Translation
