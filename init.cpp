@@ -182,7 +182,8 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
             "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
+            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n") +
+            "  -nicestart       \t  "   + _("Run initialization in background\n");
 
 #ifdef USE_SSL
         strUsage += string() +
@@ -352,6 +353,15 @@ bool AppInit2(int argc, char* argv[])
         fprintf(stdout, "bitcoin server starting\n");
     strErrors = "";
     int64 nStart;
+    
+    if (!fDaemon || GetBoolArg("-nicestart"))
+    {
+        // lower the process priority while loading all files so that we don't slow down people that launch bitcoin at startup
+        // TODO: can we do the same on Unix systems without being run as superuser?
+        #ifdef __WXMSW__
+            SetPriorityClass(GetCurrentProcess(), PROCESS_MODE_BACKGROUND_BEGIN);
+        #endif
+    }
 
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
@@ -389,6 +399,11 @@ bool AppInit2(int argc, char* argv[])
         ScanForWalletTransactions(pindexRescan);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
+    
+    #ifdef __WXMSW__
+        // return to normal priority (if we're not in background mode then it's a no-op)
+        SetPriorityClass(GetCurrentProcess(), PROCESS_MODE_BACKGROUND_END);
+    #endif
 
     printf("Done loading\n");
 
