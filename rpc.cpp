@@ -1570,10 +1570,11 @@ int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHea
         {
             string strHeader = str.substr(0, nColon);
             boost::trim(strHeader);
+            boost::to_lower(strHeader);
             string strValue = str.substr(nColon+1);
             boost::trim(strValue);
             mapHeadersRet[strHeader] = strValue;
-            if (strHeader == "Content-Length")
+            if (strHeader == "content-length")
                 nLen = atoi(strValue.c_str());
         }
     }
@@ -1643,7 +1644,7 @@ string DecodeBase64(string s)
 
 bool HTTPAuthorized(map<string, string>& mapHeaders)
 {
-    string strAuth = mapHeaders["Authorization"];
+    string strAuth = mapHeaders["authorization"];
     if (strAuth.substr(0,6) != "Basic ")
         return false;
     string strUserPass64 = strAuth.substr(6); boost::trim(strUserPass64);
@@ -1872,7 +1873,7 @@ void ThreadRPCServer2(void* parg)
         }
 
         // Check authorization
-        if (mapHeaders.count("Authorization") == 0)
+        if (mapHeaders.count("authorization") == 0)
         {
             stream << HTTPReply(401, "") << std::flush;
             continue;
