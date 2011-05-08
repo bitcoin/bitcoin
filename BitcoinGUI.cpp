@@ -2,6 +2,7 @@
  * W.J. van der Laan 2011
  */
 #include "BitcoinGUI.h"
+#include "TransactionTableModel.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -26,7 +27,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     resize(850, 550);
     setWindowTitle("Bitcoin");
     setWindowIcon(QIcon("bitcoin.png"));
-    
     
     QAction *quit = new QAction(QIcon("quit.png"), "&Quit", this);
     QAction *sendcoins = new QAction(QIcon("send.png"), "&Send coins", this);
@@ -53,13 +53,13 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     /* Address: <address>: New... : Paste to clipboard */
     QHBoxLayout *hbox_address = new QHBoxLayout();
-    hbox_address->addWidget(new QLabel("Your Bitcoin Address:"));
+    hbox_address->addWidget(new QLabel(tr("Your Bitcoin Address:")));
     QLineEdit *edit_address = new QLineEdit();
     edit_address->setReadOnly(true);
     hbox_address->addWidget(edit_address);
     
     QPushButton *button_new = new QPushButton(trUtf8("&New\u2026"));
-    QPushButton *button_clipboard = new QPushButton("&Copy to clipboard");
+    QPushButton *button_clipboard = new QPushButton(tr("&Copy to clipboard"));
     hbox_address->addWidget(button_new);
     hbox_address->addWidget(button_clipboard);
     
@@ -80,12 +80,14 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     /* Transaction table:
      * TransactionView
      * TransactionModel
-     * Selection behaviour
+     * Selection behavior
      * selection mode
      * QAbstractItemView::SelectItems
      * QAbstractItemView::ExtendedSelection
      */
     QTableView *transaction_table = new QTableView(this);
+    TransactionTableModel *transaction_model = new TransactionTableModel(this);
+    transaction_table->setModel(transaction_model);
     
     QTabBar *tabs = new QTabBar(this);
     tabs->addTab("All transactions");

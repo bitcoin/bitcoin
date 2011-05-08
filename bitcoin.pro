@@ -8,5 +8,7 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += BitcoinGUI.h
-SOURCES += bitcoin.cpp BitcoinGUI.cpp
+HEADERS += BitcoinGUI.h \
+    TransactionTableModel.h
+SOURCES += bitcoin.cpp BitcoinGUI.cpp \
+    TransactionTableModel.cpp
