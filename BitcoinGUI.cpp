@@ -18,6 +18,7 @@
 #include <QTableView>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QHeaderView>
 
 #include <iostream>
 
@@ -86,9 +87,24 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
      * QAbstractItemView::ExtendedSelection
      */
     QTableView *transaction_table = new QTableView(this);
+
     TransactionTableModel *transaction_model = new TransactionTableModel(this);
     transaction_table->setModel(transaction_model);
-    
+    transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+    transaction_table->horizontalHeader()->resizeSection(
+            TransactionTableModel::Status, 112);
+    transaction_table->horizontalHeader()->resizeSection(
+            TransactionTableModel::Date, 112);
+    transaction_table->horizontalHeader()->setResizeMode(
+            TransactionTableModel::Description, QHeaderView::Stretch);
+    transaction_table->horizontalHeader()->resizeSection(
+            TransactionTableModel::Debit, 79);
+    transaction_table->horizontalHeader()->resizeSection(
+            TransactionTableModel::Credit, 79);
+    /* TODO: alignment; debit/credit columns must align right */
+
     QTabBar *tabs = new QTabBar(this);
     tabs->addTab("All transactions");
     tabs->addTab("Sent/Received");

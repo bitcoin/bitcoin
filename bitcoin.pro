@@ -9,6 +9,14 @@ INCLUDEPATH += .
 
 # Input
 HEADERS += BitcoinGUI.h \
-    TransactionTableModel.h
+    TransactionTableModel.h \
+    SendCoinsDialog.h \
+    SettingsDialog.h \
+    AddressBookDialog.h \
+    AboutDialog.h
 SOURCES += bitcoin.cpp BitcoinGUI.cpp \
-    TransactionTableModel.cpp
+    TransactionTableModel.cpp \
+    SendCoinsDialog.cpp \
+    SettingsDialog.cpp \
+    AddressBookDialog.cpp \
+    AboutDialog.cpp

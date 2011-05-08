@@ -1,5 +1,14 @@
 #include "TransactionTableModel.h"
 
+/* Credit and Debit columns are right-aligned as they contain numbers */
+static Qt::AlignmentFlag column_alignments[] = {
+        Qt::AlignLeft,
+        Qt::AlignLeft,
+        Qt::AlignLeft,
+        Qt::AlignRight,
+        Qt::AlignRight
+    };
+
 TransactionTableModel::TransactionTableModel(QObject *parent):
         QAbstractTableModel(parent)
 {
@@ -28,18 +37,24 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         /* index.row(), index.column() */
         /* Return QString */
         return QString("test");
+    } else if (role == Qt::TextAlignmentRole)
+    {
+        return column_alignments[index.column()];
     }
     return QVariant();
 }
 
 QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if(role != Qt::DisplayRole)
-        return QVariant();
-
-    if(orientation == Qt::Horizontal)
+    if(role == Qt::DisplayRole)
     {
-        return columns[section];
+        if(orientation == Qt::Horizontal)
+        {
+            return columns[section];
+        }
+    } else if (role == Qt::TextAlignmentRole)
+    {
+        return column_alignments[section];
     }
     return QVariant();
 }

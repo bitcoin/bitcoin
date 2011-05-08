@@ -23,6 +23,9 @@ Table [columns]:
     Credit
 
     ** Table should be the same in all tabs. Do we really need different widgets?
+       -> yes, to have different proxy views
+
+    ** Table rows are much too high?
 
 Status bar:
   Permanent status indicators:
@@ -46,5 +49,5 @@ AboutDialog
 
   - Address Book icon
 
-
 - Translation
+

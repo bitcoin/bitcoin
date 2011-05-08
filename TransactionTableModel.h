@@ -1,5 +1,5 @@
-#ifndef H_TRANSACTIONTABLEMODEL
-#define H_TRANSACTIONTABLEMODEL
+#ifndef TRANSACTIONTABLEMODEL_H
+#define TRANSACTIONTABLEMODEL_H
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -8,7 +8,15 @@ class TransactionTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    TransactionTableModel(QObject *parent = 0);
+    explicit TransactionTableModel(QObject *parent = 0);
+
+    enum {
+        Status = 0,
+        Date = 1,
+        Description = 2,
+        Debit = 3,
+        Credit = 4
+    } ColumnIndex;
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
