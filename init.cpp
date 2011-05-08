@@ -76,6 +76,11 @@ void HandleSIGTERM(int)
 int main(int argc, char* argv[])
 {
     bool fRet = false;
+
+#ifdef USE_POSIX_CAPABILITIES
+    cCap_lock();
+#endif
+
     fRet = AppInit(argc, argv);
 
     if (fRet && fDaemon)
