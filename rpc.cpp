@@ -1201,6 +1201,51 @@ Value listaccounts(const Array& params, bool fHelp)
     return ret;
 }
 
+Value listsinceblock(const Array& params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error(
+            "listsinceblock [blockid]\n"
+            "Get all transactions in blocks since block [blockid], or all transactions if omitted");
+
+    uint256 blockId = 0;
+
+    if (params.size() > 0)
+        blockId.SetHex(params[0].get_str());
+
+    CBlockIndex *pindex = CBlockLocator(blockId).GetBlockIndex();
+
+    uint256 lastBlockId = pindex->GetBlockHash();
+    pindex = pindex->pnext;
+
+    Array transactions;
+
+    CRITICAL_BLOCK(cs_mapWallet)
+    while (pindex)
+    {
+        lastBlockId = pindex->GetBlockHash();
+
+        CBlock block;
+        block.ReadFromDisk(pindex, true);
+
+        foreach(CTransaction& tx, block.vtx)
+        {
+            map<uint256, CWalletTx>::iterator mi = mapWallet.find(tx.GetHash());
+
+            if (mi != mapWallet.end())
+                ListTransactions((*mi).second, "*", 1, true, transactions);
+        }
+
+        pindex = pindex->pnext;
+    }
+
+    Object ret;
+    ret.push_back(Pair("transactions", transactions));
+    ret.push_back(Pair("lastblock", lastBlockId.GetHex()));
+
+    return ret;
+}
+
 Value gettransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1440,6 +1485,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listtransactions",      &listtransactions),
     make_pair("getwork",               &getwork),
     make_pair("listaccounts",          &listaccounts),
+    make_pair("listsinceblock",        &listsinceblock),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
