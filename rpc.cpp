@@ -1083,8 +1083,8 @@ Value listtransactions(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
-            "listtransactions [account] [count=10]\n"
-            "Returns up to [count] most recent transactions for account <account>.");
+            "listtransactions [account] [count=10] [from=0]\n"
+            "Returns up to [count] most recent transactions skipping the first [from] transactions for account [account].");
 
     string strAccount = "*";
     if (params.size() > 0)
@@ -1092,6 +1092,9 @@ Value listtransactions(const Array& params, bool fHelp)
     int nCount = 10;
     if (params.size() > 1)
         nCount = params[1].get_int();
+    int nFrom = 0;
+    if (params.size() > 2)
+        nFrom = params[2].get_int();
 
     Array ret;
     CWalletDB walletdb;
@@ -1116,7 +1119,7 @@ Value listtransactions(const Array& params, bool fHelp)
         }
 
         // Now: iterate backwards until we have nCount items to return:
-        for (TxItems::reverse_iterator it = txByTime.rbegin(); it != txByTime.rend(); ++it)
+        for (TxItems::reverse_iterator it = txByTime.rbegin(), std::advance(it, nFrom); it != txByTime.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second.first;
             if (pwtx != 0)
@@ -2088,6 +2091,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
         if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "sendmany"               && n > 1)
         {
