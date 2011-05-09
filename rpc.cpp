@@ -1119,7 +1119,8 @@ Value listtransactions(const Array& params, bool fHelp)
         }
 
         // Now: iterate backwards until we have nCount items to return:
-        for (TxItems::reverse_iterator it = txByTime.rbegin(), std::advance(it, nFrom); it != txByTime.rend(); ++it)
+        TxItems::reverse_iterator it = txByTime.rbegin();
+        for (std::advance(it, nFrom); it != txByTime.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second.first;
             if (pwtx != 0)
