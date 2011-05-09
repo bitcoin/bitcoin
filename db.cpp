@@ -790,7 +790,9 @@ bool CWalletDB::LoadWallet()
                 if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
                 if (strKey == "fUseProxy")          ssValue >> fUseProxy;
                 if (strKey == "addrProxy")          ssValue >> addrProxy;
+#if USE_UPNP
                 if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
+#endif
             }
         }
         pcursor->close();
