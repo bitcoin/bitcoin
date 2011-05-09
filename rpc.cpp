@@ -1081,7 +1081,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
 
 Value listtransactions(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 2)
+    if (fHelp || params.size() > 3)
         throw runtime_error(
             "listtransactions [account] [count=10] [from=0]\n"
             "Returns up to [count] most recent transactions skipping the first [from] transactions for account [account].");
