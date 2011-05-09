@@ -106,7 +106,7 @@ Get miniupnpc-1.5.20110215.tar.gz and copy *.h to \upnpc-exe-win32-20110215\mini
 Bitcoin
 -------
 DOS prompt:
-cd \bitcoin
+cd \bitcoin\src
 mingw32-make bitcoin.exe bitcoind.exe -f makefile.mingw
 strip bitcoin.exe
 strip bitcoind.exe
