@@ -2097,6 +2097,13 @@ int CommandLineRPC(int argc, char *argv[])
             params[1] = v.get_obj();
         }
         if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        // Handle backupwallet special case in caller.
+        if (strMethod == "backupwallet")
+            if (GetArg("-rpcconnect","127.0.0.1") == "127.0.0.1")
+                if (!(params[0].get_str()[0] == '/')) 
+                {
+                    params[0] = boost::filesystem::current_path().string() + "/" + params[0].get_str();
+                }
 
         // Execute
         Object reply = CallRPC(strMethod, params);
