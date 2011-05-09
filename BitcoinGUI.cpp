@@ -19,6 +19,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QHeaderView>
+#include <QLocale>
 
 #include <iostream>
 
@@ -27,12 +28,12 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 {
     resize(850, 550);
     setWindowTitle("Bitcoin");
-    setWindowIcon(QIcon("bitcoin.png"));
+    setWindowIcon(QIcon(":icons/bitcoin"));
     
-    QAction *quit = new QAction(QIcon("quit.png"), "&Quit", this);
-    QAction *sendcoins = new QAction(QIcon("send.png"), "&Send coins", this);
-    QAction *addressbook = new QAction(QIcon("address-book.png"), "&Address book", this);
-    QAction *about = new QAction(QIcon("bitcoin.png"), "&About", this);
+    QAction *quit = new QAction(QIcon(":/icons/quit"), "&Quit", this);
+    QAction *sendcoins = new QAction(QIcon(":/icons/send"), "&Send coins", this);
+    QAction *addressbook = new QAction(QIcon(":/icons/address-book"), "&Address book", this);
+    QAction *about = new QAction(QIcon(":/icons/bitcoin"), "&About", this);
     
     /* Menus */
     QMenu *file = menuBar()->addMenu("&File");
@@ -66,9 +67,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     
     /* Balance: <balance> */
     QHBoxLayout *hbox_balance = new QHBoxLayout();
-    hbox_balance->addWidget(new QLabel("Balance:"));
+    hbox_balance->addWidget(new QLabel(tr("Balance:")));
     hbox_balance->addSpacing(5);/* Add some spacing between the label and the text */
-    QLabel *label_balance = new QLabel("1,234.54");
+
+    QLabel *label_balance = new QLabel(QLocale::system().toString(1345.54)); /* TODO: use locale to format amount */
     label_balance->setFont(QFont("Teletype"));
     hbox_balance->addWidget(label_balance);
     hbox_balance->addStretch(1);
@@ -106,10 +108,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     /* TODO: alignment; debit/credit columns must align right */
 
     QTabBar *tabs = new QTabBar(this);
-    tabs->addTab("All transactions");
-    tabs->addTab("Sent/Received");
-    tabs->addTab("Sent");
-    tabs->addTab("Received");
+    tabs->addTab(tr("All transactions"));
+    tabs->addTab(tr("Sent/Received"));
+    tabs->addTab(tr("Sent"));
+    tabs->addTab(tr("Received"));
    
     vbox->addWidget(tabs);
     vbox->addWidget(transaction_table);
