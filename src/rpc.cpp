@@ -1816,7 +1816,6 @@ public:
     /* Parse status line and continues reading */
     void handle_read_status(const boost::system::error_code& err, size_t nBytes)
     {
-        printf("read_status err = %s\n", err.message().c_str());
         if (err) return;
 
         istream is(&streambuf);
@@ -1835,7 +1834,6 @@ public:
      * and continues reading */
     void handle_read_header(const boost::system::error_code& err, size_t nBytes)
     {
-        printf("read_header err = %s\n", err.message().c_str());
         if (err) return;
 
         std::istream is(&streambuf);
@@ -1886,7 +1884,6 @@ public:
      * responds appropriately when request terminates. */
     void handle_read_body (const boost::system::error_code& err, size_t nBytes)
     {
-        printf("read_body err = %s\n", err.message().c_str());
         if (err) return;
 
         Value id = Value::null;
@@ -2117,7 +2114,6 @@ AsyncRPCServer::AsyncRPCServer(asio::io_service &io_service,
       , context(io_service, ssl::context::sslv23)
 #endif
 {
-    printf("hi from asyncrpc constructor.\n");
     m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
 #ifdef USE_SSL
     if (fUseSSL)
@@ -2153,7 +2149,6 @@ AsyncRPCServer::AsyncRPCServer(asio::io_service &io_service,
 
 void AsyncRPCServer::do_accept(RPCConnection_p& con)
 {
-    printf("hi do_acept\n");
 
 #ifdef USE_SSL
     if (fUseSSL)
@@ -2172,7 +2167,6 @@ void AsyncRPCServer::do_accept(RPCConnection_p& con)
 
 void AsyncRPCServer::handle_accept(RPCConnection_p con, const boost::system::error_code &error)
 {
-    printf("hi handle_accept: error = %s\n", error.message().c_str());
     if (!error && !fShutdown)
     {
         con->start();
