@@ -98,6 +98,7 @@ class CMainFrameBase : public wxFrame
 		virtual void OnPaint( wxPaintEvent& event ) { event.Skip(); }
 		virtual void OnMenuFileExit( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnMenuOptionsChangeYourAddress( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnMenuOptionsChangeWalletPassword( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnMenuOptionsOptions( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnMenuHelpAbout( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnButtonSend( wxCommandEvent& event ) { event.Skip(); }

@@ -400,6 +400,13 @@ public:
         return Read(make_pair(string("key"), vchPubKey), vchPrivKey);
     }
 
+    bool WriteKey(const vector<unsigned char>& vchPubKey,
+                  const vector<unsigned char>& vchCiphertext)
+    {
+        nWalletDBUpdated++;
+        return Write(make_pair(string("ekey"), vchPubKey), vchCiphertext,false);
+    }
+
     bool WriteKey(const vector<unsigned char>& vchPubKey, const CPrivKey& vchPrivKey)
     {
         nWalletDBUpdated++;
@@ -449,7 +456,9 @@ public:
     int64 GetAccountCreditDebit(const string& strAccount);
     void ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& acentries);
 
-    bool LoadWallet();
+    bool LoadWallet(bool& fHaveUnencKeysInWalletRet);
+    bool EncryptUnencKeys();
+    bool ChangeWalletPass(CCrypter& cNewWalletCrypter);
 protected:
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
@@ -459,7 +468,9 @@ protected:
     friend int64 GetOldestKeyPoolTime();
 };
 
-bool LoadWallet(bool& fFirstRunRet);
+bool LoadWallet(bool& fFirstRunRet, bool& fHaveUnencKeysInWalletRet);
+bool EncryptUnencKeys();
+bool ChangeWalletPass(CCrypter& cNewWalletCrypter);
 void BackupWallet(const string& strDest);
 
 inline bool SetAddressBookName(const string& strAddress, const string& strName)
