@@ -27,7 +27,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QMainWindow(parent)
 {
     resize(850, 550);
-    setWindowTitle("Bitcoin");
+    setWindowTitle(tr("Bitcoin"));
     setWindowIcon(QIcon(":icons/bitcoin"));
     
     QAction *quit = new QAction(QIcon(":/icons/quit"), "&Quit", this);
@@ -70,7 +70,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_balance->addWidget(new QLabel(tr("Balance:")));
     hbox_balance->addSpacing(5);/* Add some spacing between the label and the text */
 
-    QLabel *label_balance = new QLabel(QLocale::system().toString(1345.54)); /* TODO: use locale to format amount */
+    QLabel *label_balance = new QLabel(QLocale::system().toString(1345.54));
     label_balance->setFont(QFont("Teletype"));
     hbox_balance->addWidget(label_balance);
     hbox_balance->addStretch(1);
@@ -83,10 +83,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     /* Transaction table:
      * TransactionView
      * TransactionModel
-     * Selection behavior
-     * selection mode
-     * QAbstractItemView::SelectItems
-     * QAbstractItemView::ExtendedSelection
      */
     QTableView *transaction_table = new QTableView(this);
 
@@ -105,13 +101,22 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
             TransactionTableModel::Debit, 79);
     transaction_table->horizontalHeader()->resizeSection(
             TransactionTableModel::Credit, 79);
-    /* TODO: alignment; debit/credit columns must align right */
 
+    /* setupTabs */
     QTabBar *tabs = new QTabBar(this);
     tabs->addTab(tr("All transactions"));
     tabs->addTab(tr("Sent/Received"));
     tabs->addTab(tr("Sent"));
     tabs->addTab(tr("Received"));
+    /* QSortFilterProxyModel
+       setFilterRole : filter on user role
+       setFilterKeyColumn
+       setFilterRegExp / setFilterFixedString
+       "^."
+       "^[sr]"
+       "^[s]"
+       "^[r]"
+     */
    
     vbox->addWidget(tabs);
     vbox->addWidget(transaction_table);

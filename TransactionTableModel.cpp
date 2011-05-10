@@ -12,7 +12,7 @@ static Qt::AlignmentFlag column_alignments[] = {
 TransactionTableModel::TransactionTableModel(QObject *parent):
         QAbstractTableModel(parent)
 {
-    columns << "Status" << "Date" << "Description" << "Debit" << "Credit";
+    columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
 }
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
@@ -41,6 +41,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     {
         return column_alignments[index.column()];
     }
+    /* user role: transaction type
+       "s" (sent)
+       "r" (received)
+       "g" (generated)
+    */
     return QVariant();
 }
 
