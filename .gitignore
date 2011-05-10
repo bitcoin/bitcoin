@@ -2,3 +2,4 @@
 *.o
 moc_*.cpp
 *.pro.user
+qrc_*.cpp
