@@ -1,15 +1,20 @@
 /*
+ * Qt4 bitcoin GUI.
+ *
  * W.J. van der Laan 2011
  */
 #include "BitcoinGUI.h"
 #include "TransactionTableModel.h"
+#include "AddressBookDialog.h"
+#include "SettingsDialog.h"
+#include "SendCoinsDialog.h"
 
 #include <QApplication>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QMenu>
 #include <QIcon>
-#include <QTabBar>
+#include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QToolBar>
@@ -20,6 +25,9 @@
 #include <QPushButton>
 #include <QHeaderView>
 #include <QLocale>
+#include <QSortFilterProxyModel>
+
+#include <QDebug>
 
 #include <iostream>
 
@@ -30,11 +38,13 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     setWindowTitle(tr("Bitcoin"));
     setWindowIcon(QIcon(":icons/bitcoin"));
     
-    QAction *quit = new QAction(QIcon(":/icons/quit"), "&Quit", this);
-    QAction *sendcoins = new QAction(QIcon(":/icons/send"), "&Send coins", this);
-    QAction *addressbook = new QAction(QIcon(":/icons/address-book"), "&Address book", this);
-    QAction *about = new QAction(QIcon(":/icons/bitcoin"), "&About", this);
-    
+    QAction *quit = new QAction(QIcon(":/icons/quit"), tr("&Quit"), this);
+    QAction *sendcoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
+    QAction *addressbook = new QAction(QIcon(":/icons/address-book"), tr("&Address book"), this);
+    QAction *about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
+    QAction *receiving_addresses = new QAction(QIcon(":/icons/receiving-addresses"), tr("Your &Receiving Addresses..."), this);
+    QAction *options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
+
     /* Menus */
     QMenu *file = menuBar()->addMenu("&File");
     file->addAction(sendcoins);
@@ -42,7 +52,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     file->addAction(quit);
     
     QMenu *settings = menuBar()->addMenu("&Settings");
-    settings->addAction(addressbook);
+    settings->addAction(receiving_addresses);
+    settings->addAction(options);
 
     QMenu *help = menuBar()->addMenu("&Help");
     help->addAction(about);
@@ -60,7 +71,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     edit_address->setReadOnly(true);
     hbox_address->addWidget(edit_address);
     
-    QPushButton *button_new = new QPushButton(trUtf8("&New\u2026"));
+    QPushButton *button_new = new QPushButton(tr("&New..."));
     QPushButton *button_clipboard = new QPushButton(tr("&Copy to clipboard"));
     hbox_address->addWidget(button_new);
     hbox_address->addWidget(button_clipboard);
@@ -80,47 +91,50 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     vbox->addLayout(hbox_address);
     vbox->addLayout(hbox_balance);
     
-    /* Transaction table:
-     * TransactionView
-     * TransactionModel
-     */
-    QTableView *transaction_table = new QTableView(this);
-
     TransactionTableModel *transaction_model = new TransactionTableModel(this);
-    transaction_table->setModel(transaction_model);
-    transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
-    transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
-
-    transaction_table->horizontalHeader()->resizeSection(
-            TransactionTableModel::Status, 112);
-    transaction_table->horizontalHeader()->resizeSection(
-            TransactionTableModel::Date, 112);
-    transaction_table->horizontalHeader()->setResizeMode(
-            TransactionTableModel::Description, QHeaderView::Stretch);
-    transaction_table->horizontalHeader()->resizeSection(
-            TransactionTableModel::Debit, 79);
-    transaction_table->horizontalHeader()->resizeSection(
-            TransactionTableModel::Credit, 79);
 
     /* setupTabs */
-    QTabBar *tabs = new QTabBar(this);
-    tabs->addTab(tr("All transactions"));
-    tabs->addTab(tr("Sent/Received"));
-    tabs->addTab(tr("Sent"));
-    tabs->addTab(tr("Received"));
-    /* QSortFilterProxyModel
-       setFilterRole : filter on user role
-       setFilterKeyColumn
-       setFilterRegExp / setFilterFixedString
-       "^."
-       "^[sr]"
-       "^[s]"
-       "^[r]"
-     */
+    QStringList tab_filters, tab_labels;
+    tab_filters << "^."
+                << "^[sr]"
+                << "^[s]"
+                << "^[r]";
+    tab_labels  << tr("All transactions")
+                << tr("Sent/Received")
+                << tr("Sent")
+                << tr("Received");
+    QTabWidget *tabs = new QTabWidget(this);
+
+    for(int i = 0; i < tab_labels.size(); ++i)
+    {
+        QSortFilterProxyModel *proxy_model = new QSortFilterProxyModel(this);
+        proxy_model->setSourceModel(transaction_model);
+        proxy_model->setDynamicSortFilter(true);
+        proxy_model->setFilterRole(Qt::UserRole);
+        proxy_model->setFilterRegExp(QRegExp(tab_filters.at(i)));
+
+        QTableView *transaction_table = new QTableView(this);
+        transaction_table->setModel(proxy_model);
+        transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+        transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        transaction_table->verticalHeader()->hide();
+
+        transaction_table->horizontalHeader()->resizeSection(
+                TransactionTableModel::Status, 112);
+        transaction_table->horizontalHeader()->resizeSection(
+                TransactionTableModel::Date, 112);
+        transaction_table->horizontalHeader()->setResizeMode(
+                TransactionTableModel::Description, QHeaderView::Stretch);
+        transaction_table->horizontalHeader()->resizeSection(
+                TransactionTableModel::Debit, 79);
+        transaction_table->horizontalHeader()->resizeSection(
+                TransactionTableModel::Credit, 79);
+
+        tabs->addTab(transaction_table, tab_labels.at(i));
+    }
    
     vbox->addWidget(tabs);
-    vbox->addWidget(transaction_table);
-    
+
     QWidget *centralwidget = new QWidget(this);
     centralwidget->setLayout(vbox);
     setCentralWidget(centralwidget);
@@ -140,19 +154,46 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     label_transactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     label_transactions->setMinimumWidth(100);
     
-    
     statusBar()->addPermanentWidget(label_connections);
     statusBar()->addPermanentWidget(label_blocks);
     statusBar()->addPermanentWidget(label_transactions);
-    
      
     /* Action bindings */
-
     connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(tabs, SIGNAL(currentChanged(int)), this, SLOT(currentChanged(int)));
+    connect(sendcoins, SIGNAL(triggered()), this, SLOT(sendcoinsClicked()));
+    connect(addressbook, SIGNAL(triggered()), this, SLOT(addressbookClicked()));
+    connect(receiving_addresses, SIGNAL(triggered()), this, SLOT(receivingAddressesClicked()));
+    connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
+    connect(button_new, SIGNAL(triggered()), this, SLOT(newAddressClicked()));
+    connect(button_clipboard, SIGNAL(triggered()), this, SLOT(copyClipboardClicked()));
 }
 
-void BitcoinGUI::currentChanged(int tab)
+void BitcoinGUI::sendcoinsClicked()
 {
-    std::cout << "Switched to tab: " << tab << std::endl;
+    qDebug() << "Send coins clicked";
+}
+
+void BitcoinGUI::addressbookClicked()
+{
+    qDebug() << "Address book clicked";
+}
+
+void BitcoinGUI::optionsClicked()
+{
+    qDebug() << "Options clicked";
+}
+
+void BitcoinGUI::receivingAddressesClicked()
+{
+    qDebug() << "Receiving addresses clicked";
+}
+
+void BitcoinGUI::newAddressClicked()
+{
+    qDebug() << "New address clicked";
+}
+
+void BitcoinGUI::copyClipboardClicked()
+{
+    qDebug() << "Copy to clipboard";
 }

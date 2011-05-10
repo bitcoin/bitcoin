@@ -17,7 +17,12 @@ public:
         Received = 3
     } TabIndex;
 private slots:
-    void currentChanged(int tab);
+    void sendcoinsClicked();
+    void addressbookClicked();
+    void optionsClicked();
+    void receivingAddressesClicked();
+    void newAddressClicked();
+    void copyClipboardClicked();
 };
 
 #endif

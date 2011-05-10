@@ -1,12 +1,14 @@
 #include "TransactionTableModel.h"
 
+#include <QLocale>
+
 /* Credit and Debit columns are right-aligned as they contain numbers */
-static Qt::AlignmentFlag column_alignments[] = {
-        Qt::AlignLeft,
-        Qt::AlignLeft,
-        Qt::AlignLeft,
-        Qt::AlignRight,
-        Qt::AlignRight
+static int column_alignments[] = {
+        Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignRight|Qt::AlignVCenter,
+        Qt::AlignRight|Qt::AlignVCenter
     };
 
 TransactionTableModel::TransactionTableModel(QObject *parent):
@@ -36,16 +38,24 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     {
         /* index.row(), index.column() */
         /* Return QString */
-        return QString("test");
+        return QLocale::system().toString(index.row());
     } else if (role == Qt::TextAlignmentRole)
     {
         return column_alignments[index.column()];
+    } else if (role == Qt::UserRole)
+    {
+        /* user role: transaction type for filtering
+           "s" (sent)
+           "r" (received)
+           "g" (generated)
+        */
+        switch(index.row() % 3)
+        {
+        case 0: return QString("s");
+        case 1: return QString("r");
+        case 2: return QString("o");
+        }
     }
-    /* user role: transaction type
-       "s" (sent)
-       "r" (received)
-       "g" (generated)
-    */
     return QVariant();
 }
 
