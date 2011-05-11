@@ -196,7 +196,7 @@ int ThreadSafeMessageBox(const string& message, const string& caption, int style
 
 bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
 {
-    if (nFeeRequired < CENT || nFeeRequired <= nTransactionFee || fDaemon)
+    if (nFeeRequired < MIN_TX_FEE || nFeeRequired <= nTransactionFee || fDaemon)
         return true;
     string strMessage = strprintf(
         _("This transaction is over the size limit.  You can still send it for a fee of %s, "
