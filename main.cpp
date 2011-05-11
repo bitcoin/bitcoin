@@ -3448,7 +3448,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 {
     // Update nExtraNonce
     int64 nNow = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-    if (++nExtraNonce >= 0x7f && nNow > nPrevTime+1)
+    if (++nExtraNonce >= 0x7f && nNow > nPrevTime+15)
     {
         nExtraNonce = 1;
         nPrevTime = nNow;
