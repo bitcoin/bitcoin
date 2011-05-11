@@ -19,6 +19,7 @@ static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
+static const int64 MIN_TX_FEE = CENT;
 static const int64 MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int COINBASE_MATURITY = 100;
@@ -593,7 +594,7 @@ public:
         // Base fee is 1 cent per kilobyte
         unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK);
         unsigned int nNewBlockSize = nBlockSize + nBytes;
-        int64 nMinFee = (1 + (int64)nBytes / 1000) * CENT;
+        int64 nMinFee = (1 + (int64)nBytes / 1000) * MIN_TX_FEE;
 
         if (fAllowFree)
         {
@@ -612,11 +613,11 @@ public:
             }
         }
 
-        // To limit dust spam, require a 0.01 fee if any output is less than 0.01
-        if (nMinFee < CENT)
+        // To limit dust spam, require MIN_TX_FEE if any output is less than 0.01
+        if (nMinFee < MIN_TX_FEE)
             foreach(const CTxOut& txout, vout)
                 if (txout.nValue < CENT)
-                    nMinFee = CENT;
+                    nMinFee = MIN_TX_FEE;
 
         // Raise the price as the block approaches full
         if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
