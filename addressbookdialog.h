@@ -3,16 +3,26 @@
 
 #include <QDialog>
 
+namespace Ui {
+    class AddressBookDialog;
+}
+
 class AddressBookDialog : public QDialog
 {
     Q_OBJECT
+
 public:
     explicit AddressBookDialog(QWidget *parent = 0);
+    ~AddressBookDialog();
 
-signals:
+    enum {
+        SendingTab = 0,
+        ReceivingTab = 1
+    } Tabs;
 
-public slots:
-
+    void setTab(int tab);
+private:
+    Ui::AddressBookDialog *ui;
 };
 
 #endif // ADDRESSBOOKDIALOG_H

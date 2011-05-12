@@ -3,16 +3,20 @@
 
 #include <QDialog>
 
+namespace Ui {
+    class SendCoinsDialog;
+}
+
 class SendCoinsDialog : public QDialog
 {
     Q_OBJECT
+
 public:
     explicit SendCoinsDialog(QWidget *parent = 0);
+    ~SendCoinsDialog();
 
-signals:
-
-public slots:
-
+private:
+    Ui::SendCoinsDialog *ui;
 };
 
 #endif // SENDCOINSDIALOG_H

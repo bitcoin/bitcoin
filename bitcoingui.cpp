@@ -5,8 +5,7 @@
  */
 #include "BitcoinGUI.h"
 #include "TransactionTableModel.h"
-#include "AddressBookDialog.h"
-#include "SettingsDialog.h"
+#include "addressbookdialog.h"
 #include "SendCoinsDialog.h"
 #include "OptionsDialog.h"
 #include "AboutDialog.h"
@@ -144,15 +143,15 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     /* Status bar */
     statusBar();
     
-    QLabel *label_connections = new QLabel("6 connections", this);
+    QLabel *label_connections = new QLabel("6 connections");
     label_connections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     label_connections->setMinimumWidth(100);
     
-    QLabel *label_blocks = new QLabel("6 blocks", this);
+    QLabel *label_blocks = new QLabel("6 blocks");
     label_blocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     label_blocks->setMinimumWidth(100);
     
-    QLabel *label_transactions = new QLabel("6 transactions", this);
+    QLabel *label_transactions = new QLabel("6 transactions");
     label_transactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     label_transactions->setMinimumWidth(100);
     
@@ -166,8 +165,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     connect(addressbook, SIGNAL(triggered()), this, SLOT(addressbookClicked()));
     connect(receiving_addresses, SIGNAL(triggered()), this, SLOT(receivingAddressesClicked()));
     connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
-    connect(button_new, SIGNAL(triggered()), this, SLOT(newAddressClicked()));
-    connect(button_clipboard, SIGNAL(triggered()), this, SLOT(copyClipboardClicked()));
+    connect(button_new, SIGNAL(clicked()), this, SLOT(newAddressClicked()));
+    connect(button_clipboard, SIGNAL(clicked()), this, SLOT(copyClipboardClicked()));
     connect(about, SIGNAL(triggered()), this, SLOT(aboutClicked()));
 }
 
@@ -182,7 +181,7 @@ void BitcoinGUI::addressbookClicked()
 {
     qDebug() << "Address book clicked";
     AddressBookDialog dlg;
-    /* TODO: Set tab to "Sending" */
+    dlg.setTab(AddressBookDialog::SendingTab);
     dlg.exec();
 }
 
@@ -190,7 +189,7 @@ void BitcoinGUI::receivingAddressesClicked()
 {
     qDebug() << "Receiving addresses clicked";
     AddressBookDialog dlg;
-    /* TODO: Set tab to "Receiving" */
+    dlg.setTab(AddressBookDialog::ReceivingTab);
     dlg.exec();
 }
 
