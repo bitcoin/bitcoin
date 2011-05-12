@@ -21,6 +21,8 @@ private slots:
     void addressbookClicked();
     void optionsClicked();
     void receivingAddressesClicked();
+    void aboutClicked();
+
     void newAddressClicked();
     void copyClipboardClicked();
 };

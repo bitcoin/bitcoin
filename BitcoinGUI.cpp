@@ -8,6 +8,8 @@
 #include "AddressBookDialog.h"
 #include "SettingsDialog.h"
 #include "SendCoinsDialog.h"
+#include "OptionsDialog.h"
+#include "AboutDialog.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -166,34 +168,54 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(button_new, SIGNAL(triggered()), this, SLOT(newAddressClicked()));
     connect(button_clipboard, SIGNAL(triggered()), this, SLOT(copyClipboardClicked()));
+    connect(about, SIGNAL(triggered()), this, SLOT(aboutClicked()));
 }
 
 void BitcoinGUI::sendcoinsClicked()
 {
     qDebug() << "Send coins clicked";
+    SendCoinsDialog dlg;
+    dlg.exec();
 }
 
 void BitcoinGUI::addressbookClicked()
 {
     qDebug() << "Address book clicked";
-}
-
-void BitcoinGUI::optionsClicked()
-{
-    qDebug() << "Options clicked";
+    AddressBookDialog dlg;
+    /* TODO: Set tab to "Sending" */
+    dlg.exec();
 }
 
 void BitcoinGUI::receivingAddressesClicked()
 {
     qDebug() << "Receiving addresses clicked";
+    AddressBookDialog dlg;
+    /* TODO: Set tab to "Receiving" */
+    dlg.exec();
+}
+
+void BitcoinGUI::optionsClicked()
+{
+    qDebug() << "Options clicked";
+    OptionsDialog dlg;
+    dlg.exec();
+}
+
+void BitcoinGUI::aboutClicked()
+{
+    qDebug() << "About clicked";
+    AboutDialog dlg;
+    dlg.exec();
 }
 
 void BitcoinGUI::newAddressClicked()
 {
     qDebug() << "New address clicked";
+    /* TODO: generate new address */
 }
 
 void BitcoinGUI::copyClipboardClicked()
 {
     qDebug() << "Copy to clipboard";
+    /* TODO: copy to clipboard */
 }

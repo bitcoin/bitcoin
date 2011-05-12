@@ -14,14 +14,16 @@ HEADERS += BitcoinGUI.h \
     SettingsDialog.h \
     AddressBookDialog.h \
     AboutDialog.h \
-    AddressTableModel.h
+    AddressTableModel.h \
+    OptionsDialog.h
 SOURCES += bitcoin.cpp BitcoinGUI.cpp \
     TransactionTableModel.cpp \
     SendCoinsDialog.cpp \
     SettingsDialog.cpp \
     AddressBookDialog.cpp \
     AboutDialog.cpp \
-    AddressTableModel.cpp
+    AddressTableModel.cpp \
+    OptionsDialog.cpp
 
 RESOURCES += \
     bitcoin.qrc
