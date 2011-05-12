@@ -66,7 +66,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_address->addWidget(new QLabel(tr("Your Bitcoin Address:")));
     address = new QLineEdit();
     address->setReadOnly(true);
-    address->setText("0123456789");
+    address->setText("0123456789"); /* test */
     hbox_address->addWidget(address);
     
     QPushButton *button_new = new QPushButton(tr("&New..."));
@@ -79,7 +79,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_balance->addWidget(new QLabel(tr("Balance:")));
     hbox_balance->addSpacing(5);/* Add some spacing between the label and the text */
 
-    labelBalance = new QLabel(QLocale::system().toString(1345.54));
+    labelBalance = new QLabel();
     labelBalance->setFont(QFont("Teletype"));
     hbox_balance->addWidget(labelBalance);
     hbox_balance->addStretch(1);
@@ -99,21 +99,21 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     /* Create status bar */
     statusBar();
     
-    QLabel *label_connections = new QLabel("6 connections");
-    label_connections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    label_connections->setMinimumWidth(100);
+    labelConnections = new QLabel();
+    labelConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    labelConnections->setMinimumWidth(130);
     
-    QLabel *label_blocks = new QLabel("6 blocks");
-    label_blocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    label_blocks->setMinimumWidth(100);
+    labelBlocks = new QLabel();
+    labelBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    labelBlocks->setMinimumWidth(130);
     
-    QLabel *label_transactions = new QLabel("6 transactions");
-    label_transactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    label_transactions->setMinimumWidth(100);
+    labelTransactions = new QLabel();
+    labelTransactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    labelTransactions->setMinimumWidth(130);
     
-    statusBar()->addPermanentWidget(label_connections);
-    statusBar()->addPermanentWidget(label_blocks);
-    statusBar()->addPermanentWidget(label_transactions);
+    statusBar()->addPermanentWidget(labelConnections);
+    statusBar()->addPermanentWidget(labelBlocks);
+    statusBar()->addPermanentWidget(labelTransactions);
      
     /* Action bindings */
     connect(button_new, SIGNAL(clicked()), this, SLOT(newAddressClicked()));
@@ -246,4 +246,24 @@ void BitcoinGUI::copyClipboardClicked()
     qDebug() << "Copy to clipboard";
     /* Copy text in address to clipboard */
     QApplication::clipboard()->setText(address->text());
+}
+
+void BitcoinGUI::setBalance(double balance)
+{
+    labelBalance->setText(QLocale::system().toString(balance, 8));
+}
+
+void BitcoinGUI::setNumConnections(int count)
+{
+    labelConnections->setText(QLocale::system().toString(count)+" "+tr("connections"));
+}
+
+void BitcoinGUI::setNumBlocks(int count)
+{
+    labelBlocks->setText(QLocale::system().toString(count)+" "+tr("blocks"));
+}
+
+void BitcoinGUI::setNumTransactions(int count)
+{
+    labelTransactions->setText(QLocale::system().toString(count)+" "+tr("transactions"));
 }

@@ -27,6 +27,9 @@ private:
 
     QLineEdit *address;
     QLabel *labelBalance;
+    QLabel *labelConnections;
+    QLabel *labelBlocks;
+    QLabel *labelTransactions;
 
     QAction *quit;
     QAction *sendcoins;
@@ -41,6 +44,12 @@ private:
     void createActions();
     QWidget *createTabs();
     void createTrayIcon();
+
+public slots:
+    void setBalance(double balance);
+    void setNumConnections(int count);
+    void setNumBlocks(int count);
+    void setNumTransactions(int count);
 
 private slots:
     void sendcoinsClicked();

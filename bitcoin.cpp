@@ -10,6 +10,10 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     BitcoinGUI window;
+    window.setBalance(1234.567890);
+    window.setNumConnections(4);
+    window.setNumTransactions(4);
+    window.setNumBlocks(33);
 
     window.show();
 
