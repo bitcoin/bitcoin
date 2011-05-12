@@ -55,7 +55,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_3">
+        <widget class="QLabel" name="versionLabel">
          <property name="text">
           <string>0.3.666-beta</string>
          </property>
@@ -133,8 +133,8 @@ This product includes software developed by the OpenSSL Project for use in the O
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>360</x>
+     <y>308</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -149,8 +149,8 @@ This product includes software developed by the OpenSSL Project for use in the O
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>428</x>
+     <y>308</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

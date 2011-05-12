@@ -25,7 +25,7 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="buddy">
-        <cstring>pay_amount</cstring>
+        <cstring>payAmount</cstring>
        </property>
       </widget>
      </item>
@@ -38,15 +38,15 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="buddy">
-        <cstring>pay_to</cstring>
+        <cstring>payTo</cstring>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QLineEdit" name="pay_to"/>
+      <widget class="QLineEdit" name="payTo"/>
      </item>
      <item row="4" column="1">
-      <widget class="QLineEdit" name="pay_amount">
+      <widget class="QLineEdit" name="payAmount">
        <property name="maximumSize">
         <size>
          <width>145</width>

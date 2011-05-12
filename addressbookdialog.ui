@@ -19,17 +19,17 @@
      <property name="currentIndex">
       <number>1</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="sendTab">
       <attribute name="title">
        <string>Sending</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QTableView" name="tableView"/>
+        <widget class="QTableView" name="sendTableView"/>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="receiveTab">
       <attribute name="title">
        <string>Receiving</string>
       </attribute>
@@ -48,7 +48,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTableView" name="tableView_2"/>
+        <widget class="QTableView" name="receiveTableView"/>
        </item>
       </layout>
      </widget>
