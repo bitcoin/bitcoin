@@ -12,7 +12,7 @@ extern int nBestHeight;
 
 
 
-inline unsigned short GetDefaultPort() { return fTestNet ? htons(18333) : htons(8333); }
+inline unsigned short GetDefaultPort() { return fTestNet ? 18333 : 8333; }
 static const unsigned int PUBLISH_HOPS = 5;
 enum
 {
@@ -23,6 +23,8 @@ enum
 
 
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet);
+bool Lookup(const char *pszName, vector<CAddress>& vaddr, int nServices, int nMaxSolutions, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
+bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool GetMyExternalIP(unsigned int& ipRet);
 bool AddAddress(CAddress addr, int64 nTimePenalty=0);
 void AddressCurrentlyConnected(const CAddress& addr);
@@ -156,7 +158,7 @@ public:
     {
         Init();
         ip = ipIn;
-        port = (portIn == 0 ? GetDefaultPort() : portIn);
+        port = htons(portIn == 0 ? GetDefaultPort() : portIn);
         nServices = nServicesIn;
     }
 
@@ -168,18 +170,28 @@ public:
         nServices = nServicesIn;
     }
 
-    explicit CAddress(const char* pszIn, uint64 nServicesIn=NODE_NETWORK)
+    explicit CAddress(const char* pszIn, int portIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK)
     {
         Init();
-        SetAddress(pszIn);
-        nServices = nServicesIn;
+        Lookup(pszIn, *this, nServicesIn, fNameLookup, portIn);
     }
 
-    explicit CAddress(string strIn, uint64 nServicesIn=NODE_NETWORK)
+    explicit CAddress(const char* pszIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK)
     {
         Init();
-        SetAddress(strIn.c_str());
-        nServices = nServicesIn;
+        Lookup(pszIn, *this, nServicesIn, fNameLookup, 0, true);
+    }
+
+    explicit CAddress(string strIn, int portIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK)
+    {
+        Init();
+        Lookup(strIn.c_str(), *this, nServicesIn, fNameLookup, portIn);
+    }
+
+    explicit CAddress(string strIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK)
+    {
+        Init();
+        Lookup(strIn.c_str(), *this, nServicesIn, fNameLookup, 0, true);
     }
 
     void Init()
@@ -187,35 +199,9 @@ public:
         nServices = NODE_NETWORK;
         memcpy(pchReserved, pchIPv4, sizeof(pchReserved));
         ip = INADDR_NONE;
-        port = GetDefaultPort();
+        port = htons(GetDefaultPort());
         nTime = 100000000;
         nLastTry = 0;
-    }
-
-    bool SetAddress(const char* pszIn)
-    {
-        ip = INADDR_NONE;
-        port = GetDefaultPort();
-        char psz[100];
-        strlcpy(psz, pszIn, sizeof(psz));
-        unsigned int a=0, b=0, c=0, d=0, e=0;
-        if (sscanf(psz, "%u.%u.%u.%u:%u", &a, &b, &c, &d, &e) < 4)
-            return false;
-        char* pszPort = strchr(psz, ':');
-        if (pszPort)
-        {
-            *pszPort++ = '\0';
-            port = htons(atoi(pszPort));
-            if (atoi(pszPort) < 0 || atoi(pszPort) > USHRT_MAX)
-                port = htons(USHRT_MAX);
-        }
-        ip = inet_addr(psz);
-        return IsValid();
-    }
-
-    bool SetAddress(string strIn)
-    {
-        return SetAddress(strIn.c_str());
     }
 
     IMPLEMENT_SERIALIZE
@@ -328,11 +314,6 @@ public:
     string ToStringPort() const
     {
         return strprintf("%u", ntohs(port));
-    }
-
-    string ToStringLog() const
-    {
-        return "";
     }
 
     string ToString() const
@@ -460,6 +441,7 @@ public:
 
 
 extern bool fClient;
+extern bool fAllowDNS;
 extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
 extern CNode* pnodeLocalHost;
