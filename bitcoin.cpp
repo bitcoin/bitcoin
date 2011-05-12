@@ -1,7 +1,7 @@
 /*
  * W.J. van der Laan 2011
  */
-#include "BitcoinGUI.h"
+#include "bitcoingui.h"
 
 #include <QApplication>
 

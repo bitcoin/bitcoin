@@ -1,4 +1,4 @@
-#include "MainOptionsPage.h"
+#include "mainoptionspage.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>

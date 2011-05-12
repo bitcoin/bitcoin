@@ -1,4 +1,4 @@
-#include "TransactionTableModel.h"
+#include "transactiontablemodel.h"
 
 #include <QLocale>
 

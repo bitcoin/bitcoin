@@ -3,12 +3,12 @@
  *
  * W.J. van der Laan 2011
  */
-#include "BitcoinGUI.h"
-#include "TransactionTableModel.h"
+#include "bitcoingui.h"
+#include "transactiontablemodel.h"
 #include "addressbookdialog.h"
-#include "SendCoinsDialog.h"
-#include "OptionsDialog.h"
-#include "AboutDialog.h"
+#include "sendcoinsdialog.h"
+#include "optionsdialog.h"
+#include "aboutdialog.h"
 
 #include <QApplication>
 #include <QMainWindow>

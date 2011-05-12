@@ -8,21 +8,21 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += BitcoinGUI.h \
-    TransactionTableModel.h \
-    AboutDialog.h \
-    AddressTableModel.h \
-    OptionsDialog.h \
-    MainOptionsPage.h \
-    SendCoinsDialog.h \
+HEADERS += bitcoingui.h \
+    transactiontablemodel.h \
+    aboutdialog.h \
+    addresstablemodel.h \
+    optionsdialog.h \
+    mainoptionspage.h \
+    sendcoinsdialog.h \
     addressbookdialog.h
-SOURCES += bitcoin.cpp BitcoinGUI.cpp \
-    TransactionTableModel.cpp \
-    AboutDialog.cpp \
-    AddressTableModel.cpp \
-    OptionsDialog.cpp \
-    MainOptionsPage.cpp \
-    SendCoinsDialog.cpp \
+SOURCES += bitcoin.cpp bitcoingui.cpp \
+    transactiontablemodel.cpp \
+    aboutdialog.cpp \
+    addresstablemodel.cpp \
+    optionsdialog.cpp \
+    mainoptionspage.cpp \
+    sendcoinsdialog.cpp \
     addressbookdialog.cpp
 
 RESOURCES += \

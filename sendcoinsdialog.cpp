@@ -1,4 +1,4 @@
-#include "SendCoinsDialog.h"
+#include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :

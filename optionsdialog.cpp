@@ -1,5 +1,5 @@
-#include "OptionsDialog.h"
-#include "MainOptionsPage.h"
+#include "optionsdialog.h"
+#include "mainoptionspage.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>

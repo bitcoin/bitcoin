@@ -3,3 +3,5 @@
 moc_*.cpp
 *.pro.user
 qrc_*.cpp
+ui_*.cpp
+ui_*.h
