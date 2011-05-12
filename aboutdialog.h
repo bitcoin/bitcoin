@@ -3,16 +3,23 @@
 
 #include <QDialog>
 
+namespace Ui {
+    class AboutDialog;
+}
+
 class AboutDialog : public QDialog
 {
     Q_OBJECT
+
 public:
     explicit AboutDialog(QWidget *parent = 0);
+    ~AboutDialog();
 
-signals:
+private:
+    Ui::AboutDialog *ui;
 
-public slots:
-
+private slots:
+    void on_buttonBox_accepted();
 };
 
 #endif // ABOUTDIALOG_H

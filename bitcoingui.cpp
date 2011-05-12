@@ -41,7 +41,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     
     QAction *quit = new QAction(QIcon(":/icons/quit"), tr("&Quit"), this);
     QAction *sendcoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
-    QAction *addressbook = new QAction(QIcon(":/icons/address-book"), tr("&Address book"), this);
+    QAction *addressbook = new QAction(QIcon(":/icons/address-book"), tr("&Address Book"), this);
     QAction *about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
     QAction *receiving_addresses = new QAction(QIcon(":/icons/receiving-addresses"), tr("Your &Receiving Addresses..."), this);
     QAction *options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);

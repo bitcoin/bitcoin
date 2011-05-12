@@ -23,6 +23,12 @@ public:
     void setTab(int tab);
 private:
     Ui::AddressBookDialog *ui;
+
+private slots:
+    void on_newAddressButton_clicked();
+    void on_editButton_clicked();
+    void on_copyToClipboard_clicked();
+    void on_OKButton_clicked();
 };
 
 #endif // ADDRESSBOOKDIALOG_H

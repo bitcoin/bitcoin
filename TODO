@@ -54,3 +54,9 @@ AboutDialog
 - Toolbar icon
 
 - 'notify' on incoming transaction
+
+- AddressTableModel
+  - Name / Label
+  - Address
+  - Delete / Copy to clipboard based on tab
+

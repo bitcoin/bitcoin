@@ -5,4 +5,7 @@
         <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
     </qresource>
+    <qresource prefix="/images">
+        <file alias="about">res/images/about.png</file>
+    </qresource>
 </RCC>
