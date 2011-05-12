@@ -13,5 +13,7 @@ int main(int argc, char *argv[])
 
     window.show();
 
+    /* Depending on settings: QApplication::setQuitOnLastWindowClosed(false); */
+
     return app.exec();
 }

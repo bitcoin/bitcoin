@@ -27,24 +27,20 @@
 #include <QHeaderView>
 #include <QLocale>
 #include <QSortFilterProxyModel>
+#include <QClipboard>
 
 #include <QDebug>
 
 #include <iostream>
 
 BitcoinGUI::BitcoinGUI(QWidget *parent):
-    QMainWindow(parent)
+    QMainWindow(parent), trayIcon(0)
 {
     resize(850, 550);
     setWindowTitle(tr("Bitcoin"));
     setWindowIcon(QIcon(":icons/bitcoin"));
-    
-    QAction *quit = new QAction(QIcon(":/icons/quit"), tr("&Quit"), this);
-    QAction *sendcoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
-    QAction *addressbook = new QAction(QIcon(":/icons/address-book"), tr("&Address Book"), this);
-    QAction *about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
-    QAction *receiving_addresses = new QAction(QIcon(":/icons/receiving-addresses"), tr("Your &Receiving Addresses..."), this);
-    QAction *options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
+
+    createActions();
 
     /* Menus */
     QMenu *file = menuBar()->addMenu("&File");
@@ -68,9 +64,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     /* Address: <address>: New... : Paste to clipboard */
     QHBoxLayout *hbox_address = new QHBoxLayout();
     hbox_address->addWidget(new QLabel(tr("Your Bitcoin Address:")));
-    QLineEdit *edit_address = new QLineEdit();
-    edit_address->setReadOnly(true);
-    hbox_address->addWidget(edit_address);
+    address = new QLineEdit();
+    address->setReadOnly(true);
+    address->setText("0123456789");
+    hbox_address->addWidget(address);
     
     QPushButton *button_new = new QPushButton(tr("&New..."));
     QPushButton *button_clipboard = new QPushButton(tr("&Copy to clipboard"));
@@ -82,19 +79,84 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_balance->addWidget(new QLabel(tr("Balance:")));
     hbox_balance->addSpacing(5);/* Add some spacing between the label and the text */
 
-    QLabel *label_balance = new QLabel(QLocale::system().toString(1345.54));
-    label_balance->setFont(QFont("Teletype"));
-    hbox_balance->addWidget(label_balance);
+    labelBalance = new QLabel(QLocale::system().toString(1345.54));
+    labelBalance->setFont(QFont("Teletype"));
+    hbox_balance->addWidget(labelBalance);
     hbox_balance->addStretch(1);
     
-    /* Tab widget */
     QVBoxLayout *vbox = new QVBoxLayout();
     vbox->addLayout(hbox_address);
     vbox->addLayout(hbox_balance);
     
-    TransactionTableModel *transaction_model = new TransactionTableModel(this);
+    transaction_model = new TransactionTableModel(this);
 
-    /* setupTabs */
+    vbox->addWidget(createTabs());
+
+    QWidget *centralwidget = new QWidget(this);
+    centralwidget->setLayout(vbox);
+    setCentralWidget(centralwidget);
+    
+    /* Create status bar */
+    statusBar();
+    
+    QLabel *label_connections = new QLabel("6 connections");
+    label_connections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    label_connections->setMinimumWidth(100);
+    
+    QLabel *label_blocks = new QLabel("6 blocks");
+    label_blocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    label_blocks->setMinimumWidth(100);
+    
+    QLabel *label_transactions = new QLabel("6 transactions");
+    label_transactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    label_transactions->setMinimumWidth(100);
+    
+    statusBar()->addPermanentWidget(label_connections);
+    statusBar()->addPermanentWidget(label_blocks);
+    statusBar()->addPermanentWidget(label_transactions);
+     
+    /* Action bindings */
+    connect(button_new, SIGNAL(clicked()), this, SLOT(newAddressClicked()));
+    connect(button_clipboard, SIGNAL(clicked()), this, SLOT(copyClipboardClicked()));
+
+    createTrayIcon();
+}
+
+void BitcoinGUI::createActions()
+{
+    quit = new QAction(QIcon(":/icons/quit"), tr("&Exit"), this);
+    sendcoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
+    addressbook = new QAction(QIcon(":/icons/address-book"), tr("&Address Book"), this);
+    about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
+    receiving_addresses = new QAction(QIcon(":/icons/receiving-addresses"), tr("Your &Receiving Addresses..."), this);
+    options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
+    openBitCoin = new QAction(QIcon(":/icons/bitcoin"), "Open Bitcoin", this);
+
+    connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(sendcoins, SIGNAL(triggered()), this, SLOT(sendcoinsClicked()));
+    connect(addressbook, SIGNAL(triggered()), this, SLOT(addressbookClicked()));
+    connect(receiving_addresses, SIGNAL(triggered()), this, SLOT(receivingAddressesClicked()));
+    connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
+    connect(about, SIGNAL(triggered()), this, SLOT(aboutClicked()));
+}
+
+void BitcoinGUI::createTrayIcon()
+{
+    QMenu *trayIconMenu = new QMenu(this);
+    trayIconMenu->addAction(openBitCoin);
+    trayIconMenu->addAction(sendcoins);
+    trayIconMenu->addAction(options);
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(quit);
+
+    trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setContextMenu(trayIconMenu);
+    trayIcon->setIcon(QIcon(":/icons/bitcoin"));
+    trayIcon->show();
+}
+
+QWidget *BitcoinGUI::createTabs()
+{
     QStringList tab_filters, tab_labels;
     tab_filters << "^."
                 << "^[sr]"
@@ -133,41 +195,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
         tabs->addTab(transaction_table, tab_labels.at(i));
     }
-   
-    vbox->addWidget(tabs);
-
-    QWidget *centralwidget = new QWidget(this);
-    centralwidget->setLayout(vbox);
-    setCentralWidget(centralwidget);
-    
-    /* Status bar */
-    statusBar();
-    
-    QLabel *label_connections = new QLabel("6 connections");
-    label_connections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    label_connections->setMinimumWidth(100);
-    
-    QLabel *label_blocks = new QLabel("6 blocks");
-    label_blocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    label_blocks->setMinimumWidth(100);
-    
-    QLabel *label_transactions = new QLabel("6 transactions");
-    label_transactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    label_transactions->setMinimumWidth(100);
-    
-    statusBar()->addPermanentWidget(label_connections);
-    statusBar()->addPermanentWidget(label_blocks);
-    statusBar()->addPermanentWidget(label_transactions);
-     
-    /* Action bindings */
-    connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(sendcoins, SIGNAL(triggered()), this, SLOT(sendcoinsClicked()));
-    connect(addressbook, SIGNAL(triggered()), this, SLOT(addressbookClicked()));
-    connect(receiving_addresses, SIGNAL(triggered()), this, SLOT(receivingAddressesClicked()));
-    connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
-    connect(button_new, SIGNAL(clicked()), this, SLOT(newAddressClicked()));
-    connect(button_clipboard, SIGNAL(clicked()), this, SLOT(copyClipboardClicked()));
-    connect(about, SIGNAL(triggered()), this, SLOT(aboutClicked()));
+    return tabs;
 }
 
 void BitcoinGUI::sendcoinsClicked()
@@ -216,5 +244,6 @@ void BitcoinGUI::newAddressClicked()
 void BitcoinGUI::copyClipboardClicked()
 {
     qDebug() << "Copy to clipboard";
-    /* TODO: copy to clipboard */
+    /* Copy text in address to clipboard */
+    QApplication::clipboard()->setText(address->text());
 }
