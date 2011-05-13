@@ -25,7 +25,14 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QTableView" name="sendTableView"/>
+        <widget class="QTableView" name="sendTableView">
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -48,7 +55,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QTableView" name="receiveTableView"/>
+        <widget class="QTableView" name="receiveTableView">
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -102,5 +116,38 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>receiveTableView</sender>
+   <signal>doubleClicked(QModelIndex)</signal>
+   <receiver>editButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>334</x>
+     <y>249</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>333</x>
+     <y>326</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sendTableView</sender>
+   <signal>doubleClicked(QModelIndex)</signal>
+   <receiver>editButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>329</x>
+     <y>261</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>332</x>
+     <y>326</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

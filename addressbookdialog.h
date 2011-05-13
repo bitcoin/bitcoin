@@ -6,6 +6,7 @@
 namespace Ui {
     class AddressBookDialog;
 }
+class AddressTableModel;
 
 class AddressBookDialog : public QDialog
 {
@@ -20,9 +21,11 @@ public:
         ReceivingTab = 1
     } Tabs;
 
+    void setModel(AddressTableModel *model);
     void setTab(int tab);
 private:
     Ui::AddressBookDialog *ui;
+    AddressTableModel *model;
 
 private slots:
     void on_newAddressButton_clicked();

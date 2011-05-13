@@ -15,8 +15,14 @@ public:
         Date = 1,
         Description = 2,
         Debit = 3,
-        Credit = 4
+        Credit = 4,
+        Type = 5
     } ColumnIndex;
+
+    /* Transaction type */
+    static const QString Sent;
+    static const QString Received;
+    static const QString Generated;
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;

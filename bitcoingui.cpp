@@ -150,7 +150,7 @@ void BitcoinGUI::createTrayIcon()
 
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setContextMenu(trayIconMenu);
-    trayIcon->setIcon(QIcon(":/icons/bitcoin"));
+    trayIcon->setIcon(QIcon(":/icons/toolbar"));
     trayIcon->show();
 }
 
@@ -158,9 +158,9 @@ QWidget *BitcoinGUI::createTabs()
 {
     QStringList tab_filters, tab_labels;
     tab_filters << "^."
-                << "^[sr]"
-                << "^[s]"
-                << "^[r]";
+            << "^["+TransactionTableModel::Sent+TransactionTableModel::Received+"]"
+            << "^["+TransactionTableModel::Sent+"]"
+            << "^["+TransactionTableModel::Received+"]";
     tab_labels  << tr("All transactions")
                 << tr("Sent/Received")
                 << tr("Sent")
@@ -173,6 +173,7 @@ QWidget *BitcoinGUI::createTabs()
         proxy_model->setSourceModel(transaction_model);
         proxy_model->setDynamicSortFilter(true);
         proxy_model->setFilterRole(Qt::UserRole);
+        proxy_model->setFilterKeyColumn(TransactionTableModel::Type);
         proxy_model->setFilterRegExp(QRegExp(tab_filters.at(i)));
 
         QTableView *transaction_table = new QTableView(this);
@@ -191,6 +192,7 @@ QWidget *BitcoinGUI::createTabs()
                 TransactionTableModel::Debit, 79);
         transaction_table->horizontalHeader()->resizeSection(
                 TransactionTableModel::Credit, 79);
+        transaction_table->setColumnHidden(TransactionTableModel::Type, true);
 
         tabs->addTab(transaction_table, tab_labels.at(i));
     }

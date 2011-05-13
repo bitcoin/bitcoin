@@ -15,7 +15,8 @@ HEADERS += bitcoingui.h \
     mainoptionspage.h \
     sendcoinsdialog.h \
     addressbookdialog.h \
-    aboutdialog.h
+    aboutdialog.h \
+    editaddressdialog.h
 SOURCES += bitcoin.cpp bitcoingui.cpp \
     transactiontablemodel.cpp \
     addresstablemodel.cpp \
@@ -23,7 +24,8 @@ SOURCES += bitcoin.cpp bitcoingui.cpp \
     mainoptionspage.cpp \
     sendcoinsdialog.cpp \
     addressbookdialog.cpp \
-    aboutdialog.cpp
+    aboutdialog.cpp \
+    editaddressdialog.cpp
 
 RESOURCES += \
     bitcoin.qrc
@@ -31,4 +33,5 @@ RESOURCES += \
 FORMS += \
     sendcoinsdialog.ui \
     addressbookdialog.ui \
-    aboutdialog.ui
+    aboutdialog.ui \
+    editaddressdialog.ui

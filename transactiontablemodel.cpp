@@ -2,19 +2,24 @@
 
 #include <QLocale>
 
+const QString TransactionTableModel::Sent = "s";
+const QString TransactionTableModel::Received = "r";
+const QString TransactionTableModel::Generated = "g";
+
 /* Credit and Debit columns are right-aligned as they contain numbers */
 static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter,
         Qt::AlignLeft|Qt::AlignVCenter,
         Qt::AlignLeft|Qt::AlignVCenter,
         Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter
+        Qt::AlignRight|Qt::AlignVCenter,
+        Qt::AlignLeft|Qt::AlignVCenter
     };
 
 TransactionTableModel::TransactionTableModel(QObject *parent):
         QAbstractTableModel(parent)
 {
-    columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
+    columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit") << tr("Type");
 }
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
