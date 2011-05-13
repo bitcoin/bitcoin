@@ -1,0 +1,895 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-10-05 10:53+0300\n"
+"PO-Revision-Date: 2011-05-01 08:38-0000\n"
+"Last-Translator: mewantsbitcoins <mewantsbitcoins@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../init.cpp:162
+msgid "Usage:"
+msgstr "Komandų vartojimas:"
+
+#: ../../../init.cpp:164
+msgid "Send command to -server or bitcoind\n"
+msgstr "Siūsti komandą i -server arba bitcoind\n"
+
+#: ../../../init.cpp:165
+msgid "List commands\n"
+msgstr "Parodyti visas komandas\n"
+
+#: ../../../init.cpp:166
+msgid "Get help for a command\n"
+msgstr "Komandos paaiškinimas\n"
+
+#: ../../../init.cpp:167
+msgid "Options:\n"
+msgstr "Parametrai\n"
+
+#: ../../../init.cpp:168
+msgid "Specify configuration file (default: bitcoin.conf)\n"
+msgstr "Nurodyti konfiguracijos failą (pagal nutylėjimą: bitcoin.conf)\n"
+
+#: ../../../init.cpp:169
+msgid "Generate coins\n"
+msgstr "Generuoti monetas\n"
+
+#: ../../../init.cpp:170
+msgid "Don't generate coins\n"
+msgstr "Negeneruoti monetų\n"
+
+#: ../../../init.cpp:171
+msgid "Start minimized\n"
+msgstr "Paleisti minimizuotą klientą\n"
+
+#: ../../../init.cpp:172
+msgid "Specify data directory\n"
+msgstr "Nurodyti duomenų direktoriją\n"
+
+#: ../../../init.cpp:173
+msgid "Connect through socks4 proxy\n"
+msgstr "Prisijungti per socks4 proksį\n"
+
+#: ../../../init.cpp:174
+msgid "Add a node to connect to\n"
+msgstr "Pridėti nodą prie kurio bus jungiamasi\n"
+
+#: ../../../init.cpp:175
+msgid "Connect only to the specified node\n"
+msgstr "Prisijungti tik prie šio nodo\n"
+
+#: ../../../init.cpp:176
+msgid "Accept command line and JSON-RPC commands\n"
+msgstr "Priimti komandas iš terminalo ir JSON-RPC\n"
+
+#: ../../../init.cpp:177
+msgid "Run in the background as a daemon and accept commands\n"
+msgstr "Paleisti daemon\n"
+
+#: ../../../init.cpp:178
+msgid "This help message\n"
+msgstr "Ši pagalbos žinutė\n"
+
+#: ../../../init.cpp:284
+msgid "Error loading addr.dat      \n"
+msgstr "Klaida nuskaitant addr.dat      \n"
+
+#: ../../../init.cpp:290
+msgid "Error loading blkindex.dat      \n"
+msgstr "Klaida nuskaitant blkindex.dat      \n"
+
+#: ../../../init.cpp:297
+msgid "Error loading wallet.dat      \n"
+msgstr "Klaida nuskaitant wallet.dat      \n"
+
+#: ../../../init.cpp:365
+msgid "Invalid -proxy address"
+msgstr "Klaidingas -proxy adresas"
+
+#: ../../../init.cpp:385
+msgid "Invalid amount for -paytxfee=<amount>"
+msgstr "Klaidinga suma -paytxfee=<amount>"
+
+#: ../../../init.cpp:389
+msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
+msgstr "Perspėjimas: -paytxfee yra nustatyta labai aukšta suma. Ši suma bus nuskaičiuota kaip mokestis darant pervedimą"
+
+#: ../../../main.cpp:1641
+msgid "Warning: Disk space is low  "
+msgstr "Perspėjimas: Diske trūksta vietos"
+
+#: ../../../main.cpp:3505
+#, c-format
+msgid "Error: This is an oversized transaction that requires a transaction fee of %s  "
+msgstr "Klaida: Šis pervedimas yra labai didelis ir reikalauja %s pervedimo mokesčio"
+
+#: ../../../main.cpp:3507
+msgid "Error: Transaction creation failed  "
+msgstr "Klaida: Pervedimo sukurti nepavyko"
+
+#: ../../../main.cpp:3512
+#: ../../../ui.cpp:1964
+#: ../../../ui.cpp:1966
+#: ../../../ui.cpp:2107
+#: ../../../ui.cpp:2260
+msgid "Sending..."
+msgstr "Siunčia..."
+
+#: ../../../main.cpp:3516
+msgid "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Klaida: Pervedimas nepavyko. Tai galėjo atsitikti jei dalis jūsų monetų jau buvo išleista. Pvz.: Jei nodojote kopija wallet.dat kitame kliente ir monetos buvo išleistos ten, bet nepažymėtos kaip išleistos čia."
+
+#: ../../../main.cpp:3528
+msgid "Invalid amount"
+msgstr "Neteisinga suma"
+
+#: ../../../main.cpp:3530
+#: ../../../ui.cpp:2174
+#: ../../../ui.cpp:2245
+msgid "Insufficient funds"
+msgstr "Nepakankamai monetų"
+
+#: ../../../main.cpp:3535
+msgid "Invalid bitcoin address"
+msgstr "Klaidingas bitcoin adresas"
+
+#: ../../../rpc.cpp:963
+#: ../../../rpc.cpp:965
+#, c-format
+msgid "To use the %s option"
+msgstr "Kad naudoti %s parametrą"
+
+#: ../../../rpc.cpp:967
+#, c-format
+msgid ""
+"Warning: %s, you must set rpcpassword=<password>\n"
+"in the configuration file: %s\n"
+"If the file does not exist, create it with owner-readable-only file permissions.\n"
+msgstr ""
+"Perspėjimas: %s, jūs privalote nustatyti rpcpassword=<slaptažodis>\n"
+"Konfiguracijos faile: %s\n"
+"Jei failas neegzistuoja, sukurkite jį su owner-readable-only failo teisėm.\n"
+
+#: ../../../rpc.cpp:1100
+#, c-format
+msgid ""
+"You must set rpcpassword=<password> in the configuration file:\n"
+"%s\n"
+"If the file does not exist, create it with owner-readable-only file permissions."
+msgstr ""
+"Jūs privalote nustatyti rpcpassword=<slaptažodis> Konfiguracijos faile:\n"
+"%s\n"
+"Jei failas neegzistuoja, sukurkite jį su owner-readable-only failo teisėm."
+
+#: ../../../ui.cpp:202
+#, c-format
+msgid "This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?"
+msgstr "Šis pervedimas viršija dydžio limitą.  Jūs galite siūsti šią suma sumokėję %s mokestį, kuris bus skirtas nodams už persiuntimą ir padėti tinklui. Ar sutinkate pridėti ši mokestį?"
+
+#: ../../../ui.cpp:301
+msgid "Status"
+msgstr "Būklė"
+
+#: ../../../ui.cpp:302
+msgid "Date"
+msgstr "Data"
+
+#: ../../../ui.cpp:303
+msgid "Description"
+msgstr "Apibūdinimas"
+
+#: ../../../ui.cpp:304
+msgid "Debit"
+msgstr "Debetas"
+
+#: ../../../ui.cpp:305
+msgid "Credit"
+msgstr "Kreditas"
+
+#: ../../../ui.cpp:511
+#, c-format
+msgid "Open for %d blocks"
+msgstr "Atidaryta %d blokams"
+
+#: ../../../ui.cpp:513
+#, c-format
+msgid "Open until %s"
+msgstr "Atidaryta iki %s"
+
+#: ../../../ui.cpp:519
+#, c-format
+msgid "%d/offline?"
+msgstr "%d/neprisijunges?"
+
+#: ../../../ui.cpp:521
+#, c-format
+msgid "%d/unconfirmed"
+msgstr "%d/ nepatvirtinta"
+
+#: ../../../ui.cpp:523
+#, c-format
+msgid "%d confirmations"
+msgstr "%d patvirtinta"
+
+#: ../../../ui.cpp:608
+msgid "Generated"
+msgstr "Sugeneruota"
+
+#: ../../../ui.cpp:616
+#, c-format
+msgid "Generated (%s matures in %d more blocks)"
+msgstr "Sugeneruota (%s bus galima naudoti už %d blokų)"
+
+#: ../../../ui.cpp:620
+msgid "Generated - Warning: This block was not received by any other nodes and will probably not be accepted!"
+msgstr "Sugeneruota - Perspėjimas: Šio bloko negavo kiti nodai ir jis tikriausiai nebus priimtas!"
+
+#: ../../../ui.cpp:624
+msgid "Generated (not accepted)"
+msgstr "Sugeneruota (nepriimta)"
+
+#: ../../../ui.cpp:634
+msgid "From: "
+msgstr "Nuo: "
+
+#: ../../../ui.cpp:658
+msgid "Received with: "
+msgstr "Priimta su: "
+
+#: ../../../ui.cpp:704
+msgid "Payment to yourself"
+msgstr "Pervedimas sau"
+
+#: ../../../ui.cpp:741
+msgid "To: "
+msgstr "Kam: "
+
+#: ../../../ui.cpp:1049
+msgid "    Generating"
+msgstr "    Generuojama"
+
+#: ../../../ui.cpp:1051
+msgid "(not connected)"
+msgstr "(neprijungta)"
+
+#: ../../../ui.cpp:1054
+#, c-format
+msgid "     %d connections     %d blocks     %d transactions"
+msgstr "     %d Jungtys     %d Blokai     %d pervedimai"
+
+#: ../../../ui.cpp:1165
+#: ../../../ui.cpp:2560
+msgid "New Receiving Address"
+msgstr "Naujas priėmimo adresas"
+
+#: ../../../ui.cpp:1166
+#: ../../../ui.cpp:2561
+msgid ""
+"You should use a new address for each payment you receive.\n"
+"\n"
+"Label"
+msgstr ""
+"Naudokite naują adresas kiekvienam pervedimui.\n"
+"\n"
+"Pavadinimas"
+
+#: ../../../ui.cpp:1235
+msgid "<b>Status:</b> "
+msgstr "<b>Būklė:</b> "
+
+#: ../../../ui.cpp:1240
+msgid ", has not been successfully broadcast yet"
+msgstr ", dar nėra paskelbta"
+
+#: ../../../ui.cpp:1242
+#, c-format
+msgid ", broadcast through %d node"
+msgstr ", paskelbta per %d nodą"
+
+#: ../../../ui.cpp:1244
+#, c-format
+msgid ", broadcast through %d nodes"
+msgstr ", paskelbta per %d nodus"
+
+#: ../../../ui.cpp:1248
+msgid "<b>Date:</b> "
+msgstr "<b>Data:</b> "
+
+#: ../../../ui.cpp:1256
+msgid "<b>Source:</b> Generated<br>"
+msgstr "<b>Iš:</b> Sugeneruota<br>"
+
+#: ../../../ui.cpp:1262
+#: ../../../ui.cpp:1280
+msgid "<b>From:</b> "
+msgstr "<b>Nuo:</b> "
+
+#: ../../../ui.cpp:1280
+msgid "unknown"
+msgstr "nežinomas"
+
+#: ../../../ui.cpp:1281
+#: ../../../ui.cpp:1305
+#: ../../../ui.cpp:1364
+msgid "<b>To:</b> "
+msgstr "<b>Kam:</b> "
+
+#: ../../../ui.cpp:1284
+msgid " (yours, label: "
+msgstr " (jūsų, pavadinimas: "
+
+#: ../../../ui.cpp:1286
+msgid " (yours)"
+msgstr " (jūsų)"
+
+#: ../../../ui.cpp:1323
+#: ../../../ui.cpp:1335
+#: ../../../ui.cpp:1398
+msgid "<b>Credit:</b> "
+msgstr "<b>Kreditas:</b> "
+
+#: ../../../ui.cpp:1325
+#, c-format
+msgid "(%s matures in %d more blocks)"
+msgstr "(%s bus galima naudoti už %d blokų)"
+
+#: ../../../ui.cpp:1327
+msgid "(not accepted)"
+msgstr "(nepriimta)"
+
+#: ../../../ui.cpp:1372
+#: ../../../ui.cpp:1395
+msgid "<b>Debit:</b> "
+msgstr "<b>Debetas:</b> "
+
+#: ../../../ui.cpp:1386
+msgid "<b>Transaction fee:</b> "
+msgstr "<b>Pervedimo mokestis:</b> "
+
+#: ../../../ui.cpp:1402
+msgid "<b>Net amount:</b> "
+msgstr "<b>Neto suma:</b> "
+
+#: ../../../ui.cpp:1409
+msgid "Message:"
+msgstr "Žinutė:"
+
+#: ../../../ui.cpp:1412
+msgid "Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours."
+msgstr "Turite palaukti 120 blokų, kol galėsite išleisti sugeneruotas monetas. Kai sugeneravotė šį blokai, jis buvo paskelbtas tinklui ir bus pridėtas į blokų grandinę. Jei šio bloko tinklas nepriims i grandinė, jis pasikeis į \"nepriimtas\" ir negali būti išleidžiamas. Tai gali kartais nutikti jei kitas nodas sugeneravo bloką keliom sekundėm anksčiau."
+
+#: ../../../ui.cpp:1593
+msgid "Cannot write autostart/bitcoin.desktop file"
+msgstr "Nepavyksta įrašyti į autostart/bitcoin.desktop failą"
+
+#: ../../../ui.cpp:1629
+msgid "Main"
+msgstr "Pagrindinis"
+
+#: ../../../ui.cpp:1634
+msgid "&Start Bitcoin on window system startup"
+msgstr "&Paleisti Bitcoin kai pasileižia operacinė sistema"
+
+#: ../../../ui.cpp:1641
+msgid "&Minimize on close"
+msgstr "&Sumažinti kai uždaroma"
+
+#: ../../../ui.cpp:1798
+#, c-format
+msgid "version %s%s BETA"
+msgstr "versija %s%s beta"
+
+#: ../../../ui.cpp:1884
+msgid "n/a"
+msgstr "netaikoma"
+
+#: ../../../ui.cpp:1885
+msgid "Can't include a message when sending to a Bitcoin address"
+msgstr "Negalite pridėti žinutės kai siunčiate i Bitcoin adresą"
+
+#: ../../../ui.cpp:1938
+msgid "Error in amount  "
+msgstr "Klaidinga suma"
+
+#: ../../../ui.cpp:1938
+#: ../../../ui.cpp:1943
+#: ../../../ui.cpp:1948
+#: ../../../ui.cpp:1974
+#: ../../../uibase.cpp:59
+msgid "Send Coins"
+msgstr "Siūsti monetas"
+
+#: ../../../ui.cpp:1943
+msgid "Amount exceeds your balance  "
+msgstr "Suma viršija jūsų balasą"
+
+#: ../../../ui.cpp:1948
+msgid "Total exceeds your balance when the "
+msgstr "Bendra suma viršija jūsu balansą kai"
+
+#: ../../../ui.cpp:1948
+msgid " transaction fee is included  "
+msgstr "pervedimo suma įskaičiuota"
+
+#: ../../../ui.cpp:1964
+msgid "Payment sent  "
+msgstr "Mokestis išsiųstas"
+
+#: ../../../ui.cpp:1974
+msgid "Invalid address  "
+msgstr "Klaidingas adresas"
+
+#: ../../../ui.cpp:2028
+#, c-format
+msgid "Sending %s to %s"
+msgstr "Siunčia %s į %s"
+
+#: ../../../ui.cpp:2101
+#: ../../../ui.cpp:2134
+msgid "CANCELLED"
+msgstr "NUTRAUKTA"
+
+#: ../../../ui.cpp:2105
+msgid "Cancelled"
+msgstr "Nutraukta"
+
+#: ../../../ui.cpp:2107
+msgid "Transfer cancelled  "
+msgstr "Siuntimas nutrauktas"
+
+#: ../../../ui.cpp:2160
+msgid "Error: "
+msgstr "Klaida:"
+
+#: ../../../ui.cpp:2179
+msgid "Connecting..."
+msgstr "Jungiasi..."
+
+#: ../../../ui.cpp:2184
+msgid "Unable to connect"
+msgstr "Negali prisijungti"
+
+#: ../../../ui.cpp:2189
+msgid "Requesting public key..."
+msgstr "Prašo \"viešojo rakto\"(public key)..."
+
+#: ../../../ui.cpp:2201
+msgid "Received public key..."
+msgstr "Gautas \"viešasis raktas\"(public key)..."
+
+#: ../../../ui.cpp:2215
+msgid "Recipient is not accepting transactions sent by IP address"
+msgstr "Gavėjas nepriima pervedimų siunčiamų iš IP adresų"
+
+#: ../../../ui.cpp:2217
+msgid "Transfer was not accepted"
+msgstr "Persiuntimas nepriimtas"
+
+#: ../../../ui.cpp:2226
+msgid "Invalid response received"
+msgstr "Gautas klaidingas atsakymas"
+
+#: ../../../ui.cpp:2241
+msgid "Creating transaction..."
+msgstr "Kuriamas pervedimas..."
+
+#: ../../../ui.cpp:2253
+#, c-format
+msgid "This is an oversized transaction that requires a transaction fee of %s"
+msgstr "Šis pervedimas yra per didelis ir reikalauja pervedimo mokesčio %s"
+
+#: ../../../ui.cpp:2255
+msgid "Transaction creation failed"
+msgstr "Pervedimo sukurti nepavyko"
+
+#: ../../../ui.cpp:2262
+msgid "Transaction aborted"
+msgstr "Pervedimas nutrauktas"
+
+#: ../../../ui.cpp:2270
+msgid "Lost connection, transaction cancelled"
+msgstr "Prarastas ryšys, pervedimas nutrauktas"
+
+#: ../../../ui.cpp:2286
+msgid "Sending payment..."
+msgstr "Monetos siunčiamos..."
+
+#: ../../../ui.cpp:2292
+msgid "The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Pervedimas buvo atmestas. Tai galėjo atsitikti jei dalis jūsų monetų jau buvo išleista. Pvz.: Jei nodojote kopija wallet.dat kitame kliente ir monetos buvo išleistos ten, bet nepažymėtos kaip išleistos čia."
+
+#: ../../../ui.cpp:2301
+msgid "Waiting for confirmation..."
+msgstr "Laukia patvirtinimo..."
+
+#: ../../../ui.cpp:2319
+msgid ""
+"The payment was sent, but the recipient was unable to verify it.\n"
+"The transaction is recorded and will credit to the recipient,\n"
+"but the comment information will be blank."
+msgstr ""
+"Pervedimas išsiūstas, bet gavėjas negalėjo jo patvirtinti.\n"
+"Pervedimas įrašytas ir suma bus kredituojama gavėjui,\n"
+"bet komentaro informacija nebus rodoma."
+
+#: ../../../ui.cpp:2328
+msgid "Payment was sent, but an invalid response was received"
+msgstr "Pervedimas išsiūstas, bet klaidingas atsakymas gautas"
+
+#: ../../../ui.cpp:2334
+msgid "Payment completed"
+msgstr "Pervedimas pavyko"
+
+#: ../../../ui.cpp:2365
+#: ../../../ui.cpp:2511
+#: ../../../ui.cpp:2548
+msgid "Name"
+msgstr "Vardas"
+
+#: ../../../ui.cpp:2366
+#: ../../../ui.cpp:2511
+#: ../../../ui.cpp:2548
+msgid "Address"
+msgstr "Adresas"
+
+#: ../../../ui.cpp:2368
+#: ../../../ui.cpp:2523
+msgid "Label"
+msgstr "Pavadinimas"
+
+#: ../../../ui.cpp:2369
+#: ../../../uibase.cpp:902
+msgid "Bitcoin Address"
+msgstr "Bitcoin Adresas"
+
+#: ../../../ui.cpp:2493
+msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
+msgstr "Tai vienas iš jūsų adresų priimti pervedimams ir negali būti įvestas i adresų knygą"
+
+#: ../../../ui.cpp:2511
+#: ../../../ui.cpp:2517
+msgid "Edit Address"
+msgstr "Pakeisti Adresą"
+
+#: ../../../ui.cpp:2523
+msgid "Edit Address Label"
+msgstr "Pakeisti adreso pavadinimą"
+
+#: ../../../ui.cpp:2548
+#: ../../../ui.cpp:2554
+msgid "Add Address"
+msgstr "Pridėti adresą"
+
+#: ../../../ui.cpp:2630
+msgid "Bitcoin"
+msgstr "Bitcoin"
+
+#: ../../../ui.cpp:2632
+msgid "Bitcoin - Generating"
+msgstr "Bitcoin - Generuoja"
+
+#: ../../../ui.cpp:2634
+msgid "Bitcoin - (not connected)"
+msgstr "Bitcoin - (neprijungta)"
+
+#: ../../../ui.cpp:2711
+msgid "&Open Bitcoin"
+msgstr "&Atidaryti Bitcoin"
+
+#: ../../../ui.cpp:2712
+msgid "O&ptions..."
+msgstr "P&arametrai..."
+
+#: ../../../ui.cpp:2713
+#: ../../../uibase.cpp:32
+msgid "&Generate Coins"
+msgstr "&Generuoti monetas"
+
+#: ../../../ui.cpp:2716
+#: ../../../uibase.cpp:25
+msgid "E&xit"
+msgstr "&Išeiti"
+
+#: ../../../ui.cpp:2931
+msgid "Program has crashed and will terminate.  "
+msgstr "Programa neveikia ir bus uždaryta"
+
+#: ../../../uibase.cpp:28
+msgid "&File"
+msgstr "&Byla"
+
+#: ../../../uibase.cpp:36
+msgid "&Your Receiving Addresses..."
+msgstr "&Jūsų priimantys adresai..."
+
+#: ../../../uibase.cpp:40
+msgid "&Options..."
+msgstr "&Parametrai"
+
+#: ../../../uibase.cpp:43
+msgid "&Settings"
+msgstr "N&ustatymai"
+
+#: ../../../uibase.cpp:47
+msgid "&About..."
+msgstr "&О Apie..."
+
+#: ../../../uibase.cpp:50
+msgid "&Help"
+msgstr "&Pagalba"
+
+#: ../../../uibase.cpp:60
+msgid "Address Book"
+msgstr "Adresų knyga"
+
+#: ../../../uibase.cpp:75
+msgid "Your Bitcoin Address:"
+msgstr "Jūsų Bitcoin Adresas:"
+
+#: ../../../uibase.cpp:82
+msgid " &New... "
+msgstr " &Naujas... "
+
+#: ../../../uibase.cpp:85
+#: ../../../uibase.cpp:845
+#: ../../../uibase.cpp:948
+msgid " &Copy to Clipboard "
+msgstr "&Kopijuoti"
+
+#: ../../../uibase.cpp:99
+msgid "Balance:"
+msgstr "Balansas:"
+
+#: ../../../uibase.cpp:115
+msgid " All"
+msgstr "Visi"
+
+#: ../../../uibase.cpp:115
+msgid " Sent"
+msgstr "Išsiūsta"
+
+#: ../../../uibase.cpp:115
+msgid " Received"
+msgstr "Priimta"
+
+#: ../../../uibase.cpp:115
+msgid " In Progress"
+msgstr "Progrese"
+
+#: ../../../uibase.cpp:136
+msgid "All Transactions"
+msgstr "Visi pervedimai"
+
+#: ../../../uibase.cpp:147
+msgid "Sent/Received"
+msgstr "Išsiųsti/Priimti"
+
+#: ../../../uibase.cpp:158
+msgid "Sent"
+msgstr "Išsiūsti"
+
+#: ../../../uibase.cpp:169
+msgid "Received"
+msgstr "Priimti"
+
+#: ../../../uibase.cpp:312
+#: ../../../uibase.cpp:473
+#: ../../../uibase.cpp:574
+#: ../../../uibase.cpp:787
+#: ../../../uibase.cpp:848
+#: ../../../uibase.cpp:957
+#: ../../../uibase.cpp:1046
+msgid "OK"
+msgstr "Gerai"
+
+#: ../../../uibase.cpp:355
+msgid "Optional transaction fee you give to the nodes that process your transactions."
+msgstr "Pasirinktinas pervedimo mokestis, kurį duodate tinklo nodams."
+
+#: ../../../uibase.cpp:364
+msgid "Transaction fee:"
+msgstr "Pervedimo mokestis:"
+
+#: ../../../uibase.cpp:380
+msgid "&Limit coin generation to"
+msgstr "&Apriboti monetų generavima iki"
+
+#: ../../../uibase.cpp:387
+msgid "processors"
+msgstr "procesorių"
+
+#: ../../../uibase.cpp:393
+msgid "&Start Bitcoin on system startup"
+msgstr "&Paleisti Bitcoin kai pasileidžia operacinė sistema"
+
+#: ../../../uibase.cpp:397
+msgid "&Minimize to the tray instead of the taskbar"
+msgstr "&Sumažinti į \"tray\" vietoj \"taskbar\""
+
+#: ../../../uibase.cpp:401
+msgid "M&inimize to the tray on close"
+msgstr "Su&mažinti į \"tray\" kai uždaroma"
+
+#: ../../../uibase.cpp:408
+msgid "&Connect through socks4 proxy: "
+msgstr "&Prisijungti per socks4 proksį: "
+
+#: ../../../uibase.cpp:420
+msgid "Proxy &IP:"
+msgstr "P&roksio IP:"
+
+#: ../../../uibase.cpp:428
+msgid " &Port:"
+msgstr " &Portas"
+
+#: ../../../uibase.cpp:450
+msgid "// [don't translate] Test panel 2 for future expansion"
+msgstr ""
+
+#: ../../../uibase.cpp:454
+msgid "// [don't translate] Let's not start multiple pages until the first page is filled up"
+msgstr ""
+
+#: ../../../uibase.cpp:476
+#: ../../../uibase.cpp:729
+#: ../../../uibase.cpp:792
+#: ../../../uibase.cpp:851
+#: ../../../uibase.cpp:960
+#: ../../../uibase.cpp:1049
+msgid "Cancel"
+msgstr "Nutraukti"
+
+#: ../../../uibase.cpp:479
+msgid "&Apply"
+msgstr "&Nustatyti"
+
+#: ../../../uibase.cpp:540
+msgid "Bitcoin "
+msgstr "Bitcoin "
+
+#: ../../../uibase.cpp:546
+msgid "version"
+msgstr "versija"
+
+#: ../../../uibase.cpp:557
+msgid ""
+"Copyright (c) 2009-2010 Bitcoin Developers\n"
+"\n"
+"This is experimental software.\n"
+"\n"
+"Distributed under the MIT/X11 software license, see the accompanying file \n"
+"license.txt or http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"This product includes software developed by the OpenSSL Project for use in the \n"
+"OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
+"Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
+msgstr ""
+"Autorinė teisė (c) 2009-2010 Bitcoin Developers\n"
+"\n"
+"Ši programa yra eksperimentinė.\n"
+"\n"
+"Išleista ir teisės saugomos pagal MIT/X11 programų licenziją, kuri detaliau aprašyra faile \n"
+"license.txt ir http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"Šis produktas turi programą iš OpenSSL projekto, kuri naudojamas \n"
+"OpenSSL Toolkit (http://www.openssl.org/), kriptografinę programą parašyta \n"
+"Eric Young (eay@cryptsoft.com) ir UPnP programą parašyta Thomas Bernard."
+
+#: ../../../uibase.cpp:613
+msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) or IP address (e.g. 123.45.6.7)"
+msgstr "Įveskite Bitcoin adresą (pvz.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) arba IP adresą (pvz.: 123.45.6.7)"
+
+#: ../../../uibase.cpp:627
+msgid "Pay &To:"
+msgstr "&Kam:"
+
+#: ../../../uibase.cpp:642
+msgid "&Paste"
+msgstr "&Įrašyti"
+
+#: ../../../uibase.cpp:645
+msgid " Address &Book..."
+msgstr " &Adresų knyga..."
+
+#: ../../../uibase.cpp:652
+msgid "&Amount:"
+msgstr "S&uma:"
+
+#: ../../../uibase.cpp:662
+msgid "T&ransfer:"
+msgstr "&Pervedimas:"
+
+#: ../../../uibase.cpp:668
+msgid " Standard"
+msgstr "Standartinis"
+
+#: ../../../uibase.cpp:690
+msgid "&From:"
+msgstr "&Nuo:"
+
+#: ../../../uibase.cpp:707
+msgid "&Message:"
+msgstr "Ž&inutė:"
+
+#: ../../../uibase.cpp:724
+msgid "&Send"
+msgstr "&Siūsti"
+
+#: ../../../uibase.cpp:776
+msgid ""
+"\n"
+"\n"
+"Connecting..."
+msgstr ""
+"\n"
+"\n"
+"Jungiasi..."
+
+#: ../../../uibase.cpp:826
+msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Tai yra jūsų Bitcoin adresai priimti pervedimus. Galite duoti skirtinga adresa kiekvienam siuntėjui, kad žinotumėte kas jums moka. Pažymėtas adresas bus rodomas pagrindiniame lange."
+
+#: ../../../uibase.cpp:839
+#: ../../../uibase.cpp:951
+msgid "&Edit..."
+msgstr "&Pakeisti..."
+
+#: ../../../uibase.cpp:842
+#: ../../../uibase.cpp:954
+msgid " &New Address... "
+msgstr " &Naujas Adresas... "
+
+#: ../../../uibase.cpp:914
+msgid "Sending"
+msgstr "Siunčiama"
+
+#: ../../../uibase.cpp:922
+msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Tai yra jūsų Bitcoin adresai priimti pervedimus. Galite duoti skirtinga adresa kiekvienam siuntėjui, kad žinotumėte kas jums moka. Pažymėtas adresas bus rodomas pagrindiniame lange."
+
+#: ../../../uibase.cpp:935
+msgid "Receiving"
+msgstr "Priėmimo"
+
+#: ../../../uibase.cpp:945
+msgid "&Delete"
+msgstr "&Ištrinti"
+
+#: ../../../util.cpp:807
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
+msgstr "Perspėjimas: Prašome patikrinti kompiuterio laiką ir datą. Jei laikas neteisingai nustatytas, Bitcoin neveiks."
+
+#: ../../../uibase.h:149
+msgid "Transaction Details"
+msgstr "Pervedimų detalės"
+
+#: ../../../uibase.h:202
+msgid "Options"
+msgstr "Parametrai"
+
+#: ../../../uibase.h:230
+msgid "About Bitcoin"
+msgstr "Apie Bitcoin"
+
+#: ../../../uibase.h:340
+msgid "Your Bitcoin Addresses"
+msgstr "Jūsų Bitcoin Adresas"
+
+#~ msgid ""
+#~ "It's good policy to use a new address for each payment you receive.\n"
+#~ "\n"
+#~ "Label"
+#~ msgstr ""
+#~ "Неплохо будет использовать новый адрес для каждого получаемого платежа.\n"
+#~ "\n"
+#~ "Метка"
+
+#~ msgid "Will appear as \"From: Unknown\""
+#~ msgstr "Будет отображаться как \"От: Аноним\""
