@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
     window.setNumConnections(4);
     window.setNumTransactions(4);
     window.setNumBlocks(33);
+    window.setAddress("123456789");
 
     window.show();
 

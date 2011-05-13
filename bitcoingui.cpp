@@ -66,7 +66,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_address->addWidget(new QLabel(tr("Your Bitcoin Address:")));
     address = new QLineEdit();
     address->setReadOnly(true);
-    address->setText("0123456789"); /* test */
     hbox_address->addWidget(address);
     
     QPushButton *button_new = new QPushButton(tr("&New..."));
@@ -251,6 +250,11 @@ void BitcoinGUI::copyClipboardClicked()
 void BitcoinGUI::setBalance(double balance)
 {
     labelBalance->setText(QLocale::system().toString(balance, 8));
+}
+
+void BitcoinGUI::setAddress(const QString &addr)
+{
+    address->setText(addr);
 }
 
 void BitcoinGUI::setNumConnections(int count)

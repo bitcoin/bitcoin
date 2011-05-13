@@ -47,6 +47,7 @@ private:
 
 public slots:
     void setBalance(double balance);
+    void setAddress(const QString &address);
     void setNumConnections(int count);
     void setNumBlocks(int count);
     void setNumTransactions(int count);
