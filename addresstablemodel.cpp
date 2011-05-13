@@ -29,7 +29,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         /* index.row(), index.column() */
         /* Return QString */
         if(index.column() == Address)
-            return "1PC9aZC4hNX2rmmrt7uHTfYAS3hRbph4UN";
+            return "1PC9aZC4hNX2rmmrt7uHTfYAS3hRbph4UN" + QString::number(index.row());
         else
             return "Description";
     } else if (role == Qt::UserRole)

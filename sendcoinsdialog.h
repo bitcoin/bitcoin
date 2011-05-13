@@ -19,9 +19,9 @@ private:
     Ui::SendCoinsDialog *ui;
 
 private slots:
+    void on_buttonBox_rejected();
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
-    void on_cancelButton_clicked();
     void on_sendButton_clicked();
 };
 

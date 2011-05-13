@@ -43,7 +43,11 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QLineEdit" name="payTo"/>
+      <widget class="QLineEdit" name="payTo">
+       <property name="maxLength">
+        <number>34</number>
+       </property>
+      </widget>
      </item>
      <item row="4" column="1">
       <widget class="QLineEdit" name="payAmount">
@@ -116,12 +120,22 @@
        <property name="text">
         <string>&amp;Send</string>
        </property>
+       <property name="icon">
+        <iconset resource="bitcoin.qrc">
+         <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
+       </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="cancelButton">
-       <property name="text">
-        <string>Cancel</string>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel</set>
        </property>
       </widget>
      </item>
@@ -129,6 +143,25 @@
    </item>
   </layout>
  </widget>
- <resources/>
- <connections/>
+ <resources>
+  <include location="bitcoin.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>payAmount</sender>
+   <signal>returnPressed()</signal>
+   <receiver>sendButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>191</x>
+     <y>65</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>570</x>
+     <y>121</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

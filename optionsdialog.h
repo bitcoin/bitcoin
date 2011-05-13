@@ -2,8 +2,12 @@
 #define OPTIONSDIALOG_H
 
 #include <QDialog>
-#include <QStackedWidget>
-#include <QListWidget>
+
+QT_BEGIN_NAMESPACE
+class QStackedWidget;
+class QListWidget;
+class QListWidgetItem;
+QT_END_NAMESPACE
 
 class OptionsDialog : public QDialog
 {

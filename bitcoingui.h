@@ -6,8 +6,11 @@
 
 /* Forward declarations */
 class TransactionTableModel;
+
+QT_BEGIN_NAMESPACE
 class QLabel;
 class QLineEdit;
+QT_END_NAMESPACE
 
 class BitcoinGUI : public QMainWindow
 {

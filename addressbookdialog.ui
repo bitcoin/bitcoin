@@ -26,6 +26,9 @@
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QTableView" name="sendTableView">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
          <property name="selectionBehavior">
           <enum>QAbstractItemView::SelectRows</enum>
          </property>
@@ -56,6 +59,9 @@
        </item>
        <item>
         <widget class="QTableView" name="receiveTableView">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
          <property name="selectionBehavior">
           <enum>QAbstractItemView::SelectRows</enum>
          </property>
@@ -84,30 +90,43 @@
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="newAddressButton">
+       <property name="text">
+        <string>&amp;New Address...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="copyToClipboard">
        <property name="text">
-        <string>Copy to Clipboard</string>
+        <string>&amp;Copy to Clipboard</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="editButton">
        <property name="text">
-        <string>Edit...</string>
+        <string>&amp;Edit...</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="newAddressButton">
+      <widget class="QPushButton" name="deleteButton">
        <property name="text">
-        <string>New Address...</string>
+        <string>&amp;Delete</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="OKButton">
-       <property name="text">
-        <string>OK</string>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
        </property>
       </widget>
      </item>

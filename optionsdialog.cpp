@@ -4,6 +4,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QListWidget>
+#include <QStackedWidget>
 
 OptionsDialog::OptionsDialog(QWidget *parent) :
     QDialog(parent), contents_widget(0), pages_widget(0)

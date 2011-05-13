@@ -5,6 +5,7 @@
 #include "editaddressdialog.h"
 
 #include <QSortFilterProxyModel>
+#include <QDebug>
 
 AddressBookDialog::AddressBookDialog(QWidget *parent) :
     QDialog(parent),
@@ -62,14 +63,23 @@ void AddressBookDialog::setTab(int tab)
     ui->tabWidget->setCurrentIndex(tab);
 }
 
-void AddressBookDialog::on_OKButton_clicked()
+QTableView *AddressBookDialog::getCurrentTable()
 {
-    accept();
+    switch(ui->tabWidget->currentIndex())
+    {
+    case SendingTab:
+        return ui->sendTableView;
+    case ReceivingTab:
+        return ui->receiveTableView;
+    default:
+        return 0;
+    }
 }
 
 void AddressBookDialog::on_copyToClipboard_clicked()
 {
-   /* Copy currently selected address to clipboard */
+    /* Copy currently selected address to clipboard */
+
 }
 
 void AddressBookDialog::on_editButton_clicked()
@@ -83,4 +93,40 @@ void AddressBookDialog::on_newAddressButton_clicked()
 {
     EditAddressDialog dlg;
     dlg.exec();
+}
+
+void AddressBookDialog::on_tabWidget_currentChanged(int index)
+{
+    switch(index)
+    {
+    case SendingTab:
+        ui->deleteButton->show();
+        break;
+    case ReceivingTab:
+        ui->deleteButton->hide();
+        break;
+    }
+}
+
+void AddressBookDialog::on_deleteButton_clicked()
+{
+    QTableView *table = getCurrentTable();
+    QModelIndexList indexes = table->selectionModel()->selectedRows();
+
+    foreach (QModelIndex index, indexes) {
+        table->model()->removeRow(index.row());
+    }
+}
+
+void AddressBookDialog::on_buttonBox_accepted()
+{
+    QTableView *table = getCurrentTable();
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+
+    foreach (QModelIndex index, indexes) {
+        QVariant address = table->model()->data(index);
+        returnValue = address.toString();
+    }
+
+    accept();
 }
