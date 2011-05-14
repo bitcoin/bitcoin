@@ -130,6 +130,8 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
 bool Lookup(const char *pszName, vector<CAddress>& vaddr, int nServices, int nMaxSolutions, bool fAllowLookup, int portDefault, bool fAllowPort)
 {
     vaddr.clear();
+    if (pszName[0] == 0)
+        return false;
     int port = portDefault;
     char psz[256];
     char *pszHost = psz;
@@ -155,11 +157,11 @@ bool Lookup(const char *pszName, vector<CAddress>& vaddr, int nServices, int nMa
         }
     }
 
-    struct in_addr addrIP;
-    if (inet_aton(pszHost, &addrIP))
+    unsigned int addrIP = inet_addr(pszHost);
+    if (addrIP != INADDR_NONE)
     {
         // valid IP address passed
-        vaddr.push_back(CAddress(addrIP.s_addr, port, nServices));
+        vaddr.push_back(CAddress(addrIP, port, nServices));
         return true;
     }
 
@@ -1524,7 +1526,7 @@ void StartNode(void* parg)
     if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR)
     {
         vector<CAddress> vaddr;
-        if (NameLookup(pszHostName, vaddr, nLocalServices))
+        if (Lookup(pszHostName, vaddr, nLocalServices, -1, true))
             foreach (const CAddress &addr, vaddr)
                 if (addr.GetByte(3) != 127)
                 {
