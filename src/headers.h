@@ -120,7 +120,6 @@
 #include "script.h"
 #include "db.h"
 #include "net.h"
-#include "irc.h"
 #include "main.h"
 #include "rpc.h"
 #ifdef GUI
