@@ -1,21 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#define __STDC_LIMIT_MACROS // to enable UINT64_MAX from stdint.h
-
-#include "util.h"
-#include "main.h"
-#include "strlcpy.h"
-
-#include <boost/interprocess/sync/interprocess_mutex.hpp>
-
-#include <openssl/crypto.h>
-#include <openssl/rand.h>
-
-#include <stdint.h>
-#include <climits>
+#include "headers.h"
 
 using namespace std;
+using namespace boost;
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
@@ -716,7 +705,7 @@ void GetDataDir(char* pszDir)
     if (!pfMkdir[nVariation])
     {
         pfMkdir[nVariation] = true;
-        filesystem::create_directory(pszDir);
+        boost::filesystem::create_directory(pszDir);
     }
 }
 
@@ -867,7 +856,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
             {
                 // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
-                foreach(int64 nOffset, vTimeOffsets)
+                BOOST_FOREACH(int64 nOffset, vTimeOffsets)
                     if (nOffset != 0 && abs64(nOffset) < 5 * 60)
                         fMatch = true;
 
@@ -881,7 +870,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
                 }
             }
         }
-        foreach(int64 n, vTimeOffsets)
+        BOOST_FOREACH(int64 n, vTimeOffsets)
             printf("%+"PRI64d"  ", n);
         printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
     }

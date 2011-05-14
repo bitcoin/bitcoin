@@ -1,8 +1,8 @@
 TEMPLATE = app
 TARGET =
 DEPENDPATH += .
-INCLUDEPATH += gui/include core/include cryptopp/include
-unix:LIBS += -lssl
+INCLUDEPATH += gui/include core/include cryptopp/include json/include
+unix:LIBS += -lssl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
 
 # Input
 HEADERS += gui/include/bitcoingui.h \
@@ -34,7 +34,23 @@ HEADERS += gui/include/bitcoingui.h \
     core/include/strlcpy.h \
     core/include/main.h \
     core/include/net.h \
-    core/include/key.h
+    core/include/key.h \
+    core/include/db.h \
+    core/include/script.h \
+    core/include/noui.h \
+    core/include/init.h \
+    core/include/headers.h \
+    core/include/irc.h \
+    json/include/json/json_spirit_writer_template.h \
+    json/include/json/json_spirit_writer.h \
+    json/include/json/json_spirit_value.h \
+    json/include/json/json_spirit_utils.h \
+    json/include/json/json_spirit_stream_reader.h \
+    json/include/json/json_spirit_reader_template.h \
+    json/include/json/json_spirit_reader.h \
+    json/include/json/json_spirit_error_position.h \
+    json/include/json/json_spirit.h \
+    core/include/rpc.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \
@@ -47,7 +63,17 @@ SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/bitcoinaddressvalidator.cpp \
     cryptopp/src/sha.cpp \
     cryptopp/src/cpu.cpp \
-    core/src/util.cpp
+    core/src/util.cpp \
+    core/src/script.cpp \
+    core/src/main.cpp \
+    core/src/init.cpp \
+    core/src/rpc.cpp \
+    core/src/net.cpp \
+    core/src/irc.cpp \
+    core/src/db.cpp \
+    json/src/json_spirit_writer.cpp \
+    json/src/json_spirit_value.cpp \
+    json/src/json_spirit_reader.cpp
 
 RESOURCES += \
     gui/bitcoin.qrc
