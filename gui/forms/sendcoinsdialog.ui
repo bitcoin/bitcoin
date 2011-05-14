@@ -121,7 +121,7 @@
         <string>&amp;Send</string>
        </property>
        <property name="icon">
-        <iconset resource="bitcoin.qrc">
+        <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
       </widget>
@@ -144,7 +144,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="bitcoin.qrc"/>
+  <include location="../bitcoin.qrc"/>
  </resources>
  <connections>
   <connection>

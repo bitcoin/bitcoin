@@ -3,6 +3,8 @@
 
 #include <QRegExpValidator>
 
+#include <base58.h>
+
 class BitcoinAddressValidator : public QRegExpValidator
 {
     Q_OBJECT
