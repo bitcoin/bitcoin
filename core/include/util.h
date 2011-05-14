@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 
+#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
@@ -37,7 +38,6 @@ typedef unsigned long long  uint64;
 #define __forceinline  inline
 #endif
 
-//#define foreach             BOOST_FOREACH
 #define loop                for (;;)
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))

@@ -7,6 +7,8 @@
 #include <QApplication>
 #include <QClipboard>
 
+#include "base58.h"
+
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog)
@@ -24,7 +26,16 @@ SendCoinsDialog::~SendCoinsDialog()
 
 void SendCoinsDialog::on_sendButton_clicked()
 {
-    accept();
+    QByteArray payTo = ui->payTo->text().toUtf8();
+    uint160 payToHash = 0;
+    if(AddressToHash160(payTo.constData(), payToHash))
+    {
+        accept();
+    }
+    else
+    {
+
+    }
 }
 
 void SendCoinsDialog::on_pasteButton_clicked()

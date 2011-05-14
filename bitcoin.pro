@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET =
 DEPENDPATH += .
 INCLUDEPATH += gui/include core/include cryptopp/include
+unix:LIBS += -lssl
 
 # Input
 HEADERS += gui/include/bitcoingui.h \
@@ -29,7 +30,11 @@ HEADERS += gui/include/bitcoingui.h \
     cryptopp/include/cryptopp/iterhash.h \
     cryptopp/include/cryptopp/cryptlib.h \
     cryptopp/include/cryptopp/cpu.h \
-    cryptopp/include/cryptopp/config.h
+    cryptopp/include/cryptopp/config.h \
+    core/include/strlcpy.h \
+    core/include/main.h \
+    core/include/net.h \
+    core/include/key.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \
@@ -41,7 +46,8 @@ SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/editaddressdialog.cpp \
     gui/src/bitcoinaddressvalidator.cpp \
     cryptopp/src/sha.cpp \
-    cryptopp/src/cpu.cpp
+    cryptopp/src/cpu.cpp \
+    core/src/util.cpp
 
 RESOURCES += \
     gui/bitcoin.qrc

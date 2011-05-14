@@ -9,6 +9,9 @@
 #include <map>
 #include <set>
 #include <cassert>
+#include <climits>
+#include <cstring>
+#include <cstdio>
 
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/tuple/tuple.hpp>

@@ -7,11 +7,8 @@
 #include <stdexcept>
 #include <vector>
 #include <openssl/bn.h>
-#include <util.h>
 
-
-
-
+#include "util.h"
 
 class bignum_error : public std::runtime_error
 {
