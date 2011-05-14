@@ -302,7 +302,7 @@ public:
         char psz[sizeof(pn)*2 + 1];
         for (int i = 0; i < sizeof(pn); i++)
             sprintf(psz + i*2, "%02x", ((unsigned char*)pn)[sizeof(pn) - i - 1]);
-        return string(psz, psz + sizeof(pn)*2);
+        return std::string(psz, psz + sizeof(pn)*2);
     }
 
     void SetHex(const char* psz)
@@ -632,7 +632,7 @@ inline const uint256 operator-(const uint256& a, const uint256& b)      { return
 
 
 
-inline int Testuint256AdHoc(vector<string> vArg)
+inline int Testuint256AdHoc(std::vector<std::string> vArg)
 {
     uint256 g(0);
 

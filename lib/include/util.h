@@ -5,8 +5,11 @@
 #define BITCOIN_UTIL_H
 
 #include "uint256.h"
+//#include "cryptopp/sha.h"
 
 #include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -15,6 +18,9 @@
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+
+#include <openssl/sha.h>
+#include <openssl/ripemd.h>
 
 
 #if defined(_MSC_VER) || defined(__BORLANDC__)
@@ -552,7 +558,7 @@ uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=VERSION)
     return Hash(ss.begin(), ss.end());
 }
 
-inline uint160 Hash160(const vector<unsigned char>& vch)
+inline uint160 Hash160(const std::vector<unsigned char>& vch)
 {
     uint256 hash1;
     SHA256(&vch[0], vch.size(), (unsigned char*)&hash1);

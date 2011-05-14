@@ -12,6 +12,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui(new Ui::SendCoinsDialog)
 {
     ui->setupUi(this);
+    ui->payTo->setMaxLength(BitcoinAddressValidator::MaxAddressLength);
     ui->payTo->setValidator(new BitcoinAddressValidator(this));
     ui->payAmount->setValidator(new QDoubleValidator(this));
 }

@@ -311,7 +311,7 @@ public:
         CAutoBN_CTX pctx;
         CBigNum bnBase = nBase;
         CBigNum bn0 = 0;
-        string str;
+        std::string str;
         CBigNum bn = *this;
         BN_set_negative(&bn, false);
         CBigNum dv;
@@ -351,7 +351,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s, int nType=0, int nVersion=VERSION)
     {
-        vector<unsigned char> vch;
+        std::vector<unsigned char> vch;
         ::Unserialize(s, vch, nType, nVersion);
         setvch(vch);
     }

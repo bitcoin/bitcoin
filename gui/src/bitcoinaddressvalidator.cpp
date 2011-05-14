@@ -1,8 +1,8 @@
 #include "bitcoinaddressvalidator.h"
 
-const QString BitcoinAddressValidator::valid_chars = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
+#include "base58.h"
 
 BitcoinAddressValidator::BitcoinAddressValidator(QObject *parent) :
-    QRegExpValidator(QRegExp("^["+valid_chars+"]+"), parent)
+    QRegExpValidator(QRegExp(QString("^[")+QString(pszBase58)+QString("]+")), parent)
 {
 }
