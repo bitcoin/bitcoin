@@ -118,7 +118,6 @@
 #include "bignum.h"
 #include "base58.h"
 #include "script.h"
-#include "net.h"
 #include "main.h"
 #ifdef GUI
 #include "uibase.h"

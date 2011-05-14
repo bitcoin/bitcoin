@@ -5,6 +5,7 @@
 #include "headers.h"
 #include "cryptopp/sha.h"
 #include "db.h"
+#include "net.h"
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>

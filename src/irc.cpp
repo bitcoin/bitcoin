@@ -4,6 +4,7 @@
 
 #include "headers.h"
 #include "irc.h"
+#include "net.h"
 
 using namespace std;
 using namespace boost;

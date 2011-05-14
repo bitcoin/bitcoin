@@ -5,6 +5,7 @@
 #include "headers.h"
 #include "irc.h"
 #include "db.h"
+#include "net.h"
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniwget.h>

@@ -4,6 +4,7 @@
 
 #include "headers.h"
 #include "db.h"
+#include "net.h"
 
 using namespace std;
 using namespace boost;
