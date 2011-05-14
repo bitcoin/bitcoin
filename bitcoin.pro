@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET =
 DEPENDPATH += .
-INCLUDEPATH += gui/include lib/include cryptopp/include
+INCLUDEPATH += gui/include core/include cryptopp/include
 
 # Input
 HEADERS += gui/include/bitcoingui.h \
@@ -14,11 +14,11 @@ HEADERS += gui/include/bitcoingui.h \
     gui/include/aboutdialog.h \
     gui/include/editaddressdialog.h \
     gui/include/bitcoinaddressvalidator.h \
-    lib/include/base58.h \
-    lib/include/bignum.h \
-    lib/include/util.h \
-    lib/include/uint256.h \
-    lib/include/serialize.h \
+    core/include/base58.h \
+    core/include/bignum.h \
+    core/include/util.h \
+    core/include/uint256.h \
+    core/include/serialize.h \
     cryptopp/include/cryptopp/stdcpp.h \
     cryptopp/include/cryptopp/smartptr.h \
     cryptopp/include/cryptopp/simple.h \
