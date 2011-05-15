@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef UI_H
+#define UI_H
+
 DECLARE_EVENT_TYPE(wxEVT_UITHREADCALL, -1)
 
 
@@ -75,12 +78,12 @@ public:
 
     // Custom
     enum
-    {
-	ALL = 0,
-	SENTRECEIVED = 1,
-	SENT = 2,
-	RECEIVED = 3,
-    };
+	{
+	    ALL = 0,
+	    SENTRECEIVED = 1,
+	    SENT = 2,
+	    RECEIVED = 3,
+	};
     int nPage;
     wxListCtrl* m_listCtrl;
     bool fShowGenerated;
@@ -246,10 +249,10 @@ public:
 
     // Custom
     enum
-    {
-	SENDING = 0,
-	RECEIVING = 1,
-    };
+	{
+	    SENDING = 0,
+	    RECEIVING = 1,
+	};
     int nPage;
     wxListCtrl* m_listCtrl;
     bool fDuringSend;
@@ -293,13 +296,13 @@ public:
 	m_textCtrl1->SetValue(strValue1);
 	y += wxString(strMessage1).Freq('\n') * 14;
 	if (!strMessage2.empty())
-	{
-	    m_staticTextMessage2->Show(true);
-	    m_staticTextMessage2->SetLabel(strMessage2);
-	    m_textCtrl2->Show(true);
-	    m_textCtrl2->SetValue(strValue2);
-	    y += 46 + wxString(strMessage2).Freq('\n') * 14;
-	}
+	    {
+		m_staticTextMessage2->Show(true);
+		m_staticTextMessage2->SetLabel(strMessage2);
+		m_textCtrl2->Show(true);
+		m_textCtrl2->SetValue(strValue2);
+		y += 46 + wxString(strMessage2).Freq('\n') * 14;
+	    }
 #ifndef __WXMSW__
 	x = x * 114 / 100;
 	y = y * 114 / 100;
@@ -339,5 +342,7 @@ public:
     void UpdateTooltip();
     virtual wxMenu* CreatePopupMenu();
 
-DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
+
+#endif // !UI_H

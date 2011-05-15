@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef UINT256_H
+#define UINT256_H
+
 #include <limits.h>
 #include <string>
 #if defined(_MSC_VER) || defined(__BORLANDC__)
@@ -115,12 +118,12 @@ public:
 	int k = shift / 32;
 	shift = shift % 32;
 	for (int i = 0; i < WIDTH; i++)
-	{
-	    if (i+k+1 < WIDTH && shift != 0)
-		pn[i+k+1] |= (a.pn[i] >> (32-shift));
-	    if (i+k < WIDTH)
-		pn[i+k] |= (a.pn[i] << shift);
-	}
+	    {
+		if (i+k+1 < WIDTH && shift != 0)
+		    pn[i+k+1] |= (a.pn[i] >> (32-shift));
+		if (i+k < WIDTH)
+		    pn[i+k] |= (a.pn[i] << shift);
+	    }
 	return *this;
     }
 
@@ -132,12 +135,12 @@ public:
 	int k = shift / 32;
 	shift = shift % 32;
 	for (int i = 0; i < WIDTH; i++)
-	{
-	    if (i-k-1 >= 0 && shift != 0)
-		pn[i-k-1] |= (a.pn[i] << (32-shift));
-	    if (i-k >= 0)
-		pn[i-k] |= (a.pn[i] >> shift);
-	}
+	    {
+		if (i-k-1 >= 0 && shift != 0)
+		    pn[i-k-1] |= (a.pn[i] << (32-shift));
+		if (i-k >= 0)
+		    pn[i-k] |= (a.pn[i] >> shift);
+	    }
 	return *this;
     }
 
@@ -145,11 +148,11 @@ public:
     {
 	uint64 carry = 0;
 	for (int i = 0; i < WIDTH; i++)
-	{
-	    uint64 n = carry + pn[i] + b.pn[i];
-	    pn[i] = n & 0xffffffff;
-	    carry = n >> 32;
-	}
+	    {
+		uint64 n = carry + pn[i] + b.pn[i];
+		pn[i] = n & 0xffffffff;
+		carry = n >> 32;
+	    }
 	return *this;
     }
 
@@ -214,48 +217,48 @@ public:
     friend inline bool operator<(const base_uint& a, const base_uint& b)
     {
 	for (int i = base_uint::WIDTH-1; i >= 0; i--)
-	{
-	    if (a.pn[i] < b.pn[i])
-		return true;
-	    else if (a.pn[i] > b.pn[i])
-		return false;
-	}
+	    {
+		if (a.pn[i] < b.pn[i])
+		    return true;
+		else if (a.pn[i] > b.pn[i])
+		    return false;
+	    }
 	return false;
     }
 
     friend inline bool operator<=(const base_uint& a, const base_uint& b)
     {
 	for (int i = base_uint::WIDTH-1; i >= 0; i--)
-	{
-	    if (a.pn[i] < b.pn[i])
-		return true;
-	    else if (a.pn[i] > b.pn[i])
-		return false;
-	}
+	    {
+		if (a.pn[i] < b.pn[i])
+		    return true;
+		else if (a.pn[i] > b.pn[i])
+		    return false;
+	    }
 	return true;
     }
 
     friend inline bool operator>(const base_uint& a, const base_uint& b)
     {
 	for (int i = base_uint::WIDTH-1; i >= 0; i--)
-	{
-	    if (a.pn[i] > b.pn[i])
-		return true;
-	    else if (a.pn[i] < b.pn[i])
-		return false;
-	}
+	    {
+		if (a.pn[i] > b.pn[i])
+		    return true;
+		else if (a.pn[i] < b.pn[i])
+		    return false;
+	    }
 	return false;
     }
 
     friend inline bool operator>=(const base_uint& a, const base_uint& b)
     {
 	for (int i = base_uint::WIDTH-1; i >= 0; i--)
-	{
-	    if (a.pn[i] > b.pn[i])
-		return true;
-	    else if (a.pn[i] < b.pn[i])
-		return false;
-	}
+	    {
+		if (a.pn[i] > b.pn[i])
+		    return true;
+		else if (a.pn[i] < b.pn[i])
+		    return false;
+	    }
 	return true;
     }
 
@@ -321,14 +324,14 @@ public:
 	unsigned char* p1 = (unsigned char*)pn;
 	unsigned char* pend = p1 + WIDTH * 4;
 	while (psz >= pbegin && p1 < pend)
-	{
-	    *p1 = phexdigit[(unsigned char)*psz--];
-	    if (psz >= pbegin)
 	    {
-		*p1 |= (phexdigit[(unsigned char)*psz--] << 4);
-		p1++;
+		*p1 = phexdigit[(unsigned char)*psz--];
+		if (psz >= pbegin)
+		    {
+			*p1 |= (phexdigit[(unsigned char)*psz--] << 4);
+			p1++;
+		    }
 	    }
-	}
     }
 
     void SetHex(const std::string& str)
@@ -726,32 +729,34 @@ inline int Testuint256AdHoc(vector<string> vArg)
     uint256 x2;
     printf("%s\n", x1.ToString().c_str());
     for (int i = 0; i < 270; i += 4)
-    {
-	x2 = x1 << i;
-	printf("%s\n", x2.ToString().c_str());
-    }
+	{
+	    x2 = x1 << i;
+	    printf("%s\n", x2.ToString().c_str());
+	}
 
     printf("\n");
     printf("%s\n", x1.ToString().c_str());
     for (int i = 0; i < 270; i += 4)
-    {
-	x2 = x1;
-	x2 >>= i;
-	printf("%s\n", x2.ToString().c_str());
-    }
+	{
+	    x2 = x1;
+	    x2 >>= i;
+	    printf("%s\n", x2.ToString().c_str());
+	}
 
 
     for (int i = 0; i < 100; i++)
-    {
-	uint256 k = (~uint256(0) >> i);
-	printf("%s\n", k.ToString().c_str());
-    }
+	{
+	    uint256 k = (~uint256(0) >> i);
+	    printf("%s\n", k.ToString().c_str());
+	}
 
     for (int i = 0; i < 100; i++)
-    {
-	uint256 k = (~uint256(0) << i);
-	printf("%s\n", k.ToString().c_str());
-    }
+	{
+	    uint256 k = (~uint256(0) << i);
+	    printf("%s\n", k.ToString().c_str());
+	}
 
     return (0);
 }
+
+#endif // !UINT256_H

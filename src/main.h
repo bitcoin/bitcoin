@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef MAIN_H
+#define MAIN_H
+
 class COutPoint;
 class CInPoint;
 class CDiskTxPos;
@@ -253,10 +256,10 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(prevout);
-	READWRITE(scriptSig);
-	READWRITE(nSequence);
-    )
+     READWRITE(prevout);
+     READWRITE(scriptSig);
+     READWRITE(nSequence);
+     )
 
     bool IsFinal() const
     {
@@ -325,9 +328,9 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(nValue);
-	READWRITE(scriptPubKey);
-    )
+     READWRITE(nValue);
+     READWRITE(scriptPubKey);
+     )
 
     void SetNull()
     {
@@ -422,12 +425,12 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(this->nVersion);
-	nVersion = this->nVersion;
-	READWRITE(vin);
-	READWRITE(vout);
-	READWRITE(nLockTime);
-    )
+     READWRITE(this->nVersion);
+     nVersion = this->nVersion;
+     READWRITE(vin);
+     READWRITE(vout);
+     READWRITE(nLockTime);
+     )
 
     void SetNull()
     {
@@ -475,21 +478,21 @@ public:
 	bool fNewer = false;
 	unsigned int nLowest = UINT_MAX;
 	for (int i = 0; i < vin.size(); i++)
-	{
-	    if (vin[i].nSequence != old.vin[i].nSequence)
 	    {
-		if (vin[i].nSequence <= nLowest)
-		{
-		    fNewer = false;
-		    nLowest = vin[i].nSequence;
-		}
-		if (old.vin[i].nSequence < nLowest)
-		{
-		    fNewer = true;
-		    nLowest = old.vin[i].nSequence;
-		}
+		if (vin[i].nSequence != old.vin[i].nSequence)
+		    {
+			if (vin[i].nSequence <= nLowest)
+			    {
+				fNewer = false;
+				nLowest = vin[i].nSequence;
+			    }
+			if (old.vin[i].nSequence < nLowest)
+			    {
+				fNewer = true;
+				nLowest = old.vin[i].nSequence;
+			    }
+		    }
 	    }
-	}
 	return fNewer;
     }
 
@@ -536,11 +539,11 @@ public:
     {
 	int64 nDebit = 0;
 	foreach(const CTxIn& txin, vin)
-	{
-	    nDebit += txin.GetDebit();
-	    if (!MoneyRange(nDebit))
-		throw runtime_error("CTransaction::GetDebit() : value out of range");
-	}
+	    {
+		nDebit += txin.GetDebit();
+		if (!MoneyRange(nDebit))
+		    throw runtime_error("CTransaction::GetDebit() : value out of range");
+	    }
 	return nDebit;
     }
 
@@ -548,11 +551,11 @@ public:
     {
 	int64 nCredit = 0;
 	foreach(const CTxOut& txout, vout)
-	{
-	    nCredit += txout.GetCredit();
-	    if (!MoneyRange(nCredit))
-		throw runtime_error("CTransaction::GetCredit() : value out of range");
-	}
+	    {
+		nCredit += txout.GetCredit();
+		if (!MoneyRange(nCredit))
+		    throw runtime_error("CTransaction::GetCredit() : value out of range");
+	    }
 	return nCredit;
     }
 
@@ -562,11 +565,11 @@ public:
 	    return 0;
 	int64 nChange = 0;
 	foreach(const CTxOut& txout, vout)
-	{
-	    nChange += txout.GetChange();
-	    if (!MoneyRange(nChange))
-		throw runtime_error("CTransaction::GetChange() : value out of range");
-	}
+	    {
+		nChange += txout.GetChange();
+		if (!MoneyRange(nChange))
+		    throw runtime_error("CTransaction::GetChange() : value out of range");
+	    }
 	return nChange;
     }
 
@@ -574,11 +577,11 @@ public:
     {
 	int64 nValueOut = 0;
 	foreach(const CTxOut& txout, vout)
-	{
-	    nValueOut += txout.nValue;
-	    if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
-		throw runtime_error("CTransaction::GetValueOut() : value out of range");
-	}
+	    {
+		nValueOut += txout.nValue;
+		if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
+		    throw runtime_error("CTransaction::GetValueOut() : value out of range");
+	    }
 	return nValueOut;
     }
 
@@ -597,21 +600,21 @@ public:
 	int64 nMinFee = (1 + (int64)nBytes / 1000) * MIN_TX_FEE;
 
 	if (fAllowFree)
-	{
-	    if (nBlockSize == 1)
 	    {
-		// Transactions under 10K are free
-		// (about 4500bc if made of 50bc inputs)
-		if (nBytes < 10000)
-		    nMinFee = 0;
+		if (nBlockSize == 1)
+		    {
+			// Transactions under 10K are free
+			// (about 4500bc if made of 50bc inputs)
+			if (nBytes < 10000)
+			    nMinFee = 0;
+		    }
+		else
+		    {
+			// Free transaction area
+			if (nNewBlockSize < 27000)
+			    nMinFee = 0;
+		    }
 	    }
-	    else
-	    {
-		// Free transaction area
-		if (nNewBlockSize < 27000)
-		    nMinFee = 0;
-	    }
-	}
 
 	// To limit dust spam, require MIN_TX_FEE if any output is less than 0.01
 	if (nMinFee < MIN_TX_FEE)
@@ -621,11 +624,11 @@ public:
 
 	// Raise the price as the block approaches full
 	if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
-	{
-	    if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
-		return MAX_MONEY;
-	    nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
-	}
+	    {
+		if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
+		    return MAX_MONEY;
+		nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
+	    }
 
 	if (!MoneyRange(nMinFee))
 	    nMinFee = MAX_MONEY;
@@ -646,11 +649,11 @@ public:
 
 	// Return file pointer
 	if (pfileRet)
-	{
-	    if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
-		return error("CTransaction::ReadFromDisk() : second fseek failed");
-	    *pfileRet = filein.release();
-	}
+	    {
+		if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
+		    return error("CTransaction::ReadFromDisk() : second fseek failed");
+		*pfileRet = filein.release();
+	    }
 	return true;
     }
 
@@ -672,11 +675,11 @@ public:
     {
 	string str;
 	str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
-	    GetHash().ToString().substr(0,10).c_str(),
-	    nVersion,
-	    vin.size(),
-	    vout.size(),
-	    nLockTime);
+			 GetHash().ToString().substr(0,10).c_str(),
+			 nVersion,
+			 vin.size(),
+			 vout.size(),
+			 nLockTime);
 	for (int i = 0; i < vin.size(); i++)
 	    str += "    " + vin[i].ToString() + "\n";
 	for (int i = 0; i < vout.size(); i++)
@@ -748,12 +751,12 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
-	nVersion = this->nVersion;
-	READWRITE(hashBlock);
-	READWRITE(vMerkleBranch);
-	READWRITE(nIndex);
-    )
+     nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
+     nVersion = this->nVersion;
+     READWRITE(hashBlock);
+     READWRITE(vMerkleBranch);
+     READWRITE(nIndex);
+     )
 
 
     int SetMerkleBranch(const CBlock* pblock=NULL);
@@ -841,49 +844,49 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	CWalletTx* pthis = const_cast<CWalletTx*>(this);
-	if (fRead)
-	    pthis->Init();
-	char fSpent = false;
+     CWalletTx* pthis = const_cast<CWalletTx*>(this);
+     if (fRead)
+	 pthis->Init();
+     char fSpent = false;
 
-	if (!fRead)
-	{
-	    pthis->mapValue["fromaccount"] = pthis->strFromAccount;
+     if (!fRead)
+	 {
+	     pthis->mapValue["fromaccount"] = pthis->strFromAccount;
 
-	    string str;
-	    foreach(char f, vfSpent)
-	    {
-		str += (f ? '1' : '0');
-		if (f)
-		    fSpent = true;
-	    }
-	    pthis->mapValue["spent"] = str;
-	}
+	     string str;
+	     foreach(char f, vfSpent)
+		 {
+		     str += (f ? '1' : '0');
+		     if (f)
+			 fSpent = true;
+		 }
+	     pthis->mapValue["spent"] = str;
+	 }
 
-	nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
-	READWRITE(vtxPrev);
-	READWRITE(mapValue);
-	READWRITE(vOrderForm);
-	READWRITE(fTimeReceivedIsTxTime);
-	READWRITE(nTimeReceived);
-	READWRITE(fFromMe);
-	READWRITE(fSpent);
+     nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
+     READWRITE(vtxPrev);
+     READWRITE(mapValue);
+     READWRITE(vOrderForm);
+     READWRITE(fTimeReceivedIsTxTime);
+     READWRITE(nTimeReceived);
+     READWRITE(fFromMe);
+     READWRITE(fSpent);
 
-	if (fRead)
-	{
-	    pthis->strFromAccount = pthis->mapValue["fromaccount"];
+     if (fRead)
+	 {
+	     pthis->strFromAccount = pthis->mapValue["fromaccount"];
 
-	    if (mapValue.count("spent"))
-		foreach(char c, pthis->mapValue["spent"])
-		    pthis->vfSpent.push_back(c != '0');
-	    else
-		pthis->vfSpent.assign(vout.size(), fSpent);
-	}
+	     if (mapValue.count("spent"))
+		 foreach(char c, pthis->mapValue["spent"])
+		     pthis->vfSpent.push_back(c != '0');
+	     else
+		 pthis->vfSpent.assign(vout.size(), fSpent);
+	 }
 
-	pthis->mapValue.erase("fromaccount");
-	pthis->mapValue.erase("version");
-	pthis->mapValue.erase("spent");
-    )
+     pthis->mapValue.erase("fromaccount");
+     pthis->mapValue.erase("version");
+     pthis->mapValue.erase("spent");
+     )
 
     // marks certain txout's as spent
     // returns true if any update took place
@@ -891,17 +894,17 @@ public:
     {
 	bool fReturn = false;
 	for (int i=0; i < vfNewSpent.size(); i++)
-	{
-	    if (i == vfSpent.size())
-		break;
-
-	    if (vfNewSpent[i] && !vfSpent[i])
 	    {
-		vfSpent[i] = true;
-		fReturn = true;
-		fAvailableCreditCached = false;
+		if (i == vfSpent.size())
+		    break;
+
+		if (vfNewSpent[i] && !vfSpent[i])
+		    {
+			vfSpent[i] = true;
+			fReturn = true;
+			fAvailableCreditCached = false;
+		    }
 	    }
-	}
 	return fReturn;
     }
 
@@ -919,10 +922,10 @@ public:
 	    throw runtime_error("CWalletTx::MarkSpent() : nOut out of range");
 	vfSpent.resize(vout.size());
 	if (!vfSpent[nOut])
-	{
-	    vfSpent[nOut] = true;
-	    fAvailableCreditCached = false;
-	}
+	    {
+		vfSpent[nOut] = true;
+		fAvailableCreditCached = false;
+	    }
     }
 
     bool IsSpent(unsigned int nOut) const
@@ -970,15 +973,15 @@ public:
 
 	int64 nCredit = 0;
 	for (int i = 0; i < vout.size(); i++)
-	{
-	    if (!IsSpent(i))
 	    {
-		const CTxOut &txout = vout[i];
-		nCredit += txout.GetCredit();
-		if (!MoneyRange(nCredit))
-		    throw runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+		if (!IsSpent(i))
+		    {
+			const CTxOut &txout = vout[i];
+			nCredit += txout.GetCredit();
+			if (!MoneyRange(nCredit))
+			    throw runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+		    }
 	    }
-	}
 
 	nAvailableCreditCached = nCredit;
 	fAvailableCreditCached = true;
@@ -1023,27 +1026,27 @@ public:
 	vWorkQueue.reserve(vtxPrev.size()+1);
 	vWorkQueue.push_back(this);
 	for (int i = 0; i < vWorkQueue.size(); i++)
-	{
-	    const CMerkleTx* ptx = vWorkQueue[i];
-
-	    if (!ptx->IsFinal())
-		return false;
-	    if (ptx->GetDepthInMainChain() >= 1)
-		continue;
-	    if (!ptx->IsFromMe())
-		return false;
-
-	    if (mapPrev.empty())
-		foreach(const CMerkleTx& tx, vtxPrev)
-		    mapPrev[tx.GetHash()] = &tx;
-
-	    foreach(const CTxIn& txin, ptx->vin)
 	    {
-		if (!mapPrev.count(txin.prevout.hash))
+		const CMerkleTx* ptx = vWorkQueue[i];
+
+		if (!ptx->IsFinal())
 		    return false;
-		vWorkQueue.push_back(mapPrev[txin.prevout.hash]);
+		if (ptx->GetDepthInMainChain() >= 1)
+		    continue;
+		if (!ptx->IsFromMe())
+		    return false;
+
+		if (mapPrev.empty())
+		    foreach(const CMerkleTx& tx, vtxPrev)
+			mapPrev[tx.GetHash()] = &tx;
+
+		foreach(const CTxIn& txin, ptx->vin)
+		    {
+			if (!mapPrev.count(txin.prevout.hash))
+			    return false;
+			vWorkQueue.push_back(mapPrev[txin.prevout.hash]);
+		    }
 	    }
-	}
 	return true;
     }
 
@@ -1092,11 +1095,11 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	if (!(nType & SER_GETHASH))
-	    READWRITE(nVersion);
-	READWRITE(pos);
-	READWRITE(vSpent);
-    )
+     if (!(nType & SER_GETHASH))
+	 READWRITE(nVersion);
+     READWRITE(pos);
+     READWRITE(vSpent);
+     )
 
     void SetNull()
     {
@@ -1162,20 +1165,20 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(this->nVersion);
-	nVersion = this->nVersion;
-	READWRITE(hashPrevBlock);
-	READWRITE(hashMerkleRoot);
-	READWRITE(nTime);
-	READWRITE(nBits);
-	READWRITE(nNonce);
+     READWRITE(this->nVersion);
+     nVersion = this->nVersion;
+     READWRITE(hashPrevBlock);
+     READWRITE(hashMerkleRoot);
+     READWRITE(nTime);
+     READWRITE(nBits);
+     READWRITE(nNonce);
 
-	// ConnectBlock depends on vtx being last so it can calculate offset
-	if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
-	    READWRITE(vtx);
-	else if (fRead)
-	    const_cast<CBlock*>(this)->vtx.clear();
-    )
+     // ConnectBlock depends on vtx being last so it can calculate offset
+     if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
+	 READWRITE(vtx);
+     else if (fRead)
+	 const_cast<CBlock*>(this)->vtx.clear();
+     )
 
     void SetNull()
     {
@@ -1220,15 +1223,15 @@ public:
 	    vMerkleTree.push_back(tx.GetHash());
 	int j = 0;
 	for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
-	{
-	    for (int i = 0; i < nSize; i += 2)
 	    {
-		int i2 = min(i+1, nSize-1);
-		vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
-					   BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
+		for (int i = 0; i < nSize; i += 2)
+		    {
+			int i2 = min(i+1, nSize-1);
+			vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
+						   BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
+		    }
+		j += nSize;
 	    }
-	    j += nSize;
-	}
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
     }
 
@@ -1239,12 +1242,12 @@ public:
 	vector<uint256> vMerkleBranch;
 	int j = 0;
 	for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
-	{
-	    int i = min(nIndex^1, nSize-1);
-	    vMerkleBranch.push_back(vMerkleTree[j+i]);
-	    nIndex >>= 1;
-	    j += nSize;
-	}
+	    {
+		int i = min(nIndex^1, nSize-1);
+		vMerkleBranch.push_back(vMerkleTree[j+i]);
+		nIndex >>= 1;
+		j += nSize;
+	    }
 	return vMerkleBranch;
     }
 
@@ -1253,13 +1256,13 @@ public:
 	if (nIndex == -1)
 	    return 0;
 	foreach(const uint256& otherside, vMerkleBranch)
-	{
-	    if (nIndex & 1)
-		hash = Hash(BEGIN(otherside), END(otherside), BEGIN(hash), END(hash));
-	    else
-		hash = Hash(BEGIN(hash), END(hash), BEGIN(otherside), END(otherside));
-	    nIndex >>= 1;
-	}
+	    {
+		if (nIndex & 1)
+		    hash = Hash(BEGIN(otherside), END(otherside), BEGIN(hash), END(hash));
+		else
+		    hash = Hash(BEGIN(hash), END(hash), BEGIN(otherside), END(otherside));
+		nIndex >>= 1;
+	    }
 	return hash;
     }
 
@@ -1284,13 +1287,13 @@ public:
 	// Flush stdio buffers and commit to disk before returning
 	fflush(fileout);
 	if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
-	{
+	    {
 #ifdef __WXMSW__
-	    _commit(_fileno(fileout));
+		_commit(_fileno(fileout));
 #else
-	    fsync(fileno(fileout));
+		fsync(fileno(fileout));
 #endif
-	}
+	    }
 
 	return true;
     }
@@ -1321,17 +1324,17 @@ public:
     void print() const
     {
 	printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%d)\n",
-	    GetHash().ToString().substr(0,20).c_str(),
-	    nVersion,
-	    hashPrevBlock.ToString().substr(0,20).c_str(),
-	    hashMerkleRoot.ToString().substr(0,10).c_str(),
-	    nTime, nBits, nNonce,
-	    vtx.size());
+	       GetHash().ToString().substr(0,20).c_str(),
+	       nVersion,
+	       hashPrevBlock.ToString().substr(0,20).c_str(),
+	       hashMerkleRoot.ToString().substr(0,10).c_str(),
+	       nTime, nBits, nNonce,
+	       vtx.size());
 	for (int i = 0; i < vtx.size(); i++)
-	{
-	    printf("  ");
-	    vtx[i].print();
-	}
+	    {
+		printf("  ");
+		vtx[i].print();
+	    }
 	printf("  vMerkleTree: ");
 	for (int i = 0; i < vMerkleTree.size(); i++)
 	    printf("%s ", vMerkleTree[i].ToString().substr(0,10).c_str());
@@ -1491,11 +1494,11 @@ public:
     {
 	const CBlockIndex* pindex = this;
 	for (int i = 0; i < nMedianTimeSpan/2; i++)
-	{
-	    if (!pindex->pnext)
-		return GetBlockTime();
-	    pindex = pindex->pnext;
-	}
+	    {
+		if (!pindex->pnext)
+		    return GetBlockTime();
+		pindex = pindex->pnext;
+	    }
 	return pindex->GetMedianTimePast();
     }
 
@@ -1504,9 +1507,9 @@ public:
     string ToString() const
     {
 	return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, merkle=%s, hashBlock=%s)",
-	    pprev, pnext, nFile, nBlockPos, nHeight,
-	    hashMerkleRoot.ToString().substr(0,10).c_str(),
-	    GetBlockHash().ToString().substr(0,20).c_str());
+			 pprev, pnext, nFile, nBlockPos, nHeight,
+			 hashMerkleRoot.ToString().substr(0,10).c_str(),
+			 GetBlockHash().ToString().substr(0,20).c_str());
     }
 
     void print() const
@@ -1540,22 +1543,22 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	if (!(nType & SER_GETHASH))
-	    READWRITE(nVersion);
+     if (!(nType & SER_GETHASH))
+	 READWRITE(nVersion);
 
-	READWRITE(hashNext);
-	READWRITE(nFile);
-	READWRITE(nBlockPos);
-	READWRITE(nHeight);
+     READWRITE(hashNext);
+     READWRITE(nFile);
+     READWRITE(nBlockPos);
+     READWRITE(nHeight);
 
-	// block header
-	READWRITE(this->nVersion);
-	READWRITE(hashPrev);
-	READWRITE(hashMerkleRoot);
-	READWRITE(nTime);
-	READWRITE(nBits);
-	READWRITE(nNonce);
-    )
+     // block header
+     READWRITE(this->nVersion);
+     READWRITE(hashPrev);
+     READWRITE(hashMerkleRoot);
+     READWRITE(nTime);
+     READWRITE(nBits);
+     READWRITE(nNonce);
+     )
 
     uint256 GetBlockHash() const
     {
@@ -1575,9 +1578,9 @@ public:
 	string str = "CDiskBlockIndex(";
 	str += CBlockIndex::ToString();
 	str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashNext=%s)",
-	    GetBlockHash().ToString().c_str(),
-	    hashPrev.ToString().substr(0,20).c_str(),
-	    hashNext.ToString().substr(0,20).c_str());
+			 GetBlockHash().ToString().c_str(),
+			 hashPrev.ToString().substr(0,20).c_str(),
+			 hashNext.ToString().substr(0,20).c_str());
 	return str;
     }
 
@@ -1623,10 +1626,10 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	if (!(nType & SER_GETHASH))
-	    READWRITE(nVersion);
-	READWRITE(vHave);
-    )
+     if (!(nType & SER_GETHASH))
+	 READWRITE(nVersion);
+     READWRITE(vHave);
+     )
 
     void SetNull()
     {
@@ -1643,15 +1646,15 @@ public:
 	vHave.clear();
 	int nStep = 1;
 	while (pindex)
-	{
-	    vHave.push_back(pindex->GetBlockHash());
+	    {
+		vHave.push_back(pindex->GetBlockHash());
 
-	    // Exponentially larger steps back
-	    for (int i = 0; pindex && i < nStep; i++)
-		pindex = pindex->pprev;
-	    if (vHave.size() > 10)
-		nStep *= 2;
-	}
+		// Exponentially larger steps back
+		for (int i = 0; pindex && i < nStep; i++)
+		    pindex = pindex->pprev;
+		if (vHave.size() > 10)
+		    nStep *= 2;
+	    }
 	vHave.push_back(hashGenesisBlock);
     }
 
@@ -1661,18 +1664,18 @@ public:
 	int nDistance = 0;
 	int nStep = 1;
 	foreach(const uint256& hash, vHave)
-	{
-	    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
-	    if (mi != mapBlockIndex.end())
 	    {
-		CBlockIndex* pindex = (*mi).second;
-		if (pindex->IsInMainChain())
-		    return nDistance;
+		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+		if (mi != mapBlockIndex.end())
+		    {
+			CBlockIndex* pindex = (*mi).second;
+			if (pindex->IsInMainChain())
+			    return nDistance;
+		    }
+		nDistance += nStep;
+		if (nDistance > 10)
+		    nStep *= 2;
 	    }
-	    nDistance += nStep;
-	    if (nDistance > 10)
-		nStep *= 2;
-	}
 	return nDistance;
     }
 
@@ -1680,15 +1683,15 @@ public:
     {
 	// Find the first block the caller has in the main chain
 	foreach(const uint256& hash, vHave)
-	{
-	    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
-	    if (mi != mapBlockIndex.end())
 	    {
-		CBlockIndex* pindex = (*mi).second;
-		if (pindex->IsInMainChain())
-		    return pindex;
+		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+		if (mi != mapBlockIndex.end())
+		    {
+			CBlockIndex* pindex = (*mi).second;
+			if (pindex->IsInMainChain())
+			    return pindex;
+		    }
 	    }
-	}
 	return pindexGenesisBlock;
     }
 
@@ -1696,15 +1699,15 @@ public:
     {
 	// Find the first block the caller has in the main chain
 	foreach(const uint256& hash, vHave)
-	{
-	    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
-	    if (mi != mapBlockIndex.end())
 	    {
-		CBlockIndex* pindex = (*mi).second;
-		if (pindex->IsInMainChain())
-		    return hash;
+		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+		if (mi != mapBlockIndex.end())
+		    {
+			CBlockIndex* pindex = (*mi).second;
+			if (pindex->IsInMainChain())
+			    return hash;
+		    }
 	    }
-	}
 	return hashGenesisBlock;
     }
 
@@ -1743,13 +1746,13 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	if (!(nType & SER_GETHASH))
-	    READWRITE(nVersion);
-	READWRITE(vchPrivKey);
-	READWRITE(nTimeCreated);
-	READWRITE(nTimeExpires);
-	READWRITE(strComment);
-    )
+     if (!(nType & SER_GETHASH))
+	 READWRITE(nVersion);
+     READWRITE(vchPrivKey);
+     READWRITE(nTimeCreated);
+     READWRITE(nTimeExpires);
+     READWRITE(strComment);
+     )
 };
 
 
@@ -1815,14 +1818,14 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	if (!(nType & SER_GETHASH))
-	    READWRITE(nVersion);
-	// Note: strAccount is serialized as part of the key, not here.
-	READWRITE(nCreditDebit);
-	READWRITE(nTime);
-	READWRITE(strOtherAccount);
-	READWRITE(strComment);
-    )
+     if (!(nType & SER_GETHASH))
+	 READWRITE(nVersion);
+     // Note: strAccount is serialized as part of the key, not here.
+     READWRITE(nCreditDebit);
+     READWRITE(nTime);
+     READWRITE(strOtherAccount);
+     READWRITE(strComment);
+     )
 };
 
 
@@ -1861,22 +1864,22 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(this->nVersion);
-	nVersion = this->nVersion;
-	READWRITE(nRelayUntil);
-	READWRITE(nExpiration);
-	READWRITE(nID);
-	READWRITE(nCancel);
-	READWRITE(setCancel);
-	READWRITE(nMinVer);
-	READWRITE(nMaxVer);
-	READWRITE(setSubVer);
-	READWRITE(nPriority);
+     READWRITE(this->nVersion);
+     nVersion = this->nVersion;
+     READWRITE(nRelayUntil);
+     READWRITE(nExpiration);
+     READWRITE(nID);
+     READWRITE(nCancel);
+     READWRITE(setCancel);
+     READWRITE(nMinVer);
+     READWRITE(nMaxVer);
+     READWRITE(setSubVer);
+     READWRITE(nPriority);
 
-	READWRITE(strComment);
-	READWRITE(strStatusBar);
-	READWRITE(strReserved);
-    )
+     READWRITE(strComment);
+     READWRITE(strStatusBar);
+     READWRITE(strReserved);
+     )
 
     void SetNull()
     {
@@ -1905,32 +1908,32 @@ public:
 	foreach(string str, setSubVer)
 	    strSetSubVer += "\"" + str + "\" ";
 	return strprintf(
-		"CAlert(\n"
-		"    nVersion     = %d\n"
-		"    nRelayUntil  = %"PRI64d"\n"
-		"    nExpiration  = %"PRI64d"\n"
-		"    nID          = %d\n"
-		"    nCancel      = %d\n"
-		"    setCancel    = %s\n"
-		"    nMinVer      = %d\n"
-		"    nMaxVer      = %d\n"
-		"    setSubVer    = %s\n"
-		"    nPriority    = %d\n"
-		"    strComment   = \"%s\"\n"
-		"    strStatusBar = \"%s\"\n"
-		")\n",
-	    nVersion,
-	    nRelayUntil,
-	    nExpiration,
-	    nID,
-	    nCancel,
-	    strSetCancel.c_str(),
-	    nMinVer,
-	    nMaxVer,
-	    strSetSubVer.c_str(),
-	    nPriority,
-	    strComment.c_str(),
-	    strStatusBar.c_str());
+			 "CAlert(\n"
+			 "    nVersion     = %d\n"
+			 "    nRelayUntil  = %"PRI64d"\n"
+			 "    nExpiration  = %"PRI64d"\n"
+			 "    nID          = %d\n"
+			 "    nCancel      = %d\n"
+			 "    setCancel    = %s\n"
+			 "    nMinVer      = %d\n"
+			 "    nMaxVer      = %d\n"
+			 "    setSubVer    = %s\n"
+			 "    nPriority    = %d\n"
+			 "    strComment   = \"%s\"\n"
+			 "    strStatusBar = \"%s\"\n"
+			 ")\n",
+			 nVersion,
+			 nRelayUntil,
+			 nExpiration,
+			 nID,
+			 nCancel,
+			 strSetCancel.c_str(),
+			 nMinVer,
+			 nMaxVer,
+			 strSetSubVer.c_str(),
+			 nPriority,
+			 strComment.c_str(),
+			 strStatusBar.c_str());
     }
 
     void print() const
@@ -1952,9 +1955,9 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(vchMsg);
-	READWRITE(vchSig);
-    )
+     READWRITE(vchMsg);
+     READWRITE(vchSig);
+     )
 
     void SetNull()
     {
@@ -2003,15 +2006,15 @@ public:
 	    return false;
 	// returns true if wasn't already contained in the set
 	if (pnode->setKnown.insert(GetHash()).second)
-	{
-	    if (AppliesTo(pnode->nVersion, pnode->strSubVer) ||
-		AppliesToMe() ||
-		GetAdjustedTime() < nRelayUntil)
 	    {
-		pnode->PushMessage("alert", *this);
-		return true;
+		if (AppliesTo(pnode->nVersion, pnode->strSubVer) ||
+		    AppliesToMe() ||
+		    GetAdjustedTime() < nRelayUntil)
+		    {
+			pnode->PushMessage("alert", *this);
+			return true;
+		    }
 	    }
-	}
 	return false;
     }
 
@@ -2049,3 +2052,5 @@ extern map<vector<unsigned char>, CPrivKey> mapKeys;
 extern map<uint160, vector<unsigned char> > mapPubKeys;
 extern CCriticalSection cs_mapKeys;
 extern CKey keyUser;
+
+#endif // !MAIN_H

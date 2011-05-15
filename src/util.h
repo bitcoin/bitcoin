@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef UTIL_H
+#define UTIL_H
 
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 typedef __int64  int64;
@@ -459,17 +461,17 @@ inline void heapchk()
 	if (nLoops <= 0)                        \
 	    nLoops = GetRand(20) + 1;           \
 	if (nLoops-- > 1)                       \
-	{                                       \
-	    ThreadFn;                           \
-	    return;                             \
-	}                                       \
+	    {					\
+		ThreadFn;			\
+		return;				\
+	    }					\
     }
 
-#define CATCH_PRINT_EXCEPTION(pszFn)     \
-    catch (std::exception& e) {          \
-	PrintException(&e, (pszFn));     \
-    } catch (...) {                      \
-	PrintException(NULL, (pszFn));   \
+#define CATCH_PRINT_EXCEPTION(pszFn)		\
+    catch (std::exception& e) {			\
+	PrintException(&e, (pszFn));		\
+    } catch (...) {				\
+	PrintException(NULL, (pszFn));		\
     }
 
 
@@ -567,22 +569,22 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
     DWORD nUnused = 0;
     HANDLE hthread =
 	CreateThread(
-	    NULL,                        // default security
-	    0,                           // inherit stack size from parent
-	    (LPTHREAD_START_ROUTINE)pfn, // function pointer
-	    parg,                        // argument
-	    0,                           // creation option, start immediately
-	    &nUnused);                   // thread identifier
+		     NULL,                        // default security
+		     0,                           // inherit stack size from parent
+		     (LPTHREAD_START_ROUTINE)pfn, // function pointer
+		     parg,                        // argument
+		     0,                           // creation option, start immediately
+		     &nUnused);                   // thread identifier
     if (hthread == NULL)
-    {
-	printf("Error: CreateThread() returned %d\n", GetLastError());
-	return (pthread_t)0;
-    }
+	{
+	    printf("Error: CreateThread() returned %d\n", GetLastError());
+	    return (pthread_t)0;
+	}
     if (!fWantHandle)
-    {
-	CloseHandle(hthread);
-	return (pthread_t)-1;
-    }
+	{
+	    CloseHandle(hthread);
+	    return (pthread_t)-1;
+	}
     return hthread;
 }
 
@@ -596,10 +598,10 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
     pthread_t hthread = 0;
     int ret = pthread_create(&hthread, NULL, (void*(*)(void*))pfn, parg);
     if (ret != 0)
-    {
-	printf("Error: pthread_create() returned %d\n", ret);
-	return (pthread_t)0;
-    }
+	{
+	    printf("Error: pthread_create() returned %d\n", ret);
+	    return (pthread_t)0;
+	}
     if (!fWantHandle)
 	return (pthread_t)-1;
     return hthread;
@@ -646,12 +648,14 @@ inline bool AffinityBugWorkaround(void(*pfn)(void*))
     DWORD dwPrev1 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
     DWORD dwPrev2 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
     if (dwPrev2 != dwProcessAffinityMask)
-    {
-	printf("AffinityBugWorkaround() : SetThreadAffinityMask=%d, ProcessAffinityMask=%d, restarting thread\n", dwPrev2, dwProcessAffinityMask);
-	if (!CreateThread(pfn, NULL))
-	    printf("Error: CreateThread() failed\n");
-	return true;
-    }
+	{
+	    printf("AffinityBugWorkaround() : SetThreadAffinityMask=%d, ProcessAffinityMask=%d, restarting thread\n", dwPrev2, dwProcessAffinityMask);
+	    if (!CreateThread(pfn, NULL))
+		printf("Error: CreateThread() failed\n");
+	    return true;
+	}
 #endif
     return false;
 }
+
+#endif // !UTIL_H

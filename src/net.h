@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef NET_H
+#define NET_H
+
 class CMessageHeader;
 class CAddress;
 class CInv;
@@ -15,9 +18,9 @@ extern int nBestHeight;
 inline unsigned short GetDefaultPort() { return fTestNet ? 18333 : 8333; }
 static const unsigned int PUBLISH_HOPS = 5;
 enum
-{
-    NODE_NETWORK = (1 << 0),
-};
+    {
+	NODE_NETWORK = (1 << 0),
+    };
 
 
 
@@ -82,12 +85,12 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(FLATDATA(pchMessageStart));
-	READWRITE(FLATDATA(pchCommand));
-	READWRITE(nMessageSize);
-	if (nVersion >= 209)
-	    READWRITE(nChecksum);
-    )
+     READWRITE(FLATDATA(pchMessageStart));
+     READWRITE(FLATDATA(pchCommand));
+     READWRITE(nMessageSize);
+     if (nVersion >= 209)
+	 READWRITE(nChecksum);
+     )
 
     string GetCommand()
     {
@@ -105,24 +108,24 @@ public:
 
 	// Check the command string for errors
 	for (char* p1 = pchCommand; p1 < pchCommand + COMMAND_SIZE; p1++)
-	{
-	    if (*p1 == 0)
 	    {
-		// Must be all zeros after the first zero
-		for (; p1 < pchCommand + COMMAND_SIZE; p1++)
-		    if (*p1 != 0)
-			return false;
+		if (*p1 == 0)
+		    {
+			// Must be all zeros after the first zero
+			for (; p1 < pchCommand + COMMAND_SIZE; p1++)
+			    if (*p1 != 0)
+				return false;
+		    }
+		else if (*p1 < ' ' || *p1 > 0x7E)
+		    return false;
 	    }
-	    else if (*p1 < ' ' || *p1 > 0x7E)
-		return false;
-	}
 
 	// Message size
 	if (nMessageSize > MAX_SIZE)
-	{
-	    printf("CMessageHeader::IsValid() : (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand().c_str(), nMessageSize);
-	    return false;
-	}
+	    {
+		printf("CMessageHeader::IsValid() : (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand().c_str(), nMessageSize);
+		return false;
+	    }
 
 	return true;
     }
@@ -206,17 +209,17 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	if (fRead)
-	    const_cast<CAddress*>(this)->Init();
-	if (nType & SER_DISK)
-	    READWRITE(nVersion);
-	if ((nType & SER_DISK) || (nVersion >= 31402 && !(nType & SER_GETHASH)))
-	    READWRITE(nTime);
-	READWRITE(nServices);
-	READWRITE(FLATDATA(pchReserved)); // for IPv6
-	READWRITE(ip);
-	READWRITE(port);
-    )
+     if (fRead)
+	 const_cast<CAddress*>(this)->Init();
+     if (nType & SER_DISK)
+	 READWRITE(nVersion);
+     if ((nType & SER_DISK) || (nVersion >= 31402 && !(nType & SER_GETHASH)))
+	 READWRITE(nTime);
+     READWRITE(nServices);
+     READWRITE(FLATDATA(pchReserved)); // for IPv6
+     READWRITE(ip);
+     READWRITE(port);
+     )
 
     friend inline bool operator==(const CAddress& a, const CAddress& b)
     {
@@ -236,12 +239,12 @@ public:
 	if (ret < 0)
 	    return true;
 	else if (ret == 0)
-	{
-	    if (ntohl(a.ip) < ntohl(b.ip))
-		return true;
-	    else if (a.ip == b.ip)
-		return ntohs(a.port) < ntohs(b.port);
-	}
+	    {
+		if (ntohl(a.ip) < ntohl(b.ip))
+		    return true;
+		else if (a.ip == b.ip)
+		    return ntohs(a.port) < ntohs(b.port);
+	    }
 	return false;
     }
 
@@ -251,11 +254,11 @@ public:
 	ss.reserve(18);
 	ss << FLATDATA(pchReserved) << ip << port;
 
-	#if defined(_MSC_VER) && _MSC_VER < 1300
+#if defined(_MSC_VER) && _MSC_VER < 1300
 	return vector<unsigned char>((unsigned char*)&ss.begin()[0], (unsigned char*)&ss.end()[0]);
-	#else
+#else
 	return vector<unsigned char>(ss.begin(), ss.end());
-	#endif
+#endif
     }
 
     struct sockaddr_in GetSockAddr() const
@@ -334,17 +337,17 @@ public:
 
 
 enum
-{
-    MSG_TX = 1,
-    MSG_BLOCK,
-};
+    {
+	MSG_TX = 1,
+	MSG_BLOCK,
+    };
 
 static const char* ppszTypeName[] =
-{
-    "ERROR",
-    "tx",
-    "block",
-};
+    {
+	"ERROR",
+	"tx",
+	"block",
+    };
 
 class CInv
 {
@@ -368,13 +371,13 @@ public:
     {
 	int i;
 	for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
-	{
-	    if (strType == ppszTypeName[i])
 	    {
-		type = i;
-		break;
+		if (strType == ppszTypeName[i])
+		    {
+			type = i;
+			break;
+		    }
 	    }
-	}
 	if (i == ARRAYLEN(ppszTypeName))
 	    throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType.c_str()));
 	hash = hashIn;
@@ -382,9 +385,9 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	READWRITE(type);
-	READWRITE(hash);
-    )
+     READWRITE(type);
+     READWRITE(hash);
+     )
 
     friend inline bool operator<(const CInv& a, const CInv& b)
     {
@@ -528,10 +531,10 @@ public:
 	vRecv.SetVersion(0);
 	// Version 0.2 obsoletes 20 Feb 2012
 	if (GetTime() > 1329696000)
-	{
-	    vSend.SetVersion(209);
-	    vRecv.SetVersion(209);
-	}
+	    {
+		vSend.SetVersion(209);
+		vRecv.SetVersion(209);
+	    }
 	nLastSend = 0;
 	nLastRecv = 0;
 	nLastSendEmpty = GetTime();
@@ -563,10 +566,10 @@ public:
     ~CNode()
     {
 	if (hSocket != INVALID_SOCKET)
-	{
-	    closesocket(hSocket);
-	    hSocket = INVALID_SOCKET;
-	}
+	    {
+		closesocket(hSocket);
+		hSocket = INVALID_SOCKET;
+	    }
     }
 
 private:
@@ -670,11 +673,11 @@ public:
     void EndMessage()
     {
 	if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
-	{
-	    printf("dropmessages DROPPING SEND MESSAGE\n");
-	    AbortMessage();
-	    return;
-	}
+	    {
+		printf("dropmessages DROPPING SEND MESSAGE\n");
+		AbortMessage();
+		return;
+	    }
 
 	if (nHeaderStart == -1)
 	    return;
@@ -685,13 +688,13 @@ public:
 
 	// Set the checksum
 	if (vSend.GetVersion() >= 209)
-	{
-	    uint256 hash = Hash(vSend.begin() + nMessageStart, vSend.end());
-	    unsigned int nChecksum = 0;
-	    memcpy(&nChecksum, &hash, sizeof(nChecksum));
-	    assert(nMessageStart - nHeaderStart >= offsetof(CMessageHeader, nChecksum) + sizeof(nChecksum));
-	    memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
-	}
+	    {
+		uint256 hash = Hash(vSend.begin() + nMessageStart, vSend.end());
+		unsigned int nChecksum = 0;
+		memcpy(&nChecksum, &hash, sizeof(nChecksum));
+		assert(nMessageStart - nHeaderStart >= offsetof(CMessageHeader, nChecksum) + sizeof(nChecksum));
+		memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
+	    }
 
 	printf("(%d bytes) ", nSize);
 	printf("\n");
@@ -722,7 +725,7 @@ public:
 	CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
 	RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
 	PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe,
-		nLocalHostNonce, string(pszSubVer), nBestHeight);
+		    nLocalHostNonce, string(pszSubVer), nBestHeight);
     }
 
 
@@ -731,159 +734,159 @@ public:
     void PushMessage(const char* pszCommand)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1>
     void PushMessage(const char* pszCommand, const T1& a1)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2, typename T3>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2 << a3;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2 << a3;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2, typename T3, typename T4>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2 << a3 << a4;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2 << a3 << a4;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2 << a3 << a4 << a5;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2 << a3 << a4 << a5;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2 << a3 << a4 << a5 << a6;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2 << a3 << a4 << a5 << a6;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8, const T9& a9)
     {
 	try
-	{
-	    BeginMessage(pszCommand);
-	    vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
-	    EndMessage();
-	}
+	    {
+		BeginMessage(pszCommand);
+		vSend << a1 << a2 << a3 << a4 << a5 << a6 << a7 << a8 << a9;
+		EndMessage();
+	    }
 	catch (...)
-	{
-	    AbortMessage();
-	    throw;
-	}
+	    {
+		AbortMessage();
+		throw;
+	    }
     }
 
 
@@ -949,7 +952,7 @@ inline void RelayInventory(const CInv& inv)
     // Put on lists to offer to the other nodes
     CRITICAL_BLOCK(cs_vNodes)
 	foreach(CNode* pnode, vNodes)
-	    pnode->PushInventory(inv);
+	pnode->PushInventory(inv);
 }
 
 template<typename T>
@@ -968,10 +971,10 @@ inline void RelayMessage<>(const CInv& inv, const CDataStream& ss)
     {
 	// Expire old relay messages
 	while (!vRelayExpiration.empty() && vRelayExpiration.front().first < GetTime())
-	{
-	    mapRelay.erase(vRelayExpiration.front().second);
-	    vRelayExpiration.pop_front();
-	}
+	    {
+		mapRelay.erase(vRelayExpiration.front().second);
+		vRelayExpiration.pop_front();
+	    }
 
 	// Save original serialized message so newer versions are preserved
 	mapRelay[inv] = ss;
@@ -1008,8 +1011,8 @@ void AdvertStartPublish(CNode* pfrom, unsigned int nChannel, unsigned int nHops,
     // Relay
     CRITICAL_BLOCK(cs_vNodes)
 	foreach(CNode* pnode, vNodes)
-	    if (pnode != pfrom && (nHops < PUBLISH_HOPS || pnode->IsSubscribed(nChannel)))
-		pnode->PushMessage("publish", nChannel, nHops, obj);
+	if (pnode != pfrom && (nHops < PUBLISH_HOPS || pnode->IsSubscribed(nChannel)))
+	    pnode->PushMessage("publish", nChannel, nHops, obj);
 }
 
 template<typename T>
@@ -1019,8 +1022,8 @@ void AdvertStopPublish(CNode* pfrom, unsigned int nChannel, unsigned int nHops, 
 
     CRITICAL_BLOCK(cs_vNodes)
 	foreach(CNode* pnode, vNodes)
-	    if (pnode != pfrom && (nHops < PUBLISH_HOPS || pnode->IsSubscribed(nChannel)))
-		pnode->PushMessage("pub-cancel", nChannel, nHops, hash);
+	if (pnode != pfrom && (nHops < PUBLISH_HOPS || pnode->IsSubscribed(nChannel)))
+	    pnode->PushMessage("pub-cancel", nChannel, nHops, hash);
 
     AdvertErase(obj);
 }

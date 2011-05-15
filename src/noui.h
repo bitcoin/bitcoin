@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef NOUI_H
+#define NOUI_H
 
 typedef void wxWindow;
 #define wxYES                   0x00000002
@@ -60,3 +62,5 @@ inline void UIThreadCall(boost::function0<void> fn)
 inline void MainFrameRepaint()
 {
 }
+
+#endif // !NOUI_H

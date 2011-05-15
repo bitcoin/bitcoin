@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef DB_H
+#define DB_H
+
 class CTransaction;
 class CTxIndex;
 class CDiskBlockIndex;
@@ -167,16 +170,16 @@ protected:
 	// Read at cursor
 	Dbt datKey;
 	if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
-	{
-	    datKey.set_data(&ssKey[0]);
-	    datKey.set_size(ssKey.size());
-	}
+	    {
+		datKey.set_data(&ssKey[0]);
+		datKey.set_size(ssKey.size());
+	    }
 	Dbt datValue;
 	if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
-	{
-	    datValue.set_data(&ssValue[0]);
-	    datValue.set_size(ssValue.size());
-	}
+	    {
+		datValue.set_data(&ssValue[0]);
+		datValue.set_size(ssValue.size());
+	    }
 	datKey.set_flags(DB_DBT_MALLOC);
 	datValue.set_flags(DB_DBT_MALLOC);
 	int ret = pcursor->get(&datKey, &datValue, fFlags);
@@ -333,11 +336,11 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-	if (!(nType & SER_GETHASH))
-	    READWRITE(nVersion);
-	READWRITE(nTime);
-	READWRITE(vchPubKey);
-    )
+     if (!(nType & SER_GETHASH))
+	 READWRITE(nVersion);
+     READWRITE(nTime);
+     READWRITE(vchPubKey);
+     )
 };
 
 
@@ -487,11 +490,11 @@ public:
     vector<unsigned char> GetReservedKey()
     {
 	if (nIndex == -1)
-	{
-	    CKeyPool keypool;
-	    CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
-	    vchPubKey = keypool.vchPubKey;
-	}
+	    {
+		CKeyPool keypool;
+		CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
+		vchPubKey = keypool.vchPubKey;
+	    }
 	assert(!vchPubKey.empty());
 	return vchPubKey;
     }
@@ -512,3 +515,5 @@ public:
 	vchPubKey.clear();
     }
 };
+
+#endif // !DB_H

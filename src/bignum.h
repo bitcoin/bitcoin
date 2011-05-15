@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef BIGNUM_H
+#define BIGNUM_H
+
 #include <stdexcept>
 #include <vector>
 #include <openssl/bn.h>
@@ -58,10 +61,10 @@ public:
     {
 	BN_init(this);
 	if (!BN_copy(this, &b))
-	{
-	    BN_clear_free(this);
-	    throw bignum_error("CBigNum::CBigNum(const CBigNum&) : BN_copy failed");
-	}
+	    {
+		BN_clear_free(this);
+		throw bignum_error("CBigNum::CBigNum(const CBigNum&) : BN_copy failed");
+	    }
     }
 
     CBigNum& operator=(const CBigNum& b)
@@ -125,27 +128,27 @@ public:
 	unsigned char* p = pch + 4;
 	bool fNegative = false;
 	if (n < (int64)0)
-	{
-	    n = -n;
-	    fNegative = true;
-	}
+	    {
+		n = -n;
+		fNegative = true;
+	    }
 	bool fLeadingZeroes = true;
 	for (int i = 0; i < 8; i++)
-	{
-	    unsigned char c = (n >> 56) & 0xff;
-	    n <<= 8;
-	    if (fLeadingZeroes)
 	    {
-		if (c == 0)
-		    continue;
-		if (c & 0x80)
-		    *p++ = (fNegative ? 0x80 : 0);
-		else if (fNegative)
-		    c |= 0x80;
-		fLeadingZeroes = false;
+		unsigned char c = (n >> 56) & 0xff;
+		n <<= 8;
+		if (fLeadingZeroes)
+		    {
+			if (c == 0)
+			    continue;
+			if (c & 0x80)
+			    *p++ = (fNegative ? 0x80 : 0);
+			else if (fNegative)
+			    c |= 0x80;
+			fLeadingZeroes = false;
+		    }
+		*p++ = c;
 	    }
-	    *p++ = c;
-	}
 	unsigned int nSize = p - (pch + 4);
 	pch[0] = (nSize >> 24) & 0xff;
 	pch[1] = (nSize >> 16) & 0xff;
@@ -160,19 +163,19 @@ public:
 	unsigned char* p = pch + 4;
 	bool fLeadingZeroes = true;
 	for (int i = 0; i < 8; i++)
-	{
-	    unsigned char c = (n >> 56) & 0xff;
-	    n <<= 8;
-	    if (fLeadingZeroes)
 	    {
-		if (c == 0)
-		    continue;
-		if (c & 0x80)
-		    *p++ = 0;
-		fLeadingZeroes = false;
+		unsigned char c = (n >> 56) & 0xff;
+		n <<= 8;
+		if (fLeadingZeroes)
+		    {
+			if (c == 0)
+			    continue;
+			if (c & 0x80)
+			    *p++ = 0;
+			fLeadingZeroes = false;
+		    }
+		*p++ = c;
 	    }
-	    *p++ = c;
-	}
 	unsigned int nSize = p - (pch + 4);
 	pch[0] = (nSize >> 24) & 0xff;
 	pch[1] = (nSize >> 16) & 0xff;
@@ -189,18 +192,18 @@ public:
 	unsigned char* pbegin = (unsigned char*)&n;
 	unsigned char* psrc = pbegin + sizeof(n);
 	while (psrc != pbegin)
-	{
-	    unsigned char c = *(--psrc);
-	    if (fLeadingZeroes)
 	    {
-		if (c == 0)
-		    continue;
-		if (c & 0x80)
-		    *p++ = 0;
-		fLeadingZeroes = false;
+		unsigned char c = *(--psrc);
+		if (fLeadingZeroes)
+		    {
+			if (c == 0)
+			    continue;
+			if (c & 0x80)
+			    *p++ = 0;
+			fLeadingZeroes = false;
+		    }
+		*p++ = c;
 	    }
-	    *p++ = c;
-	}
 	unsigned int nSize = p - (pch + 4);
 	pch[0] = (nSize >> 24) & 0xff;
 	pch[1] = (nSize >> 16) & 0xff;
@@ -281,10 +284,10 @@ public:
 	    psz++;
 	bool fNegative = false;
 	if (*psz == '-')
-	{
-	    fNegative = true;
-	    psz++;
-	}
+	    {
+		fNegative = true;
+		psz++;
+	    }
 	if (psz[0] == '0' && tolower(psz[1]) == 'x')
 	    psz += 2;
 	while (isspace(*psz))
@@ -294,11 +297,11 @@ public:
 	static char phexdigit[256] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0 };
 	*this = 0;
 	while (isxdigit(*psz))
-	{
-	    *this <<= 4;
-	    int n = phexdigit[*psz++];
-	    *this += n;
-	}
+	    {
+		*this <<= 4;
+		int n = phexdigit[*psz++];
+		*this += n;
+	    }
 	if (fNegative)
 	    *this = 0 - *this;
     }
@@ -316,13 +319,13 @@ public:
 	if (BN_cmp(&bn, &bn0) == 0)
 	    return "0";
 	while (BN_cmp(&bn, &bn0) > 0)
-	{
-	    if (!BN_div(&dv, &rem, &bn, &bnBase, pctx))
-		throw bignum_error("CBigNum::ToString() : BN_div failed");
-	    bn = dv;
-	    unsigned int c = rem.getulong();
-	    str += "0123456789abcdef"[c];
-	}
+	    {
+		if (!BN_div(&dv, &rem, &bn, &bnBase, pctx))
+		    throw bignum_error("CBigNum::ToString() : BN_div failed");
+		bn = dv;
+		unsigned int c = rem.getulong();
+		str += "0123456789abcdef"[c];
+	    }
 	if (BN_is_negative(this))
 	    str += "-";
 	reverse(str.begin(), str.end());
@@ -406,10 +409,10 @@ public:
 	CBigNum a = 1;
 	a <<= shift;
 	if (BN_cmp(&a, this) > 0)
-	{
-	    *this = 0;
-	    return *this;
-	}
+	    {
+		*this = 0;
+		return *this;
+	    }
 
 	if (!BN_rshift(this, this, shift))
 	    throw bignum_error("CBigNum:operator>>= : BN_rshift failed");
@@ -530,3 +533,5 @@ inline bool operator<=(const CBigNum& a, const CBigNum& b) { return (BN_cmp(&a, 
 inline bool operator>=(const CBigNum& a, const CBigNum& b) { return (BN_cmp(&a, &b) >= 0); }
 inline bool operator<(const CBigNum& a, const CBigNum& b)  { return (BN_cmp(&a, &b) < 0); }
 inline bool operator>(const CBigNum& a, const CBigNum& b)  { return (BN_cmp(&a, &b) > 0); }
+
+#endif // !BIGNUM_H

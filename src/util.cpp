@@ -71,7 +71,7 @@ public:
 	OPENSSL_free(ppmutexOpenSSL);
     }
 }
-instance_of_cinit;
+    instance_of_cinit;
 
 
 
@@ -107,11 +107,11 @@ void RandAddSeedPerfmon()
     long ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, pdata, &nSize);
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS)
-    {
-	RAND_add(pdata, nSize, nSize/100.0);
-	memset(pdata, 0, nSize);
-	printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M", GetTime()).c_str(), nSize);
-    }
+	{
+	    RAND_add(pdata, nSize, nSize/100.0);
+	    memset(pdata, 0, nSize);
+	    printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M", GetTime()).c_str(), nSize);
+	}
 #endif
 }
 
@@ -149,86 +149,86 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
 {
     int ret = 0;
     if (fPrintToConsole)
-    {
-	// print to console
-	va_list arg_ptr;
-	va_start(arg_ptr, pszFormat);
-	ret = vprintf(pszFormat, arg_ptr);
-	va_end(arg_ptr);
-    }
-    else
-    {
-	// print to debug.log
-	static FILE* fileout = NULL;
-
-	if (!fileout)
 	{
-	    char pszFile[MAX_PATH+100];
-	    GetDataDir(pszFile);
-	    strlcat(pszFile, "/debug.log", sizeof(pszFile));
-	    fileout = fopen(pszFile, "a");
-	    if (fileout) setbuf(fileout, NULL); // unbuffered
-	}
-	if (fileout)
-	{
-	    static bool fStartedNewLine = true;
-
-	    // Debug print useful for profiling
-	    if (fLogTimestamps && fStartedNewLine)
-		fprintf(fileout, "%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
-	    if (pszFormat[strlen(pszFormat) - 1] == '\n')
-		fStartedNewLine = true;
-	    else
-		fStartedNewLine = false;
-
+	    // print to console
 	    va_list arg_ptr;
 	    va_start(arg_ptr, pszFormat);
-	    ret = vfprintf(fileout, pszFormat, arg_ptr);
+	    ret = vprintf(pszFormat, arg_ptr);
 	    va_end(arg_ptr);
 	}
-    }
+    else
+	{
+	    // print to debug.log
+	    static FILE* fileout = NULL;
+
+	    if (!fileout)
+		{
+		    char pszFile[MAX_PATH+100];
+		    GetDataDir(pszFile);
+		    strlcat(pszFile, "/debug.log", sizeof(pszFile));
+		    fileout = fopen(pszFile, "a");
+		    if (fileout) setbuf(fileout, NULL); // unbuffered
+		}
+	    if (fileout)
+		{
+		    static bool fStartedNewLine = true;
+
+		    // Debug print useful for profiling
+		    if (fLogTimestamps && fStartedNewLine)
+			fprintf(fileout, "%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+		    if (pszFormat[strlen(pszFormat) - 1] == '\n')
+			fStartedNewLine = true;
+		    else
+			fStartedNewLine = false;
+
+		    va_list arg_ptr;
+		    va_start(arg_ptr, pszFormat);
+		    ret = vfprintf(fileout, pszFormat, arg_ptr);
+		    va_end(arg_ptr);
+		}
+	}
 
 #ifdef __WXMSW__
     if (fPrintToDebugger)
-    {
-	static CCriticalSection cs_OutputDebugStringF;
-
-	// accumulate a line at a time
-	CRITICAL_BLOCK(cs_OutputDebugStringF)
 	{
-	    static char pszBuffer[50000];
-	    static char* pend;
-	    if (pend == NULL)
-		pend = pszBuffer;
-	    va_list arg_ptr;
-	    va_start(arg_ptr, pszFormat);
-	    int limit = END(pszBuffer) - pend - 2;
-	    int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
-	    va_end(arg_ptr);
-	    if (ret < 0 || ret >= limit)
+	    static CCriticalSection cs_OutputDebugStringF;
+
+	    // accumulate a line at a time
+	    CRITICAL_BLOCK(cs_OutputDebugStringF)
 	    {
-		pend = END(pszBuffer) - 2;
-		*pend++ = '\n';
+		static char pszBuffer[50000];
+		static char* pend;
+		if (pend == NULL)
+		    pend = pszBuffer;
+		va_list arg_ptr;
+		va_start(arg_ptr, pszFormat);
+		int limit = END(pszBuffer) - pend - 2;
+		int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
+		va_end(arg_ptr);
+		if (ret < 0 || ret >= limit)
+		    {
+			pend = END(pszBuffer) - 2;
+			*pend++ = '\n';
+		    }
+		else
+		    pend += ret;
+		*pend = '\0';
+		char* p1 = pszBuffer;
+		char* p2;
+		while (p2 = strchr(p1, '\n'))
+		    {
+			p2++;
+			char c = *p2;
+			*p2 = '\0';
+			OutputDebugStringA(p1);
+			*p2 = c;
+			p1 = p2;
+		    }
+		if (p1 != pszBuffer)
+		    memmove(pszBuffer, p1, pend - p1 + 1);
+		pend -= (p1 - pszBuffer);
 	    }
-	    else
-		pend += ret;
-	    *pend = '\0';
-	    char* p1 = pszBuffer;
-	    char* p2;
-	    while (p2 = strchr(p1, '\n'))
-	    {
-		p2++;
-		char c = *p2;
-		*p2 = '\0';
-		OutputDebugStringA(p1);
-		*p2 = c;
-		p1 = p2;
-	    }
-	    if (p1 != pszBuffer)
-		memmove(pszBuffer, p1, pend - p1 + 1);
-	    pend -= (p1 - pszBuffer);
 	}
-    }
 #endif
     return ret;
 }
@@ -247,10 +247,10 @@ int my_snprintf(char* buffer, size_t limit, const char* format, ...)
     int ret = _vsnprintf(buffer, limit, format, arg_ptr);
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
-    {
-	ret = limit - 1;
-	buffer[limit-1] = 0;
-    }
+	{
+	    ret = limit - 1;
+	    buffer[limit-1] = 0;
+	}
     return ret;
 }
 
@@ -262,20 +262,20 @@ string strprintf(const char* format, ...)
     int limit = sizeof(buffer);
     int ret;
     loop
-    {
-	va_list arg_ptr;
-	va_start(arg_ptr, format);
-	ret = _vsnprintf(p, limit, format, arg_ptr);
-	va_end(arg_ptr);
-	if (ret >= 0 && ret < limit)
-	    break;
-	if (p != buffer)
-	    delete p;
-	limit *= 2;
-	p = new char[limit];
-	if (p == NULL)
-	    throw std::bad_alloc();
-    }
+	{
+	    va_list arg_ptr;
+	    va_start(arg_ptr, format);
+	    ret = _vsnprintf(p, limit, format, arg_ptr);
+	    va_end(arg_ptr);
+	    if (ret >= 0 && ret < limit)
+		break;
+	    if (p != buffer)
+		delete p;
+	    limit *= 2;
+	    p = new char[limit];
+	    if (p == NULL)
+		throw std::bad_alloc();
+	}
     string str(p, p+ret);
     if (p != buffer)
 	delete p;
@@ -292,10 +292,10 @@ bool error(const char* format, ...)
     int ret = _vsnprintf(buffer, limit, format, arg_ptr);
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
-    {
-	ret = limit - 1;
-	buffer[limit-1] = 0;
-    }
+	{
+	    ret = limit - 1;
+	    buffer[limit-1] = 0;
+	}
     printf("ERROR: %s\n", buffer);
     return false;
 }
@@ -308,16 +308,16 @@ void ParseString(const string& str, char c, vector<string>& v)
     string::size_type i1 = 0;
     string::size_type i2;
     loop
-    {
-	i2 = str.find(c, i1);
-	if (i2 == str.npos)
 	{
-	    v.push_back(str.substr(i1));
-	    return;
+	    i2 = str.find(c, i1);
+	    if (i2 == str.npos)
+		{
+		    v.push_back(str.substr(i1));
+		    return;
+		}
+	    v.push_back(str.substr(i1, i2-i1));
+	    i1 = i2+1;
 	}
-	v.push_back(str.substr(i1, i2-i1));
-	i1 = i2+1;
-    }
 }
 
 
@@ -363,26 +363,26 @@ bool ParseMoney(const char* pszIn, int64& nRet)
     while (isspace(*p))
 	p++;
     for (; *p; p++)
-    {
-	if (*p == ',' && p > pszIn && isdigit(p[-1]) && isdigit(p[1]) && isdigit(p[2]) && isdigit(p[3]) && !isdigit(p[4]))
-	    continue;
-	if (*p == '.')
 	{
-	    p++;
-	    int64 nMult = CENT*10;
-	    while (isdigit(*p) && (nMult > 0))
-	    {
-		nUnits += nMult * (*p++ - '0');
-		nMult /= 10;
-	    }
-	    break;
+	    if (*p == ',' && p > pszIn && isdigit(p[-1]) && isdigit(p[1]) && isdigit(p[2]) && isdigit(p[3]) && !isdigit(p[4]))
+		continue;
+	    if (*p == '.')
+		{
+		    p++;
+		    int64 nMult = CENT*10;
+		    while (isdigit(*p) && (nMult > 0))
+			{
+			    nUnits += nMult * (*p++ - '0');
+			    nMult /= 10;
+			}
+		    break;
+		}
+	    if (isspace(*p))
+		break;
+	    if (!isdigit(*p))
+		return false;
+	    strWhole.insert(strWhole.end(), *p);
 	}
-	if (isspace(*p))
-	    break;
-	if (!isdigit(*p))
-	    return false;
-	strWhole.insert(strWhole.end(), *p);
-    }
     for (; *p; p++)
 	if (!isspace(*p))
 	    return false;
@@ -401,39 +401,39 @@ bool ParseMoney(const char* pszIn, int64& nRet)
 vector<unsigned char> ParseHex(const char* psz)
 {
     static char phexdigit[256] =
-    { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,
-      -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, };
+	{ -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,
+	  -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, };
 
     // convert hex dump to vector
     vector<unsigned char> vch;
     loop
-    {
-	while (isspace(*psz))
-	    psz++;
-	char c = phexdigit[(unsigned char)*psz++];
-	if (c == (char)-1)
-	    break;
-	unsigned char n = (c << 4);
-	c = phexdigit[(unsigned char)*psz++];
-	if (c == (char)-1)
-	    break;
-	n |= c;
-	vch.push_back(n);
-    }
+	{
+	    while (isspace(*psz))
+		psz++;
+	    char c = phexdigit[(unsigned char)*psz++];
+	    if (c == (char)-1)
+		break;
+	    unsigned char n = (c << 4);
+	    c = phexdigit[(unsigned char)*psz++];
+	    if (c == (char)-1)
+		break;
+	    n |= c;
+	    vch.push_back(n);
+	}
     return vch;
 }
 
@@ -448,25 +448,25 @@ void ParseParameters(int argc, char* argv[])
     mapArgs.clear();
     mapMultiArgs.clear();
     for (int i = 1; i < argc; i++)
-    {
-	char psz[10000];
-	strlcpy(psz, argv[i], sizeof(psz));
-	char* pszValue = (char*)"";
-	if (strchr(psz, '='))
 	{
-	    pszValue = strchr(psz, '=');
-	    *pszValue++ = '\0';
+	    char psz[10000];
+	    strlcpy(psz, argv[i], sizeof(psz));
+	    char* pszValue = (char*)"";
+	    if (strchr(psz, '='))
+		{
+		    pszValue = strchr(psz, '=');
+		    *pszValue++ = '\0';
+		}
+#ifdef __WXMSW__
+	    _strlwr(psz);
+	    if (psz[0] == '/')
+		psz[0] = '-';
+#endif
+	    if (psz[0] != '-')
+		break;
+	    mapArgs[psz] = pszValue;
+	    mapMultiArgs[psz].push_back(pszValue);
 	}
-	#ifdef __WXMSW__
-	_strlwr(psz);
-	if (psz[0] == '/')
-	    psz[0] = '-';
-	#endif
-	if (psz[0] != '-')
-	    break;
-	mapArgs[psz] = pszValue;
-	mapMultiArgs[psz].push_back(pszValue);
-    }
 }
 
 
@@ -508,25 +508,25 @@ const char* wxGetTranslation(const char* pszEnglish)
 bool WildcardMatch(const char* psz, const char* mask)
 {
     loop
-    {
-	switch (*mask)
 	{
-	case '\0':
-	    return (*psz == '\0');
-	case '*':
-	    return WildcardMatch(psz, mask+1) || (*psz && WildcardMatch(psz+1, mask));
-	case '?':
-	    if (*psz == '\0')
-		return false;
-	    break;
-	default:
-	    if (*psz != *mask)
-		return false;
-	    break;
+	    switch (*mask)
+		{
+		case '\0':
+		    return (*psz == '\0');
+		case '*':
+		    return WildcardMatch(psz, mask+1) || (*psz && WildcardMatch(psz+1, mask));
+		case '?':
+		    if (*psz == '\0')
+			return false;
+		    break;
+		default:
+		    if (*psz != *mask)
+			return false;
+		    break;
+		}
+	    psz++;
+	    mask++;
 	}
-	psz++;
-	mask++;
-    }
 }
 
 bool WildcardMatch(const string& str, const string& mask)
@@ -552,10 +552,10 @@ void FormatException(char* pszMessage, std::exception* pex, const char* pszThrea
 #endif
     if (pex)
 	snprintf(pszMessage, 1000,
-	    "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
+		 "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
     else
 	snprintf(pszMessage, 1000,
-	    "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
+		 "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
 }
 
 void LogException(std::exception* pex, const char* pszThread)
@@ -620,27 +620,27 @@ string MyGetSpecialFolderPath(int nFolder, bool fCreate)
     // SHGetSpecialFolderPath isn't always available on old Windows versions
     HMODULE hShell32 = LoadLibraryA("shell32.dll");
     if (hShell32)
-    {
-	PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
-	    (PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
-	if (pSHGetSpecialFolderPath)
-	    (*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
-	FreeModule(hShell32);
-    }
+	{
+	    PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
+		(PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
+	    if (pSHGetSpecialFolderPath)
+		(*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
+	    FreeModule(hShell32);
+	}
 
     // Backup option
     if (pszPath[0] == '\0')
-    {
-	if (nFolder == CSIDL_STARTUP)
 	{
-	    strcpy(pszPath, getenv("USERPROFILE"));
-	    strcat(pszPath, "\\Start Menu\\Programs\\Startup");
+	    if (nFolder == CSIDL_STARTUP)
+		{
+		    strcpy(pszPath, getenv("USERPROFILE"));
+		    strcat(pszPath, "\\Start Menu\\Programs\\Startup");
+		}
+	    else if (nFolder == CSIDL_APPDATA)
+		{
+		    strcpy(pszPath, getenv("APPDATA"));
+		}
 	}
-	else if (nFolder == CSIDL_APPDATA)
-	{
-	    strcpy(pszPath, getenv("APPDATA"));
-	}
-    }
 
     return pszPath;
 }
@@ -678,34 +678,34 @@ void GetDataDir(char* pszDir)
     // pszDir must be at least MAX_PATH length.
     int nVariation;
     if (pszSetDataDir[0] != 0)
-    {
-	strlcpy(pszDir, pszSetDataDir, MAX_PATH);
-	nVariation = 0;
-    }
+	{
+	    strlcpy(pszDir, pszSetDataDir, MAX_PATH);
+	    nVariation = 0;
+	}
     else
-    {
-	// This can be called during exceptions by printf, so we cache the
-	// value so we don't have to do memory allocations after that.
-	static char pszCachedDir[MAX_PATH];
-	if (pszCachedDir[0] == 0)
-	    strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
-	strlcpy(pszDir, pszCachedDir, MAX_PATH);
-	nVariation = 1;
-    }
+	{
+	    // This can be called during exceptions by printf, so we cache the
+	    // value so we don't have to do memory allocations after that.
+	    static char pszCachedDir[MAX_PATH];
+	    if (pszCachedDir[0] == 0)
+		strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
+	    strlcpy(pszDir, pszCachedDir, MAX_PATH);
+	    nVariation = 1;
+	}
     if (fTestNet)
-    {
-	char* p = pszDir + strlen(pszDir);
-	if (p > pszDir && p[-1] != '/' && p[-1] != '\\')
-	    *p++ = '/';
-	strcpy(p, "testnet");
-	nVariation += 2;
-    }
+	{
+	    char* p = pszDir + strlen(pszDir);
+	    if (p > pszDir && p[-1] != '/' && p[-1] != '\\')
+		*p++ = '/';
+	    strcpy(p, "testnet");
+	    nVariation += 2;
+	}
     static bool pfMkdir[4];
     if (!pfMkdir[nVariation])
-    {
-	pfMkdir[nVariation] = true;
-	filesystem::create_directory(pszDir);
-    }
+	{
+	    pfMkdir[nVariation] = true;
+	    filesystem::create_directory(pszDir);
+	}
 }
 
 string GetDataDir()
@@ -738,13 +738,13 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
     setOptions.insert("*");
 
     for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
-    {
-	// Don't overwrite existing settings so command line settings override bitcoin.conf
-	string strKey = string("-") + it->string_key;
-	if (mapSettingsRet.count(strKey) == 0)
-	    mapSettingsRet[strKey] = it->value[0];
-	mapMultiSettingsRet[strKey].push_back(it->value[0]);
-    }
+	{
+	    // Don't overwrite existing settings so command line settings override bitcoin.conf
+	    string strKey = string("-") + it->string_key;
+	    if (mapSettingsRet.count(strKey) == 0)
+		mapSettingsRet[strKey] = it->value[0];
+	    mapMultiSettingsRet[strKey].push_back(it->value[0]);
+	}
 }
 
 string GetPidFile()
@@ -760,10 +760,10 @@ void CreatePidFile(string pidFile, pid_t pid)
 {
     FILE* file;
     if (file = fopen(pidFile.c_str(), "w"))
-    {
-	fprintf(file, "%d\n", pid);
-	fclose(file);
-    }
+	{
+	    fprintf(file, "%d\n", pid);
+	    fclose(file);
+	}
 }
 
 int GetFilesize(FILE* file)
@@ -782,18 +782,18 @@ void ShrinkDebugFile()
     string strFile = GetDataDir() + "/debug.log";
     FILE* file = fopen(strFile.c_str(), "r");
     if (file && GetFilesize(file) > 10 * 1000000)
-    {
-	// Restart the file with some of the end
-	char pch[200000];
-	fseek(file, -sizeof(pch), SEEK_END);
-	int nBytes = fread(pch, 1, sizeof(pch), file);
-	fclose(file);
-	if (file = fopen(strFile.c_str(), "w"))
 	{
-	    fwrite(pch, 1, nBytes, file);
+	    // Restart the file with some of the end
+	    char pch[200000];
+	    fseek(file, -sizeof(pch), SEEK_END);
+	    int nBytes = fread(pch, 1, sizeof(pch), file);
 	    fclose(file);
+	    if (file = fopen(strFile.c_str(), "w"))
+		{
+		    fwrite(pch, 1, nBytes, file);
+		    fclose(file);
+		}
 	}
-    }
 }
 
 
@@ -838,41 +838,41 @@ void AddTimeData(unsigned int ip, int64 nTime)
     vTimeOffsets.push_back(nOffsetSample);
     printf("Added time data, samples %d, offset %+"PRI64d" (%+"PRI64d" minutes)\n", vTimeOffsets.size(), vTimeOffsets.back(), vTimeOffsets.back()/60);
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
-    {
-	sort(vTimeOffsets.begin(), vTimeOffsets.end());
-	int64 nMedian = vTimeOffsets[vTimeOffsets.size()/2];
-	// Only let other nodes change our time by so much
-	if (abs64(nMedian) < 70 * 60)
 	{
-	    nTimeOffset = nMedian;
-	}
-	else
-	{
-	    nTimeOffset = 0;
-
-	    static bool fDone;
-	    if (!fDone)
-	    {
-		// If nobody has a time different than ours but within 5 minutes of ours, give a warning
-		bool fMatch = false;
-		foreach(int64 nOffset, vTimeOffsets)
-		    if (nOffset != 0 && abs64(nOffset) < 5 * 60)
-			fMatch = true;
-
-		if (!fMatch)
+	    sort(vTimeOffsets.begin(), vTimeOffsets.end());
+	    int64 nMedian = vTimeOffsets[vTimeOffsets.size()/2];
+	    // Only let other nodes change our time by so much
+	    if (abs64(nMedian) < 70 * 60)
 		{
-		    fDone = true;
-		    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
-		    strMiscWarning = strMessage;
-		    printf("*** %s\n", strMessage.c_str());
-		    boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
+		    nTimeOffset = nMedian;
 		}
-	    }
+	    else
+		{
+		    nTimeOffset = 0;
+
+		    static bool fDone;
+		    if (!fDone)
+			{
+			    // If nobody has a time different than ours but within 5 minutes of ours, give a warning
+			    bool fMatch = false;
+			    foreach(int64 nOffset, vTimeOffsets)
+				if (nOffset != 0 && abs64(nOffset) < 5 * 60)
+				    fMatch = true;
+
+			    if (!fMatch)
+				{
+				    fDone = true;
+				    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
+				    strMiscWarning = strMessage;
+				    printf("*** %s\n", strMessage.c_str());
+				    boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
+				}
+			}
+		}
+	    foreach(int64 n, vTimeOffsets)
+		printf("%+"PRI64d"  ", n);
+	    printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
 	}
-	foreach(int64 n, vTimeOffsets)
-	    printf("%+"PRI64d"  ", n);
-	printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
-    }
 }
 
 

@@ -26,7 +26,8 @@
 // see www.keylength.com
 // script supports up to 75 for single byte push
 
-
+#ifndef KEY_H
+#define KEY_H
 
 class key_error : public std::runtime_error
 {
@@ -166,3 +167,5 @@ public:
 	return key.Verify(hash, vchSig);
     }
 };
+
+#endif // !KEY_H

@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef SERIALIZE_H
+#define SERIALIZE_H
+
 #include <string>
 #include <vector>
 #include <map>
@@ -10,6 +13,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
+
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 typedef __int64  int64;
 typedef unsigned __int64  uint64;
@@ -41,50 +45,50 @@ static const bool VERSION_IS_BETA = true;
 //
 
 enum
-{
-    // primary actions
-    SER_NETWORK         = (1 << 0),
-    SER_DISK            = (1 << 1),
-    SER_GETHASH         = (1 << 2),
+    {
+	// primary actions
+	SER_NETWORK         = (1 << 0),
+	SER_DISK            = (1 << 1),
+	SER_GETHASH         = (1 << 2),
 
-    // modifiers
-    SER_SKIPSIG         = (1 << 16),
-    SER_BLOCKHEADERONLY = (1 << 17),
-};
+	// modifiers
+	SER_SKIPSIG         = (1 << 16),
+	SER_BLOCKHEADERONLY = (1 << 17),
+    };
 
-#define IMPLEMENT_SERIALIZE(statements)    \
-    unsigned int GetSerializeSize(int nType=0, int nVersion=VERSION) const  \
-    {                                           \
-	CSerActionGetSerializeSize ser_action;  \
-	const bool fGetSize = true;             \
-	const bool fWrite = false;              \
-	const bool fRead = false;               \
-	unsigned int nSerSize = 0;              \
-	ser_streamplaceholder s;                \
-	s.nType = nType;                        \
-	s.nVersion = nVersion;                  \
-	{statements}                            \
-	return nSerSize;                        \
-    }                                           \
-    template<typename Stream>                   \
+#define IMPLEMENT_SERIALIZE(statements)					\
+    unsigned int GetSerializeSize(int nType=0, int nVersion=VERSION) const \
+    {									\
+	CSerActionGetSerializeSize ser_action;				\
+	const bool fGetSize = true;					\
+	const bool fWrite = false;					\
+	const bool fRead = false;					\
+	unsigned int nSerSize = 0;					\
+	ser_streamplaceholder s;					\
+	s.nType = nType;						\
+	s.nVersion = nVersion;						\
+	{statements}							\
+	return nSerSize;						\
+    }									\
+    template<typename Stream>						\
     void Serialize(Stream& s, int nType=0, int nVersion=VERSION) const  \
-    {                                           \
-	CSerActionSerialize ser_action;         \
-	const bool fGetSize = false;            \
-	const bool fWrite = true;               \
-	const bool fRead = false;               \
-	unsigned int nSerSize = 0;              \
-	{statements}                            \
-    }                                           \
-    template<typename Stream>                   \
-    void Unserialize(Stream& s, int nType=0, int nVersion=VERSION)  \
-    {                                           \
-	CSerActionUnserialize ser_action;       \
-	const bool fGetSize = false;            \
-	const bool fWrite = false;              \
-	const bool fRead = true;                \
-	unsigned int nSerSize = 0;              \
-	{statements}                            \
+    {									\
+	CSerActionSerialize ser_action;					\
+	const bool fGetSize = false;					\
+	const bool fWrite = true;					\
+	const bool fRead = false;					\
+	unsigned int nSerSize = 0;					\
+	{statements}							\
+    }									\
+    template<typename Stream>						\
+    void Unserialize(Stream& s, int nType=0, int nVersion=VERSION)	\
+    {									\
+	CSerActionUnserialize ser_action;				\
+	const bool fGetSize = false;					\
+	const bool fWrite = false;					\
+	const bool fRead = true;					\
+	unsigned int nSerSize = 0;					\
+	{statements}							\
     }
 
 #define READWRITE(obj)      (nSerSize += ::SerReadWrite(s, (obj), nType, nVersion, ser_action))
@@ -170,31 +174,31 @@ template<typename Stream>
 void WriteCompactSize(Stream& os, uint64 nSize)
 {
     if (nSize < 253)
-    {
-	unsigned char chSize = nSize;
-	WRITEDATA(os, chSize);
-    }
+	{
+	    unsigned char chSize = nSize;
+	    WRITEDATA(os, chSize);
+	}
     else if (nSize <= USHRT_MAX)
-    {
-	unsigned char chSize = 253;
-	unsigned short xSize = nSize;
-	WRITEDATA(os, chSize);
-	WRITEDATA(os, xSize);
-    }
+	{
+	    unsigned char chSize = 253;
+	    unsigned short xSize = nSize;
+	    WRITEDATA(os, chSize);
+	    WRITEDATA(os, xSize);
+	}
     else if (nSize <= UINT_MAX)
-    {
-	unsigned char chSize = 254;
-	unsigned int xSize = nSize;
-	WRITEDATA(os, chSize);
-	WRITEDATA(os, xSize);
-    }
+	{
+	    unsigned char chSize = 254;
+	    unsigned int xSize = nSize;
+	    WRITEDATA(os, chSize);
+	    WRITEDATA(os, xSize);
+	}
     else
-    {
-	unsigned char chSize = 255;
-	uint64 xSize = nSize;
-	WRITEDATA(os, chSize);
-	WRITEDATA(os, xSize);
-    }
+	{
+	    unsigned char chSize = 255;
+	    uint64 xSize = nSize;
+	    WRITEDATA(os, chSize);
+	    WRITEDATA(os, xSize);
+	}
     return;
 }
 
@@ -205,27 +209,27 @@ uint64 ReadCompactSize(Stream& is)
     READDATA(is, chSize);
     uint64 nSizeRet = 0;
     if (chSize < 253)
-    {
-	nSizeRet = chSize;
-    }
+	{
+	    nSizeRet = chSize;
+	}
     else if (chSize == 253)
-    {
-	unsigned short xSize;
-	READDATA(is, xSize);
-	nSizeRet = xSize;
-    }
+	{
+	    unsigned short xSize;
+	    READDATA(is, xSize);
+	    nSizeRet = xSize;
+	}
     else if (chSize == 254)
-    {
-	unsigned int xSize;
-	READDATA(is, xSize);
-	nSizeRet = xSize;
-    }
+	{
+	    unsigned int xSize;
+	    READDATA(is, xSize);
+	    nSizeRet = xSize;
+	}
     else
-    {
-	uint64 xSize;
-	READDATA(is, xSize);
-	nSizeRet = xSize;
-    }
+	{
+	    uint64 xSize;
+	    READDATA(is, xSize);
+	    nSizeRet = xSize;
+	}
     if (nSizeRet > (uint64)MAX_SIZE)
 	throw std::ios_base::failure("ReadCompactSize() : size too large");
     return nSizeRet;
@@ -482,12 +486,12 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion,
     unsigned int nSize = ReadCompactSize(is);
     unsigned int i = 0;
     while (i < nSize)
-    {
-	unsigned int blk = min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
-	v.resize(i + blk);
-	is.read((char*)&v[i], blk * sizeof(T));
-	i += blk;
-    }
+	{
+	    unsigned int blk = min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
+	    v.resize(i + blk);
+	    is.read((char*)&v[i], blk * sizeof(T));
+	    i += blk;
+	}
 }
 
 template<typename Stream, typename T, typename A>
@@ -503,14 +507,14 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion,
     unsigned int i = 0;
     unsigned int nMid = 0;
     while (nMid < nSize)
-    {
-	nMid += 5000000 / sizeof(T);
-	if (nMid > nSize)
-	    nMid = nSize;
-	v.resize(nMid);
-	for (; i < nMid; i++)
-	    Unserialize(is, v[i], nType, nVersion);
-    }
+	{
+	    nMid += 5000000 / sizeof(T);
+	    if (nMid > nSize)
+		nMid = nSize;
+	    v.resize(nMid);
+	    for (; i < nMid; i++)
+		Unserialize(is, v[i], nType, nVersion);
+	}
 }
 
 template<typename Stream, typename T, typename A>
@@ -660,11 +664,11 @@ void Unserialize(Stream& is, std::map<K, T, Pred, A>& m, int nType, int nVersion
     unsigned int nSize = ReadCompactSize(is);
     typename std::map<K, T, Pred, A>::iterator mi = m.begin();
     for (unsigned int i = 0; i < nSize; i++)
-    {
-	pair<K, T> item;
-	Unserialize(is, item, nType, nVersion);
-	mi = m.insert(mi, item);
-    }
+	{
+	    pair<K, T> item;
+	    Unserialize(is, item, nType, nVersion);
+	    mi = m.insert(mi, item);
+	}
 }
 
 
@@ -696,11 +700,11 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m, int nType, int nVersion)
     unsigned int nSize = ReadCompactSize(is);
     typename std::set<K, Pred, A>::iterator it = m.begin();
     for (unsigned int i = 0; i < nSize; i++)
-    {
-	K key;
-	Unserialize(is, key, nType, nVersion);
-	it = m.insert(it, key);
-    }
+	{
+	    K key;
+	    Unserialize(is, key, nType, nVersion);
+	    it = m.insert(it, key);
+	}
 }
 
 
@@ -886,11 +890,11 @@ public:
     void insert(iterator it, const_iterator first, const_iterator last)
     {
 	if (it == vch.begin() + nReadPos && last - first <= nReadPos)
-	{
-	    // special case for inserting at the front when there's room
-	    nReadPos -= (last - first);
-	    memcpy(&vch[nReadPos], &first[0], last - first);
-	}
+	    {
+		// special case for inserting at the front when there's room
+		nReadPos -= (last - first);
+		memcpy(&vch[nReadPos], &first[0], last - first);
+	    }
 	else
 	    vch.insert(it, first, last);
     }
@@ -898,11 +902,11 @@ public:
     void insert(iterator it, vector<char>::const_iterator first, vector<char>::const_iterator last)
     {
 	if (it == vch.begin() + nReadPos && last - first <= nReadPos)
-	{
-	    // special case for inserting at the front when there's room
-	    nReadPos -= (last - first);
-	    memcpy(&vch[nReadPos], &first[0], last - first);
-	}
+	    {
+		// special case for inserting at the front when there's room
+		nReadPos -= (last - first);
+		memcpy(&vch[nReadPos], &first[0], last - first);
+	    }
 	else
 	    vch.insert(it, first, last);
     }
@@ -911,11 +915,11 @@ public:
     void insert(iterator it, const char* first, const char* last)
     {
 	if (it == vch.begin() + nReadPos && last - first <= nReadPos)
-	{
-	    // special case for inserting at the front when there's room
-	    nReadPos -= (last - first);
-	    memcpy(&vch[nReadPos], &first[0], last - first);
-	}
+	    {
+		// special case for inserting at the front when there's room
+		nReadPos -= (last - first);
+		memcpy(&vch[nReadPos], &first[0], last - first);
+	    }
 	else
 	    vch.insert(it, first, last);
     }
@@ -924,16 +928,16 @@ public:
     iterator erase(iterator it)
     {
 	if (it == vch.begin() + nReadPos)
-	{
-	    // special case for erasing from the front
-	    if (++nReadPos >= vch.size())
 	    {
-		// whenever we reach the end, we take the opportunity to clear the buffer
-		nReadPos = 0;
-		return vch.erase(vch.begin(), vch.end());
+		// special case for erasing from the front
+		if (++nReadPos >= vch.size())
+		    {
+			// whenever we reach the end, we take the opportunity to clear the buffer
+			nReadPos = 0;
+			return vch.erase(vch.begin(), vch.end());
+		    }
+		return vch.begin() + nReadPos;
 	    }
-	    return vch.begin() + nReadPos;
-	}
 	else
 	    return vch.erase(it);
     }
@@ -941,19 +945,19 @@ public:
     iterator erase(iterator first, iterator last)
     {
 	if (first == vch.begin() + nReadPos)
-	{
-	    // special case for erasing from the front
-	    if (last == vch.end())
 	    {
-		nReadPos = 0;
-		return vch.erase(vch.begin(), vch.end());
+		// special case for erasing from the front
+		if (last == vch.end())
+		    {
+			nReadPos = 0;
+			return vch.erase(vch.begin(), vch.end());
+		    }
+		else
+		    {
+			nReadPos = (last - vch.begin());
+			return last;
+		    }
 	    }
-	    else
-	    {
-		nReadPos = (last - vch.begin());
-		return last;
-	    }
-	}
 	else
 	    return vch.erase(first, last);
     }
@@ -1006,18 +1010,18 @@ public:
 	assert(nSize >= 0);
 	unsigned int nReadPosNext = nReadPos + nSize;
 	if (nReadPosNext >= vch.size())
-	{
-	    if (nReadPosNext > vch.size())
 	    {
-		setstate(ios::failbit, "CDataStream::read() : end of data");
-		memset(pch, 0, nSize);
-		nSize = vch.size() - nReadPos;
+		if (nReadPosNext > vch.size())
+		    {
+			setstate(ios::failbit, "CDataStream::read() : end of data");
+			memset(pch, 0, nSize);
+			nSize = vch.size() - nReadPos;
+		    }
+		memcpy(pch, &vch[nReadPos], nSize);
+		nReadPos = 0;
+		vch.clear();
+		return (*this);
 	    }
-	    memcpy(pch, &vch[nReadPos], nSize);
-	    nReadPos = 0;
-	    vch.clear();
-	    return (*this);
-	}
 	memcpy(pch, &vch[nReadPos], nSize);
 	nReadPos = nReadPosNext;
 	return (*this);
@@ -1029,16 +1033,16 @@ public:
 	assert(nSize >= 0);
 	unsigned int nReadPosNext = nReadPos + nSize;
 	if (nReadPosNext >= vch.size())
-	{
-	    if (nReadPosNext > vch.size())
 	    {
-		setstate(ios::failbit, "CDataStream::ignore() : end of data");
-		nSize = vch.size() - nReadPos;
+		if (nReadPosNext > vch.size())
+		    {
+			setstate(ios::failbit, "CDataStream::ignore() : end of data");
+			nSize = vch.size() - nReadPos;
+		    }
+		nReadPos = 0;
+		vch.clear();
+		return (*this);
 	    }
-	    nReadPos = 0;
-	    vch.clear();
-	    return (*this);
-	}
 	nReadPos = nReadPosNext;
 	return (*this);
     }
@@ -1259,3 +1263,5 @@ public:
 	return (*this);
     }
 };
+
+#endif // !SERIALIZE_H

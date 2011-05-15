@@ -12,6 +12,8 @@
 // - Doubleclicking selects the whole number as one word if it's all alphanumeric.
 //
 
+#ifndef BASE58_H
+#define BASE58_H
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -37,13 +39,13 @@ inline string EncodeBase58(const unsigned char* pbegin, const unsigned char* pen
     CBigNum dv;
     CBigNum rem;
     while (bn > bn0)
-    {
-	if (!BN_div(&dv, &rem, &bn, &bn58, pctx))
-	    throw bignum_error("EncodeBase58 : BN_div failed");
-	bn = dv;
-	unsigned int c = rem.getulong();
-	str += pszBase58[c];
-    }
+	{
+	    if (!BN_div(&dv, &rem, &bn, &bn58, pctx))
+		throw bignum_error("EncodeBase58 : BN_div failed");
+	    bn = dv;
+	    unsigned int c = rem.getulong();
+	    str += pszBase58[c];
+	}
 
     // Leading zeroes encoded as base58 zeros
     for (const unsigned char* p = pbegin; p < pend && *p == 0; p++)
@@ -71,21 +73,21 @@ inline bool DecodeBase58(const char* psz, vector<unsigned char>& vchRet)
 
     // Convert big endian string to bignum
     for (const char* p = psz; *p; p++)
-    {
-	const char* p1 = strchr(pszBase58, *p);
-	if (p1 == NULL)
 	{
-	    while (isspace(*p))
-		p++;
-	    if (*p != '\0')
-		return false;
-	    break;
+	    const char* p1 = strchr(pszBase58, *p);
+	    if (p1 == NULL)
+		{
+		    while (isspace(*p))
+			p++;
+		    if (*p != '\0')
+			return false;
+		    break;
+		}
+	    bnChar.setulong(p1 - pszBase58);
+	    if (!BN_mul(&bn, &bn, &bn58, pctx))
+		throw bignum_error("DecodeBase58 : BN_mul failed");
+	    bn += bnChar;
 	}
-	bnChar.setulong(p1 - pszBase58);
-	if (!BN_mul(&bn, &bn, &bn58, pctx))
-	    throw bignum_error("DecodeBase58 : BN_mul failed");
-	bn += bnChar;
-    }
 
     // Get bignum as little endian data
     vector<unsigned char> vchTmp = bn.getvch();
@@ -128,16 +130,16 @@ inline bool DecodeBase58Check(const char* psz, vector<unsigned char>& vchRet)
     if (!DecodeBase58(psz, vchRet))
 	return false;
     if (vchRet.size() < 4)
-    {
-	vchRet.clear();
-	return false;
-    }
+	{
+	    vchRet.clear();
+	    return false;
+	}
     uint256 hash = Hash(vchRet.begin(), vchRet.end()-4);
     if (memcmp(&hash, &vchRet.end()[-4], 4) != 0)
-    {
-	vchRet.clear();
-	return false;
-    }
+	{
+	    vchRet.clear();
+	    return false;
+	}
     vchRet.resize(vchRet.size()-4);
     return true;
 }
@@ -199,3 +201,5 @@ inline string PubKeyToAddress(const vector<unsigned char>& vchPubKey)
 {
     return Hash160ToAddress(Hash160(vchPubKey));
 }
+
+#endif // !BASE58_H

@@ -35,26 +35,26 @@ void Shutdown(void* parg)
     }
     static bool fExit;
     if (fFirstThread)
-    {
-	fShutdown = true;
-	nTransactionsUpdated++;
-	DBFlush(false);
-	StopNode();
-	DBFlush(true);
-	boost::filesystem::remove(GetPidFile());
-	CreateThread(ExitTimeout, NULL);
-	Sleep(50);
-	printf("Bitcoin exiting\n\n");
-	fExit = true;
-	exit(0);
-    }
+	{
+	    fShutdown = true;
+	    nTransactionsUpdated++;
+	    DBFlush(false);
+	    StopNode();
+	    DBFlush(true);
+	    boost::filesystem::remove(GetPidFile());
+	    CreateThread(ExitTimeout, NULL);
+	    Sleep(50);
+	    printf("Bitcoin exiting\n\n");
+	    fExit = true;
+	    exit(0);
+	}
     else
-    {
-	while (!fExit)
-	    Sleep(500);
-	Sleep(100);
-	ExitThread(0);
-    }
+	{
+	    while (!fExit)
+		Sleep(500);
+	    Sleep(100);
+	    ExitThread(0);
+	}
 }
 
 void HandleSIGTERM(int)
@@ -89,9 +89,9 @@ bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
     try
-    {
-	fRet = AppInit2(argc, argv);
-    }
+	{
+	    fRet = AppInit2(argc, argv);
+	}
     catch (std::exception& e) {
 	PrintException(&e, "AppInit()");
     } catch (...) {
@@ -133,80 +133,80 @@ bool AppInit2(int argc, char* argv[])
     ParseParameters(argc, argv);
 
     if (mapArgs.count("-datadir"))
-    {
-	filesystem::path pathDataDir = filesystem::system_complete(mapArgs["-datadir"]);
-	strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
-    }
+	{
+	    filesystem::path pathDataDir = filesystem::system_complete(mapArgs["-datadir"]);
+	    strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
+	}
 
     ReadConfigFile(mapArgs, mapMultiArgs); // Must be done after processing datadir
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
-    {
-	string beta = VERSION_IS_BETA ? _(" beta") : "";
-	string strUsage = string() +
-	  _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
-	  _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
-	    "  bitcoin [options]                   \t  " + "\n" +
-	    "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
-	    "  bitcoin [options] help              \t\t  " + _("List commands\n") +
-	    "  bitcoin [options] help <command>    \t\t  " + _("Get help for a command\n") +
-	  _("Options:\n") +
-	    "  -conf=<file>     \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
-	    "  -pid=<file>      \t\t  " + _("Specify pid file (default: bitcoind.pid)\n") +
-	    "  -gen             \t\t  " + _("Generate coins\n") +
-	    "  -gen=0           \t\t  " + _("Don't generate coins\n") +
-	    "  -min             \t\t  " + _("Start minimized\n") +
-	    "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
-	    "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
-	    "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect\n") +
-	    "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
-	    "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
-	    "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
+	{
+	    string beta = VERSION_IS_BETA ? _(" beta") : "";
+	    string strUsage = string() +
+		_("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
+		_("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
+		"  bitcoin [options]                   \t  " + "\n" +
+		"  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
+		"  bitcoin [options] help              \t\t  " + _("List commands\n") +
+		"  bitcoin [options] help <command>    \t\t  " + _("Get help for a command\n") +
+		_("Options:\n") +
+		"  -conf=<file>     \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
+		"  -pid=<file>      \t\t  " + _("Specify pid file (default: bitcoind.pid)\n") +
+		"  -gen             \t\t  " + _("Generate coins\n") +
+		"  -gen=0           \t\t  " + _("Don't generate coins\n") +
+		"  -min             \t\t  " + _("Start minimized\n") +
+		"  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
+		"  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
+		"  -dns             \t  "   + _("Allow DNS lookups for addnode and connect\n") +
+		"  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
+		"  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
+		"  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
 #ifdef USE_UPNP
 #if USE_UPNP
-	    "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
+		"  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
 #else
-	    "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
+		"  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
 #endif
 #endif
-	    "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
+		"  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
 #ifdef GUI
-	    "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
+		"  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif
 #ifndef __WXMSW__
-	    "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
+		"  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
-	    "  -testnet         \t\t  " + _("Use the test network\n") +
-	    "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
-	    "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
-	    "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
-	    "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
-	    "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
-	    "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-	    "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
+		"  -testnet         \t\t  " + _("Use the test network\n") +
+		"  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
+		"  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
+		"  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
+		"  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
+		"  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
+		"  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
+		"  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
 
 #ifdef USE_SSL
-	strUsage += string() +
-	    _("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)\n") +
-	    "  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
-	    "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
-	    "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)\n") +
-	    "  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
+	    strUsage += string() +
+		_("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)\n") +
+		"  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
+		"  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
+		"  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)\n") +
+		"  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
 #endif
 
-	strUsage += string() +
-	    "  -?               \t\t  " + _("This help message\n");
+	    strUsage += string() +
+		"  -?               \t\t  " + _("This help message\n");
 
 #if defined(__WXMSW__) && defined(GUI)
-	// Tabs make the columns line up in the message box
-	wxMessageBox(strUsage, "Bitcoin", wxOK);
+	    // Tabs make the columns line up in the message box
+	    wxMessageBox(strUsage, "Bitcoin", wxOK);
 #else
-	// Remove tabs
-	strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
-	fprintf(stderr, "%s", strUsage.c_str());
+	    // Remove tabs
+	    strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
+	    fprintf(stderr, "%s", strUsage.c_str());
 #endif
-	return false;
-    }
+	    return false;
+	}
 
     fDebug = GetBoolArg("-debug");
     fAllowDNS = GetBoolArg("-dns");
@@ -239,31 +239,31 @@ bool AppInit2(int argc, char* argv[])
 	    fCommandLine = true;
 
     if (fCommandLine)
-    {
-	int ret = CommandLineRPC(argc, argv);
-	exit(ret);
-    }
+	{
+	    int ret = CommandLineRPC(argc, argv);
+	    exit(ret);
+	}
 
 #ifndef __WXMSW__
     if (fDaemon)
-    {
-	// Daemonize
-	pid_t pid = fork();
-	if (pid < 0)
 	{
-	    fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
-	    return false;
-	}
-	if (pid > 0)
-	{
-	    CreatePidFile(GetPidFile(), pid);
-	    return true;
-	}
+	    // Daemonize
+	    pid_t pid = fork();
+	    if (pid < 0)
+		{
+		    fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+		    return false;
+		}
+	    if (pid > 0)
+		{
+		    CreatePidFile(GetPidFile(), pid);
+		    return true;
+		}
 
-	pid_t sid = setsid();
-	if (sid < 0)
-	    fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
-    }
+	    pid_t sid = setsid();
+	    if (sid < 0)
+		fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+	}
 #endif
 
     if (!fDebug && !pszSetDataDir[0])
@@ -278,12 +278,12 @@ bool AppInit2(int argc, char* argv[])
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
     if (GetBoolArg("-loadblockindextest"))
-    {
-	CTxDB txdb("r");
-	txdb.LoadBlockIndex();
-	PrintBlockTree();
-	return false;
-    }
+	{
+	    CTxDB txdb("r");
+	    txdb.LoadBlockIndex();
+	    PrintBlockTree();
+	    return false;
+	}
 
     //
     // Limit to single instance per user
@@ -297,32 +297,32 @@ bool AppInit2(int argc, char* argv[])
 	    strMutexName[i] = '.';
     wxSingleInstanceChecker* psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
     if (psingleinstancechecker->IsAnotherRunning())
-    {
-	printf("Existing instance found\n");
-	unsigned int nStart = GetTime();
-	loop
 	{
-	    // Show the previous instance and exit
-	    HWND hwndPrev = FindWindowA("wxWindowClassNR", "Bitcoin");
-	    if (hwndPrev)
-	    {
-		if (IsIconic(hwndPrev))
-		    ShowWindow(hwndPrev, SW_RESTORE);
-		SetForegroundWindow(hwndPrev);
-		return false;
-	    }
+	    printf("Existing instance found\n");
+	    unsigned int nStart = GetTime();
+	    loop
+		{
+		    // Show the previous instance and exit
+		    HWND hwndPrev = FindWindowA("wxWindowClassNR", "Bitcoin");
+		    if (hwndPrev)
+			{
+			    if (IsIconic(hwndPrev))
+				ShowWindow(hwndPrev, SW_RESTORE);
+			    SetForegroundWindow(hwndPrev);
+			    return false;
+			}
 
-	    if (GetTime() > nStart + 60)
-		return false;
+		    if (GetTime() > nStart + 60)
+			return false;
 
-	    // Resume this instance if the other exits
-	    delete psingleinstancechecker;
-	    Sleep(1000);
-	    psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
-	    if (!psingleinstancechecker->IsAnotherRunning())
-		break;
+		    // Resume this instance if the other exits
+		    delete psingleinstancechecker;
+		    Sleep(1000);
+		    psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
+		    if (!psingleinstancechecker->IsAnotherRunning())
+			break;
+		}
 	}
-    }
 #endif
 
     // Make sure only a single bitcoin process is using the data directory.
@@ -331,21 +331,21 @@ bool AppInit2(int argc, char* argv[])
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(strLockFile.c_str());
     if (!lock.try_lock())
-    {
-	wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), "Bitcoin");
-	return false;
-    }
+	{
+	    wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), "Bitcoin");
+	    return false;
+	}
 
     // Bind to the port early so we can tell if another instance is already running.
     string strErrors;
     if (!fNoListen)
-    {
-	if (!BindListenPort(strErrors))
 	{
-	    wxMessageBox(strErrors, "Bitcoin");
-	    return false;
+	    if (!BindListenPort(strErrors))
+		{
+		    wxMessageBox(strErrors, "Bitcoin");
+		    return false;
+		}
 	}
-    }
 
     //
     // Load data files
@@ -378,35 +378,35 @@ bool AppInit2(int argc, char* argv[])
     if (GetBoolArg("-rescan"))
 	pindexRescan = pindexGenesisBlock;
     else
-    {
-	CWalletDB walletdb;
-	CBlockLocator locator;
-	if (walletdb.ReadBestBlock(locator))
-	    pindexRescan = locator.GetBlockIndex();
-    }
+	{
+	    CWalletDB walletdb;
+	    CBlockLocator locator;
+	    if (walletdb.ReadBestBlock(locator))
+		pindexRescan = locator.GetBlockIndex();
+	}
     if (pindexBest != pindexRescan)
-    {
-	printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
-	nStart = GetTimeMillis();
-	ScanForWalletTransactions(pindexRescan);
-	printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
-    }
+	{
+	    printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
+	    nStart = GetTimeMillis();
+	    ScanForWalletTransactions(pindexRescan);
+	    printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+	}
 
     printf("Done loading\n");
 
-	//// debug print
-	printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
-	printf("nBestHeight = %d\n",            nBestHeight);
-	printf("mapKeys.size() = %d\n",         mapKeys.size());
-	printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
-	printf("mapWallet.size() = %d\n",       mapWallet.size());
-	printf("mapAddressBook.size() = %d\n",  mapAddressBook.size());
+    //// debug print
+    printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
+    printf("nBestHeight = %d\n",            nBestHeight);
+    printf("mapKeys.size() = %d\n",         mapKeys.size());
+    printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
+    printf("mapWallet.size() = %d\n",       mapWallet.size());
+    printf("mapAddressBook.size() = %d\n",  mapAddressBook.size());
 
     if (!strErrors.empty())
-    {
-	wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
-	return false;
-    }
+	{
+	    wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+	    return false;
+	}
 
     // Add wallet transactions that aren't already in a block to mapTransactions
     ReacceptWalletTransactions();
@@ -415,82 +415,82 @@ bool AppInit2(int argc, char* argv[])
     // Parameters
     //
     if (GetBoolArg("-printblockindex") || GetBoolArg("-printblocktree"))
-    {
-	PrintBlockTree();
-	return false;
-    }
+	{
+	    PrintBlockTree();
+	    return false;
+	}
 
     if (mapArgs.count("-printblock"))
-    {
-	string strMatch = mapArgs["-printblock"];
-	int nFound = 0;
-	for (map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.begin(); mi != mapBlockIndex.end(); ++mi)
 	{
-	    uint256 hash = (*mi).first;
-	    if (strncmp(hash.ToString().c_str(), strMatch.c_str(), strMatch.size()) == 0)
-	    {
-		CBlockIndex* pindex = (*mi).second;
-		CBlock block;
-		block.ReadFromDisk(pindex);
-		block.BuildMerkleTree();
-		block.print();
-		printf("\n");
-		nFound++;
-	    }
+	    string strMatch = mapArgs["-printblock"];
+	    int nFound = 0;
+	    for (map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.begin(); mi != mapBlockIndex.end(); ++mi)
+		{
+		    uint256 hash = (*mi).first;
+		    if (strncmp(hash.ToString().c_str(), strMatch.c_str(), strMatch.size()) == 0)
+			{
+			    CBlockIndex* pindex = (*mi).second;
+			    CBlock block;
+			    block.ReadFromDisk(pindex);
+			    block.BuildMerkleTree();
+			    block.print();
+			    printf("\n");
+			    nFound++;
+			}
+		}
+	    if (nFound == 0)
+		printf("No blocks matching %s were found\n", strMatch.c_str());
+	    return false;
 	}
-	if (nFound == 0)
-	    printf("No blocks matching %s were found\n", strMatch.c_str());
-	return false;
-    }
 
     fGenerateBitcoins = GetBoolArg("-gen");
 
     if (mapArgs.count("-proxy"))
-    {
-	fUseProxy = true;
-	addrProxy = CAddress(mapArgs["-proxy"]);
-	if (!addrProxy.IsValid())
 	{
-	    wxMessageBox(_("Invalid -proxy address"), "Bitcoin");
-	    return false;
+	    fUseProxy = true;
+	    addrProxy = CAddress(mapArgs["-proxy"]);
+	    if (!addrProxy.IsValid())
+		{
+		    wxMessageBox(_("Invalid -proxy address"), "Bitcoin");
+		    return false;
+		}
 	}
-    }
 
     if (mapArgs.count("-addnode"))
-    {
-	foreach(string strAddr, mapMultiArgs["-addnode"])
 	{
-	    CAddress addr(strAddr, fAllowDNS);
-	    addr.nTime = 0; // so it won't relay unless successfully connected
-	    if (addr.IsValid())
-		AddAddress(addr);
+	    foreach(string strAddr, mapMultiArgs["-addnode"])
+		{
+		    CAddress addr(strAddr, fAllowDNS);
+		    addr.nTime = 0; // so it won't relay unless successfully connected
+		    if (addr.IsValid())
+			AddAddress(addr);
+		}
 	}
-    }
 
     if (mapArgs.count("-dnsseed"))
 	DNSAddressSeed();
 
     if (mapArgs.count("-paytxfee"))
-    {
-	if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
 	{
-	    wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
-	    return false;
+	    if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
+		{
+		    wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
+		    return false;
+		}
+	    if (nTransactionFee > 0.25 * COIN)
+		wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
 	}
-	if (nTransactionFee > 0.25 * COIN)
-	    wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
-    }
 
     if (fHaveUPnP)
-    {
+	{
 #if USE_UPNP
-    if (GetBoolArg("-noupnp"))
-	fUseUPnP = false;
+	    if (GetBoolArg("-noupnp"))
+		fUseUPnP = false;
 #else
-    if (GetBoolArg("-upnp"))
-	fUseUPnP = true;
+	    if (GetBoolArg("-upnp"))
+		fUseUPnP = true;
 #endif
-    }
+	}
 
     //
     // Create the main window and start the node
