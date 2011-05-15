@@ -201,14 +201,12 @@ QWidget *BitcoinGUI::createTabs()
 
 void BitcoinGUI::sendcoinsClicked()
 {
-    qDebug() << "Send coins clicked";
     SendCoinsDialog dlg;
     dlg.exec();
 }
 
 void BitcoinGUI::addressbookClicked()
 {
-    qDebug() << "Address book clicked";
     AddressBookDialog dlg;
     dlg.setTab(AddressBookDialog::SendingTab);
     /* if an address accepted, do a 'send' to specified address */
@@ -221,7 +219,6 @@ void BitcoinGUI::addressbookClicked()
 
 void BitcoinGUI::receivingAddressesClicked()
 {
-    qDebug() << "Receiving addresses clicked";
     AddressBookDialog dlg;
     dlg.setTab(AddressBookDialog::ReceivingTab);
     dlg.exec();
@@ -229,14 +226,12 @@ void BitcoinGUI::receivingAddressesClicked()
 
 void BitcoinGUI::optionsClicked()
 {
-    qDebug() << "Options clicked";
     OptionsDialog dlg;
     dlg.exec();
 }
 
 void BitcoinGUI::aboutClicked()
 {
-    qDebug() << "About clicked";
     AboutDialog dlg;
     dlg.exec();
 }
@@ -249,7 +244,6 @@ void BitcoinGUI::newAddressClicked()
 
 void BitcoinGUI::copyClipboardClicked()
 {
-    qDebug() << "Copy to clipboard";
     /* Copy text in address to clipboard */
     QApplication::clipboard()->setText(address->text());
 }
