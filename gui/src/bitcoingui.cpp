@@ -211,7 +211,12 @@ void BitcoinGUI::addressbookClicked()
     qDebug() << "Address book clicked";
     AddressBookDialog dlg;
     dlg.setTab(AddressBookDialog::SendingTab);
-    dlg.exec();
+    /* if an address accepted, do a 'send' to specified address */
+    if(dlg.exec())
+    {
+        SendCoinsDialog send(0, dlg.getReturnValue());
+        send.exec();
+    }
 }
 
 void BitcoinGUI::receivingAddressesClicked()

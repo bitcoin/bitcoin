@@ -127,6 +127,12 @@ void AddressBookDialog::on_buttonBox_accepted()
         QVariant address = table->model()->data(index);
         returnValue = address.toString();
     }
-
-    accept();
+    if(!returnValue.isEmpty())
+    {
+        accept();
+    }
+    else
+    {
+        reject();
+    }
 }

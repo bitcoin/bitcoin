@@ -64,12 +64,18 @@
        <property name="text">
         <string>&amp;Paste</string>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item row="3" column="3">
       <widget class="QPushButton" name="addressBookButton">
        <property name="text">
         <string>Address &amp;Book...</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -124,6 +130,9 @@
         <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -146,22 +155,5 @@
  <resources>
   <include location="../bitcoin.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>payAmount</sender>
-   <signal>returnPressed()</signal>
-   <receiver>sendButton</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>191</x>
-     <y>65</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>570</x>
-     <y>121</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
