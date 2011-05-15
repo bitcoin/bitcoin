@@ -125,7 +125,6 @@
 #else
 #include "noui.h"
 #endif
-#include "init.h"
 
 #ifdef GUI
 #include "xpm/addressbook16.xpm"

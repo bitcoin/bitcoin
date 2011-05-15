@@ -5,6 +5,7 @@
 #include "db.h"
 #include "rpc.h"
 #include "net.h"
+#include "init.h"
 
 using namespace std;
 using namespace boost;

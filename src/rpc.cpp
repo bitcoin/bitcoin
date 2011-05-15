@@ -6,6 +6,7 @@
 #include "cryptopp/sha.h"
 #include "db.h"
 #include "net.h"
+#include "init.h"
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>
