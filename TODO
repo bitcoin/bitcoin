@@ -70,12 +70,13 @@ Compatibility with Qt, and some more modularity
 
 - Put guard statements around header files.
 
-- Proper include between header files; remove central "header.h" file.
-
 - Removed macro foreach: conflicts with Qt keyword foreach, replaced back with BOOST_FOREACH
 
 - Prefix stdlib structures and functions with std:: in headers; "using namespace" in header files is
    generally frowned upon
+
+- Modularity: base48.h can now be included without including all the headers
+   (useful for linking external GUI to bitcoin core, part of GUI separation)
 
 Todo:
 
