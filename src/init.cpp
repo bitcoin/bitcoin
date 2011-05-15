@@ -6,6 +6,7 @@
 #include "rpc.h"
 #include "net.h"
 #include "init.h"
+#include "strlcpy.h"
 
 using namespace std;
 using namespace boost;

@@ -5,6 +5,7 @@
 #include "headers.h"
 #include "irc.h"
 #include "net.h"
+#include "strlcpy.h"
 
 using namespace std;
 using namespace boost;

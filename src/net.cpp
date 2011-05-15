@@ -7,6 +7,7 @@
 #include "db.h"
 #include "net.h"
 #include "init.h"
+#include "strlcpy.h"
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniwget.h>
