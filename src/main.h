@@ -1,6 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
+#ifndef BITCOIN_MAIN_H
+#define BITCOIN_MAIN_H
+
+#include "bignum.h"
+#include "net.h"
+#include "key.h"
+#include "db.h"
+#include "script.h"
+
+#include <list>
 
 class COutPoint;
 class CInPoint;
@@ -35,7 +45,7 @@ static const int fHaveUPnP = false;
 
 
 extern CCriticalSection cs_main;
-extern map<uint256, CBlockIndex*> mapBlockIndex;
+extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern uint256 hashGenesisBlock;
 extern CBigNum bnProofOfWorkLimit;
 extern CBlockIndex* pindexGenesisBlock;
@@ -45,11 +55,11 @@ extern CBigNum bnBestInvalidWork;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
-extern map<uint256, int> mapRequestCount;
+extern std::map<uint256, int> mapRequestCount;
 extern CCriticalSection cs_mapRequestCount;
-extern map<string, string> mapAddressBook;
+extern std::map<std::string, std::string> mapAddressBook;
 extern CCriticalSection cs_mapAddressBook;
-extern vector<unsigned char> vchDefaultKey;
+extern std::vector<unsigned char> vchDefaultKey;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 
@@ -73,7 +83,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");
 FILE* AppendBlockFile(unsigned int& nFileRet);
 bool AddKey(const CKey& key);
-vector<unsigned char> GenerateNewKey();
+std::vector<unsigned char> GenerateNewKey();
 bool AddToWallet(const CWalletTx& wtxIn);
 void WalletUpdateSpent(const COutPoint& prevout);
 int ScanForWalletTransactions(CBlockIndex* pindexStart);
@@ -81,15 +91,15 @@ void ReacceptWalletTransactions();
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
 bool ProcessMessages(CNode* pfrom);
-bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv);
+bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 int64 GetBalance();
-bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
+bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 bool BroadcastTransaction(CWalletTx& wtxNew);
-string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
-string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
+std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
+std::string SendMoneyToBitcoinAddress(std::string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 CBlock* CreateNewBlock(CReserveKey& reservekey);
@@ -99,7 +109,7 @@ bool CheckWork(CBlock* pblock, CReserveKey& reservekey);
 void BitcoinMiner();
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 bool IsInitialBlockDownload();
-string GetWarnings(string strFor);
+std::string GetWarnings(std::string strFor);
 
 
 
@@ -147,7 +157,7 @@ public:
         return !(a == b);
     }
 
-    string ToString() const
+    std::string ToString() const
     {
         if (IsNull())
             return strprintf("null");
@@ -206,7 +216,7 @@ public:
         return !(a == b);
     }
 
-    string ToString() const
+    std::string ToString() const
     {
         return strprintf("COutPoint(%s, %d)", hash.ToString().substr(0,10).c_str(), n);
     }
@@ -275,9 +285,9 @@ public:
         return !(a == b);
     }
 
-    string ToString() const
+    std::string ToString() const
     {
-        string str;
+        std::string str;
         str += strprintf("CTxIn(");
         str += prevout.ToString();
         if (prevout.IsNull())
@@ -353,14 +363,14 @@ public:
     int64 GetCredit() const
     {
         if (!MoneyRange(nValue))
-            throw runtime_error("CTxOut::GetCredit() : value out of range");
+            throw std::runtime_error("CTxOut::GetCredit() : value out of range");
         return (IsMine() ? nValue : 0);
     }
 
     bool IsChange() const
     {
         // On a debit transaction, a txout that's mine but isn't in the address book is change
-        vector<unsigned char> vchPubKey;
+        std::vector<unsigned char> vchPubKey;
         if (ExtractPubKey(scriptPubKey, true, vchPubKey))
             CRITICAL_BLOCK(cs_mapAddressBook)
                 if (!mapAddressBook.count(PubKeyToAddress(vchPubKey)))
@@ -371,7 +381,7 @@ public:
     int64 GetChange() const
     {
         if (!MoneyRange(nValue))
-            throw runtime_error("CTxOut::GetChange() : value out of range");
+            throw std::runtime_error("CTxOut::GetChange() : value out of range");
         return (IsChange() ? nValue : 0);
     }
 
@@ -386,7 +396,7 @@ public:
         return !(a == b);
     }
 
-    string ToString() const
+    std::string ToString() const
     {
         if (scriptPubKey.size() < 6)
             return "CTxOut(error)";
@@ -410,8 +420,8 @@ class CTransaction
 {
 public:
     int nVersion;
-    vector<CTxIn> vin;
-    vector<CTxOut> vout;
+    std::vector<CTxIn> vin;
+    std::vector<CTxOut> vout;
     unsigned int nLockTime;
 
 
@@ -458,7 +468,7 @@ public:
             nBlockTime = GetAdjustedTime();
         if ((int64)nLockTime < (nLockTime < 500000000 ? (int64)nBlockHeight : nBlockTime))
             return true;
-        foreach(const CTxIn& txin, vin)
+        BOOST_FOREACH(const CTxIn& txin, vin)
             if (!txin.IsFinal())
                 return false;
         return true;
@@ -501,19 +511,19 @@ public:
     int GetSigOpCount() const
     {
         int n = 0;
-        foreach(const CTxIn& txin, vin)
+        BOOST_FOREACH(const CTxIn& txin, vin)
             n += txin.scriptSig.GetSigOpCount();
-        foreach(const CTxOut& txout, vout)
+        BOOST_FOREACH(const CTxOut& txout, vout)
             n += txout.scriptPubKey.GetSigOpCount();
         return n;
     }
 
     bool IsStandard() const
     {
-        foreach(const CTxIn& txin, vin)
+        BOOST_FOREACH(const CTxIn& txin, vin)
             if (!txin.scriptSig.IsPushOnly())
                 return error("nonstandard txin: %s", txin.scriptSig.ToString().c_str());
-        foreach(const CTxOut& txout, vout)
+        BOOST_FOREACH(const CTxOut& txout, vout)
             if (!::IsStandard(txout.scriptPubKey))
                 return error("nonstandard txout: %s", txout.scriptPubKey.ToString().c_str());
         return true;
@@ -521,7 +531,7 @@ public:
 
     bool IsMine() const
     {
-        foreach(const CTxOut& txout, vout)
+        BOOST_FOREACH(const CTxOut& txout, vout)
             if (txout.IsMine())
                 return true;
         return false;
@@ -535,11 +545,11 @@ public:
     int64 GetDebit() const
     {
         int64 nDebit = 0;
-        foreach(const CTxIn& txin, vin)
+        BOOST_FOREACH(const CTxIn& txin, vin)
         {
             nDebit += txin.GetDebit();
             if (!MoneyRange(nDebit))
-                throw runtime_error("CTransaction::GetDebit() : value out of range");
+                throw std::runtime_error("CTransaction::GetDebit() : value out of range");
         }
         return nDebit;
     }
@@ -547,11 +557,11 @@ public:
     int64 GetCredit() const
     {
         int64 nCredit = 0;
-        foreach(const CTxOut& txout, vout)
+        BOOST_FOREACH(const CTxOut& txout, vout)
         {
             nCredit += txout.GetCredit();
             if (!MoneyRange(nCredit))
-                throw runtime_error("CTransaction::GetCredit() : value out of range");
+                throw std::runtime_error("CTransaction::GetCredit() : value out of range");
         }
         return nCredit;
     }
@@ -561,11 +571,11 @@ public:
         if (IsCoinBase())
             return 0;
         int64 nChange = 0;
-        foreach(const CTxOut& txout, vout)
+        BOOST_FOREACH(const CTxOut& txout, vout)
         {
             nChange += txout.GetChange();
             if (!MoneyRange(nChange))
-                throw runtime_error("CTransaction::GetChange() : value out of range");
+                throw std::runtime_error("CTransaction::GetChange() : value out of range");
         }
         return nChange;
     }
@@ -573,11 +583,11 @@ public:
     int64 GetValueOut() const
     {
         int64 nValueOut = 0;
-        foreach(const CTxOut& txout, vout)
+        BOOST_FOREACH(const CTxOut& txout, vout)
         {
             nValueOut += txout.nValue;
             if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
-                throw runtime_error("CTransaction::GetValueOut() : value out of range");
+                throw std::runtime_error("CTransaction::GetValueOut() : value out of range");
         }
         return nValueOut;
     }
@@ -615,7 +625,7 @@ public:
 
         // To limit dust spam, require MIN_TX_FEE if any output is less than 0.01
         if (nMinFee < MIN_TX_FEE)
-            foreach(const CTxOut& txout, vout)
+            BOOST_FOREACH(const CTxOut& txout, vout)
                 if (txout.nValue < CENT)
                     nMinFee = MIN_TX_FEE;
 
@@ -668,9 +678,9 @@ public:
     }
 
 
-    string ToString() const
+    std::string ToString() const
     {
-        string str;
+        std::string str;
         str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
             GetHash().ToString().substr(0,10).c_str(),
             nVersion,
@@ -694,7 +704,7 @@ public:
     bool ReadFromDisk(CTxDB& txdb, COutPoint prevout);
     bool ReadFromDisk(COutPoint prevout);
     bool DisconnectInputs(CTxDB& txdb);
-    bool ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
+    bool ConnectInputs(CTxDB& txdb, std::map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
                        CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee=0);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
@@ -721,7 +731,7 @@ class CMerkleTx : public CTransaction
 {
 public:
     uint256 hashBlock;
-    vector<uint256> vMerkleBranch;
+    std::vector<uint256> vMerkleBranch;
     int nIndex;
 
     // memory only
@@ -776,14 +786,14 @@ public:
 class CWalletTx : public CMerkleTx
 {
 public:
-    vector<CMerkleTx> vtxPrev;
-    map<string, string> mapValue;
-    vector<pair<string, string> > vOrderForm;
+    std::vector<CMerkleTx> vtxPrev;
+    std::map<std::string, std::string> mapValue;
+    std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived;  // time received by this node
     char fFromMe;
-    string strFromAccount;
-    vector<char> vfSpent;
+    std::string strFromAccount;
+    std::vector<char> vfSpent;
 
     // memory only
     mutable char fDebitCached;
@@ -850,8 +860,8 @@ public:
         {
             pthis->mapValue["fromaccount"] = pthis->strFromAccount;
 
-            string str;
-            foreach(char f, vfSpent)
+            std::string str;
+            BOOST_FOREACH(char f, vfSpent)
             {
                 str += (f ? '1' : '0');
                 if (f)
@@ -874,7 +884,7 @@ public:
             pthis->strFromAccount = pthis->mapValue["fromaccount"];
 
             if (mapValue.count("spent"))
-                foreach(char c, pthis->mapValue["spent"])
+                BOOST_FOREACH(char c, pthis->mapValue["spent"])
                     pthis->vfSpent.push_back(c != '0');
             else
                 pthis->vfSpent.assign(vout.size(), fSpent);
@@ -887,7 +897,7 @@ public:
 
     // marks certain txout's as spent
     // returns true if any update took place
-    bool UpdateSpent(const vector<char>& vfNewSpent)
+    bool UpdateSpent(const std::vector<char>& vfNewSpent)
     {
         bool fReturn = false;
         for (int i=0; i < vfNewSpent.size(); i++)
@@ -916,7 +926,7 @@ public:
     void MarkSpent(unsigned int nOut)
     {
         if (nOut >= vout.size())
-            throw runtime_error("CWalletTx::MarkSpent() : nOut out of range");
+            throw std::runtime_error("CWalletTx::MarkSpent() : nOut out of range");
         vfSpent.resize(vout.size());
         if (!vfSpent[nOut])
         {
@@ -928,7 +938,7 @@ public:
     bool IsSpent(unsigned int nOut) const
     {
         if (nOut >= vout.size())
-            throw runtime_error("CWalletTx::IsSpent() : nOut out of range");
+            throw std::runtime_error("CWalletTx::IsSpent() : nOut out of range");
         if (nOut >= vfSpent.size())
             return false;
         return (!!vfSpent[nOut]);
@@ -976,7 +986,7 @@ public:
                 const CTxOut &txout = vout[i];
                 nCredit += txout.GetCredit();
                 if (!MoneyRange(nCredit))
-                    throw runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
             }
         }
 
@@ -995,10 +1005,10 @@ public:
         return nChangeCached;
     }
 
-    void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, list<pair<string /* address */, int64> >& listReceived,
-                    list<pair<string /* address */, int64> >& listSent, int64& nFee, string& strSentAccount) const;
+    void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<std::string /* address */, int64> >& listReceived,
+                    std::list<std::pair<std::string /* address */, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
 
-    void GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
+    void GetAccountAmounts(const std::string& strAccount, int64& nGenerated, int64& nReceived,
                            int64& nSent, int64& nFee) const;
 
     bool IsFromMe() const
@@ -1018,8 +1028,8 @@ public:
 
         // If no confirmations but it's from us, we can still
         // consider it confirmed if all dependencies are confirmed
-        map<uint256, const CMerkleTx*> mapPrev;
-        vector<const CMerkleTx*> vWorkQueue;
+        std::map<uint256, const CMerkleTx*> mapPrev;
+        std::vector<const CMerkleTx*> vWorkQueue;
         vWorkQueue.reserve(vtxPrev.size()+1);
         vWorkQueue.push_back(this);
         for (int i = 0; i < vWorkQueue.size(); i++)
@@ -1034,10 +1044,10 @@ public:
                 return false;
 
             if (mapPrev.empty())
-                foreach(const CMerkleTx& tx, vtxPrev)
+                BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
                     mapPrev[tx.GetHash()] = &tx;
 
-            foreach(const CTxIn& txin, ptx->vin)
+            BOOST_FOREACH(const CTxIn& txin, ptx->vin)
             {
                 if (!mapPrev.count(txin.prevout.hash))
                     return false;
@@ -1077,7 +1087,7 @@ class CTxIndex
 {
 public:
     CDiskTxPos pos;
-    vector<CDiskTxPos> vSpent;
+    std::vector<CDiskTxPos> vSpent;
 
     CTxIndex()
     {
@@ -1149,10 +1159,10 @@ public:
     unsigned int nNonce;
 
     // network and disk
-    vector<CTransaction> vtx;
+    std::vector<CTransaction> vtx;
 
     // memory only
-    mutable vector<uint256> vMerkleTree;
+    mutable std::vector<uint256> vMerkleTree;
 
 
     CBlock()
@@ -1207,7 +1217,7 @@ public:
     int GetSigOpCount() const
     {
         int n = 0;
-        foreach(const CTransaction& tx, vtx)
+        BOOST_FOREACH(const CTransaction& tx, vtx)
             n += tx.GetSigOpCount();
         return n;
     }
@@ -1216,14 +1226,14 @@ public:
     uint256 BuildMerkleTree() const
     {
         vMerkleTree.clear();
-        foreach(const CTransaction& tx, vtx)
+        BOOST_FOREACH(const CTransaction& tx, vtx)
             vMerkleTree.push_back(tx.GetHash());
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
             for (int i = 0; i < nSize; i += 2)
             {
-                int i2 = min(i+1, nSize-1);
+                int i2 = std::min(i+1, nSize-1);
                 vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
                                            BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
             }
@@ -1232,15 +1242,15 @@ public:
         return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
     }
 
-    vector<uint256> GetMerkleBranch(int nIndex) const
+    std::vector<uint256> GetMerkleBranch(int nIndex) const
     {
         if (vMerkleTree.empty())
             BuildMerkleTree();
-        vector<uint256> vMerkleBranch;
+        std::vector<uint256> vMerkleBranch;
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
-            int i = min(nIndex^1, nSize-1);
+            int i = std::min(nIndex^1, nSize-1);
             vMerkleBranch.push_back(vMerkleTree[j+i]);
             nIndex >>= 1;
             j += nSize;
@@ -1248,11 +1258,11 @@ public:
         return vMerkleBranch;
     }
 
-    static uint256 CheckMerkleBranch(uint256 hash, const vector<uint256>& vMerkleBranch, int nIndex)
+    static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex)
     {
         if (nIndex == -1)
             return 0;
-        foreach(const uint256& otherside, vMerkleBranch)
+        BOOST_FOREACH(const uint256& otherside, vMerkleBranch)
         {
             if (nIndex & 1)
                 hash = Hash(BEGIN(otherside), END(otherside), BEGIN(hash), END(hash));
@@ -1483,7 +1493,7 @@ public:
         for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
             *(--pbegin) = pindex->GetBlockTime();
 
-        sort(pbegin, pend);
+        std::sort(pbegin, pend);
         return pbegin[(pend - pbegin)/2];
     }
 
@@ -1501,7 +1511,7 @@ public:
 
 
 
-    string ToString() const
+    std::string ToString() const
     {
         return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nHeight,
@@ -1570,9 +1580,9 @@ public:
     }
 
 
-    string ToString() const
+    std::string ToString() const
     {
-        string str = "CDiskBlockIndex(";
+        std::string str = "CDiskBlockIndex(";
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashNext=%s)",
             GetBlockHash().ToString().c_str(),
@@ -1602,7 +1612,7 @@ public:
 class CBlockLocator
 {
 protected:
-    vector<uint256> vHave;
+    std::vector<uint256> vHave;
 public:
 
     CBlockLocator()
@@ -1616,7 +1626,7 @@ public:
 
     explicit CBlockLocator(uint256 hashBlock)
     {
-        map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+        std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
         if (mi != mapBlockIndex.end())
             Set((*mi).second);
     }
@@ -1660,9 +1670,9 @@ public:
         // Retrace how far back it was in the sender's branch
         int nDistance = 0;
         int nStep = 1;
-        foreach(const uint256& hash, vHave)
+        BOOST_FOREACH(const uint256& hash, vHave)
         {
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+            std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end())
             {
                 CBlockIndex* pindex = (*mi).second;
@@ -1679,9 +1689,9 @@ public:
     CBlockIndex* GetBlockIndex()
     {
         // Find the first block the caller has in the main chain
-        foreach(const uint256& hash, vHave)
+        BOOST_FOREACH(const uint256& hash, vHave)
         {
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+            std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end())
             {
                 CBlockIndex* pindex = (*mi).second;
@@ -1695,9 +1705,9 @@ public:
     uint256 GetBlockHash()
     {
         // Find the first block the caller has in the main chain
-        foreach(const uint256& hash, vHave)
+        BOOST_FOREACH(const uint256& hash, vHave)
         {
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+            std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end())
             {
                 CBlockIndex* pindex = (*mi).second;
@@ -1731,7 +1741,7 @@ public:
     CPrivKey vchPrivKey;
     int64 nTimeCreated;
     int64 nTimeExpires;
-    string strComment;
+    std::string strComment;
     //// todo: add something to note what created it (user, getnewaddress, change)
     ////   maybe should have a map<string, string> property map
 
@@ -1764,7 +1774,7 @@ public:
 class CAccount
 {
 public:
-    vector<unsigned char> vchPubKey;
+    std::vector<unsigned char> vchPubKey;
 
     CAccount()
     {
@@ -1793,11 +1803,11 @@ public:
 class CAccountingEntry
 {
 public:
-    string strAccount;
+    std::string strAccount;
     int64 nCreditDebit;
     int64 nTime;
-    string strOtherAccount;
-    string strComment;
+    std::string strOtherAccount;
+    std::string strComment;
 
     CAccountingEntry()
     {
@@ -1848,16 +1858,16 @@ public:
     int64 nExpiration;
     int nID;
     int nCancel;
-    set<int> setCancel;
+    std::set<int> setCancel;
     int nMinVer;            // lowest version inclusive
     int nMaxVer;            // highest version inclusive
-    set<string> setSubVer;  // empty matches all
+    std::set<std::string> setSubVer;  // empty matches all
     int nPriority;
 
     // Actions
-    string strComment;
-    string strStatusBar;
-    string strReserved;
+    std::string strComment;
+    std::string strStatusBar;
+    std::string strReserved;
 
     IMPLEMENT_SERIALIZE
     (
@@ -1896,13 +1906,13 @@ public:
         strReserved.clear();
     }
 
-    string ToString() const
+    std::string ToString() const
     {
-        string strSetCancel;
-        foreach(int n, setCancel)
+        std::string strSetCancel;
+        BOOST_FOREACH(int n, setCancel)
             strSetCancel += strprintf("%d ", n);
-        string strSetSubVer;
-        foreach(string str, setSubVer)
+        std::string strSetSubVer;
+        BOOST_FOREACH(std::string str, setSubVer)
             strSetSubVer += "\"" + str + "\" ";
         return strprintf(
                 "CAlert(\n"
@@ -1942,8 +1952,8 @@ public:
 class CAlert : public CUnsignedAlert
 {
 public:
-    vector<unsigned char> vchMsg;
-    vector<unsigned char> vchSig;
+    std::vector<unsigned char> vchMsg;
+    std::vector<unsigned char> vchSig;
 
     CAlert()
     {
@@ -1985,7 +1995,7 @@ public:
         return (alert.nID <= nCancel || setCancel.count(alert.nID));
     }
 
-    bool AppliesTo(int nVersion, string strSubVerIn) const
+    bool AppliesTo(int nVersion, std::string strSubVerIn) const
     {
         return (IsInEffect() &&
                 nMinVer <= nVersion && nVersion <= nMaxVer &&
@@ -2041,11 +2051,13 @@ public:
 
 
 
-extern map<uint256, CTransaction> mapTransactions;
-extern map<uint256, CWalletTx> mapWallet;
-extern vector<uint256> vWalletUpdated;
+extern std::map<uint256, CTransaction> mapTransactions;
+extern std::map<uint256, CWalletTx> mapWallet;
+extern std::vector<uint256> vWalletUpdated;
 extern CCriticalSection cs_mapWallet;
-extern map<vector<unsigned char>, CPrivKey> mapKeys;
-extern map<uint160, vector<unsigned char> > mapPubKeys;
+extern std::map<std::vector<unsigned char>, CPrivKey> mapKeys;
+extern std::map<uint160, std::vector<unsigned char> > mapPubKeys;
 extern CCriticalSection cs_mapKeys;
 extern CKey keyUser;
+
+#endif

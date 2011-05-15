@@ -1,7 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
+#ifndef BITCOIN_NOUI_H
+#define BITCOIN_NOUI_H
 
+#include <string>
 
 typedef void wxWindow;
 #define wxYES                   0x00000002
@@ -31,7 +34,7 @@ typedef void wxWindow;
 #define wxMORE                  0x00010000
 #define wxSETUP                 0x00020000
 
-inline int MyMessageBox(const string& message, const string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
+inline int MyMessageBox(const std::string& message, const std::string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
 {
     printf("%s: %s\n", caption.c_str(), message.c_str());
     fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
@@ -39,17 +42,17 @@ inline int MyMessageBox(const string& message, const string& caption="Message", 
 }
 #define wxMessageBox  MyMessageBox
 
-inline int ThreadSafeMessageBox(const string& message, const string& caption, int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
+inline int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
 {
     return MyMessageBox(message, caption, style, parent, x, y);
 }
 
-inline bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
+inline bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
 {
     return true;
 }
 
-inline void CalledSetStatusBar(const string& strText, int nField)
+inline void CalledSetStatusBar(const std::string& strText, int nField)
 {
 }
 
@@ -60,3 +63,5 @@ inline void UIThreadCall(boost::function0<void> fn)
 inline void MainFrameRepaint()
 {
 }
+
+#endif

@@ -1,14 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
 #include "headers.h"
 
-
-
-
-
-
+using namespace std;
+using namespace boost;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +67,6 @@ void HandleSIGTERM(int)
 //
 // Start
 //
-
 #ifndef GUI
 int main(int argc, char* argv[])
 {
@@ -458,7 +453,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-addnode"))
     {
-        foreach(string strAddr, mapMultiArgs["-addnode"])
+        BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
         {
             CAddress addr(strAddr, fAllowDNS);
             addr.nTime = 0; // so it won't relay unless successfully connected

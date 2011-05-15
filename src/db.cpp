@@ -4,6 +4,9 @@
 
 #include "headers.h"
 
+using namespace std;
+using namespace boost;
+
 void ThreadFlushWalletDB(void* parg);
 
 
@@ -434,13 +437,13 @@ bool CTxDB::LoadBlockIndex()
     // Calculate bnChainWork
     vector<pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(mapBlockIndex.size());
-    foreach(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
+    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
     {
         CBlockIndex* pindex = item.second;
         vSortedByHeight.push_back(make_pair(pindex->nHeight, pindex));
     }
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
-    foreach(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
+    BOOST_FOREACH(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
     {
         CBlockIndex* pindex = item.second;
         pindex->bnChainWork = (pindex->pprev ? pindex->pprev->bnChainWork : 0) + pindex->GetBlockWork();
@@ -603,7 +606,7 @@ int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
     ListAccountCreditDebit(strAccount, entries);
 
     int64 nCreditDebit = 0;
-    foreach (const CAccountingEntry& entry, entries)
+    BOOST_FOREACH (const CAccountingEntry& entry, entries)
         nCreditDebit += entry.nCreditDebit;
 
     return nCreditDebit;
@@ -796,7 +799,7 @@ bool CWalletDB::LoadWallet()
         pcursor->close();
     }
 
-    foreach(uint256 hash, vWalletUpgrade)
+    BOOST_FOREACH(uint256 hash, vWalletUpgrade)
         WriteTx(hash, mapWallet[hash]);
 
     printf("nFileVersion = %d\n", nFileVersion);

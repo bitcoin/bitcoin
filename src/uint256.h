@@ -1,9 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
+#ifndef BITCOIN_UINT256_H
+#define BITCOIN_UINT256_H
+
+#include "serialize.h"
 
 #include <limits.h>
 #include <string>
+#include <vector>
+
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 typedef __int64  int64;
 typedef unsigned __int64  uint64;
@@ -16,7 +22,7 @@ typedef unsigned long long  uint64;
 #endif
 
 
-inline int Testuint256AdHoc(vector<string> vArg);
+inline int Testuint256AdHoc(std::vector<std::string> vArg);
 
 
 
@@ -296,7 +302,7 @@ public:
         char psz[sizeof(pn)*2 + 1];
         for (int i = 0; i < sizeof(pn); i++)
             sprintf(psz + i*2, "%02x", ((unsigned char*)pn)[sizeof(pn) - i - 1]);
-        return string(psz, psz + sizeof(pn)*2);
+        return std::string(psz, psz + sizeof(pn)*2);
     }
 
     void SetHex(const char* psz)
@@ -377,7 +383,7 @@ public:
 
     friend class uint160;
     friend class uint256;
-    friend inline int Testuint256AdHoc(vector<string> vArg);
+    friend inline int Testuint256AdHoc(std::vector<std::string> vArg);
 };
 
 typedef base_uint<160> base_uint160;
@@ -626,7 +632,7 @@ inline const uint256 operator-(const uint256& a, const uint256& b)      { return
 
 
 
-inline int Testuint256AdHoc(vector<string> vArg)
+inline int Testuint256AdHoc(std::vector<std::string> vArg)
 {
     uint256 g(0);
 
@@ -755,3 +761,5 @@ inline int Testuint256AdHoc(vector<string> vArg)
 
     return (0);
 }
+
+#endif

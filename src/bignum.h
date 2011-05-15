@@ -1,14 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
+#ifndef BITCOIN_BIGNUM_H
+#define BITCOIN_BIGNUM_H
 
 #include <stdexcept>
 #include <vector>
 #include <openssl/bn.h>
 
-
-
-
+#include "util.h"
 
 class bignum_error : public std::runtime_error
 {
@@ -308,7 +308,7 @@ public:
         CAutoBN_CTX pctx;
         CBigNum bnBase = nBase;
         CBigNum bn0 = 0;
-        string str;
+        std::string str;
         CBigNum bn = *this;
         BN_set_negative(&bn, false);
         CBigNum dv;
@@ -348,7 +348,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s, int nType=0, int nVersion=VERSION)
     {
-        vector<unsigned char> vch;
+        std::vector<unsigned char> vch;
         ::Unserialize(s, vch, nType, nVersion);
         setvch(vch);
     }
@@ -530,3 +530,5 @@ inline bool operator<=(const CBigNum& a, const CBigNum& b) { return (BN_cmp(&a, 
 inline bool operator>=(const CBigNum& a, const CBigNum& b) { return (BN_cmp(&a, &b) >= 0); }
 inline bool operator<(const CBigNum& a, const CBigNum& b)  { return (BN_cmp(&a, &b) < 0); }
 inline bool operator>(const CBigNum& a, const CBigNum& b)  { return (BN_cmp(&a, &b) > 0); }
+
+#endif
