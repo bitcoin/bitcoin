@@ -7,10 +7,10 @@ bool Function(char* psz, int n)
     // Comment summarising what this section of code does
     for (int i = 0; i < n; i++)
     {
-        // When something fails, return early
-        if (!Something())
-            return false;
-        ...
+	// When something fails, return early
+	if (!Something())
+	    return false;
+	...
     }
 
     // Success return is usually at the end
@@ -28,7 +28,7 @@ someVariable.
 
 Common types:
 n       integer number: short, unsigned short, int, unsigned int,
-            int64, uint64, sometimes char if used as a number
+	    int64, uint64, sometimes char if used as a number
 d       double, float
 f       flag
 hash    uint256

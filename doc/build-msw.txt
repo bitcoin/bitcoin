@@ -26,7 +26,7 @@ Dependencies
 ------------
 Libraries you need to download separately and build:
 
-                default path               download
+		default path               download
 wxWidgets       \wxwidgets-2.9.1-mgw       http://www.wxwidgets.org/downloads/
 OpenSSL         \openssl-1.0.0c-mgw        http://www.openssl.org/source/
 Berkeley DB     \db-4.7.25.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html

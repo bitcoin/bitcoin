@@ -303,7 +303,7 @@ inline const char* GetOpName(opcodetype opcode)
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
     default:
-        return "OP_UNKNOWN";
+	return "OP_UNKNOWN";
     }
 };
 
@@ -313,9 +313,9 @@ inline const char* GetOpName(opcodetype opcode)
 inline string ValueString(const vector<unsigned char>& vch)
 {
     if (vch.size() <= 4)
-        return strprintf("%d", CBigNum(vch).getint());
+	return strprintf("%d", CBigNum(vch).getint());
     else
-        return HexStr(vch);
+	return HexStr(vch);
 }
 
 inline string StackString(const vector<vector<unsigned char> >& vStack)
@@ -323,9 +323,9 @@ inline string StackString(const vector<vector<unsigned char> >& vStack)
     string str;
     foreach(const vector<unsigned char>& vch, vStack)
     {
-        if (!str.empty())
-            str += " ";
-        str += ValueString(vch);
+	if (!str.empty())
+	    str += " ";
+	str += ValueString(vch);
     }
     return str;
 }
@@ -343,30 +343,30 @@ class CScript : public vector<unsigned char>
 protected:
     CScript& push_int64(int64 n)
     {
-        if (n == -1 || (n >= 1 && n <= 16))
-        {
-            push_back(n + (OP_1 - 1));
-        }
-        else
-        {
-            CBigNum bn(n);
-            *this << bn.getvch();
-        }
-        return *this;
+	if (n == -1 || (n >= 1 && n <= 16))
+	{
+	    push_back(n + (OP_1 - 1));
+	}
+	else
+	{
+	    CBigNum bn(n);
+	    *this << bn.getvch();
+	}
+	return *this;
     }
 
     CScript& push_uint64(uint64 n)
     {
-        if (n >= 1 && n <= 16)
-        {
-            push_back(n + (OP_1 - 1));
-        }
-        else
-        {
-            CBigNum bn(n);
-            *this << bn.getvch();
-        }
-        return *this;
+	if (n >= 1 && n <= 16)
+	{
+	    push_back(n + (OP_1 - 1));
+	}
+	else
+	{
+	    CBigNum bn(n);
+	    *this << bn.getvch();
+	}
+	return *this;
     }
 
 public:
@@ -379,15 +379,15 @@ public:
 
     CScript& operator+=(const CScript& b)
     {
-        insert(end(), b.begin(), b.end());
-        return *this;
+	insert(end(), b.begin(), b.end());
+	return *this;
     }
 
     friend CScript operator+(const CScript& a, const CScript& b)
     {
-        CScript ret = a;
-        ret += b;
-        return ret;
+	CScript ret = a;
+	ret += b;
+	return ret;
     }
 
 
@@ -421,275 +421,275 @@ public:
 
     CScript& operator<<(opcodetype opcode)
     {
-        if (opcode < 0 || opcode > 0xff)
-            throw runtime_error("CScript::operator<<() : invalid opcode");
-        insert(end(), (unsigned char)opcode);
-        return *this;
+	if (opcode < 0 || opcode > 0xff)
+	    throw runtime_error("CScript::operator<<() : invalid opcode");
+	insert(end(), (unsigned char)opcode);
+	return *this;
     }
 
     CScript& operator<<(const uint160& b)
     {
-        insert(end(), sizeof(b));
-        insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
-        return *this;
+	insert(end(), sizeof(b));
+	insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
+	return *this;
     }
 
     CScript& operator<<(const uint256& b)
     {
-        insert(end(), sizeof(b));
-        insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
-        return *this;
+	insert(end(), sizeof(b));
+	insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
+	return *this;
     }
 
     CScript& operator<<(const CBigNum& b)
     {
-        *this << b.getvch();
-        return *this;
+	*this << b.getvch();
+	return *this;
     }
 
     CScript& operator<<(const vector<unsigned char>& b)
     {
-        if (b.size() < OP_PUSHDATA1)
-        {
-            insert(end(), (unsigned char)b.size());
-        }
-        else if (b.size() <= 0xff)
-        {
-            insert(end(), OP_PUSHDATA1);
-            insert(end(), (unsigned char)b.size());
-        }
-        else if (b.size() <= 0xffff)
-        {
-            insert(end(), OP_PUSHDATA2);
-            unsigned short nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
-        }
-        else
-        {
-            insert(end(), OP_PUSHDATA4);
-            unsigned int nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
-        }
-        insert(end(), b.begin(), b.end());
-        return *this;
+	if (b.size() < OP_PUSHDATA1)
+	{
+	    insert(end(), (unsigned char)b.size());
+	}
+	else if (b.size() <= 0xff)
+	{
+	    insert(end(), OP_PUSHDATA1);
+	    insert(end(), (unsigned char)b.size());
+	}
+	else if (b.size() <= 0xffff)
+	{
+	    insert(end(), OP_PUSHDATA2);
+	    unsigned short nSize = b.size();
+	    insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
+	}
+	else
+	{
+	    insert(end(), OP_PUSHDATA4);
+	    unsigned int nSize = b.size();
+	    insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
+	}
+	insert(end(), b.begin(), b.end());
+	return *this;
     }
 
     CScript& operator<<(const CScript& b)
     {
-        // I'm not sure if this should push the script or concatenate scripts.
-        // If there's ever a use for pushing a script onto a script, delete this member fn
-        assert(("warning: pushing a CScript onto a CScript with << is probably not intended, use + to concatenate", false));
-        return *this;
+	// I'm not sure if this should push the script or concatenate scripts.
+	// If there's ever a use for pushing a script onto a script, delete this member fn
+	assert(("warning: pushing a CScript onto a CScript with << is probably not intended, use + to concatenate", false));
+	return *this;
     }
 
 
     bool GetOp(iterator& pc, opcodetype& opcodeRet, vector<unsigned char>& vchRet)
     {
-         // Wrapper so it can be called with either iterator or const_iterator
-         const_iterator pc2 = pc;
-         bool fRet = GetOp2(pc2, opcodeRet, &vchRet);
-         pc = begin() + (pc2 - begin());
-         return fRet;
+	 // Wrapper so it can be called with either iterator or const_iterator
+	 const_iterator pc2 = pc;
+	 bool fRet = GetOp2(pc2, opcodeRet, &vchRet);
+	 pc = begin() + (pc2 - begin());
+	 return fRet;
     }
 
     bool GetOp(iterator& pc, opcodetype& opcodeRet)
     {
-         const_iterator pc2 = pc;
-         bool fRet = GetOp2(pc2, opcodeRet, NULL);
-         pc = begin() + (pc2 - begin());
-         return fRet;
+	 const_iterator pc2 = pc;
+	 bool fRet = GetOp2(pc2, opcodeRet, NULL);
+	 pc = begin() + (pc2 - begin());
+	 return fRet;
     }
 
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet, vector<unsigned char>& vchRet) const
     {
-        return GetOp2(pc, opcodeRet, &vchRet);
+	return GetOp2(pc, opcodeRet, &vchRet);
     }
 
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet) const
     {
-        return GetOp2(pc, opcodeRet, NULL);
+	return GetOp2(pc, opcodeRet, NULL);
     }
 
     bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, vector<unsigned char>* pvchRet) const
     {
-        opcodeRet = OP_INVALIDOPCODE;
-        if (pvchRet)
-            pvchRet->clear();
-        if (pc >= end())
-            return false;
+	opcodeRet = OP_INVALIDOPCODE;
+	if (pvchRet)
+	    pvchRet->clear();
+	if (pc >= end())
+	    return false;
 
-        // Read instruction
-        if (end() - pc < 1)
-            return false;
-        unsigned int opcode = *pc++;
+	// Read instruction
+	if (end() - pc < 1)
+	    return false;
+	unsigned int opcode = *pc++;
 
-        // Immediate operand
-        if (opcode <= OP_PUSHDATA4)
-        {
-            unsigned int nSize;
-            if (opcode < OP_PUSHDATA1)
-            {
-                nSize = opcode;
-            }
-            else if (opcode == OP_PUSHDATA1)
-            {
-                if (end() - pc < 1)
-                    return false;
-                nSize = *pc++;
-            }
-            else if (opcode == OP_PUSHDATA2)
-            {
-                if (end() - pc < 2)
-                    return false;
-                nSize = 0;
-                memcpy(&nSize, &pc[0], 2);
-                pc += 2;
-            }
-            else if (opcode == OP_PUSHDATA4)
-            {
-                if (end() - pc < 4)
-                    return false;
-                memcpy(&nSize, &pc[0], 4);
-                pc += 4;
-            }
-            if (end() - pc < nSize)
-                return false;
-            if (pvchRet)
-                pvchRet->assign(pc, pc + nSize);
-            pc += nSize;
-        }
+	// Immediate operand
+	if (opcode <= OP_PUSHDATA4)
+	{
+	    unsigned int nSize;
+	    if (opcode < OP_PUSHDATA1)
+	    {
+		nSize = opcode;
+	    }
+	    else if (opcode == OP_PUSHDATA1)
+	    {
+		if (end() - pc < 1)
+		    return false;
+		nSize = *pc++;
+	    }
+	    else if (opcode == OP_PUSHDATA2)
+	    {
+		if (end() - pc < 2)
+		    return false;
+		nSize = 0;
+		memcpy(&nSize, &pc[0], 2);
+		pc += 2;
+	    }
+	    else if (opcode == OP_PUSHDATA4)
+	    {
+		if (end() - pc < 4)
+		    return false;
+		memcpy(&nSize, &pc[0], 4);
+		pc += 4;
+	    }
+	    if (end() - pc < nSize)
+		return false;
+	    if (pvchRet)
+		pvchRet->assign(pc, pc + nSize);
+	    pc += nSize;
+	}
 
-        opcodeRet = (opcodetype)opcode;
-        return true;
+	opcodeRet = (opcodetype)opcode;
+	return true;
     }
 
 
     void FindAndDelete(const CScript& b)
     {
-        if (b.empty())
-            return;
-        iterator pc = begin();
-        opcodetype opcode;
-        do
-        {
-            while (end() - pc >= b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
-                erase(pc, pc + b.size());
-        }
-        while (GetOp(pc, opcode));
+	if (b.empty())
+	    return;
+	iterator pc = begin();
+	opcodetype opcode;
+	do
+	{
+	    while (end() - pc >= b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
+		erase(pc, pc + b.size());
+	}
+	while (GetOp(pc, opcode));
     }
 
 
     int GetSigOpCount() const
     {
-        int n = 0;
-        const_iterator pc = begin();
-        while (pc < end())
-        {
-            opcodetype opcode;
-            if (!GetOp(pc, opcode))
-                break;
-            if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
-                n++;
-            else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-                n += 20;
-        }
-        return n;
+	int n = 0;
+	const_iterator pc = begin();
+	while (pc < end())
+	{
+	    opcodetype opcode;
+	    if (!GetOp(pc, opcode))
+		break;
+	    if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
+		n++;
+	    else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
+		n += 20;
+	}
+	return n;
     }
 
 
     bool IsPushOnly() const
     {
-        if (size() > 200)
-            return false;
-        const_iterator pc = begin();
-        while (pc < end())
-        {
-            opcodetype opcode;
-            if (!GetOp(pc, opcode))
-                return false;
-            if (opcode > OP_16)
-                return false;
-        }
-        return true;
+	if (size() > 200)
+	    return false;
+	const_iterator pc = begin();
+	while (pc < end())
+	{
+	    opcodetype opcode;
+	    if (!GetOp(pc, opcode))
+		return false;
+	    if (opcode > OP_16)
+		return false;
+	}
+	return true;
     }
 
 
     uint160 GetBitcoinAddressHash160() const
     {
-        opcodetype opcode;
-        vector<unsigned char> vch;
-        CScript::const_iterator pc = begin();
-        if (!GetOp(pc, opcode, vch) || opcode != OP_DUP) return 0;
-        if (!GetOp(pc, opcode, vch) || opcode != OP_HASH160) return 0;
-        if (!GetOp(pc, opcode, vch) || vch.size() != sizeof(uint160)) return 0;
-        uint160 hash160 = uint160(vch);
-        if (!GetOp(pc, opcode, vch) || opcode != OP_EQUALVERIFY) return 0;
-        if (!GetOp(pc, opcode, vch) || opcode != OP_CHECKSIG) return 0;
-        if (pc != end()) return 0;
-        return hash160;
+	opcodetype opcode;
+	vector<unsigned char> vch;
+	CScript::const_iterator pc = begin();
+	if (!GetOp(pc, opcode, vch) || opcode != OP_DUP) return 0;
+	if (!GetOp(pc, opcode, vch) || opcode != OP_HASH160) return 0;
+	if (!GetOp(pc, opcode, vch) || vch.size() != sizeof(uint160)) return 0;
+	uint160 hash160 = uint160(vch);
+	if (!GetOp(pc, opcode, vch) || opcode != OP_EQUALVERIFY) return 0;
+	if (!GetOp(pc, opcode, vch) || opcode != OP_CHECKSIG) return 0;
+	if (pc != end()) return 0;
+	return hash160;
     }
 
     string GetBitcoinAddress() const
     {
-        uint160 hash160 = GetBitcoinAddressHash160();
-        if (hash160 == 0)
-            return "";
-        return Hash160ToAddress(hash160);
+	uint160 hash160 = GetBitcoinAddressHash160();
+	if (hash160 == 0)
+	    return "";
+	return Hash160ToAddress(hash160);
     }
 
     void SetBitcoinAddress(const uint160& hash160)
     {
-        this->clear();
-        *this << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
+	this->clear();
+	*this << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
     void SetBitcoinAddress(const vector<unsigned char>& vchPubKey)
     {
-        SetBitcoinAddress(Hash160(vchPubKey));
+	SetBitcoinAddress(Hash160(vchPubKey));
     }
 
     bool SetBitcoinAddress(const string& strAddress)
     {
-        this->clear();
-        uint160 hash160;
-        if (!AddressToHash160(strAddress, hash160))
-            return false;
-        SetBitcoinAddress(hash160);
-        return true;
+	this->clear();
+	uint160 hash160;
+	if (!AddressToHash160(strAddress, hash160))
+	    return false;
+	SetBitcoinAddress(hash160);
+	return true;
     }
 
 
     void PrintHex() const
     {
-        printf("CScript(%s)\n", HexStr(begin(), end(), true).c_str());
+	printf("CScript(%s)\n", HexStr(begin(), end(), true).c_str());
     }
 
     string ToString() const
     {
-        string str;
-        opcodetype opcode;
-        vector<unsigned char> vch;
-        const_iterator pc = begin();
-        while (pc < end())
-        {
-            if (!str.empty())
-                str += " ";
-            if (!GetOp(pc, opcode, vch))
-            {
-                str += "[error]";
-                return str;
-            }
-            if (0 <= opcode && opcode <= OP_PUSHDATA4)
-                str += ValueString(vch);
-            else
-                str += GetOpName(opcode);
-        }
-        return str;
+	string str;
+	opcodetype opcode;
+	vector<unsigned char> vch;
+	const_iterator pc = begin();
+	while (pc < end())
+	{
+	    if (!str.empty())
+		str += " ";
+	    if (!GetOp(pc, opcode, vch))
+	    {
+		str += "[error]";
+		return str;
+	    }
+	    if (0 <= opcode && opcode <= OP_PUSHDATA4)
+		str += ValueString(vch);
+	    else
+		str += GetOpName(opcode);
+	}
+	return str;
     }
 
     void print() const
     {
-        printf("%s\n", ToString().c_str());
+	printf("%s\n", ToString().c_str());
     }
 };
 

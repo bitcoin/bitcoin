@@ -60,8 +60,8 @@ T* alignup(T* p)
 {
     union
     {
-        T* ptr;
-        size_t n;
+	T* ptr;
+	size_t n;
     } u;
     u.ptr = p;
     u.n = (u.n + (nBytes-1)) & ~(nBytes-1);
@@ -107,7 +107,7 @@ inline void Sleep(int64 n)
 inline int myclosesocket(SOCKET& hSocket)
 {
     if (hSocket == INVALID_SOCKET)
-        return WSAENOTSOCK;
+	return WSAENOTSOCK;
 #ifdef __WXMSW__
     int ret = closesocket(hSocket);
 #else
@@ -320,13 +320,13 @@ template<typename T>
 string HexStr(const T itbegin, const T itend, bool fSpaces=false)
 {
     if (itbegin == itend)
-        return "";
+	return "";
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
     string str;
     str.reserve((pend-pbegin) * (fSpaces ? 3 : 2));
     for (const unsigned char* p = pbegin; p != pend; p++)
-        str += strprintf((fSpaces && p != pend-1 ? "%02x " : "%02x"), *p);
+	str += strprintf((fSpaces && p != pend-1 ? "%02x " : "%02x"), *p);
     return str;
 }
 
@@ -339,13 +339,13 @@ template<typename T>
 string HexNumStr(const T itbegin, const T itend, bool f0x=true)
 {
     if (itbegin == itend)
-        return "";
+	return "";
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
     string str = (f0x ? "0x" : "");
     str.reserve(str.size() + (pend-pbegin) * 2);
     for (const unsigned char* p = pend-1; p >= pbegin; p--)
-        str += strprintf("%02x", *p);
+	str += strprintf("%02x", *p);
     return str;
 }
 
@@ -381,7 +381,7 @@ inline int64 GetPerformanceCounter()
 inline int64 GetTimeMillis()
 {
     return (posix_time::ptime(posix_time::microsec_clock::universal_time()) -
-            posix_time::ptime(gregorian::date(1970,1,1))).total_milliseconds();
+	    posix_time::ptime(gregorian::date(1970,1,1))).total_milliseconds();
 }
 
 inline string DateTimeStrFormat(const char* pszFormat, int64 nTime)
@@ -397,7 +397,7 @@ template<typename T>
 void skipspaces(T& it)
 {
     while (isspace(*it))
-        ++it;
+	++it;
 }
 
 inline bool IsSwitchChar(char c)
@@ -412,14 +412,14 @@ inline bool IsSwitchChar(char c)
 inline string GetArg(const string& strArg, const string& strDefault)
 {
     if (mapArgs.count(strArg))
-        return mapArgs[strArg];
+	return mapArgs[strArg];
     return strDefault;
 }
 
 inline int64 GetArg(const string& strArg, int64 nDefault)
 {
     if (mapArgs.count(strArg))
-        return atoi64(mapArgs[strArg]);
+	return atoi64(mapArgs[strArg]);
     return nDefault;
 }
 
@@ -427,9 +427,9 @@ inline bool GetBoolArg(const string& strArg)
 {
     if (mapArgs.count(strArg))
     {
-        if (mapArgs[strArg].empty())
-            return true;
-        return (atoi(mapArgs[strArg]) != 0);
+	if (mapArgs[strArg].empty())
+	    return true;
+	return (atoi(mapArgs[strArg]) != 0);
     }
     return false;
 }
@@ -455,21 +455,21 @@ inline void heapchk()
 // Randomize the stack to help protect against buffer overrun exploits
 #define IMPLEMENT_RANDOMIZE_STACK(ThreadFn)     \
     {                                           \
-        static char nLoops;                     \
-        if (nLoops <= 0)                        \
-            nLoops = GetRand(20) + 1;           \
-        if (nLoops-- > 1)                       \
-        {                                       \
-            ThreadFn;                           \
-            return;                             \
-        }                                       \
+	static char nLoops;                     \
+	if (nLoops <= 0)                        \
+	    nLoops = GetRand(20) + 1;           \
+	if (nLoops-- > 1)                       \
+	{                                       \
+	    ThreadFn;                           \
+	    return;                             \
+	}                                       \
     }
 
 #define CATCH_PRINT_EXCEPTION(pszFn)     \
     catch (std::exception& e) {          \
-        PrintException(&e, (pszFn));     \
+	PrintException(&e, (pszFn));     \
     } catch (...) {                      \
-        PrintException(NULL, (pszFn));   \
+	PrintException(NULL, (pszFn));   \
     }
 
 
@@ -494,7 +494,7 @@ inline uint256 Hash(const T1 pbegin, const T1 pend)
 
 template<typename T1, typename T2>
 inline uint256 Hash(const T1 p1begin, const T1 p1end,
-                    const T2 p2begin, const T2 p2end)
+		    const T2 p2begin, const T2 p2end)
 {
     static unsigned char pblank[1];
     uint256 hash1;
@@ -510,8 +510,8 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
 
 template<typename T1, typename T2, typename T3>
 inline uint256 Hash(const T1 p1begin, const T1 p1end,
-                    const T2 p2begin, const T2 p2end,
-                    const T3 p3begin, const T3 p3end)
+		    const T2 p2begin, const T2 p2end,
+		    const T3 p3begin, const T3 p3end)
 {
     static unsigned char pblank[1];
     uint256 hash1;
@@ -566,22 +566,22 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
 {
     DWORD nUnused = 0;
     HANDLE hthread =
-        CreateThread(
-            NULL,                        // default security
-            0,                           // inherit stack size from parent
-            (LPTHREAD_START_ROUTINE)pfn, // function pointer
-            parg,                        // argument
-            0,                           // creation option, start immediately
-            &nUnused);                   // thread identifier
+	CreateThread(
+	    NULL,                        // default security
+	    0,                           // inherit stack size from parent
+	    (LPTHREAD_START_ROUTINE)pfn, // function pointer
+	    parg,                        // argument
+	    0,                           // creation option, start immediately
+	    &nUnused);                   // thread identifier
     if (hthread == NULL)
     {
-        printf("Error: CreateThread() returned %d\n", GetLastError());
-        return (pthread_t)0;
+	printf("Error: CreateThread() returned %d\n", GetLastError());
+	return (pthread_t)0;
     }
     if (!fWantHandle)
     {
-        CloseHandle(hthread);
-        return (pthread_t)-1;
+	CloseHandle(hthread);
+	return (pthread_t)-1;
     }
     return hthread;
 }
@@ -597,11 +597,11 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
     int ret = pthread_create(&hthread, NULL, (void*(*)(void*))pfn, parg);
     if (ret != 0)
     {
-        printf("Error: pthread_create() returned %d\n", ret);
-        return (pthread_t)0;
+	printf("Error: pthread_create() returned %d\n", ret);
+	return (pthread_t)0;
     }
     if (!fWantHandle)
-        return (pthread_t)-1;
+	return (pthread_t)-1;
     return hthread;
 }
 
@@ -647,10 +647,10 @@ inline bool AffinityBugWorkaround(void(*pfn)(void*))
     DWORD dwPrev2 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
     if (dwPrev2 != dwProcessAffinityMask)
     {
-        printf("AffinityBugWorkaround() : SetThreadAffinityMask=%d, ProcessAffinityMask=%d, restarting thread\n", dwPrev2, dwProcessAffinityMask);
-        if (!CreateThread(pfn, NULL))
-            printf("Error: CreateThread() failed\n");
-        return true;
+	printf("AffinityBugWorkaround() : SetThreadAffinityMask=%d, ProcessAffinityMask=%d, restarting thread\n", dwPrev2, dwProcessAffinityMask);
+	if (!CreateThread(pfn, NULL))
+	    printf("Error: CreateThread() failed\n");
+	return true;
     }
 #endif
     return false;

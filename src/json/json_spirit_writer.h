@@ -15,7 +15,7 @@
 
 namespace json_spirit
 {
-    // functions to convert JSON Values to text, 
+    // functions to convert JSON Values to text,
     // the "formatted" versions add whitespace to format the output nicely
 
     void         write          ( const Value& value, std::ostream&  os );

@@ -5,7 +5,7 @@ suites:
 architectures:
 - "i386"
 - "amd64"
-packages: 
+packages:
 - "libdb4.8++-dev"
 - "libxxf86vm-dev"
 - "libgtk2.0-dev"

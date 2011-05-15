@@ -43,7 +43,7 @@ name of the directory, for example /Users/james/bitcoin/deps for a user named
 cd ~/bitcoin
 svn checkout https://bitcoin.svn.sourceforge.net/svnroot/bitcoin/trunk
 
-This will make ~/bitcoin/trunk for you with all the files from subversion. 
+This will make ~/bitcoin/trunk for you with all the files from subversion.
 
 3.  Get and build the dependencies
 
@@ -219,17 +219,17 @@ cd "$BUILDDIR" &&
 --with-macosx-sdk=/Developer/SDKs/MacOSX10.5.sdk &&
 
 
-find . -name Makefile | 
-while read i; do 
-  echo $i; 
-  sed 's/-arch i386/-arch i386 -arch x86_64/g' < "$i" > "$i".new && 
-  mv "$i" "$i".old && 
-  mv "$i".new "$i"; 
+find . -name Makefile |
+while read i; do
+  echo $i;
+  sed 's/-arch i386/-arch i386 -arch x86_64/g' < "$i" > "$i".new &&
+  mv "$i" "$i".old &&
+  mv "$i".new "$i";
 done
 
 
 
-make && 
+make &&
 make install
 
 

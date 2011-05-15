@@ -53,206 +53,206 @@ protected:
     template<typename K, typename T>
     bool Read(const K& key, T& value)
     {
-        if (!pdb)
-            return false;
+	if (!pdb)
+	    return false;
 
-        // Key
-        CDataStream ssKey(SER_DISK);
-        ssKey.reserve(1000);
-        ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
+	// Key
+	CDataStream ssKey(SER_DISK);
+	ssKey.reserve(1000);
+	ssKey << key;
+	Dbt datKey(&ssKey[0], ssKey.size());
 
-        // Read
-        Dbt datValue;
-        datValue.set_flags(DB_DBT_MALLOC);
-        int ret = pdb->get(GetTxn(), &datKey, &datValue, 0);
-        memset(datKey.get_data(), 0, datKey.get_size());
-        if (datValue.get_data() == NULL)
-            return false;
+	// Read
+	Dbt datValue;
+	datValue.set_flags(DB_DBT_MALLOC);
+	int ret = pdb->get(GetTxn(), &datKey, &datValue, 0);
+	memset(datKey.get_data(), 0, datKey.get_size());
+	if (datValue.get_data() == NULL)
+	    return false;
 
-        // Unserialize value
-        CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK);
-        ssValue >> value;
+	// Unserialize value
+	CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK);
+	ssValue >> value;
 
-        // Clear and free memory
-        memset(datValue.get_data(), 0, datValue.get_size());
-        free(datValue.get_data());
-        return (ret == 0);
+	// Clear and free memory
+	memset(datValue.get_data(), 0, datValue.get_size());
+	free(datValue.get_data());
+	return (ret == 0);
     }
 
     template<typename K, typename T>
     bool Write(const K& key, const T& value, bool fOverwrite=true)
     {
-        if (!pdb)
-            return false;
-        if (fReadOnly)
-            assert(("Write called on database in read-only mode", false));
+	if (!pdb)
+	    return false;
+	if (fReadOnly)
+	    assert(("Write called on database in read-only mode", false));
 
-        // Key
-        CDataStream ssKey(SER_DISK);
-        ssKey.reserve(1000);
-        ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
+	// Key
+	CDataStream ssKey(SER_DISK);
+	ssKey.reserve(1000);
+	ssKey << key;
+	Dbt datKey(&ssKey[0], ssKey.size());
 
-        // Value
-        CDataStream ssValue(SER_DISK);
-        ssValue.reserve(10000);
-        ssValue << value;
-        Dbt datValue(&ssValue[0], ssValue.size());
+	// Value
+	CDataStream ssValue(SER_DISK);
+	ssValue.reserve(10000);
+	ssValue << value;
+	Dbt datValue(&ssValue[0], ssValue.size());
 
-        // Write
-        int ret = pdb->put(GetTxn(), &datKey, &datValue, (fOverwrite ? 0 : DB_NOOVERWRITE));
+	// Write
+	int ret = pdb->put(GetTxn(), &datKey, &datValue, (fOverwrite ? 0 : DB_NOOVERWRITE));
 
-        // Clear memory in case it was a private key
-        memset(datKey.get_data(), 0, datKey.get_size());
-        memset(datValue.get_data(), 0, datValue.get_size());
-        return (ret == 0);
+	// Clear memory in case it was a private key
+	memset(datKey.get_data(), 0, datKey.get_size());
+	memset(datValue.get_data(), 0, datValue.get_size());
+	return (ret == 0);
     }
 
     template<typename K>
     bool Erase(const K& key)
     {
-        if (!pdb)
-            return false;
-        if (fReadOnly)
-            assert(("Erase called on database in read-only mode", false));
+	if (!pdb)
+	    return false;
+	if (fReadOnly)
+	    assert(("Erase called on database in read-only mode", false));
 
-        // Key
-        CDataStream ssKey(SER_DISK);
-        ssKey.reserve(1000);
-        ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
+	// Key
+	CDataStream ssKey(SER_DISK);
+	ssKey.reserve(1000);
+	ssKey << key;
+	Dbt datKey(&ssKey[0], ssKey.size());
 
-        // Erase
-        int ret = pdb->del(GetTxn(), &datKey, 0);
+	// Erase
+	int ret = pdb->del(GetTxn(), &datKey, 0);
 
-        // Clear memory
-        memset(datKey.get_data(), 0, datKey.get_size());
-        return (ret == 0 || ret == DB_NOTFOUND);
+	// Clear memory
+	memset(datKey.get_data(), 0, datKey.get_size());
+	return (ret == 0 || ret == DB_NOTFOUND);
     }
 
     template<typename K>
     bool Exists(const K& key)
     {
-        if (!pdb)
-            return false;
+	if (!pdb)
+	    return false;
 
-        // Key
-        CDataStream ssKey(SER_DISK);
-        ssKey.reserve(1000);
-        ssKey << key;
-        Dbt datKey(&ssKey[0], ssKey.size());
+	// Key
+	CDataStream ssKey(SER_DISK);
+	ssKey.reserve(1000);
+	ssKey << key;
+	Dbt datKey(&ssKey[0], ssKey.size());
 
-        // Exists
-        int ret = pdb->exists(GetTxn(), &datKey, 0);
+	// Exists
+	int ret = pdb->exists(GetTxn(), &datKey, 0);
 
-        // Clear memory
-        memset(datKey.get_data(), 0, datKey.get_size());
-        return (ret == 0);
+	// Clear memory
+	memset(datKey.get_data(), 0, datKey.get_size());
+	return (ret == 0);
     }
 
     Dbc* GetCursor()
     {
-        if (!pdb)
-            return NULL;
-        Dbc* pcursor = NULL;
-        int ret = pdb->cursor(NULL, &pcursor, 0);
-        if (ret != 0)
-            return NULL;
-        return pcursor;
+	if (!pdb)
+	    return NULL;
+	Dbc* pcursor = NULL;
+	int ret = pdb->cursor(NULL, &pcursor, 0);
+	if (ret != 0)
+	    return NULL;
+	return pcursor;
     }
 
     int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, unsigned int fFlags=DB_NEXT)
     {
-        // Read at cursor
-        Dbt datKey;
-        if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
-        {
-            datKey.set_data(&ssKey[0]);
-            datKey.set_size(ssKey.size());
-        }
-        Dbt datValue;
-        if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
-        {
-            datValue.set_data(&ssValue[0]);
-            datValue.set_size(ssValue.size());
-        }
-        datKey.set_flags(DB_DBT_MALLOC);
-        datValue.set_flags(DB_DBT_MALLOC);
-        int ret = pcursor->get(&datKey, &datValue, fFlags);
-        if (ret != 0)
-            return ret;
-        else if (datKey.get_data() == NULL || datValue.get_data() == NULL)
-            return 99999;
+	// Read at cursor
+	Dbt datKey;
+	if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
+	{
+	    datKey.set_data(&ssKey[0]);
+	    datKey.set_size(ssKey.size());
+	}
+	Dbt datValue;
+	if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
+	{
+	    datValue.set_data(&ssValue[0]);
+	    datValue.set_size(ssValue.size());
+	}
+	datKey.set_flags(DB_DBT_MALLOC);
+	datValue.set_flags(DB_DBT_MALLOC);
+	int ret = pcursor->get(&datKey, &datValue, fFlags);
+	if (ret != 0)
+	    return ret;
+	else if (datKey.get_data() == NULL || datValue.get_data() == NULL)
+	    return 99999;
 
-        // Convert to streams
-        ssKey.SetType(SER_DISK);
-        ssKey.clear();
-        ssKey.write((char*)datKey.get_data(), datKey.get_size());
-        ssValue.SetType(SER_DISK);
-        ssValue.clear();
-        ssValue.write((char*)datValue.get_data(), datValue.get_size());
+	// Convert to streams
+	ssKey.SetType(SER_DISK);
+	ssKey.clear();
+	ssKey.write((char*)datKey.get_data(), datKey.get_size());
+	ssValue.SetType(SER_DISK);
+	ssValue.clear();
+	ssValue.write((char*)datValue.get_data(), datValue.get_size());
 
-        // Clear and free memory
-        memset(datKey.get_data(), 0, datKey.get_size());
-        memset(datValue.get_data(), 0, datValue.get_size());
-        free(datKey.get_data());
-        free(datValue.get_data());
-        return 0;
+	// Clear and free memory
+	memset(datKey.get_data(), 0, datKey.get_size());
+	memset(datValue.get_data(), 0, datValue.get_size());
+	free(datKey.get_data());
+	free(datValue.get_data());
+	return 0;
     }
 
     DbTxn* GetTxn()
     {
-        if (!vTxn.empty())
-            return vTxn.back();
-        else
-            return NULL;
+	if (!vTxn.empty())
+	    return vTxn.back();
+	else
+	    return NULL;
     }
 
 public:
     bool TxnBegin()
     {
-        if (!pdb)
-            return false;
-        DbTxn* ptxn = NULL;
-        int ret = dbenv.txn_begin(GetTxn(), &ptxn, DB_TXN_NOSYNC);
-        if (!ptxn || ret != 0)
-            return false;
-        vTxn.push_back(ptxn);
-        return true;
+	if (!pdb)
+	    return false;
+	DbTxn* ptxn = NULL;
+	int ret = dbenv.txn_begin(GetTxn(), &ptxn, DB_TXN_NOSYNC);
+	if (!ptxn || ret != 0)
+	    return false;
+	vTxn.push_back(ptxn);
+	return true;
     }
 
     bool TxnCommit()
     {
-        if (!pdb)
-            return false;
-        if (vTxn.empty())
-            return false;
-        int ret = vTxn.back()->commit(0);
-        vTxn.pop_back();
-        return (ret == 0);
+	if (!pdb)
+	    return false;
+	if (vTxn.empty())
+	    return false;
+	int ret = vTxn.back()->commit(0);
+	vTxn.pop_back();
+	return (ret == 0);
     }
 
     bool TxnAbort()
     {
-        if (!pdb)
-            return false;
-        if (vTxn.empty())
-            return false;
-        int ret = vTxn.back()->abort();
-        vTxn.pop_back();
-        return (ret == 0);
+	if (!pdb)
+	    return false;
+	if (vTxn.empty())
+	    return false;
+	int ret = vTxn.back()->abort();
+	vTxn.pop_back();
+	return (ret == 0);
     }
 
     bool ReadVersion(int& nVersion)
     {
-        nVersion = 0;
-        return Read(string("version"), nVersion);
+	nVersion = 0;
+	return Read(string("version"), nVersion);
     }
 
     bool WriteVersion(int nVersion)
     {
-        return Write(string("version"), nVersion);
+	return Write(string("version"), nVersion);
     }
 };
 
@@ -322,21 +322,21 @@ public:
 
     CKeyPool()
     {
-        nTime = GetTime();
+	nTime = GetTime();
     }
 
     CKeyPool(const vector<unsigned char>& vchPubKeyIn)
     {
-        nTime = GetTime();
-        vchPubKey = vchPubKeyIn;
+	nTime = GetTime();
+	vchPubKey = vchPubKeyIn;
     }
 
     IMPLEMENT_SERIALIZE
     (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(nTime);
-        READWRITE(vchPubKey);
+	if (!(nType & SER_GETHASH))
+	    READWRITE(nVersion);
+	READWRITE(nTime);
+	READWRITE(vchPubKey);
     )
 };
 
@@ -355,92 +355,92 @@ private:
 public:
     bool ReadName(const string& strAddress, string& strName)
     {
-        strName = "";
-        return Read(make_pair(string("name"), strAddress), strName);
+	strName = "";
+	return Read(make_pair(string("name"), strAddress), strName);
     }
 
     bool WriteName(const string& strAddress, const string& strName)
     {
-        CRITICAL_BLOCK(cs_mapAddressBook)
-            mapAddressBook[strAddress] = strName;
-        nWalletDBUpdated++;
-        return Write(make_pair(string("name"), strAddress), strName);
+	CRITICAL_BLOCK(cs_mapAddressBook)
+	    mapAddressBook[strAddress] = strName;
+	nWalletDBUpdated++;
+	return Write(make_pair(string("name"), strAddress), strName);
     }
 
     bool EraseName(const string& strAddress)
     {
-        // This should only be used for sending addresses, never for receiving addresses,
-        // receiving addresses must always have an address book entry if they're not change return.
-        CRITICAL_BLOCK(cs_mapAddressBook)
-            mapAddressBook.erase(strAddress);
-        nWalletDBUpdated++;
-        return Erase(make_pair(string("name"), strAddress));
+	// This should only be used for sending addresses, never for receiving addresses,
+	// receiving addresses must always have an address book entry if they're not change return.
+	CRITICAL_BLOCK(cs_mapAddressBook)
+	    mapAddressBook.erase(strAddress);
+	nWalletDBUpdated++;
+	return Erase(make_pair(string("name"), strAddress));
     }
 
     bool ReadTx(uint256 hash, CWalletTx& wtx)
     {
-        return Read(make_pair(string("tx"), hash), wtx);
+	return Read(make_pair(string("tx"), hash), wtx);
     }
 
     bool WriteTx(uint256 hash, const CWalletTx& wtx)
     {
-        nWalletDBUpdated++;
-        return Write(make_pair(string("tx"), hash), wtx);
+	nWalletDBUpdated++;
+	return Write(make_pair(string("tx"), hash), wtx);
     }
 
     bool EraseTx(uint256 hash)
     {
-        nWalletDBUpdated++;
-        return Erase(make_pair(string("tx"), hash));
+	nWalletDBUpdated++;
+	return Erase(make_pair(string("tx"), hash));
     }
 
     bool ReadKey(const vector<unsigned char>& vchPubKey, CPrivKey& vchPrivKey)
     {
-        vchPrivKey.clear();
-        return Read(make_pair(string("key"), vchPubKey), vchPrivKey);
+	vchPrivKey.clear();
+	return Read(make_pair(string("key"), vchPubKey), vchPrivKey);
     }
 
     bool WriteKey(const vector<unsigned char>& vchPubKey, const CPrivKey& vchPrivKey)
     {
-        nWalletDBUpdated++;
-        return Write(make_pair(string("key"), vchPubKey), vchPrivKey, false);
+	nWalletDBUpdated++;
+	return Write(make_pair(string("key"), vchPubKey), vchPrivKey, false);
     }
 
     bool WriteBestBlock(const CBlockLocator& locator)
     {
-        nWalletDBUpdated++;
-        return Write(string("bestblock"), locator);
+	nWalletDBUpdated++;
+	return Write(string("bestblock"), locator);
     }
 
     bool ReadBestBlock(CBlockLocator& locator)
     {
-        return Read(string("bestblock"), locator);
+	return Read(string("bestblock"), locator);
     }
 
     bool ReadDefaultKey(vector<unsigned char>& vchPubKey)
     {
-        vchPubKey.clear();
-        return Read(string("defaultkey"), vchPubKey);
+	vchPubKey.clear();
+	return Read(string("defaultkey"), vchPubKey);
     }
 
     bool WriteDefaultKey(const vector<unsigned char>& vchPubKey)
     {
-        vchDefaultKey = vchPubKey;
-        nWalletDBUpdated++;
-        return Write(string("defaultkey"), vchPubKey);
+	vchDefaultKey = vchPubKey;
+	nWalletDBUpdated++;
+	return Write(string("defaultkey"), vchPubKey);
     }
 
     template<typename T>
     bool ReadSetting(const string& strKey, T& value)
     {
-        return Read(make_pair(string("setting"), strKey), value);
+	return Read(make_pair(string("setting"), strKey), value);
     }
 
     template<typename T>
     bool WriteSetting(const string& strKey, const T& value)
     {
-        nWalletDBUpdated++;
-        return Write(make_pair(string("setting"), strKey), value);
+	nWalletDBUpdated++;
+	return Write(make_pair(string("setting"), strKey), value);
     }
 
     bool ReadAccount(const string& strAccount, CAccount& account);
@@ -475,40 +475,40 @@ protected:
 public:
     CReserveKey()
     {
-        nIndex = -1;
+	nIndex = -1;
     }
 
     ~CReserveKey()
     {
-        if (!fShutdown)
-            ReturnKey();
+	if (!fShutdown)
+	    ReturnKey();
     }
 
     vector<unsigned char> GetReservedKey()
     {
-        if (nIndex == -1)
-        {
-            CKeyPool keypool;
-            CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
-            vchPubKey = keypool.vchPubKey;
-        }
-        assert(!vchPubKey.empty());
-        return vchPubKey;
+	if (nIndex == -1)
+	{
+	    CKeyPool keypool;
+	    CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
+	    vchPubKey = keypool.vchPubKey;
+	}
+	assert(!vchPubKey.empty());
+	return vchPubKey;
     }
 
     void KeepKey()
     {
-        if (nIndex != -1)
-            CWalletDB().KeepKey(nIndex);
-        nIndex = -1;
-        vchPubKey.clear();
+	if (nIndex != -1)
+	    CWalletDB().KeepKey(nIndex);
+	nIndex = -1;
+	vchPubKey.clear();
     }
 
     void ReturnKey()
     {
-        if (nIndex != -1)
-            CWalletDB::ReturnKey(nIndex);
-        nIndex = -1;
-        vchPubKey.clear();
+	if (nIndex != -1)
+	    CWalletDB::ReturnKey(nIndex);
+	nIndex = -1;
+	vchPubKey.clear();
     }
 };

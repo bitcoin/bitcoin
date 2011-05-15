@@ -25,7 +25,7 @@ LIBS= -dead_strip \
  $(DEPSDIR)/lib/libboost_program_options.a \
  $(DEPSDIR)/lib/libboost_thread.a \
  $(DEPSDIR)/lib/libssl.a \
- $(DEPSDIR)/lib/libcrypto.a 
+ $(DEPSDIR)/lib/libcrypto.a
 
 DEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0 -DUSE_SSL
 
@@ -51,7 +51,7 @@ ifdef USE_UPNP
 	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
-	
+
 
 all: bitcoin
 

@@ -38,16 +38,16 @@ inline string EncodeBase58(const unsigned char* pbegin, const unsigned char* pen
     CBigNum rem;
     while (bn > bn0)
     {
-        if (!BN_div(&dv, &rem, &bn, &bn58, pctx))
-            throw bignum_error("EncodeBase58 : BN_div failed");
-        bn = dv;
-        unsigned int c = rem.getulong();
-        str += pszBase58[c];
+	if (!BN_div(&dv, &rem, &bn, &bn58, pctx))
+	    throw bignum_error("EncodeBase58 : BN_div failed");
+	bn = dv;
+	unsigned int c = rem.getulong();
+	str += pszBase58[c];
     }
 
     // Leading zeroes encoded as base58 zeros
     for (const unsigned char* p = pbegin; p < pend && *p == 0; p++)
-        str += pszBase58[0];
+	str += pszBase58[0];
 
     // Convert little endian string to big endian
     reverse(str.begin(), str.end());
@@ -67,24 +67,24 @@ inline bool DecodeBase58(const char* psz, vector<unsigned char>& vchRet)
     CBigNum bn = 0;
     CBigNum bnChar;
     while (isspace(*psz))
-        psz++;
+	psz++;
 
     // Convert big endian string to bignum
     for (const char* p = psz; *p; p++)
     {
-        const char* p1 = strchr(pszBase58, *p);
-        if (p1 == NULL)
-        {
-            while (isspace(*p))
-                p++;
-            if (*p != '\0')
-                return false;
-            break;
-        }
-        bnChar.setulong(p1 - pszBase58);
-        if (!BN_mul(&bn, &bn, &bn58, pctx))
-            throw bignum_error("DecodeBase58 : BN_mul failed");
-        bn += bnChar;
+	const char* p1 = strchr(pszBase58, *p);
+	if (p1 == NULL)
+	{
+	    while (isspace(*p))
+		p++;
+	    if (*p != '\0')
+		return false;
+	    break;
+	}
+	bnChar.setulong(p1 - pszBase58);
+	if (!BN_mul(&bn, &bn, &bn58, pctx))
+	    throw bignum_error("DecodeBase58 : BN_mul failed");
+	bn += bnChar;
     }
 
     // Get bignum as little endian data
@@ -92,12 +92,12 @@ inline bool DecodeBase58(const char* psz, vector<unsigned char>& vchRet)
 
     // Trim off sign byte if present
     if (vchTmp.size() >= 2 && vchTmp.end()[-1] == 0 && vchTmp.end()[-2] >= 0x80)
-        vchTmp.erase(vchTmp.end()-1);
+	vchTmp.erase(vchTmp.end()-1);
 
     // Restore leading zeros
     int nLeadingZeros = 0;
     for (const char* p = psz; *p == pszBase58[0]; p++)
-        nLeadingZeros++;
+	nLeadingZeros++;
     vchRet.assign(nLeadingZeros + vchTmp.size(), 0);
 
     // Convert little endian data to big endian
@@ -126,17 +126,17 @@ inline string EncodeBase58Check(const vector<unsigned char>& vchIn)
 inline bool DecodeBase58Check(const char* psz, vector<unsigned char>& vchRet)
 {
     if (!DecodeBase58(psz, vchRet))
-        return false;
+	return false;
     if (vchRet.size() < 4)
     {
-        vchRet.clear();
-        return false;
+	vchRet.clear();
+	return false;
     }
     uint256 hash = Hash(vchRet.begin(), vchRet.end()-4);
     if (memcmp(&hash, &vchRet.end()[-4], 4) != 0)
     {
-        vchRet.clear();
-        return false;
+	vchRet.clear();
+	return false;
     }
     vchRet.resize(vchRet.size()-4);
     return true;
@@ -166,12 +166,12 @@ inline bool AddressToHash160(const char* psz, uint160& hash160Ret)
 {
     vector<unsigned char> vch;
     if (!DecodeBase58Check(psz, vch))
-        return false;
+	return false;
     if (vch.empty())
-        return false;
+	return false;
     unsigned char nVersion = vch[0];
     if (vch.size() != sizeof(hash160Ret) + 1)
-        return false;
+	return false;
     memcpy(&hash160Ret, &vch[1], sizeof(hash160Ret));
     return (nVersion <= ADDRESSVERSION);
 }

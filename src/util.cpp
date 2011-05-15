@@ -37,9 +37,9 @@ static boost::interprocess::interprocess_mutex** ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line)
 {
     if (mode & CRYPTO_LOCK)
-        ppmutexOpenSSL[i]->lock();
+	ppmutexOpenSSL[i]->lock();
     else
-        ppmutexOpenSSL[i]->unlock();
+	ppmutexOpenSSL[i]->unlock();
 }
 
 // Init
@@ -48,27 +48,27 @@ class CInit
 public:
     CInit()
     {
-        // Init openssl library multithreading support
-        ppmutexOpenSSL = (boost::interprocess::interprocess_mutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(boost::interprocess::interprocess_mutex*));
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
-            ppmutexOpenSSL[i] = new boost::interprocess::interprocess_mutex();
-        CRYPTO_set_locking_callback(locking_callback);
+	// Init openssl library multithreading support
+	ppmutexOpenSSL = (boost::interprocess::interprocess_mutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(boost::interprocess::interprocess_mutex*));
+	for (int i = 0; i < CRYPTO_num_locks(); i++)
+	    ppmutexOpenSSL[i] = new boost::interprocess::interprocess_mutex();
+	CRYPTO_set_locking_callback(locking_callback);
 
 #ifdef __WXMSW__
-        // Seed random number generator with screen scrape and other hardware sources
-        RAND_screen();
+	// Seed random number generator with screen scrape and other hardware sources
+	RAND_screen();
 #endif
 
-        // Seed random number generator with performance counter
-        RandAddSeed();
+	// Seed random number generator with performance counter
+	RandAddSeed();
     }
     ~CInit()
     {
-        // Shutdown openssl library multithreading support
-        CRYPTO_set_locking_callback(NULL);
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
-            delete ppmutexOpenSSL[i];
-        OPENSSL_free(ppmutexOpenSSL);
+	// Shutdown openssl library multithreading support
+	CRYPTO_set_locking_callback(NULL);
+	for (int i = 0; i < CRYPTO_num_locks(); i++)
+	    delete ppmutexOpenSSL[i];
+	OPENSSL_free(ppmutexOpenSSL);
     }
 }
 instance_of_cinit;
@@ -95,7 +95,7 @@ void RandAddSeedPerfmon()
     // This can take up to 2 seconds, so only do it every 10 minutes
     static int64 nLastPerfmon;
     if (GetTime() < nLastPerfmon + 10 * 60)
-        return;
+	return;
     nLastPerfmon = GetTime();
 
 #ifdef __WXMSW__
@@ -108,9 +108,9 @@ void RandAddSeedPerfmon()
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS)
     {
-        RAND_add(pdata, nSize, nSize/100.0);
-        memset(pdata, 0, nSize);
-        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M", GetTime()).c_str(), nSize);
+	RAND_add(pdata, nSize, nSize/100.0);
+	memset(pdata, 0, nSize);
+	printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M", GetTime()).c_str(), nSize);
     }
 #endif
 }
@@ -118,14 +118,14 @@ void RandAddSeedPerfmon()
 uint64 GetRand(uint64 nMax)
 {
     if (nMax == 0)
-        return 0;
+	return 0;
 
     // The range of the random source must be a multiple of the modulus
     // to give every possible output value an equal possibility
     uint64 nRange = (UINT64_MAX / nMax) * nMax;
     uint64 nRand = 0;
     do
-        RAND_bytes((unsigned char*)&nRand, sizeof(nRand));
+	RAND_bytes((unsigned char*)&nRand, sizeof(nRand));
     while (nRand >= nRange);
     return (nRand % nMax);
 }
@@ -150,84 +150,84 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     int ret = 0;
     if (fPrintToConsole)
     {
-        // print to console
-        va_list arg_ptr;
-        va_start(arg_ptr, pszFormat);
-        ret = vprintf(pszFormat, arg_ptr);
-        va_end(arg_ptr);
+	// print to console
+	va_list arg_ptr;
+	va_start(arg_ptr, pszFormat);
+	ret = vprintf(pszFormat, arg_ptr);
+	va_end(arg_ptr);
     }
     else
     {
-        // print to debug.log
-        static FILE* fileout = NULL;
+	// print to debug.log
+	static FILE* fileout = NULL;
 
-        if (!fileout)
-        {
-            char pszFile[MAX_PATH+100];
-            GetDataDir(pszFile);
-            strlcat(pszFile, "/debug.log", sizeof(pszFile));
-            fileout = fopen(pszFile, "a");
-            if (fileout) setbuf(fileout, NULL); // unbuffered
-        }
-        if (fileout)
-        {
-            static bool fStartedNewLine = true;
+	if (!fileout)
+	{
+	    char pszFile[MAX_PATH+100];
+	    GetDataDir(pszFile);
+	    strlcat(pszFile, "/debug.log", sizeof(pszFile));
+	    fileout = fopen(pszFile, "a");
+	    if (fileout) setbuf(fileout, NULL); // unbuffered
+	}
+	if (fileout)
+	{
+	    static bool fStartedNewLine = true;
 
-            // Debug print useful for profiling
-            if (fLogTimestamps && fStartedNewLine)
-                fprintf(fileout, "%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
-            if (pszFormat[strlen(pszFormat) - 1] == '\n')
-                fStartedNewLine = true;
-            else
-                fStartedNewLine = false;
+	    // Debug print useful for profiling
+	    if (fLogTimestamps && fStartedNewLine)
+		fprintf(fileout, "%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+	    if (pszFormat[strlen(pszFormat) - 1] == '\n')
+		fStartedNewLine = true;
+	    else
+		fStartedNewLine = false;
 
-            va_list arg_ptr;
-            va_start(arg_ptr, pszFormat);
-            ret = vfprintf(fileout, pszFormat, arg_ptr);
-            va_end(arg_ptr);
-        }
+	    va_list arg_ptr;
+	    va_start(arg_ptr, pszFormat);
+	    ret = vfprintf(fileout, pszFormat, arg_ptr);
+	    va_end(arg_ptr);
+	}
     }
 
 #ifdef __WXMSW__
     if (fPrintToDebugger)
     {
-        static CCriticalSection cs_OutputDebugStringF;
+	static CCriticalSection cs_OutputDebugStringF;
 
-        // accumulate a line at a time
-        CRITICAL_BLOCK(cs_OutputDebugStringF)
-        {
-            static char pszBuffer[50000];
-            static char* pend;
-            if (pend == NULL)
-                pend = pszBuffer;
-            va_list arg_ptr;
-            va_start(arg_ptr, pszFormat);
-            int limit = END(pszBuffer) - pend - 2;
-            int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
-            va_end(arg_ptr);
-            if (ret < 0 || ret >= limit)
-            {
-                pend = END(pszBuffer) - 2;
-                *pend++ = '\n';
-            }
-            else
-                pend += ret;
-            *pend = '\0';
-            char* p1 = pszBuffer;
-            char* p2;
-            while (p2 = strchr(p1, '\n'))
-            {
-                p2++;
-                char c = *p2;
-                *p2 = '\0';
-                OutputDebugStringA(p1);
-                *p2 = c;
-                p1 = p2;
-            }
-            if (p1 != pszBuffer)
-                memmove(pszBuffer, p1, pend - p1 + 1);
-            pend -= (p1 - pszBuffer);
-        }
+	// accumulate a line at a time
+	CRITICAL_BLOCK(cs_OutputDebugStringF)
+	{
+	    static char pszBuffer[50000];
+	    static char* pend;
+	    if (pend == NULL)
+		pend = pszBuffer;
+	    va_list arg_ptr;
+	    va_start(arg_ptr, pszFormat);
+	    int limit = END(pszBuffer) - pend - 2;
+	    int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
+	    va_end(arg_ptr);
+	    if (ret < 0 || ret >= limit)
+	    {
+		pend = END(pszBuffer) - 2;
+		*pend++ = '\n';
+	    }
+	    else
+		pend += ret;
+	    *pend = '\0';
+	    char* p1 = pszBuffer;
+	    char* p2;
+	    while (p2 = strchr(p1, '\n'))
+	    {
+		p2++;
+		char c = *p2;
+		*p2 = '\0';
+		OutputDebugStringA(p1);
+		*p2 = c;
+		p1 = p2;
+	    }
+	    if (p1 != pszBuffer)
+		memmove(pszBuffer, p1, pend - p1 + 1);
+	    pend -= (p1 - pszBuffer);
+	}
     }
 #endif
     return ret;
@@ -241,15 +241,15 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
 int my_snprintf(char* buffer, size_t limit, const char* format, ...)
 {
     if (limit == 0)
-        return 0;
+	return 0;
     va_list arg_ptr;
     va_start(arg_ptr, format);
     int ret = _vsnprintf(buffer, limit, format, arg_ptr);
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
     {
-        ret = limit - 1;
-        buffer[limit-1] = 0;
+	ret = limit - 1;
+	buffer[limit-1] = 0;
     }
     return ret;
 }
@@ -263,22 +263,22 @@ string strprintf(const char* format, ...)
     int ret;
     loop
     {
-        va_list arg_ptr;
-        va_start(arg_ptr, format);
-        ret = _vsnprintf(p, limit, format, arg_ptr);
-        va_end(arg_ptr);
-        if (ret >= 0 && ret < limit)
-            break;
-        if (p != buffer)
-            delete p;
-        limit *= 2;
-        p = new char[limit];
-        if (p == NULL)
-            throw std::bad_alloc();
+	va_list arg_ptr;
+	va_start(arg_ptr, format);
+	ret = _vsnprintf(p, limit, format, arg_ptr);
+	va_end(arg_ptr);
+	if (ret >= 0 && ret < limit)
+	    break;
+	if (p != buffer)
+	    delete p;
+	limit *= 2;
+	p = new char[limit];
+	if (p == NULL)
+	    throw std::bad_alloc();
     }
     string str(p, p+ret);
     if (p != buffer)
-        delete p;
+	delete p;
     return str;
 }
 
@@ -293,8 +293,8 @@ bool error(const char* format, ...)
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
     {
-        ret = limit - 1;
-        buffer[limit-1] = 0;
+	ret = limit - 1;
+	buffer[limit-1] = 0;
     }
     printf("ERROR: %s\n", buffer);
     return false;
@@ -304,19 +304,19 @@ bool error(const char* format, ...)
 void ParseString(const string& str, char c, vector<string>& v)
 {
     if (str.empty())
-        return;
+	return;
     string::size_type i1 = 0;
     string::size_type i2;
     loop
     {
-        i2 = str.find(c, i1);
-        if (i2 == str.npos)
-        {
-            v.push_back(str.substr(i1));
-            return;
-        }
-        v.push_back(str.substr(i1, i2-i1));
-        i1 = i2+1;
+	i2 = str.find(c, i1);
+	if (i2 == str.npos)
+	{
+	    v.push_back(str.substr(i1));
+	    return;
+	}
+	v.push_back(str.substr(i1, i2-i1));
+	i1 = i2+1;
     }
 }
 
@@ -333,19 +333,19 @@ string FormatMoney(int64 n, bool fPlus)
     // Right-trim excess 0's before the decimal point:
     int nTrim = 0;
     for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
-        ++nTrim;
+	++nTrim;
     if (nTrim)
-        str.erase(str.size()-nTrim, nTrim);
+	str.erase(str.size()-nTrim, nTrim);
 
     // Insert thousands-separators:
     size_t point = str.find(".");
     for (int i = (str.size()-point)+3; i < str.size(); i += 4)
-        if (isdigit(str[str.size() - i - 1]))
-            str.insert(str.size() - i, 1, ',');
+	if (isdigit(str[str.size() - i - 1]))
+	    str.insert(str.size() - i, 1, ',');
     if (n < 0)
-        str.insert((unsigned int)0, 1, '-');
+	str.insert((unsigned int)0, 1, '-');
     else if (fPlus && n > 0)
-        str.insert((unsigned int)0, 1, '+');
+	str.insert((unsigned int)0, 1, '+');
     return str;
 }
 
@@ -361,35 +361,35 @@ bool ParseMoney(const char* pszIn, int64& nRet)
     int64 nUnits = 0;
     const char* p = pszIn;
     while (isspace(*p))
-        p++;
+	p++;
     for (; *p; p++)
     {
-        if (*p == ',' && p > pszIn && isdigit(p[-1]) && isdigit(p[1]) && isdigit(p[2]) && isdigit(p[3]) && !isdigit(p[4]))
-            continue;
-        if (*p == '.')
-        {
-            p++;
-            int64 nMult = CENT*10;
-            while (isdigit(*p) && (nMult > 0))
-            {
-                nUnits += nMult * (*p++ - '0');
-                nMult /= 10;
-            }
-            break;
-        }
-        if (isspace(*p))
-            break;
-        if (!isdigit(*p))
-            return false;
-        strWhole.insert(strWhole.end(), *p);
+	if (*p == ',' && p > pszIn && isdigit(p[-1]) && isdigit(p[1]) && isdigit(p[2]) && isdigit(p[3]) && !isdigit(p[4]))
+	    continue;
+	if (*p == '.')
+	{
+	    p++;
+	    int64 nMult = CENT*10;
+	    while (isdigit(*p) && (nMult > 0))
+	    {
+		nUnits += nMult * (*p++ - '0');
+		nMult /= 10;
+	    }
+	    break;
+	}
+	if (isspace(*p))
+	    break;
+	if (!isdigit(*p))
+	    return false;
+	strWhole.insert(strWhole.end(), *p);
     }
     for (; *p; p++)
-        if (!isspace(*p))
-            return false;
+	if (!isspace(*p))
+	    return false;
     if (strWhole.size() > 14)
-        return false;
+	return false;
     if (nUnits < 0 || nUnits > COIN)
-        return false;
+	return false;
     int64 nWhole = atoi64(strWhole);
     int64 nValue = nWhole*COIN + nUnits;
 
@@ -422,17 +422,17 @@ vector<unsigned char> ParseHex(const char* psz)
     vector<unsigned char> vch;
     loop
     {
-        while (isspace(*psz))
-            psz++;
-        char c = phexdigit[(unsigned char)*psz++];
-        if (c == (char)-1)
-            break;
-        unsigned char n = (c << 4);
-        c = phexdigit[(unsigned char)*psz++];
-        if (c == (char)-1)
-            break;
-        n |= c;
-        vch.push_back(n);
+	while (isspace(*psz))
+	    psz++;
+	char c = phexdigit[(unsigned char)*psz++];
+	if (c == (char)-1)
+	    break;
+	unsigned char n = (c << 4);
+	c = phexdigit[(unsigned char)*psz++];
+	if (c == (char)-1)
+	    break;
+	n |= c;
+	vch.push_back(n);
     }
     return vch;
 }
@@ -449,23 +449,23 @@ void ParseParameters(int argc, char* argv[])
     mapMultiArgs.clear();
     for (int i = 1; i < argc; i++)
     {
-        char psz[10000];
-        strlcpy(psz, argv[i], sizeof(psz));
-        char* pszValue = (char*)"";
-        if (strchr(psz, '='))
-        {
-            pszValue = strchr(psz, '=');
-            *pszValue++ = '\0';
-        }
-        #ifdef __WXMSW__
-        _strlwr(psz);
-        if (psz[0] == '/')
-            psz[0] = '-';
-        #endif
-        if (psz[0] != '-')
-            break;
-        mapArgs[psz] = pszValue;
-        mapMultiArgs[psz].push_back(pszValue);
+	char psz[10000];
+	strlcpy(psz, argv[i], sizeof(psz));
+	char* pszValue = (char*)"";
+	if (strchr(psz, '='))
+	{
+	    pszValue = strchr(psz, '=');
+	    *pszValue++ = '\0';
+	}
+	#ifdef __WXMSW__
+	_strlwr(psz);
+	if (psz[0] == '/')
+	    psz[0] = '-';
+	#endif
+	if (psz[0] != '-')
+	    break;
+	mapArgs[psz] = pszValue;
+	mapMultiArgs[psz].push_back(pszValue);
     }
 }
 
@@ -477,26 +477,26 @@ const char* wxGetTranslation(const char* pszEnglish)
     static CCriticalSection cs;
     CRITICAL_BLOCK(cs)
     {
-        // Look in cache
-        static map<string, char*> mapCache;
-        map<string, char*>::iterator mi = mapCache.find(pszEnglish);
-        if (mi != mapCache.end())
-            return (*mi).second;
+	// Look in cache
+	static map<string, char*> mapCache;
+	map<string, char*>::iterator mi = mapCache.find(pszEnglish);
+	if (mi != mapCache.end())
+	    return (*mi).second;
 
-        // wxWidgets translation
-        wxString strTranslated = wxGetTranslation(wxString(pszEnglish, wxConvUTF8));
+	// wxWidgets translation
+	wxString strTranslated = wxGetTranslation(wxString(pszEnglish, wxConvUTF8));
 
-        // We don't cache unknown strings because caller might be passing in a
-        // dynamic string and we would keep allocating memory for each variation.
-        if (strcmp(pszEnglish, strTranslated.utf8_str()) == 0)
-            return pszEnglish;
+	// We don't cache unknown strings because caller might be passing in a
+	// dynamic string and we would keep allocating memory for each variation.
+	if (strcmp(pszEnglish, strTranslated.utf8_str()) == 0)
+	    return pszEnglish;
 
-        // Add to cache, memory doesn't need to be freed.  We only cache because
-        // we must pass back a pointer to permanently allocated memory.
-        char* pszCached = new char[strlen(strTranslated.utf8_str())+1];
-        strcpy(pszCached, strTranslated.utf8_str());
-        mapCache[pszEnglish] = pszCached;
-        return pszCached;
+	// Add to cache, memory doesn't need to be freed.  We only cache because
+	// we must pass back a pointer to permanently allocated memory.
+	char* pszCached = new char[strlen(strTranslated.utf8_str())+1];
+	strcpy(pszCached, strTranslated.utf8_str());
+	mapCache[pszEnglish] = pszCached;
+	return pszCached;
     }
     return NULL;
 #else
@@ -509,23 +509,23 @@ bool WildcardMatch(const char* psz, const char* mask)
 {
     loop
     {
-        switch (*mask)
-        {
-        case '\0':
-            return (*psz == '\0');
-        case '*':
-            return WildcardMatch(psz, mask+1) || (*psz && WildcardMatch(psz+1, mask));
-        case '?':
-            if (*psz == '\0')
-                return false;
-            break;
-        default:
-            if (*psz != *mask)
-                return false;
-            break;
-        }
-        psz++;
-        mask++;
+	switch (*mask)
+	{
+	case '\0':
+	    return (*psz == '\0');
+	case '*':
+	    return WildcardMatch(psz, mask+1) || (*psz && WildcardMatch(psz+1, mask));
+	case '?':
+	    if (*psz == '\0')
+		return false;
+	    break;
+	default:
+	    if (*psz != *mask)
+		return false;
+	    break;
+	}
+	psz++;
+	mask++;
     }
 }
 
@@ -551,11 +551,11 @@ void FormatException(char* pszMessage, std::exception* pex, const char* pszThrea
     const char* pszModule = "bitcoin";
 #endif
     if (pex)
-        snprintf(pszMessage, 1000,
-            "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
+	snprintf(pszMessage, 1000,
+	    "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
     else
-        snprintf(pszMessage, 1000,
-            "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
+	snprintf(pszMessage, 1000,
+	    "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
 }
 
 void LogException(std::exception* pex, const char* pszThread)
@@ -574,7 +574,7 @@ void PrintException(std::exception* pex, const char* pszThread)
     strMiscWarning = pszMessage;
 #ifdef GUI
     if (wxTheApp && !fDaemon)
-        MyMessageBox(pszMessage, "Bitcoin", wxOK | wxICON_ERROR);
+	MyMessageBox(pszMessage, "Bitcoin", wxOK | wxICON_ERROR);
 #endif
     throw;
 }
@@ -584,7 +584,7 @@ void ThreadOneMessageBox(string strMessage)
     // Skip message boxes if one is already open
     static bool fMessageBoxOpen;
     if (fMessageBoxOpen)
-        return;
+	return;
     fMessageBoxOpen = true;
     ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
     fMessageBoxOpen = false;
@@ -599,7 +599,7 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     strMiscWarning = pszMessage;
 #ifdef GUI
     if (wxTheApp && !fDaemon)
-        boost::thread(boost::bind(ThreadOneMessageBox, string(pszMessage)));
+	boost::thread(boost::bind(ThreadOneMessageBox, string(pszMessage)));
 #endif
 }
 
@@ -621,25 +621,25 @@ string MyGetSpecialFolderPath(int nFolder, bool fCreate)
     HMODULE hShell32 = LoadLibraryA("shell32.dll");
     if (hShell32)
     {
-        PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
-            (PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
-        if (pSHGetSpecialFolderPath)
-            (*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
-        FreeModule(hShell32);
+	PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
+	    (PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
+	if (pSHGetSpecialFolderPath)
+	    (*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
+	FreeModule(hShell32);
     }
 
     // Backup option
     if (pszPath[0] == '\0')
     {
-        if (nFolder == CSIDL_STARTUP)
-        {
-            strcpy(pszPath, getenv("USERPROFILE"));
-            strcat(pszPath, "\\Start Menu\\Programs\\Startup");
-        }
-        else if (nFolder == CSIDL_APPDATA)
-        {
-            strcpy(pszPath, getenv("APPDATA"));
-        }
+	if (nFolder == CSIDL_STARTUP)
+	{
+	    strcpy(pszPath, getenv("USERPROFILE"));
+	    strcat(pszPath, "\\Start Menu\\Programs\\Startup");
+	}
+	else if (nFolder == CSIDL_APPDATA)
+	{
+	    strcpy(pszPath, getenv("APPDATA"));
+	}
     }
 
     return pszPath;
@@ -657,10 +657,10 @@ string GetDefaultDataDir()
 #else
     char* pszHome = getenv("HOME");
     if (pszHome == NULL || strlen(pszHome) == 0)
-        pszHome = (char*)"/";
+	pszHome = (char*)"/";
     string strHome = pszHome;
     if (strHome[strHome.size()-1] != '/')
-        strHome += '/';
+	strHome += '/';
 #ifdef __WXMAC_OSX__
     // Mac
     strHome += "Library/Application Support/";
@@ -679,32 +679,32 @@ void GetDataDir(char* pszDir)
     int nVariation;
     if (pszSetDataDir[0] != 0)
     {
-        strlcpy(pszDir, pszSetDataDir, MAX_PATH);
-        nVariation = 0;
+	strlcpy(pszDir, pszSetDataDir, MAX_PATH);
+	nVariation = 0;
     }
     else
     {
-        // This can be called during exceptions by printf, so we cache the
-        // value so we don't have to do memory allocations after that.
-        static char pszCachedDir[MAX_PATH];
-        if (pszCachedDir[0] == 0)
-            strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
-        strlcpy(pszDir, pszCachedDir, MAX_PATH);
-        nVariation = 1;
+	// This can be called during exceptions by printf, so we cache the
+	// value so we don't have to do memory allocations after that.
+	static char pszCachedDir[MAX_PATH];
+	if (pszCachedDir[0] == 0)
+	    strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
+	strlcpy(pszDir, pszCachedDir, MAX_PATH);
+	nVariation = 1;
     }
     if (fTestNet)
     {
-        char* p = pszDir + strlen(pszDir);
-        if (p > pszDir && p[-1] != '/' && p[-1] != '\\')
-            *p++ = '/';
-        strcpy(p, "testnet");
-        nVariation += 2;
+	char* p = pszDir + strlen(pszDir);
+	if (p > pszDir && p[-1] != '/' && p[-1] != '\\')
+	    *p++ = '/';
+	strcpy(p, "testnet");
+	nVariation += 2;
     }
     static bool pfMkdir[4];
     if (!pfMkdir[nVariation])
     {
-        pfMkdir[nVariation] = true;
-        filesystem::create_directory(pszDir);
+	pfMkdir[nVariation] = true;
+	filesystem::create_directory(pszDir);
     }
 }
 
@@ -720,30 +720,30 @@ string GetConfigFile()
     namespace fs = boost::filesystem;
     fs::path pathConfig(GetArg("-conf", "bitcoin.conf"));
     if (!pathConfig.is_complete())
-        pathConfig = fs::path(GetDataDir()) / pathConfig;
+	pathConfig = fs::path(GetDataDir()) / pathConfig;
     return pathConfig.string();
 }
 
 void ReadConfigFile(map<string, string>& mapSettingsRet,
-                    map<string, vector<string> >& mapMultiSettingsRet)
+		    map<string, vector<string> >& mapMultiSettingsRet)
 {
     namespace fs = boost::filesystem;
     namespace pod = boost::program_options::detail;
 
     fs::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return;
+	return;
 
     set<string> setOptions;
     setOptions.insert("*");
-    
+
     for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override bitcoin.conf
-        string strKey = string("-") + it->string_key;
-        if (mapSettingsRet.count(strKey) == 0)
-            mapSettingsRet[strKey] = it->value[0];
-        mapMultiSettingsRet[strKey].push_back(it->value[0]);
+	// Don't overwrite existing settings so command line settings override bitcoin.conf
+	string strKey = string("-") + it->string_key;
+	if (mapSettingsRet.count(strKey) == 0)
+	    mapSettingsRet[strKey] = it->value[0];
+	mapMultiSettingsRet[strKey].push_back(it->value[0]);
     }
 }
 
@@ -752,7 +752,7 @@ string GetPidFile()
     namespace fs = boost::filesystem;
     fs::path pathConfig(GetArg("-pid", "bitcoind.pid"));
     if (!pathConfig.is_complete())
-        pathConfig = fs::path(GetDataDir()) / pathConfig;
+	pathConfig = fs::path(GetDataDir()) / pathConfig;
     return pathConfig.string();
 }
 
@@ -761,8 +761,8 @@ void CreatePidFile(string pidFile, pid_t pid)
     FILE* file;
     if (file = fopen(pidFile.c_str(), "w"))
     {
-        fprintf(file, "%d\n", pid);
-        fclose(file);
+	fprintf(file, "%d\n", pid);
+	fclose(file);
     }
 }
 
@@ -771,7 +771,7 @@ int GetFilesize(FILE* file)
     int nSavePos = ftell(file);
     int nFilesize = -1;
     if (fseek(file, 0, SEEK_END) == 0)
-        nFilesize = ftell(file);
+	nFilesize = ftell(file);
     fseek(file, nSavePos, SEEK_SET);
     return nFilesize;
 }
@@ -783,16 +783,16 @@ void ShrinkDebugFile()
     FILE* file = fopen(strFile.c_str(), "r");
     if (file && GetFilesize(file) > 10 * 1000000)
     {
-        // Restart the file with some of the end
-        char pch[200000];
-        fseek(file, -sizeof(pch), SEEK_END);
-        int nBytes = fread(pch, 1, sizeof(pch), file);
-        fclose(file);
-        if (file = fopen(strFile.c_str(), "w"))
-        {
-            fwrite(pch, 1, nBytes, file);
-            fclose(file);
-        }
+	// Restart the file with some of the end
+	char pch[200000];
+	fseek(file, -sizeof(pch), SEEK_END);
+	int nBytes = fread(pch, 1, sizeof(pch), file);
+	fclose(file);
+	if (file = fopen(strFile.c_str(), "w"))
+	{
+	    fwrite(pch, 1, nBytes, file);
+	    fclose(file);
+	}
     }
 }
 
@@ -829,49 +829,49 @@ void AddTimeData(unsigned int ip, int64 nTime)
     // Ignore duplicates
     static set<unsigned int> setKnown;
     if (!setKnown.insert(ip).second)
-        return;
+	return;
 
     // Add data
     static vector<int64> vTimeOffsets;
     if (vTimeOffsets.empty())
-        vTimeOffsets.push_back(0);
+	vTimeOffsets.push_back(0);
     vTimeOffsets.push_back(nOffsetSample);
     printf("Added time data, samples %d, offset %+"PRI64d" (%+"PRI64d" minutes)\n", vTimeOffsets.size(), vTimeOffsets.back(), vTimeOffsets.back()/60);
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
     {
-        sort(vTimeOffsets.begin(), vTimeOffsets.end());
-        int64 nMedian = vTimeOffsets[vTimeOffsets.size()/2];
-        // Only let other nodes change our time by so much
-        if (abs64(nMedian) < 70 * 60)
-        {
-            nTimeOffset = nMedian;
-        }
-        else
-        {
-            nTimeOffset = 0;
+	sort(vTimeOffsets.begin(), vTimeOffsets.end());
+	int64 nMedian = vTimeOffsets[vTimeOffsets.size()/2];
+	// Only let other nodes change our time by so much
+	if (abs64(nMedian) < 70 * 60)
+	{
+	    nTimeOffset = nMedian;
+	}
+	else
+	{
+	    nTimeOffset = 0;
 
-            static bool fDone;
-            if (!fDone)
-            {
-                // If nobody has a time different than ours but within 5 minutes of ours, give a warning
-                bool fMatch = false;
-                foreach(int64 nOffset, vTimeOffsets)
-                    if (nOffset != 0 && abs64(nOffset) < 5 * 60)
-                        fMatch = true;
+	    static bool fDone;
+	    if (!fDone)
+	    {
+		// If nobody has a time different than ours but within 5 minutes of ours, give a warning
+		bool fMatch = false;
+		foreach(int64 nOffset, vTimeOffsets)
+		    if (nOffset != 0 && abs64(nOffset) < 5 * 60)
+			fMatch = true;
 
-                if (!fMatch)
-                {
-                    fDone = true;
-                    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
-                    strMiscWarning = strMessage;
-                    printf("*** %s\n", strMessage.c_str());
-                    boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
-                }
-            }
-        }
-        foreach(int64 n, vTimeOffsets)
-            printf("%+"PRI64d"  ", n);
-        printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
+		if (!fMatch)
+		{
+		    fDone = true;
+		    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
+		    strMiscWarning = strMessage;
+		    printf("*** %s\n", strMessage.c_str());
+		    boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
+		}
+	    }
+	}
+	foreach(int64 n, vTimeOffsets)
+	    printf("%+"PRI64d"  ", n);
+	printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
     }
 }
 
@@ -886,20 +886,15 @@ void AddTimeData(unsigned int ip, int64 nTime)
 string FormatVersion(int nVersion)
 {
     if (nVersion%100 == 0)
-        return strprintf("%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100);
+	return strprintf("%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100);
     else
-        return strprintf("%d.%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100, nVersion%100);
+	return strprintf("%d.%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100, nVersion%100);
 }
 
 string FormatFullVersion()
 {
     string s = FormatVersion(VERSION) + pszSubVer;
     if (VERSION_IS_BETA)
-        s += _("-beta");
+	s += _("-beta");
     return s;
 }
-
-
-
-
-

@@ -26,7 +26,7 @@ inline int MyMessageBox(const wxString& message, const wxString& caption="Messag
 {
 #ifdef GUI
     if (!fDaemon)
-        return wxMessageBox(message, caption, style, parent, x, y);
+	return wxMessageBox(message, caption, style, parent, x, y);
 #endif
     printf("wxMessageBox %s: %s\n", string(caption).c_str(), string(message).c_str());
     fprintf(stderr, "%s: %s\n", string(caption).c_str(), string(message).c_str());
@@ -67,7 +67,7 @@ protected:
     void OnListItemActivatedProductsSent(wxListEvent& event);
     void OnListItemActivatedOrdersSent(wxListEvent& event);
     void OnListItemActivatedOrdersReceived(wxListEvent& event);
-	
+
 public:
     /** Constructor */
     CMainFrame(wxWindow* parent);
@@ -76,10 +76,10 @@ public:
     // Custom
     enum
     {
-        ALL = 0,
-        SENTRECEIVED = 1,
-        SENT = 2,
-        RECEIVED = 3,
+	ALL = 0,
+	SENTRECEIVED = 1,
+	SENT = 2,
+	RECEIVED = 3,
     };
     int nPage;
     wxListCtrl* m_listCtrl;
@@ -169,7 +169,7 @@ protected:
     void OnButtonPaste(wxCommandEvent& event);
     void OnButtonSend(wxCommandEvent& event);
     void OnButtonCancel(wxCommandEvent& event);
-	
+
 public:
     /** Constructor */
     CSendDialog(wxWindow* parent, const wxString& strAddress="");
@@ -190,7 +190,7 @@ public:
     void OnButtonOK(wxCommandEvent& event);
     void OnButtonCancel(wxCommandEvent& event);
     void OnPaint(wxPaintEvent& event);
-	
+
 public:
     /** Constructor */
     CSendingDialog(wxWindow* parent, const CAddress& addrIn, int64 nPriceIn, const CWalletTx& wtxIn);
@@ -247,8 +247,8 @@ public:
     // Custom
     enum
     {
-        SENDING = 0,
-        RECEIVING = 1,
+	SENDING = 0,
+	RECEIVING = 1,
     };
     int nPage;
     wxListCtrl* m_listCtrl;
@@ -272,39 +272,39 @@ protected:
 
     void OnKeyDown(wxKeyEvent& event)
     {
-        if (event.GetKeyCode() == '\r' || event.GetKeyCode() == WXK_NUMPAD_ENTER)
-            EndModal(true);
-        else
-            HandleCtrlA(event);
+	if (event.GetKeyCode() == '\r' || event.GetKeyCode() == WXK_NUMPAD_ENTER)
+	    EndModal(true);
+	else
+	    HandleCtrlA(event);
     }
 
 public:
     /** Constructor */
     CGetTextFromUserDialog(wxWindow* parent,
-                           const string& strCaption,
-                           const string& strMessage1,
-                           const string& strValue1="",
-                           const string& strMessage2="",
-                           const string& strValue2="") : CGetTextFromUserDialogBase(parent, wxID_ANY, strCaption)
+			   const string& strCaption,
+			   const string& strMessage1,
+			   const string& strValue1="",
+			   const string& strMessage2="",
+			   const string& strValue2="") : CGetTextFromUserDialogBase(parent, wxID_ANY, strCaption)
     {
-        int x = GetSize().GetWidth();
-        int y = GetSize().GetHeight();
-        m_staticTextMessage1->SetLabel(strMessage1);
-        m_textCtrl1->SetValue(strValue1);
-        y += wxString(strMessage1).Freq('\n') * 14;
-        if (!strMessage2.empty())
-        {
-            m_staticTextMessage2->Show(true);
-            m_staticTextMessage2->SetLabel(strMessage2);
-            m_textCtrl2->Show(true);
-            m_textCtrl2->SetValue(strValue2);
-            y += 46 + wxString(strMessage2).Freq('\n') * 14;
-        }
+	int x = GetSize().GetWidth();
+	int y = GetSize().GetHeight();
+	m_staticTextMessage1->SetLabel(strMessage1);
+	m_textCtrl1->SetValue(strValue1);
+	y += wxString(strMessage1).Freq('\n') * 14;
+	if (!strMessage2.empty())
+	{
+	    m_staticTextMessage2->Show(true);
+	    m_staticTextMessage2->SetLabel(strMessage2);
+	    m_textCtrl2->Show(true);
+	    m_textCtrl2->SetValue(strValue2);
+	    y += 46 + wxString(strMessage2).Freq('\n') * 14;
+	}
 #ifndef __WXMSW__
-        x = x * 114 / 100;
-        y = y * 114 / 100;
+	x = x * 114 / 100;
+	y = y * 114 / 100;
 #endif
-        SetSize(x, y);
+	SetSize(x, y);
     }
 
     // Custom
@@ -330,7 +330,7 @@ protected:
 public:
     CMyTaskBarIcon() : wxTaskBarIcon()
     {
-        Show(true);
+	Show(true);
     }
 
     void Show(bool fShow=true);
