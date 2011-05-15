@@ -6,8 +6,11 @@
 
 #include <deque>
 #include <boost/array.hpp>
-#include <arpa/inet.h>
 #include <openssl/rand.h>
+
+#ifndef __WXMSW__
+#include <arpa/inet.h>
+#endif
 
 class CMessageHeader;
 class CAddress;

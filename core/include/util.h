@@ -5,11 +5,12 @@
 #define BITCOIN_UTIL_H
 
 #include "uint256.h"
-//#include "cryptopp/sha.h"
 
+#ifndef __WXMSW__
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 #include <map>
 #include <vector>
 #include <string>

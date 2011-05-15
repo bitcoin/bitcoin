@@ -66,17 +66,20 @@ AboutDialog
 
 Done:
 
-Compatibility with Qt, and some more modularity
+To be able to make an external GUI, I am working on modularizing bitcoin into a library. This is basic code
+plumbing, 100% no functional changes.
 
 - Put guard statements around header files.
 
-- Removed macro foreach: conflicts with Qt keyword foreach, replaced back with BOOST_FOREACH
+- Removed macro foreach: conflicts with Qt4 keyword `foreach`, replaced with BOOST_FOREACH.
 
 - Prefix stdlib structures and functions with std:: in headers; "using namespace" in header files is
-   generally frowned upon
+   generally frowned upon. These are moved to the implementation files.
 
-- Modularity: base48.h can now be included without including all the headers
-   (useful for linking external GUI to bitcoin core, part of GUI separation)
+- Modularity: base48.h and most other header files can now be included without the other shebang
+   (useful for linking external GUI to bitcoin core, part of GUI separation).
+  The include files that need each other now include each other.
+
 
 Todo:
 

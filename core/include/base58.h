@@ -7,7 +7,7 @@
 // Why base-58 instead of standard base-64 encoding?
 // - Don't want 0OIl characters that look the same in some fonts and
 //      could be used to create visually identical looking account numbers.
-// - A std::string with non-alphanumeric characters is not as easily accepted as an account number.
+// - A string with non-alphanumeric characters is not as easily accepted as an account number.
 // - E-mail usually won't line-break if there's no punctuation to break at.
 // - Doubleclicking selects the whole number as one word if it's all alphanumeric.
 //
@@ -74,7 +74,7 @@ inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
     while (isspace(*psz))
         psz++;
 
-    // Convert big endian std::string to bignum
+    // Convert big endian string to bignum
     for (const char* p = psz; *p; p++)
     {
         const char* p1 = strchr(pszBase58, *p);
