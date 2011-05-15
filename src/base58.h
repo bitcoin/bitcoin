@@ -11,12 +11,17 @@
 // - E-mail usually won't line-break if there's no punctuation to break at.
 // - Doubleclicking selects the whole number as one word if it's all alphanumeric.
 //
+#ifndef BITCOIN_BASE58_H
+#define BITCOIN_BASE58_H
 
+#include <string>
+#include <vector>
+#include "bignum.h"
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 
-inline string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
+inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 {
     CAutoBN_CTX pctx;
     CBigNum bn58 = 58;
@@ -24,15 +29,15 @@ inline string EncodeBase58(const unsigned char* pbegin, const unsigned char* pen
 
     // Convert big endian data to little endian
     // Extra zero at the end make sure bignum will interpret as a positive number
-    vector<unsigned char> vchTmp(pend-pbegin+1, 0);
+    std::vector<unsigned char> vchTmp(pend-pbegin+1, 0);
     reverse_copy(pbegin, pend, vchTmp.begin());
 
     // Convert little endian data to bignum
     CBigNum bn;
     bn.setvch(vchTmp);
 
-    // Convert bignum to string
-    string str;
+    // Convert bignum to std::string
+    std::string str;
     str.reserve((pend - pbegin) * 138 / 100 + 1);
     CBigNum dv;
     CBigNum rem;
@@ -49,17 +54,17 @@ inline string EncodeBase58(const unsigned char* pbegin, const unsigned char* pen
     for (const unsigned char* p = pbegin; p < pend && *p == 0; p++)
         str += pszBase58[0];
 
-    // Convert little endian string to big endian
+    // Convert little endian std::string to big endian
     reverse(str.begin(), str.end());
     return str;
 }
 
-inline string EncodeBase58(const vector<unsigned char>& vch)
+inline std::string EncodeBase58(const std::vector<unsigned char>& vch)
 {
     return EncodeBase58(&vch[0], &vch[0] + vch.size());
 }
 
-inline bool DecodeBase58(const char* psz, vector<unsigned char>& vchRet)
+inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
 {
     CAutoBN_CTX pctx;
     vchRet.clear();
@@ -88,7 +93,7 @@ inline bool DecodeBase58(const char* psz, vector<unsigned char>& vchRet)
     }
 
     // Get bignum as little endian data
-    vector<unsigned char> vchTmp = bn.getvch();
+    std::vector<unsigned char> vchTmp = bn.getvch();
 
     // Trim off sign byte if present
     if (vchTmp.size() >= 2 && vchTmp.end()[-1] == 0 && vchTmp.end()[-2] >= 0x80)
@@ -105,7 +110,7 @@ inline bool DecodeBase58(const char* psz, vector<unsigned char>& vchRet)
     return true;
 }
 
-inline bool DecodeBase58(const string& str, vector<unsigned char>& vchRet)
+inline bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet)
 {
     return DecodeBase58(str.c_str(), vchRet);
 }
@@ -114,16 +119,16 @@ inline bool DecodeBase58(const string& str, vector<unsigned char>& vchRet)
 
 
 
-inline string EncodeBase58Check(const vector<unsigned char>& vchIn)
+inline std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
 {
     // add 4-byte hash check to the end
-    vector<unsigned char> vch(vchIn);
+    std::vector<unsigned char> vch(vchIn);
     uint256 hash = Hash(vch.begin(), vch.end());
     vch.insert(vch.end(), (unsigned char*)&hash, (unsigned char*)&hash + 4);
     return EncodeBase58(vch);
 }
 
-inline bool DecodeBase58Check(const char* psz, vector<unsigned char>& vchRet)
+inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet)
 {
     if (!DecodeBase58(psz, vchRet))
         return false;
@@ -142,7 +147,7 @@ inline bool DecodeBase58Check(const char* psz, vector<unsigned char>& vchRet)
     return true;
 }
 
-inline bool DecodeBase58Check(const string& str, vector<unsigned char>& vchRet)
+inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet)
 {
     return DecodeBase58Check(str.c_str(), vchRet);
 }
@@ -154,17 +159,17 @@ inline bool DecodeBase58Check(const string& str, vector<unsigned char>& vchRet)
 
 #define ADDRESSVERSION   ((unsigned char)(fTestNet ? 111 : 0))
 
-inline string Hash160ToAddress(uint160 hash160)
+inline std::string Hash160ToAddress(uint160 hash160)
 {
     // add 1-byte version number to the front
-    vector<unsigned char> vch(1, ADDRESSVERSION);
+    std::vector<unsigned char> vch(1, ADDRESSVERSION);
     vch.insert(vch.end(), UBEGIN(hash160), UEND(hash160));
     return EncodeBase58Check(vch);
 }
 
 inline bool AddressToHash160(const char* psz, uint160& hash160Ret)
 {
-    vector<unsigned char> vch;
+    std::vector<unsigned char> vch;
     if (!DecodeBase58Check(psz, vch))
         return false;
     if (vch.empty())
@@ -176,7 +181,7 @@ inline bool AddressToHash160(const char* psz, uint160& hash160Ret)
     return (nVersion <= ADDRESSVERSION);
 }
 
-inline bool AddressToHash160(const string& str, uint160& hash160Ret)
+inline bool AddressToHash160(const std::string& str, uint160& hash160Ret)
 {
     return AddressToHash160(str.c_str(), hash160Ret);
 }
@@ -187,7 +192,7 @@ inline bool IsValidBitcoinAddress(const char* psz)
     return AddressToHash160(psz, hash160);
 }
 
-inline bool IsValidBitcoinAddress(const string& str)
+inline bool IsValidBitcoinAddress(const std::string& str)
 {
     return IsValidBitcoinAddress(str.c_str());
 }
@@ -195,7 +200,9 @@ inline bool IsValidBitcoinAddress(const string& str)
 
 
 
-inline string PubKeyToAddress(const vector<unsigned char>& vchPubKey)
+inline std::string PubKeyToAddress(const std::vector<unsigned char>& vchPubKey)
 {
     return Hash160ToAddress(Hash160(vchPubKey));
 }
+
+#endif

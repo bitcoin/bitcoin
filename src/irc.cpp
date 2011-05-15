@@ -4,6 +4,9 @@
 
 #include "headers.h"
 
+using namespace std;
+using namespace boost;
+
 int nGotIRCAddresses = 0;
 bool fGotExternalIP = false;
 

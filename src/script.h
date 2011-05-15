@@ -1,6 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
+#ifndef H_BITCOIN_SCRIPT
+#define H_BITCOIN_SCRIPT
+
+#include "base58.h"
+
+#include <string>
+#include <vector>
 
 class CTransaction;
 
@@ -310,7 +317,7 @@ inline const char* GetOpName(opcodetype opcode)
 
 
 
-inline string ValueString(const vector<unsigned char>& vch)
+inline std::string ValueString(const std::vector<unsigned char>& vch)
 {
     if (vch.size() <= 4)
         return strprintf("%d", CBigNum(vch).getint());
@@ -318,10 +325,10 @@ inline string ValueString(const vector<unsigned char>& vch)
         return HexStr(vch);
 }
 
-inline string StackString(const vector<vector<unsigned char> >& vStack)
+inline std::string StackString(const std::vector<std::vector<unsigned char> >& vStack)
 {
-    string str;
-    foreach(const vector<unsigned char>& vch, vStack)
+    std::string str;
+    BOOST_FOREACH(const std::vector<unsigned char>& vch, vStack)
     {
         if (!str.empty())
             str += " ";
@@ -338,7 +345,7 @@ inline string StackString(const vector<vector<unsigned char> >& vStack)
 
 
 
-class CScript : public vector<unsigned char>
+class CScript : public std::vector<unsigned char>
 {
 protected:
     CScript& push_int64(int64 n)
@@ -371,10 +378,10 @@ protected:
 
 public:
     CScript() { }
-    CScript(const CScript& b) : vector<unsigned char>(b.begin(), b.end()) { }
-    CScript(const_iterator pbegin, const_iterator pend) : vector<unsigned char>(pbegin, pend) { }
+    CScript(const CScript& b) : std::vector<unsigned char>(b.begin(), b.end()) { }
+    CScript(const_iterator pbegin, const_iterator pend) : std::vector<unsigned char>(pbegin, pend) { }
 #ifndef _MSC_VER
-    CScript(const unsigned char* pbegin, const unsigned char* pend) : vector<unsigned char>(pbegin, pend) { }
+    CScript(const unsigned char* pbegin, const unsigned char* pend) : std::vector<unsigned char>(pbegin, pend) { }
 #endif
 
     CScript& operator+=(const CScript& b)
@@ -405,7 +412,7 @@ public:
     explicit CScript(opcodetype b)     { operator<<(b); }
     explicit CScript(const uint256& b) { operator<<(b); }
     explicit CScript(const CBigNum& b) { operator<<(b); }
-    explicit CScript(const vector<unsigned char>& b) { operator<<(b); }
+    explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
 
 
     CScript& operator<<(char b)           { return push_int64(b); }
@@ -422,7 +429,7 @@ public:
     CScript& operator<<(opcodetype opcode)
     {
         if (opcode < 0 || opcode > 0xff)
-            throw runtime_error("CScript::operator<<() : invalid opcode");
+            throw std::runtime_error("CScript::operator<<() : invalid opcode");
         insert(end(), (unsigned char)opcode);
         return *this;
     }
@@ -447,7 +454,7 @@ public:
         return *this;
     }
 
-    CScript& operator<<(const vector<unsigned char>& b)
+    CScript& operator<<(const std::vector<unsigned char>& b)
     {
         if (b.size() < OP_PUSHDATA1)
         {
@@ -483,7 +490,7 @@ public:
     }
 
 
-    bool GetOp(iterator& pc, opcodetype& opcodeRet, vector<unsigned char>& vchRet)
+    bool GetOp(iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet)
     {
          // Wrapper so it can be called with either iterator or const_iterator
          const_iterator pc2 = pc;
@@ -500,7 +507,7 @@ public:
          return fRet;
     }
 
-    bool GetOp(const_iterator& pc, opcodetype& opcodeRet, vector<unsigned char>& vchRet) const
+    bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet) const
     {
         return GetOp2(pc, opcodeRet, &vchRet);
     }
@@ -510,7 +517,7 @@ public:
         return GetOp2(pc, opcodeRet, NULL);
     }
 
-    bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, vector<unsigned char>* pvchRet) const
+    bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) const
     {
         opcodeRet = OP_INVALIDOPCODE;
         if (pvchRet)
@@ -617,7 +624,7 @@ public:
     uint160 GetBitcoinAddressHash160() const
     {
         opcodetype opcode;
-        vector<unsigned char> vch;
+        std::vector<unsigned char> vch;
         CScript::const_iterator pc = begin();
         if (!GetOp(pc, opcode, vch) || opcode != OP_DUP) return 0;
         if (!GetOp(pc, opcode, vch) || opcode != OP_HASH160) return 0;
@@ -629,7 +636,7 @@ public:
         return hash160;
     }
 
-    string GetBitcoinAddress() const
+    std::string GetBitcoinAddress() const
     {
         uint160 hash160 = GetBitcoinAddressHash160();
         if (hash160 == 0)
@@ -643,12 +650,12 @@ public:
         *this << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
-    void SetBitcoinAddress(const vector<unsigned char>& vchPubKey)
+    void SetBitcoinAddress(const std::vector<unsigned char>& vchPubKey)
     {
         SetBitcoinAddress(Hash160(vchPubKey));
     }
 
-    bool SetBitcoinAddress(const string& strAddress)
+    bool SetBitcoinAddress(const std::string& strAddress)
     {
         this->clear();
         uint160 hash160;
@@ -664,11 +671,11 @@ public:
         printf("CScript(%s)\n", HexStr(begin(), end(), true).c_str());
     }
 
-    string ToString() const
+    std::string ToString() const
     {
-        string str;
+        std::string str;
         opcodetype opcode;
-        vector<unsigned char> vch;
+        std::vector<unsigned char> vch;
         const_iterator pc = begin();
         while (pc < end())
         {
@@ -703,7 +710,9 @@ public:
 uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CScript& scriptPubKey);
-bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned char>& vchPubKeyRet);
+bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, std::vector<unsigned char>& vchPubKeyRet);
 bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret);
 bool SignSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript());
 bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType=0);
+
+#endif

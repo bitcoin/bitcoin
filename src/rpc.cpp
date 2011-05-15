@@ -21,6 +21,8 @@ typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 // a certain size around 145MB.  If we need access to json_spirit outside this
 // file, we could use the compiled json_spirit option.
 
+using namespace std;
+using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
@@ -81,7 +83,7 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     entry.push_back(Pair("confirmations", wtx.GetDepthInMainChain()));
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
     entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
-    foreach(const PAIRTYPE(string,string)& item, wtx.mapValue)
+    BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
 
@@ -336,7 +338,7 @@ string GetAccountAddress(string strAccount, bool bForceNew=false)
              ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if (txout.scriptPubKey == scriptPubKey)
                     account.vchPubKey.clear();
         }
@@ -449,7 +451,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     Array ret;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
-        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
+        BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapAddressBook)
         {
             const string& strAddress = item.first;
             const string& strName = item.second;
@@ -541,7 +543,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
             if (wtx.IsCoinBase() || !wtx.IsFinal())
                 continue;
 
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if (txout.scriptPubKey == scriptPubKey)
                     if (wtx.GetDepthInMainChain() >= nMinDepth)
                         nAmount += txout.nValue;
@@ -556,7 +558,7 @@ void GetAccountPubKeys(string strAccount, set<CScript>& setPubKey)
 {
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
-        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
+        BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapAddressBook)
         {
             const string& strAddress = item.first;
             const string& strName = item.second;
@@ -600,7 +602,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
             if (wtx.IsCoinBase() || !wtx.IsFinal())
                 continue;
 
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if (setPubKey.count(txout.scriptPubKey))
                     if (wtx.GetDepthInMainChain() >= nMinDepth)
                         nAmount += txout.nValue;
@@ -678,9 +680,9 @@ Value getbalance(const Array& params, bool fHelp)
             list<pair<string, int64> > listSent;
             wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
-                foreach(const PAIRTYPE(string,int64)& r, listReceived)
+                BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listReceived)
                     nBalance += r.second;
-            foreach(const PAIRTYPE(string,int64)& r, listSent)
+            BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
             nBalance += allGeneratedMature;
@@ -804,7 +806,7 @@ Value sendmany(const Array& params, bool fHelp)
     vector<pair<CScript, int64> > vecSend;
 
     int64 totalAmount = 0;
-    foreach(const Pair& s, sendTo)
+    BOOST_FOREACH(const Pair& s, sendTo)
     {
         uint160 hash160;
         string strAddress = s.name_;
@@ -885,7 +887,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             if (nDepth < nMinDepth)
                 continue;
 
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             {
                 // Only counting our own bitcoin addresses and not ip addresses
                 uint160 hash160 = txout.scriptPubKey.GetBitcoinAddressHash160();
@@ -904,7 +906,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     map<string, tallyitem> mapAccountTally;
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
-        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
+        BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapAddressBook)
         {
             const string& strAddress = item.first;
             const string& strAccount = item.second;
@@ -1024,7 +1026,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
-        foreach(const PAIRTYPE(string, int64)& s, listSent)
+        BOOST_FOREACH(const PAIRTYPE(string, int64)& s, listSent)
         {
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
@@ -1042,7 +1044,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
         CRITICAL_BLOCK(cs_mapAddressBook)
         {
-            foreach(const PAIRTYPE(string, int64)& r, listReceived)
+            BOOST_FOREACH(const PAIRTYPE(string, int64)& r, listReceived)
             {
                 string account;
                 if (mapAddressBook.count(r.first))
@@ -1114,7 +1116,7 @@ Value listtransactions(const Array& params, bool fHelp)
         }
         list<CAccountingEntry> acentries;
         walletdb.ListAccountCreditDebit(strAccount, acentries);
-        foreach(CAccountingEntry& entry, acentries)
+        BOOST_FOREACH(CAccountingEntry& entry, acentries)
         {
             txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
         }
@@ -1162,7 +1164,7 @@ Value listaccounts(const Array& params, bool fHelp)
     CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
-        foreach(const PAIRTYPE(string, string)& entry, mapAddressBook) {
+        BOOST_FOREACH(const PAIRTYPE(string, string)& entry, mapAddressBook) {
             uint160 hash160;
             if(AddressToHash160(entry.first, hash160) && mapPubKeys.count(hash160)) // This address belongs to me
                 mapAccountBalances[entry.second] = 0;
@@ -1177,12 +1179,12 @@ Value listaccounts(const Array& params, bool fHelp)
             list<pair<string, int64> > listSent;
             wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
             mapAccountBalances[strSentAccount] -= nFee;
-            foreach(const PAIRTYPE(string, int64)& s, listSent)
+            BOOST_FOREACH(const PAIRTYPE(string, int64)& s, listSent)
                 mapAccountBalances[strSentAccount] -= s.second;
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
                 mapAccountBalances[""] += nGeneratedMature;
-                foreach(const PAIRTYPE(string, int64)& r, listReceived)
+                BOOST_FOREACH(const PAIRTYPE(string, int64)& r, listReceived)
                     if (mapAddressBook.count(r.first))
                         mapAccountBalances[mapAddressBook[r.first]] += r.second;
                     else
@@ -1193,11 +1195,11 @@ Value listaccounts(const Array& params, bool fHelp)
 
     list<CAccountingEntry> acentries;
     CWalletDB().ListAccountCreditDebit("*", acentries);
-    foreach(const CAccountingEntry& entry, acentries)
+    BOOST_FOREACH(const CAccountingEntry& entry, acentries)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 
     Object ret;
-    foreach(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
+    BOOST_FOREACH(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
         ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
     }
     return ret;
@@ -1320,7 +1322,7 @@ Value getwork(const Array& params, bool fHelp)
             {
                 // Deallocate old blocks since they're obsolete now
                 mapNewBlock.clear();
-                foreach(CBlock* pblock, vNewBlock)
+                BOOST_FOREACH(CBlock* pblock, vNewBlock)
                     delete pblock;
                 vNewBlock.clear();
             }
@@ -1490,7 +1492,7 @@ string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeader
       << "Content-Type: application/json\r\n"
       << "Content-Length: " << strMsg.size() << "\r\n"
       << "Accept: application/json\r\n";
-    foreach(const PAIRTYPE(string, string)& item, mapRequestHeaders)
+    BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapRequestHeaders)
         s << item.first << ": " << item.second << "\r\n";
     s << "\r\n" << strMsg;
 
@@ -1710,7 +1712,7 @@ bool ClientAllowed(const string& strAddress)
     if (strAddress == asio::ip::address_v4::loopback().to_string())
         return true;
     const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
-    foreach(string strAllow, vAllow)
+    BOOST_FOREACH(string strAllow, vAllow)
         if (WildcardMatch(strAddress, strAllow))
             return true;
     return false;

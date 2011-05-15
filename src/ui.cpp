@@ -7,6 +7,8 @@
 #include <crtdbg.h>
 #endif
 
+using namespace std;
+using namespace boost;
 
 
 DEFINE_EVENT_TYPE(wxEVT_UITHREADCALL)
@@ -294,7 +296,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     dResize -= 0.01;
 #endif
     wxListCtrl* pplistCtrl[] = {m_listCtrlAll, m_listCtrlSentReceived, m_listCtrlSent, m_listCtrlReceived};
-    foreach(wxListCtrl* p, pplistCtrl)
+    BOOST_FOREACH(wxListCtrl* p, pplistCtrl)
     {
         p->InsertColumn(0, "",               wxLIST_FORMAT_LEFT,  dResize * 0);
         p->InsertColumn(1, "",               wxLIST_FORMAT_LEFT,  dResize * 0);
@@ -528,7 +530,7 @@ string SingleLine(const string& strIn)
 {
     string strOut;
     bool fOneSpace = false;
-    foreach(unsigned char c, strIn)
+    BOOST_FOREACH(unsigned char c, strIn)
     {
         if (isspace(c))
         {
@@ -609,7 +611,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             if (nCredit == 0)
             {
                 int64 nUnmatured = 0;
-                foreach(const CTxOut& txout, wtx.vout)
+                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                     nUnmatured += txout.GetCredit();
                 if (wtx.IsInMainChain())
                 {
@@ -644,7 +646,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             // Received by Bitcoin Address
             if (!fShowReceived)
                 return false;
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             {
                 if (txout.IsMine())
                 {
@@ -687,11 +689,11 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
     else
     {
         bool fAllFromMe = true;
-        foreach(const CTxIn& txin, wtx.vin)
+        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
             fAllFromMe = fAllFromMe && txin.IsMine();
 
         bool fAllToMe = true;
-        foreach(const CTxOut& txout, wtx.vout)
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             fAllToMe = fAllToMe && txout.IsMine();
 
         if (fAllFromMe && fAllToMe)
@@ -776,9 +778,9 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             // Mixed debit transaction, can't break down payees
             //
             bool fAllMine = true;
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 fAllMine = fAllMine && txout.IsMine();
-            foreach(const CTxIn& txin, wtx.vin)
+            BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 fAllMine = fAllMine && txin.IsMine();
 
             InsertLine(fNew, nIndex, hash, strSort, colour,
@@ -1006,7 +1008,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
                 string strTop;
                 if (m_listCtrl->GetItemCount())
                     strTop = (string)m_listCtrl->GetItemText(0);
-                foreach(uint256 hash, vWalletUpdated)
+                BOOST_FOREACH(uint256 hash, vWalletUpdated)
                 {
                     map<uint256, CWalletTx>::iterator mi = mapWallet.find(hash);
                     if (mi != mapWallet.end())
@@ -1265,7 +1267,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
             if (nNet > 0)
             {
                 // Credit
-                foreach(const CTxOut& txout, wtx.vout)
+                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 {
                     if (txout.IsMine())
                     {
@@ -1316,7 +1318,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
             // Coinbase
             //
             int64 nUnmatured = 0;
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 nUnmatured += txout.GetCredit();
             strHTML += _("<b>Credit:</b> ");
             if (wtx.IsInMainChain())
@@ -1335,11 +1337,11 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
         else
         {
             bool fAllFromMe = true;
-            foreach(const CTxIn& txin, wtx.vin)
+            BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 fAllFromMe = fAllFromMe && txin.IsMine();
 
             bool fAllToMe = true;
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 fAllToMe = fAllToMe && txout.IsMine();
 
             if (fAllFromMe)
@@ -1347,7 +1349,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                 //
                 // Debit
                 //
-                foreach(const CTxOut& txout, wtx.vout)
+                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 {
                     if (txout.IsMine())
                         continue;
@@ -1388,10 +1390,10 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                 //
                 // Mixed debit transaction
                 //
-                foreach(const CTxIn& txin, wtx.vin)
+                BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                     if (txin.IsMine())
                         strHTML += _("<b>Debit:</b> ") + FormatMoney(-txin.GetDebit()) + "<br>";
-                foreach(const CTxOut& txout, wtx.vout)
+                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                     if (txout.IsMine())
                         strHTML += _("<b>Credit:</b> ") + FormatMoney(txout.GetCredit()) + "<br>";
             }
@@ -1418,10 +1420,10 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
         if (fDebug)
         {
             strHTML += "<hr><br>debug print<br><br>";
-            foreach(const CTxIn& txin, wtx.vin)
+            BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 if (txin.IsMine())
                     strHTML += "<b>Debit:</b> " + FormatMoney(-txin.GetDebit()) + "<br>";
-            foreach(const CTxOut& txout, wtx.vout)
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if (txout.IsMine())
                     strHTML += "<b>Credit:</b> " + FormatMoney(txout.GetCredit()) + "<br>";
 
@@ -1431,7 +1433,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
             strHTML += "<br><b>Inputs:</b><br>";
             CRITICAL_BLOCK(cs_mapWallet)
             {
-                foreach(const CTxIn& txin, wtx.vin)
+                BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 {
                     COutPoint prevout = txin.prevout;
                     map<uint256, CWalletTx>::iterator mi = mapWallet.find(prevout.hash);
@@ -2341,7 +2343,7 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         string strDefaultReceiving = (string)pframeMain->m_textCtrlAddress->GetValue();
-        foreach(const PAIRTYPE(string, string)& item, mapAddressBook)
+        BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapAddressBook)
         {
             string strAddress = item.first;
             string strName = item.second;

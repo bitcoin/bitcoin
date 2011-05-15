@@ -1,6 +1,28 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
+#ifndef BITCOIN_UTIL_H
+#define BITCOIN_UTIL_H
+
+#include "uint256.h"
+
+#ifndef __WXMSW__
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
+#include <map>
+#include <vector>
+#include <string>
+
+#include <boost/foreach.hpp>
+#include <boost/thread.hpp>
+#include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
+#include <boost/date_time/gregorian/gregorian_types.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+
+#include <openssl/sha.h>
+#include <openssl/ripemd.h>
 
 
 #if defined(_MSC_VER) || defined(__BORLANDC__)
@@ -17,7 +39,6 @@ typedef unsigned long long  uint64;
 #define __forceinline  inline
 #endif
 
-#define foreach             BOOST_FOREACH
 #define loop                for (;;)
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
@@ -134,8 +155,8 @@ inline const char* _(const char* psz)
 
 
 
-extern map<string, string> mapArgs;
-extern map<string, vector<string> > mapMultiArgs;
+extern std::map<std::string, std::string> mapArgs;
+extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugger;
@@ -145,7 +166,7 @@ extern bool fShutdown;
 extern bool fDaemon;
 extern bool fServer;
 extern bool fCommandLine;
-extern string strMiscWarning;
+extern std::string strMiscWarning;
 extern bool fTestNet;
 extern bool fNoListen;
 extern bool fLogTimestamps;
@@ -154,39 +175,39 @@ void RandAddSeed();
 void RandAddSeedPerfmon();
 int OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
-string strprintf(const char* format, ...);
+std::string strprintf(const char* format, ...);
 bool error(const char* format, ...);
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
-void ParseString(const string& str, char c, vector<string>& v);
-string FormatMoney(int64 n, bool fPlus=false);
-bool ParseMoney(const string& str, int64& nRet);
+void ParseString(const std::string& str, char c, std::vector<std::string>& v);
+std::string FormatMoney(int64 n, bool fPlus=false);
+bool ParseMoney(const std::string& str, int64& nRet);
 bool ParseMoney(const char* pszIn, int64& nRet);
-vector<unsigned char> ParseHex(const char* psz);
-vector<unsigned char> ParseHex(const string& str);
+std::vector<unsigned char> ParseHex(const char* psz);
+std::vector<unsigned char> ParseHex(const std::string& str);
 void ParseParameters(int argc, char* argv[]);
 const char* wxGetTranslation(const char* psz);
 bool WildcardMatch(const char* psz, const char* mask);
-bool WildcardMatch(const string& str, const string& mask);
+bool WildcardMatch(const std::string& str, const std::string& mask);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
-string GetConfigFile();
-string GetPidFile();
-void CreatePidFile(string pidFile, pid_t pid);
-void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<string> >& mapMultiSettingsRet);
+std::string GetConfigFile();
+std::string GetPidFile();
+void CreatePidFile(std::string pidFile, pid_t pid);
+void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef __WXMSW__
 string MyGetSpecialFolderPath(int nFolder, bool fCreate);
 #endif
-string GetDefaultDataDir();
-string GetDataDir();
+std::string GetDefaultDataDir();
+std::string GetDataDir();
 void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
-string FormatFullVersion();
+std::string FormatFullVersion();
 
 
 
@@ -268,12 +289,12 @@ public:
 
 
 
-inline string i64tostr(int64 n)
+inline std::string i64tostr(int64 n)
 {
     return strprintf("%"PRI64d, n);
 }
 
-inline string itostr(int n)
+inline std::string itostr(int n)
 {
     return strprintf("%d", n);
 }
@@ -287,7 +308,7 @@ inline int64 atoi64(const char* psz)
 #endif
 }
 
-inline int64 atoi64(const string& str)
+inline int64 atoi64(const std::string& str)
 {
 #ifdef _MSC_VER
     return _atoi64(str.c_str());
@@ -296,7 +317,7 @@ inline int64 atoi64(const string& str)
 #endif
 }
 
-inline int atoi(const string& str)
+inline int atoi(const std::string& str)
 {
     return atoi(str.c_str());
 }
@@ -317,39 +338,39 @@ inline int64 abs64(int64 n)
 }
 
 template<typename T>
-string HexStr(const T itbegin, const T itend, bool fSpaces=false)
+std::string HexStr(const T itbegin, const T itend, bool fSpaces=false)
 {
     if (itbegin == itend)
         return "";
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
-    string str;
+    std::string str;
     str.reserve((pend-pbegin) * (fSpaces ? 3 : 2));
     for (const unsigned char* p = pbegin; p != pend; p++)
         str += strprintf((fSpaces && p != pend-1 ? "%02x " : "%02x"), *p);
     return str;
 }
 
-inline string HexStr(const vector<unsigned char>& vch, bool fSpaces=false)
+inline std::string HexStr(const std::vector<unsigned char>& vch, bool fSpaces=false)
 {
     return HexStr(vch.begin(), vch.end(), fSpaces);
 }
 
 template<typename T>
-string HexNumStr(const T itbegin, const T itend, bool f0x=true)
+std::string HexNumStr(const T itbegin, const T itend, bool f0x=true)
 {
     if (itbegin == itend)
         return "";
     const unsigned char* pbegin = (const unsigned char*)&itbegin[0];
     const unsigned char* pend = pbegin + (itend - itbegin) * sizeof(itbegin[0]);
-    string str = (f0x ? "0x" : "");
+    std::string str = (f0x ? "0x" : "");
     str.reserve(str.size() + (pend-pbegin) * 2);
     for (const unsigned char* p = pend-1; p >= pbegin; p--)
         str += strprintf("%02x", *p);
     return str;
 }
 
-inline string HexNumStr(const vector<unsigned char>& vch, bool f0x=true)
+inline std::string HexNumStr(const std::vector<unsigned char>& vch, bool f0x=true)
 {
     return HexNumStr(vch.begin(), vch.end(), f0x);
 }
@@ -360,7 +381,7 @@ void PrintHex(const T pbegin, const T pend, const char* pszFormat="%s", bool fSp
     printf(pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
 }
 
-inline void PrintHex(const vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
+inline void PrintHex(const std::vector<unsigned char>& vch, const char* pszFormat="%s", bool fSpaces=true)
 {
     printf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
@@ -380,11 +401,11 @@ inline int64 GetPerformanceCounter()
 
 inline int64 GetTimeMillis()
 {
-    return (posix_time::ptime(posix_time::microsec_clock::universal_time()) -
-            posix_time::ptime(gregorian::date(1970,1,1))).total_milliseconds();
+    return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
+            boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
 }
 
-inline string DateTimeStrFormat(const char* pszFormat, int64 nTime)
+inline std::string DateTimeStrFormat(const char* pszFormat, int64 nTime)
 {
     time_t n = nTime;
     struct tm* ptmTime = gmtime(&n);
@@ -409,21 +430,21 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
-inline string GetArg(const string& strArg, const string& strDefault)
+inline std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
     if (mapArgs.count(strArg))
         return mapArgs[strArg];
     return strDefault;
 }
 
-inline int64 GetArg(const string& strArg, int64 nDefault)
+inline int64 GetArg(const std::string& strArg, int64 nDefault)
 {
     if (mapArgs.count(strArg))
         return atoi64(mapArgs[strArg]);
     return nDefault;
 }
 
-inline bool GetBoolArg(const string& strArg)
+inline bool GetBoolArg(const std::string& strArg)
 {
     if (mapArgs.count(strArg))
     {
@@ -538,7 +559,7 @@ uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=VERSION)
     return Hash(ss.begin(), ss.end());
 }
 
-inline uint160 Hash160(const vector<unsigned char>& vch)
+inline uint160 Hash160(const std::vector<unsigned char>& vch)
 {
     uint256 hash1;
     SHA256(&vch[0], vch.size(), (unsigned char*)&hash1);
@@ -655,3 +676,5 @@ inline bool AffinityBugWorkaround(void(*pfn)(void*))
 #endif
     return false;
 }
+
+#endif

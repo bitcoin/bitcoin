@@ -1,8 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
 #include "headers.h"
+
+using namespace std;
+using namespace boost;
 
 bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
@@ -974,7 +976,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
 
     // Scan templates
     const CScript& script1 = scriptPubKey;
-    foreach(const CScript& script2, vTemplates)
+    BOOST_FOREACH(const CScript& script2, vTemplates)
     {
         vSolutionRet.clear();
         opcodetype opcode1, opcode2;
@@ -1030,7 +1032,7 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
     // Compile solution
     CRITICAL_BLOCK(cs_mapKeys)
     {
-        foreach(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
         {
             if (item.first == OP_PUBKEY)
             {
@@ -1100,7 +1102,7 @@ bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned 
 
     CRITICAL_BLOCK(cs_mapKeys)
     {
-        foreach(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
         {
             valtype vchPubKey;
             if (item.first == OP_PUBKEY)
@@ -1133,7 +1135,7 @@ bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret)
     if (!Solver(scriptPubKey, vSolution))
         return false;
 
-    foreach(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
     {
         if (item.first == OP_PUBKEYHASH)
         {
