@@ -1038,3 +1038,5 @@ void AdvertRemoveSource(CNode* pfrom, unsigned int nChannel, unsigned int nHops,
     if (obj.setSources.empty())
 	AdvertStopPublish(pfrom, nChannel, nHops, obj);
 }
+
+#endif // !NET_H
