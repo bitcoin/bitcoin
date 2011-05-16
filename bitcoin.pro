@@ -3,6 +3,7 @@ TARGET =
 DEPENDPATH += .
 INCLUDEPATH += gui/include core/include cryptopp/include json/include
 unix:LIBS += -lssl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
+macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0
 
 # Input
 HEADERS += gui/include/bitcoingui.h \
