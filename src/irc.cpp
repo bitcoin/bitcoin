@@ -265,11 +265,11 @@ void ThreadIRCSeed2(void* parg)
     while (!fShutdown)
     {
         //CAddress addrConnect("216.155.130.130:6667"); // chat.freenode.net
-        CAddress addrConnect("92.243.23.21:6667"); // irc.lfnet.org
+        CAddress addrConnect("92.243.23.21", 6667); // irc.lfnet.org
         if (!fTOR)
         {
             //struct hostent* phostent = gethostbyname("chat.freenode.net");
-            CAddress addrIRC("irc.lfnet.org:6667", 0, true);
+            CAddress addrIRC("irc.lfnet.org", 6667, true);
             if (addrIRC.IsValid())
                 addrConnect = addrIRC;
         }
