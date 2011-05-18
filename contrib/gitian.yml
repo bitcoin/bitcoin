@@ -40,7 +40,9 @@ script: |
   cp -a . $OUTDIR/src
   rm -rf $OUTDIR/src/.git
   mv $OUTDIR/src/locale $OUTDIR
-  cp $OUTDIR/src/license.txt $OUTDIR
+  cp $OUTDIR/src/doc/README $OUTDIR
+  cp $OUTDIR/src/COPYING $OUTDIR
+  cd src
   PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin bitcoind
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
