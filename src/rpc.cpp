@@ -1255,6 +1255,18 @@ Value backupwallet(const Array& params, bool fHelp)
     return Value::null;
 }
 
+Value importkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "importkey <file> <account>\n"
+            "Reads a PEM-encoded keypair from file and adds it to the wallet.");
+
+    string strFile = params[0].get_str();
+    string strAccount = AccountFromValue(params[1]);
+    return ImportPemFile(strFile, strAccount);
+}
+
 
 Value validateaddress(const Array& params, bool fHelp)
 {
@@ -1435,6 +1447,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listreceivedbyaccount", &listreceivedbyaccount),
     make_pair("listreceivedbylabel",   &listreceivedbyaccount), // deprecated
     make_pair("backupwallet",          &backupwallet),
+    make_pair("importkey",             &importkey),
     make_pair("validateaddress",       &validateaddress),
     make_pair("getbalance",            &getbalance),
     make_pair("move",                  &movecmd),

@@ -471,6 +471,7 @@ protected:
 
 bool LoadWallet(bool& fFirstRunRet);
 void BackupWallet(const std::string& strDest);
+std::string ImportPemFile(const std::string& strFile, const std::string& strAccount);
 
 inline bool SetAddressBookName(const std::string& strAddress, const std::string& strName)
 {
