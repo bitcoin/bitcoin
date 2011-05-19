@@ -953,12 +953,12 @@ void BackupWallet(const string& strDest)
 
 string ImportPemFile(const string& strFile, const string& strAccount)
 {
-    FILE* fp = fopen(strFile.c_str(), "r");
-    if (fp == NULL)
+    CAutoFile filein = fopen(strFile.c_str(), "r");
+    if (!filein)
         throw runtime_error(strprintf("ImportPemFile() : failed to open file %s", strFile.c_str()));
 
     CKey key;
-    if (!key.SetPrivKeyPem(fp))
+    if (!key.SetPrivKeyPem(filein))
         throw runtime_error(strprintf("ImportPemFile() : failed to read key from file %s", strFile.c_str()));
 
     string strAddress = PubKeyToAddress(key.GetPubKey());
