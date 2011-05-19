@@ -1260,7 +1260,10 @@ Value importkey(const Array& params, bool fHelp)
     if (fHelp || params.size() != 2)
         throw runtime_error(
             "importkey <file> <account>\n"
-            "Reads a PEM-encoded keypair from file and adds it to the wallet.");
+            "Reads a PEM-encoded keypair from file and adds it to the wallet.\n"
+            "To create a keypair with OpenSSL, use:\n"
+            "    openssl ecparam -name secp256k1 -out NEW_KEY.pem -genkey\n"
+            "Returns the key's bitcoin address.");
 
     string strFile = params[0].get_str();
     string strAccount = AccountFromValue(params[1]);
