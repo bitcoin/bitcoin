@@ -47,7 +47,7 @@ OBJS= \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
-ifeq (USE_UPNP, 1)
+ifdef USE_UPNP
 	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
