@@ -86,7 +86,7 @@ bool AddKey(const CKey& key);
 std::vector<unsigned char> GenerateNewKey();
 bool AddToWallet(const CWalletTx& wtxIn);
 void WalletUpdateSpent(const COutPoint& prevout);
-int ScanForWalletTransactions(CBlockIndex* pindexStart);
+int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
 void ReacceptWalletTransactions();
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
