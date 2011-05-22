@@ -184,48 +184,6 @@ public:
 
 
 
-class CSendingDialog : public CSendingDialogBase
-{
-public:
-    // Event handlers
-    void OnClose(wxCloseEvent& event);
-    void OnButtonOK(wxCommandEvent& event);
-    void OnButtonCancel(wxCommandEvent& event);
-    void OnPaint(wxPaintEvent& event);
-	
-public:
-    /** Constructor */
-    CSendingDialog(wxWindow* parent, const CAddress& addrIn, int64 nPriceIn, const CWalletTx& wtxIn);
-    ~CSendingDialog();
-
-    // State
-    CAddress addr;
-    int64 nPrice;
-    CWalletTx wtx;
-    wxDateTime start;
-    char pszStatus[10000];
-    bool fCanCancel;
-    bool fAbort;
-    bool fSuccess;
-    bool fUIDone;
-    bool fWorkDone;
-
-    void Close();
-    void Repaint();
-    bool Status();
-    bool Status(const std::string& str);
-    bool Error(const std::string& str);
-    void StartTransfer();
-    void OnReply2(CDataStream& vRecv);
-    void OnReply3(CDataStream& vRecv);
-};
-
-void SendingDialogStartTransfer(void* parg);
-void SendingDialogOnReply2(void* parg, CDataStream& vRecv);
-void SendingDialogOnReply3(void* parg, CDataStream& vRecv);
-
-
-
 class CAddressBookDialog : public CAddressBookDialogBase
 {
 protected:
