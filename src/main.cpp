@@ -2770,26 +2770,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         uint256 hashReply;
         vRecv >> hashReply;
-
-        if (!GetBoolArg("-allowreceivebyip"))
-        {
-            pfrom->PushMessage("reply", hashReply, (int)2, string(""));
-            return true;
-        }
-
-        CWalletTx order;
-        vRecv >> order;
-
-        /// we have a chance to check the order here
-
-        // Keep giving the same key to the same ip until they use it
-        if (!mapReuseKey.count(pfrom->addr.ip))
-            mapReuseKey[pfrom->addr.ip] = GetKeyFromKeyPool();
-
-        // Send back approval of order and pubkey to use
-        CScript scriptPubKey;
-        scriptPubKey << mapReuseKey[pfrom->addr.ip] << OP_CHECKSIG;
-        pfrom->PushMessage("reply", hashReply, (int)0, scriptPubKey);
+        // Deprecated: was used for "send to IP"
+        pfrom->PushMessage("reply", hashReply, (int)2, string(""));
+        return true;
     }
 
 
@@ -2797,30 +2780,9 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         uint256 hashReply;
         vRecv >> hashReply;
-
-        if (!GetBoolArg("-allowreceivebyip"))
-        {
-            pfrom->PushMessage("reply", hashReply, (int)2);
-            return true;
-        }
-
-        CWalletTx wtxNew;
-        vRecv >> wtxNew;
-        wtxNew.fFromMe = false;
-
-        // Broadcast
-        if (!wtxNew.AcceptWalletTransaction())
-        {
-            pfrom->PushMessage("reply", hashReply, (int)1);
-            return error("submitorder AcceptWalletTransaction() failed, returning error 1");
-        }
-        wtxNew.fTimeReceivedIsTxTime = true;
-        AddToWallet(wtxNew);
-        wtxNew.RelayWalletTransaction();
-        mapReuseKey.erase(pfrom->addr.ip);
-
-        // Send back confirmation
-        pfrom->PushMessage("reply", hashReply, (int)0);
+        // Deprecated: was used for "send to IP"
+        pfrom->PushMessage("reply", hashReply, (int)2);
+        return true;
     }
 
 
