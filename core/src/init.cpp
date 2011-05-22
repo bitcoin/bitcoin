@@ -220,10 +220,11 @@ bool AppInit2(int argc, char* argv[])
         fServer = GetBoolArg("-server");
 
     /* force fServer when running without GUI */
+#if 0
 #ifndef GUI
     fServer = true;
 #endif
-
+#endif
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
