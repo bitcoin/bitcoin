@@ -2,7 +2,9 @@
  * W.J. van der Laan 2011
  */
 #include "bitcoingui.h"
+#include "clientmodel.h"
 #include "util.h"
+#include "init.h"
 
 #include <QApplication>
 
@@ -10,19 +12,29 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    /* Testing on testnet */
-    fTestNet = true;
+    try {
+        if(AppInit2(argc, argv))
+        {
+            ClientModel model;
+            BitcoinGUI window;
+            window.setModel(&model);
 
-    BitcoinGUI window;
-    window.setBalance(1234.567890);
-    window.setNumConnections(4);
-    window.setNumTransactions(4);
-    window.setNumBlocks(33);
-    window.setAddress("123456789");
+            window.show();
 
-    window.show();
+            /* Depending on settings: QApplication::setQuitOnLastWindowClosed(false); */
+            int retval = app.exec();
 
-    /* Depending on settings: QApplication::setQuitOnLastWindowClosed(false); */
+            Shutdown(NULL);
 
-    return app.exec();
+            return retval;
+        }
+        else
+        {
+            return 1;
+        }
+    } catch (std::exception& e) {
+        PrintException(&e, "Runaway exception");
+    } catch (...) {
+        PrintException(NULL, "Runaway exception");
+    }
 }

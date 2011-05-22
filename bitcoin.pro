@@ -4,6 +4,7 @@ DEPENDPATH += .
 INCLUDEPATH += gui/include core/include cryptopp/include json/include
 unix:LIBS += -lssl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
 macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0
+# WINDOWS defines, -DSSL, look at build system
 
 # Input
 HEADERS += gui/include/bitcoingui.h \
@@ -51,7 +52,9 @@ HEADERS += gui/include/bitcoingui.h \
     json/include/json/json_spirit_reader.h \
     json/include/json/json_spirit_error_position.h \
     json/include/json/json_spirit.h \
-    core/include/rpc.h
+    core/include/rpc.h \
+    gui/src/clientmodel.h \
+    gui/include/clientmodel.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \
@@ -74,7 +77,8 @@ SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     core/src/db.cpp \
     json/src/json_spirit_writer.cpp \
     json/src/json_spirit_value.cpp \
-    json/src/json_spirit_reader.cpp
+    json/src/json_spirit_reader.cpp \
+    gui/src/clientmodel.cpp
 
 RESOURCES += \
     gui/bitcoin.qrc

@@ -9,6 +9,7 @@
 #include "sendcoinsdialog.h"
 #include "optionsdialog.h"
 #include "aboutdialog.h"
+#include "clientmodel.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -137,6 +138,26 @@ void BitcoinGUI::createActions()
     connect(receiving_addresses, SIGNAL(triggered()), this, SLOT(receivingAddressesClicked()));
     connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(about, SIGNAL(triggered()), this, SLOT(aboutClicked()));
+}
+
+void BitcoinGUI::setModel(ClientModel *model)
+{
+    this->model = model;
+
+    setBalance(model->getBalance());
+    connect(model, SIGNAL(balanceChanged(double)), this, SLOT(setBalance(double)));
+
+    setNumConnections(model->getNumConnections());
+    connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
+
+    setNumTransactions(model->getNumTransactions());
+    connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
+
+    setNumBlocks(model->getNumBlocks());
+    connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
+
+    setAddress(model->getAddress());
+    connect(model, SIGNAL(addressChanged(QString)), this, SLOT(setAddress(QString)));
 }
 
 void BitcoinGUI::createTrayIcon()

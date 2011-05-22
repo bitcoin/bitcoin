@@ -513,9 +513,11 @@ bool AppInit2(int argc, char* argv[])
         SetStartOnSystemStartup(true);
 #endif
 
+#if 0
 #ifndef GUI
     while (1)
         Sleep(5000);
+#endif
 #endif
 
     return true;

@@ -6,6 +6,7 @@
 
 /* Forward declarations */
 class TransactionTableModel;
+class ClientModel;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -17,6 +18,7 @@ class BitcoinGUI : public QMainWindow
     Q_OBJECT
 public:
     explicit BitcoinGUI(QWidget *parent = 0);
+    void setModel(ClientModel *model);
     
     /* Transaction table tab indices */
     enum {
@@ -27,6 +29,7 @@ public:
     } TabIndex;
 private:
     TransactionTableModel *transaction_model;
+    ClientModel *model;
 
     QLineEdit *address;
     QLabel *labelBalance;
