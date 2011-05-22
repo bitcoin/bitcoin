@@ -193,8 +193,7 @@ QWidget *BitcoinGUI::createTabs()
         QSortFilterProxyModel *proxy_model = new QSortFilterProxyModel(this);
         proxy_model->setSourceModel(transaction_model);
         proxy_model->setDynamicSortFilter(true);
-        proxy_model->setFilterRole(Qt::UserRole);
-        proxy_model->setFilterKeyColumn(TransactionTableModel::Type);
+        proxy_model->setFilterRole(TransactionTableModel::TypeRole);
         proxy_model->setFilterRegExp(QRegExp(tab_filters.at(i)));
 
         QTableView *transaction_table = new QTableView(this);
@@ -213,7 +212,6 @@ QWidget *BitcoinGUI::createTabs()
                 TransactionTableModel::Debit, 79);
         transaction_table->horizontalHeader()->resizeSection(
                 TransactionTableModel::Credit, 79);
-        transaction_table->setColumnHidden(TransactionTableModel::Type, true);
 
         tabs->addTab(transaction_table, tab_labels.at(i));
     }

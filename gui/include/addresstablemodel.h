@@ -10,10 +10,13 @@ public:
     explicit AddressTableModel(QObject *parent = 0);
 
     enum {
-        Label = 0,  /* User specified label */
-        Address = 1,  /* Bitcoin address */
-        Type = 2 /* Send/Receive, used for filter */
+        Label = 0,   /* User specified label */
+        Address = 1  /* Bitcoin address */
     } ColumnIndex;
+
+    enum {
+        TypeRole = Qt::UserRole
+    } RoleIndex;
 
     static const QString Send; /* Send addres */
     static const QString Receive; /* Receive address */

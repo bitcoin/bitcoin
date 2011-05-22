@@ -1,4 +1,5 @@
 #include "transactiontablemodel.h"
+#include "main.h"
 
 #include <QLocale>
 
@@ -19,13 +20,13 @@ static int column_alignments[] = {
 TransactionTableModel::TransactionTableModel(QObject *parent):
         QAbstractTableModel(parent)
 {
-    columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit") << tr("Type");
+    columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
 }
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 5;
+    return 4;
 }
 
 int TransactionTableModel::columnCount(const QModelIndex &parent) const
@@ -47,7 +48,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     } else if (role == Qt::TextAlignmentRole)
     {
         return column_alignments[index.column()];
-    } else if (role == Qt::UserRole)
+    } else if (role == TypeRole)
     {
         /* user role: transaction type for filtering
            "s" (sent)

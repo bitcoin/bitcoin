@@ -1,4 +1,5 @@
 #include "addresstablemodel.h"
+#include "main.h"
 
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
@@ -16,7 +17,7 @@ int AddressTableModel::rowCount(const QModelIndex &parent) const
 
 int AddressTableModel::columnCount(const QModelIndex &parent) const
 {
-    return 3;
+    return 2;
 }
 
 QVariant AddressTableModel::data(const QModelIndex &index, int role) const
@@ -32,7 +33,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
             return "1PC9aZC4hNX2rmmrt7uHTfYAS3hRbph4UN" + QString::number(index.row());
         else
             return "Description";
-    } else if (role == Qt::UserRole)
+    } else if (role == TypeRole)
     {
         switch(index.row() % 2)
         {

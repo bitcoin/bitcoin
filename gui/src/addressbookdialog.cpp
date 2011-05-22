@@ -29,8 +29,7 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     QSortFilterProxyModel *receive_model = new QSortFilterProxyModel(this);
     receive_model->setSourceModel(model);
     receive_model->setDynamicSortFilter(true);
-    receive_model->setFilterRole(Qt::UserRole);
-    receive_model->setFilterKeyColumn(AddressTableModel::Type);
+    receive_model->setFilterRole(AddressTableModel::TypeRole);
     receive_model->setFilterFixedString(AddressTableModel::Receive);
     ui->receiveTableView->setModel(receive_model);
 
@@ -38,8 +37,7 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     QSortFilterProxyModel *send_model = new QSortFilterProxyModel(this);
     send_model->setSourceModel(model);
     send_model->setDynamicSortFilter(true);
-    send_model->setFilterRole(Qt::UserRole);
-    send_model->setFilterKeyColumn(AddressTableModel::Type);
+    send_model->setFilterRole(AddressTableModel::TypeRole);
     send_model->setFilterFixedString(AddressTableModel::Send);
     ui->sendTableView->setModel(send_model);
 
@@ -52,10 +50,6 @@ void AddressBookDialog::setModel(AddressTableModel *model)
             AddressTableModel::Address, 320);
     ui->sendTableView->horizontalHeader()->setResizeMode(
             AddressTableModel::Label, QHeaderView::Stretch);
-
-    /* Hide "Type" column in both views as it is only used for filtering */
-    ui->receiveTableView->setColumnHidden(AddressTableModel::Type, true);
-    ui->sendTableView->setColumnHidden(AddressTableModel::Type, true);
 }
 
 void AddressBookDialog::setTab(int tab)

@@ -15,9 +15,12 @@ public:
         Date = 1,
         Description = 2,
         Debit = 3,
-        Credit = 4,
-        Type = 5
+        Credit = 4
     } ColumnIndex;
+
+    enum {
+        TypeRole = Qt::UserRole
+    } RoleIndex;
 
     /* Transaction type */
     static const QString Sent;
