@@ -178,7 +178,8 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
             "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
+            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n") +
+            "  -purgetx         \t  "   + _("Purge all transactions from wallet and rescan\n");
 
 #ifdef USE_SSL
         strUsage += string() +
@@ -369,8 +370,15 @@ bool AppInit2(int argc, char* argv[])
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
+    bool fForceRescan=false;
+    if (GetBoolArg("-purgetx"))
+    {
+       PurgeWalletTransactions();
+       fForceRescan=true;
+    }
+
     CBlockIndex *pindexRescan = pindexBest;
-    if (GetBoolArg("-rescan"))
+    if (fForceRescan || GetBoolArg("-rescan"))
         pindexRescan = pindexGenesisBlock;
     else
     {
