@@ -701,15 +701,17 @@ bool CWalletDB::LoadWallet()
                 ssKey >> strAddress;
                 ssValue >> mapAddressBook[strAddress];
             }
-            else if (strType == "tx")
+            else if (strType == "tx" || strType == "rejtx")
             {
                 uint256 hash;
                 ssKey >> hash;
-                CWalletTx& wtx = mapWallet[hash];
+                CWalletTx wtx;
                 ssValue >> wtx;
 
                 if (wtx.GetHash() != hash)
                     printf("Error in wallet.dat, hash mismatch\n");
+
+                AddWalletTx(hash, wtx);
 
                 // Undo serialize changes in 31600
                 if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
@@ -984,6 +986,18 @@ void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
         assert(!keypool.vchPubKey.empty());
         printf("keypool reserve %"PRI64d"\n", nIndex);
     }
+}
+
+bool CWalletDB::WriteTx(uint256 hash, const CWalletTx& wtx)
+{
+    nWalletDBUpdated++;
+    if (wtx.IsRejected())
+    {
+        Erase(make_pair(string("tx"),hash));
+        return Write(make_pair(string("rejtx"), hash), wtx);
+    }
+    else
+        return Write(make_pair(string("tx"), hash), wtx);
 }
 
 void CWalletDB::KeepKey(int64 nIndex)
