@@ -884,6 +884,21 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
     return false;
 }
 
+void PurgeWalletTransactions()
+{
+    // Delete all txes stored in wallet
+    printf("PurgeWalletTransactions()\n");
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
+        {
+            CWalletTx& wtx = item.second;
+            CWalletDB().EraseTx(wtx.GetHash());
+        }
+        mapWallet.clear();
+    }
+}
+
 int ScanForWalletTransactions(CBlockIndex* pindexStart)
 {
     int ret = 0;
