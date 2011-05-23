@@ -37,7 +37,8 @@ multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
 
 map<uint256, CWalletTx> mapWallet;
 vector<uint256> vWalletUpdated;
-CCriticalSection cs_mapWallet;
+CCriticalSection cs_mapWallet; // also used for mapWalletInputs
+map<COutPoint, uint256> mapWalletInputs; // maps outpoints to the wallettx's that consume them
 
 map<vector<unsigned char>, CPrivKey> mapKeys;
 map<uint160, vector<unsigned char> > mapPubKeys;
@@ -108,53 +109,89 @@ vector<unsigned char> GenerateNewKey()
 // mapWallet
 //
 
+// all insertions into mapWallet should happen through this function,
+// to keep mapWalletInputs up-to-date
+bool AddWalletTx(uint256& hash, const CWalletTx& wtxIn)
+{
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        mapWallet[hash] = wtxIn;
+        mapWallet[hash].AddToWalletInputs();
+    }
+    return true;
+}
+
+void WalletUpdateSpent(const CTransaction &tx, bool fActive = true)
+{
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            map<uint256, CWalletTx>::iterator mi = mapWallet.find(txin.prevout.hash);
+            if (mi != mapWallet.end())
+            {
+                CWalletTx& wtx = (*mi).second;
+                if (wtx.IsSpent(txin.prevout.n) != fActive && wtx.vout[txin.prevout.n].IsMine())
+                {
+                    printf("WalletUpdateSpent found %sspent coin %sbc %s\n", fActive ? "" : "un", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                    wtx.MarkSpent(txin.prevout.n, fActive);
+                    wtx.WriteToDisk();
+                    vWalletUpdated.push_back(txin.prevout.hash);
+                }
+            }
+        }
+    }
+}
+
 bool AddToWallet(const CWalletTx& wtxIn)
 {
     uint256 hash = wtxIn.GetHash();
     CRITICAL_BLOCK(cs_mapWallet)
     {
-        // Inserts only if not already there, returns tx inserted or tx found
-        pair<map<uint256, CWalletTx>::iterator, bool> ret = mapWallet.insert(make_pair(hash, wtxIn));
-        CWalletTx& wtx = (*ret.first).second;
-        bool fInsertedNew = ret.second;
-        if (fInsertedNew)
-            wtx.nTimeReceived = GetAdjustedTime();
-
         bool fUpdated = false;
-        if (!fInsertedNew)
+        bool fInsertedNew = false;
+        CWalletTx* pwtx;
+        if (mapWallet.count(hash))
         {
+            pwtx = &mapWallet[hash];
             // Merge
-            if (wtxIn.hashBlock != 0 && wtxIn.hashBlock != wtx.hashBlock)
+            if (wtxIn.hashBlock != 0 && wtxIn.hashBlock != pwtx->hashBlock)
             {
-                wtx.hashBlock = wtxIn.hashBlock;
+                pwtx->hashBlock = wtxIn.hashBlock;
                 fUpdated = true;
             }
-            if (wtxIn.nIndex != -1 && (wtxIn.vMerkleBranch != wtx.vMerkleBranch || wtxIn.nIndex != wtx.nIndex))
+            if (wtxIn.nIndex != -1 && (wtxIn.vMerkleBranch != pwtx->vMerkleBranch || wtxIn.nIndex != pwtx->nIndex))
             {
-                wtx.vMerkleBranch = wtxIn.vMerkleBranch;
-                wtx.nIndex = wtxIn.nIndex;
+                pwtx->vMerkleBranch = wtxIn.vMerkleBranch;
+                pwtx->nIndex = wtxIn.nIndex;
                 fUpdated = true;
             }
-            if (wtxIn.fFromMe && wtxIn.fFromMe != wtx.fFromMe)
+            if (wtxIn.fFromMe && wtxIn.fFromMe != pwtx->fFromMe)
             {
-                wtx.fFromMe = wtxIn.fFromMe;
+                pwtx->fFromMe = wtxIn.fFromMe;
                 fUpdated = true;
             }
-            fUpdated |= wtx.UpdateSpent(wtxIn.vfSpent);
+            fUpdated |= pwtx->UpdateSpent(wtxIn.vfSpent);
         }
-
+        else
+        {
+            AddWalletTx(hash, wtxIn);
+            pwtx = &mapWallet[hash];
+            pwtx->nTimeReceived = GetAdjustedTime();
+            fInsertedNew = true;
+        }
         //// debug print
         printf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString().substr(0,10).c_str(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
         // Write to disk
-        if (fInsertedNew || fUpdated)
-            if (!wtx.WriteToDisk())
+        if (fUpdated || fInsertedNew)
+            if (!pwtx->WriteToDisk())
                 return false;
 
         // If default receiving address gets used, replace it with a new one
         CScript scriptDefaultKey;
         scriptDefaultKey.SetBitcoinAddress(vchDefaultKey);
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        BOOST_FOREACH(const CTxOut& txout, pwtx->vout)
         {
             if (txout.scriptPubKey == scriptDefaultKey)
             {
@@ -165,20 +202,43 @@ bool AddToWallet(const CWalletTx& wtxIn)
             }
         }
 
+        // since AddToWallet is called directly for self-originating transactions, check for consumption of own coins
+        WalletUpdateSpent(*pwtx);
+
         // Notify UI
         vWalletUpdated.push_back(hash);
     }
 
+    
     // Refresh UI
     MainFrameRepaint();
     return true;
 }
 
-bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false)
+// pblock must point to a block in the main chain, or be NULL
+bool SyncWithWallet(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false)
 {
     uint256 hash = tx.GetHash();
     bool fExisted = mapWallet.count(hash);
     if (fExisted && !fUpdate) return false;
+    if (!fExisted && pblock && !tx.IsCoinBase())
+    {
+        // check for conflicts with wallet
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            map<COutPoint, uint256>::iterator mi = mapWalletInputs.find(txin.prevout);
+            if (mi != mapWalletInputs.end())
+            {
+                CWalletTx& wtx = mapWallet[(*mi).second]; // should always exist
+                if (wtx.GetHash() != hash)
+                {
+                    printf("Scanned tx %s conflicts with wallet tx %s (both using %s:%i)\n",tx.GetHash().GetHex().c_str(), wtx.GetHash().GetHex().c_str(),txin.prevout.hash.GetHex().c_str(),txin.prevout.n);
+                    wtx.MarkConflicting(true);
+                    wtx.WriteToDisk();
+                }
+            }
+        }
+    }
     if (fExisted || tx.IsMine() || tx.IsFromMe())
     {
         CWalletTx wtx(tx);
@@ -187,46 +247,31 @@ bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool
             wtx.SetMerkleBranch(pblock);
         return AddToWallet(wtx);
     }
+    else
+        WalletUpdateSpent(tx);
     return false;
 }
 
+bool UnsyncWithWallet(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false)
+{
+}
+
+// unused, for now
 bool EraseFromWallet(uint256 hash)
 {
     CRITICAL_BLOCK(cs_mapWallet)
     {
-        if (mapWallet.erase(hash))
-            CWalletDB().EraseTx(hash);
+        if (mapWallet.count(hash))
+        {
+            CWalletTx& wtx = mapWallet[hash];
+            wtx.RemoveFromWalletInputs();
+
+            if (mapWallet.erase(hash))
+                CWalletDB().EraseTx(hash);
+        }
     }
     return true;
 }
-
-void WalletUpdateSpent(const COutPoint& prevout)
-{
-    // Anytime a signature is successfully verified, it's proof the outpoint is spent.
-    // Update the wallet spent flag if it doesn't know due to wallet.dat being
-    // restored from backup or the user making copies of wallet.dat.
-    CRITICAL_BLOCK(cs_mapWallet)
-    {
-        map<uint256, CWalletTx>::iterator mi = mapWallet.find(prevout.hash);
-        if (mi != mapWallet.end())
-        {
-            CWalletTx& wtx = (*mi).second;
-            if (!wtx.IsSpent(prevout.n) && wtx.vout[prevout.n].IsMine())
-            {
-                printf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
-                wtx.MarkSpent(prevout.n);
-                wtx.WriteToDisk();
-                vWalletUpdated.push_back(prevout.hash);
-            }
-        }
-    }
-}
-
-
-
-
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -340,6 +385,85 @@ int64 CTxIn::GetDebit() const
     return 0;
 }
 
+void CWalletTx::UpdateRejected(bool fCertainlyRejected = false)
+{
+    char fNewRejected = false;
+    if (fConflicting || fCertainlyRejected)
+        fNewRejected = true;
+    else
+    {
+        // check whether dependencies are rejected
+        BOOST_FOREACH(const CTxIn& txin, vin)
+        {
+            map<uint256, CWalletTx>::iterator mi = mapWallet.find(txin.prevout.hash);
+            if (mi != mapWallet.end())
+                if ((*mi).second.IsRejected())
+                {
+                    fNewRejected = true;
+                    break;
+                }
+        }
+    }
+
+    // exit if nothing changed
+    if (fRejected == fNewRejected)
+        return;
+
+    fRejected = fNewRejected;
+
+    // mark parent transaction outputs (un)spent
+    WalletUpdateSpent(*this, !fRejected);
+
+    // recursively mark dependencies (un)rejected
+    uint256 hash = GetHash();
+    for (int n = 0; n < vout.size(); n++)
+    {
+        map<COutPoint, uint256>::iterator mi = mapWalletInputs.find(COutPoint(hash, n));
+        if (mi != mapWalletInputs.end())
+        {
+            CWalletTx& wtx = mapWallet[(*mi).second]; // should always exist
+            wtx.UpdateRejected(fNewRejected);
+        }
+    }
+
+    if (!fNewRejected)
+        AddToWalletInputs();
+
+}
+
+void CWalletTx::MarkConflicting(bool fConflict)
+{
+    if (fConflict && GetDepthInMainChain() > 0)
+        throw runtime_error("MarkConflicting() : transaction is already confirmed");
+    fConflicting = fConflict;
+    UpdateRejected();
+}
+
+void CWalletTx::RemoveFromWalletInputs()
+{
+    if (IsCoinBase())
+        return;
+
+    uint256 hash = GetHash();
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        if (mapWalletInputs.count(txin.prevout))
+            if (mapWalletInputs[txin.prevout] == hash)
+                mapWalletInputs.erase(txin.prevout);
+    }
+}
+
+void CWalletTx::AddToWalletInputs()
+{
+    // coinbase transactions do not have any real inputs
+    if (IsCoinBase())
+        return;
+
+    uint256 hash = GetHash();
+    BOOST_FOREACH(const CTxIn& txin, vin)
+        mapWalletInputs[txin.prevout] = hash;
+}
+
 int64 CWalletTx::GetTxTime() const
 {
     if (!fTimeReceivedIsTxTime && hashBlock != 0)
@@ -404,6 +528,9 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
     listReceived.clear();
     listSent.clear();
     strSentAccount = strFromAccount;
+
+    if (IsRejected())
+        return;
 
     if (IsCoinBase())
     {
@@ -884,7 +1011,7 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
     return false;
 }
 
-int ScanForWalletTransactions(CBlockIndex* pindexStart)
+int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
 
@@ -897,7 +1024,7 @@ int ScanForWalletTransactions(CBlockIndex* pindexStart)
             block.ReadFromDisk(pindex, true);
             BOOST_FOREACH(CTransaction& tx, block.vtx)
             {
-                if (AddToWalletIfInvolvingMe(tx, &block))
+                if (SyncWithWallet(tx, &block, fUpdate))
                     ret++;
             }
             pindex = pindex->pnext;
@@ -1443,7 +1570,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     // Watch for transactions paying to me
     BOOST_FOREACH(CTransaction& tx, vtx)
-        AddToWalletIfInvolvingMe(tx, this, true);
+        SyncWithWallet(tx, this, true);
 
     return true;
 }
@@ -2686,7 +2813,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         bool fMissingInputs = false;
         if (tx.AcceptToMemoryPool(true, &fMissingInputs))
         {
-            AddToWalletIfInvolvingMe(tx, NULL, true);
+            SyncWithWallet(tx, NULL, true);
             RelayMessage(inv, vMsg);
             mapAlreadyAskedFor.erase(inv);
             vWorkQueue.push_back(inv.hash);
@@ -2707,7 +2834,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     if (tx.AcceptToMemoryPool(true))
                     {
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-                        AddToWalletIfInvolvingMe(tx, NULL, true);
+                        SyncWithWallet(tx, NULL, true);
                         RelayMessage(inv, vMsg);
                         mapAlreadyAskedFor.erase(inv);
                         vWorkQueue.push_back(inv.hash);

@@ -392,16 +392,12 @@ public:
         return Read(std::make_pair(std::string("tx"), hash), wtx);
     }
 
-    bool WriteTx(uint256 hash, const CWalletTx& wtx)
-    {
-        nWalletDBUpdated++;
-        return Write(std::make_pair(std::string("tx"), hash), wtx);
-    }
+    bool WriteTx(uint256 hash, const CWalletTx& wtx);
 
     bool EraseTx(uint256 hash)
     {
         nWalletDBUpdated++;
-        return Erase(std::make_pair(std::string("tx"), hash));
+        return Erase(std::make_pair(std::string("tx"), hash)) || Erase(std::make_pair(std::string("rejtx"), hash));
     }
 
     bool ReadKey(const std::vector<unsigned char>& vchPubKey, CPrivKey& vchPrivKey)

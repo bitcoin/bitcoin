@@ -516,6 +516,8 @@ string FormatTxStatus(const CWalletTx& wtx)
     }
     else
     {
+        if (wtx.IsRejected())
+            return "rejected";
         int nDepth = wtx.GetDepthInMainChain();
         if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
             return strprintf(_("%d/offline?"), nDepth);
