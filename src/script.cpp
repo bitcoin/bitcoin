@@ -1199,10 +1199,5 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nHashType))
         return false;
 
-    // Anytime a signature is successfully verified, it's proof the outpoint is spent,
-    // so lets update the wallet spent flag if it doesn't know due to wallet.dat being
-    // restored from backup or the user making copies of wallet.dat.
-    WalletUpdateSpent(txin.prevout);
-
     return true;
 }

@@ -383,7 +383,7 @@ bool AppInit2(int argc, char* argv[])
     {
         printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
-        ScanForWalletTransactions(pindexRescan);
+        ScanForWalletTransactions(pindexRescan, true);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
 
@@ -395,6 +395,7 @@ bool AppInit2(int argc, char* argv[])
         printf("mapKeys.size() = %d\n",         mapKeys.size());
         printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
         printf("mapWallet.size() = %d\n",       mapWallet.size());
+        printf("mapWalletInputs.size() = %d\n", mapWalletInputs.size());
         printf("mapAddressBook.size() = %d\n",  mapAddressBook.size());
 
     if (!strErrors.empty())
