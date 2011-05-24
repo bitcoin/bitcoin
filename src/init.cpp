@@ -137,60 +137,60 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
-        string beta = VERSION_IS_BETA ? _(" beta") : "";
+        string beta = VERSION_IS_BETA ? GetTranslationString(" beta") : "";
         string strUsage = string() +
-          _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
-          _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
+          GetTranslationString("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
+          GetTranslationString("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
             "  bitcoin [options]                   \t  " + "\n" +
-            "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
-            "  bitcoin [options] help              \t\t  " + _("List commands\n") +
-            "  bitcoin [options] help <command>    \t\t  " + _("Get help for a command\n") +
-          _("Options:\n") +
-            "  -conf=<file>     \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
-            "  -pid=<file>      \t\t  " + _("Specify pid file (default: bitcoind.pid)\n") +
-            "  -gen             \t\t  " + _("Generate coins\n") +
-            "  -gen=0           \t\t  " + _("Don't generate coins\n") +
-            "  -min             \t\t  " + _("Start minimized\n") +
-            "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
-            "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
-            "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect\n") +
-            "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
-            "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
-            "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
+            "  bitcoin [options] <command> [params]\t  " + GetTranslationString("Send command to -server or bitcoind\n") +
+            "  bitcoin [options] help              \t\t  " + GetTranslationString("List commands\n") +
+            "  bitcoin [options] help <command>    \t\t  " + GetTranslationString("Get help for a command\n") +
+          GetTranslationString("Options:\n") +
+            "  -conf=<file>     \t\t  " + GetTranslationString("Specify configuration file (default: bitcoin.conf)\n") +
+            "  -pid=<file>      \t\t  " + GetTranslationString("Specify pid file (default: bitcoind.pid)\n") +
+            "  -gen             \t\t  " + GetTranslationString("Generate coins\n") +
+            "  -gen=0           \t\t  " + GetTranslationString("Don't generate coins\n") +
+            "  -min             \t\t  " + GetTranslationString("Start minimized\n") +
+            "  -datadir=<dir>   \t\t  " + GetTranslationString("Specify data directory\n") +
+            "  -proxy=<ip:port> \t  "   + GetTranslationString("Connect through socks4 proxy\n") +
+            "  -dns             \t  "   + GetTranslationString("Allow DNS lookups for addnode and connect\n") +
+            "  -addnode=<ip>    \t  "   + GetTranslationString("Add a node to connect to\n") +
+            "  -connect=<ip>    \t\t  " + GetTranslationString("Connect only to the specified node\n") +
+            "  -nolisten        \t  "   + GetTranslationString("Don't accept connections from outside\n") +
 #ifdef USE_UPNP
 #if USE_UPNP
-            "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
+            "  -noupnp          \t  "   + GetTranslationString("Don't attempt to use UPnP to map the listening port\n") +
 #else
-            "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
+            "  -upnp            \t  "   + GetTranslationString("Attempt to use UPnP to map the listening port\n") +
 #endif
 #endif
-            "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
+            "  -paytxfee=<amt>  \t  "   + GetTranslationString("Fee per KB to add to transactions you send\n") +
 #ifdef GUI
-            "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
+            "  -server          \t\t  " + GetTranslationString("Accept command line and JSON-RPC commands\n") +
 #endif
 #ifndef __WXMSW__
-            "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
+            "  -daemon          \t\t  " + GetTranslationString("Run in the background as a daemon and accept commands\n") +
 #endif
-            "  -testnet         \t\t  " + _("Use the test network\n") +
-            "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
-            "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
-            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
-            "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
-            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
-            "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
+            "  -testnet         \t\t  " + GetTranslationString("Use the test network\n") +
+            "  -rpcuser=<user>  \t  "   + GetTranslationString("Username for JSON-RPC connections\n") +
+            "  -rpcpassword=<pw>\t  "   + GetTranslationString("Password for JSON-RPC connections\n") +
+            "  -rpcport=<port>  \t\t  " + GetTranslationString("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
+            "  -rpcallowip=<ip> \t\t  " + GetTranslationString("Allow JSON-RPC connections from specified IP address\n") +
+            "  -rpcconnect=<ip> \t  "   + GetTranslationString("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
+            "  -keypool=<n>     \t  "   + GetTranslationString("Set key pool size to <n> (default: 100)\n") +
+            "  -rescan          \t  "   + GetTranslationString("Rescan the block chain for missing wallet transactions\n");
 
 #ifdef USE_SSL
         strUsage += string() +
-            _("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)\n") +
-            "  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
-            "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
-            "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)\n") +
-            "  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
+            GetTranslationString("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)\n") +
+            "  -rpcssl                                \t  " + GetTranslationString("Use OpenSSL (https) for JSON-RPC connections\n") +
+            "  -rpcsslcertificatechainfile=<file.cert>\t  " + GetTranslationString("Server certificate file (default: server.cert)\n") +
+            "  -rpcsslprivatekeyfile=<file.pem>       \t  " + GetTranslationString("Server private key (default: server.pem)\n") +
+            "  -rpcsslciphers=<ciphers>               \t  " + GetTranslationString("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
 #endif
 
         strUsage += string() +
-            "  -?               \t\t  " + _("This help message\n");
+            "  -?               \t\t  " + GetTranslationString("This help message\n");
 
 #if defined(__WXMSW__) && defined(GUI)
         // Tabs make the columns line up in the message box
@@ -266,9 +266,9 @@ bool AppInit2(int argc, char* argv[])
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %s\n", FormatFullVersion().c_str());
 #ifdef GUI
-    printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
-    printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
-    printf("Language file %s (%s)\n", (string("locale/") + (string)g_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)g_locale.GetLocale()).c_str());
+    printf("OS version %s\n", ((string)wxGetOsDescription().mb_str()).c_str());
+    printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName().mb_str()).c_str());
+    printf("Language file %s (%s)\n", (string("locale/") + (string)g_locale.GetCanonicalName().mb_str() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)((wxString)g_locale.GetLocale()).mb_str()).c_str());
 #endif
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
@@ -327,7 +327,7 @@ bool AppInit2(int argc, char* argv[])
     static boost::interprocess::file_lock lock(strLockFile.c_str());
     if (!lock.try_lock())
     {
-        wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), "Bitcoin");
+        wxMessageBox(GetWXOrStdString(strprintf(GetTranslationChar("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str())), _T("Bitcoin"));
         return false;
     }
 
@@ -337,7 +337,7 @@ bool AppInit2(int argc, char* argv[])
     {
         if (!BindListenPort(strErrors))
         {
-            wxMessageBox(strErrors, "Bitcoin");
+            wxMessageBox(GetWXOrStdString(strErrors), _T("Bitcoin"));
             return false;
         }
     }
@@ -353,20 +353,20 @@ bool AppInit2(int argc, char* argv[])
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
     if (!LoadAddresses())
-        strErrors += _("Error loading addr.dat      \n");
+        strErrors += GetTranslationString("Error loading addr.dat      \n");
     printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
-        strErrors += _("Error loading blkindex.dat      \n");
+        strErrors += GetTranslationString("Error loading blkindex.dat      \n");
     printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
     bool fFirstRun;
     if (!LoadWallet(fFirstRun))
-        strErrors += _("Error loading wallet.dat      \n");
+        strErrors += GetTranslationString("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     CBlockIndex *pindexRescan = pindexBest;
@@ -399,7 +399,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (!strErrors.empty())
     {
-        wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(GetWXOrStdString(strErrors), _T("Bitcoin"), wxOK | wxICON_ERROR);
         return false;
     }
 
@@ -446,7 +446,7 @@ bool AppInit2(int argc, char* argv[])
         addrProxy = CAddress(mapArgs["-proxy"]);
         if (!addrProxy.IsValid())
         {
-            wxMessageBox(_("Invalid -proxy address"), "Bitcoin");
+            wxMessageBox(_("Invalid -proxy address"), _T("Bitcoin"));
             return false;
         }
     }
@@ -469,11 +469,11 @@ bool AppInit2(int argc, char* argv[])
     {
         if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
         {
-            wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
+            wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), _T("Bitcoin"));
             return false;
         }
         if (nTransactionFee > 0.25 * COIN)
-            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), _T("Bitcoin"), wxOK | wxICON_EXCLAMATION);
     }
 
     if (fHaveUPnP)
@@ -501,7 +501,7 @@ bool AppInit2(int argc, char* argv[])
     RandAddSeedPerfmon();
 
     if (!CreateThread(StartNode, NULL))
-        wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
+        wxMessageBox(_T("Error: CreateThread(StartNode) failed"), _T("Bitcoin"));
 
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);

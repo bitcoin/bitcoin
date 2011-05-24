@@ -575,7 +575,7 @@ void PrintException(std::exception* pex, const char* pszThread)
     strMiscWarning = pszMessage;
 #ifdef GUI
     if (wxTheApp && !fDaemon)
-        MyMessageBox(pszMessage, "Bitcoin", wxOK | wxICON_ERROR);
+        MyMessageBox(wxString(pszMessage, wxConvUTF8), _T("Bitcoin"), wxOK | wxICON_ERROR);
 #endif
     throw;
 }
@@ -863,7 +863,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
                 if (!fMatch)
                 {
                     fDone = true;
-                    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
+                    string strMessage = GetTranslationString("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
                     strMiscWarning = strMessage;
                     printf("*** %s\n", strMessage.c_str());
                     boost::thread(boost::bind(ThreadSafeMessageBox, strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION, (wxWindow*)NULL, -1, -1));
@@ -896,7 +896,7 @@ string FormatFullVersion()
 {
     string s = FormatVersion(VERSION) + pszSubVer;
     if (VERSION_IS_BETA)
-        s += _("-beta");
+        s += GetTranslationString("-beta");
     return s;
 }
 
