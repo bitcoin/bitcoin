@@ -139,8 +139,40 @@ inline int myclosesocket(SOCKET& hSocket)
 }
 #define closesocket(s)      myclosesocket(s)
 
-#ifndef GUI
+#ifdef GUI
+inline wxString GetWXOrStdString(std::string psz)
+{
+    return wxString(psz.c_str(), wxConvUTF8);
+}
+inline std::string GetTranslationString(const char* psz)
+{
+    return std::string(((wxString)wxGetTranslation(wxString(psz, wxConvUTF8))).mb_str());
+}
+inline const char* GetTranslationChar(const char* psz)
+{
+    int nTranslationLength = wxStrlen((wxString)wxGetTranslation(wxString(psz, wxConvUTF8)));
+    char* retChar = (char*)malloc((nTranslationLength + 1) * sizeof(char));
+    strlcpy(retChar, ((wxString)wxGetTranslation(wxString(psz, wxConvUTF8))).mb_str(wxConvUTF8), nTranslationLength + 1);
+    return retChar;
+}
+#else
+inline std::string GetWXOrStdString(std::string psz)
+{
+    return psz;
+}
+inline std::string GetTranslationString(const char* psz)
+{
+    return std::string(psz);
+}
+inline const char* GetTranslationChar(const char* psz)
+{
+    return psz;
+}
 inline const char* _(const char* psz)
+{
+    return psz;
+}
+inline const char* _T(const char* psz)
 {
     return psz;
 }

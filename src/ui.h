@@ -24,14 +24,14 @@ void SetStartOnSystemStartup(bool fAutoStart);
 
 
 
-inline int MyMessageBox(const wxString& message, const wxString& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
+inline int MyMessageBox(const wxString& message, const wxString& caption=_T("Message"), int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
 {
 #ifdef GUI
     if (!fDaemon)
         return wxMessageBox(message, caption, style, parent, x, y);
 #endif
-    printf("wxMessageBox %s: %s\n", std::string(caption).c_str(), std::string(message).c_str());
-    fprintf(stderr, "%s: %s\n", std::string(caption).c_str(), std::string(message).c_str());
+    printf("wxMessageBox %s: %s\n", std::string(caption.mb_str()).c_str(), std::string(message.mb_str()).c_str());
+    fprintf(stderr, "%s: %s\n", std::string(caption.mb_str()).c_str(), std::string(message.mb_str()).c_str());
     return wxOK;
 }
 #define wxMessageBox  MyMessageBox
@@ -174,7 +174,7 @@ protected:
 	
 public:
     /** Constructor */
-    CSendDialog(wxWindow* parent, const wxString& strAddress="");
+    CSendDialog(wxWindow* parent, const wxString& strAddress=_T(""));
 
     // Custom
     bool fEnabledPrev;
@@ -287,20 +287,20 @@ public:
                            const std::string& strMessage1,
                            const std::string& strValue1="",
                            const std::string& strMessage2="",
-                           const std::string& strValue2="") : CGetTextFromUserDialogBase(parent, wxID_ANY, strCaption)
+                           const std::string& strValue2="") : CGetTextFromUserDialogBase(parent, wxID_ANY, wxString(strCaption.c_str(), wxConvUTF8))
     {
         int x = GetSize().GetWidth();
         int y = GetSize().GetHeight();
-        m_staticTextMessage1->SetLabel(strMessage1);
-        m_textCtrl1->SetValue(strValue1);
-        y += wxString(strMessage1).Freq('\n') * 14;
+        m_staticTextMessage1->SetLabel(wxString(strMessage1.c_str(), wxConvUTF8));
+        m_textCtrl1->SetValue(wxString(strValue1.c_str(), wxConvUTF8));
+        y += wxString(strMessage1.c_str(), wxConvUTF8).Freq('\n') * 14;
         if (!strMessage2.empty())
         {
             m_staticTextMessage2->Show(true);
-            m_staticTextMessage2->SetLabel(strMessage2);
+            m_staticTextMessage2->SetLabel(wxString(strMessage2.c_str(), wxConvUTF8));
             m_textCtrl2->Show(true);
-            m_textCtrl2->SetValue(strValue2);
-            y += 46 + wxString(strMessage2).Freq('\n') * 14;
+            m_textCtrl2->SetValue(wxString(strValue2.c_str(), wxConvUTF8));
+            y += 46 + wxString(strMessage2.c_str(), wxConvUTF8).Freq('\n') * 14;
         }
 #ifndef __WXMSW__
         x = x * 114 / 100;
@@ -310,9 +310,9 @@ public:
     }
 
     // Custom
-    std::string GetValue()  { return (std::string)m_textCtrl1->GetValue(); }
-    std::string GetValue1() { return (std::string)m_textCtrl1->GetValue(); }
-    std::string GetValue2() { return (std::string)m_textCtrl2->GetValue(); }
+    std::string GetValue()  { return std::string(m_textCtrl1->GetValue().mb_str()); }
+    std::string GetValue1() { return std::string(m_textCtrl1->GetValue().mb_str()); }
+    std::string GetValue2() { return std::string(m_textCtrl2->GetValue().mb_str()); }
 };
 
 
