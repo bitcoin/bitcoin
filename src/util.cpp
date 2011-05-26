@@ -271,7 +271,7 @@ string strprintf(const char* format, ...)
         if (ret >= 0 && ret < limit)
             break;
         if (p != buffer)
-            delete p;
+            delete[] p;
         limit *= 2;
         p = new char[limit];
         if (p == NULL)
@@ -279,7 +279,7 @@ string strprintf(const char* format, ...)
     }
     string str(p, p+ret);
     if (p != buffer)
-        delete p;
+        delete[] p;
     return str;
 }
 
