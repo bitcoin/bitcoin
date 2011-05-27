@@ -273,7 +273,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         {
         case TransactionRecord::RecvFromAddress:
         case TransactionRecord::RecvFromIP:
-        case TransactionRecord::Generated:
             return TransactionTableModel::Received;
         case TransactionRecord::SendToAddress:
         case TransactionRecord::SendToIP:
