@@ -204,9 +204,9 @@ QWidget *BitcoinGUI::createTabs()
         transaction_table->verticalHeader()->hide();
 
         transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Status, 112);
+                TransactionTableModel::Status, 120);
         transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Date, 112);
+                TransactionTableModel::Date, 120);
         transaction_table->horizontalHeader()->setResizeMode(
                 TransactionTableModel::Description, QHeaderView::Stretch);
         transaction_table->horizontalHeader()->resizeSection(

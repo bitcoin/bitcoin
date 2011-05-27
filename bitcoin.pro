@@ -55,7 +55,8 @@ HEADERS += gui/include/bitcoingui.h \
     core/include/rpc.h \
     gui/src/clientmodel.h \
     gui/include/clientmodel.h \
-    gui/include/guiutil.h
+    gui/include/guiutil.h \
+    gui/include/transactionrecord.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \
@@ -80,7 +81,8 @@ SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     json/src/json_spirit_value.cpp \
     json/src/json_spirit_reader.cpp \
     gui/src/clientmodel.cpp \
-    gui/src/guiutil.cpp
+    gui/src/guiutil.cpp \
+    gui/src/transactionrecord.cpp
 
 RESOURCES += \
     gui/bitcoin.qrc
