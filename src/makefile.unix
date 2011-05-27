@@ -14,7 +14,7 @@ DEFS=-DNOPCH -DFOURWAYSSE2 -DUSE_SSL
 
 # for boost 1.37, add -mt to the boost libraries
 LIBS= \
- -Wl,-Bstatic \
+ -Wl,-Bdynamic \
    -l boost_system \
    -l boost_filesystem \
    -l boost_program_options \
