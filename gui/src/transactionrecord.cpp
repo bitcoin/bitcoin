@@ -106,7 +106,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
 
                     if (wtx.IsInMainChain())
                     {
-                        sub.status.maturity = TransactionStatus::MaturesIn;
                         sub.status.matures_in = wtx.GetBlocksToMaturity();
 
                         // Check if the block was requested by anyone

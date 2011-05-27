@@ -184,8 +184,22 @@ QVariant TransactionTableModel::formatTxDescription(const TransactionRecord *wtx
         description = tr("Payment to yourself");
         break;
     case TransactionRecord::Generated:
-        /* TODO: more extensive description */
-        description = tr("Generated");
+        switch(wtx->status.maturity)
+        {
+        case TransactionStatus::Immature:
+            description = tr("Generated (matures in %n more blocks)", "",
+                           wtx->status.matures_in);
+            break;
+        case TransactionStatus::Mature:
+            description = tr("Generated");
+            break;
+        case TransactionStatus::MaturesWarning:
+            description = tr("Generated - Warning: This block was not received by any other nodes and will probably not be accepted!");
+            break;
+        case TransactionStatus::NotAccepted:
+            description = tr("Generated (not accepted)");
+            break;
+        }
         break;
     }
     return QVariant(description);

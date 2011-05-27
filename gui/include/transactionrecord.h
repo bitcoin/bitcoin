@@ -17,7 +17,6 @@ public:
     {
         Immature,
         Mature,
-        MaturesIn,
         MaturesWarning, /* Will likely not mature because no nodes have confirmed */
         NotAccepted
     };
