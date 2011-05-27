@@ -1799,11 +1799,11 @@ void ThreadRPCServer2(void* parg)
     {
         string strWhatAmI = "To use bitcoind";
         if (mapArgs.count("-server"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
+            strWhatAmI = strprintf(GetTranslationChar("To use the %s option"), "\"-server\"");
         else if (mapArgs.count("-daemon"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
+            strWhatAmI = strprintf(GetTranslationChar("To use the %s option"), "\"-daemon\"");
         PrintConsole(
-            _("Warning: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
+            GetTranslationChar("Warning: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"),
                 strWhatAmI.c_str(),
                 GetConfigFile().c_str());
@@ -1971,7 +1971,7 @@ Object CallRPC(const string& strMethod, const Array& params)
 {
     if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
         throw runtime_error(strprintf(
-            _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
+            GetTranslationChar("You must set rpcpassword=<password> in the configuration file:\n%s\n"
               "If the file does not exist, create it with owner-readable-only file permissions."),
                 GetConfigFile().c_str()));
 

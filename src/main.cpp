@@ -1863,7 +1863,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
     if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
-        string strMessage = _("Warning: Disk space is low  ");
+        string strMessage = GetTranslationString("Warning: Disk space is low  ");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
         ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
@@ -3987,18 +3987,18 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
     {
         string strError;
         if (nValue + nFeeRequired > GetBalance())
-            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "), FormatMoney(nFeeRequired).c_str());
+            strError = strprintf(GetTranslationChar("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "), FormatMoney(nFeeRequired).c_str());
         else
-            strError = _("Error: Transaction creation failed  ");
+            strError = GetTranslationString("Error: Transaction creation failed  ");
         printf("SendMoney() : %s", strError.c_str());
         return strError;
     }
 
-    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
+    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, GetTranslationString("Sending..."), NULL))
         return "ABORTED";
 
     if (!CommitTransaction(wtxNew, reservekey))
-        return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+        return GetTranslationString("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 
     MainFrameRepaint();
     return "";
@@ -4011,14 +4011,14 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
 {
     // Check amount
     if (nValue <= 0)
-        return _("Invalid amount");
+        return GetTranslationString("Invalid amount");
     if (nValue + nTransactionFee > GetBalance())
-        return _("Insufficient funds");
+        return GetTranslationString("Insufficient funds");
 
     // Parse bitcoin address
     CScript scriptPubKey;
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
-        return _("Invalid bitcoin address");
+        return GetTranslationString("Invalid bitcoin address");
 
     return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
 }
