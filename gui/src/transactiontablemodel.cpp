@@ -101,6 +101,7 @@ int TransactionTableModel::columnCount(const QModelIndex &parent) const
 QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) const
 {
     QString status;
+
     switch(wtx->status.status)
     {
     case TransactionStatus::OpenUntilBlock:
@@ -133,25 +134,42 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     }
 }
 
+/* Look up address in address book, if found return
+     address[0:12]... (label)
+   otherwise just return address
+ */
+std::string lookupAddress(const std::string &address)
+{
+    std::string description;
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        std::map<std::string, std::string>::iterator mi = mapAddressBook.find(address);
+        if (mi != mapAddressBook.end() && !(*mi).second.empty())
+        {
+            std::string label = (*mi).second;
+            description += address.substr(0,12) + "... ";
+            description += "(" + label + ")";
+        }
+        else
+            description += address;
+    }
+    return description;
+}
+
 QVariant TransactionTableModel::formatTxDescription(const TransactionRecord *wtx) const
 {
     QString description;
-    /* TODO: look up label for wtx->address in address book if
-       TransactionRecord::RecvFromAddress /  TransactionRecord::SendToAddress
 
-        strDescription += strAddress.substr(0,12) + "... ";
-        strDescription += "(" + strLabel + ")";
-     */
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromAddress:
-        description = tr("From: ") + QString::fromStdString(wtx->address);
+        description = tr("From: ") + QString::fromStdString(lookupAddress(wtx->address));
         break;
     case TransactionRecord::RecvFromIP:
         description = tr("From IP: ") + QString::fromStdString(wtx->address);
         break;
     case TransactionRecord::SendToAddress:
-        description = tr("To: ") + QString::fromStdString(wtx->address);
+        description = tr("To: ") + QString::fromStdString(lookupAddress(wtx->address));
         break;
     case TransactionRecord::SendToIP:
         description = tr("To IP: ") + QString::fromStdString(wtx->address);
@@ -160,6 +178,7 @@ QVariant TransactionTableModel::formatTxDescription(const TransactionRecord *wtx
         description = tr("Payment to yourself");
         break;
     case TransactionRecord::Generated:
+        /* TODO: more extensive description */
         description = tr("Generated");
         break;
     }
