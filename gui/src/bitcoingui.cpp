@@ -11,6 +11,8 @@
 #include "aboutdialog.h"
 #include "clientmodel.h"
 
+#include "main.h"
+
 #include <QApplication>
 #include <QMainWindow>
 #include <QMenuBar>
@@ -268,9 +270,9 @@ void BitcoinGUI::copyClipboardClicked()
     QApplication::clipboard()->setText(address->text());
 }
 
-void BitcoinGUI::setBalance(double balance)
+void BitcoinGUI::setBalance(qint64 balance)
 {
-    labelBalance->setText(QLocale::system().toString(balance, 8));
+    labelBalance->setText(QString::fromStdString(FormatMoney(balance)));
 }
 
 void BitcoinGUI::setAddress(const QString &addr)
@@ -280,15 +282,15 @@ void BitcoinGUI::setAddress(const QString &addr)
 
 void BitcoinGUI::setNumConnections(int count)
 {
-    labelConnections->setText(QLocale::system().toString(count)+" "+tr("connections"));
+    labelConnections->setText(QLocale::system().toString(count)+" "+tr("connections(s)", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
 {
-    labelBlocks->setText(QLocale::system().toString(count)+" "+tr("blocks"));
+    labelBlocks->setText(QLocale::system().toString(count)+" "+tr("block(s)", "", count));
 }
 
 void BitcoinGUI::setNumTransactions(int count)
 {
-    labelTransactions->setText(QLocale::system().toString(count)+" "+tr("transactions"));
+    labelTransactions->setText(QLocale::system().toString(count)+" "+tr("transaction(s)", "", count));
 }

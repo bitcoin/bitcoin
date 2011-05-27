@@ -85,6 +85,12 @@ TransactionTableModel::~TransactionTableModel()
     delete impl;
 }
 
+void TransactionTableModel::updateWallet()
+{
+    beginResetModel();
+    impl->updateWallet();
+    endResetModel();
+}
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
 {

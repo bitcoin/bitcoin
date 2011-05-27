@@ -52,7 +52,7 @@ private:
     void createTrayIcon();
 
 public slots:
-    void setBalance(double balance);
+    void setBalance(qint64 balance);
     void setAddress(const QString &address);
     void setNumConnections(int count);
     void setNumBlocks(int count);

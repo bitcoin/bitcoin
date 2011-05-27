@@ -17,7 +17,7 @@ ClientModel::ClientModel(QObject *parent) :
     timer->start(MODEL_UPDATE_DELAY);
 }
 
-double ClientModel::getBalance()
+qint64 ClientModel::getBalance()
 {
     return GetBalance();
 }
@@ -45,7 +45,12 @@ int ClientModel::getNumBlocks()
 
 int ClientModel::getNumTransactions()
 {
-    return 0;
+    int numTransactions = 0;
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        numTransactions = mapWallet.size();
+    }
+    return numTransactions;
 }
 
 void ClientModel::update()

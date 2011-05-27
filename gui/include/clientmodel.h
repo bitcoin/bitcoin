@@ -9,14 +9,14 @@ class ClientModel : public QObject
 public:
     explicit ClientModel(QObject *parent = 0);
 
-    double getBalance();
+    qint64 getBalance();
     QString getAddress();
     int getNumConnections();
     int getNumBlocks();
     int getNumTransactions();
 
 signals:
-    void balanceChanged(double balance);
+    void balanceChanged(qint64 balance);
     void addressChanged(const QString &address);
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);

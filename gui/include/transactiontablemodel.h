@@ -37,6 +37,8 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
+public slots:
+    void updateWallet();
 private:
     QStringList columns;
     TransactionTableImpl *impl;
