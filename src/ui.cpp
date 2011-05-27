@@ -18,6 +18,13 @@ CMyTaskBarIcon* ptaskbaricon = NULL;
 bool fClosedToTray = false;
 wxLocale g_locale;
 
+#ifdef __WXMSW__
+double nScaleX = 1.0;
+double nScaleY = 1.0;
+#else
+static const double nScaleX = 1.0;
+static const double nScaleY = 1.0;
+#endif
 
 
 
@@ -263,9 +270,10 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     fOnSetFocusAddress = false;
     fRefresh = false;
     m_choiceFilter->SetSelection(0);
-    double dResize = 1.0;
+    double dResize = nScaleX;
 #ifdef __WXMSW__
     SetIcon(wxICON(bitcoin));
+    SetSize(dResize * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
 #else
     SetIcon(bitcoin80_xpm);
     SetBackgroundColour(m_toolBar->GetBackgroundColour());
@@ -1219,6 +1227,9 @@ void CMainFrame::OnListItemActivated(wxListEvent& event)
 
 CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetailsDialogBase(parent)
 {
+#ifdef __WXMSW__
+    SetSize(nScaleX * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
+#endif
     CRITICAL_BLOCK(cs_mapAddressBook)
     {
         string strHTML;
@@ -1633,6 +1644,8 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     SelectPage(0);
 #ifndef __WXMSW__
     SetSize(1.0 * GetSize().GetWidth(), 1.2 * GetSize().GetHeight());
+#else
+    SetSize(nScaleX * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
 #endif
 #if defined(__WXGTK__) || defined(__WXMAC_OSX__)
     m_checkBoxStartOnSystemStartup->SetLabel(_("&Start Bitcoin on window system startup"));
@@ -1803,6 +1816,8 @@ CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
         fontTmp.SetPointSize(8);
     m_staticTextMain->SetFont(fontTmp);
     SetSize(GetSize().GetWidth() + 44, GetSize().GetHeight() + 10);
+#else
+    SetSize(nScaleX * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
 #endif
 }
 
@@ -1837,12 +1852,19 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
         fontTmp.SetPointSize(9);
     m_staticTextInstructions->SetFont(fontTmp);
     SetSize(725, 180);
+#else
+    SetSize(nScaleX * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
 #endif
     
     // Set Icon
-    wxIcon iconSend;
-    iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
-    SetIcon(iconSend);
+    if (nScaleX == 1.0 && nScaleY == 1.0) // We don't have icons of the proper size otherwise
+    {
+        wxIcon iconSend;
+        iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
+        SetIcon(iconSend);
+    }
+    else
+        SetIcon(wxICON(bitcoin));
 
     // Fixup the tab order
     m_buttonPaste->MoveAfterInTabOrder(m_buttonCancel);
@@ -1992,6 +2014,8 @@ CSendingDialog::CSendingDialog(wxWindow* parent, const CAddress& addrIn, int64 n
     fWorkDone = false;
 #ifndef __WXMSW__
     SetSize(1.2 * GetSize().GetWidth(), 1.08 * GetSize().GetHeight());
+#else
+    SetSize(nScaleX * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
 #endif
 
     SetTitle(strprintf(_("Sending %s to %s"), FormatMoney(nPrice).c_str(), wtx.mapValue["to"].c_str()));
@@ -2315,6 +2339,10 @@ void CSendingDialog::OnReply3(CDataStream& vRecv)
 
 CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInitSelected, int nPageIn, bool fDuringSendIn) : CAddressBookDialogBase(parent)
 {
+#ifdef __WXMSW__
+    SetSize(nScaleX * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
+#endif
+
     // Set initially selected page
     wxNotebookEvent event;
     event.SetSelection(nPageIn);
@@ -2326,9 +2354,14 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
         m_buttonCancel->Show(false);
 
     // Set Icon
-    wxIcon iconAddressBook;
-    iconAddressBook.CopyFromBitmap(wxBitmap(addressbook16_xpm));
-    SetIcon(iconAddressBook);
+    if (nScaleX == 1.0 && nScaleY == 1.0) // We don't have icons of the proper size otherwise
+    {
+        wxIcon iconAddressBook;
+        iconAddressBook.CopyFromBitmap(wxBitmap(addressbook16_xpm));
+        SetIcon(iconAddressBook);
+    }
+    else
+        SetIcon(wxICON(bitcoin));
 
     // Init column headers
     m_listCtrlSending->InsertColumn(0, _("Name"), wxLIST_FORMAT_LEFT, 200);
@@ -2843,6 +2876,16 @@ bool CMyApp::OnInit()
 #endif
     g_locale.AddCatalog("wxstd"); // wxWidgets standard translations, if any
     g_locale.AddCatalog("bitcoin");
+
+#ifdef __WXMSW__
+    HDC hdc = GetDC(NULL);
+    if (hdc)
+    {
+        nScaleX = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0;
+        nScaleY = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0;
+        ReleaseDC(NULL, hdc);
+    }
+#endif
 
     return AppInit(argc, argv);
 }
