@@ -1863,8 +1863,10 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
         iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
         SetIcon(iconSend);
     }
+#ifdef __WXMSW__
     else
         SetIcon(wxICON(bitcoin));
+#endif
 
     // Fixup the tab order
     m_buttonPaste->MoveAfterInTabOrder(m_buttonCancel);
@@ -2360,8 +2362,10 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
         iconAddressBook.CopyFromBitmap(wxBitmap(addressbook16_xpm));
         SetIcon(iconAddressBook);
     }
+#ifdef __WXMSW__
     else
         SetIcon(wxICON(bitcoin));
+#endif
 
     // Init column headers
     m_listCtrlSending->InsertColumn(0, _("Name"), wxLIST_FORMAT_LEFT, 200);
