@@ -26,10 +26,11 @@ public:
         TypeRole = Qt::UserRole
     } RoleIndex;
 
-    /* Transaction type */
+    /* TypeRole values */
     static const QString Sent;
     static const QString Received;
     static const QString Generated;
+    static const QString Other;
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
