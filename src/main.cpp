@@ -3270,13 +3270,41 @@ int DoCoinbaser_I(CBlock* pblock, uint64 nTotal, FILE* file)
 
 int DoCoinbaser(CBlock* pblock, uint64 nTotal)
 {
-    FILE* file = popen(mapArgs["-coinbaser"].c_str(), "r");
+    string strCmd = mapArgs["-coinbaser"];
+    try
+    {
+        char strTotal[11];
+        int nTotalLen = snprintf(strTotal, 11, "%" PRI64u, nTotal);
+        if (nTotalLen < 1 || nTotalLen > 10)
+        {
+            strTotal[0] = '\0';
+            nTotalLen = 0;
+        }
+        string::size_type nPos;
+        while ((nPos = strCmd.find("%d")) != string::npos)
+        {
+            strCmd.replace(nPos, 2, strTotal, nTotalLen);
+        }
+    }
+    catch (...)
+    {
+        return 1;
+    }
+    FILE* file = popen(strCmd.c_str(), "r");
     if (!file)
     {
         printf("DoCoinbaser(): failed to popen: %s", strerror(errno));
         return -1;
     }
-    int rv = DoCoinbaser_I(pblock, nTotal, file);
+    int rv;
+    try
+    {
+        rv = DoCoinbaser_I(pblock, nTotal, file);
+    }
+    catch (...)
+    {
+        rv = 1;
+    }
     pclose(file);
     if (rv)
         pblock->vtx[0].vout.resize(1);
