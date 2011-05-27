@@ -8,7 +8,9 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QLocale>
+#include <QDebug>
 
+#include "util.h"
 #include "base58.h"
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
@@ -42,7 +44,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 {
     QByteArray payTo = ui->payTo->text().toUtf8();
     uint160 payToHash = 0;
-    double payAmount = 0.0;
+    int64 payAmount = 0.0;
     bool valid = false;
 
     if(!AddressToHash160(payTo.constData(), payToHash))
@@ -54,8 +56,9 @@ void SendCoinsDialog::on_sendButton_clicked()
         ui->payTo->setFocus();
         return;
     }
-    payAmount = QLocale::system().toDouble(ui->payAmount->text(), &valid);
-    if(!valid || payAmount <= 0.0)
+    valid = ParseMoney(ui->payAmount->text().toStdString(), payAmount);
+
+    if(!valid || payAmount <= 0)
     {
         QMessageBox::warning(this, tr("Warning"),
                                        tr("The amount to pay must be a valid number larger than 0."),
@@ -64,6 +67,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         ui->payAmount->setFocus();
         return;
     }
+    qDebug() << "Pay " << payAmount;
 
     /* TODO: send command to core, once this succeeds do accept() */
     accept();
