@@ -7,14 +7,14 @@ USE_UPNP:=0
 INCLUDEPATHS= \
  -I"C:\boost-1.43.0-mgw" \
  -I"C:\db-4.7.25.NC-mgw\build_unix" \
- -I"C:\openssl-1.0.0c-mgw\include" \
+ -I"C:\openssl-1.0.0d-mgw\include" \
  -I"C:\wxWidgets-2.9.1-mgw\lib\gcc_lib\mswud" \
  -I"C:\wxWidgets-2.9.1-mgw\include"
 
 LIBPATHS= \
  -L"C:\boost-1.43.0-mgw\stage\lib" \
  -L"C:\db-4.7.25.NC-mgw\build_unix" \
- -L"C:\openssl-1.0.0c-mgw" \
+ -L"C:\openssl-1.0.0d-mgw" \
  -L"C:\wxWidgets-2.9.1-mgw\lib\gcc_lib"
 
 WXLIBS= \
@@ -26,9 +26,10 @@ LIBS= \
  -l boost_program_options-mgw45-mt-s-1_43 \
  -l boost_thread-mgw45-mt-s-1_43 \
  -l db_cxx \
- -l eay32
+ -l ssl \
+ -l crypto
 
-DEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH
+DEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
