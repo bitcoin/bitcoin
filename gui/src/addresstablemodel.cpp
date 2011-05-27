@@ -12,7 +12,13 @@ AddressTableModel::AddressTableModel(QObject *parent) :
 
 int AddressTableModel::rowCount(const QModelIndex &parent) const
 {
-    return 5;
+    Q_UNUSED(parent);
+    int retval = 0;
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        retval = mapAddressBook.size();
+    }
+    return retval;
 }
 
 int AddressTableModel::columnCount(const QModelIndex &parent) const

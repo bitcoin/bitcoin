@@ -200,6 +200,7 @@ QWidget *BitcoinGUI::createTabs()
         transaction_table->setModel(proxy_model);
         transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        transaction_table->setSortingEnabled(true);
         transaction_table->verticalHeader()->hide();
 
         transaction_table->horizontalHeader()->resizeSection(
