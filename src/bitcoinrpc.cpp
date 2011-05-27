@@ -1910,7 +1910,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             // Create new block
             if(pblock)
                 delete pblock;
-            pblock = CreateNewBlock(reservekey);
+            pblock = CreateNewBlock(reservekey, false);
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
         }
