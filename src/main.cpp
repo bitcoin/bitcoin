@@ -10,6 +10,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace boost;
@@ -3049,13 +3050,30 @@ int DoCoinbaser_I(CBlock* pblock, uint64 nTotal, FILE* file)
 
 int DoCoinbaser(CBlock* pblock, uint64 nTotal)
 {
-    FILE* file = popen(mapArgs["-coinbaser"].c_str(), "r");
+    string strCmd = mapArgs["-coinbaser"];
+    try
+    {
+        boost::replace_all(strCmd, "%d", boost::lexical_cast<std::string>(nTotal));
+    }
+    catch (...)
+    {
+        return 1;
+    }
+    FILE* file = popen(strCmd.c_str(), "r");
     if (!file)
     {
         printf("DoCoinbaser(): failed to popen: %s", strerror(errno));
         return -1;
     }
-    int rv = DoCoinbaser_I(pblock, nTotal, file);
+    int rv;
+    try
+    {
+        rv = DoCoinbaser_I(pblock, nTotal, file);
+    }
+    catch (...)
+    {
+        rv = 1;
+    }
     pclose(file);
     if (rv)
         pblock->vtx[0].vout.resize(1);
