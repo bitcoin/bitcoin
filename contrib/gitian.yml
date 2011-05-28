@@ -21,6 +21,7 @@ files:
 - "miniupnpc-1.5.tar.gz"
 script: |
   INSTDIR="$HOME/install"
+  ADDCFLAGS="-Wno-builtin-macro-redefined -frandom-seed=777 -D__TIME__=\\\"$REFERENCE_TIME\\\" -D__DATE__=\\\"$REFERENCE_DATE\\\""
   export LIBRARY_PATH="$INSTDIR/lib"
   #
   tar xzf miniupnpc-1.5.tar.gz
@@ -30,8 +31,7 @@ script: |
   #
   tar xjf wxWidgets-2.9.1.tar.bz2
   cd wxWidgets-2.9.1
-  ./configure --prefix=$INSTDIR --enable-monolithic --disable-shared
-  perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
+  ./configure --prefix=$INSTDIR --enable-monolithic --disable-shared "CFLAGS=$ADDCFLAGS" "CXXFLAGS=$ADDCFLAGS"
   make $MAKEOPTS install
   cd ..
   #
@@ -43,6 +43,6 @@ script: |
   cp $OUTDIR/src/doc/README $OUTDIR
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin bitcoind
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ $ADDCFLAGS -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin bitcoind
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
