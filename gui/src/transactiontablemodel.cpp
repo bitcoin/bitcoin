@@ -12,7 +12,7 @@ const QString TransactionTableModel::Sent = "s";
 const QString TransactionTableModel::Received = "r";
 const QString TransactionTableModel::Other = "o";
 
-/* Internal implementation */
+/* Private implementation, no need to pull this into header */
 class TransactionTableImpl
 {
 public:
@@ -87,6 +87,10 @@ TransactionTableModel::~TransactionTableModel()
 
 void TransactionTableModel::updateWallet()
 {
+    /* TODO: improve this, way too brute-force at the moment,
+       only update transactions that actually changed, and add/remove
+       transactions that were added/removed.
+     */
     beginResetModel();
     impl->updateWallet();
     endResetModel();
@@ -210,7 +214,7 @@ QVariant TransactionTableModel::formatTxDebit(const TransactionRecord *wtx) cons
     if(wtx->debit)
     {
         QString str = QString::fromStdString(FormatMoney(wtx->debit));
-        if(!wtx->status.confirmed)
+        if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)
         {
             str = QString("[") + str + QString("]");
         }
@@ -225,7 +229,7 @@ QVariant TransactionTableModel::formatTxCredit(const TransactionRecord *wtx) con
     if(wtx->credit)
     {
         QString str = QString::fromStdString(FormatMoney(wtx->credit));
-        if(!wtx->status.confirmed)
+        if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)
         {
             str = QString("[") + str + QString("]");
         }
@@ -243,6 +247,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 
     if(role == Qt::DisplayRole)
     {
+        /* Delegate to specific column handlers */
         switch(index.column())
         {
         case Status:
@@ -261,6 +266,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return column_alignments[index.column()];
     } else if (role == Qt::ForegroundRole)
     {
+        /* Non-confirmed transactions are grey */
         if(rec->status.confirmed)
         {
             return QColor(0, 0, 0);
@@ -269,6 +275,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         }
     } else if (role == TypeRole)
     {
+        /* Role for filtering tabs by type */
         switch(rec->type)
         {
         case TransactionRecord::RecvFromAddress:
@@ -287,15 +294,15 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 
 QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if(role == Qt::DisplayRole)
+    if(orientation == Qt::Horizontal)
     {
-        if(orientation == Qt::Horizontal)
+        if(role == Qt::DisplayRole)
         {
             return columns[section];
+        } else if (role == Qt::TextAlignmentRole)
+        {
+            return column_alignments[section];
         }
-    } else if (role == Qt::TextAlignmentRole)
-    {
-        return column_alignments[section];
     }
     return QVariant();
 }
