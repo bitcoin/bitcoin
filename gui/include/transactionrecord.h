@@ -51,7 +51,7 @@ public:
         Generated,
         SendToAddress,
         SendToIP,
-        RecvFromAddress,
+        RecvWithAddress,
         RecvFromIP,
         SendToSelf
     };

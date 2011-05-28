@@ -27,25 +27,17 @@ public:
     void refreshWallet()
     {
         qDebug() << "refreshWallet";
-        cachedWallet.clear();
 
-        /* Query wallet from core, and compare with our own
-           representation.
+        /* Query entire wallet from core.
          */
+        cachedWallet.clear();
         CRITICAL_BLOCK(cs_mapWallet)
         {
             for(std::map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
             {
-                /* TODO: Make note of new and removed transactions */
-                /* insertedIndices */
-                /* removedIndices */
                 cachedWallet.append(TransactionRecord::decomposeTransaction(it->second));
             }
         }
-        /* beginInsertRows(QModelIndex(), first, last) */
-        /* endInsertRows */
-        /* beginRemoveRows(QModelIndex(), first, last) */
-        /* beginEndRows */
     }
 
     /* Update our model of the wallet.
@@ -64,6 +56,10 @@ public:
         {
             qDebug() << "  " << QString::fromStdString(hash.ToString());
         }
+        /* beginInsertRows(QModelIndex(), first, last) */
+        /* endInsertRows */
+        /* beginRemoveRows(QModelIndex(), first, last) */
+        /* beginEndRows */
 
         refreshWallet();
     }
@@ -218,17 +214,17 @@ QVariant TransactionTableModel::formatTxDescription(const TransactionRecord *wtx
 
     switch(wtx->type)
     {
-    case TransactionRecord::RecvFromAddress:
-        description = tr("From: ") + QString::fromStdString(lookupAddress(wtx->address));
+    case TransactionRecord::RecvWithAddress:
+        description = tr("Received with: ") + QString::fromStdString(lookupAddress(wtx->address));
         break;
     case TransactionRecord::RecvFromIP:
-        description = tr("From IP: ") + QString::fromStdString(wtx->address);
+        description = tr("Received from IP: ") + QString::fromStdString(wtx->address);
         break;
     case TransactionRecord::SendToAddress:
-        description = tr("To: ") + QString::fromStdString(lookupAddress(wtx->address));
+        description = tr("Sent to: ") + QString::fromStdString(lookupAddress(wtx->address));
         break;
     case TransactionRecord::SendToIP:
-        description = tr("To IP: ") + QString::fromStdString(wtx->address);
+        description = tr("Sent to IP: ") + QString::fromStdString(wtx->address);
         break;
     case TransactionRecord::SendToSelf:
         description = tr("Payment to yourself");
@@ -340,7 +336,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         /* Role for filtering tabs by type */
         switch(rec->type)
         {
-        case TransactionRecord::RecvFromAddress:
+        case TransactionRecord::RecvWithAddress:
         case TransactionRecord::RecvFromIP:
             return TransactionTableModel::Received;
         case TransactionRecord::SendToAddress:

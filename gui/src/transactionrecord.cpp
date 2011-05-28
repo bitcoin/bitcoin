@@ -128,7 +128,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
             else
             {
                 // Received by Bitcoin Address
-                sub.type = TransactionRecord::RecvFromAddress;
+                sub.type = TransactionRecord::RecvWithAddress;
                 BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 {
                     if (txout.IsMine())
@@ -176,9 +176,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
 
                     if (txout.IsMine())
                     {
-                        // Sent to self
-                        sub.type = TransactionRecord::SendToSelf;
-                        sub.credit = txout.nValue;
+                        // Ignore parts sent to self, as this is usually the change
+                        // from a transaction sent back to our own address.
+                        continue;
                     } else if (!mapValue["to"].empty())
                     {
                         // Sent to IP
@@ -199,7 +199,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
                         nValue += nTxFee;
                         nTxFee = 0;
                     }
-                    sub.debit = nValue;
+                    sub.debit = -nValue;
                     sub.status.sortKey += strprintf("-%d", nOut);
 
                     parts.append(sub);
