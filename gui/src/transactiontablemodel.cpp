@@ -1,12 +1,14 @@
 #include "transactiontablemodel.h"
 #include "guiutil.h"
 #include "transactionrecord.h"
+#include "guiconstants.h"
 #include "main.h"
 
 #include <QLocale>
 #include <QDebug>
 #include <QList>
 #include <QColor>
+#include <QTimer>
 
 const QString TransactionTableModel::Sent = "s";
 const QString TransactionTableModel::Received = "r";
@@ -16,14 +18,15 @@ const QString TransactionTableModel::Other = "o";
 class TransactionTableImpl
 {
 public:
+    /* Local cache of wallet.
+     * As it is in the same order as the CWallet, by definition
+     * this is sorted by sha256.
+     */
     QList<TransactionRecord> cachedWallet;
 
-    /* Update our model of the wallet */
-    void updateWallet()
+    void refreshWallet()
     {
-        QList<int> insertedIndices;
-        QList<int> removedIndices;
-
+        qDebug() << "refreshWallet";
         cachedWallet.clear();
 
         /* Query wallet from core, and compare with our own
@@ -45,6 +48,26 @@ public:
         /* beginEndRows */
     }
 
+    /* Update our model of the wallet.
+       Call with list of hashes of transactions that were added, removed or changed.
+     */
+    void updateWallet(const QList<uint256> &updated)
+    {
+        /* TODO: update only transactions in updated, and only if
+           the transactions are really part of the visible wallet.
+
+           Update status of the other transactions in the cache just in case,
+           because this call means that a new block came in.
+         */
+        qDebug() << "updateWallet";
+        foreach(uint256 hash, updated)
+        {
+            qDebug() << "  " << QString::fromStdString(hash.ToString());
+        }
+
+        refreshWallet();
+    }
+
     int size()
     {
         return cachedWallet.size();
@@ -59,6 +82,7 @@ public:
             return 0;
         }
     }
+
 };
 
 /* Credit and Debit columns are right-aligned as they contain numbers */
@@ -77,7 +101,11 @@ TransactionTableModel::TransactionTableModel(QObject *parent):
 {
     columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
 
-    impl->updateWallet();
+    impl->refreshWallet();
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    timer->start(MODEL_UPDATE_DELAY);
 }
 
 TransactionTableModel::~TransactionTableModel()
@@ -85,15 +113,33 @@ TransactionTableModel::~TransactionTableModel()
     delete impl;
 }
 
-void TransactionTableModel::updateWallet()
+void TransactionTableModel::update()
 {
-    /* TODO: improve this, way too brute-force at the moment,
-       only update transactions that actually changed, and add/remove
-       transactions that were added/removed.
-     */
-    beginResetModel();
-    impl->updateWallet();
-    endResetModel();
+    QList<uint256> updated;
+
+    /* Check if there are changes to wallet map */
+    TRY_CRITICAL_BLOCK(cs_mapWallet)
+    {
+        if(!vWalletUpdated.empty())
+        {
+            BOOST_FOREACH(uint256 hash, vWalletUpdated)
+            {
+                updated.append(hash);
+            }
+            vWalletUpdated.clear();
+        }
+    }
+
+    if(!updated.empty())
+    {
+        /* TODO: improve this, way too brute-force at the moment,
+           only update transactions that actually changed, and add/remove
+           transactions that were added/removed.
+         */
+        beginResetModel();
+        impl->updateWallet(updated);
+        endResetModel();
+    }
 }
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
@@ -260,6 +306,22 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return formatTxDebit(rec);
         case Credit:
             return formatTxCredit(rec);
+        }
+    } else if(role == Qt::EditRole)
+    {
+        /* Edit role is used for sorting so return the real values */
+        switch(index.column())
+        {
+        case Status:
+            return QString::fromStdString(rec->status.sortKey);
+        case Date:
+            return rec->time;
+        case Description:
+            return formatTxDescription(rec);
+        case Debit:
+            return rec->debit;
+        case Credit:
+            return rec->credit;
         }
     } else if (role == Qt::TextAlignmentRole)
     {

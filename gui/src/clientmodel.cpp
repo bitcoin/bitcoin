@@ -1,10 +1,8 @@
 #include "clientmodel.h"
 #include "main.h"
+#include "guiconstants.h"
 
 #include <QTimer>
-
-/* milliseconds between model updates */
-const int MODEL_UPDATE_DELAY = 250;
 
 ClientModel::ClientModel(QObject *parent) :
     QObject(parent)

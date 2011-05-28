@@ -147,7 +147,7 @@ void BitcoinGUI::setModel(ClientModel *model)
     this->model = model;
 
     setBalance(model->getBalance());
-    connect(model, SIGNAL(balanceChanged(double)), this, SLOT(setBalance(double)));
+    connect(model, SIGNAL(balanceChanged(qint64)), this, SLOT(setBalance(qint64)));
 
     setNumConnections(model->getNumConnections());
     connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
@@ -197,12 +197,14 @@ QWidget *BitcoinGUI::createTabs()
         proxy_model->setDynamicSortFilter(true);
         proxy_model->setFilterRole(TransactionTableModel::TypeRole);
         proxy_model->setFilterRegExp(QRegExp(tab_filters.at(i)));
+        proxy_model->setSortRole(Qt::EditRole);
 
         QTableView *transaction_table = new QTableView(this);
         transaction_table->setModel(proxy_model);
         transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
         transaction_table->setSortingEnabled(true);
+        transaction_table->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
         transaction_table->verticalHeader()->hide();
 
         transaction_table->horizontalHeader()->resizeSection(

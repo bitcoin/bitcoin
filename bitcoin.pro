@@ -56,7 +56,8 @@ HEADERS += gui/include/bitcoingui.h \
     gui/src/clientmodel.h \
     gui/include/clientmodel.h \
     gui/include/guiutil.h \
-    gui/include/transactionrecord.h
+    gui/include/transactionrecord.h \
+    gui/include/guiconstants.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \
