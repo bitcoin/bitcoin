@@ -28,7 +28,7 @@ Libraries you need to download separately and build:
 
                 default path               download
 wxWidgets       \wxwidgets-2.9.1-mgw       http://www.wxwidgets.org/downloads/
-OpenSSL         \openssl-1.0.0c-mgw        http://www.openssl.org/source/
+OpenSSL         \openssl-1.0.0d-mgw        http://www.openssl.org/source/
 Berkeley DB     \db-4.7.25.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
 Boost           \boost-1.43.0-mgw          http://www.boost.org/users/download/
 miniupnpc       \upnpc-exe-win32-20110215  http://miniupnp.tuxfamily.org/files/
@@ -42,7 +42,7 @@ miniupnpc      New (3-clause) BSD license
 
 Versions used in this release:
 wxWidgets    2.9.1
-OpenSSL      1.0.0c
+OpenSSL      1.0.0d
 Berkeley DB  4.7.25.NC
 Boost        1.43.0
 miniupnpc    1.5-20110215
@@ -66,14 +66,9 @@ MSYS shell:
 un-tar sources with MSYS 'tar xfz' to avoid issue with symlinks (OpenSSL ticket 2377)
 change 'MAKE' env. variable from 'C:\MinGW32\bin\mingw32-make.exe' to '/c/MinGW32/bin/mingw32-make.exe'
 
-cd /c/openssl-1.0.0c-mgw
+cd /c/openssl-1.0.0d-mgw
 ./config
 make
-
-perl util/mkdef.pl 32 libeay enable-static-engine > libeay32.def
-dllwrap --dllname libeay32.dll --output-lib libeay32.a --def libeay32.def libcrypto.a -lws2_32 -lgdi32
-
-after that openssl libeay is in main source dir (openssl-1.0.0c-mgw)
 
 Berkeley DB
 -----------
