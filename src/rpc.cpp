@@ -490,24 +490,23 @@ Value estimatetxfee(const Array& params, bool fHelp)
         throw runtime_error(
             "estimatetxfee <amount>\n"
             "<amount> is a real and is rounded to the nearest 0.00000001");
-	// Amount
+    // Amount
     int64 nAmount = AmountFromValue(params[0]);
 
     // Wallet comments
     CWalletTx wtx;
-	CReserveKey keyChange;
+    CReserveKey keyChange;
     int64 nFeeRequired = 0;
     
-	string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
+    string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
 
-	CScript scriptPubKey;
+    CScript scriptPubKey;
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
         throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
 
-	CreateTransaction(scriptPubKey, nAmount, wtx, keyChange, nFeeRequired);
+    CreateTransaction(scriptPubKey, nAmount, wtx, keyChange, nFeeRequired);
 
-	return ValueFromAmount(nFeeRequired);
-	//return FormatMoney(nFeeRequired);
+    return ValueFromAmount(nFeeRequired);
 }
 
 Value sendtoaddress(const Array& params, bool fHelp)
