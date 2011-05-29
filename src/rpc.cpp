@@ -501,9 +501,8 @@ Value estimatetxfee(const Array& params, bool fHelp)
     string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
 
     CScript scriptPubKey;
-    if (!scriptPubKey.SetBitcoinAddress(strAddress))
-        throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
-
+    scriptPubKey.SetBitcoinAddress(strAddress)
+    
     CreateTransaction(scriptPubKey, nAmount, wtx, keyChange, nFeeRequired);
 
     return ValueFromAmount(nFeeRequired);
