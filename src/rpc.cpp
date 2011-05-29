@@ -4,6 +4,7 @@
 
 #include "headers.h"
 #include "cryptopp/sha.h"
+#include "pinentry.h"
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>
@@ -1969,11 +1970,6 @@ void ThreadRPCServer2(void* parg)
 
 Object CallRPC(const string& strMethod, const Array& params)
 {
-    if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
-        throw runtime_error(strprintf(
-            _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
-              "If the file does not exist, create it with owner-readable-only file permissions."),
-                GetConfigFile().c_str()));
 
     // Connect to localhost
     bool fUseSSL = GetBoolArg("-rpcssl");
@@ -1995,9 +1991,47 @@ Object CallRPC(const string& strMethod, const Array& params)
         throw runtime_error("couldn't connect to server");
 #endif
 
-
+    string strUserPass64;
+    string strUser, strPass;
+    strUser = mapArgs["-rpcuser"];
+    if (strUser == "") {
+#ifndef USE_ASSUAN
+      throw runtime_error
+	(strprintf
+	 (_("You must set rpcpuser=<user> in the configuration file:\n%s\n"
+	    "If the file does not exist, create it with owner-readable-only file permissions."),
+	  GetConfigFile().c_str()));
+#else
+      Pin *askuser = new Pin();
+      askuser->title(_("Bitcoin user login"));
+      askuser->description(_("Please choose the username to connect bitcoin via RPC"));
+      askuser->prompt(_("login:"));
+      askuser->ask();
+      strUser = askuser->answer;
+      delete askuser;
+#endif
+    }
+    strPass = mapArgs["-rpcpassword"];
+    if (strPass == "") {
+#ifndef USE_ASSUAN
+      throw runtime_error
+	(strprintf
+	 (_("You must set rpcpassword=<password> in the configuration file:\n%s\n"
+	    "If the file does not exist, create it with owner-readable-only file permissions."),
+	  GetConfigFile().c_str()));
+#else
+      Pin *askpass = new Pin();
+      askpass->title(_("Bitcoin password"));
+      askpass->description(_("Please type the password to connect bitcoin via RPC"));
+      askpass->prompt(strprintf("%s password:", strUser.c_str()));
+      askpass->ask();
+      strPass = askpass->answer;
+      delete askpass;
+#endif
+    }
     // HTTP basic authentication
-    string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
+    strUserPass64 = EncodeBase64(strUser + ":" + strPass);
+
     map<string, string> mapRequestHeaders;
     mapRequestHeaders["Authorization"] = string("Basic ") + strUserPass64;
 
