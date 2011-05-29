@@ -483,6 +483,33 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
+
+Value estimatetxfee(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "estimatetxfee <amount>\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001");
+	// Amount
+    int64 nAmount = AmountFromValue(params[0]);
+
+    // Wallet comments
+    CWalletTx wtx;
+	CReserveKey keyChange;
+    int64 nFeeRequired = 0;
+    
+	string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
+
+	CScript scriptPubKey;
+    if (!scriptPubKey.SetBitcoinAddress(strAddress))
+        throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
+
+	CreateTransaction(scriptPubKey, nAmount, wtx, keyChange, nFeeRequired);
+
+	return ValueFromAmount(nFeeRequired);
+	//return FormatMoney(nFeeRequired);
+}
+
 Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
@@ -1445,6 +1472,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getwork",               &getwork),
     make_pair("listaccounts",          &listaccounts),
     make_pair("settxfee",              &settxfee),
+	make_pair("estimatetxfee",         &estimatetxfee),
+	
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2079,6 +2108,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
+        if (strMethod == "estimatetxfee"          && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
