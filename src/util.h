@@ -193,6 +193,7 @@ bool WildcardMatch(const std::string& str, const std::string& mask);
 int GetFilesize(FILE* file);
 void GetDataDir(char* pszDirRet);
 std::string GetConfigFile();
+std::string GetWalletFile();
 std::string GetPidFile();
 void CreatePidFile(std::string pidFile, pid_t pid);
 void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
@@ -208,6 +209,7 @@ int64 GetTime();
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
 std::string FormatFullVersion();
+bool LockDirectory(std::string dir);
 
 
 

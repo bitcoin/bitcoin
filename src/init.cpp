@@ -152,6 +152,7 @@ bool AppInit2(int argc, char* argv[])
             "  -gen=0           \t\t  " + _("Don't generate coins\n") +
             "  -min             \t\t  " + _("Start minimized\n") +
             "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
+            "  -wallet=<file>   \t\t  " + _("Specify wallet file (default: wallet.dat)\n") +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect\n") +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
@@ -321,11 +322,7 @@ bool AppInit2(int argc, char* argv[])
 #endif
 
     // Make sure only a single bitcoin process is using the data directory.
-    string strLockFile = GetDataDir() + "/.lock";
-    FILE* file = fopen(strLockFile.c_str(), "a"); // empty lock file; created if it doesn't exist.
-    if (file) fclose(file);
-    static boost::interprocess::file_lock lock(strLockFile.c_str());
-    if (!lock.try_lock())
+    if (!LockDirectory(GetDataDir()))
     {
         wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), "Bitcoin");
         return false;
@@ -364,8 +361,9 @@ bool AppInit2(int argc, char* argv[])
 
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
+    filesystem::path pathWalletFilePath = filesystem::system_complete(GetWalletFile());
     bool fFirstRun;
-    if (!LoadWallet(fFirstRun))
+    if (!LoadWallet(fFirstRun, pathWalletFilePath.string().c_str()))
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 

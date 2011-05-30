@@ -12,6 +12,7 @@ void ThreadFlushWalletDB(void* parg);
 
 unsigned int nWalletDBUpdated;
 uint64 nAccountingEntryNumber = 0;
+string strWalletFilePath; // updated when the user's wallet is loaded
 
 
 
@@ -93,6 +94,16 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
         if (pdb == NULL)
         {
             pdb = new Db(&dbenv, 0);
+
+            // Prevent multiple processes from accessing the database files simultaneously via file lock
+            filesystem::path pathFile(pszFile);
+            // If the database file we're about to open is in the main datadir, we don't need to lock now
+            // because the datadir is locked when the app initializes
+            if (pathFile.is_complete() && pathFile.parent_path().string() != GetDataDir())
+            {
+                if (!LockDirectory(pathFile.parent_path().string()))
+                    throw runtime_error(strprintf("Cannot obtain a lock on database directory %s.", pathFile.parent_path().string().c_str()));
+            }
 
             ret = pdb->open(NULL,      // Txn pointer
                             pszFile,   // Filename
@@ -584,6 +595,8 @@ bool LoadAddresses()
 static set<int64> setKeyPool;
 static CCriticalSection cs_setKeyPool;
 
+char* CWalletDB::pszSavedWalletFilePath; // saved the first time CWalletDB is initialized with a file path
+
 bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
 {
     account.SetNull();
@@ -828,10 +841,11 @@ bool CWalletDB::LoadWallet()
     return true;
 }
 
-bool LoadWallet(bool& fFirstRunRet)
+bool LoadWallet(bool& fFirstRunRet, const char* pszWalletFilePath)
 {
     fFirstRunRet = false;
-    if (!CWalletDB("cr+").LoadWallet())
+    strWalletFilePath = pszWalletFilePath;
+    if (!CWalletDB("cr+", pszWalletFilePath).LoadWallet())
         return false;
     fFirstRunRet = vchDefaultKey.empty();
 
@@ -894,8 +908,7 @@ void ThreadFlushWalletDB(void* parg)
 
                 if (nRefCount == 0 && !fShutdown)
                 {
-                    string strFile = "wallet.dat";
-                    map<string, int>::iterator mi = mapFileUseCount.find(strFile);
+                    map<string, int>::iterator mi = mapFileUseCount.find(strWalletFilePath);
                     if (mi != mapFileUseCount.end())
                     {
                         printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
@@ -904,9 +917,9 @@ void ThreadFlushWalletDB(void* parg)
                         int64 nStart = GetTimeMillis();
 
                         // Flush wallet.dat so it's self contained
-                        CloseDb(strFile);
+                        CloseDb(strWalletFilePath);
                         dbenv.txn_checkpoint(0, 0, 0);
-                        dbenv.lsn_reset(strFile.c_str(), 0);
+                        dbenv.lsn_reset(strWalletFilePath.c_str(), 0);
 
                         mapFileUseCount.erase(mi++);
                         printf("Flushed wallet.dat %"PRI64d"ms\n", GetTimeMillis() - nStart);
@@ -923,20 +936,19 @@ void BackupWallet(const string& strDest)
     {
         CRITICAL_BLOCK(cs_db)
         {
-            const string strFile = "wallet.dat";
-            if (!mapFileUseCount.count(strFile) || mapFileUseCount[strFile] == 0)
+            if (!mapFileUseCount.count(strWalletFilePath) || mapFileUseCount[strWalletFilePath] == 0)
             {
                 // Flush log data to the dat file
-                CloseDb(strFile);
+                CloseDb(strWalletFilePath);
                 dbenv.txn_checkpoint(0, 0, 0);
-                dbenv.lsn_reset(strFile.c_str(), 0);
-                mapFileUseCount.erase(strFile);
+                dbenv.lsn_reset(strWalletFilePath.c_str(), 0);
+                mapFileUseCount.erase(strWalletFilePath);
 
                 // Copy wallet.dat
-                filesystem::path pathSrc(GetDataDir() + "/" + strFile);
+                filesystem::path pathSrc(strWalletFilePath);
                 filesystem::path pathDest(strDest);
                 if (filesystem::is_directory(pathDest))
-                    pathDest = pathDest / strFile;
+                    pathDest = pathDest / pathSrc.filename();
 #if BOOST_VERSION >= 104000
                 filesystem::copy_file(pathSrc, pathDest, filesystem::copy_option::overwrite_if_exists);
 #else
