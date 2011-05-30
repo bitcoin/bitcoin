@@ -31,6 +31,7 @@
 #include <QLocale>
 #include <QSortFilterProxyModel>
 #include <QClipboard>
+#include <QMessageBox>
 
 #include <QDebug>
 
@@ -160,6 +161,9 @@ void BitcoinGUI::setModel(ClientModel *model)
 
     setAddress(model->getAddress());
     connect(model, SIGNAL(addressChanged(QString)), this, SLOT(setAddress(QString)));
+
+    /* Report errors from network/worker thread */
+    connect(model, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -226,6 +230,7 @@ QWidget *BitcoinGUI::createTabs()
 void BitcoinGUI::sendcoinsClicked()
 {
     SendCoinsDialog dlg;
+    dlg.setModel(model);
     dlg.exec();
 }
 
@@ -295,4 +300,12 @@ void BitcoinGUI::setNumBlocks(int count)
 void BitcoinGUI::setNumTransactions(int count)
 {
     labelTransactions->setText(QLocale::system().toString(count)+" "+tr("transaction(s)", "", count));
+}
+
+void BitcoinGUI::error(const QString &title, const QString &message)
+{
+    /* Report errors from network/worker thread */
+    QMessageBox::critical(this, title,
+        message,
+        QMessageBox::Ok, QMessageBox::Ok);
 }

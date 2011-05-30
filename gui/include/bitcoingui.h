@@ -67,6 +67,7 @@ private slots:
 
     void newAddressClicked();
     void copyClipboardClicked();
+    void error(const QString &title, const QString &message);
 };
 
 #endif

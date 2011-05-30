@@ -51,6 +51,11 @@ int ClientModel::getNumTransactions()
     return numTransactions;
 }
 
+qint64 ClientModel::getTransactionFee()
+{
+    return nTransactionFee;
+}
+
 void ClientModel::update()
 {
     emit balanceChanged(getBalance());
@@ -59,3 +64,51 @@ void ClientModel::update()
     emit numBlocksChanged(getNumBlocks());
     emit numTransactionsChanged(getNumTransactions());
 }
+
+ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payAmount)
+{
+    uint160 hash160 = 0;
+    bool valid = false;
+
+    if(!AddressToHash160(payTo.toUtf8().constData(), hash160))
+    {
+        return InvalidAddress;
+    }
+
+    if(payAmount <= 0)
+    {
+        return InvalidAmount;
+    }
+
+    if(payAmount > getBalance())
+    {
+        return AmountExceedsBalance;
+    }
+
+    if((payAmount + nTransactionFee) > getBalance())
+    {
+        return AmountWithFeeExceedsBalance;
+    }
+
+    CRITICAL_BLOCK(cs_main)
+    {
+        // Send to bitcoin address
+        CWalletTx wtx;
+        CScript scriptPubKey;
+        scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
+
+        std::string strError = SendMoney(scriptPubKey, payAmount, wtx, true);
+        if (strError == "")
+            return OK;
+        else if (strError == "ABORTED")
+            return Aborted;
+        else
+        {
+            emit error(tr("Sending..."), QString::fromStdString(strError));
+            return MiscError;
+        }
+    }
+
+    return OK;
+}
+

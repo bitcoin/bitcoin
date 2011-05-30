@@ -9,11 +9,26 @@ class ClientModel : public QObject
 public:
     explicit ClientModel(QObject *parent = 0);
 
+    enum StatusCode
+    {
+        OK,
+        InvalidAmount,
+        InvalidAddress,
+        AmountExceedsBalance,
+        AmountWithFeeExceedsBalance,
+        Aborted,
+        MiscError
+    };
+
     qint64 getBalance();
     QString getAddress();
     int getNumConnections();
     int getNumBlocks();
     int getNumTransactions();
+
+    qint64 getTransactionFee();
+
+    StatusCode sendCoins(const QString &payTo, qint64 payAmount);
 
 signals:
     void balanceChanged(qint64 balance);
@@ -21,6 +36,8 @@ signals:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);
     void numTransactionsChanged(int count);
+    /* Asynchronous error notification */
+    void error(const QString &title, const QString &message);
 
 public slots:
 

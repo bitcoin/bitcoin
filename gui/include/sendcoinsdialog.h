@@ -6,6 +6,7 @@
 namespace Ui {
     class SendCoinsDialog;
 }
+class ClientModel;
 
 class SendCoinsDialog : public QDialog
 {
@@ -15,8 +16,11 @@ public:
     explicit SendCoinsDialog(QWidget *parent = 0, const QString &address = "");
     ~SendCoinsDialog();
 
+    void setModel(ClientModel *model);
+
 private:
     Ui::SendCoinsDialog *ui;
+    ClientModel *model;
 
 private slots:
     void on_buttonBox_rejected();

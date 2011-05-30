@@ -1,5 +1,6 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
+#include "clientmodel.h"
 
 #include "addressbookdialog.h"
 #include "bitcoinaddressvalidator.h"
@@ -15,7 +16,8 @@
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     QDialog(parent),
-    ui(new Ui::SendCoinsDialog)
+    ui(new Ui::SendCoinsDialog),
+    model(0)
 {
     ui->setupUi(this);
 
@@ -35,6 +37,11 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     }
 }
 
+void SendCoinsDialog::setModel(ClientModel *model)
+{
+    this->model = model;
+}
+
 SendCoinsDialog::~SendCoinsDialog()
 {
     delete ui;
@@ -42,35 +49,50 @@ SendCoinsDialog::~SendCoinsDialog()
 
 void SendCoinsDialog::on_sendButton_clicked()
 {
-    QByteArray payTo = ui->payTo->text().toUtf8();
-    uint160 payToHash = 0;
-    int64 payAmount = 0.0;
-    bool valid = false;
+    bool valid;
+    QString payAmount = ui->payAmount->text();
+    qint64 payAmountParsed;
 
-    if(!AddressToHash160(payTo.constData(), payToHash))
+    valid = ParseMoney(payAmount.toStdString(), payAmountParsed);
+
+    if(!valid)
     {
-        QMessageBox::warning(this, tr("Warning"),
-                                       tr("The recepient address is not valid, please recheck."),
-                                       QMessageBox::Ok,
-                                       QMessageBox::Ok);
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("The amount to pay must be a valid number."),
+            QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+
+    switch(model->sendCoins(ui->payTo->text(), payAmountParsed))
+    {
+    case ClientModel::InvalidAddress:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("The recepient address is not valid, please recheck."),
+            QMessageBox::Ok, QMessageBox::Ok);
         ui->payTo->setFocus();
-        return;
-    }
-    valid = ParseMoney(ui->payAmount->text().toStdString(), payAmount);
-
-    if(!valid || payAmount <= 0)
-    {
-        QMessageBox::warning(this, tr("Warning"),
-                                       tr("The amount to pay must be a valid number larger than 0."),
-                                       QMessageBox::Ok,
-                                       QMessageBox::Ok);
+        break;
+    case ClientModel::InvalidAmount:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("The amount to pay must be larger than 0."),
+            QMessageBox::Ok, QMessageBox::Ok);
         ui->payAmount->setFocus();
-        return;
+        break;
+    case ClientModel::AmountExceedsBalance:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Amount exceeds your balance"),
+            QMessageBox::Ok, QMessageBox::Ok);
+        ui->payAmount->setFocus();
+        break;
+    case ClientModel::AmountWithFeeExceedsBalance:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Total exceeds your balance when the %1 transaction fee is included").
+                arg(QString::fromStdString(FormatMoney(model->getTransactionFee()))),
+            QMessageBox::Ok, QMessageBox::Ok);
+        ui->payAmount->setFocus();
+        break;
     }
-    qDebug() << "Pay " << payAmount;
-
     /* TODO: send command to core, once this succeeds do accept() */
-    accept();
+    //accept();
 }
 
 void SendCoinsDialog::on_pasteButton_clicked()
