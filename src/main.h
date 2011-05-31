@@ -101,8 +101,8 @@ bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, C
 bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
 bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 bool BroadcastTransaction(CWalletTx& wtxNew);
-std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
-std::string SendMoneyToBitcoinAddress(std::string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
+std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekeyRet, bool fAskFee=false, bool fAutoCommit = true);
+std::string SendMoneyToBitcoinAddress(std::string strAddress, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekeyRet, bool fAskFee=false, bool fAutoCommit = true);
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 CBlock* CreateNewBlock(CReserveKey& reservekey);

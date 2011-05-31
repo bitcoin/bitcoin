@@ -3995,11 +3995,10 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
 
 // requires cs_main lock
-string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekeyRet, bool fAskFee, bool fAutoCommit)
 {
-    CReserveKey reservekey;
     int64 nFeeRequired;
-    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
+    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekeyRet, nFeeRequired))
     {
         string strError;
         if (nValue + nFeeRequired > GetBalance())
@@ -4023,8 +4022,9 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
     if (fAskFee && !ThreadSafeAskFee(nFeeRequired, nPayFee, _("Sending..."), NULL))
         return "ABORTED";
 
-    if (!CommitTransaction(wtxNew, reservekey))
-        return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+    if (fAutoCommit)
+        if (!CommitTransaction(wtxNew, reservekeyRet))
+            return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 
     MainFrameRepaint();
     return "";
@@ -4033,7 +4033,7 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
 
 
 // requires cs_main lock
-string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekeyRet, bool fAskFee, bool fAutoCommit)
 {
     // Check amount
     if (nValue <= 0)
@@ -4046,5 +4046,5 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
         return _("Invalid bitcoin address");
 
-    return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
+    return SendMoney(scriptPubKey, nValue, wtxNew, reservekeyRet, fAskFee, fAutoCommit);
 }
