@@ -203,9 +203,9 @@ int ThreadSafeMessageBox(const string& message, const string& caption, int style
 #endif
 }
 
-bool ThreadSafeAskFee(int64 nFeeRequired, const string& strCaption, wxWindow* parent)
+bool ThreadSafeAskFee(int64 nFeeRequired, int64 nPayFee, const string& strCaption, wxWindow* parent)
 {
-    if (nFeeRequired < MIN_TX_FEE || nFeeRequired <= nTransactionFee || fDaemon)
+    if (nFeeRequired < MIN_TX_FEE || nFeeRequired <= nPayFee || fDaemon)
         return true;
     string strMessage = strprintf(
         _("This transaction is over the size limit.  You can still send it for a fee of %s, "
@@ -1928,11 +1928,6 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
             wxMessageBox(_("Amount exceeds your balance  "), _("Send Coins"));
             return;
         }
-        if (nValue + nTransactionFee > GetBalance())
-        {
-            wxMessageBox(string(_("Total exceeds your balance when the ")) + FormatMoney(nTransactionFee) + _(" transaction fee is included  "), _("Send Coins"));
-            return;
-        }
 
         // Parse bitcoin address
         uint160 hash160;
@@ -2164,7 +2159,7 @@ void SendingDialogStartTransfer(void* parg)
 void CSendingDialog::StartTransfer()
 {
     // Make sure we have enough money
-    if (nPrice + nTransactionFee > GetBalance())
+    if (nPrice > GetBalance())
     {
         Error(_("Insufficient funds"));
         return;
@@ -2235,7 +2230,7 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
         // Pay
         if (!Status(_("Creating transaction...")))
             return;
-        if (nPrice + nTransactionFee > GetBalance())
+        if (nPrice > GetBalance())
         {
             Error(_("Insufficient funds"));
             return;
@@ -2245,14 +2240,24 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
         if (!CreateTransaction(scriptPubKey, nPrice, wtx, reservekey, nFeeRequired))
         {
             if (nPrice + nFeeRequired > GetBalance())
-                Error(strprintf(_("This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds"), FormatMoney(nFeeRequired).c_str()));
+            {
+                unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtx, SER_NETWORK);
+                int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+                if (nPayFee == nFeeRequired)
+                    Error(strprintf(_("Based on your fee settings, this transaction requires a fee of at least %s, putting its total over your balance. You can change those settings in the Options dialog, or via the settxfee RPC command."), FormatMoney(nFeeRequired).c_str()));
+                else
+                    Error(strprintf(_("This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds, putting its total over your balance."), FormatMoney(nFeeRequired).c_str()));
+            }
             else
                 Error(_("Transaction creation failed"));
             return;
         }
 
+        unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtx, SER_NETWORK);
+        int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+
         // Transaction fee
-        if (!ThreadSafeAskFee(nFeeRequired, _("Sending..."), this))
+        if (!ThreadSafeAskFee(nFeeRequired, nPayFee, _("Sending..."), this))
         {
             Error(_("Transaction aborted"));
             return;
