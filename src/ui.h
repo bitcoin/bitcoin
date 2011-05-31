@@ -127,7 +127,8 @@ class COptionsDialog : public COptionsDialogBase
 protected:
     // Event handlers
     void OnListBox(wxCommandEvent& event);
-    void OnKillFocusTransactionFee(wxFocusEvent& event);
+    void OnKillFocusBaseTransactionFee(wxFocusEvent& event);
+    void OnKillFocusPerKBTransactionFee(wxFocusEvent& event);
     void OnCheckBoxUseProxy(wxCommandEvent& event);
     void OnKillFocusProxy(wxFocusEvent& event);
 

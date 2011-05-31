@@ -146,39 +146,41 @@ bool AppInit2(int argc, char* argv[])
             "  bitcoin [options] help              \t\t  " + _("List commands\n") +
             "  bitcoin [options] help <command>    \t\t  " + _("Get help for a command\n") +
           _("Options:\n") +
-            "  -conf=<file>     \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
-            "  -pid=<file>      \t\t  " + _("Specify pid file (default: bitcoind.pid)\n") +
-            "  -gen             \t\t  " + _("Generate coins\n") +
-            "  -gen=0           \t\t  " + _("Don't generate coins\n") +
-            "  -min             \t\t  " + _("Start minimized\n") +
-            "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
-            "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
-            "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect\n") +
-            "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
-            "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
-            "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
+            "  -conf=<file>         \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
+            "  -pid=<file>          \t\t  " + _("Specify pid file (default: bitcoind.pid)\n") +
+            "  -gen                 \t\t  " + _("Generate coins\n") +
+            "  -gen=0               \t\t  " + _("Don't generate coins\n") +
+            "  -min                 \t\t  " + _("Start minimized\n") +
+            "  -datadir=<dir>       \t\t  " + _("Specify data directory\n") +
+            "  -proxy=<ip:port>     \t  "   + _("Connect through socks4 proxy\n") +
+            "  -dns                 \t  "   + _("Allow DNS lookups for addnode and connect\n") +
+            "  -addnode=<ip>        \t  "   + _("Add a node to connect to\n") +
+            "  -connect=<ip>        \t\t  " + _("Connect only to the specified node\n") +
+            "  -nolisten            \t  "   + _("Don't accept connections from outside\n") +
 #ifdef USE_UPNP
 #if USE_UPNP
-            "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
+            "  -noupnp              \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
 #else
-            "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
+            "  -upnp                \t  "   + _("Attempt to use UPnP to map the listening port\n") +
 #endif
 #endif
-            "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
+            "  -paybasetxfee=<amt>  \t  "   + _("Fee to add to each transactions you send\n") +
+            "  -payperkbtxfee=<amt> \t  "   + _("Fee per KB (after the first) to add to transactions you send\n") +
+            "  -overridesanetxfee   \t  "   + _("Ignore the suggested transaction fees and send your own\n") +
 #ifdef GUI
-            "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
+            "  -server              \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif
 #ifndef __WXMSW__
-            "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
+            "  -daemon              \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
-            "  -testnet         \t\t  " + _("Use the test network\n") +
-            "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
-            "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
-            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
-            "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
-            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
-            "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
+            "  -testnet             \t\t  " + _("Use the test network\n") +
+            "  -rpcuser=<user>      \t  "   + _("Username for JSON-RPC connections\n") +
+            "  -rpcpassword=<pw>    \t  "   + _("Password for JSON-RPC connections\n") +
+            "  -rpcport=<port>      \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
+            "  -rpcallowip=<ip>     \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
+            "  -rpcconnect=<ip>     \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
+            "  -keypool=<n>         \t  "   + _("Set key pool size to <n> (default: 100)\n") +
+            "  -rescan              \t  "   + _("Rescan the block chain for missing wallet transactions\n");
 
 #ifdef USE_SSL
         strUsage += string() +
@@ -465,15 +467,52 @@ bool AppInit2(int argc, char* argv[])
     if (mapArgs.count("-dnsseed"))
         DNSAddressSeed();
 
-    if (mapArgs.count("-paytxfee"))
+    if (mapArgs.count("-paybasetxfee"))
     {
-        if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
+        if (!ParseMoney(mapArgs["-paybasetxfee"], nBaseTransactionFee))
+        {
+            wxMessageBox(_("Invalid amount for -paybasetxfee=<amount>"), "Bitcoin");
+            return false;
+        }
+        if (nBaseTransactionFee > 0.25 * COIN)
+            wxMessageBox(_("Warning: -paybasetxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+    }
+    else if (mapArgs.count("-paytxfee")) // For backward compatibility
+    {
+        if (!ParseMoney(mapArgs["-paytxfee"], nBaseTransactionFee))
         {
             wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
             return false;
         }
-        if (nTransactionFee > 0.25 * COIN)
+        if (nBaseTransactionFee > 0.25 * COIN)
             wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+    }
+
+    if (mapArgs.count("-payperkbtxfee"))
+    {
+        if (!ParseMoney(mapArgs["-payperkbtxfee"], nPerKBTransactionFee))
+        {
+            wxMessageBox(_("Invalid amount for -payperkbtxfee=<amount>"), "Bitcoin");
+            return false;
+        }
+        if (nPerKBTransactionFee > 0.25 * COIN)
+            wxMessageBox(_("Warning: -payperkbtxfee is set very high.  This is the transaction fee you will pay per KB if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+    }
+    else if (mapArgs.count("-paytxfee")) // For backward compatibility
+    {
+        if (!ParseMoney(mapArgs["-paytxfee"], nPerKBTransactionFee))
+        {
+            wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
+            return false;
+        }
+        if (nPerKBTransactionFee > 0.25 * COIN)
+            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+    }
+
+    if (mapArgs.count("-overridesanetxfee"))
+    {
+        fOverrideTransactionFee = true;
+        wxMessageBox(_("Warning: -overridesanetxfee is set, thus it is likely that your transactions will not be relayed through the network and will never be confirmed."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
     }
 
     if (fHaveUPnP)
