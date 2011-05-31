@@ -1961,7 +1961,8 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
                 CScript scriptPubKey;
                 scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
 
-                string strError = SendMoney(scriptPubKey, nValue, wtx, true);
+                CReserveKey keyReserve;
+                string strError = SendMoney(scriptPubKey, nValue, wtx, keyReserve, true);
                 if (strError == "")
                     wxMessageBox(_("Payment sent  "), _("Sending..."));
                 else if (strError == "ABORTED")

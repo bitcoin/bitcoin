@@ -30,6 +30,11 @@ void ThreadRPCServer2(void* parg);
 typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
 extern map<string, rpcfn_type> mapCallTable;
 
+static bool fAutoCommit = true;
+static std::map<uint256, CWalletTx> mapTempTransactions;
+static std::map<uint256, CReserveKey> mapTempPoolKeys;
+static CCriticalSection cs_mapTempTransactions;
+
 
 Object JSONRPCError(int code, const string& message)
 {
@@ -483,6 +488,72 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     return ret;
 }
 
+Value setautocommit(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "setautocommit <autocommit>\n"
+            "If <autocommit> is false, the send* functions will return a txid,\n"
+            "which must be manually committed instead of being immediately committed.\n"
+            "Once a new transaction has been created, you can get information about it by using\n"
+            "gettransaction <txid>. It can then be commited or rejected using\n"
+            "committransaction <txid> or rejecttransaction <txid> respectively.");
+
+    fAutoCommit = params[0].get_bool();
+    return fAutoCommit;
+}
+
+Value committransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "committransaction <txid>\n"
+            "Commits transaction <txid>, returning <txid> on success.");
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    CRITICAL_BLOCK(cs_mapTempTransactions)
+    {
+        if (mapTempTransactions.count(hash) && mapTempPoolKeys.count(hash))
+        {
+            CWalletTx& wtx = mapTempTransactions[hash];
+            CReserveKey& keyChange = mapTempPoolKeys[hash];
+            if (!CommitTransaction(wtx, keyChange))
+                throw JSONRPCError(-4, "Transaction commit failed");
+        }
+        else
+            throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
+    }
+
+    return params[0].get_str();
+}
+
+Value rejecttransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "rejecttransaction <txid>\n"
+            "rejects transaction <txid>, removing it from memory and returning its reserved key to keypool.");
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    CRITICAL_BLOCK(cs_mapTempTransactions)
+    {
+        if (mapTempTransactions.count(hash) && mapTempPoolKeys.count(hash))
+        {
+            mapTempTransactions.erase(hash);
+            mapTempPoolKeys[hash].ReturnKey();
+            mapTempPoolKeys.erase(hash);
+        }
+        else
+            throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
+    }
+
+    return true;
+}
+
 Value setbasetxfee(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
@@ -554,20 +625,41 @@ Value sendtoaddress(const Array& params, bool fHelp)
     int64 nAmount = AmountFromValue(params[1]);
 
     // Wallet comments
-    CWalletTx wtx;
+    CWalletTx* wtx = new CWalletTx();
     if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
-        wtx.mapValue["comment"] = params[2].get_str();
+        (*wtx).mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-        wtx.mapValue["to"]      = params[3].get_str();
+        (*wtx).mapValue["to"]      = params[3].get_str();
+
+    string strTxHashHex;
 
     CRITICAL_BLOCK(cs_main)
     {
-        string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+        CReserveKey* keyChange = new CReserveKey();
+        string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, *wtx, *keyChange, false, fAutoCommit);
         if (strError != "")
+        {
+            free(wtx);
+            free(keyChange);
             throw JSONRPCError(-4, strError);
+        }
+        strTxHashHex = (*wtx).GetHash().GetHex();
+        if (!fAutoCommit)
+        {
+            CRITICAL_BLOCK(cs_mapTempTransactions)
+            {
+                mapTempTransactions.insert(make_pair((*wtx).GetHash(), *wtx));
+                mapTempPoolKeys.insert(make_pair((*wtx).GetHash(), *keyChange));
+            }
+        }
+        else
+        {
+            free(wtx);
+            free(keyChange);
+        }
     }
 
-    return wtx.GetHash().GetHex();
+    return strTxHashHex;
 }
 
 
@@ -818,12 +910,14 @@ Value sendfrom(const Array& params, bool fHelp)
     if (params.size() > 3)
         nMinDepth = params[3].get_int();
 
-    CWalletTx wtx;
-    wtx.strFromAccount = strAccount;
+    CWalletTx* wtx = new CWalletTx();
+    (*wtx).strFromAccount = strAccount;
     if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
-        wtx.mapValue["comment"] = params[4].get_str();
+        (*wtx).mapValue["comment"] = params[4].get_str();
     if (params.size() > 5 && params[5].type() != null_type && !params[5].get_str().empty())
-        wtx.mapValue["to"]      = params[5].get_str();
+        (*wtx).mapValue["to"]      = params[5].get_str();
+
+    string strTxHashHex;
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
@@ -834,12 +928,31 @@ Value sendfrom(const Array& params, bool fHelp)
             throw JSONRPCError(-6, "Account has insufficient funds");
 
         // Send
-        string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+        CReserveKey* keyChange;
+        string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, *wtx, *keyChange, false, fAutoCommit);
         if (strError != "")
+        {
+            free(wtx);
+            free(keyChange);
             throw JSONRPCError(-4, strError);
+        }
+        strTxHashHex = (*wtx).GetHash().GetHex();
+        if (!fAutoCommit)
+        {
+            CRITICAL_BLOCK(cs_mapTempTransactions)
+            {
+                mapTempTransactions.insert(make_pair((*wtx).GetHash(), *wtx));
+                mapTempPoolKeys.insert(make_pair((*wtx).GetHash(), *keyChange));
+            }
+        }
+        else
+        {
+            free(wtx);
+            free(keyChange);
+        }
     }
 
-    return wtx.GetHash().GetHex();
+    return strTxHashHex;
 }
 
 Value sendmany(const Array& params, bool fHelp)
@@ -855,10 +968,10 @@ Value sendmany(const Array& params, bool fHelp)
     if (params.size() > 2)
         nMinDepth = params[2].get_int();
 
-    CWalletTx wtx;
-    wtx.strFromAccount = strAccount;
+    CWalletTx* wtx = new CWalletTx();
+    (*wtx).strFromAccount = strAccount;
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-        wtx.mapValue["comment"] = params[3].get_str();
+        (*wtx).mapValue["comment"] = params[3].get_str();
 
     set<string> setAddress;
     vector<pair<CScript, int64> > vecSend;
@@ -882,6 +995,9 @@ Value sendmany(const Array& params, bool fHelp)
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
     }
 
+    string strTxHashHex;
+    CReserveKey* keyChange = new CReserveKey();
+
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
     {
@@ -891,20 +1007,43 @@ Value sendmany(const Array& params, bool fHelp)
             throw JSONRPCError(-6, "Account has insufficient funds");
 
         // Send
-        CReserveKey keyChange;
         int64 nFeeRequired = 0;
-        bool fCreated = CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
+        bool fCreated = CreateTransaction(vecSend, *wtx, *keyChange, nFeeRequired);
         if (!fCreated)
         {
+            free(wtx);
+            free(keyChange);
             if (totalAmount + nFeeRequired > GetBalance())
                 throw JSONRPCError(-6, "Insufficient funds");
             throw JSONRPCError(-4, "Transaction creation failed");
         }
-        if (!CommitTransaction(wtx, keyChange))
-            throw JSONRPCError(-4, "Transaction commit failed");
+        strTxHashHex = (*wtx).GetHash().GetHex();
+        if (fAutoCommit)
+        {
+            if (!CommitTransaction(*wtx, *keyChange))
+            {
+                free(wtx);
+                free(keyChange);
+                throw JSONRPCError(-4, "Transaction commit failed");
+            }
+        }
+        else
+        {
+            CRITICAL_BLOCK(cs_mapTempTransactions)
+            {
+                mapTempTransactions.insert(make_pair((*wtx).GetHash(), *wtx));
+                mapTempPoolKeys.insert(make_pair((*wtx).GetHash(), *keyChange));
+            }
+        }
     }
 
-    return wtx.GetHash().GetHex();
+    if (fAutoCommit)
+    {
+        free(wtx);
+        free(keyChange);
+    }
+
+    return strTxHashHex;
 }
 
 
@@ -1273,28 +1412,61 @@ Value gettransaction(const Array& params, bool fHelp)
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
+    bool fTxFound = false;
     Object entry;
     CRITICAL_BLOCK(cs_mapWallet)
     {
-        if (!mapWallet.count(hash))
-            throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
-        const CWalletTx& wtx = mapWallet[hash];
+        if (mapWallet.count(hash))
+        {
+            fTxFound = true;
+            const CWalletTx& wtx = mapWallet[hash];
 
-        int64 nCredit = wtx.GetCredit();
-        int64 nDebit = wtx.GetDebit();
-        int64 nNet = nCredit - nDebit;
-        int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
+            int64 nCredit = wtx.GetCredit();
+            int64 nDebit = wtx.GetDebit();
+            int64 nNet = nCredit - nDebit;
+            int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
 
-        entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
-        if (wtx.IsFromMe())
-            entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+            entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+            if (wtx.IsFromMe())
+                entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 
-        WalletTxToJSON(mapWallet[hash], entry);
+            WalletTxToJSON(mapWallet[hash], entry);
 
-        Array details;
-        ListTransactions(mapWallet[hash], "*", 0, false, details);
-        entry.push_back(Pair("details", details));
+            Array details;
+            ListTransactions(mapWallet[hash], "*", 0, false, details);
+            entry.push_back(Pair("details", details));
+        }
     }
+
+    if (fTxFound)
+        return entry;
+
+    CRITICAL_BLOCK(cs_mapTempTransactions)
+    {
+        if (mapTempTransactions.count(hash))
+        {
+            fTxFound = true;
+            const CWalletTx& wtx = mapTempTransactions[hash];
+
+            int64 nCredit = wtx.GetCredit();
+            int64 nDebit = wtx.GetDebit();
+            int64 nNet = nCredit - nDebit;
+            int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
+
+            entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+            if (wtx.IsFromMe())
+                entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+
+            WalletTxToJSON(mapTempTransactions[hash], entry);
+
+            Array details;
+            ListTransactions(mapTempTransactions[hash], "*", 0, false, details);
+            entry.push_back(Pair("details", details));
+        }
+    }
+
+    if (!fTxFound)
+        throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
 
     return entry;
 }
@@ -1505,6 +1677,9 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("setbasetxfee",          &setbasetxfee),
     make_pair("setperkbtxfee",         &setperkbtxfee),
     make_pair("setoverridesanetxfee",  &setoverridesanetxfee),
+    make_pair("setautocommit",         &setautocommit),
+    make_pair("committransaction",     &committransaction),
+    make_pair("rejecttransaction",     &rejecttransaction),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2141,6 +2316,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setbasetxfee"           && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "setperkbtxfee"          && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "setoverridesanetxfee"   && n > 0) ConvertTo<bool>(params[0]);
+        if (strMethod == "setautocommit"          && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
