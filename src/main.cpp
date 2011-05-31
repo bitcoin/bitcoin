@@ -57,7 +57,9 @@ int64 nHPSTimerStart;
 
 // Settings
 int fGenerateBitcoins = false;
-int64 nTransactionFee = 0;
+int64 nBaseTransactionFee = 0;
+int64 nPerKBTransactionFee = 0;
+int fOverrideTransactionFee = false;
 CAddress addrIncoming;
 int fLimitProcessors = false;
 int nLimitProcessors = 1;
@@ -652,7 +654,7 @@ bool CTransaction::CheckTransaction() const
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs, bool fCheckFee)
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -731,13 +733,13 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         }
 
         // Don't accept it if it can't get into a block
-        if (nFees < GetMinFee(1000, true, true))
+        if (fCheckFee && nFees < GetMinFee(1000, true, true))
             return error("AcceptToMemoryPool() : not enough fees");
 
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make other's transactions take longer to confirm.
-        if (nFees < MIN_RELAY_TX_FEE)
+        if (fCheckFee && nFees < MIN_RELAY_TX_FEE)
         {
             static CCriticalSection cs;
             static double dFreeCount;
@@ -849,17 +851,17 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
+bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool fCheckFee)
 {
     if (fClient)
     {
         if (!IsInMainChain() && !ClientConnectInputs())
             return false;
-        return CTransaction::AcceptToMemoryPool(txdb, false);
+        return CTransaction::AcceptToMemoryPool(txdb, false, (bool*)NULL, fCheckFee);
     }
     else
     {
-        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs);
+        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs, (bool*)NULL, fCheckFee);
     }
 }
 
@@ -3830,7 +3832,7 @@ bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& 
         CTxDB txdb("r");
         CRITICAL_BLOCK(cs_mapWallet)
         {
-            nFeeRet = nTransactionFee;
+            nFeeRet = nBaseTransactionFee;
             loop
             {
                 wtxNew.vin.clear();
@@ -3909,9 +3911,13 @@ bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& 
                 dPriority /= nBytes;
 
                 // Check that enough fee is included
-                int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                bool fAllowFree = CTransaction::AllowFree(dPriority);
-                int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+                int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
+                int64 nMinFee = 0;
+                if (!fOverrideTransactionFee)
+                {
+                    bool fAllowFree = CTransaction::AllowFree(dPriority);
+                    int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+                }
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
                     nFeeRet = max(nPayFee, nMinFee);
@@ -3972,7 +3978,8 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool())
+        CTxDB txdb("r");
+        if (!wtxNew.AcceptToMemoryPool(txdb, true, !fOverrideTransactionFee))
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("CommitTransaction() : Error: Transaction not valid");
@@ -3998,7 +4005,7 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
         if (nValue + nFeeRequired > GetBalance())
         {
             unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
-            int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+            int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
             if (nPayFee == nFeeRequired)
                 strError = strprintf(_("Based on your fee settings, this transaction requires a fee of at least %s, putting its total over your balance. You can change those settings in the Options dialog, or via the settxfee RPC command."), FormatMoney(nFeeRequired).c_str());
             else
@@ -4011,7 +4018,7 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
     }
 
     unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
-    int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+    int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
 
     if (fAskFee && !ThreadSafeAskFee(nFeeRequired, nPayFee, _("Sending..."), NULL))
         return "ABORTED";

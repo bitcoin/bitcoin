@@ -670,6 +670,11 @@ bool CWalletDB::LoadWallet()
     fMinimizeOnClose = false;
 #endif
 
+    int64 nOldTransactionFee;
+    bool fOldTransactionFeeSet = false;
+    bool fBaseTransactionFeeSet = false;
+    bool fPerKBTransactionFeeSet = false;
+
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_mapKeys)
@@ -783,28 +788,52 @@ bool CWalletDB::LoadWallet()
 
                 // Options
 #ifndef GUI
-                if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
+                if (strKey == "fGenerateBitcoins")       ssValue >> fGenerateBitcoins;
 #endif
-                if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;
-                if (strKey == "addrIncoming")       ssValue >> addrIncoming;
-                if (strKey == "fLimitProcessors")   ssValue >> fLimitProcessors;
-                if (strKey == "nLimitProcessors")   ssValue >> nLimitProcessors;
-                if (strKey == "fMinimizeToTray")    ssValue >> fMinimizeToTray;
-                if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
-                if (strKey == "fUseProxy")          ssValue >> fUseProxy;
-                if (strKey == "addrProxy")          ssValue >> addrProxy;
-                if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
+                if (strKey == "fOverrideTransactionFee") ssValue >> fOverrideTransactionFee;
+                if (strKey == "addrIncoming")            ssValue >> addrIncoming;
+                if (strKey == "fLimitProcessors")        ssValue >> fLimitProcessors;
+                if (strKey == "nLimitProcessors")        ssValue >> nLimitProcessors;
+                if (strKey == "fMinimizeToTray")         ssValue >> fMinimizeToTray;
+                if (strKey == "fMinimizeOnClose")        ssValue >> fMinimizeOnClose;
+                if (strKey == "fUseProxy")               ssValue >> fUseProxy;
+                if (strKey == "addrProxy")               ssValue >> addrProxy;
+                if (fHaveUPnP && strKey == "fUseUPnP")   ssValue >> fUseUPnP;
+                if (strKey == "nTransactionFee")
+                {
+                    ssValue >> nOldTransactionFee;
+                    fOldTransactionFeeSet = true;
+                }
+                if (strKey == "nBaseTransactionFee")
+                {
+                    ssValue >> nBaseTransactionFee;
+                    fBaseTransactionFeeSet = true;
+                }
+                if (strKey == "nPerKBTransactionFee")
+                {
+                    ssValue >> nPerKBTransactionFee;
+                    fPerKBTransactionFeeSet = true;
+                }
             }
         }
         pcursor->close();
     }
+
+    if (fOldTransactionFeeSet && !fPerKBTransactionFeeSet)
+        nPerKBTransactionFee = nOldTransactionFee;
+    if (fOldTransactionFeeSet && !fBaseTransactionFeeSet)
+        nBaseTransactionFee = nOldTransactionFee;
 
     BOOST_FOREACH(uint256 hash, vWalletUpgrade)
         WriteTx(hash, mapWallet[hash]);
 
     printf("nFileVersion = %d\n", nFileVersion);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
-    printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
+    if (fOldTransactionFeeSet)
+        printf("nTransactionFee = %"PRI64d"\n", nOldTransactionFee);
+    printf("nBaseTransactionFee = %"PRI64d"\n", nBaseTransactionFee);
+    printf("nPerKBTransactionFee = %"PRI64d"\n", nPerKBTransactionFee);
+    printf("fOverrideTransactionFee = %d\n", fOverrideTransactionFee);
     printf("addrIncoming = %s\n", addrIncoming.ToString().c_str());
     printf("fMinimizeToTray = %d\n", fMinimizeToTray);
     printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);

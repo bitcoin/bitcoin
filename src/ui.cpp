@@ -1639,7 +1639,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 {
     // Set up list box of page choices
     m_listBox->Append(_("Main"));
-    //m_listBox->Append(_("Test 2"));
+    m_listBox->Append(_("Transaction Fees"));
     m_listBox->SetSelection(0);
     SelectPage(0);
 #ifndef __WXMSW__
@@ -1663,7 +1663,9 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 #endif
 
     // Init values
-    m_textCtrlTransactionFee->SetValue(FormatMoney(nTransactionFee));
+    m_textCtrlBaseTransactionFee->SetValue(FormatMoney(nBaseTransactionFee));
+    m_textCtrlPerKBTransactionFee->SetValue(FormatMoney(nPerKBTransactionFee));
+    m_checkBoxOverrideTransactionFee->SetValue(fOverrideTransactionFee);
     m_checkBoxStartOnSystemStartup->SetValue(fTmpStartOnSystemStartup = GetStartOnSystemStartup());
     m_checkBoxMinimizeToTray->SetValue(fMinimizeToTray);
     m_checkBoxMinimizeOnClose->SetValue(fMinimizeOnClose);
@@ -1685,7 +1687,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
 void COptionsDialog::SelectPage(int nPage)
 {
     m_panelMain->Show(nPage == 0);
-    m_panelTest2->Show(nPage == 1);
+    m_panelFeeOptions->Show(nPage == 1);
 
     m_scrolledWindow->Layout();
     m_scrolledWindow->SetScrollbars(0, 0, 0, 0, 0, 0);
@@ -1696,12 +1698,20 @@ void COptionsDialog::OnListBox(wxCommandEvent& event)
     SelectPage(event.GetSelection());
 }
 
-void COptionsDialog::OnKillFocusTransactionFee(wxFocusEvent& event)
+void COptionsDialog::OnKillFocusBaseTransactionFee(wxFocusEvent& event)
 {
     event.Skip();
-    int64 nTmp = nTransactionFee;
-    ParseMoney(m_textCtrlTransactionFee->GetValue(), nTmp);
-    m_textCtrlTransactionFee->SetValue(FormatMoney(nTmp));
+    int64 nTmp = nBaseTransactionFee;
+    ParseMoney(m_textCtrlBaseTransactionFee->GetValue(), nTmp);
+    m_textCtrlBaseTransactionFee->SetValue(FormatMoney(nTmp));
+}
+
+void COptionsDialog::OnKillFocusPerKBTransactionFee(wxFocusEvent& event)
+{
+    event.Skip();
+    int64 nTmp = nPerKBTransactionFee;
+    ParseMoney(m_textCtrlPerKBTransactionFee->GetValue(), nTmp);
+    m_textCtrlPerKBTransactionFee->SetValue(FormatMoney(nTmp));
 }
 
 void COptionsDialog::OnCheckBoxUseProxy(wxCommandEvent& event)
@@ -1748,9 +1758,19 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
 {
     CWalletDB walletdb;
 
-    int64 nPrevTransactionFee = nTransactionFee;
-    if (ParseMoney(m_textCtrlTransactionFee->GetValue(), nTransactionFee) && nTransactionFee != nPrevTransactionFee)
-        walletdb.WriteSetting("nTransactionFee", nTransactionFee);
+    int64 nPrevTransactionFee = nBaseTransactionFee;
+    if (ParseMoney(m_textCtrlBaseTransactionFee->GetValue(), nBaseTransactionFee) && nBaseTransactionFee != nPrevTransactionFee)
+        walletdb.WriteSetting("nBaseTransactionFee", nBaseTransactionFee);
+
+    nPrevTransactionFee = nPerKBTransactionFee;
+    if (ParseMoney(m_textCtrlPerKBTransactionFee->GetValue(), nPerKBTransactionFee) && nPerKBTransactionFee != nPrevTransactionFee)
+        walletdb.WriteSetting("nPerKBTransactionFee", nPerKBTransactionFee);
+
+    if (fOverrideTransactionFee != m_checkBoxOverrideTransactionFee->GetValue())
+    {
+        fOverrideTransactionFee = m_checkBoxOverrideTransactionFee->GetValue();
+        walletdb.WriteSetting("fOverrideTransactionFee", fOverrideTransactionFee);
+    }
 
     if (fTmpStartOnSystemStartup != m_checkBoxStartOnSystemStartup->GetValue())
     {
@@ -2242,7 +2262,7 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             if (nPrice + nFeeRequired > GetBalance())
             {
                 unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtx, SER_NETWORK);
-                int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+                int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
                 if (nPayFee == nFeeRequired)
                     Error(strprintf(_("Based on your fee settings, this transaction requires a fee of at least %s, putting its total over your balance. You can change those settings in the Options dialog, or via the settxfee RPC command."), FormatMoney(nFeeRequired).c_str()));
                 else
@@ -2254,7 +2274,7 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
         }
 
         unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtx, SER_NETWORK);
-        int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+        int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
 
         // Transaction fee
         if (!ThreadSafeAskFee(nFeeRequired, nPayFee, _("Sending..."), this))

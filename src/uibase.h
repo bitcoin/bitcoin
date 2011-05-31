@@ -45,9 +45,9 @@
 #define wxID_TEXTCTRLADDRESS 1003
 #define wxID_BUTTONNEW 1004
 #define wxID_BUTTONCOPY 1005
-#define wxID_PROXYIP 1006
-#define wxID_PROXYPORT 1007
-#define wxID_TRANSACTIONFEE 1008
+#define wxID_TRANSACTIONFEE 1006
+#define wxID_PROXYIP 1007
+#define wxID_PROXYPORT 1008
 #define wxID_TEXTCTRLPAYTO 1009
 #define wxID_BUTTONPASTE 1010
 #define wxID_BUTTONADDRESSBOOK 1011
@@ -159,6 +159,16 @@ class COptionsDialogBase : public wxDialog
 	protected:
 		wxListBox* m_listBox;
 		wxScrolledWindow* m_scrolledWindow;
+		wxPanel* m_panelFeeOptions;
+		wxStaticText* m_staticText331;
+		wxStaticText* m_staticText32212;
+		wxStaticText* m_staticText311;
+		wxTextCtrl* m_textCtrlBaseTransactionFee;
+		wxStaticText* m_staticText332;
+		wxStaticText* m_staticText333;
+		wxTextCtrl* m_textCtrlPerKBTransactionFee;
+		wxStaticText* m_staticText334;
+		wxCheckBox* m_checkBoxOverrideTransactionFee;
 		wxPanel* m_panelMain;
 		
 		wxCheckBox* m_checkBoxStartOnSystemStartup;
@@ -172,23 +182,17 @@ class COptionsDialogBase : public wxDialog
 		wxStaticText* m_staticTextProxyPort;
 		wxTextCtrl* m_textCtrlProxyPort;
 		
-		wxStaticText* m_staticText32;
-		wxStaticText* m_staticText31;
-		wxTextCtrl* m_textCtrlTransactionFee;
-		wxPanel* m_panelTest2;
-		
-		wxStaticText* m_staticText321;
-		wxStaticText* m_staticText69;
 		wxButton* m_buttonOK;
 		wxButton* m_buttonCancel;
 		wxButton* m_buttonApply;
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnListBox( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnKillFocusBaseTransactionFee( wxFocusEvent& event ) { event.Skip(); }
+		virtual void OnKillFocusPerKBTransactionFee( wxFocusEvent& event ) { event.Skip(); }
 		virtual void OnCheckBoxMinimizeToTray( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnCheckBoxUseProxy( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnKillFocusProxy( wxFocusEvent& event ) { event.Skip(); }
-		virtual void OnKillFocusTransactionFee( wxFocusEvent& event ) { event.Skip(); }
 		virtual void OnButtonOK( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnButtonCancel( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnButtonApply( wxCommandEvent& event ) { event.Skip(); }

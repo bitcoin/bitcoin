@@ -335,6 +335,73 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	wxBoxSizer* bSizer63;
 	bSizer63 = new wxBoxSizer( wxVERTICAL );
 	
+	m_panelFeeOptions = new wxPanel( m_scrolledWindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer691;
+	bSizer691 = new wxBoxSizer( wxVERTICAL );
+	
+	m_staticText331 = new wxStaticText( m_panelFeeOptions, wxID_ANY, _("All transaction fees are optional and go to the miners who help secure the network and confirm your transactions.  Fees will ensure your transactions are given priority and are confirmed quickly."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText331->Wrap( 365 );
+	bSizer691->Add( m_staticText331, 0, wxALL, 5 );
+	
+	wxBoxSizer* bSizer561;
+	bSizer561 = new wxBoxSizer( wxVERTICAL );
+	
+	m_staticText32212 = new wxStaticText( m_panelFeeOptions, wxID_ANY, _("Base Transaction fee is applied to all transactions (0.01 is recommended)."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText32212->Wrap( 365 );
+	bSizer561->Add( m_staticText32212, 0, wxALL, 5 );
+	
+	wxBoxSizer* bSizer59;
+	bSizer59 = new wxBoxSizer( wxHORIZONTAL );
+	
+	m_staticText311 = new wxStaticText( m_panelFeeOptions, wxID_ANY, _("Base transaction fee:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText311->Wrap( -1 );
+	bSizer59->Add( m_staticText311, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
+	
+	m_textCtrlBaseTransactionFee = new wxTextCtrl( m_panelFeeOptions, wxID_TRANSACTIONFEE, wxEmptyString, wxDefaultPosition, wxSize( 70,-1 ), 0 );
+	bSizer59->Add( m_textCtrlBaseTransactionFee, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	bSizer561->Add( bSizer59, 1, wxEXPAND, 5 );
+	
+	bSizer691->Add( bSizer561, 0, wxEXPAND, 5 );
+	
+	wxBoxSizer* bSizer562;
+	bSizer562 = new wxBoxSizer( wxVERTICAL );
+	
+	m_staticText332 = new wxStaticText( m_panelFeeOptions, wxID_ANY, _("Per KB Transaction fee is applied per KB of transaction after the first (0.01 is recommended)."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText332->Wrap( 365 );
+	bSizer562->Add( m_staticText332, 0, wxALL, 5 );
+	
+	wxBoxSizer* bSizer591;
+	bSizer591 = new wxBoxSizer( wxHORIZONTAL );
+	
+	m_staticText333 = new wxStaticText( m_panelFeeOptions, wxID_ANY, _("Per KB transaction fee:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText333->Wrap( -1 );
+	bSizer591->Add( m_staticText333, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
+	
+	m_textCtrlPerKBTransactionFee = new wxTextCtrl( m_panelFeeOptions, wxID_TRANSACTIONFEE, wxEmptyString, wxDefaultPosition, wxSize( 70,-1 ), 0 );
+	bSizer591->Add( m_textCtrlPerKBTransactionFee, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	bSizer562->Add( bSizer591, 1, wxEXPAND, 5 );
+	
+	bSizer691->Add( bSizer562, 1, wxEXPAND, 5 );
+	
+	wxBoxSizer* bSizer5621;
+	bSizer5621 = new wxBoxSizer( wxVERTICAL );
+	
+	m_staticText334 = new wxStaticText( m_panelFeeOptions, wxID_ANY, _("If a transaction requires a fee larger than you specified above in order for it to likely be accepted by the network, the client will override your settings and ask if you wish to send with the appropriate fee.  You may override this option, however it is likely that your transactions will not be relayed through the network and will never be confirmed."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText334->Wrap( 365 );
+	bSizer5621->Add( m_staticText334, 0, wxALL, 5 );
+	
+	m_checkBoxOverrideTransactionFee = new wxCheckBox( m_panelFeeOptions, wxID_ANY, _("&Override minimum sane fee."), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer5621->Add( m_checkBoxOverrideTransactionFee, 0, wxALL, 5 );
+	
+	bSizer691->Add( bSizer5621, 1, wxEXPAND, 5 );
+	
+	m_panelFeeOptions->SetSizer( bSizer691 );
+	m_panelFeeOptions->Layout();
+	bSizer691->Fit( m_panelFeeOptions );
+	bSizer63->Add( m_panelFeeOptions, 1, wxEXPAND | wxALL, 5 );
+	
 	m_panelMain = new wxPanel( m_scrolledWindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxBoxSizer* bSizer69;
 	bSizer69 = new wxBoxSizer( wxVERTICAL );
@@ -389,46 +456,10 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	bSizer69->Add( 0, 1, 0, 0, 5 );
 	
-	m_staticText32 = new wxStaticText( m_panelMain, wxID_ANY, _("Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText32->Wrap( 365 );
-	bSizer69->Add( m_staticText32, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxRIGHT|wxLEFT, 5 );
-	
-	wxBoxSizer* bSizer56;
-	bSizer56 = new wxBoxSizer( wxHORIZONTAL );
-	
-	m_staticText31 = new wxStaticText( m_panelMain, wxID_ANY, _("Pay transaction fee:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText31->Wrap( -1 );
-	bSizer56->Add( m_staticText31, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxLEFT, 5 );
-	
-	m_textCtrlTransactionFee = new wxTextCtrl( m_panelMain, wxID_TRANSACTIONFEE, wxEmptyString, wxDefaultPosition, wxSize( 70,-1 ), 0 );
-	bSizer56->Add( m_textCtrlTransactionFee, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	bSizer69->Add( bSizer56, 0, wxEXPAND, 5 );
-	
 	m_panelMain->SetSizer( bSizer69 );
 	m_panelMain->Layout();
 	bSizer69->Fit( m_panelMain );
 	bSizer63->Add( m_panelMain, 0, wxEXPAND, 5 );
-	
-	m_panelTest2 = new wxPanel( m_scrolledWindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	wxBoxSizer* bSizer64;
-	bSizer64 = new wxBoxSizer( wxVERTICAL );
-	
-	
-	bSizer64->Add( 0, 16, 0, wxEXPAND, 5 );
-	
-	m_staticText321 = new wxStaticText( m_panelTest2, wxID_ANY, _("// [don't translate] Test panel 2 for future expansion"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText321->Wrap( -1 );
-	bSizer64->Add( m_staticText321, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	m_staticText69 = new wxStaticText( m_panelTest2, wxID_ANY, _("// [don't translate] Let's not start multiple pages until the first page is filled up"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText69->Wrap( -1 );
-	bSizer64->Add( m_staticText69, 0, wxALL, 5 );
-	
-	m_panelTest2->SetSizer( bSizer64 );
-	m_panelTest2->Layout();
-	bSizer64->Fit( m_panelTest2 );
-	bSizer63->Add( m_panelTest2, 0, wxEXPAND, 5 );
 	
 	m_scrolledWindow->SetSizer( bSizer63 );
 	m_scrolledWindow->Layout();
@@ -456,11 +487,12 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	
 	// Connect Events
 	m_listBox->Connect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
+	m_textCtrlBaseTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusBaseTransactionFee ), NULL, this );
+	m_textCtrlPerKBTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusPerKBTransactionFee ), NULL, this );
 	m_checkBoxMinimizeToTray->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_checkBoxUseProxy->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
 	m_textCtrlProxyIP->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
 	m_textCtrlProxyPort->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
-	m_textCtrlTransactionFee->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_buttonOK->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
 	m_buttonApply->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );
@@ -470,11 +502,12 @@ COptionsDialogBase::~COptionsDialogBase()
 {
 	// Disconnect Events
 	m_listBox->Disconnect( wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler( COptionsDialogBase::OnListBox ), NULL, this );
+	m_textCtrlBaseTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusBaseTransactionFee ), NULL, this );
+	m_textCtrlPerKBTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusPerKBTransactionFee ), NULL, this );
 	m_checkBoxMinimizeToTray->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxMinimizeToTray ), NULL, this );
 	m_checkBoxUseProxy->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnCheckBoxUseProxy ), NULL, this );
 	m_textCtrlProxyIP->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
 	m_textCtrlProxyPort->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusProxy ), NULL, this );
-	m_textCtrlTransactionFee->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( COptionsDialogBase::OnKillFocusTransactionFee ), NULL, this );
 	m_buttonOK->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonOK ), NULL, this );
 	m_buttonCancel->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonCancel ), NULL, this );
 	m_buttonApply->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( COptionsDialogBase::OnButtonApply ), NULL, this );

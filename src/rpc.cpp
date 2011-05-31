@@ -292,19 +292,21 @@ Value getinfo(const Array& params, bool fHelp)
             "Returns an object containing various state info.");
 
     Object obj;
-    obj.push_back(Pair("version",       (int)VERSION));
-    obj.push_back(Pair("balance",       ValueFromAmount(GetBalance())));
-    obj.push_back(Pair("blocks",        (int)nBestHeight));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
-    obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
-    obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
-    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
-    obj.push_back(Pair("testnet",       fTestNet));
-    obj.push_back(Pair("keypoololdest", (boost::int64_t)GetOldestKeyPoolTime()));
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
-    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    obj.push_back(Pair("version",           (int)VERSION));
+    obj.push_back(Pair("balance",           ValueFromAmount(GetBalance())));
+    obj.push_back(Pair("blocks",            (int)nBestHeight));
+    obj.push_back(Pair("connections",       (int)vNodes.size()));
+    obj.push_back(Pair("proxy",             (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+    obj.push_back(Pair("generate",          (bool)fGenerateBitcoins));
+    obj.push_back(Pair("genproclimit",      (int)(fLimitProcessors ? nLimitProcessors : -1)));
+    obj.push_back(Pair("difficulty",        (double)GetDifficulty()));
+    obj.push_back(Pair("hashespersec",      gethashespersec(params, false)));
+    obj.push_back(Pair("testnet",           fTestNet));
+    obj.push_back(Pair("keypoololdest",     (boost::int64_t)GetOldestKeyPoolTime()));
+    obj.push_back(Pair("paybasetxfee",      ValueFromAmount(nBaseTransactionFee)));
+    obj.push_back(Pair("payperkbtxfee",     ValueFromAmount(nPerKBTransactionFee)));
+    obj.push_back(Pair("overridesanetxfee", fOverrideTransactionFee));
+    obj.push_back(Pair("errors",            GetWarnings("statusbar")));
     return obj;
 }
 
@@ -481,11 +483,11 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     return ret;
 }
 
-Value settxfee(const Array& params, bool fHelp)
+Value setbasetxfee(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
-            "settxfee <amount>\n"
+            "setbasetxfee <amount>\n"
             "<amount> is a real and is rounded to the nearest 0.00000001");
 
     // Amount
@@ -493,8 +495,50 @@ Value settxfee(const Array& params, bool fHelp)
     if (params[0].get_real() != 0.0)
         nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
 
-    nTransactionFee = nAmount;
+    CWalletDB walletdb;
+    if (nBaseTransactionFee != nAmount)
+        walletdb.WriteSetting("nBaseTransactionFee", nAmount);
+
+    nBaseTransactionFee = nAmount;
+
     return true;
+}
+
+Value setperkbtxfee(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "setperkbtxfee <amount>\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001");
+
+    // Amount
+    int64 nAmount = 0;
+    if (params[0].get_real() != 0.0)
+        nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
+
+    CWalletDB walletdb;
+    if (nPerKBTransactionFee != nAmount)
+        walletdb.WriteSetting("nPerKBTransactionFee", nAmount);
+
+    nPerKBTransactionFee = nAmount;
+    return true;
+}
+
+Value setoverridesanetxfee(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "setoverridesanetxfee <value>\n"
+            "<value> is true/false to override the default transaction fees");
+
+    bool fNewOverrideTransactionFee = params[0].get_bool();
+
+    CWalletDB walletdb;
+    if (fOverrideTransactionFee != fNewOverrideTransactionFee)
+        walletdb.WriteSetting("fOverrideTransactionFee", fNewOverrideTransactionFee);
+
+    fOverrideTransactionFee = fNewOverrideTransactionFee;
+    return fOverrideTransactionFee;
 }
 
 Value sendtoaddress(const Array& params, bool fHelp)
@@ -1458,7 +1502,9 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listtransactions",      &listtransactions),
     make_pair("getwork",               &getwork),
     make_pair("listaccounts",          &listaccounts),
-    make_pair("settxfee",              &settxfee),
+    make_pair("setbasetxfee",          &setbasetxfee),
+    make_pair("setperkbtxfee",         &setperkbtxfee),
+    make_pair("setoverridesanetxfee",  &setoverridesanetxfee),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2092,7 +2138,9 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
+        if (strMethod == "setbasetxfee"           && n > 0) ConvertTo<double>(params[0]);
+        if (strMethod == "setperkbtxfee"          && n > 0) ConvertTo<double>(params[0]);
+        if (strMethod == "setoverridesanetxfee"   && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
