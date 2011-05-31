@@ -3996,14 +3996,24 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
     {
         string strError;
         if (nValue + nFeeRequired > GetBalance())
-            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "), FormatMoney(nFeeRequired).c_str());
+        {
+            unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
+            int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+            if (nPayFee == nFeeRequired)
+                strError = strprintf(_("Based on your fee settings, this transaction requires a fee of at least %s, putting its total over your balance. You can change those settings in the Options dialog, or via the settxfee RPC command."), FormatMoney(nFeeRequired).c_str());
+            else
+                strError = strprintf(_("This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds, putting its total over your balance."), FormatMoney(nFeeRequired).c_str());
+        }
         else
             strError = _("Error: Transaction creation failed  ");
         printf("SendMoney() : %s", strError.c_str());
         return strError;
     }
 
-    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
+    unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
+    int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+
+    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, nPayFee, _("Sending..."), NULL))
         return "ABORTED";
 
     if (!CommitTransaction(wtxNew, reservekey))
@@ -4021,7 +4031,7 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
     // Check amount
     if (nValue <= 0)
         return _("Invalid amount");
-    if (nValue + nTransactionFee > GetBalance())
+    if (nValue > GetBalance())
         return _("Insufficient funds");
 
     // Parse bitcoin address
