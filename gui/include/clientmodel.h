@@ -2,6 +2,7 @@
 #define CLIENTMODEL_H
 
 #include <QObject>
+class OptionsModel;
 
 class ClientModel : public QObject
 {
@@ -20,6 +21,8 @@ public:
         MiscError
     };
 
+    OptionsModel *getOptionsModel();
+
     qint64 getBalance();
     QString getAddress();
     int getNumConnections();
@@ -29,6 +32,8 @@ public:
     qint64 getTransactionFee();
 
     StatusCode sendCoins(const QString &payTo, qint64 payAmount);
+private:
+    OptionsModel *options_model;
 
 signals:
     void balanceChanged(qint64 balance);

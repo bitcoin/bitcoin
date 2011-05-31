@@ -256,6 +256,7 @@ void BitcoinGUI::receivingAddressesClicked()
 void BitcoinGUI::optionsClicked()
 {
     OptionsDialog dlg;
+    dlg.setModel(model->getOptionsModel());
     dlg.exec();
 }
 

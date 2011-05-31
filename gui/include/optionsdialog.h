@@ -7,13 +7,18 @@ QT_BEGIN_NAMESPACE
 class QStackedWidget;
 class QListWidget;
 class QListWidgetItem;
+class QDataWidgetMapper;
 QT_END_NAMESPACE
+class OptionsModel;
+class MainOptionsPage;
 
 class OptionsDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit OptionsDialog(QWidget *parent = 0);
+    explicit OptionsDialog(QWidget *parent=0);
+
+    void setModel(OptionsModel *model);
 
 signals:
 
@@ -22,6 +27,9 @@ public slots:
 private:
     QListWidget *contents_widget;
     QStackedWidget *pages_widget;
+    MainOptionsPage *main_options_page;
+    OptionsModel *model;
+    QDataWidgetMapper *mapper;
 
     void setupMainPage();
 };

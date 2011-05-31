@@ -1,4 +1,5 @@
 #include "optionsdialog.h"
+#include "optionsmodel.h"
 #include "mainoptionspage.h"
 
 #include <QHBoxLayout>
@@ -6,9 +7,11 @@
 #include <QPushButton>
 #include <QListWidget>
 #include <QStackedWidget>
+#include <QDataWidgetMapper>
 
-OptionsDialog::OptionsDialog(QWidget *parent) :
-    QDialog(parent), contents_widget(0), pages_widget(0)
+OptionsDialog::OptionsDialog(QWidget *parent):
+    QDialog(parent), contents_widget(0), pages_widget(0),
+    main_options_page(0), model(0)
 {
     contents_widget = new QListWidget();
     contents_widget->setMaximumWidth(128);
@@ -18,7 +21,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
 
     QListWidgetItem *item_main = new QListWidgetItem(tr("Main"));
     contents_widget->addItem(item_main);
-    pages_widget->addWidget(new MainOptionsPage(this));
+    main_options_page = new MainOptionsPage(this);
+    pages_widget->addWidget(main_options_page);
 
     contents_widget->setCurrentRow(0);
 
@@ -40,11 +44,22 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
 
     layout->addLayout(buttons);
 
-
     setLayout(layout);
     setWindowTitle(tr("Options"));
 
+    mapper = new QDataWidgetMapper();
+    mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
+    mapper->setOrientation(Qt::Vertical);
+}
 
+void OptionsDialog::setModel(OptionsModel *model)
+{
+    this->model = model;
+
+    mapper->setModel(model);
+    main_options_page->setMapper(mapper);
+
+    mapper->toFirst();
 }
 
 void OptionsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)

@@ -90,9 +90,10 @@ void SendCoinsDialog::on_sendButton_clicked()
             QMessageBox::Ok, QMessageBox::Ok);
         ui->payAmount->setFocus();
         break;
+    case ClientModel::OK:
+        accept();
+        break;
     }
-    /* TODO: send command to core, once this succeeds do accept() */
-    //accept();
 }
 
 void SendCoinsDialog::on_pasteButton_clicked()

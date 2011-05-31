@@ -1,11 +1,12 @@
 #include "clientmodel.h"
 #include "main.h"
 #include "guiconstants.h"
+#include "optionsmodel.h"
 
 #include <QTimer>
 
 ClientModel::ClientModel(QObject *parent) :
-    QObject(parent)
+    QObject(parent), options_model(0)
 {
     /* Until we build signal notifications into the bitcoin core,
        simply update everything using a timer.
@@ -13,6 +14,8 @@ ClientModel::ClientModel(QObject *parent) :
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(MODEL_UPDATE_DELAY);
+
+    options_model = new OptionsModel(this);
 }
 
 qint64 ClientModel::getBalance()
@@ -112,3 +115,7 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
     return OK;
 }
 
+OptionsModel *ClientModel::getOptionsModel()
+{
+    return options_model;
+}
