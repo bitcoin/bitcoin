@@ -106,6 +106,11 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
             return MiscError;
         }
     }
+    // Add addresses that we've sent to to the address book
+    std::string strAddress = payTo.toStdString();
+    CRITICAL_BLOCK(cs_mapAddressBook)
+        if (!mapAddressBook.count(strAddress))
+            SetAddressBookName(strAddress, "");
 
     return OK;
 }
