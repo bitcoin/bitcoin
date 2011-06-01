@@ -4,7 +4,7 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
-class TransactionTableImpl;
+class TransactionTablePriv;
 class TransactionRecord;
 
 class TransactionTableModel : public QAbstractTableModel
@@ -39,7 +39,7 @@ public:
     QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
 private:
     QStringList columns;
-    TransactionTableImpl *impl;
+    TransactionTablePriv *priv;
 
     QVariant formatTxStatus(const TransactionRecord *wtx) const;
     QVariant formatTxDate(const TransactionRecord *wtx) const;

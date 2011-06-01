@@ -14,10 +14,9 @@ const QString TransactionTableModel::Sent = "s";
 const QString TransactionTableModel::Received = "r";
 const QString TransactionTableModel::Other = "o";
 
-/* Private implementation, no need to pull this into header */
-class TransactionTableImpl
+/* Private implementation */
+struct TransactionTablePriv
 {
-public:
     /* Local cache of wallet.
      * As it is in the same order as the CWallet, by definition
      * this is sorted by sha256.
@@ -93,11 +92,11 @@ static int column_alignments[] = {
 
 TransactionTableModel::TransactionTableModel(QObject *parent):
         QAbstractTableModel(parent),
-        impl(new TransactionTableImpl())
+        priv(new TransactionTablePriv())
 {
     columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
 
-    impl->refreshWallet();
+    priv->refreshWallet();
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -106,7 +105,7 @@ TransactionTableModel::TransactionTableModel(QObject *parent):
 
 TransactionTableModel::~TransactionTableModel()
 {
-    delete impl;
+    delete priv;
 }
 
 void TransactionTableModel::update()
@@ -133,7 +132,7 @@ void TransactionTableModel::update()
            transactions that were added/removed.
          */
         beginResetModel();
-        impl->updateWallet(updated);
+        priv->updateWallet(updated);
         endResetModel();
     }
 }
@@ -141,7 +140,7 @@ void TransactionTableModel::update()
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return impl->size();
+    return priv->size();
 }
 
 int TransactionTableModel::columnCount(const QModelIndex &parent) const
@@ -370,14 +369,13 @@ Qt::ItemFlags TransactionTableModel::flags(const QModelIndex &index) const
     return QAbstractTableModel::flags(index);
 }
 
-
-QModelIndex TransactionTableModel::index ( int row, int column, const QModelIndex & parent ) const
+QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    TransactionRecord *data = impl->index(row);
+    TransactionRecord *data = priv->index(row);
     if(data)
     {
-        return createIndex(row, column, impl->index(row));
+        return createIndex(row, column, priv->index(row));
     } else {
         return QModelIndex();
     }
