@@ -3,7 +3,7 @@
 
 #include <QAbstractListModel>
 
-/* Configuration data structure for bitcoin client */
+/* Interface from QT to configuration data structure for bitcoin client */
 class OptionsModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -28,6 +28,8 @@ public:
 
     /* Explicit getters */
     qint64 getTransactionFee();
+    bool getMinimizeToTray();
+    bool getMinimizeOnClose();
 signals:
 
 public slots:

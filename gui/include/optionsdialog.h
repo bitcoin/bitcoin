@@ -7,11 +7,11 @@ QT_BEGIN_NAMESPACE
 class QStackedWidget;
 class QListWidget;
 class QListWidgetItem;
-class QDataWidgetMapper;
 class QPushButton;
 QT_END_NAMESPACE
 class OptionsModel;
 class MainOptionsPage;
+class MonitoredDataMapper;
 
 class OptionsDialog : public QDialog
 {
@@ -30,12 +30,13 @@ private slots:
     void cancelClicked();
     void applyClicked();
     void enableApply();
+    void disableApply();
 private:
     QListWidget *contents_widget;
     QStackedWidget *pages_widget;
     MainOptionsPage *main_options_page;
     OptionsModel *model;
-    QDataWidgetMapper *mapper;
+    MonitoredDataMapper *mapper;
     QPushButton *apply_button;
 
     void setupMainPage();

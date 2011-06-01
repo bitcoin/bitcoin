@@ -15,7 +15,6 @@ HEADERS += gui/include/bitcoingui.h \
     gui/include/transactiontablemodel.h \
     gui/include/addresstablemodel.h \
     gui/include/optionsdialog.h \
-    gui/include/mainoptionspage.h \
     gui/include/sendcoinsdialog.h \
     gui/include/addressbookdialog.h \
     gui/include/aboutdialog.h \
@@ -61,12 +60,12 @@ HEADERS += gui/include/bitcoingui.h \
     gui/include/guiutil.h \
     gui/include/transactionrecord.h \
     gui/include/guiconstants.h \
-    gui/include/optionsmodel.h
+    gui/include/optionsmodel.h \
+    gui/include/monitoreddatamapper.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \
     gui/src/optionsdialog.cpp \
-    gui/src/mainoptionspage.cpp \
     gui/src/sendcoinsdialog.cpp \
     gui/src/addressbookdialog.cpp \
     gui/src/aboutdialog.cpp \
@@ -88,7 +87,8 @@ SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/clientmodel.cpp \
     gui/src/guiutil.cpp \
     gui/src/transactionrecord.cpp \
-    gui/src/optionsmodel.cpp
+    gui/src/optionsmodel.cpp \
+    gui/src/monitoreddatamapper.cpp
 
 RESOURCES += \
     gui/bitcoin.qrc

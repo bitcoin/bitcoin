@@ -15,10 +15,8 @@ int OptionsModel::rowCount(const QModelIndex & parent) const
 
 QVariant OptionsModel::data(const QModelIndex & index, int role) const
 {
-    qDebug() << "OptionsModel::data" << " " << index.row() << " " << role;
     if(role == Qt::EditRole)
     {
-        /* Delegate to specific column handlers */
         switch(index.row())
         {
         case StartAtStartup:
@@ -46,12 +44,79 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 
 bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-    qDebug() << "OptionsModel::setData" << " " << index.row() << "=" << value;
+    bool successful = true; /* set to false on parse error */
+    if(role == Qt::EditRole)
+    {
+        switch(index.row())
+        {
+        case StartAtStartup:
+            successful = false; /*TODO*/
+            break;
+        case MinimizeToTray:
+            fMinimizeToTray = value.toBool();
+            break;
+        case MapPortUPnP:
+            fUseUPnP = value.toBool();
+            break;
+        case MinimizeOnClose:
+            fMinimizeOnClose = value.toBool();
+            break;
+        case ConnectSOCKS4:
+            fUseProxy = value.toBool();
+            break;
+        case ProxyIP:
+            {
+                /* Use CAddress to parse IP */
+                CAddress addr(value.toString().toStdString() + ":1");
+                if (addr.ip != INADDR_NONE)
+                {
+                    addrProxy.ip = addr.ip;
+                } else {
+                    successful = false;
+                }
+            }
+            break;
+        case ProxyPort:
+            {
+                int nPort = atoi(value.toString().toAscii().data());
+                if (nPort > 0 && nPort < USHRT_MAX)
+                {
+                    addrProxy.port = htons(nPort);
+                } else {
+                    successful = false;
+                }
+            }
+            break;
+        case Fee: {
+                int64 retval;
+                if(ParseMoney(value.toString().toStdString(), retval))
+                {
+                    nTransactionFee = retval;
+                } else {
+                    successful = false; /* parse error */
+                }
+            }
+            break;
+        default:
+            break;
+        }
+    }
     emit dataChanged(index, index);
-    return true;
+
+    return successful;
 }
 
 qint64 OptionsModel::getTransactionFee()
 {
     return nTransactionFee;
+}
+
+bool getMinimizeToTray()
+{
+    return fMinimizeToTray;
+}
+
+bool getMinimizeOnClose()
+{
+    return fMinimizeOnClose;
 }
