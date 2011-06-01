@@ -83,7 +83,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_balance->addSpacing(5);/* Add some spacing between the label and the text */
 
     labelBalance = new QLabel();
-    labelBalance->setFont(QFont("Teletype"));
+    labelBalance->setFont(QFont("Monospace"));
     hbox_balance->addWidget(labelBalance);
     hbox_balance->addStretch(1);
     

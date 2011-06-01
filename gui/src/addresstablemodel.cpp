@@ -1,4 +1,5 @@
 #include "addresstablemodel.h"
+#include "guiutil.h"
 #include "main.h"
 
 const QString AddressTableModel::Send = "S";
@@ -28,10 +29,6 @@ struct AddressTablePriv
     {
         cachedAddressTable.clear();
 
-    }
-
-    void updateAddressTable()
-    {
         CRITICAL_BLOCK(cs_mapKeys)
         CRITICAL_BLOCK(cs_mapAddressBook)
         {
@@ -47,7 +44,6 @@ struct AddressTablePriv
             }
         }
     }
-
 
     int size()
     {
@@ -108,6 +104,12 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case Address:
             return rec->address;
         }
+    } else if (role == Qt::FontRole)
+    {
+        if(index.column() == Address)
+        {
+            return bitcoinAddressFont();
+        }
     } else if (role == TypeRole)
     {
         switch(rec->type)
@@ -134,7 +136,7 @@ QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
-QModelIndex AddressTableModel::index ( int row, int column, const QModelIndex & parent ) const
+QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & parent) const
 {
     Q_UNUSED(parent);
     AddressTableEntry *data = priv->index(row);
@@ -146,3 +148,10 @@ QModelIndex AddressTableModel::index ( int row, int column, const QModelIndex & 
     }
 }
 
+void AddressTableModel::updateList()
+{
+    /* Update internal model from Bitcoin core */
+    beginResetModel();
+    priv->refreshAddressTable();
+    endResetModel();
+}

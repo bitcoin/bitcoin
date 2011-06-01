@@ -5,6 +5,7 @@
 #include "editaddressdialog.h"
 
 #include <QSortFilterProxyModel>
+#include <QClipboard>
 #include <QDebug>
 
 AddressBookDialog::AddressBookDialog(QWidget *parent) :
@@ -72,13 +73,21 @@ QTableView *AddressBookDialog::getCurrentTable()
 
 void AddressBookDialog::on_copyToClipboard_clicked()
 {
-    /* Copy currently selected address to clipboard */
+    /* Copy currently selected address to clipboard
+       (or nothing, if nothing selected)
+     */
+    QTableView *table = getCurrentTable();
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
+    foreach (QModelIndex index, indexes) {
+        QVariant address = table->model()->data(index);
+        QApplication::clipboard()->setText(address.toString());
+    }
 }
 
 void AddressBookDialog::on_editButton_clicked()
 {
-    /* Double click should trigger edit button */
+    /* Double click triggers edit button */
     EditAddressDialog dlg;
     dlg.exec();
 }
