@@ -8,6 +8,7 @@
 #include <QListWidget>
 #include <QStackedWidget>
 #include <QDataWidgetMapper>
+#include <QDebug>
 
 OptionsDialog::OptionsDialog(QWidget *parent):
     QDialog(parent), contents_widget(0), pages_widget(0),
@@ -39,7 +40,8 @@ OptionsDialog::OptionsDialog(QWidget *parent):
     buttons->addWidget(ok_button);
     QPushButton *cancel_button = new QPushButton(tr("Cancel"));
     buttons->addWidget(cancel_button);
-    QPushButton *apply_button = new QPushButton(tr("Apply"));
+    apply_button = new QPushButton(tr("Apply"));
+    apply_button->setEnabled(false);
     buttons->addWidget(apply_button);
 
     layout->addLayout(buttons);
@@ -47,9 +49,16 @@ OptionsDialog::OptionsDialog(QWidget *parent):
     setLayout(layout);
     setWindowTitle(tr("Options"));
 
+    /* Widget-to-option mapper */
     mapper = new QDataWidgetMapper();
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
+    connect(mapper->itemDelegate(), SIGNAL(commitData(QWidget*)), this, SLOT(enableApply()));
+
+    /* Event bindings */
+    connect(ok_button, SIGNAL(clicked()), this, SLOT(okClicked()));
+    connect(cancel_button, SIGNAL(clicked()), this, SLOT(cancelClicked()));
+    connect(apply_button, SIGNAL(clicked()), this, SLOT(applyClicked()));
 }
 
 void OptionsDialog::setModel(OptionsModel *model)
@@ -69,4 +78,26 @@ void OptionsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previo
     {
         pages_widget->setCurrentIndex(contents_widget->row(current));
     }
+}
+
+void OptionsDialog::okClicked()
+{
+    mapper->submit();
+    accept();
+}
+
+void OptionsDialog::cancelClicked()
+{
+    reject();
+}
+
+void OptionsDialog::applyClicked()
+{
+    mapper->submit();
+    apply_button->setEnabled(false);
+}
+
+void OptionsDialog::enableApply()
+{
+    apply_button->setEnabled(true);
 }
