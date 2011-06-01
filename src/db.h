@@ -25,8 +25,6 @@ class CAccount;
 class CAccountingEntry;
 class CBlockLocator;
 
-extern std::map<std::string, std::string> mapAddressBook;
-extern CCriticalSection cs_mapAddressBook;
 extern std::vector<unsigned char> vchDefaultKey;
 extern bool fClient;
 extern int nBestHeight;
@@ -39,6 +37,8 @@ extern DbEnv dbenv;
 extern void DBFlush(bool fShutdown);
 extern std::vector<unsigned char> GetKeyFromKeyPool();
 extern int64 GetOldestKeyPoolTime();
+extern void ThreadFlushWalletDB(void* parg);
+
 
 
 
@@ -494,33 +494,9 @@ public:
             ReturnKey();
     }
 
-    std::vector<unsigned char> GetReservedKey()
-    {
-        if (nIndex == -1)
-        {
-            CKeyPool keypool;
-            CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
-            vchPubKey = keypool.vchPubKey;
-        }
-        assert(!vchPubKey.empty());
-        return vchPubKey;
-    }
-
-    void KeepKey()
-    {
-        if (nIndex != -1)
-            CWalletDB().KeepKey(nIndex);
-        nIndex = -1;
-        vchPubKey.clear();
-    }
-
-    void ReturnKey()
-    {
-        if (nIndex != -1)
-            CWalletDB::ReturnKey(nIndex);
-        nIndex = -1;
-        vchPubKey.clear();
-    }
+    std::vector<unsigned char> GetReservedKey();
+    void KeepKey();
+    void ReturnKey();
 };
 
 #endif

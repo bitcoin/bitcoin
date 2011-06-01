@@ -5,6 +5,7 @@
 #define H_BITCOIN_SCRIPT
 
 #include "base58.h"
+#include "keystore.h"
 
 #include <string>
 #include <vector>
