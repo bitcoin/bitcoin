@@ -24,6 +24,12 @@ This has been implemented:
 
 This has to be done:
 
+- Settings are not remembered between invocations yet
+
+- Minimize to tray / Minimize on close
+
+- Start at system start
+
 - Internationalization (convert WX language files)
 
 - Build on Windows
