@@ -356,12 +356,16 @@ public:
 class CWalletDB : public CDB
 {
 public:
-    CWalletDB(const char* pszMode="r+") : CDB("wallet.dat", pszMode)
+    CWalletDB(const char* pszMode="r+", const char* pszWalletFilePath=pszSavedWalletFilePath) : CDB(pszWalletFilePath, pszMode)
     {
+        // For ease-of-use, the wallet file path only needs to be passed in to CWalletDB the first time it's initialized. After that, it'll remember it automatically
+        if (pszWalletFilePath != NULL)
+            pszSavedWalletFilePath = const_cast<char*>(pszWalletFilePath);
     }
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
+    static char* pszSavedWalletFilePath;
 public:
     bool ReadName(const std::string& strAddress, std::string& strName)
     {
@@ -469,7 +473,7 @@ protected:
     friend int64 GetOldestKeyPoolTime();
 };
 
-bool LoadWallet(bool& fFirstRunRet);
+bool LoadWallet(bool& fFirstRunRet, const char* pszWalletFilePath);
 void BackupWallet(const std::string& strDest);
 
 inline bool SetAddressBookName(const std::string& strAddress, const std::string& strName)

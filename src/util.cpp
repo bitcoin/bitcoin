@@ -725,6 +725,17 @@ string GetConfigFile()
     return pathConfig.string();
 }
 
+string GetWalletFile()
+{
+    namespace fs = boost::filesystem;
+    fs::path pathWallet(GetArg("-wallet", "wallet.dat"));
+    if (is_directory(pathWallet))
+        pathWallet = pathWallet / fs::path("wallet.dat");
+    if (!pathWallet.is_complete())
+        pathWallet = fs::path(GetDataDir()) / pathWallet;
+    return pathWallet.string();
+}
+
 void ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
@@ -898,6 +909,21 @@ string FormatFullVersion()
     if (VERSION_IS_BETA)
         s += _("-beta");
     return s;
+}
+
+
+
+
+bool LockDirectory(string dir)
+{
+    string strLockFile = dir + "/.lock";
+    FILE* file = fopen(strLockFile.c_str(), "a"); // empty lock file; created if it doesn't exist.
+    if (file) fclose(file);
+    static boost::interprocess::file_lock lock(strLockFile.c_str());
+    if (lock.try_lock())
+        return true;
+    else
+        return false;
 }
 
 
