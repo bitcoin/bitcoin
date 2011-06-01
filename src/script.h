@@ -708,12 +708,11 @@ public:
 
 
 
-uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 bool IsStandard(const CScript& scriptPubKey);
-bool IsMine(const CScript& scriptPubKey);
-bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, std::vector<unsigned char>& vchPubKeyRet);
+bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+bool ExtractPubKey(const CScript& scriptPubKey, const CKeyStore* pkeystore, std::vector<unsigned char>& vchPubKeyRet);
 bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret);
-bool SignSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript());
+bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript());
 bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType=0);
 
 #endif

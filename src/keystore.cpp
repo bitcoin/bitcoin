@@ -12,7 +12,7 @@
 // mapKeys
 //
 
-std::vector<unsigned char> GenerateNewKey()
+std::vector<unsigned char> CKeyStore::GenerateNewKey()
 {
     RandAddSeedPerfmon();
     CKey key;
@@ -22,12 +22,12 @@ std::vector<unsigned char> GenerateNewKey()
     return key.GetPubKey();
 }
 
-bool AddKey(const CKey& key)
+bool CKeyStore::AddKey(const CKey& key)
 {
     CRITICAL_BLOCK(cs_mapKeys)
     {
         mapKeys[key.GetPubKey()] = key.GetPrivKey();
         mapPubKeys[Hash160(key.GetPubKey())] = key.GetPubKey();
     }
-    return CWalletDB().WriteKey(key.GetPubKey(), key.GetPrivKey());
 }
+

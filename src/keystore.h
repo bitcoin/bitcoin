@@ -4,7 +4,23 @@
 #ifndef BITCOIN_KEYSTORE_H
 #define BITCOIN_KEYSTORE_H
 
-bool AddKey(const CKey& key);
-std::vector<unsigned char> GenerateNewKey();
+class CKeyStore
+{
+public:
+    std::map<std::vector<unsigned char>, CPrivKey> mapKeys;
+    mutable CCriticalSection cs_mapKeys;
+    virtual bool AddKey(const CKey& key);
+    bool HaveKey(const std::vector<unsigned char> &vchPubKey) const
+    {
+        return (mapKeys.count(vchPubKey) > 0);
+    }
+    CPrivKey GetPrivKey(const std::vector<unsigned char> &vchPubKey) const
+    {
+        std::map<std::vector<unsigned char>, CPrivKey>::const_iterator mi = mapKeys.find(vchPubKey);
+        if (mi != mapKeys.end())
+            return (*mi).second;
+    }
+    std::vector<unsigned char> GenerateNewKey();
+};
 
 #endif

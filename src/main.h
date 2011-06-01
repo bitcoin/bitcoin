@@ -8,21 +8,17 @@
 #include "net.h"
 #include "key.h"
 #include "script.h"
+#include "db.h"
 
 #include <list>
 
-class COutPoint;
-class CInPoint;
-class CDiskTxPos;
-class CCoinBase;
-class CTxIn;
-class CTxOut;
-class CTransaction;
 class CBlock;
 class CBlockIndex;
 class CWalletTx;
 class CWallet;
 class CKeyItem;
+class CReserveKey;
+class CWalletDB;
 
 class CMessageHeader;
 class CAddress;
@@ -62,15 +58,12 @@ extern CBigNum bnBestChainWork;
 extern CBigNum bnBestInvalidWork;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
-extern std::set<int64> setKeyPool;
-extern CCriticalSection cs_setKeyPool;
 extern unsigned int nTransactionsUpdated;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
-extern std::map<std::string, std::string> mapAddressBook;
-extern CCriticalSection cs_mapAddressBook;
-
+extern CCriticalSection cs_setpwalletRegistered;
+extern std::set<CWallet*> setpwalletRegistered;
 
 // Settings
 extern int fGenerateBitcoins;
@@ -90,21 +83,20 @@ class CReserveKey;
 class CTxDB;
 class CTxIndex;
 
+void RegisterWallet(CWallet* pwalletIn);
+void UnregisterWallet(CWallet* pwalletIn);
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");
 FILE* AppendBlockFile(unsigned int& nFileRet);
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
 bool ProcessMessages(CNode* pfrom);
-bool ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vRecv);
 bool SendMessages(CNode* pto, bool fSendTrickle);
-void GenerateBitcoins(bool fGenerate);
-void ThreadBitcoinMiner(void* parg);
+void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
 CBlock* CreateNewBlock(CReserveKey& reservekey);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime);
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
-bool CheckWork(CBlock* pblock, CReserveKey& reservekey);
-void BitcoinMiner();
+bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
@@ -118,6 +110,23 @@ std::string GetWarnings(std::string strFor);
 
 
 
+
+
+bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
+
+template<typename T>
+bool WriteSetting(const std::string& strKey, const T& value)
+{
+    bool fOk = false;
+    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
+    {
+        std::string strWalletFile;
+        if (!GetWalletFile(pwallet, strWalletFile))
+            continue;
+        fOk |= CWalletDB(strWalletFile).WriteSetting(strKey, value);
+    }
+    return fOk;
+}
 
 
 class CDiskTxPos
@@ -302,9 +311,6 @@ public:
     {
         printf("%s\n", ToString().c_str());
     }
-
-    bool IsMine() const;
-    int64 GetDebit() const;
 };
 
 
@@ -351,36 +357,6 @@ public:
     uint256 GetHash() const
     {
         return SerializeHash(*this);
-    }
-
-    bool IsMine() const
-    {
-        return ::IsMine(scriptPubKey);
-    }
-
-    int64 GetCredit() const
-    {
-        if (!MoneyRange(nValue))
-            throw std::runtime_error("CTxOut::GetCredit() : value out of range");
-        return (IsMine() ? nValue : 0);
-    }
-
-    bool IsChange() const
-    {
-        // On a debit transaction, a txout that's mine but isn't in the address book is change
-        std::vector<unsigned char> vchPubKey;
-        if (ExtractPubKey(scriptPubKey, true, vchPubKey))
-            CRITICAL_BLOCK(cs_mapAddressBook)
-                if (!mapAddressBook.count(PubKeyToAddress(vchPubKey)))
-                    return true;
-        return false;
-    }
-
-    int64 GetChange() const
-    {
-        if (!MoneyRange(nValue))
-            throw std::runtime_error("CTxOut::GetChange() : value out of range");
-        return (IsChange() ? nValue : 0);
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -525,57 +501,6 @@ public:
             if (!::IsStandard(txout.scriptPubKey))
                 return error("nonstandard txout: %s", txout.scriptPubKey.ToString().c_str());
         return true;
-    }
-
-    bool IsMine() const
-    {
-        BOOST_FOREACH(const CTxOut& txout, vout)
-            if (txout.IsMine())
-                return true;
-        return false;
-    }
-
-    bool IsFromMe() const
-    {
-        return (GetDebit() > 0);
-    }
-
-    int64 GetDebit() const
-    {
-        int64 nDebit = 0;
-        BOOST_FOREACH(const CTxIn& txin, vin)
-        {
-            nDebit += txin.GetDebit();
-            if (!MoneyRange(nDebit))
-                throw std::runtime_error("CTransaction::GetDebit() : value out of range");
-        }
-        return nDebit;
-    }
-
-    int64 GetCredit() const
-    {
-        int64 nCredit = 0;
-        BOOST_FOREACH(const CTxOut& txout, vout)
-        {
-            nCredit += txout.GetCredit();
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error("CTransaction::GetCredit() : value out of range");
-        }
-        return nCredit;
-    }
-
-    int64 GetChange() const
-    {
-        if (IsCoinBase())
-            return 0;
-        int64 nChange = 0;
-        BOOST_FOREACH(const CTxOut& txout, vout)
-        {
-            nChange += txout.GetChange();
-            if (!MoneyRange(nChange))
-                throw std::runtime_error("CTransaction::GetChange() : value out of range");
-        }
-        return nChange;
     }
 
     int64 GetValueOut() const
@@ -1639,9 +1564,9 @@ public:
 
 
 
+
 extern std::map<uint256, CTransaction> mapTransactions;
-extern std::map<std::vector<unsigned char>, CPrivKey> mapKeys;
 extern std::map<uint160, std::vector<unsigned char> > mapPubKeys;
-extern CCriticalSection cs_mapKeys;
+extern CCriticalSection cs_mapPubKeys;
 
 #endif

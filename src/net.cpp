@@ -1117,7 +1117,7 @@ void MapPort(bool fMapPort)
     if (fUseUPnP != fMapPort)
     {
         fUseUPnP = fMapPort;
-        CWalletDB().WriteSetting("fUseUPnP", fUseUPnP);
+        WriteSetting("fUseUPnP", fUseUPnP);
     }
     if (fUseUPnP && vnThreadsRunning[5] < 1)
     {
@@ -1698,7 +1698,7 @@ void StartNode(void* parg)
         printf("Error: CreateThread(ThreadMessageHandler) failed\n");
 
     // Generate coins in the background
-    GenerateBitcoins(fGenerateBitcoins);
+    GenerateBitcoins(fGenerateBitcoins, pwalletMain);
 }
 
 bool StopNode()

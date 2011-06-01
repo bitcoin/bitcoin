@@ -10,8 +10,6 @@
 using namespace std;
 using namespace boost;
 
-void ThreadFlushWalletDB(void* parg);
-
 
 unsigned int nWalletDBUpdated;
 uint64 nAccountingEntryNumber = 0;
@@ -150,7 +148,7 @@ void CDB::Close()
         --mapFileUseCount[strFile];
 }
 
-void CloseDb(const string& strFile)
+void static CloseDb(const string& strFile)
 {
     CRITICAL_BLOCK(cs_db)
     {
@@ -359,7 +357,7 @@ bool CTxDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
     return Write(string("bnBestInvalidWork"), bnBestInvalidWork);
 }
 
-CBlockIndex* InsertBlockIndex(uint256 hash)
+CBlockIndex static * InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
         return NULL;
@@ -584,6 +582,20 @@ bool LoadAddresses()
 // CWalletDB
 //
 
+bool CWalletDB::WriteName(const string& strAddress, const string& strName)
+{
+    nWalletDBUpdated++;
+    return Write(make_pair(string("name"), strAddress), strName);
+}
+
+bool CWalletDB::EraseName(const string& strAddress)
+{
+    // This should only be used for sending addresses, never for receiving addresses,
+    // receiving addresses must always have an address book entry if they're not change return.
+    nWalletDBUpdated++;
+    return Erase(make_pair(string("name"), strAddress));
+}
+
 bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
 {
     account.SetNull();
@@ -657,9 +669,9 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 }
 
 
-bool CWalletDB::LoadWallet()
+bool CWalletDB::LoadWallet(CWallet* pwallet)
 {
-    vchDefaultKey.clear();
+    pwallet->vchDefaultKey.clear();
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
 
@@ -671,8 +683,8 @@ bool CWalletDB::LoadWallet()
 #endif
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
-    CRITICAL_BLOCK(cs_mapWallet)
-    CRITICAL_BLOCK(cs_mapKeys)
+    CRITICAL_BLOCK(pwallet->cs_mapWallet)
+    CRITICAL_BLOCK(pwallet->cs_mapKeys)
     {
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -699,14 +711,15 @@ bool CWalletDB::LoadWallet()
             {
                 string strAddress;
                 ssKey >> strAddress;
-                ssValue >> mapAddressBook[strAddress];
+                ssValue >> pwallet->mapAddressBook[strAddress];
             }
             else if (strType == "tx")
             {
                 uint256 hash;
                 ssKey >> hash;
-                CWalletTx& wtx = mapWallet[hash];
+                CWalletTx& wtx = pwallet->mapWallet[hash];
                 ssValue >> wtx;
+                wtx.pwallet = pwallet;
 
                 if (wtx.GetHash() != hash)
                     printf("Error in wallet.dat, hash mismatch\n");
@@ -757,18 +770,18 @@ bool CWalletDB::LoadWallet()
                 else
                     ssValue >> wkey;
 
-                mapKeys[vchPubKey] = wkey.vchPrivKey;
+                pwallet->mapKeys[vchPubKey] = wkey.vchPrivKey;
                 mapPubKeys[Hash160(vchPubKey)] = vchPubKey;
             }
             else if (strType == "defaultkey")
             {
-                ssValue >> vchDefaultKey;
+                ssValue >> pwallet->vchDefaultKey;
             }
             else if (strType == "pool")
             {
                 int64 nIndex;
                 ssKey >> nIndex;
-                setKeyPool.insert(nIndex);
+                pwallet->setKeyPool.insert(nIndex);
             }
             else if (strType == "version")
             {
@@ -800,7 +813,7 @@ bool CWalletDB::LoadWallet()
     }
 
     BOOST_FOREACH(uint256 hash, vWalletUpgrade)
-        WriteTx(hash, mapWallet[hash]);
+        WriteTx(hash, pwallet->mapWallet[hash]);
 
     printf("nFileVersion = %d\n", nFileVersion);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
@@ -830,6 +843,7 @@ bool CWalletDB::LoadWallet()
 
 void ThreadFlushWalletDB(void* parg)
 {
+    const string& strFile = ((const string*)parg)[0];
     static bool fOneThread;
     if (fOneThread)
         return;
@@ -865,7 +879,6 @@ void ThreadFlushWalletDB(void* parg)
 
                 if (nRefCount == 0 && !fShutdown)
                 {
-                    string strFile = "wallet.dat";
                     map<string, int>::iterator mi = mapFileUseCount.find(strFile);
                     if (mi != mapFileUseCount.end())
                     {
@@ -888,26 +901,27 @@ void ThreadFlushWalletDB(void* parg)
     }
 }
 
-void BackupWallet(const string& strDest)
+bool BackupWallet(const CWallet& wallet, const string& strDest)
 {
+    if (!wallet.fFileBacked)
+        return false;
     while (!fShutdown)
     {
         CRITICAL_BLOCK(cs_db)
         {
-            const string strFile = "wallet.dat";
-            if (!mapFileUseCount.count(strFile) || mapFileUseCount[strFile] == 0)
+            if (!mapFileUseCount.count(wallet.strWalletFile) || mapFileUseCount[wallet.strWalletFile] == 0)
             {
                 // Flush log data to the dat file
-                CloseDb(strFile);
+                CloseDb(wallet.strWalletFile);
                 dbenv.txn_checkpoint(0, 0, 0);
-                dbenv.lsn_reset(strFile.c_str(), 0);
-                mapFileUseCount.erase(strFile);
+                dbenv.lsn_reset(wallet.strWalletFile.c_str(), 0);
+                mapFileUseCount.erase(wallet.strWalletFile);
 
                 // Copy wallet.dat
-                filesystem::path pathSrc(GetDataDir() + "/" + strFile);
+                filesystem::path pathSrc(GetDataDir() + "/" + wallet.strWalletFile);
                 filesystem::path pathDest(strDest);
                 if (filesystem::is_directory(pathDest))
-                    pathDest = pathDest / strFile;
+                    pathDest = pathDest / wallet.strWalletFile;
 #if BOOST_VERSION >= 104000
                 filesystem::copy_file(pathSrc, pathDest, filesystem::copy_option::overwrite_if_exists);
 #else
@@ -915,11 +929,10 @@ void BackupWallet(const string& strDest)
 #endif
                 printf("copied wallet.dat to %s\n", pathDest.string().c_str());
 
-                return;
+                return true;
             }
         }
         Sleep(100);
     }
+    return false;
 }
-
-

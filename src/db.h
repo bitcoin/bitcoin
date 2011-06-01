@@ -12,22 +12,16 @@
 
 #include <db_cxx.h>
 
-class CTransaction;
 class CTxIndex;
 class CDiskBlockIndex;
 class CDiskTxPos;
 class COutPoint;
-class CUser;
-class CReview;
 class CAddress;
 class CWalletTx;
+class CWallet;
 class CAccount;
 class CAccountingEntry;
 class CBlockLocator;
-
-extern std::vector<unsigned char> vchDefaultKey;
-extern bool fClient;
-extern int nBestHeight;
 
 
 extern unsigned int nWalletDBUpdated;
@@ -35,10 +29,8 @@ extern DbEnv dbenv;
 
 
 extern void DBFlush(bool fShutdown);
-extern std::vector<unsigned char> GetKeyFromKeyPool();
-extern int64 GetOldestKeyPoolTime();
-extern void ThreadFlushWalletDB(void* parg);
-
+void ThreadFlushWalletDB(void* parg);
+bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 
 
 
@@ -321,9 +313,6 @@ bool LoadAddresses();
 
 
 
-
-
-
 class CKeyPool
 {
 public:
@@ -356,7 +345,7 @@ public:
 class CWalletDB : public CDB
 {
 public:
-    CWalletDB(const char* pszMode="r+") : CDB("wallet.dat", pszMode)
+    CWalletDB(std::string strFilename, const char* pszMode="r+") : CDB(strFilename.c_str(), pszMode)
     {
     }
 private:
@@ -369,23 +358,9 @@ public:
         return Read(std::make_pair(std::string("name"), strAddress), strName);
     }
 
-    bool WriteName(const std::string& strAddress, const std::string& strName)
-    {
-        CRITICAL_BLOCK(cs_mapAddressBook)
-            mapAddressBook[strAddress] = strName;
-        nWalletDBUpdated++;
-        return Write(std::make_pair(std::string("name"), strAddress), strName);
-    }
+    bool WriteName(const std::string& strAddress, const std::string& strName);
 
-    bool EraseName(const std::string& strAddress)
-    {
-        // This should only be used for sending addresses, never for receiving addresses,
-        // receiving addresses must always have an address book entry if they're not change return.
-        CRITICAL_BLOCK(cs_mapAddressBook)
-            mapAddressBook.erase(strAddress);
-        nWalletDBUpdated++;
-        return Erase(std::make_pair(std::string("name"), strAddress));
-    }
+    bool EraseName(const std::string& strAddress);
 
     bool ReadTx(uint256 hash, CWalletTx& wtx)
     {
@@ -435,9 +410,25 @@ public:
 
     bool WriteDefaultKey(const std::vector<unsigned char>& vchPubKey)
     {
-        vchDefaultKey = vchPubKey;
         nWalletDBUpdated++;
         return Write(std::string("defaultkey"), vchPubKey);
+    }
+
+    bool ReadPool(int64 nPool, CKeyPool& keypool)
+    {
+        return Read(std::make_pair(std::string("pool"), nPool), keypool);
+    }
+
+    bool WritePool(int64 nPool, const CKeyPool& keypool)
+    {
+        nWalletDBUpdated++;
+        return Write(std::make_pair(std::string("pool"), nPool), keypool);
+    }
+
+    bool ErasePool(int64 nPool)
+    {
+        nWalletDBUpdated++;
+        return Erase(std::make_pair(std::string("pool"), nPool));
     }
 
     template<typename T>
@@ -459,44 +450,7 @@ public:
     int64 GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
-    bool LoadWallet();
-protected:
-    void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
-    void KeepKey(int64 nIndex);
-    static void ReturnKey(int64 nIndex);
-    friend class CReserveKey;
-    friend std::vector<unsigned char> GetKeyFromKeyPool();
-    friend int64 GetOldestKeyPoolTime();
-};
-
-bool LoadWallet(bool& fFirstRunRet);
-void BackupWallet(const std::string& strDest);
-
-inline bool SetAddressBookName(const std::string& strAddress, const std::string& strName)
-{
-    return CWalletDB().WriteName(strAddress, strName);
-}
-
-class CReserveKey
-{
-protected:
-    int64 nIndex;
-    std::vector<unsigned char> vchPubKey;
-public:
-    CReserveKey()
-    {
-        nIndex = -1;
-    }
-
-    ~CReserveKey()
-    {
-        if (!fShutdown)
-            ReturnKey();
-    }
-
-    std::vector<unsigned char> GetReservedKey();
-    void KeepKey();
-    void ReturnKey();
+    bool LoadWallet(CWallet* pwallet);
 };
 
 #endif
