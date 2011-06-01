@@ -4,26 +4,90 @@
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
 
-AddressTableModel::AddressTableModel(QObject *parent) :
-    QAbstractTableModel(parent)
+struct AddressTableEntry
 {
+    enum Type {
+        Sending,
+        Receiving
+    };
+    Type type;
+    QString label;
+    QString address;
 
+    AddressTableEntry() {}
+    AddressTableEntry(Type type, const QString &label, const QString &address):
+        type(type), label(label), address(address) {}
+};
+
+/* Private implementation */
+struct AddressTablePriv
+{
+    QList<AddressTableEntry> cachedAddressTable;
+
+    void refreshAddressTable()
+    {
+        cachedAddressTable.clear();
+
+    }
+
+    void updateAddressTable()
+    {
+        CRITICAL_BLOCK(cs_mapKeys)
+        CRITICAL_BLOCK(cs_mapAddressBook)
+        {
+            BOOST_FOREACH(const PAIRTYPE(std::string, std::string)& item, mapAddressBook)
+            {
+                std::string strAddress = item.first;
+                std::string strName = item.second;
+                uint160 hash160;
+                bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
+                cachedAddressTable.append(AddressTableEntry(fMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending,
+                                  QString::fromStdString(strName),
+                                  QString::fromStdString(strAddress)));
+            }
+        }
+    }
+
+
+    int size()
+    {
+        return cachedAddressTable.size();
+    }
+
+    AddressTableEntry *index(int idx)
+    {
+        if(idx >= 0 && idx < cachedAddressTable.size())
+        {
+            return &cachedAddressTable[idx];
+        } else {
+            return 0;
+        }
+    }
+};
+
+AddressTableModel::AddressTableModel(QObject *parent) :
+    QAbstractTableModel(parent),priv(0)
+{
+    columns << tr("Label") << tr("Address");
+    priv = new AddressTablePriv();
+    priv->refreshAddressTable();
+}
+
+AddressTableModel::~AddressTableModel()
+{
+    delete priv;
 }
 
 int AddressTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    int retval = 0;
-    CRITICAL_BLOCK(cs_mapAddressBook)
-    {
-        retval = mapAddressBook.size();
-    }
-    return retval;
+    return priv->size();
 }
 
 int AddressTableModel::columnCount(const QModelIndex &parent) const
 {
-    return 2;
+    Q_UNUSED(parent);
+    return columns.length();
 }
 
 QVariant AddressTableModel::data(const QModelIndex &index, int role) const
@@ -31,20 +95,28 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
     if(!index.isValid())
         return QVariant();
 
+    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
+
     if(role == Qt::DisplayRole)
     {
         /* index.row(), index.column() */
         /* Return QString */
-        if(index.column() == Address)
-            return "1PC9aZC4hNX2rmmrt7uHTfYAS3hRbph4UN" + QString::number(index.row());
-        else
-            return "Description";
+        switch(index.column())
+        {
+        case Label:
+            return rec->label;
+        case Address:
+            return rec->address;
+        }
     } else if (role == TypeRole)
     {
-        switch(index.row() % 2)
+        switch(rec->type)
         {
-        case 0: return Send;
-        case 1: return Receive;
+        case AddressTableEntry::Sending:
+            return Send;
+        case AddressTableEntry::Receiving:
+            return Receive;
+        default: break;
         }
     }
     return QVariant();
@@ -52,13 +124,25 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
 
 QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    if(orientation == Qt::Horizontal)
+    {
+        if(role == Qt::DisplayRole)
+        {
+            return columns[section];
+        }
+    }
     return QVariant();
 }
 
-Qt::ItemFlags AddressTableModel::flags(const QModelIndex &index) const
+QModelIndex AddressTableModel::index ( int row, int column, const QModelIndex & parent ) const
 {
-    if (!index.isValid())
-        return Qt::ItemIsEnabled;
-
-    return QAbstractTableModel::flags(index);
+    Q_UNUSED(parent);
+    AddressTableEntry *data = priv->index(row);
+    if(data)
+    {
+        return createIndex(row, column, priv->index(row));
+    } else {
+        return QModelIndex();
+    }
 }
+
