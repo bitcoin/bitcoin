@@ -3,6 +3,7 @@
 
 #include <QAbstractListModel>
 
+/* Configuration data structure for bitcoin client */
 class OptionsModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -25,6 +26,8 @@ public:
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
     bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
 
+    /* Explicit getters */
+    qint64 getTransactionFee();
 signals:
 
 public slots:

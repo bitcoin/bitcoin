@@ -29,8 +29,6 @@ public:
     int getNumBlocks();
     int getNumTransactions();
 
-    qint64 getTransactionFee();
-
     StatusCode sendCoins(const QString &payTo, qint64 payAmount);
 private:
     OptionsModel *options_model;

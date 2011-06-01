@@ -50,3 +50,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     emit dataChanged(index, index);
     return true;
 }
+
+qint64 OptionsModel::getTransactionFee()
+{
+    return nTransactionFee;
+}

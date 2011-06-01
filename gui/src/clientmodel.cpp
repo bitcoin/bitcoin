@@ -54,11 +54,6 @@ int ClientModel::getNumTransactions()
     return numTransactions;
 }
 
-qint64 ClientModel::getTransactionFee()
-{
-    return nTransactionFee;
-}
-
 void ClientModel::update()
 {
     emit balanceChanged(getBalance());
