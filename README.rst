@@ -2,7 +2,7 @@ Bitcoin-qt: Qt4 based GUI replacement for Bitcoin
 =================================================
 
 **Warning** **Warning** **Warning**
-Pre-alpha stuff! Developer only!
+Pre-alpha stuff! Use on testnet only!
 
 This has been implemented:
 
@@ -18,16 +18,15 @@ This has been implemented:
 
 - Send coins dialog: address and input validation
 
-- Address book and transactions views
+- Address book and transactions views and models
+
+- Sending coins
 
 This has to be done:
-
-- Further integration of bitcoin core, so that it can actually connect
-  to the network, send commands and get feedback
-
-- Address book and transactions models: so that 
-  something sensible is shown instead of dummy data :)
 
 - Internationalization (convert WX language files)
 
 - Build on Windows
+
+- Details dialog for transactions (on double click)
+
