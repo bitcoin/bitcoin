@@ -10,6 +10,7 @@
 #include "optionsdialog.h"
 #include "aboutdialog.h"
 #include "clientmodel.h"
+#include "guiutil.h"
 
 #include "main.h"
 
@@ -70,6 +71,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_address->addWidget(new QLabel(tr("Your Bitcoin Address:")));
     address = new QLineEdit();
     address->setReadOnly(true);
+    address->setFont(GUIUtil::bitcoinAddressFont());
     hbox_address->addWidget(address);
     
     QPushButton *button_new = new QPushButton(tr("&New..."));

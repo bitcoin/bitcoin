@@ -87,14 +87,20 @@ void AddressBookDialog::on_copyToClipboard_clicked()
 
 void AddressBookDialog::on_editButton_clicked()
 {
-    /* Double click triggers edit button */
-    EditAddressDialog dlg;
+    /* Double click also triggers edit button */
+    EditAddressDialog dlg(
+            ui->tabWidget->currentIndex() == SendingTab ?
+            EditAddressDialog::EditSendingAddress :
+            EditAddressDialog::EditReceivingAddress);
     dlg.exec();
 }
 
 void AddressBookDialog::on_newAddressButton_clicked()
 {
-    EditAddressDialog dlg;
+    EditAddressDialog dlg(
+            ui->tabWidget->currentIndex() == SendingTab ?
+            EditAddressDialog::NewSendingAddress :
+            EditAddressDialog::NewReceivingAddress);
     dlg.exec();
 }
 
@@ -103,10 +109,10 @@ void AddressBookDialog::on_tabWidget_currentChanged(int index)
     switch(index)
     {
     case SendingTab:
-        ui->deleteButton->show();
+        ui->deleteButton->setEnabled(true);
         break;
     case ReceivingTab:
-        ui->deleteButton->hide();
+        ui->deleteButton->setEnabled(false);
         break;
     }
 }

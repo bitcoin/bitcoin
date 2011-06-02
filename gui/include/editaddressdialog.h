@@ -12,8 +12,15 @@ class EditAddressDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit EditAddressDialog(QWidget *parent = 0);
-    ~EditAddressDialog();
+    enum Mode {
+        NewReceivingAddress,
+        NewSendingAddress,
+        EditReceivingAddress,
+        EditSendingAddress
+    };
+
+    explicit EditAddressDialog(Mode mode, QWidget *parent = 0);
+    ~EditAddressDialog();    
 
 private:
     Ui::EditAddressDialog *ui;

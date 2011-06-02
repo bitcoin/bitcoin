@@ -1,9 +1,9 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
 #include "clientmodel.h"
+#include "guiutil.h"
 
 #include "addressbookdialog.h"
-#include "bitcoinaddressvalidator.h"
 #include "optionsmodel.h"
 
 #include <QApplication>
@@ -22,13 +22,8 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
 {
     ui->setupUi(this);
 
-    /* Set up validators */
-    ui->payTo->setMaxLength(BitcoinAddressValidator::MaxAddressLength);
-    ui->payTo->setValidator(new BitcoinAddressValidator(this));
-    QDoubleValidator *amountValidator = new QDoubleValidator(this);
-    amountValidator->setDecimals(8);
-    amountValidator->setBottom(0.0);
-    ui->payAmount->setValidator(amountValidator);
+    GUIUtil::setupAddressWidget(ui->payTo, this);
+    GUIUtil::setupAmountWidget(ui->payAmount, this);
 
     /* Set initial address if provided */
     if(!address.isEmpty())

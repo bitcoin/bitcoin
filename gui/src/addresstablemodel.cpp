@@ -2,6 +2,8 @@
 #include "guiutil.h"
 #include "main.h"
 
+#include <QFont>
+
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
 
@@ -108,7 +110,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
     {
         if(index.column() == Address)
         {
-            return bitcoinAddressFont();
+            return GUIUtil::bitcoinAddressFont();
         }
     } else if (role == TypeRole)
     {
