@@ -11,6 +11,7 @@ QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-invalid-offsetof -
 # WINDOWS defines, -DSSL, look at build system
 
 # Input
+DEPENDPATH += gui/include core/include cryptopp/include core/include json/include
 HEADERS += gui/include/bitcoingui.h \
     gui/include/transactiontablemodel.h \
     gui/include/addresstablemodel.h \
