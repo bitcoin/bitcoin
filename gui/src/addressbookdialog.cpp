@@ -87,11 +87,19 @@ void AddressBookDialog::on_copyToClipboard_clicked()
 
 void AddressBookDialog::on_editButton_clicked()
 {
+    QModelIndexList indexes = getCurrentTable()->selectionModel()->selectedRows();
+    if(indexes.isEmpty())
+    {
+        return;
+    }
+
     /* Double click also triggers edit button */
     EditAddressDialog dlg(
             ui->tabWidget->currentIndex() == SendingTab ?
             EditAddressDialog::EditSendingAddress :
             EditAddressDialog::EditReceivingAddress);
+    dlg.setModel(model);
+    dlg.loadRow(indexes.at(0).row());
     dlg.exec();
 }
 
@@ -101,6 +109,7 @@ void AddressBookDialog::on_newAddressButton_clicked()
             ui->tabWidget->currentIndex() == SendingTab ?
             EditAddressDialog::NewSendingAddress :
             EditAddressDialog::NewReceivingAddress);
+    dlg.setModel(model);
     dlg.exec();
 }
 

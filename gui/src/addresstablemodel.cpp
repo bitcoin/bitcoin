@@ -95,10 +95,8 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
 
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
 
-    if(role == Qt::DisplayRole)
+    if(role == Qt::DisplayRole || role == Qt::EditRole)
     {
-        /* index.row(), index.column() */
-        /* Return QString */
         switch(index.column())
         {
         case Label:
@@ -124,6 +122,30 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         }
     }
     return QVariant();
+}
+
+bool AddressTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
+{
+    if(!index.isValid())
+        return false;
+
+    if(role == Qt::EditRole)
+    {
+        switch(index.column())
+        {
+        case Label:
+            /* TODO */
+            break;
+        case Address:
+            /* TODO */
+            /* Double-check that we're not overwriting receiving address */
+            /* Note that changing address changes index in map */
+            break;
+        }
+        /* emit dataChanged(index, index); */
+        return true;
+    }
+    return false;
 }
 
 QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation, int role) const

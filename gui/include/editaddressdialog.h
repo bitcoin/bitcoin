@@ -3,9 +3,14 @@
 
 #include <QDialog>
 
+QT_BEGIN_NAMESPACE
+class QDataWidgetMapper;
+QT_END_NAMESPACE
+
 namespace Ui {
     class EditAddressDialog;
 }
+class AddressTableModel;
 
 class EditAddressDialog : public QDialog
 {
@@ -22,8 +27,12 @@ public:
     explicit EditAddressDialog(Mode mode, QWidget *parent = 0);
     ~EditAddressDialog();    
 
+    void setModel(AddressTableModel *model);
+    void loadRow(int row);
+
 private:
     Ui::EditAddressDialog *ui;
+    QDataWidgetMapper *mapper;
 };
 
 #endif // EDITADDRESSDIALOG_H
