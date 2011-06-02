@@ -60,7 +60,6 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File ../src/bitcoin.exe
-    File ../../openssl-1.0.0d/libeay32.dll
     File /oname=license.txt ../COPYING
     File /oname=readme.txt ../doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
@@ -108,7 +107,6 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\bitcoin.exe
-    Delete /REBOOTOK $INSTDIR\libeay32.dll
     Delete /REBOOTOK $INSTDIR\license.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
