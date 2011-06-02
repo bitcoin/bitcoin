@@ -1062,7 +1062,7 @@ void DNSAddressSeed()
 
     for (int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
         vector<CAddress> vaddr;
-        if (Lookup(strDNSSeed[seed_idx], vaddr, NODE_NETWORK, true))
+        if (Lookup(strDNSSeed[seed_idx], vaddr, NODE_NETWORK, -1, true))
         {
             BOOST_FOREACH (CAddress& addr, vaddr)
             {
