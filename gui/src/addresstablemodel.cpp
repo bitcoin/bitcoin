@@ -13,6 +13,7 @@ struct AddressTableEntry
         Sending,
         Receiving
     };
+
     Type type;
     QString label;
     QString address;
@@ -128,21 +129,31 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
 {
     if(!index.isValid())
         return false;
+    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
 
     if(role == Qt::EditRole)
     {
         switch(index.column())
         {
         case Label:
-            /* TODO */
+            SetAddressBookName(rec->address.toStdString(), value.toString().toStdString());
+            rec->label = value.toString();
             break;
         case Address:
-            /* TODO */
             /* Double-check that we're not overwriting receiving address */
-            /* Note that changing address changes index in map */
+            if(rec->type == AddressTableEntry::Sending)
+            {
+                /* Remove old entry */
+                CWalletDB().EraseName(rec->address.toStdString());
+                /* Add new entry with new address */
+                SetAddressBookName(value.toString().toStdString(), rec->label.toStdString());
+
+                rec->address = value.toString();
+            }
             break;
         }
-        /* emit dataChanged(index, index); */
+        emit dataChanged(index, index);
+
         return true;
     }
     return false;
@@ -178,4 +189,49 @@ void AddressTableModel::updateList()
     beginResetModel();
     priv->refreshAddressTable();
     endResetModel();
+}
+
+bool AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
+{
+    std::string strLabel = label.toStdString();
+    std::string strAddress = address.toStdString();
+
+    if(type == Send)
+    {
+        /* Check for duplicate */
+        CRITICAL_BLOCK(cs_mapAddressBook)
+        {
+            if(mapAddressBook.count(strAddress))
+            {
+                return false;
+            }
+        }
+    } else if(type == Receive)
+    {
+        /* Generate a new address to associate with given label */
+        strAddress = PubKeyToAddress(GetKeyFromKeyPool());
+    } else
+    {
+        return false;
+    }
+    /* Add entry and update list */
+    SetAddressBookName(strAddress, strLabel);
+    updateList();
+    return true;
+}
+
+bool AddressTableModel::removeRows(int row, int count, const QModelIndex & parent)
+{
+    Q_UNUSED(parent);
+    AddressTableEntry *rec = priv->index(row);
+    if(count != 1 || !rec || rec->type == AddressTableEntry::Receiving)
+    {
+        /* Can only remove one row at a time, and cannot remove rows not in model.
+           Also refuse to remove receiving addresses.
+         */
+        return false;
+    }
+    CWalletDB().EraseName(rec->address.toStdString());
+    updateList();
+    return true;
 }

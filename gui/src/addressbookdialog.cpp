@@ -100,7 +100,10 @@ void AddressBookDialog::on_editButton_clicked()
             EditAddressDialog::EditReceivingAddress);
     dlg.setModel(model);
     dlg.loadRow(indexes.at(0).row());
-    dlg.exec();
+    if(dlg.exec())
+    {
+        dlg.saveCurrentRow();
+    }
 }
 
 void AddressBookDialog::on_newAddressButton_clicked()
@@ -110,7 +113,10 @@ void AddressBookDialog::on_newAddressButton_clicked()
             EditAddressDialog::NewSendingAddress :
             EditAddressDialog::NewReceivingAddress);
     dlg.setModel(model);
-    dlg.exec();
+    if(dlg.exec())
+    {
+        dlg.saveCurrentRow();
+    }
 }
 
 void AddressBookDialog::on_tabWidget_currentChanged(int index)
@@ -130,9 +136,9 @@ void AddressBookDialog::on_deleteButton_clicked()
 {
     QTableView *table = getCurrentTable();
     QModelIndexList indexes = table->selectionModel()->selectedRows();
-
-    foreach (QModelIndex index, indexes) {
-        table->model()->removeRow(index.row());
+    if(!indexes.isEmpty())
+    {
+        table->model()->removeRow(indexes.at(0).row());
     }
 }
 

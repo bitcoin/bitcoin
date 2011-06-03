@@ -29,10 +29,13 @@ public:
 
     void setModel(AddressTableModel *model);
     void loadRow(int row);
+    void saveCurrentRow();
 
 private:
     Ui::EditAddressDialog *ui;
     QDataWidgetMapper *mapper;
+    Mode mode;
+    AddressTableModel *model;
 };
 
 #endif // EDITADDRESSDIALOG_H

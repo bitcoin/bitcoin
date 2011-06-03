@@ -240,12 +240,7 @@ void BitcoinGUI::addressbookClicked()
 {
     AddressBookDialog dlg;
     dlg.setTab(AddressBookDialog::SendingTab);
-    /* if an address accepted, do a 'send' to specified address */
-    if(dlg.exec())
-    {
-        SendCoinsDialog send(0, dlg.getReturnValue());
-        send.exec();
-    }
+    dlg.exec();
 }
 
 void BitcoinGUI::receivingAddressesClicked()

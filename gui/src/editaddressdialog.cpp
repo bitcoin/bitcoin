@@ -4,11 +4,11 @@
 #include "guiutil.h"
 
 #include <QDataWidgetMapper>
-#include <QDebug>
+#include <QMessageBox>
 
 EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::EditAddressDialog), mapper(0)
+    ui(new Ui::EditAddressDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
 
@@ -33,7 +33,7 @@ EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     }
 
     mapper = new QDataWidgetMapper(this);
-
+    mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
 
 EditAddressDialog::~EditAddressDialog()
@@ -43,7 +43,7 @@ EditAddressDialog::~EditAddressDialog()
 
 void EditAddressDialog::setModel(AddressTableModel *model)
 {
-    qDebug() << "setModel " << model;
+    this->model = model;
     mapper->setModel(model);
     mapper->addMapping(ui->labelEdit, AddressTableModel::Label);
     mapper->addMapping(ui->addressEdit, AddressTableModel::Address);
@@ -51,6 +51,28 @@ void EditAddressDialog::setModel(AddressTableModel *model)
 
 void EditAddressDialog::loadRow(int row)
 {
-    qDebug() << "loadRow " << row;
     mapper->setCurrentIndex(row);
+}
+
+void EditAddressDialog::saveCurrentRow()
+{
+    switch(mode)
+    {
+    case NewReceivingAddress:
+    case NewSendingAddress:
+        if(!model->addRow(
+                mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
+                ui->labelEdit->text(),
+                ui->addressEdit->text()))
+        {
+            QMessageBox::warning(this, windowTitle(),
+                tr("The address %1 is already in the address book.").arg(ui->addressEdit->text()),
+                QMessageBox::Ok, QMessageBox::Ok);
+        }
+        break;
+    case EditReceivingAddress:
+    case EditSendingAddress:
+        mapper->submit();
+        break;
+    }
 }
