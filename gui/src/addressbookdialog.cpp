@@ -14,9 +14,6 @@ AddressBookDialog::AddressBookDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
-
-    model = new AddressTableModel(this);
-    setModel(model);
 }
 
 AddressBookDialog::~AddressBookDialog()
@@ -26,6 +23,9 @@ AddressBookDialog::~AddressBookDialog()
 
 void AddressBookDialog::setModel(AddressTableModel *model)
 {
+    /* Refresh list from core */
+    model->updateList();
+
     /* Receive filter */
     QSortFilterProxyModel *receive_model = new QSortFilterProxyModel(this);
     receive_model->setSourceModel(model);

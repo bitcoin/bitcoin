@@ -11,6 +11,7 @@
 #include "aboutdialog.h"
 #include "clientmodel.h"
 #include "guiutil.h"
+#include "editaddressdialog.h"
 
 #include "main.h"
 
@@ -239,6 +240,7 @@ void BitcoinGUI::sendcoinsClicked()
 void BitcoinGUI::addressbookClicked()
 {
     AddressBookDialog dlg;
+    dlg.setModel(model->getAddressTableModel());
     dlg.setTab(AddressBookDialog::SendingTab);
     dlg.exec();
 }
@@ -246,6 +248,7 @@ void BitcoinGUI::addressbookClicked()
 void BitcoinGUI::receivingAddressesClicked()
 {
     AddressBookDialog dlg;
+    dlg.setModel(model->getAddressTableModel());
     dlg.setTab(AddressBookDialog::ReceivingTab);
     dlg.exec();
 }
@@ -265,8 +268,17 @@ void BitcoinGUI::aboutClicked()
 
 void BitcoinGUI::newAddressClicked()
 {
-    qDebug() << "New address clicked";
-    /* TODO: generate new address */
+    EditAddressDialog dlg(EditAddressDialog::NewReceivingAddress);
+    dlg.setModel(model->getAddressTableModel());
+    if(dlg.exec())
+    {
+        QString newAddress = dlg.saveCurrentRow();
+        /* Set returned address as new default address */
+        if(!newAddress.isEmpty())
+        {
+            model->setAddress(newAddress);
+        }
+    }
 }
 
 void BitcoinGUI::copyClipboardClicked()

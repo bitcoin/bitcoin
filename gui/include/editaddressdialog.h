@@ -29,7 +29,7 @@ public:
 
     void setModel(AddressTableModel *model);
     void loadRow(int row);
-    void saveCurrentRow();
+    QString saveCurrentRow();
 
 private:
     Ui::EditAddressDialog *ui;

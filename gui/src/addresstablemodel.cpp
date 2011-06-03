@@ -191,7 +191,7 @@ void AddressTableModel::updateList()
     endResetModel();
 }
 
-bool AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
+QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -203,7 +203,7 @@ bool AddressTableModel::addRow(const QString &type, const QString &label, const 
         {
             if(mapAddressBook.count(strAddress))
             {
-                return false;
+                return QString();
             }
         }
     } else if(type == Receive)
@@ -212,12 +212,12 @@ bool AddressTableModel::addRow(const QString &type, const QString &label, const 
         strAddress = PubKeyToAddress(GetKeyFromKeyPool());
     } else
     {
-        return false;
+        return QString();
     }
     /* Add entry and update list */
     SetAddressBookName(strAddress, strLabel);
     updateList();
-    return true;
+    return QString::fromStdString(strAddress);
 }
 
 bool AddressTableModel::removeRows(int row, int count, const QModelIndex & parent)

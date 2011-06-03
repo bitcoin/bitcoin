@@ -35,9 +35,9 @@ public:
     bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 
     /* Add an address to the model.
-       Returns true on success, false otherwise.
+       Returns the added address on success, and an empty string otherwise.
      */
-    bool addRow(const QString &type, const QString &label, const QString &address);
+    QString addRow(const QString &type, const QString &label, const QString &address);
 
     /* Update address list from core. Invalidates any indices.
      */

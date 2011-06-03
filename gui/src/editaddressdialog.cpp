@@ -54,16 +54,18 @@ void EditAddressDialog::loadRow(int row)
     mapper->setCurrentIndex(row);
 }
 
-void EditAddressDialog::saveCurrentRow()
+QString EditAddressDialog::saveCurrentRow()
 {
+    QString address;
     switch(mode)
     {
     case NewReceivingAddress:
     case NewSendingAddress:
-        if(!model->addRow(
+        address = model->addRow(
                 mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
                 ui->labelEdit->text(),
-                ui->addressEdit->text()))
+                ui->addressEdit->text());
+        if(address.isEmpty())
         {
             QMessageBox::warning(this, windowTitle(),
                 tr("The address %1 is already in the address book.").arg(ui->addressEdit->text()),
@@ -72,7 +74,11 @@ void EditAddressDialog::saveCurrentRow()
         break;
     case EditReceivingAddress:
     case EditSendingAddress:
-        mapper->submit();
+        if(mapper->submit())
+        {
+            address = ui->addressEdit->text();
+        }
         break;
     }
+    return address;
 }

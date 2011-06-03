@@ -2,7 +2,9 @@
 #define CLIENTMODEL_H
 
 #include <QObject>
+
 class OptionsModel;
+class AddressTableModel;
 
 class ClientModel : public QObject
 {
@@ -22,6 +24,7 @@ public:
     };
 
     OptionsModel *getOptionsModel();
+    AddressTableModel *getAddressTableModel();
 
     qint64 getBalance();
     QString getAddress();
@@ -34,7 +37,8 @@ public:
     /* Send coins */
     StatusCode sendCoins(const QString &payTo, qint64 payAmount);
 private:
-    OptionsModel *options_model;
+    OptionsModel *optionsModel;
+    AddressTableModel *addressTableModel;
 
 signals:
     void balanceChanged(qint64 balance);
