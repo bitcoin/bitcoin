@@ -29,6 +29,9 @@ public:
     int getNumBlocks();
     int getNumTransactions();
 
+    /* Set default address */
+    void setAddress(const QString &defaultAddress);
+    /* Send coins */
     StatusCode sendCoins(const QString &payTo, qint64 payAmount);
 private:
     OptionsModel *options_model;

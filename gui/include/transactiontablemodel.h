@@ -49,6 +49,8 @@ private:
 
 private slots:
     void update();
+
+    friend class TransactionTablePriv;
 };
 
 #endif

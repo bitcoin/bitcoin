@@ -9,14 +9,39 @@
 #include <QList>
 #include <QColor>
 #include <QTimer>
+#include <QtAlgorithms>
 
 const QString TransactionTableModel::Sent = "s";
 const QString TransactionTableModel::Received = "r";
 const QString TransactionTableModel::Other = "o";
 
+/* Comparison operator for sort/binary search of model tx list */
+struct TxLessThan
+{
+    bool operator()(const TransactionRecord &a, const TransactionRecord &b) const
+    {
+        return a.hash < b.hash;
+    }
+    bool operator()(const TransactionRecord &a, const uint256 &b) const
+    {
+        return a.hash < b;
+    }
+    bool operator()(const uint256 &a, const TransactionRecord &b) const
+    {
+        return a < b.hash;
+    }
+};
+
 /* Private implementation */
 struct TransactionTablePriv
 {
+    TransactionTablePriv(TransactionTableModel *parent):
+            parent(parent)
+    {
+    }
+
+    TransactionTableModel *parent;
+
     /* Local cache of wallet.
      * As it is in the same order as the CWallet, by definition
      * this is sorted by sha256.
@@ -39,28 +64,79 @@ struct TransactionTablePriv
         }
     }
 
-    /* Update our model of the wallet.
+    /* Update our model of the wallet incrementally.
        Call with list of hashes of transactions that were added, removed or changed.
      */
     void updateWallet(const QList<uint256> &updated)
     {
-        /* TODO: update only transactions in updated, and only if
-           the transactions are really part of the visible wallet.
-
-           Update status of the other transactions in the cache just in case,
-           because this call means that a new block came in.
+        /* Walk through updated transactions, update model as needed.
          */
         qDebug() << "updateWallet";
-        foreach(uint256 hash, updated)
-        {
-            qDebug() << "  " << QString::fromStdString(hash.ToString());
-        }
-        /* beginInsertRows(QModelIndex(), first, last) */
-        /* endInsertRows */
-        /* beginRemoveRows(QModelIndex(), first, last) */
-        /* beginEndRows */
 
-        refreshWallet();
+        /* Sort update list, and iterate through it in reverse, so that model updates
+           can be emitted from end to beginning (so that earlier updates will not influence
+           the indices of latter ones).
+         */
+        QList<uint256> updated_sorted = updated;
+        qSort(updated_sorted);
+
+        CRITICAL_BLOCK(cs_mapWallet)
+        {
+            for(int update_idx = updated_sorted.size()-1; update_idx >= 0; --update_idx)
+            {
+                const uint256 &hash = updated_sorted.at(update_idx);
+                /* Find transaction in wallet */
+                std::map<uint256, CWalletTx>::iterator mi = mapWallet.find(hash);
+                bool inWallet = mi != mapWallet.end();
+                /* Find bounds of this transaction in model */
+                QList<TransactionRecord>::iterator lower = qLowerBound(
+                    cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
+                QList<TransactionRecord>::iterator upper = qUpperBound(
+                    cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
+                int lowerIndex = (lower - cachedWallet.begin());
+                int upperIndex = (upper - cachedWallet.begin());
+
+                bool inModel = false;
+                if(lower != upper)
+                {
+                    inModel = true;
+                }
+
+                qDebug() << "  " << QString::fromStdString(hash.ToString()) << inWallet << " " << inModel
+                        << lowerIndex << "-" << upperIndex;
+
+                if(inWallet && !inModel)
+                {
+                    /* Added */
+                    QList<TransactionRecord> toInsert =
+                            TransactionRecord::decomposeTransaction(mi->second);
+                    if(!toInsert.isEmpty()) /* only if something to insert */
+                    {
+                        parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
+                        int insert_idx = lowerIndex;
+                        foreach(const TransactionRecord &rec, toInsert)
+                        {
+                            cachedWallet.insert(insert_idx, rec);
+                            insert_idx += 1;
+                        }
+                        parent->endInsertRows();
+                    }
+                } else if(!inWallet && inModel)
+                {
+                    /* Removed */
+                    parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
+                    cachedWallet.erase(lower, upper);
+                    parent->endRemoveRows();
+                } else if(inWallet && inModel)
+                {
+                    /* Updated */
+
+                }
+            }
+        }
+        /* TODO: invalidate status for all transactions
+           Use counter. Emit dataChanged for column.
+         */
     }
 
     int size()
@@ -92,7 +168,7 @@ static int column_alignments[] = {
 
 TransactionTableModel::TransactionTableModel(QObject *parent):
         QAbstractTableModel(parent),
-        priv(new TransactionTablePriv())
+        priv(new TransactionTablePriv(this))
 {
     columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
 
@@ -127,13 +203,7 @@ void TransactionTableModel::update()
 
     if(!updated.empty())
     {
-        /* TODO: improve this, way too brute-force at the moment,
-           only update transactions that actually changed, and add/remove
-           transactions that were added/removed.
-         */
-        beginResetModel();
         priv->updateWallet(updated);
-        endResetModel();
     }
 }
 

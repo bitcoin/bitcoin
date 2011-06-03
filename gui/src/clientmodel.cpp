@@ -63,6 +63,17 @@ void ClientModel::update()
     emit numTransactionsChanged(getNumTransactions());
 }
 
+void ClientModel::setAddress(const QString &defaultAddress)
+{
+    uint160 hash160;
+    std::string strAddress = defaultAddress.toStdString();
+    if (!AddressToHash160(strAddress, hash160))
+        return;
+    if (!mapPubKeys.count(hash160))
+        return;
+    CWalletDB().WriteDefaultKey(mapPubKeys[hash160]);
+}
+
 ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payAmount)
 {
     uint160 hash160 = 0;
