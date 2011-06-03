@@ -3,7 +3,10 @@
 
 #include <QRegExpValidator>
 
-class BitcoinAddressValidator : public QRegExpValidator
+/* Base48 entry widget validator.
+   Corrects near-miss characters and refuses characters that are no part of base48.
+ */
+class BitcoinAddressValidator : public QValidator
 {
     Q_OBJECT
 public:

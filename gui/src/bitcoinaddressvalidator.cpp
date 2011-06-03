@@ -1,7 +1,5 @@
 #include "bitcoinaddressvalidator.h"
 
-#include "base58.h"
-
 #include <QDebug>
 
 /* Base58 characters are:
@@ -18,12 +16,13 @@
 */
 
 BitcoinAddressValidator::BitcoinAddressValidator(QObject *parent) :
-    QRegExpValidator(QRegExp(QString("^[")+QString(pszBase58)+QString("]+")), parent)
+    QValidator(parent)
 {
 }
 
 QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) const
 {
+    /* Correction */
     for(int idx=0; idx<input.size(); ++idx)
     {
         switch(input.at(idx).unicode())
@@ -39,7 +38,26 @@ QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) co
         default:
             break;
         }
-
     }
-    return QRegExpValidator::validate(input, pos);
+
+    /* Validation */
+    QValidator::State state = QValidator::Acceptable;
+    for(int idx=0; idx<input.size(); ++idx)
+    {
+        int ch = input.at(idx).unicode();
+
+        if(((ch >= '0' && ch<='9') ||
+           (ch >= 'a' && ch<='z') ||
+           (ch >= 'A' && ch<='Z')) &&
+           ch != 'l' && ch != 'I' && ch != '0' && ch != 'O')
+        {
+            /* Alphanumeric and not a 'forbidden' character */
+        }
+        else
+        {
+            state = QValidator::Invalid;
+        }
+    }
+
+    return state;
 }
