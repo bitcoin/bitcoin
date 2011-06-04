@@ -8,6 +8,7 @@
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #ifdef USE_SSL
 #include <boost/asio/ssl.hpp> 
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
@@ -1586,7 +1587,9 @@ int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHea
         string str;
         std::getline(stream, str);
         if (str.empty() || str == "\r")
+        {
             break;
+        }
         string::size_type nColon = str.find(":");
         if (nColon != string::npos)
         {
@@ -1597,7 +1600,9 @@ int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHea
             boost::trim(strValue);
             mapHeadersRet[strHeader] = strValue;
             if (strHeader == "content-length")
+            {
                 nLen = atoi(strValue.c_str());
+            }
         }
     }
     return nLen;
@@ -1721,9 +1726,20 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     stream << HTTPReply(nStatus, strReply) << std::flush;
 }
 
+string ErrorString(const Object& objError, const Value& id)
+{
+    // Send error reply from json-rpc error object
+    int nStatus = 500;
+    int code = find_value(objError, "code").get_int();
+    if (code == -32600) nStatus = 400;
+    else if (code == -32601) nStatus = 404;
+    string strReply = JSONRPCReply(Value::null, objError, id);
+    return HTTPReply(nStatus, strReply);
+}
+
 bool ClientAllowed(const string& strAddress)
 {
-    if (strAddress == asio::ip::address_v4::loopback().to_string())
+    if (strAddress == ip::address_v4::loopback().to_string())
         return true;
     const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
     BOOST_FOREACH(string strAllow, vAllow)
@@ -1786,132 +1802,113 @@ private:
 };
 #endif
 
-void ThreadRPCServer(void* parg)
+
+/* Generic server-side RPC connection. Instantiate one of its children depending
+ * on whether the desired connection is SSL or non-SSL (Plain).
+ *
+ * Uses asynchronous IO.
+ */
+class RPCConnection
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer(parg));
-    try
+public:
+    /* Read the status line of an HTTP request */
+    virtual void do_read_status() = 0;
+    /* Read the header of an HTTP request */
+    virtual void do_read_header() = 0;
+    /* Read the body of an HTTP request */
+    virtual void do_read_body() = 0;
+    /* Respond to an HTTP request with str */
+    virtual void respond(std::string str) = 0;
+
+    /* Initiate the connection */
+    virtual void start()
     {
-        vnThreadsRunning[4]++;
-        ThreadRPCServer2(parg);
-        vnThreadsRunning[4]--;
-    }
-    catch (std::exception& e) {
-        vnThreadsRunning[4]--;
-        PrintException(&e, "ThreadRPCServer()");
-    } catch (...) {
-        vnThreadsRunning[4]--;
-        PrintException(NULL, "ThreadRPCServer()");
-    }
-    printf("ThreadRPCServer exiting\n");
-}
-
-void ThreadRPCServer2(void* parg)
-{
-    printf("ThreadRPCServer started\n");
-
-    if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
-    {
-        string strWhatAmI = "To use bitcoind";
-        if (mapArgs.count("-server"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
-        else if (mapArgs.count("-daemon"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
-        PrintConsole(
-            _("Warning: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
-              "If the file does not exist, create it with owner-readable-only file permissions.\n"),
-                strWhatAmI.c_str(),
-                GetConfigFile().c_str());
-        CreateThread(Shutdown, NULL);
-        return;
-    }
-
-    bool fUseSSL = GetBoolArg("-rpcssl");
-    asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
-
-    asio::io_service io_service;
-    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
-    ip::tcp::acceptor acceptor(io_service, endpoint);
-
-    acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-
-#ifdef USE_SSL
-    ssl::context context(io_service, ssl::context::sslv23);
-    if (fUseSSL)
-    {
-        context.set_options(ssl::context::no_sslv2);
-        filesystem::path certfile = GetArg("-rpcsslcertificatechainfile", "server.cert");
-        if (!certfile.is_complete()) certfile = filesystem::path(GetDataDir()) / certfile;
-        if (filesystem::exists(certfile)) context.use_certificate_chain_file(certfile.string().c_str());
-        else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", certfile.string().c_str());
-        filesystem::path pkfile = GetArg("-rpcsslprivatekeyfile", "server.pem");
-        if (!pkfile.is_complete()) pkfile = filesystem::path(GetDataDir()) / pkfile;
-        if (filesystem::exists(pkfile)) context.use_private_key_file(pkfile.string().c_str(), ssl::context::pem);
-        else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pkfile.string().c_str());
-
-        string ciphers = GetArg("-rpcsslciphers",
-                                         "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
-        SSL_CTX_set_cipher_list(context.impl(), ciphers.c_str());
-    }
-#else
-    if (fUseSSL)
-        throw runtime_error("-rpcssl=1, but bitcoin compiled without full openssl libraries.");
-#endif
-
-    loop
-    {
-        // Accept connection
-#ifdef USE_SSL
-        SSLStream sslStream(io_service, context);
-        SSLIOStreamDevice d(sslStream, fUseSSL);
-        iostreams::stream<SSLIOStreamDevice> stream(d);
-#else
-        ip::tcp::iostream stream;
-#endif
-
-        ip::tcp::endpoint peer;
-        vnThreadsRunning[4]--;
-#ifdef USE_SSL
-        acceptor.accept(sslStream.lowest_layer(), peer);
-#else
-        acceptor.accept(*stream.rdbuf(), peer);
-#endif
-        vnThreadsRunning[4]++;
-        if (fShutdown)
+        if (! ClientAllowed(peer.address().to_string()))
             return;
+        do_read_status();
+    }
+    /* Parse status line and continues reading */
+    void handle_read_status(const boost::system::error_code& err, size_t nBytes)
+    {
+        if (err) return;
 
-        // Restrict callers by IP
-        if (!ClientAllowed(peer.address().to_string()))
-            continue;
+        istream is(&streambuf);
+        char * pszStatus = new char[nBytes + 1];
+        is.read(pszStatus, nBytes);
+        pszStatus[nBytes] = '\0';
 
+        stringstream ss(pszStatus);
+        int status = ReadHTTPStatus(ss);
+
+        delete[] pszStatus;
+
+        do_read_header();
+    }
+    /* Parses header lines to determine authentication and body length info,
+     * and continues reading */
+    void handle_read_header(const boost::system::error_code& err, size_t nBytes)
+    {
+        if (err) return;
+
+        std::istream is(&streambuf);
+        char *pszHeader = new char[nBytes + 1];
+        is.read(pszHeader, nBytes);
+        pszHeader[nBytes] = '\0';
+
+        stringstream ss(pszHeader);
         map<string, string> mapHeaders;
-        string strRequest;
+        int nLen = ReadHTTPHeader(ss, mapHeaders);
 
-        boost::thread api_caller(ReadHTTP, boost::ref(stream), boost::ref(mapHeaders), boost::ref(strRequest));
-        if (!api_caller.timed_join(boost::posix_time::seconds(GetArg("-rpctimeout", 30))))
-        {   // Timed out:
-            acceptor.cancel();
-            printf("ThreadRPCServer ReadHTTP timeout\n");
-            continue;
+        delete[] pszHeader;
+        if (nLen < 0 || nLen > MAX_SIZE)
+        {
+            respond(HTTPReply(500, ""));
         }
-
         // Check authorization
         if (mapHeaders.count("authorization") == 0)
         {
-            stream << HTTPReply(401, "") << std::flush;
-            continue;
+            respond(HTTPReply(401, ""));
         }
-        if (!HTTPAuthorized(mapHeaders))
+        else if (!HTTPAuthorized(mapHeaders))
         {
             // Deter brute-forcing short passwords
             if (mapArgs["-rpcpassword"].size() < 15)
                 Sleep(50);
 
-            stream << HTTPReply(401, "") << std::flush;
+            respond(HTTPReply(401, ""));
             printf("ThreadRPCServer incorrect password attempt\n");
-            continue;
         }
+        else
+        {
+
+            size_t nExtra = is.rdbuf()->in_avail();
+            if (nExtra >= nLen)
+            {
+                handle_read_body(err, nLen);
+            }
+            else
+            {
+                nBytesExpected = nLen - nExtra;
+
+                do_read_body();
+            }
+        }
+    }
+    /* Parses body, dispatches RPC call based on incoming JSONRPC request, and
+     * responds appropriately when request terminates. */
+    void handle_read_body (const boost::system::error_code& err, size_t nBytes)
+    {
+        if (err) return;
 
         Value id = Value::null;
+        std::istream is(&streambuf);
+
+        char *pszBody = new char[nBytes + 1];
+        is.read(pszBody, nBytes);
+        pszBody[nBytes] = '\0';
+
+        string strRequest(pszBody);
+
         try
         {
             // Parse request
@@ -1960,22 +1957,307 @@ void ThreadRPCServer2(void* parg)
 
                 // Send reply
                 string strReply = JSONRPCReply(result, Value::null, id);
-                stream << HTTPReply(200, strReply) << std::flush;
+                respond(HTTPReply(200, strReply));
             }
             catch (std::exception& e)
             {
-                ErrorReply(stream, JSONRPCError(-1, e.what()), id);
+                respond(ErrorString(JSONRPCError(-1, e.what()), id));
             }
         }
         catch (Object& objError)
         {
-            ErrorReply(stream, objError, id);
+            respond(ErrorString(objError, id));
         }
         catch (std::exception& e)
         {
-            ErrorReply(stream, JSONRPCError(-32700, e.what()), id);
+            respond(ErrorString(JSONRPCError(-32700, e.what()), id));
+        }
+        delete[] pszBody;
+    }
+
+    /* Called asynchronously during body read. Returns the number of bytes of
+     * data that's still expected from the network. */
+    size_t body_done_condition(const boost::system::error_code& err,
+                               size_t nBytes)
+    {
+        if (nBytes < nBytesExpected)
+            return nBytesExpected - nBytes;
+        else
+            return 0;
+    }
+
+    /* Do any necessary handling once the response to the JSONRPC call is
+     * dispatched to the client. */
+    void handle_response(const boost::system::error_code& err, size_t nBytes)
+    {}
+
+    ip::tcp::endpoint& getPeer()
+    {
+        return peer;
+    }
+protected:
+    ip::tcp::endpoint peer;
+    asio::streambuf streambuf;
+    size_t nBytesExpected;
+};
+
+#ifdef USE_SSL
+/* An RPCConnection that uses SSL. */
+class SSLRPCConnection :public boost::enable_shared_from_this<SSLRPCConnection>,
+                        public RPCConnection
+{
+public:
+    SSLRPCConnection(asio::io_service& io_service, ssl::context& context)
+        : socket(io_service, context)
+    {}
+    void start()
+    {
+        if (! ClientAllowed(peer.address().to_string()))
+            return;
+        socket.async_handshake(ssl::stream_base::server,
+            boost::bind(&SSLRPCConnection::handle_handshake, shared_from_this(),
+                        asio::placeholders::error));
+    }
+    void handle_handshake(const boost::system::error_code& err)
+    {
+        if (err) return;
+        do_read_status();
+    }
+    void do_read_status()
+    {
+        asio::async_read_until(socket, streambuf, "\r\n",
+            boost::bind(&SSLRPCConnection::handle_read_status,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred));
+    }
+    void do_read_header()
+    {
+        asio::async_read_until(socket, streambuf, "\r\n\r\n",
+            boost::bind(&SSLRPCConnection::handle_read_header,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred));
+    }
+    void do_read_body()
+    {
+        asio::async_read(socket, streambuf,
+            boost::bind(&SSLRPCConnection::body_done_condition,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred),
+            boost::bind(&SSLRPCConnection::handle_read_body,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred));
+    }
+    void respond(std::string str)
+    {
+        boost::asio::async_write(socket, boost::asio::buffer(str),
+            boost::bind(&SSLRPCConnection::handle_response, shared_from_this(),
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
+    }
+
+    SSLStream socket;
+private:
+};
+#endif
+
+/* An RPCConnection that uses plain TCP. */
+class PlainRPCConnection :
+    public boost::enable_shared_from_this<PlainRPCConnection>,
+    public RPCConnection
+{
+public:
+    PlainRPCConnection(asio::io_service& io_service) : socket(io_service)
+    {}
+    void do_read_status()
+    {
+        asio::async_read_until(socket, streambuf, "\r\n",
+            boost::bind(&PlainRPCConnection::handle_read_status,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred));
+    }
+    void do_read_header()
+    {
+        asio::async_read_until(socket, streambuf, "\r\n\r\n",
+            boost::bind(&PlainRPCConnection::handle_read_header,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred));
+    }
+    void do_read_body()
+    {
+        asio::async_read(socket, streambuf,
+            boost::bind(&PlainRPCConnection::body_done_condition,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred),
+            boost::bind(&PlainRPCConnection::handle_read_body,
+                        shared_from_this(), asio::placeholders::error,
+                        asio::placeholders::bytes_transferred));
+    }
+    void respond(std::string str)
+    {
+        boost::asio::async_write(socket, boost::asio::buffer(str),
+            boost::bind(&PlainRPCConnection::handle_response,
+            shared_from_this(), boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
+    }
+    ip::tcp::socket socket;
+private:
+};
+
+typedef boost::shared_ptr<RPCConnection> RPCConnection_p;
+
+class AsyncRPCServer {
+public:
+    AsyncRPCServer(asio::io_service &io_service, ip::tcp::acceptor &acceptor,
+                   bool useSSL);
+    void do_accept(RPCConnection_p& con);
+    void handle_accept(RPCConnection_p con, const boost::system::error_code &error);
+private:
+    asio::io_service& m_io_service;
+    ip::tcp::acceptor& m_acceptor;
+    bool fUseSSL;
+#ifdef USE_SSL
+    ssl::context context;
+#endif
+
+};
+
+AsyncRPCServer::AsyncRPCServer(asio::io_service &io_service,
+                               ip::tcp::acceptor &acceptor, bool useSSL)
+    : m_io_service(io_service), m_acceptor(acceptor), fUseSSL(useSSL)
+#ifdef USE_SSL
+      , context(io_service, ssl::context::sslv23)
+#endif
+{
+    m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+#ifdef USE_SSL
+    if (fUseSSL)
+    {
+        context.set_options(ssl::context::no_sslv2);
+        filesystem::path certfile = GetArg("-rpcsslcertificatechainfile", "server.cert");
+        if (!certfile.is_complete()) certfile = filesystem::path(GetDataDir()) / certfile;
+        if (filesystem::exists(certfile)) context.use_certificate_chain_file(certfile.string().c_str());
+        else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", certfile.string().c_str());
+        filesystem::path pkfile = GetArg("-rpcsslprivatekeyfile", "server.pem");
+        if (!pkfile.is_complete()) pkfile = filesystem::path(GetDataDir()) / pkfile;
+        if (filesystem::exists(pkfile)) context.use_private_key_file(pkfile.string().c_str(), ssl::context::pem);
+        else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pkfile.string().c_str());
+
+        string ciphers = GetArg("-rpcsslciphers",
+                                         "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
+        SSL_CTX_set_cipher_list(context.impl(), ciphers.c_str());
+        RPCConnection_p con(new SSLRPCConnection(m_io_service, context));
+        do_accept(con);
+    }
+    else
+    {
+        RPCConnection_p con(new PlainRPCConnection(m_io_service));
+        do_accept(con);
+    }
+#else
+    if (fUseSSL)
+        throw runtime_error("-rpcssl=1, but bitcoin compiled without full openssl libraries.");
+    RPCConnection_p con(new PlainRPCConnection(m_io_service));
+    do_accept(con);
+#endif
+}
+
+void AsyncRPCServer::do_accept(RPCConnection_p& con)
+{
+
+#ifdef USE_SSL
+    if (fUseSSL)
+    {
+        boost::shared_ptr<SSLRPCConnection> src = static_pointer_cast<SSLRPCConnection> (con);
+        m_acceptor.async_accept(src->socket.lowest_layer(), con->getPeer(), boost::bind(&AsyncRPCServer::handle_accept, this, con, boost::asio::placeholders::error));
+    }
+    else
+#endif
+    {
+        boost::shared_ptr<PlainRPCConnection> prc = static_pointer_cast<PlainRPCConnection> (con);
+        m_acceptor.async_accept(prc->socket.lowest_layer(), con->getPeer(), boost::bind(&AsyncRPCServer::handle_accept, this, con, boost::asio::placeholders::error));
+    }
+
+}
+
+void AsyncRPCServer::handle_accept(RPCConnection_p con, const boost::system::error_code &error)
+{
+    if (!error && !fShutdown)
+    {
+        con->start();
+#ifdef USE_SSL
+        if (fUseSSL)
+        {
+            RPCConnection_p new_con(new SSLRPCConnection(m_io_service, context));
+            do_accept(new_con);
+        }
+        else
+#endif
+        {
+            RPCConnection_p new_con(new PlainRPCConnection(m_io_service));
+            do_accept(new_con);
         }
     }
+}
+
+
+void ThreadRPCServer(void* parg)
+{
+    IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer(parg));
+    try
+    {
+        vnThreadsRunning[4]++;
+        ThreadRPCServer2(parg);
+        vnThreadsRunning[4]--;
+    }
+    catch (std::exception& e) {
+        vnThreadsRunning[4]--;
+        PrintException(&e, "ThreadRPCServer()");
+    } catch (...) {
+        vnThreadsRunning[4]--;
+        PrintException(NULL, "ThreadRPCServer()");
+    }
+    printf("ThreadRPCServer exiting\n");
+}
+
+void ThreadRPCServer2(void* parg)
+{
+    printf("ThreadRPCServer started\n");
+
+    if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
+    {
+        string strWhatAmI = "To use bitcoind";
+        if (mapArgs.count("-server"))
+            strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
+        else if (mapArgs.count("-daemon"))
+            strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
+        PrintConsole(
+            _("Warning: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
+              "If the file does not exist, create it with owner-readable-only file permissions.\n"),
+                strWhatAmI.c_str(),
+                GetConfigFile().c_str());
+        CreateThread(Shutdown, NULL);
+        return;
+    }
+
+    asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
+
+    asio::io_service io_service;
+    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
+    ip::tcp::acceptor acceptor(io_service, endpoint);
+
+    bool fUseSSL = GetBoolArg("-rpcssl");
+    AsyncRPCServer server(io_service, acceptor, fUseSSL);
+
+    vnThreadsRunning[4]++;
+    boost::thread io_runner(static_cast <size_t (asio::io_service::*)(void) >(&asio::io_service::run), &io_service);
+
+    while (!fShutdown)
+    {
+        Sleep(2000);
+    }
+    io_service.stop();
+    io_runner.join();
+    vnThreadsRunning[4]--;
 }
 
 
