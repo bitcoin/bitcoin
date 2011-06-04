@@ -148,7 +148,25 @@ struct TransactionTablePriv
     {
         if(idx >= 0 && idx < cachedWallet.size())
         {
-            return &cachedWallet[idx];
+            TransactionRecord *rec = &cachedWallet[idx];
+
+            /* If a status update is needed (blocks came in since last check),
+               update the status of this transaction from the wallet. Otherwise,
+               simply re-use the cached status.
+             */
+            if(rec->statusUpdateNeeded())
+            {
+                CRITICAL_BLOCK(cs_mapWallet)
+                {
+                    std::map<uint256, CWalletTx>::iterator mi = mapWallet.find(rec->hash);
+
+                    if(mi != mapWallet.end())
+                    {
+                        rec->updateStatus(mi->second);
+                    }
+                }
+            }
+            return rec;
         } else {
             return 0;
         }
@@ -204,6 +222,12 @@ void TransactionTableModel::update()
     if(!updated.empty())
     {
         priv->updateWallet(updated);
+
+        /* Status (number of confirmations) and (possibly) description
+           columns changed for all rows.
+         */
+        emit dataChanged(index(0, Status), index(priv->size()-1, Status));
+        emit dataChanged(index(0, Description), index(priv->size()-1, Description));
     }
 }
 

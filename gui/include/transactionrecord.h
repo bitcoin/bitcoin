@@ -10,7 +10,7 @@ class TransactionStatus
 public:
     TransactionStatus():
             confirmed(false), sortKey(""), maturity(Mature),
-            matures_in(0), status(Offline), depth(0), open_for(0)
+            matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
     { }
 
     enum Maturity
@@ -40,6 +40,9 @@ public:
     Status status;
     int64 depth;
     int64 open_for; /* Timestamp if status==OpenUntilDate, otherwise number of blocks */
+
+    /* Current number of blocks (to know whether cached status is still valid. */
+    int cur_num_blocks;
 };
 
 class TransactionRecord
@@ -57,21 +60,21 @@ public:
     };
 
     TransactionRecord():
-            hash(), time(0), type(Other), address(""), debit(0), credit(0)
+            hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, int64 time, const TransactionStatus &status):
+    TransactionRecord(uint256 hash, int64 time):
             hash(hash), time(time), type(Other), address(""), debit(0),
-            credit(0), status(status)
+            credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, int64 time, const TransactionStatus &status,
+    TransactionRecord(uint256 hash, int64 time,
                 Type type, const std::string &address,
                 int64 debit, int64 credit):
             hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
-            status(status)
+            idx(0)
     {
     }
 
@@ -88,8 +91,19 @@ public:
     int64 debit;
     int64 credit;
 
+    /* Subtransaction index, for sort key */
+    int idx;
+
     /* Status: can change with block chain update */
     TransactionStatus status;
+
+    /* Update status from wallet tx.
+     */
+    void updateStatus(const CWalletTx &wtx);
+
+    /* Is a status update needed?
+     */
+    bool statusUpdateNeeded();
 };
 
 #endif // TRANSACTIONRECORD_H
