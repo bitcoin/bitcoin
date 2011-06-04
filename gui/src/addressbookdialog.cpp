@@ -23,6 +23,7 @@ AddressBookDialog::~AddressBookDialog()
 
 void AddressBookDialog::setModel(AddressTableModel *model)
 {
+    this->model = model;
     /* Refresh list from core */
     model->updateList();
 
