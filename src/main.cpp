@@ -397,7 +397,7 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
-void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, list<pair<string, int64> >& listReceived,
+void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, string& strGenerateAddress, list<pair<string, int64> >& listReceived,
                            list<pair<string, int64> >& listSent, int64& nFee, string& strSentAccount) const
 {
     nGeneratedImmature = nGeneratedMature = nFee = 0;
@@ -407,6 +407,20 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
 
     if (IsCoinBase())
     {
+        string address;
+        uint160 hash160;
+        vector<unsigned char> vchPubKey;
+        if (ExtractHash160(vout[0].scriptPubKey, hash160))
+            address = Hash160ToAddress(hash160);
+        else if (ExtractPubKey(vout[0].scriptPubKey, false, vchPubKey))
+            address = PubKeyToAddress(vchPubKey);
+        else
+        {
+            printf("CWalletTx::GetAmounts: Unknown generating transaction type found, txid %s\n",
+                   this->GetHash().ToString().c_str());
+            address = " unknown ";
+        }
+        strGenerateAddress = address;
         if (GetBlocksToMaturity() > 0)
             nGeneratedImmature = CTransaction::GetCredit();
         else
@@ -460,13 +474,12 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
 
     int64 allGeneratedImmature, allGeneratedMature, allFee;
     allGeneratedImmature = allGeneratedMature = allFee = 0;
-    string strSentAccount;
+    string strSentAccount, strGenerateAddress;
     list<pair<string, int64> > listReceived;
     list<pair<string, int64> > listSent;
-    GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
+    GetAmounts(allGeneratedImmature, allGeneratedMature, strGenerateAddress, listReceived, listSent, allFee, strSentAccount);
+    string strGenerateAccount;
 
-    if (strAccount == "")
-        nGenerated = allGeneratedMature;
     if (strAccount == strSentAccount)
     {
         BOOST_FOREACH(const PAIRTYPE(string,int64)& s, listSent)
@@ -489,7 +502,11 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
                 nReceived += r.second;
             }
         }
+        if (mapAddressBook.count(strGenerateAddress))
+            strGenerateAccount = mapAddressBook[strGenerateAddress];
     }
+    if (strAccount == strGenerateAccount)
+        nGenerated = allGeneratedMature;
 }
 
 

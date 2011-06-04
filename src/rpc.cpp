@@ -689,10 +689,10 @@ Value getbalance(const Array& params, bool fHelp)
 
             int64 allGeneratedImmature, allGeneratedMature, allFee;
             allGeneratedImmature = allGeneratedMature = allFee = 0;
-            string strSentAccount;
+            string strSentAccount, strGenerateAddress;
             list<pair<string, int64> > listReceived;
             list<pair<string, int64> > listSent;
-            wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
+            wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, strGenerateAddress, listReceived, listSent, allFee, strSentAccount);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
                 BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listReceived)
                     nBalance += r.second;
@@ -1010,18 +1010,24 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nGeneratedImmature, nGeneratedMature, nFee;
-    string strSentAccount;
+    string strSentAccount, strGenerateAddress;
     list<pair<string, int64> > listReceived;
     list<pair<string, int64> > listSent;
-    wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
+    wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, strGenerateAddress, listReceived, listSent, nFee, strSentAccount);
+    string strGenerateAccount;
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        if (mapAddressBook.count(strGenerateAddress))
+            strGenerateAccount = mapAddressBook[strGenerateAddress];
+    }
 
     bool fAllAccounts = (strAccount == string("*"));
 
     // Generated blocks assigned to account ""
-    if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == ""))
+    if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == strGenerateAccount))
     {
         Object entry;
-        entry.push_back(Pair("account", string("")));
+        entry.push_back(Pair("account", strGenerateAccount));
         if (nGeneratedImmature)
         {
             entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
@@ -1188,16 +1194,19 @@ Value listaccounts(const Array& params, bool fHelp)
         {
             const CWalletTx& wtx = (*it).second;
             int64 nGeneratedImmature, nGeneratedMature, nFee;
-            string strSentAccount;
+            string strSentAccount, strGenerateAddress;
             list<pair<string, int64> > listReceived;
             list<pair<string, int64> > listSent;
-            wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
+            wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, strGenerateAddress, listReceived, listSent, nFee, strSentAccount);
+            string strGenerateAccount;
+            if (mapAddressBook.count(strGenerateAddress))
+                strGenerateAccount = mapAddressBook[strGenerateAddress];
             mapAccountBalances[strSentAccount] -= nFee;
             BOOST_FOREACH(const PAIRTYPE(string, int64)& s, listSent)
                 mapAccountBalances[strSentAccount] -= s.second;
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
-                mapAccountBalances[""] += nGeneratedMature;
+                mapAccountBalances[strGenerateAccount] += nGeneratedMature;
                 BOOST_FOREACH(const PAIRTYPE(string, int64)& r, listReceived)
                     if (mapAddressBook.count(r.first))
                         mapAccountBalances[mapAddressBook[r.first]] += r.second;
