@@ -1,5 +1,6 @@
 #include "optionsmodel.h"
 #include "main.h"
+#include "net.h"
 
 #include <QDebug>
 
@@ -47,6 +48,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     bool successful = true; /* set to false on parse error */
     if(role == Qt::EditRole)
     {
+        CWalletDB walletdb;
         switch(index.row())
         {
         case StartAtStartup:
@@ -54,15 +56,22 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();
+            walletdb.WriteSetting("fMinimizeToTray", fMinimizeToTray);
             break;
         case MapPortUPnP:
             fUseUPnP = value.toBool();
+            walletdb.WriteSetting("fUseUPnP", fUseUPnP);
+#ifdef USE_UPNP
+            MapPort(fUseUPnP);
+#endif
             break;
         case MinimizeOnClose:
             fMinimizeOnClose = value.toBool();
+            walletdb.WriteSetting("fMinimizeOnClose", fMinimizeOnClose);
             break;
         case ConnectSOCKS4:
             fUseProxy = value.toBool();
+            walletdb.WriteSetting("fUseProxy", fUseProxy);
             break;
         case ProxyIP:
             {
@@ -71,6 +80,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (addr.ip != INADDR_NONE)
                 {
                     addrProxy.ip = addr.ip;
+                    walletdb.WriteSetting("addrProxy", addrProxy);
                 } else {
                     successful = false;
                 }
@@ -82,6 +92,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (nPort > 0 && nPort < USHRT_MAX)
                 {
                     addrProxy.port = htons(nPort);
+                    walletdb.WriteSetting("addrProxy", addrProxy);
                 } else {
                     successful = false;
                 }
@@ -92,6 +103,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if(ParseMoney(value.toString().toStdString(), retval))
                 {
                     nTransactionFee = retval;
+                    walletdb.WriteSetting("nTransactionFee", nTransactionFee);
                 } else {
                     successful = false; /* parse error */
                 }

@@ -20,11 +20,11 @@ This has been implemented:
 
 - Address book and transactions views and models
 
+- Options dialog
+
 - Sending coins
 
 This has to be done:
-
-- Settings are not remembered between invocations yet
 
 - Minimize to tray / Minimize on close
 
