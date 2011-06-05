@@ -14,7 +14,7 @@ This has been implemented:
 
 - GUI only functionality (copy to clipboard, select address, address/transaction filter proxys)
 
-- Bitcoin core is made compatible with Qt4, and linked against
+- Bitcoin core is made compatible with Qt4
 
 - Send coins dialog: address and input validation
 
