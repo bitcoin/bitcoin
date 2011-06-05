@@ -5,10 +5,12 @@
 #include "clientmodel.h"
 #include "util.h"
 #include "init.h"
+#include "main.h"
 #include "externui.h"
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QThread>
 
 // Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;
@@ -16,7 +18,6 @@ BitcoinGUI *guiref;
 int MyMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
 {
     // Message from main thread
-    printf("MyMessageBox\n");
     if(guiref)
     {
         guiref->error(QString::fromStdString(caption),
@@ -50,9 +51,26 @@ int ThreadSafeMessageBox(const std::string& message, const std::string& caption,
 
 bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
 {
-    // Query from network thread
-    // TODO
-    return true;
+    if(!guiref)
+        return false;
+    if(nFeeRequired < MIN_TX_FEE || nFeeRequired <= nTransactionFee || fDaemon)
+        return true;
+    bool payFee = false;
+
+    /* Call slot on GUI thread.
+       If called from another thread, use a blocking QueuedConnection.
+     */
+    Qt::ConnectionType connectionType = Qt::DirectConnection;
+    if(QThread::currentThread() != QCoreApplication::instance()->thread())
+    {
+        connectionType = Qt::BlockingQueuedConnection;
+    }
+
+    QMetaObject::invokeMethod(guiref, "askFee", connectionType,
+                               Q_ARG(qint64, nFeeRequired),
+                               Q_ARG(bool*, &payFee));
+
+    return payFee;
 }
 
 void CalledSetStatusBar(const std::string& strText, int nField)
@@ -73,13 +91,13 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
-    BitcoinGUI window;
-    guiref = &window;
 
     try {
         if(AppInit2(argc, argv))
         {
+            BitcoinGUI window;
             ClientModel model;
+            guiref = &window;
             window.setModel(&model);
 
             window.show();

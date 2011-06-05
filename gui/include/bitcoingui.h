@@ -66,6 +66,7 @@ public slots:
     void setNumBlocks(int count);
     void setNumTransactions(int count);
     void error(const QString &title, const QString &message);
+    void askFee(qint64 nFeeRequired, bool *payFee);
 
 private slots:
     void sendcoinsClicked();
