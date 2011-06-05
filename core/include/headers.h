@@ -127,7 +127,7 @@
 #include "uibase.h"
 #include "ui.h"
 #else
-#include "noui.h"
+#include "externui.h"
 #endif
 #include "init.h"
 

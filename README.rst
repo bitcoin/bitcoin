@@ -14,19 +14,17 @@ This has been implemented:
 
 - GUI only functionality (copy to clipboard, select address, address/transaction filter proxys)
 
-- Bitcoin core is made compatible with Qt4, and linked against
+- Bitcoin core is made compatible with Qt4
 
 - Send coins dialog: address and input validation
 
 - Address book and transactions views and models
 
+- Options dialog
+
 - Sending coins
 
 This has to be done:
-
-- Settings are not remembered between invocations yet
-
-- Minimize to tray / Minimize on close
 
 - Start at system start
 

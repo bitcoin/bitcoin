@@ -3,11 +3,13 @@
 #include "guiconstants.h"
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
+#include "transactiontablemodel.h"
 
 #include <QTimer>
 
 ClientModel::ClientModel(QObject *parent) :
-    QObject(parent), optionsModel(0), addressTableModel(0)
+    QObject(parent), optionsModel(0), addressTableModel(0),
+    transactionTableModel(0)
 {
     /* Until signal notifications is built into the bitcoin core,
        simply update everything after polling using a timer.
@@ -18,6 +20,7 @@ ClientModel::ClientModel(QObject *parent) :
 
     optionsModel = new OptionsModel(this);
     addressTableModel = new AddressTableModel(this);
+    transactionTableModel = new TransactionTableModel(this);
 }
 
 qint64 ClientModel::getBalance()
@@ -139,4 +142,9 @@ OptionsModel *ClientModel::getOptionsModel()
 AddressTableModel *ClientModel::getAddressTableModel()
 {
     return addressTableModel;
+}
+
+TransactionTableModel *ClientModel::getTransactionTableModel()
+{
+    return transactionTableModel;
 }

@@ -207,6 +207,10 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 
     connect(connect_socks4, SIGNAL(toggled(bool)), proxy_ip, SLOT(setEnabled(bool)));
     connect(connect_socks4, SIGNAL(toggled(bool)), proxy_port, SLOT(setEnabled(bool)));
+
+#ifndef USE_UPNP
+    map_port_upnp->setDisabled(true);
+#endif
 }
 
 void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)

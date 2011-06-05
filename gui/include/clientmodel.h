@@ -5,6 +5,7 @@
 
 class OptionsModel;
 class AddressTableModel;
+class TransactionTableModel;
 
 class ClientModel : public QObject
 {
@@ -25,6 +26,7 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
+    TransactionTableModel *getTransactionTableModel();
 
     qint64 getBalance();
     QString getAddress();
@@ -39,6 +41,7 @@ public:
 private:
     OptionsModel *optionsModel;
     AddressTableModel *addressTableModel;
+    TransactionTableModel *transactionTableModel;
 
 signals:
     void balanceChanged(qint64 balance);
