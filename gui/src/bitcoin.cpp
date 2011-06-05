@@ -10,7 +10,7 @@
 #include <QApplication>
 #include <QMessageBox>
 
-// Need a global reference to process net thread
+// Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;
 
 int MyMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
@@ -83,11 +83,10 @@ int main(int argc, char *argv[])
             window.setModel(&model);
 
             window.show();
-            guiref = 0;
 
-            /* Depending on settings: QApplication::setQuitOnLastWindowClosed(false); */
             int retval = app.exec();
 
+            guiref = 0;
             Shutdown(NULL);
 
             return retval;
