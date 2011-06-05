@@ -283,13 +283,29 @@ public:
         return (memcmp(pchReserved, pchIPv4, sizeof(pchIPv4)) == 0);
     }
 
+    bool IsRFC1918() const
+    {
+      return IsIPv4() && (GetByte(3) == 10 ||
+        (GetByte(3) == 192 && GetByte(2) == 168) ||
+        (GetByte(3) == 172 &&
+          (GetByte(2) >= 16 && GetByte(2) <= 31)));
+    }
+
+    bool IsRFC3927() const
+    {
+      return IsIPv4() && (GetByte(3) == 169 && GetByte(2) == 254);
+    }
+
+    bool IsLocal() const
+    {
+      return IsIPv4() && (GetByte(3) == 127 ||
+          GetByte(3) == 0);
+    }
+
     bool IsRoutable() const
     {
         return IsValid() &&
-            !(GetByte(3) == 10 ||
-              (GetByte(3) == 192 && GetByte(2) == 168) ||
-              GetByte(3) == 127 ||
-              GetByte(3) == 0);
+            !(IsRFC1918() || IsRFC3927() || IsLocal());
     }
 
     bool IsValid() const

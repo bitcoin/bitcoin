@@ -88,8 +88,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet)
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
 
-    bool fRoutable = !(addrConnect.GetByte(3) == 10 || (addrConnect.GetByte(3) == 192 && addrConnect.GetByte(2) == 168));
-    bool fProxy = (fUseProxy && fRoutable);
+    bool fProxy = (fUseProxy && addrConnect.IsRoutable());
     struct sockaddr_in sockaddr = (fProxy ? addrProxy.GetSockAddr() : addrConnect.GetSockAddr());
 
     if (connect(hSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
