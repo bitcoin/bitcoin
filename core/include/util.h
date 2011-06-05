@@ -197,7 +197,7 @@ std::string GetPidFile();
 void CreatePidFile(std::string pidFile, pid_t pid);
 void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef __WXMSW__
-string MyGetSpecialFolderPath(int nFolder, bool fCreate);
+std::string MyGetSpecialFolderPath(int nFolder, bool fCreate);
 #endif
 std::string GetDefaultDataDir();
 std::string GetDataDir();

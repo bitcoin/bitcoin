@@ -731,13 +731,13 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         }
 
         // Don't accept it if it can't get into a block
-        if (nFees < GetMinFee(1000))
+        if (nFees < GetMinFee(1000, true, true))
             return error("AcceptToMemoryPool() : not enough fees");
 
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make other's transactions take longer to confirm.
-        if (nFees < MIN_TX_FEE)
+        if (nFees < MIN_RELAY_TX_FEE)
         {
             static CCriticalSection cs;
             static double dFreeCount;
@@ -884,7 +884,7 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
     return false;
 }
 
-int ScanForWalletTransactions(CBlockIndex* pindexStart)
+int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
 
@@ -897,7 +897,7 @@ int ScanForWalletTransactions(CBlockIndex* pindexStart)
             block.ReadFromDisk(pindex, true);
             BOOST_FOREACH(CTransaction& tx, block.vtx)
             {
-                if (AddToWalletIfInvolvingMe(tx, &block))
+                if (AddToWalletIfInvolvingMe(tx, &block, fUpdate))
                     ret++;
             }
             pindex = pindex->pnext;
@@ -3329,7 +3329,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
             // Transaction fee required depends on block size
             bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
-            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree);
+            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree, true);
 
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
@@ -3854,9 +3854,18 @@ bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& 
                     dPriority += (double)nCredit * pcoin.first->GetDepthInMainChain();
                 }
 
-                // Fill a vout back to self with any change
-                int64 nChange = nValueIn - nTotalValue;
-                if (nChange >= CENT)
+                int64 nChange = nValueIn - nValue - nFeeRet;
+
+                // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
+                // or until nChange becomes zero
+                if (nFeeRet < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+                {
+                    int64 nMoveToFee = min(nChange, MIN_TX_FEE - nFeeRet);
+                    nChange -= nMoveToFee;
+                    nFeeRet += nMoveToFee;
+                }
+
+                if (nChange > 0)
                 {
                     // Note: We use a new key here to keep it from being obvious which side is the change.
                     //  The drawback is that by not reusing a previous key, the change may be lost if a

@@ -265,11 +265,11 @@ void ThreadIRCSeed2(void* parg)
     while (!fShutdown)
     {
         //CAddress addrConnect("216.155.130.130:6667"); // chat.freenode.net
-        CAddress addrConnect("92.243.23.21:6667"); // irc.lfnet.org
+        CAddress addrConnect("92.243.23.21", 6667); // irc.lfnet.org
         if (!fTOR)
         {
             //struct hostent* phostent = gethostbyname("chat.freenode.net");
-            CAddress addrIRC("irc.lfnet.org:6667", 0, true);
+            CAddress addrIRC("irc.lfnet.org", 6667, true);
             if (addrIRC.IsValid())
                 addrConnect = addrIRC;
         }
@@ -339,9 +339,16 @@ void ThreadIRCSeed2(void* parg)
                 Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
             }
         }
-
-        Send(hSocket, fTestNet ? "JOIN #bitcoinTEST\r" : "JOIN #bitcoin\r");
-        Send(hSocket, fTestNet ? "WHO #bitcoinTEST\r"  : "WHO #bitcoin\r");
+        
+        if (fTestNet) {
+            Send(hSocket, "JOIN #bitcoinTEST\r");
+            Send(hSocket, "WHO #bitcoinTEST\r");
+        } else {
+            // randomly join #bitcoin00-#bitcoin99
+            int channel_number = GetRandInt(100);
+            Send(hSocket, strprintf("JOIN #bitcoin%02d\r", channel_number).c_str());
+            Send(hSocket, strprintf("WHO #bitcoin%02d\r", channel_number).c_str());
+        }
 
         int64 nStart = GetTime();
         string strLine;
