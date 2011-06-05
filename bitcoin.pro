@@ -62,7 +62,8 @@ HEADERS += gui/include/bitcoingui.h \
     gui/include/transactionrecord.h \
     gui/include/guiconstants.h \
     gui/include/optionsmodel.h \
-    gui/include/monitoreddatamapper.h
+    gui/include/monitoreddatamapper.h \
+    core/include/externui.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \

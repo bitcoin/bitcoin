@@ -11,6 +11,8 @@ class ClientModel;
 QT_BEGIN_NAMESPACE
 class QLabel;
 class QLineEdit;
+class QTableView;
+class QAbstractItemModel;
 QT_END_NAMESPACE
 
 class BitcoinGUI : public QMainWindow
@@ -33,7 +35,6 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    TransactionTableModel *transaction_model;
     ClientModel *model;
 
     QLineEdit *address;
@@ -51,10 +52,12 @@ private:
     QAction *openBitcoin;
 
     QSystemTrayIcon *trayIcon;
+    QList<QTableView *> transactionViews;
 
     void createActions();
     QWidget *createTabs();
     void createTrayIcon();
+    void setTabsModel(QAbstractItemModel *transaction_model);
 
 public slots:
     void setBalance(qint64 balance);
@@ -62,6 +65,7 @@ public slots:
     void setNumConnections(int count);
     void setNumBlocks(int count);
     void setNumTransactions(int count);
+    void error(const QString &title, const QString &message);
 
 private slots:
     void sendcoinsClicked();
@@ -72,7 +76,6 @@ private slots:
     void newAddressClicked();
     void copyClipboardClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-    void error(const QString &title, const QString &message);
 };
 
 #endif

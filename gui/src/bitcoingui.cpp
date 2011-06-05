@@ -95,7 +95,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     vbox->addLayout(hbox_address);
     vbox->addLayout(hbox_balance);
 
-    transaction_model = new TransactionTableModel(this);
     vbox->addWidget(createTabs());
 
     QWidget *centralwidget = new QWidget(this);
@@ -169,6 +168,9 @@ void BitcoinGUI::setModel(ClientModel *model)
 
     // Report errors from network/worker thread
     connect(model, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));    
+
+    // Put transaction list in tabs
+    setTabsModel(model->getTransactionTableModel());
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -199,18 +201,32 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 
 QWidget *BitcoinGUI::createTabs()
 {
-    QStringList tab_filters, tab_labels;
-    tab_filters << "^."
-            << "^["+TransactionTableModel::Sent+TransactionTableModel::Received+"]"
-            << "^["+TransactionTableModel::Sent+"]"
-            << "^["+TransactionTableModel::Received+"]";
+    QStringList tab_labels;
     tab_labels  << tr("All transactions")
                 << tr("Sent/Received")
                 << tr("Sent")
                 << tr("Received");
-    QTabWidget *tabs = new QTabWidget(this);
 
+    QTabWidget *tabs = new QTabWidget(this);
     for(int i = 0; i < tab_labels.size(); ++i)
+    {
+        QTableView *view = new QTableView(this);
+        tabs->addTab(view, tab_labels.at(i));
+        transactionViews.append(view);
+    }
+
+    return tabs;
+}
+
+void BitcoinGUI::setTabsModel(QAbstractItemModel *transaction_model)
+{
+    QStringList tab_filters;
+    tab_filters << "^."
+            << "^["+TransactionTableModel::Sent+TransactionTableModel::Received+"]"
+            << "^["+TransactionTableModel::Sent+"]"
+            << "^["+TransactionTableModel::Received+"]";
+
+    for(int i = 0; i < transactionViews.size(); ++i)
     {
         QSortFilterProxyModel *proxy_model = new QSortFilterProxyModel(this);
         proxy_model->setSourceModel(transaction_model);
@@ -219,7 +235,7 @@ QWidget *BitcoinGUI::createTabs()
         proxy_model->setFilterRegExp(QRegExp(tab_filters.at(i)));
         proxy_model->setSortRole(Qt::EditRole);
 
-        QTableView *transaction_table = new QTableView(this);
+        QTableView *transaction_table = transactionViews.at(i);
         transaction_table->setModel(proxy_model);
         transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -237,10 +253,7 @@ QWidget *BitcoinGUI::createTabs()
                 TransactionTableModel::Debit, 79);
         transaction_table->horizontalHeader()->resizeSection(
                 TransactionTableModel::Credit, 79);
-
-        tabs->addTab(transaction_table, tab_labels.at(i));
     }
-    return tabs;
 }
 
 void BitcoinGUI::sendcoinsClicked()
@@ -248,7 +261,6 @@ void BitcoinGUI::sendcoinsClicked()
     SendCoinsDialog dlg;
     dlg.setModel(model);
     dlg.exec();
-    qDebug() << "After close";
 }
 
 void BitcoinGUI::addressbookClicked()
@@ -329,9 +341,16 @@ void BitcoinGUI::setNumTransactions(int count)
 void BitcoinGUI::error(const QString &title, const QString &message)
 {
     // Report errors from network/worker thread
-    QMessageBox::critical(this, title,
-        message,
-        QMessageBox::Ok, QMessageBox::Ok);
+    if(trayIcon->supportsMessages())
+    {
+        // Show as "balloon" message if possible
+        trayIcon->showMessage(title, message, QSystemTrayIcon::Critical);
+    } else {
+        // Fall back to old fashioned popup dialog if not
+        QMessageBox::critical(this, title,
+            message,
+            QMessageBox::Ok, QMessageBox::Ok);
+    }
 }
 
 void BitcoinGUI::changeEvent(QEvent *e)
