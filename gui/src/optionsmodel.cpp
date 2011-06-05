@@ -123,12 +123,12 @@ qint64 OptionsModel::getTransactionFee()
     return nTransactionFee;
 }
 
-bool getMinimizeToTray()
+bool OptionsModel::getMinimizeToTray()
 {
     return fMinimizeToTray;
 }
 
-bool getMinimizeOnClose()
+bool OptionsModel::getMinimizeOnClose()
 {
     return fMinimizeOnClose;
 }

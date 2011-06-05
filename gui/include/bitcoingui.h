@@ -27,6 +27,11 @@ public:
         Sent = 2,
         Received = 3
     } TabIndex;
+
+protected:
+    void changeEvent(QEvent *e);
+    void closeEvent(QCloseEvent *event);
+
 private:
     TransactionTableModel *transaction_model;
     ClientModel *model;
@@ -41,9 +46,9 @@ private:
     QAction *sendcoins;
     QAction *addressbook;
     QAction *about;
-    QAction *receiving_addresses;
+    QAction *receivingAddresses;
     QAction *options;
-    QAction *openBitCoin;
+    QAction *openBitcoin;
 
     QSystemTrayIcon *trayIcon;
 
@@ -64,9 +69,9 @@ private slots:
     void optionsClicked();
     void receivingAddressesClicked();
     void aboutClicked();
-
     void newAddressClicked();
     void copyClipboardClicked();
+    void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void error(const QString &title, const QString &message);
 };
 

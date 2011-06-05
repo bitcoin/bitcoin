@@ -26,8 +26,6 @@ This has been implemented:
 
 This has to be done:
 
-- Minimize to tray / Minimize on close
-
 - Start at system start
 
 - Internationalization (convert WX language files)
