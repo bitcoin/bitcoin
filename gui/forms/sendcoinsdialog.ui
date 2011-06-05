@@ -57,6 +57,9 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="3" column="2">
