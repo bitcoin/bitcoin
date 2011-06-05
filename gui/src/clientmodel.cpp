@@ -9,8 +9,8 @@
 ClientModel::ClientModel(QObject *parent) :
     QObject(parent), optionsModel(0), addressTableModel(0)
 {
-    /* Until we build signal notifications into the bitcoin core,
-       simply update everything using a timer.
+    /* Until signal notifications is built into the bitcoin core,
+       simply update everything after polling using a timer.
     */
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -58,6 +58,9 @@ int ClientModel::getNumTransactions()
 
 void ClientModel::update()
 {
+    /* Plainly emit all signals for now. To be precise this should check
+       wether the values actually changed first.
+     */
     emit balanceChanged(getBalance());
     emit addressChanged(getAddress());
     emit numConnectionsChanged(getNumConnections());
