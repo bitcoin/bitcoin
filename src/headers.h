@@ -33,6 +33,7 @@
 #include <wx/utils.h>
 #include <wx/clipbrd.h>
 #include <wx/taskbar.h>
+#include <boost/interprocess/ipc/message_queue.hpp>
 #endif
 #include <openssl/buffer.h>
 #include <openssl/ecdsa.h>
@@ -126,6 +127,7 @@
 #ifdef GUI
 #include "uibase.h"
 #include "ui.h"
+#include "wxipcserver.h"
 #else
 #include "noui.h"
 #endif

@@ -69,7 +69,7 @@ cryptopp/obj/%.o: cryptopp/%.cpp
 obj/ui_res.o: ../share/ui.rc  ../share/pixmaps/bitcoin.ico ../share/pixmaps/check.ico ../share/pixmaps/send16.bmp ../share/pixmaps/send16mask.bmp ../share/pixmaps/send16masknoshadow.bmp ../share/pixmaps/send20.bmp ../share/pixmaps/send20mask.bmp ../share/pixmaps/addressbook16.bmp ../share/pixmaps/addressbook16mask.bmp ../share/pixmaps/addressbook20.bmp ../share/pixmaps/addressbook20mask.bmp
 	windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
 
-bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o
+bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o obj/wxipcserver.o
 	g++ $(CFLAGS) -mwindows -Wl,--subsystem,windows -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
 
 

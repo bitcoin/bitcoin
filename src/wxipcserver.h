@@ -1,0 +1,2 @@
+int ipcInit();
+void ipcShutdown();

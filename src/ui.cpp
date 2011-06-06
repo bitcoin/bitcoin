@@ -1836,10 +1836,12 @@ void CAboutDialog::OnButtonOK(wxCommandEvent& event)
 // CSendDialog
 //
 
-CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDialogBase(parent)
+CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress, const int64 amount) : CSendDialogBase(parent)
 {
     // Init
     m_textCtrlAddress->SetValue(strAddress);
+    if (amount)
+        m_textCtrlAmount->SetValue(FormatMoney(amount));
     m_choiceTransferType->SetSelection(0);
     m_bitmapCheckMark->Show(false);
     fEnabledPrev = true;
@@ -2786,8 +2788,12 @@ IMPLEMENT_APP(CMyApp)
 bool CMyApp::Initialize(int& argc, wxChar** argv)
 {
     for (int i = 1; i < argc; i++)
-        if (!IsSwitchChar(argv[i][0]))
+    {
+        wxString str = argv[i];
+        wxString str2 = "bitcoin:";
+        if (!IsSwitchChar(argv[i][0]) && !(str.size() > 7 && str.Find(str2) != wxNOT_FOUND))
             fCommandLine = true;
+    }
 
     if (!fCommandLine)
     {

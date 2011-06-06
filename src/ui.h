@@ -174,7 +174,7 @@ protected:
 	
 public:
     /** Constructor */
-    CSendDialog(wxWindow* parent, const wxString& strAddress="");
+    CSendDialog(wxWindow* parent, const wxString& strAddress="", const int64 amount=0);
 
     // Custom
     bool fEnabledPrev;
