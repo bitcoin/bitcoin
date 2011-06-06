@@ -38,6 +38,8 @@ inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char
 
     // Convert bignum to std::string
     std::string str;
+    // Expected size increase from base58 conversion is approximately 137%
+    // use 138% to be safe
     str.reserve((pend - pbegin) * 138 / 100 + 1);
     CBigNum dv;
     CBigNum rem;
