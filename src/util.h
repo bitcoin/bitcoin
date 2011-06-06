@@ -105,6 +105,8 @@ T* alignup(T* p)
 typedef int socklen_t;
 #else
 #define WSAGetLastError()   errno
+#define WSAEINVAL           EINVAL
+#define WSAEALREADY         EALREADY
 #define WSAEWOULDBLOCK      EWOULDBLOCK
 #define WSAEMSGSIZE         EMSGSIZE
 #define WSAEINTR            EINTR
