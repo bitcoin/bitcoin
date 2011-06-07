@@ -121,13 +121,15 @@ struct TransactionTablePriv
                         }
                         parent->endInsertRows();
                     }
-                } else if(!inWallet && inModel)
+                }
+                else if(!inWallet && inModel)
                 {
                     /* Removed */
                     parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
                     cachedWallet.erase(lower, upper);
                     parent->endRemoveRows();
-                } else if(inWallet && inModel)
+                }
+                else if(inWallet && inModel)
                 {
                     /* Updated */
 
@@ -167,7 +169,9 @@ struct TransactionTablePriv
                 }
             }
             return rec;
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }
@@ -274,7 +278,9 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     if(wtx->time)
     {
         return QVariant(GUIUtil::DateTimeStr(wtx->time));
-    } else {
+    }
+    else
+    {
         return QVariant();
     }
 }
@@ -296,7 +302,9 @@ std::string lookupAddress(const std::string &address)
             description += "(" + label + ")";
         }
         else
+        {
             description += address;
+        }
     }
     return description;
 }
@@ -354,7 +362,9 @@ QVariant TransactionTableModel::formatTxDebit(const TransactionRecord *wtx) cons
             str = QString("[") + str + QString("]");
         }
         return QVariant(str);
-    } else {
+    }
+    else
+    {
         return QVariant();
     }
 }
@@ -369,7 +379,9 @@ QVariant TransactionTableModel::formatTxCredit(const TransactionRecord *wtx) con
             str = QString("[") + str + QString("]");
         }
         return QVariant(str);
-    } else {
+    }
+    else
+    {
         return QVariant();
     }
 }
@@ -396,7 +408,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Credit:
             return formatTxCredit(rec);
         }
-    } else if(role == Qt::EditRole)
+    }
+    else if(role == Qt::EditRole)
     {
         /* Edit role is used for sorting so return the real values */
         switch(index.column())
@@ -412,19 +425,24 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Credit:
             return rec->credit;
         }
-    } else if (role == Qt::TextAlignmentRole)
+    }
+    else if (role == Qt::TextAlignmentRole)
     {
         return column_alignments[index.column()];
-    } else if (role == Qt::ForegroundRole)
+    }
+    else if (role == Qt::ForegroundRole)
     {
         /* Non-confirmed transactions are grey */
         if(rec->status.confirmed)
         {
             return QColor(0, 0, 0);
-        } else {
+        }
+        else
+        {
             return QColor(128, 128, 128);
         }
-    } else if (role == TypeRole)
+    }
+    else if (role == TypeRole)
     {
         /* Role for filtering tabs by type */
         switch(rec->type)
@@ -450,7 +468,8 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
         if(role == Qt::DisplayRole)
         {
             return columns[section];
-        } else if (role == Qt::TextAlignmentRole)
+        }
+        else if (role == Qt::TextAlignmentRole)
         {
             return column_alignments[section];
         }
@@ -470,7 +489,9 @@ QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex 
     if(data)
     {
         return createIndex(row, column, priv->index(row));
-    } else {
+    }
+    else
+    {
         return QModelIndex();
     }
 }

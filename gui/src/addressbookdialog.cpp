@@ -80,7 +80,8 @@ void AddressBookDialog::on_copyToClipboard_clicked()
     QTableView *table = getCurrentTable();
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
-    foreach (QModelIndex index, indexes) {
+    foreach (QModelIndex index, indexes)
+    {
         QVariant address = table->model()->data(index);
         QApplication::clipboard()->setText(address.toString());
     }
@@ -148,7 +149,8 @@ void AddressBookDialog::on_buttonBox_accepted()
     QTableView *table = getCurrentTable();
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
-    foreach (QModelIndex index, indexes) {
+    foreach (QModelIndex index, indexes)
+    {
         QVariant address = table->model()->data(index);
         returnValue = address.toString();
     }

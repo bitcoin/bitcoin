@@ -345,7 +345,9 @@ void BitcoinGUI::error(const QString &title, const QString &message)
     {
         // Show as "balloon" message if possible
         trayIcon->showMessage(title, message, QSystemTrayIcon::Critical);
-    } else {
+    }
+    else
+    {
         // Fall back to old fashioned popup dialog if not
         QMessageBox::critical(this, title,
             message,
@@ -363,7 +365,9 @@ void BitcoinGUI::changeEvent(QEvent *e)
             {
                 hide();
                 e->ignore();
-            } else {
+            }
+            else
+            {
                 e->accept();
             }
         }

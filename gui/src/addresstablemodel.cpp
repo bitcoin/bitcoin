@@ -58,7 +58,9 @@ struct AddressTablePriv
         if(idx >= 0 && idx < cachedAddressTable.size())
         {
             return &cachedAddressTable[idx];
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }
@@ -105,13 +107,15 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case Address:
             return rec->address;
         }
-    } else if (role == Qt::FontRole)
+    }
+    else if (role == Qt::FontRole)
     {
         if(index.column() == Address)
         {
             return GUIUtil::bitcoinAddressFont();
         }
-    } else if (role == TypeRole)
+    }
+    else if (role == TypeRole)
     {
         switch(rec->type)
         {
@@ -178,7 +182,9 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & pa
     if(data)
     {
         return createIndex(row, column, priv->index(row));
-    } else {
+    }
+    else
+    {
         return QModelIndex();
     }
 }
@@ -206,11 +212,13 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 return QString();
             }
         }
-    } else if(type == Receive)
+    }
+    else if(type == Receive)
     {
         /* Generate a new address to associate with given label */
         strAddress = PubKeyToAddress(GetKeyFromKeyPool());
-    } else
+    }
+    else
     {
         return QString();
     }

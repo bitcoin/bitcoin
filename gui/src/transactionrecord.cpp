@@ -124,12 +124,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
                         // Ignore parts sent to self, as this is usually the change
                         // from a transaction sent back to our own address.
                         continue;
-                    } else if (!mapValue["to"].empty())
+                    }
+                    else if (!mapValue["to"].empty())
                     {
                         // Sent to IP
                         sub.type = TransactionRecord::SendToIP;
                         sub.address = mapValue["to"];
-                    } else {
+                    }
+                    else
+                    {
                         // Sent to Bitcoin Address
                         sub.type = TransactionRecord::SendToAddress;
                         uint160 hash160;
@@ -148,7 +151,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
 
                     parts.append(sub);
                 }
-            } else {
+            }
+            else
+            {
                 //
                 // Mixed debit transaction, can't break down payees
                 //
@@ -192,7 +197,9 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         {
             status.status = TransactionStatus::OpenUntilBlock;
             status.open_for = nBestHeight - wtx.nLockTime;
-        } else {
+        }
+        else
+        {
             status.status = TransactionStatus::OpenUntilDate;
             status.open_for = wtx.nLockTime;
         }
@@ -202,10 +209,12 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
         {
             status.status = TransactionStatus::Offline;
-        } else if (status.depth < 6)
+        }
+        else if (status.depth < 6)
         {
             status.status = TransactionStatus::Unconfirmed;
-        } else
+        }
+        else
         {
             status.status = TransactionStatus::HaveConfirmations;
         }
@@ -226,10 +235,14 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
                 // Check if the block was requested by anyone
                 if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
                     status.maturity = TransactionStatus::MaturesWarning;
-            } else {
+            }
+            else
+            {
                 status.maturity = TransactionStatus::NotAccepted;
             }
-        } else {
+        }
+        else
+        {
             status.maturity = TransactionStatus::Mature;
         }
     }

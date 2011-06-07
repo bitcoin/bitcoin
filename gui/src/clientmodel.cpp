@@ -34,7 +34,9 @@ QString ClientModel::getAddress()
     if (CWalletDB("r").ReadDefaultKey(vchPubKey))
     {
         return QString::fromStdString(PubKeyToAddress(vchPubKey));
-    } else {
+    }
+    else
+    {
         return QString();
     }
 }
@@ -116,9 +118,13 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
 
         std::string strError = SendMoney(scriptPubKey, payAmount, wtx, true);
         if (strError == "")
+        {
             return OK;
+        }
         else if (strError == "ABORTED")
+        {
             return Aborted;
+        }
         else
         {
             emit error(tr("Sending..."), QString::fromStdString(strError));

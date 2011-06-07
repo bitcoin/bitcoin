@@ -81,7 +81,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 {
                     addrProxy.ip = addr.ip;
                     walletdb.WriteSetting("addrProxy", addrProxy);
-                } else {
+                }
+                else
+                {
                     successful = false;
                 }
             }
@@ -93,7 +95,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 {
                     addrProxy.port = htons(nPort);
                     walletdb.WriteSetting("addrProxy", addrProxy);
-                } else {
+                }
+                else
+                {
                     successful = false;
                 }
             }
@@ -104,7 +108,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 {
                     nTransactionFee = retval;
                     walletdb.WriteSetting("nTransactionFee", nTransactionFee);
-                } else {
+                }
+                else
+                {
                     successful = false; /* parse error */
                 }
             }
