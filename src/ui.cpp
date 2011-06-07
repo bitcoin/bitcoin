@@ -1117,6 +1117,80 @@ void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
         return;
 }
 
+void CMainFrame::OnMenuOptionsChangeWalletPassword(wxCommandEvent& event)
+{
+    // Options->Change Wallet Password
+    if (!GetBoolArg("-nocrypt"))
+    {
+        CRITICAL_BLOCK(cs_walletCrypter)
+        {
+            string strWalletPass;
+            strWalletPass.reserve(100);
+            MLOCK(strWalletPass[0], strWalletPass.capacity());
+
+            if (!cWalletCrypter.fKeySet)
+            {
+                // obtain current wallet encrypt/decrypt key, from passphrase
+                // Note that the password is not mlock()d during this entry and could potentially
+                // be obtained from disk long after bitcoin has run.
+                strWalletPass = wxGetPasswordFromUser(_("Enter the current password to the wallet."),
+                                                      _("Password")).ToStdString();
+                if (!strWalletPass.size())
+                {
+                    wxMessageBox(_("Please supply the current wallet decryption password."), "Bitcoin");
+                    return;
+                }
+
+                if (!cWalletCrypter.SetKey(strWalletPass))
+                {
+                    wxMessageBox(_("Wallet decryption setup failed"), "Bitcoin");
+                    fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                    return;
+                }
+                fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+            }
+
+            if (!cWalletCrypter.CheckKey())
+            {
+                wxMessageBox(_("The password entered for the wallet decryption was incorrect."), "Bitcoin");
+                cWalletCrypter.CleanKey();
+                return;
+            }
+
+            // obtain new wallet encrypt/decrypt key, from passphrase
+            // Note that the password is not mlock()d during this entry and could potentially
+            // be obtained from disk long after bitcoin has run.
+            strWalletPass = wxGetPasswordFromUser(_("Enter a new password to reencrypt all encrypted addresses.\nWARNING: If you lose this password, no one, not even the Bitcoin developers can get you your Bitcoins back."),
+                                                      _("Password")).ToStdString();
+
+            if (!strWalletPass.size())
+            {
+                wxMessageBox(_("Please supply a new wallet encryption/decryption password."), "Bitcoin");
+                return;
+            }
+
+            CCrypter cNewWalletCrypter;
+            if (!cNewWalletCrypter.SetKey(strWalletPass))
+            {
+                wxMessageBox(_("Wallet decryption setup failed"), "Bitcoin");
+                fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                return;
+            }
+            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+
+            ChangeWalletPass(cNewWalletCrypter);
+
+            cWalletCrypter.CleanKey();
+            cWalletCrypter = cNewWalletCrypter;
+            cWalletCrypter.CleanKey();
+
+            wxMessageBox(_("Wallet password updated."), "Bitcoin");
+        }
+    }
+    else
+        wxMessageBox(_("You cannot change the wallet password when running in -nocrypt mode."), "Bitcoin");
+}
+
 void CMainFrame::OnMenuOptionsOptions(wxCommandEvent& event)
 {
     // Options->Options
@@ -1177,8 +1251,55 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
         return;
     string strName = dialog.GetValue();
 
-    // Generate new key
-    string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
+    if (!GetBoolArg("-nocrypt"))
+    {
+        CRITICAL_BLOCK(cs_walletCrypter)
+        {
+            // Refresh keypool and generate new key
+            if (!cWalletCrypter.fKeySet)
+            {
+                string strWalletPass;
+                strWalletPass.reserve(100);
+                MLOCK(strWalletPass[0], strWalletPass.capacity());
+
+                // obtain current wallet encrypt/decrypt key, from passphrase
+                // Note that the password is not mlock()d during this entry and could potentially
+                // be obtained from disk long after bitcoin has run.
+                strWalletPass = wxGetPasswordFromUser(_("Enter the current password to the wallet."),
+                                                      _("Password")).ToStdString();
+
+                if (!strWalletPass.size())
+                {
+                    wxMessageBox(_("Please supply the current wallet decryption password."), "Bitcoin");
+                    return;
+                }
+
+                if (!cWalletCrypter.SetKey(strWalletPass))
+                {
+                    wxMessageBox(_("Wallet decryption setup failed"), "Bitcoin");
+                    fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                    return;
+                }
+                fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+            }
+
+            if (!cWalletCrypter.CheckKey())
+            {
+                wxMessageBox(_("The password entered for the wallet decryption was incorrect."), "Bitcoin");
+                cWalletCrypter.CleanKey();
+                return;
+            }
+
+            wxMessageBox(_("Creating new keys, this may take a minute..."), "Bitcoin");
+
+            CWalletDB().TopUpKeyPool();
+            cWalletCrypter.CleanKey();
+        }
+    }
+
+    assert (GetKeyPoolSize() >= max(GetArg("-keypool", 100), GetBoolArg("-nocrypt") ? (int64)0 : (int64)1));
+
+    string strAddress = PubKeyToAddress(GetOrReuseKeyFromPool());
 
     // Save
     SetAddressBookName(strAddress, strName);
@@ -1941,12 +2062,61 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
         if (fBitcoinAddress)
         {
 	    CRITICAL_BLOCK(cs_main)
+            CRITICAL_BLOCK(cs_walletCrypter)
 	    {
+                if (!GetBoolArg("-nocrypt"))
+                {        
+                    if (!cWalletCrypter.fKeySet)
+                    {
+                        string strWalletPass;
+                        strWalletPass.reserve(100);
+                        MLOCK(strWalletPass[0], strWalletPass.capacity());
+
+                        // obtain current wallet encrypt/decrypt key, from passphrase
+                        // Note that the password is not mlock()d during this entry and could potentially
+                        // be obtained from disk long after bitcoin has run.
+                        strWalletPass = wxGetPasswordFromUser(_("Enter the current password to the wallet."),
+                                                                  _("Password")).ToStdString();
+
+                        if (!strWalletPass.size())
+                        {
+                            wxMessageBox(_("Please supply the current wallet decryption password."), "Bitcoin");
+                            return;
+                        }
+
+                        if (!cWalletCrypter.SetKey(strWalletPass))
+                        {
+                            wxMessageBox(_("Wallet decryption setup failed"), "Bitcoin");
+                            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                            return;
+                        }
+                        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                    }
+
+                    if (!cWalletCrypter.CheckKey())
+                    {
+                        wxMessageBox(_("The password entered for the wallet decryption was incorrect."), "Bitcoin");
+                        cWalletCrypter.CleanKey();
+                        return;
+                    }
+                }
+
+                wxMessageBox(_("Creating new keys, this may take a minute..."), "Bitcoin");
+
+                CWalletDB().TopUpKeyPool();
+                assert (GetKeyPoolSize() >= max(GetArg("-keypool", 100), GetBoolArg("-nocrypt") ? (int64)0 : (int64)1));
+
                 // Send to bitcoin address
                 CScript scriptPubKey;
                 scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
 
                 string strError = SendMoney(scriptPubKey, nValue, wtx, true);
+
+                CWalletDB().TopUpKeyPool();
+
+                if (!GetBoolArg("-nocrypt"))
+                    cWalletCrypter.CleanKey();
+
                 if (strError == "")
                     wxMessageBox(_("Payment sent  "), _("Sending..."));
                 else if (strError == "ABORTED")
@@ -2570,8 +2740,55 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
             return;
         strName = dialog.GetValue();
 
-        // Generate new key
-        strAddress = PubKeyToAddress(GetKeyFromKeyPool());
+        if (!GetBoolArg("-nocrypt"))
+        {
+            CRITICAL_BLOCK(cs_walletCrypter)
+            {
+                // Refresh keypool and generate new key
+                if (!cWalletCrypter.fKeySet)
+                {
+                    string strWalletPass;
+                    strWalletPass.reserve(100);
+                    MLOCK(strWalletPass[0], strWalletPass.capacity());
+
+                    // obtain current wallet encrypt/decrypt key, from passphrase
+                    // Note that the password is not mlock()d during this entry and could potentially
+                    // be obtained from disk long after bitcoin has run.
+                    strWalletPass = wxGetPasswordFromUser(_("Enter the current password to the wallet."),
+                                                          _("Password")).ToStdString();
+
+                    if (!strWalletPass.size())
+                    {
+                        wxMessageBox(_("Please supply the current wallet decryption password."), "Bitcoin");
+                        return;
+                    }
+
+                    if (!cWalletCrypter.SetKey(strWalletPass))
+                    {
+                        wxMessageBox(_("Wallet decryption setup failed"), "Bitcoin");
+                        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                        return;
+                    }
+                    fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                }
+            }
+
+            if (!cWalletCrypter.CheckKey())
+            {
+                wxMessageBox(_("The password entered for the wallet decryption was incorrect."), "Bitcoin");
+                cWalletCrypter.CleanKey();
+                return;
+            }
+
+            wxMessageBox(_("Creating new keys, this may take a minute..."), "Bitcoin");
+
+            CWalletDB().TopUpKeyPool();
+            cWalletCrypter.CleanKey();
+        }
+
+        assert (GetKeyPoolSize() >= max(GetArg("-keypool", 100), GetBoolArg("-nocrypt") ? (int64)0 : (int64)1));
+
+        strAddress = PubKeyToAddress(GetOrReuseKeyFromPool());
     }
 
     // Add to list and select it

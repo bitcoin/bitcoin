@@ -747,15 +747,51 @@ bool CWalletDB::LoadWallet()
                 if (nNumber > nAccountingEntryNumber)
                     nAccountingEntryNumber = nNumber;
             }
+            else if (strType == "ekey")
+            {
+                vector<unsigned char> vchPubKey;
+                ssKey >> vchPubKey;
+
+                vector<unsigned char> vchCiphertext;
+                ssValue >> vchCiphertext;
+
+                CPrivKey vchEncPrivKey;
+                vchEncPrivKey.resize(vchCiphertext.size());
+                memcpy(&vchEncPrivKey[0], &vchCiphertext[0], vchCiphertext.size());
+
+                mapKeys[vchPubKey] = vchEncPrivKey;
+                mapPubKeys[Hash160(vchPubKey)] = vchPubKey;
+            }
             else if (strType == "key" || strType == "wkey")
             {
                 vector<unsigned char> vchPubKey;
                 ssKey >> vchPubKey;
                 CWalletKey wkey;
                 if (strType == "key")
-                    ssValue >> wkey.vchPrivKey;
+                    ssValue >> wkey.vchPrivKey; //WARNING: Key might end up in swap here
                 else
                     ssValue >> wkey;
+
+                if (!GetBoolArg("-nocrypt"))
+                {
+                    MLOCK(wkey.vchPrivKey[0], wkey.vchPrivKey.size());
+
+                    uint256 hashPubKey = Hash(vchPubKey.begin(), vchPubKey.end());
+                    unsigned char chIV[32];
+                    memcpy(&chIV, &hashPubKey, 32);
+
+                    vector<unsigned char> vchPlaintext(wkey.vchPrivKey.size());
+                    MLOCK(vchPlaintext[0], vchPlaintext.size());
+
+                    memcpy(&vchPlaintext[0], &wkey.vchPrivKey[0], wkey.vchPrivKey.size());
+                    fill(wkey.vchPrivKey.begin(), wkey.vchPrivKey.end(), '\0');
+
+                    vector<unsigned char> vchCiphertext;
+                    cWalletCrypter.Encrypt(vchPlaintext, chIV, vchCiphertext);
+                    fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+                    wkey.vchPrivKey = CPrivKey(vchCiphertext.size());
+                    memcpy(&wkey.vchPrivKey[0], &vchCiphertext[0], vchCiphertext.size());
+                }
 
                 mapKeys[vchPubKey] = wkey.vchPrivKey;
                 mapPubKeys[Hash160(vchPubKey)] = vchPubKey;
@@ -835,25 +871,286 @@ bool LoadWallet(bool& fFirstRunRet)
         return false;
     fFirstRunRet = vchDefaultKey.empty();
 
-    if (mapKeys.count(vchDefaultKey))
+    if (!mapKeys.count(vchDefaultKey))
     {
-        // Set keyUser
-        keyUser.SetPubKey(vchDefaultKey);
-        keyUser.SetPrivKey(mapKeys[vchDefaultKey]);
-    }
-    else
-    {
-        // Create new keyUser and set as default key
-        RandAddSeedPerfmon();
-
-        CWalletDB walletdb;
-        vchDefaultKey = GetKeyFromKeyPool();
-        walletdb.WriteDefaultKey(vchDefaultKey);
-        walletdb.WriteName(PubKeyToAddress(vchDefaultKey), "");
+        // Create new Key and set as default key
+        vchDefaultKey = GenerateNewKey();
+        if (!SetAddressBookName(PubKeyToAddress(vchDefaultKey), ""))
+            return false;
+        CWalletDB().WriteDefaultKey(vchDefaultKey);
     }
 
     CreateThread(ThreadFlushWalletDB, NULL);
     return true;
+}
+
+void CWalletDB::WalletKeyStatus(bool& fHaveUnencKeys, bool& fHaveEncKeys)
+{
+    // Get cursor
+    Dbc* pcursor = GetCursor();
+
+    if (!pcursor)
+        return;
+
+    fHaveUnencKeys = false;
+    fHaveEncKeys = false;
+
+    loop
+    {
+        // Read next record
+        CDataStream ssKey;
+        CDataStream ssValue;
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue);
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+            return;
+
+        // Unserialize
+        // Taking advantage of the fact that pair serialization
+        // is just the two items serialized one after the other
+        string strType;
+        ssKey >> strType;
+        if (strType == "key" || strType == "wkey")
+            fHaveUnencKeys = true;
+        else if (strType == "ekey")
+            fHaveEncKeys = true;
+    }
+    pcursor->close();
+
+    return;
+}
+
+void WalletStatus(bool& fHaveUnencKeys, bool& fHaveEncKeys, bool& fWalletExists)
+{
+    string dataDir = GetDataDir() + "/wallet.dat";
+    FILE* pFile = fopen(dataDir.c_str(), "r");
+    if (pFile==NULL)
+    {
+        fHaveUnencKeys = false;
+        fHaveEncKeys = false;
+        fWalletExists = false;
+    }
+    else
+    {
+        fWalletExists = true;
+        fclose(pFile);
+        CWalletDB().WalletKeyStatus(fHaveUnencKeys, fHaveEncKeys);
+    }
+}
+
+bool CWalletDB::EncryptUnencKeys()
+{
+    if (GetBoolArg("-nocrypt"))
+        return false;
+
+    // Get cursor
+    Dbc* pcursor = GetCursor();
+    if (!pcursor)
+        return false;
+
+    vector< vector <unsigned char> > keysToWrite;
+
+    loop
+    {
+        // Read next record
+        CDataStream ssKey;
+        CDataStream ssValue;
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue);
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+            return false;
+
+        // Unserialize
+        // Taking advantage of the fact that pair serialization
+        // is just the two items serialized one after the other
+        string strType;
+        ssKey >> strType;
+        if (strType == "key" || strType == "wkey")
+        {
+            vector<unsigned char> vchPubKey;
+            ssKey >> vchPubKey;
+            vector<unsigned char> vchPrivKey;
+            if (strType == "key")
+            {
+                ssValue >> vchPrivKey; //WARNING: Key might end up in swap here
+                MLOCK(vchPrivKey[0], vchPrivKey.size());
+            }
+            else
+            {
+                CWalletKey wkey;
+                ssValue >> wkey; //WARNING: Key might end up in swap here
+                MLOCK(wkey.vchPrivKey[0], wkey.vchPrivKey.size());
+
+                vchPrivKey = vector<unsigned char>(wkey.vchPrivKey.size());
+                MLOCK(vchPrivKey[0], vchPrivKey.size());
+                memcpy(&vchPrivKey[0], &wkey.vchPrivKey[0], wkey.vchPrivKey.size());
+                fill(wkey.vchPrivKey.begin(), wkey.vchPrivKey.end(), '\0');
+            }
+
+            uint256 pubKeyHash = Hash(vchPubKey.begin(), vchPubKey.end());
+            unsigned char chIV[32];
+            memcpy(&chIV, &pubKeyHash, 32);
+
+            vector<unsigned char> vchCiphertext;
+            if (!cWalletCrypter.Encrypt(vchPrivKey, chIV, vchCiphertext))
+                return false;
+
+            fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
+
+            keysToWrite.push_back(vchPubKey);
+            keysToWrite.push_back(vchCiphertext);
+        }
+    }
+    pcursor->close();
+
+    TxnBegin();
+    for (int i = 0; i < keysToWrite.size()-1; i+=2)
+    {
+        WriteKey(keysToWrite[i], keysToWrite[i+1]);
+        Erase(make_pair(string("key"), keysToWrite[i]));
+        Erase(make_pair(string("wkey"), keysToWrite[i]));
+    }
+    TxnCommit();
+
+    return true;
+}
+
+bool EncryptUnencKeys()
+{
+    return CWalletDB().EncryptUnencKeys();
+}
+
+bool CWalletDB::ChangeWalletPass(CCrypter& cNewWalletCrypter)
+{
+    if (GetBoolArg("-nocrypt"))
+        return false;
+
+    // Get cursor
+    Dbc* pcursor = GetCursor();
+    if (!pcursor)
+        return false;
+
+    vector< vector <unsigned char> > keysToWrite;
+
+    loop
+    {
+        // Read next record
+        CDataStream ssKey;
+        CDataStream ssValue;
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue);
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+            return false;
+
+        // Unserialize
+        // Taking advantage of the fact that pair serialization
+        // is just the two items serialized one after the other
+        string strType;
+        ssKey >> strType;
+        if (strType == "ekey")
+        {
+            vector<unsigned char> vchPubKey;
+            ssKey >> vchPubKey;
+
+            vector<unsigned char> vchCiphertext;
+            ssValue >> vchCiphertext;
+
+            uint256 hashPubKey = Hash(vchPubKey.begin(), vchPubKey.end());
+            unsigned char chIV[32];
+            memcpy(&chIV, &hashPubKey, 32);
+
+            vector<unsigned char> vchPlaintext;
+            if (!cWalletCrypter.Decrypt(vchCiphertext, chIV, vchPlaintext)) //mlock()s vchPlaintext for us
+                return false;
+
+            try
+            {
+                CPrivKey vchPrivKey;
+                vchPrivKey.resize(vchPlaintext.size());
+                MLOCK(vchPrivKey[0], vchPrivKey.size());
+                memcpy(&vchPrivKey[0], &vchPlaintext[0], vchPlaintext.size());
+
+                CKey key;
+                if (!key.SetPrivKey(vchPrivKey))
+                {
+                    fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+                    fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
+                    return false;
+                }
+                vector<unsigned char> vchDerivedPubKey = key.GetPubKey();
+                if (vchDerivedPubKey.size() < 1 || vchDerivedPubKey != vchPubKey)
+                {
+                    fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+                    fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
+                    return false;
+                }
+                fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
+            }
+            catch (key_error e)
+            {
+                return false;
+            }
+
+            if (!cNewWalletCrypter.Encrypt(vchPlaintext, chIV, vchCiphertext))
+            {
+                fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+                return false;
+            }
+
+            fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+
+            keysToWrite.push_back(vchPubKey);
+            keysToWrite.push_back(vchCiphertext);
+        }
+    }
+    pcursor->close();
+
+    TxnBegin();
+    for (int i = 0; i < keysToWrite.size()-1; i+=2)
+    {
+        Erase(make_pair(string("ekey"), keysToWrite[i]));
+        WriteKey(keysToWrite[i], keysToWrite[i+1]);
+    }
+    TxnCommit();
+
+    BOOST_FOREACH(PubToPrivKeyMap::value_type pairKey, mapKeys)
+    {
+        uint256 hashPubKey = Hash(pairKey.first.begin(), pairKey.first.end());
+        unsigned char chIV[32];
+        memcpy(&chIV, &hashPubKey, 32);
+
+        std::vector<unsigned char> vchPlaintext;
+        std::vector<unsigned char> vchCiphertext;
+        vchCiphertext.resize(pairKey.second.size());
+        memcpy(&vchCiphertext[0], &pairKey.second[0], vchCiphertext.size());
+
+        if (!cWalletCrypter.Decrypt(vchCiphertext, chIV, vchPlaintext))
+            throw 1;
+
+        if (!cNewWalletCrypter.Encrypt(vchPlaintext, chIV, vchCiphertext))
+        {
+            fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+            throw 1;
+        }
+        fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+
+        CPrivKey vchPrivKey(vchCiphertext.size());
+        memcpy(&vchPrivKey[0], &vchCiphertext[0], vchCiphertext.size());
+        mapKeys[pairKey.first] = vchPrivKey;
+    }
+
+    return true;
+}
+
+bool ChangeWalletPass(CCrypter& cNewWalletCrypter)
+{
+    if (!cWalletCrypter.CheckKey(true))
+        return false;
+
+    return CWalletDB().ChangeWalletPass(cNewWalletCrypter);
 }
 
 void ThreadFlushWalletDB(void* parg)
@@ -950,8 +1247,53 @@ void BackupWallet(const string& strDest)
     }
 }
 
+bool CWalletDB::TopUpKeyPool()
+{
+    if (!GetBoolArg("-nocrypt") && (!cWalletCrypter.fKeySet || !cWalletCrypter.CheckKey()))
+        return false;
 
-void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(cs_setKeyPool)
+    {
+        // Top up key pool
+        int64 nTargetSize = max(GetArg("-keypool", 100), GetBoolArg("-nocrypt") ? (int64)0 : (int64)1);
+        while (setKeyPool.size() < nTargetSize+1)
+        {
+            int64 nEnd = 1;
+            if (!setKeyPool.empty())
+                nEnd = *(--setKeyPool.end()) + 1;
+            if (!Write(make_pair(string("pool"), nEnd), CKeyPool(GenerateNewKey())))
+                throw runtime_error("TopUpKeyPool() : writing generated key failed");
+            setKeyPool.insert(nEnd);
+            printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
+        }
+    }
+    return true;
+}
+
+bool TopUpKeyPool()
+{
+    return CWalletDB().TopUpKeyPool();
+}
+
+void ThreadTopUpKeyPool(void* parg)
+{
+    static bool fOneKeyPoolThread;
+    if (fOneKeyPoolThread)
+        return;
+    fOneKeyPoolThread = true;
+    CRITICAL_BLOCK(cs_setKeyPool)
+    {
+        TopUpKeyPool();
+        if (*((bool*)parg))
+            cWalletCrypter.CleanKey();
+    }
+    free(parg);
+}
+
+
+bool CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
 {
     nIndex = -1;
     keypool.vchPubKey.clear();
@@ -959,30 +1301,24 @@ void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
     CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_setKeyPool)
     {
-        // Top up key pool
-        int64 nTargetSize = max(GetArg("-keypool", 100), (int64)0);
-        while (setKeyPool.size() < nTargetSize+1)
-        {
-            int64 nEnd = 1;
-            if (!setKeyPool.empty())
-                nEnd = *(--setKeyPool.end()) + 1;
-            if (!Write(make_pair(string("pool"), nEnd), CKeyPool(GenerateNewKey())))
-                throw runtime_error("ReserveKeyFromKeyPool() : writing generated key failed");
-            setKeyPool.insert(nEnd);
-            printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
-        }
-
         // Get the oldest key
-        assert(!setKeyPool.empty());
-        nIndex = *(setKeyPool.begin());
-        setKeyPool.erase(setKeyPool.begin());
-        if (!Read(make_pair(string("pool"), nIndex), keypool))
+        if (setKeyPool.empty() && !GetBoolArg("-nocrypt"))
+            return false;
+        else
+        {
+            if (GetBoolArg("-nocrypt"))
+                TopUpKeyPool();
+            nIndex = *(setKeyPool.begin());
+            setKeyPool.erase(setKeyPool.begin());
+            if (!Read(make_pair(string("pool"), nIndex), keypool))
             throw runtime_error("ReserveKeyFromKeyPool() : read failed");
-        if (!mapKeys.count(keypool.vchPubKey))
-            throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
-        assert(!keypool.vchPubKey.empty());
-        printf("keypool reserve %"PRI64d"\n", nIndex);
+            if (!mapKeys.count(keypool.vchPubKey))
+                throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
+            assert(!keypool.vchPubKey.empty());
+            printf("keypool reserve %"PRI64d"\n", nIndex);
+        }
     }
+    return true;
 }
 
 void CWalletDB::KeepKey(int64 nIndex)
@@ -1004,13 +1340,17 @@ void CWalletDB::ReturnKey(int64 nIndex)
     printf("keypool return %"PRI64d"\n", nIndex);
 }
 
-vector<unsigned char> GetKeyFromKeyPool()
+vector<unsigned char> GetOrReuseKeyFromPool()
 {
     CWalletDB walletdb;
     int64 nIndex = 0;
     CKeyPool keypool;
-    walletdb.ReserveKeyFromKeyPool(nIndex, keypool);
-    walletdb.KeepKey(nIndex);
+    if (walletdb.ReserveKeyFromKeyPool(nIndex, keypool))
+        walletdb.KeepKey(nIndex);
+    else
+    {
+        return vchDefaultKey;
+    }
     return keypool.vchPubKey;
 }
 
@@ -1019,7 +1359,14 @@ int64 GetOldestKeyPoolTime()
     CWalletDB walletdb;
     int64 nIndex = 0;
     CKeyPool keypool;
-    walletdb.ReserveKeyFromKeyPool(nIndex, keypool);
-    walletdb.ReturnKey(nIndex);
+    if (walletdb.ReserveKeyFromKeyPool(nIndex, keypool))
+        walletdb.ReturnKey(nIndex);
+    else
+        return GetTime();
     return keypool.nTime;
+}
+
+int GetKeyPoolSize()
+{
+    return setKeyPool.size();
 }

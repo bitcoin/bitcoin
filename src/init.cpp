@@ -178,7 +178,9 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
             "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
+            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n") +
+            "  -nocrypt         \t  "   + _("Don't encrypt the private keys in the wallet.\n") +
+            "  -encryptkeys     \t  "   + _("Automatically encrypt old, unencrypted keys.\n");
 
 #ifdef USE_SSL
         strUsage += string() +
@@ -365,9 +367,100 @@ bool AppInit2(int argc, char* argv[])
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
     bool fFirstRun;
+    bool fHaveUnencKeysInWallet;
+    bool fHaveEncKeysInWallet;
+    bool fWalletExists;
+
+    WalletStatus(fHaveUnencKeysInWallet, fHaveEncKeysInWallet, fWalletExists);
+    if ((fHaveUnencKeysInWallet || !fWalletExists) && !GetBoolArg("-nocrypt"))
+    {
+        // obtain wallet encrypt/decrypt key, from passphrase
+        string strWalletPass = "";
+        strWalletPass.reserve(100);
+        // keep the passphrase out of swap (or atleast the first 100 characters of it)
+        // note that this doesn't account for the possibility of suspend-to-disk
+        // the password could still touch swap while being entered in wxGetPasswordFromUser (below)
+        // or by sitting in the environment/being copied from the environment.
+        MLOCK(strWalletPass[0], strWalletPass.capacity());
+
+        if (getenv("WALLET_PASSPHRASE") != NULL)
+            strWalletPass = getenv("WALLET_PASSPHRASE");
+
+#ifdef GUI
+        if (!strWalletPass.size())
+        {
+            strWalletPass = wxGetPasswordFromUser(_("Enter a password to encrypt/decrypt all addresses created after this point.\nIf you do not want to encrypt new private keys, please start the client with the -nocrypt flag set.\nWARNING: If you lose this password, no one, not even the Bitcoin developers can get you your Bitcoins back."),
+                                                  _("Password"));
+        }
+#endif
+
+        if (!strWalletPass.size())
+        {
+#ifdef GUI
+            wxMessageBox(_("Please supply a wallet encryption/decryption password."), "Bitcoin");
+#else
+            fprintf(stderr, "Please supply a wallet encryption password via the WALLET_PASSPHRASE environment varible to encrypt keys in memory.\n");
+#endif
+            return false;
+        }
+
+        if (!cWalletCrypter.SetKey(strWalletPass))
+        {
+#ifdef GUI
+            wxMessageBox(_("Wallet decryption setup failed"), "Bitcoin");
+#else
+            fprintf(stderr, "Wallet decryption setup failed\n");
+#endif
+            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+            return false;
+        }
+
+        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+    }
+
+    if (GetBoolArg("-nocrypt") && fHaveEncKeysInWallet)
+    {
+#ifdef GUI
+        wxMessageBox(_("You specified the -nocrypt option, but the wallet has encrypted private keys, bitcoin will now exit."), "Bitcoin");
+#else
+        fprintf(stderr, "Error: -nocrypt was specified, but the wallet has encrypted private keys.\n");
+#endif
+        return false;
+    }
+
     if (!LoadWallet(fFirstRun))
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+
+    if ((fHaveUnencKeysInWallet || !fWalletExists) && !GetBoolArg("-nocrypt") && !cWalletCrypter.CheckKey(true))
+    {
+#ifdef GUI
+        wxMessageBox(_("The password entered for the wallet decryption was incorrect."), "Bitcoin");
+#else
+        fprintf(stderr, "Error: The password entered for the wallet decryption was incorrect.\n");
+#endif
+        return false;
+    }
+
+    if (fHaveUnencKeysInWallet && !GetBoolArg("-nocrypt"))
+    {
+#ifdef GUI
+        int nResponse = wxMessageBox(_("Would you like to encrypt the remaining unencrypted keys in your wallet (Recommended)?\nNote: This means older version of Bitcoin will not be able to read any of your wallet."),
+                                     "Bitcoin", wxYES_NO);
+
+        if (nResponse == wxYES || GetBoolArg("-encryptkeys"))
+        {
+            EncryptUnencKeys();
+        }
+#else
+        if (GetBoolArg("-encryptkeys"))
+        {
+            EncryptUnencKeys();
+        }
+        else
+            fprintf(stderr, "It is recommended that you restart bitcoin with -encryptkeys to automatically encrypt the existing unencrypted keys in your wallet.\n");
+#endif
+    }
 
     CBlockIndex *pindexRescan = pindexBest;
     if (GetBoolArg("-rescan"))
@@ -510,6 +603,13 @@ bool AppInit2(int argc, char* argv[])
     if (fFirstRun)
         SetStartOnSystemStartup(true);
 #endif
+
+    if ((cWalletCrypter.fKeySet && !GetBoolArg("-nocrypt")) || GetBoolArg("-nocrypt"))
+    {
+        //topup the keypool here as we already have the key
+        bool *fCleanKey = new bool(true);
+        CreateThread(ThreadTopUpKeyPool, fCleanKey);
+    }
 
 #ifndef GUI
     while (1)

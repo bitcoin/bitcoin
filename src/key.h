@@ -102,16 +102,17 @@ public:
         return true;
     }
 
-    CPrivKey GetPrivKey() const
+    bool GetPrivKey(CPrivKey& vchPrivKeyRet) const
     {
         unsigned int nSize = i2d_ECPrivateKey(pkey, NULL);
         if (!nSize)
             throw key_error("CKey::GetPrivKey() : i2d_ECPrivateKey failed");
-        CPrivKey vchPrivKey(nSize, 0);
-        unsigned char* pbegin = &vchPrivKey[0];
+        vchPrivKeyRet = CPrivKey (nSize, 0);
+        MLOCK(vchPrivKeyRet[0], vchPrivKeyRet.size());
+        unsigned char* pbegin = &vchPrivKeyRet[0];
         if (i2d_ECPrivateKey(pkey, &pbegin) != nSize)
             throw key_error("CKey::GetPrivKey() : i2d_ECPrivateKey returned unexpected size");
-        return vchPrivKey;
+        return true;
     }
 
     bool SetPubKey(const std::vector<unsigned char>& vchPubKey)

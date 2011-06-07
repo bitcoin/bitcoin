@@ -39,10 +39,11 @@ map<uint256, CWalletTx> mapWallet;
 vector<uint256> vWalletUpdated;
 CCriticalSection cs_mapWallet;
 
+CCrypter cWalletCrypter;
+CCriticalSection cs_walletCrypter;
 map<vector<unsigned char>, CPrivKey> mapKeys;
 map<uint160, vector<unsigned char> > mapPubKeys;
 CCriticalSection cs_mapKeys;
-CKey keyUser;
 
 map<uint256, int> mapRequestCount;
 CCriticalSection cs_mapRequestCount;
@@ -82,19 +83,62 @@ int fUseUPnP = false;
 
 bool AddKey(const CKey& key)
 {
-    CRITICAL_BLOCK(cs_mapKeys)
+    if (!GetBoolArg("-nocrypt"))
     {
-        mapKeys[key.GetPubKey()] = key.GetPrivKey();
-        mapPubKeys[Hash160(key.GetPubKey())] = key.GetPubKey();
+        if (!cWalletCrypter.fKeySet || !cWalletCrypter.CheckKey())
+            return false;
+
+        CPrivKey vchPrivKey;
+        if (!key.GetPrivKey(vchPrivKey)) //mlock()s vchPrivKey for us
+            return false;
+        vector<unsigned char> vchPlaintext(vchPrivKey.size());
+        MLOCK(vchPlaintext[0], vchPlaintext.size());
+        memcpy(&vchPlaintext[0], &vchPrivKey[0], vchPrivKey.size());
+        fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
+
+        vector<unsigned char> pubKey = key.GetPubKey();
+        uint256 pubKeyHash = Hash(pubKey.begin(), pubKey.end());
+        unsigned char chIV[32];
+        memcpy(&chIV, &pubKeyHash, 32);
+
+        vector<unsigned char> vchCiphertext;
+        if (!cWalletCrypter.Encrypt(vchPlaintext, chIV, vchCiphertext))
+        {
+            fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+            return false;
+        }
+        fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+
+        CPrivKey vchEncPrivKey(vchCiphertext.size());
+        memcpy(&vchEncPrivKey[0], &vchCiphertext[0], vchCiphertext.size());
+
+        CRITICAL_BLOCK(cs_mapKeys)
+        {
+            mapKeys[key.GetPubKey()] = vchEncPrivKey;
+            mapPubKeys[Hash160(key.GetPubKey())] = key.GetPubKey();
+        }
+
+        return CWalletDB().WriteKey(key.GetPubKey(), vchCiphertext);
     }
-    return CWalletDB().WriteKey(key.GetPubKey(), key.GetPrivKey());
+    else
+    {
+        CPrivKey vchPrivKey;
+        if (!key.GetPrivKey(vchPrivKey))
+            return false;
+        CRITICAL_BLOCK(cs_mapKeys)
+        {
+            mapKeys[key.GetPubKey()] = vchPrivKey;
+            mapPubKeys[Hash160(key.GetPubKey())] = key.GetPubKey();
+        }
+        return CWalletDB().WriteKey(key.GetPubKey(), vchPrivKey);
+    }
 }
 
 vector<unsigned char> GenerateNewKey()
 {
     RandAddSeedPerfmon();
     CKey key;
-    key.MakeNewKey();
+    key.MakeNewKey(); //WARNING: Key might end up in swap here as OpenSSL/CKey does not mlock keys
     if (!AddKey(key))
         throw runtime_error("GenerateNewKey() : AddKey failed");
     return key.GetPubKey();
@@ -156,10 +200,10 @@ bool AddToWallet(const CWalletTx& wtxIn)
         scriptDefaultKey.SetBitcoinAddress(vchDefaultKey);
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
-            if (txout.scriptPubKey == scriptDefaultKey)
+            if (txout.scriptPubKey == scriptDefaultKey && ((!GetBoolArg("-nocrypt") && GetKeyPoolSize() != 0) || GetBoolArg("-nocrypt")))
             {
                 CWalletDB walletdb;
-                vchDefaultKey = GetKeyFromKeyPool();
+                vchDefaultKey = GetOrReuseKeyFromPool();
                 walletdb.WriteDefaultKey(vchDefaultKey);
                 walletdb.WriteName(PubKeyToAddress(vchDefaultKey), "");
             }
@@ -2784,7 +2828,7 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // Keep giving the same key to the same ip until they use it
         if (!mapReuseKey.count(pfrom->addr.ip))
-            mapReuseKey[pfrom->addr.ip] = GetKeyFromKeyPool();
+            mapReuseKey[pfrom->addr.ip] = GetOrReuseKeyFromPool();
 
         // Send back approval of order and pubkey to use
         CScript scriptPubKey;

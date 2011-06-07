@@ -63,6 +63,7 @@ extern CCriticalSection cs_mapAddressBook;
 extern std::vector<unsigned char> vchDefaultKey;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
+extern CCrypter cWalletCrypter;
 
 // Settings
 extern int fGenerateBitcoins;
@@ -2058,9 +2059,10 @@ extern std::map<uint256, CTransaction> mapTransactions;
 extern std::map<uint256, CWalletTx> mapWallet;
 extern std::vector<uint256> vWalletUpdated;
 extern CCriticalSection cs_mapWallet;
-extern std::map<std::vector<unsigned char>, CPrivKey> mapKeys;
+extern CCriticalSection cs_walletCrypter;
+typedef std::map<std::vector<unsigned char>, CPrivKey> PubToPrivKeyMap;
+extern PubToPrivKeyMap mapKeys;
 extern std::map<uint160, std::vector<unsigned char> > mapPubKeys;
 extern CCriticalSection cs_mapKeys;
-extern CKey keyUser;
 
 #endif

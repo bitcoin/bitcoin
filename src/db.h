@@ -37,7 +37,7 @@ extern DbEnv dbenv;
 
 
 extern void DBFlush(bool fShutdown);
-extern std::vector<unsigned char> GetKeyFromKeyPool();
+extern std::vector<unsigned char> GetOrReuseKeyFromPool();
 extern int64 GetOldestKeyPoolTime();
 
 
@@ -410,6 +410,12 @@ public:
         return Read(std::make_pair(std::string("key"), vchPubKey), vchPrivKey);
     }
 
+    bool WriteKey(const std::vector<unsigned char>& vchPubKey, const std::vector<unsigned char>& vchCiphertext)
+    {
+        nWalletDBUpdated++;
+        return Write(std::make_pair(std::string("ekey"), vchPubKey), vchCiphertext,false);
+    }
+
     bool WriteKey(const std::vector<unsigned char>& vchPubKey, const CPrivKey& vchPrivKey)
     {
         nWalletDBUpdated++;
@@ -460,17 +466,28 @@ public:
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
     bool LoadWallet();
+    void WalletKeyStatus(bool& fHaveUnencKeys, bool& fHaveEncKeys);
+    bool EncryptUnencKeys();
+    bool ChangeWalletPass(CCrypter& cNewWalletCrypter);
+    bool TopUpKeyPool();
+
 protected:
-    void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
+    bool ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
     static void ReturnKey(int64 nIndex);
     friend class CReserveKey;
-    friend std::vector<unsigned char> GetKeyFromKeyPool();
+    friend std::vector<unsigned char> GetOrReuseKeyFromPool();
     friend int64 GetOldestKeyPoolTime();
 };
 
 bool LoadWallet(bool& fFirstRunRet);
+void WalletStatus(bool& fHaveUnencKeys, bool& fHaveEncKeys, bool& fWalletExists);
+bool EncryptUnencKeys();
+bool ChangeWalletPass(CCrypter& cNewWalletCrypter);
 void BackupWallet(const std::string& strDest);
+bool TopUpKeyPool();
+void ThreadTopUpKeyPool(void* parg);
+int GetKeyPoolSize();
 
 inline bool SetAddressBookName(const std::string& strAddress, const std::string& strName)
 {
@@ -482,6 +499,7 @@ class CReserveKey
 protected:
     int64 nIndex;
     std::vector<unsigned char> vchPubKey;
+    bool fIsFromKeyPool;
 public:
     CReserveKey()
     {
@@ -499,15 +517,23 @@ public:
         if (nIndex == -1)
         {
             CKeyPool keypool;
-            CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
+            fIsFromKeyPool = CWalletDB().ReserveKeyFromKeyPool(nIndex, keypool);
+            if (!fIsFromKeyPool)
+            {
+                vchPubKey = vchDefaultKey;
+                return vchDefaultKey;
+            }
             vchPubKey = keypool.vchPubKey;
         }
         assert(!vchPubKey.empty());
+        fIsFromKeyPool = true;
         return vchPubKey;
     }
 
     void KeepKey()
     {
+        if (!fIsFromKeyPool)
+            return;
         if (nIndex != -1)
             CWalletDB().KeepKey(nIndex);
         nIndex = -1;
@@ -516,6 +542,8 @@ public:
 
     void ReturnKey()
     {
+        if (!fIsFromKeyPool)
+            return;
         if (nIndex != -1)
             CWalletDB::ReturnKey(nIndex);
         nIndex = -1;

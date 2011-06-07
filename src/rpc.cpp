@@ -303,6 +303,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoolsize",   GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
@@ -318,13 +319,16 @@ Value getnewaddress(const Array& params, bool fHelp)
             "If [account] is specified (recommended), it is added to the address book "
             "so payments received with the address will be credited to [account].");
 
+    if (GetKeyPoolSize() < 1)
+        throw JSONRPCError(-12, "Error: Keypool ran out, please call topupkeypool first");
+
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
     if (params.size() > 0)
         strAccount = AccountFromValue(params[0]);
 
     // Generate a new key that is added to wallet
-    string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
+    string strAddress = PubKeyToAddress(GetOrReuseKeyFromPool());
 
     SetAddressBookName(strAddress, strAccount);
     return strAddress;
@@ -361,10 +365,16 @@ string GetAccountAddress(string strAccount, bool bForceNew=false)
     // Generate a new key
     if (account.vchPubKey.empty() || bForceNew)
     {
-        account.vchPubKey = GetKeyFromKeyPool();
-        string strAddress = PubKeyToAddress(account.vchPubKey);
-        SetAddressBookName(strAddress, strAccount);
-        walletdb.WriteAccount(strAccount, account);
+        if (!GetBoolArg("-nocrypt") && GetKeyPoolSize() == 0)
+            if (!walletdb.ReadAccount(strAccount, account))
+                throw JSONRPCError(-13, "Error: Please enter the wallet password with walletpassword first.");
+        else
+        {
+            account.vchPubKey = GetOrReuseKeyFromPool();
+            string strAddress = PubKeyToAddress(account.vchPubKey);
+            SetAddressBookName(strAddress, strAccount);
+            walletdb.WriteAccount(strAccount, account);
+        }
     }
 
     walletdb.TxnCommit();
@@ -499,7 +509,12 @@ Value settxfee(const Array& params, bool fHelp)
 
 Value sendtoaddress(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (!GetBoolArg("-nocrypt") && (fHelp || params.size() < 2 || params.size() > 4))
+        throw runtime_error(
+            "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001\n"
+            "requires wallet password to be set with walletpassword first");
+    if (GetBoolArg("-nocrypt") && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
             "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.00000001");
@@ -517,7 +532,12 @@ Value sendtoaddress(const Array& params, bool fHelp)
         wtx.mapValue["to"]      = params[3].get_str();
 
     CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_walletCrypter)
     {
+        if (!cWalletCrypter.fKeySet)
+            throw JSONRPCError(-13, "Error: Please enter the wallet password with walletpassword first.");
+        if (!cWalletCrypter.CheckKey())
+            throw JSONRPCError(-14, "Error: The wallet password entered was incorrect.");
         string strError = SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
         if (strError != "")
             throw JSONRPCError(-4, strError);
@@ -762,10 +782,15 @@ Value movecmd(const Array& params, bool fHelp)
 
 Value sendfrom(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 3 || params.size() > 6)
+    if (!GetBoolArg("-nocrypt") && (fHelp || params.size() < 3 || params.size() > 6))
         throw runtime_error(
             "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.00000001");
+            "<amount> is a real and is rounded to the nearest 0.00000001\n"
+            "requires wallet password to be set with walletpassword first");
+    if (GetBoolArg("-nocrypt") && (fHelp || params.size() < 3 || params.size() > 6))
+        throw runtime_error(
+            "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001\n");
 
     string strAccount = AccountFromValue(params[0]);
     string strAddress = params[1].get_str();
@@ -783,7 +808,13 @@ Value sendfrom(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(cs_walletCrypter)
     {
+        if (!cWalletCrypter.fKeySet)
+            throw JSONRPCError(-13, "Error: Please enter the wallet password with walletpassword first.");
+        if (!cWalletCrypter.CheckKey())
+            throw JSONRPCError(-14, "Error: The wallet password entered was incorrect.");
+
         // Check funds
         int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
         if (nAmount > nBalance)
@@ -798,12 +829,18 @@ Value sendfrom(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+
 Value sendmany(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (GetBoolArg("-nocrypt") && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
             "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
             "amounts are double-precision floating point numbers");
+    if (!GetBoolArg("-nocrypt") && (fHelp || params.size() < 2 || params.size() > 4))
+        throw runtime_error(
+            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
+            "amounts are double-precision floating point numbers\n"
+            "requires wallet password to be set with walletpassword first");
 
     string strAccount = AccountFromValue(params[0]);
     Object sendTo = params[1].get_obj();
@@ -840,7 +877,13 @@ Value sendmany(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(cs_walletCrypter)
     {
+        if (!cWalletCrypter.fKeySet)
+            throw JSONRPCError(-13, "Error: Please enter the wallet password with walletpassword first.");
+        if (!cWalletCrypter.CheckKey())
+            throw JSONRPCError(-14, "Error: The wallet password entered was incorrect.");
+
         // Check funds
         int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
         if (totalAmount > nBalance)
@@ -1270,6 +1313,199 @@ Value backupwallet(const Array& params, bool fHelp)
 }
 
 
+Value topupkeypool(const Array& params, bool fHelp)
+{
+    if (!GetBoolArg("-nocrypt") && (fHelp || params.size() > 0))
+        throw runtime_error(
+            "topupkeypool\n"
+            "Fills the keypool, requires wallet password to be set.");
+    if (GetBoolArg("-nocrypt") && (fHelp || params.size() > 0))
+        throw runtime_error(
+            "topupkeypool\n"
+            "Fills the keypool.");
+
+    if (!GetBoolArg("-nocrypt"))
+    {
+        CRITICAL_BLOCK(cs_walletCrypter)
+        {
+            if (!cWalletCrypter.fKeySet)
+                throw JSONRPCError(-13, "Error: Please enter the wallet password with walletpassword first.");
+            if (!cWalletCrypter.CheckKey())
+                throw JSONRPCError(-14, "Error: The wallet password entered was incorrect.");
+
+            CWalletDB().TopUpKeyPool();
+        }
+        if (GetKeyPoolSize() < GetArg("-keypool", 100))
+            throw JSONRPCError(-4, "Error refreshing keypool.");
+    }
+    else
+        CWalletDB().TopUpKeyPool();
+
+    return Value::null;
+}
+
+
+void ThreadCleanWalletPassword(void* parg)
+{
+    static int64 nWakeTime;
+    int64 nMyWakeTime = GetTime() + *((int*)parg);
+    static CCriticalSection cs_nWakeTime;
+
+    if (nWakeTime == 0)
+    {
+        CRITICAL_BLOCK(cs_nWakeTime)
+        {
+            nWakeTime = nMyWakeTime;
+        }
+
+        while (GetTime() < nWakeTime)
+            Sleep(GetTime() - nWakeTime);
+
+        CRITICAL_BLOCK(cs_nWakeTime)
+        {
+            nWakeTime = 0;
+        }
+    }
+    else
+    {
+        CRITICAL_BLOCK(cs_nWakeTime)
+        {
+            if (nWakeTime < nMyWakeTime)
+                nWakeTime = nMyWakeTime;
+        }
+        free(parg);
+        return;
+    }
+
+    CRITICAL_BLOCK(cs_walletCrypter)
+    {
+        cWalletCrypter.CleanKey();
+    }
+
+    free(parg);
+}
+
+Value walletpassword(const Array& params, bool fHelp)
+{
+    if (!GetBoolArg("-nocrypt") && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "walletpassword <password> <timeout>\n"
+            "Stores the wallet decryption key in memory for <timeout> seconds.");
+    if (fHelp)
+        return true;
+    if (GetBoolArg("-nocrypt"))
+        throw JSONRPCError(-15, "Error: running with -nocrypt, but walletpassword was called.");
+
+    string strWalletPass;
+    strWalletPass.reserve(100);
+    MLOCK(strWalletPass[0], strWalletPass.length());
+    strWalletPass = params[0].get_str();
+
+    CRITICAL_BLOCK(cs_walletCrypter)
+    {
+        if (strWalletPass.length() > 0)
+        {
+            if (!cWalletCrypter.SetKey(strWalletPass))
+            {
+                fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                throw JSONRPCError(-4, "Error: Wallet decryption setup failed");
+            }
+            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+        }
+        else
+            throw runtime_error(
+                "walletpassword <password> <timeout>\n"
+                "Stores the wallet decryption key in memory for <timeout> seconds.");
+        if (!cWalletCrypter.CheckKey())
+        {
+            cWalletCrypter.CleanKey();
+            throw JSONRPCError(-14, "Error: The wallet password entered was incorrect.");
+        }
+    }
+
+    int* pnSleepTime = new int(params[1].get_int());
+    CreateThread(ThreadCleanWalletPassword, pnSleepTime);
+    bool* fCleanKey = new bool(false);
+    CreateThread(ThreadTopUpKeyPool, fCleanKey);
+
+    return Value::null;
+}
+
+
+Value walletpasswordchange(const Array& params, bool fHelp)
+{
+    if (!GetBoolArg("-nocrypt") && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "walletpasswordchange <oldpassword> <newpassword>\n"
+            "Changes the wallet password from <oldpassword> to <newpassword>.");
+    if (fHelp)
+        return true;
+    if (GetBoolArg("-nocrypt"))
+        throw JSONRPCError(-15, "Error: running with -nocrypt, but walletpasswordchange was called.");
+
+    string strOldWalletPass;
+    strOldWalletPass.reserve(100);
+    MLOCK(strOldWalletPass[0], strOldWalletPass.length());
+    strOldWalletPass = params[0].get_str();
+
+    string strNewWalletPass;
+    strNewWalletPass.reserve(100);
+    MLOCK(strNewWalletPass[0], strNewWalletPass.length());
+    strNewWalletPass = params[1].get_str();
+
+    CRITICAL_BLOCK(cs_walletCrypter)
+    {
+        if (strOldWalletPass.length() > 0)
+        {
+            if (!cWalletCrypter.SetKey(strOldWalletPass))
+            {
+                fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+                fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+                throw JSONRPCError(-4, "Error: Wallet decryption setup failed");
+            }
+            fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+        }
+        else
+        {
+            fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+            throw runtime_error(
+                "walletpassword <password> <timeout>\n"
+                "Stores the wallet decryption key in memory for <timeout> seconds.");
+        }
+
+        if (!cWalletCrypter.CheckKey())
+        {
+            fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+            cWalletCrypter.CleanKey();
+            throw JSONRPCError(-14, "Error: The wallet password entered was incorrect.");
+        }
+
+        CCrypter cNewWalletCrypter;
+        if (strNewWalletPass.length() > 0)
+        {
+            if (!cNewWalletCrypter.SetKey(strNewWalletPass))
+            {
+                fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+                throw JSONRPCError(-4, "Error: Wallet decryption setup failed");
+            }
+            fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+        }
+        else
+            throw runtime_error(
+                "walletpassword <password> <timeout>\n"
+                "Stores the wallet decryption key in memory for <timeout> seconds.");
+
+        ChangeWalletPass(cNewWalletCrypter);
+
+        cWalletCrypter.CleanKey();
+        cWalletCrypter = cNewWalletCrypter;
+        cWalletCrypter.CleanKey();
+    }
+
+    return Value::null;
+}
+
+
 Value validateaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1449,6 +1685,9 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listreceivedbyaccount", &listreceivedbyaccount),
     make_pair("listreceivedbylabel",   &listreceivedbyaccount), // deprecated
     make_pair("backupwallet",          &backupwallet),
+    make_pair("topupkeypool",          &topupkeypool),
+    make_pair("walletpassword",        &walletpassword),
+    make_pair("walletpasswordchange",  &walletpasswordchange),
     make_pair("validateaddress",       &validateaddress),
     make_pair("getbalance",            &getbalance),
     make_pair("move",                  &movecmd),
@@ -1482,6 +1721,7 @@ string pAllowInSafeMode[] =
     "getaddressesbyaccount",
     "getaddressesbylabel", // deprecated
     "backupwallet",
+    "topupkeypool",
     "validateaddress",
     "getwork",
 };
@@ -2113,6 +2353,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
         if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "walletpassword"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendmany"               && n > 1)
         {
             string s = params[1].get_str();
