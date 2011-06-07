@@ -27,6 +27,8 @@ class CKeyItem;
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
+static const int DEF_KEYPOOL_SZ = 125;
+static const int DEF_KEYPOOL_MIN = 100;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
 static const int64 MIN_TX_FEE = 50000;

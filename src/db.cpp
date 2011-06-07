@@ -960,18 +960,21 @@ void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
     CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_setKeyPool)
     {
-        // Top up key pool
-        int64 nTargetSize = max(GetArg("-keypool", 100), (int64)0);
-        while (setKeyPool.size() < nTargetSize+1)
-        {
-            int64 nEnd = 1;
-            if (!setKeyPool.empty())
-                nEnd = *(--setKeyPool.end()) + 1;
-            if (!Write(make_pair(string("pool"), nEnd), CKeyPool(GenerateNewKey())))
-                throw runtime_error("ReserveKeyFromKeyPool() : writing generated key failed");
-            setKeyPool.insert(nEnd);
-            printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
-        }
+        // Top up key pool, if below low-water level
+	int64 nMinPoolSize = max(GetArg("-keypoolmin", DEF_KEYPOOL_MIN), (int64)0);
+	if (setKeyPool.size() < nMinPoolSize) {
+            int64 nTargetSize = max(GetArg("-keypool", DEF_KEYPOOL_SZ), (int64)0);
+            while (setKeyPool.size() < nTargetSize+1)
+            {
+                int64 nEnd = 1;
+                if (!setKeyPool.empty())
+                    nEnd = *(--setKeyPool.end()) + 1;
+                if (!Write(make_pair(string("pool"), nEnd), CKeyPool(GenerateNewKey())))
+                    throw runtime_error("ReserveKeyFromKeyPool() : writing generated key failed");
+                setKeyPool.insert(nEnd);
+                printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
+            }
+	}
 
         // Get the oldest key
         assert(!setKeyPool.empty());
