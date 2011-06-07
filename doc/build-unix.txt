@@ -22,11 +22,7 @@ make -f makefile.unix bitcoind   # Headless bitcoin
 
 Dependencies
 ------------
-sudo apt-get install build-essential
-sudo apt-get install libgtk2.0-dev
-sudo apt-get install libssl-dev
-sudo apt-get install libdb4.7-dev
-sudo apt-get install libdb4.7++-dev
+sudo apt-get install build-essential libgtk2.0-dev libssl-dev libdb4.7-dev libdb4.7++-dev
 Boost 1.40+: sudo apt-get install libboost-all-dev
 or Boost 1.37: sudo apt-get install libboost1.37-dev
 
