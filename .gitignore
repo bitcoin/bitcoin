@@ -1,3 +1,5 @@
 src/*.exe
 src/bitcoin
 src/bitcoind
+.*.swp
+*.*~*

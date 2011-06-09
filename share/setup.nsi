@@ -4,7 +4,7 @@ RequestExecutionLevel highest
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.3.22
+!define VERSION 0.3.23
 !define COMPANY "Bitcoin project"
 !define URL http://www.bitcoin.org/
 
@@ -39,12 +39,12 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile bitcoin-0.3.22-win32-setup.exe
+OutFile bitcoin-0.3.23-win32-setup.exe
 InstallDir $PROGRAMFILES\Bitcoin
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 0.3.22.0
+VIProductVersion 0.3.23.0
 VIAddVersionKey ProductName Bitcoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -60,7 +60,6 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File ../src/bitcoin.exe
-    File ../../openssl-1.0.0d/libeay32.dll
     File /oname=license.txt ../COPYING
     File /oname=readme.txt ../doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
@@ -108,7 +107,6 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\bitcoin.exe
-    Delete /REBOOTOK $INSTDIR\libeay32.dll
     Delete /REBOOTOK $INSTDIR\license.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon

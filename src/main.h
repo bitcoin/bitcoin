@@ -29,7 +29,7 @@ static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
-static const int64 MIN_TX_FEE = CENT;
+static const int64 MIN_TX_FEE = 50000;
 static const int64 MIN_RELAY_TX_FEE = 50000;
 static const int64 MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
@@ -87,7 +87,7 @@ bool AddKey(const CKey& key);
 std::vector<unsigned char> GenerateNewKey();
 bool AddToWallet(const CWalletTx& wtxIn);
 void WalletUpdateSpent(const COutPoint& prevout);
-int ScanForWalletTransactions(CBlockIndex* pindexStart);
+int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
 void ReacceptWalletTransactions();
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
