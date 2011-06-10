@@ -257,6 +257,9 @@ void BitcoinGUI::setTabsModel(QAbstractItemModel *transaction_model)
         transaction_table->horizontalHeader()->resizeSection(
                 TransactionTableModel::Credit, 79);
     }
+
+    connect(transaction_model, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
+            this, SLOT(incomingTransaction(const QModelIndex &, int, int)));
 }
 
 void BitcoinGUI::sendcoinsClicked()
@@ -407,3 +410,25 @@ void BitcoinGUI::transactionDetails(const QModelIndex& idx)
     dlg.exec();
 }
 
+void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int end)
+{
+    TransactionTableModel *ttm = model->getTransactionTableModel();
+    qint64 credit = ttm->index(start, TransactionTableModel::Credit, parent)
+                    .data(Qt::EditRole).toULongLong();
+    qint64 debit = ttm->index(start, TransactionTableModel::Debit, parent)
+                    .data(Qt::EditRole).toULongLong();
+    if((credit+debit)>0)
+    {
+        /* On incoming transaction, make an info balloon */
+        QString date = ttm->index(start, TransactionTableModel::Date, parent)
+                        .data().toString();
+        QString description = ttm->index(start, TransactionTableModel::Description, parent)
+                        .data().toString();
+
+        trayIcon->showMessage(tr("Incoming transaction"),
+                              "Date: " + date + "\n" +
+                              "Amount: " + QString::fromStdString(FormatMoney(credit+debit, true)) + "\n" +
+                              description,
+                              QSystemTrayIcon::Information);
+    }
+}

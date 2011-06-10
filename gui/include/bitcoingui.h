@@ -82,6 +82,7 @@ private slots:
     void copyClipboardClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void transactionDetails(const QModelIndex& idx);
+    void incomingTransaction(const QModelIndex & parent, int start, int end);
 };
 
 #endif
