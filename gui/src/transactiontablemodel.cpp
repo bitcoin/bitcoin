@@ -3,6 +3,7 @@
 #include "transactionrecord.h"
 #include "guiconstants.h"
 #include "main.h"
+#include "transactiondesc.h"
 
 #include <QLocale>
 #include <QDebug>
@@ -131,14 +132,10 @@ struct TransactionTablePriv
                 }
                 else if(inWallet && inModel)
                 {
-                    /* Updated */
-
+                    /* Updated -- nothing to do, status update will take care of this */
                 }
             }
         }
-        /* TODO: invalidate status for all transactions
-           Use counter. Emit dataChanged for column.
-         */
     }
 
     int size()
@@ -174,6 +171,19 @@ struct TransactionTablePriv
         {
             return 0;
         }
+    }
+
+    QString describe(TransactionRecord *rec)
+    {
+        CRITICAL_BLOCK(cs_mapWallet)
+        {
+            std::map<uint256, CWalletTx>::iterator mi = mapWallet.find(rec->hash);
+            if(mi != mapWallet.end())
+            {
+                return QString::fromStdString(TransactionDesc::toHTML(mi->second));
+            }
+        }
+        return QString("");
     }
 
 };
@@ -457,6 +467,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         default:
             return TransactionTableModel::Other;
         }
+    }
+    else if (role == LongDescriptionRole)
+    {
+        return priv->describe(rec);
     }
     return QVariant();
 }

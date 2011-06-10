@@ -13,6 +13,7 @@
 #include "guiutil.h"
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
+#include "transactiondescdialog.h"
 
 #include "main.h"
 
@@ -212,6 +213,8 @@ QWidget *BitcoinGUI::createTabs()
     {
         QTableView *view = new QTableView(this);
         tabs->addTab(view, tab_labels.at(i));
+
+        connect(view, SIGNAL(activated(const QModelIndex&)), this, SLOT(transactionDetails(const QModelIndex&)));
         transactionViews.append(view);
     }
 
@@ -396,3 +399,11 @@ void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
           QMessageBox::Yes|QMessageBox::Cancel, QMessageBox::Yes);
     *payFee = (retval == QMessageBox::Yes);
 }
+
+void BitcoinGUI::transactionDetails(const QModelIndex& idx)
+{
+    /* A transaction is doubleclicked */
+    TransactionDescDialog dlg(idx);
+    dlg.exec();
+}
+

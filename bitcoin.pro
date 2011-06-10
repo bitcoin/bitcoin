@@ -63,7 +63,9 @@ HEADERS += gui/include/bitcoingui.h \
     gui/include/guiconstants.h \
     gui/include/optionsmodel.h \
     gui/include/monitoreddatamapper.h \
-    core/include/externui.h
+    core/include/externui.h \
+    gui/include/transactiondesc.h \
+    gui/include/transactiondescdialog.h
 SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/transactiontablemodel.cpp \
     gui/src/addresstablemodel.cpp \
@@ -90,7 +92,9 @@ SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
     gui/src/guiutil.cpp \
     gui/src/transactionrecord.cpp \
     gui/src/optionsmodel.cpp \
-    gui/src/monitoreddatamapper.cpp
+    gui/src/monitoreddatamapper.cpp \
+    gui/src/transactiondesc.cpp \
+    gui/src/transactiondescdialog.cpp
 
 RESOURCES += \
     gui/bitcoin.qrc
@@ -99,4 +103,5 @@ FORMS += \
     gui/forms/sendcoinsdialog.ui \
     gui/forms/addressbookdialog.ui \
     gui/forms/aboutdialog.ui \
-    gui/forms/editaddressdialog.ui
+    gui/forms/editaddressdialog.ui \
+    gui/forms/transactiondescdialog.ui

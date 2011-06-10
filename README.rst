@@ -24,7 +24,9 @@ This has been implemented:
 
 - Sending coins (including ask for fee when needed)
 
-- Show messages from core
+- Show error messages from core
+
+- Show details dialog for transactions (on double click)
 
 This has to be done:
 
@@ -33,7 +35,5 @@ This has to be done:
 - Internationalization (convert WX language files)
 
 - Build on Windows
-
-- Show details dialog for transactions (on double click)
 
 - More thorough testing of the view with all the kinds of transactions (sendmany, generation)

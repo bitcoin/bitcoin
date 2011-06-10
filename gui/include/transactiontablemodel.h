@@ -23,7 +23,8 @@ public:
     } ColumnIndex;
 
     enum {
-        TypeRole = Qt::UserRole
+        TypeRole = Qt::UserRole,
+        LongDescriptionRole = Qt::UserRole+1
     } RoleIndex;
 
     /* TypeRole values */

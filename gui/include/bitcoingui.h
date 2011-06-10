@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 
-/* Forward declarations */
 class TransactionTableModel;
 class ClientModel;
 
@@ -13,6 +12,7 @@ class QLabel;
 class QLineEdit;
 class QTableView;
 class QAbstractItemModel;
+class QModelIndex;
 QT_END_NAMESPACE
 
 class BitcoinGUI : public QMainWindow
@@ -66,6 +66,10 @@ public slots:
     void setNumBlocks(int count);
     void setNumTransactions(int count);
     void error(const QString &title, const QString &message);
+    /* It is currently not possible to pass a return value to another thread through
+       BlockingQueuedConnection, so use an indirected pointer.
+       http://bugreports.qt.nokia.com/browse/QTBUG-10440
+    */
     void askFee(qint64 nFeeRequired, bool *payFee);
 
 private slots:
@@ -77,6 +81,7 @@ private slots:
     void newAddressClicked();
     void copyClipboardClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
+    void transactionDetails(const QModelIndex& idx);
 };
 
 #endif
