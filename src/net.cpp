@@ -756,9 +756,12 @@ void ThreadSocketHandler2(void* parg)
         if (nSelect == SOCKET_ERROR)
         {
             int nErr = WSAGetLastError();
-            printf("socket select error %d\n", nErr);
-            for (int i = 0; i <= hSocketMax; i++)
-                FD_SET(i, &fdsetRecv);
+            if (hSocketMax > -1)
+            {
+                printf("socket select error %d\n", nErr);
+                for (int i = 0; i <= hSocketMax; i++)
+                    FD_SET(i, &fdsetRecv);
+            }
             FD_ZERO(&fdsetSend);
             FD_ZERO(&fdsetError);
             Sleep(timeout.tv_usec/1000);
