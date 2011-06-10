@@ -82,7 +82,7 @@ void AddressBookDialog::on_copyToClipboard_clicked()
 
     foreach (QModelIndex index, indexes)
     {
-        QVariant address = table->model()->data(index);
+        QVariant address = index.data();
         QApplication::clipboard()->setText(address.toString());
     }
 }
@@ -94,6 +94,9 @@ void AddressBookDialog::on_editButton_clicked()
     {
         return;
     }
+    /* Map selected index to source address book model */
+    QAbstractProxyModel *proxy_model = static_cast<QAbstractProxyModel*>(getCurrentTable()->model());
+    QModelIndex selected = proxy_model->mapToSource(indexes.at(0));
 
     /* Double click also triggers edit button */
     EditAddressDialog dlg(
@@ -101,7 +104,7 @@ void AddressBookDialog::on_editButton_clicked()
             EditAddressDialog::EditSendingAddress :
             EditAddressDialog::EditReceivingAddress);
     dlg.setModel(model);
-    dlg.loadRow(indexes.at(0).row());
+    dlg.loadRow(selected.row());
     if(dlg.exec())
     {
         dlg.saveCurrentRow();
