@@ -57,7 +57,9 @@ int64 nHPSTimerStart;
 
 // Settings
 int fGenerateBitcoins = false;
-int64 nTransactionFee = 0;
+int64 nBaseTransactionFee = 0;
+int64 nPerKBTransactionFee = 0;
+int fOverrideTransactionFee = false;
 CAddress addrIncoming;
 int fLimitProcessors = false;
 int nLimitProcessors = 1;
@@ -652,7 +654,7 @@ bool CTransaction::CheckTransaction() const
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs, bool fCheckFee)
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -731,13 +733,13 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         }
 
         // Don't accept it if it can't get into a block
-        if (nFees < GetMinFee(1000, true, true))
+        if (fCheckFee && nFees < GetMinFee(1000, true, true))
             return error("AcceptToMemoryPool() : not enough fees");
 
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make other's transactions take longer to confirm.
-        if (nFees < MIN_RELAY_TX_FEE)
+        if (fCheckFee && nFees < MIN_RELAY_TX_FEE)
         {
             static CCriticalSection cs;
             static double dFreeCount;
@@ -849,17 +851,17 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
+bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool fCheckFee)
 {
     if (fClient)
     {
         if (!IsInMainChain() && !ClientConnectInputs())
             return false;
-        return CTransaction::AcceptToMemoryPool(txdb, false);
+        return CTransaction::AcceptToMemoryPool(txdb, false, (bool*)NULL, fCheckFee);
     }
     else
     {
-        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs);
+        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs, (bool*)NULL, fCheckFee);
     }
 }
 
@@ -3830,7 +3832,7 @@ bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& 
         CTxDB txdb("r");
         CRITICAL_BLOCK(cs_mapWallet)
         {
-            nFeeRet = nTransactionFee;
+            nFeeRet = nBaseTransactionFee;
             loop
             {
                 wtxNew.vin.clear();
@@ -3909,9 +3911,13 @@ bool CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& 
                 dPriority /= nBytes;
 
                 // Check that enough fee is included
-                int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                bool fAllowFree = CTransaction::AllowFree(dPriority);
-                int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+                int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
+                int64 nMinFee = 0;
+                if (!fOverrideTransactionFee)
+                {
+                    bool fAllowFree = CTransaction::AllowFree(dPriority);
+                    int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+                }
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
                     nFeeRet = max(nPayFee, nMinFee);
@@ -3972,7 +3978,8 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
             mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool())
+        CTxDB txdb("r");
+        if (!wtxNew.AcceptToMemoryPool(txdb, true, !fOverrideTransactionFee))
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("CommitTransaction() : Error: Transaction not valid");
@@ -3988,26 +3995,36 @@ bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
 
 // requires cs_main lock
-string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekeyRet, bool fAskFee, bool fAutoCommit)
 {
-    CReserveKey reservekey;
     int64 nFeeRequired;
-    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
+    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekeyRet, nFeeRequired))
     {
         string strError;
         if (nValue + nFeeRequired > GetBalance())
-            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "), FormatMoney(nFeeRequired).c_str());
+        {
+            unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
+            int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
+            if (nPayFee == nFeeRequired)
+                strError = strprintf(_("Based on your fee settings, this transaction requires a fee of at least %s, putting its total over your balance. You can change those settings in the Options dialog, or via the settxfee RPC command."), FormatMoney(nFeeRequired).c_str());
+            else
+                strError = strprintf(_("This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds, putting its total over your balance."), FormatMoney(nFeeRequired).c_str());
+        }
         else
             strError = _("Error: Transaction creation failed  ");
         printf("SendMoney() : %s", strError.c_str());
         return strError;
     }
 
-    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
+    unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
+    int64 nPayFee = nBaseTransactionFee + nPerKBTransactionFee * ((int64)nBytes / 1000);
+
+    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, nPayFee, _("Sending..."), NULL))
         return "ABORTED";
 
-    if (!CommitTransaction(wtxNew, reservekey))
-        return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+    if (fAutoCommit)
+        if (!CommitTransaction(wtxNew, reservekeyRet))
+            return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 
     MainFrameRepaint();
     return "";
@@ -4016,12 +4033,12 @@ string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAs
 
 
 // requires cs_main lock
-string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekeyRet, bool fAskFee, bool fAutoCommit)
 {
     // Check amount
     if (nValue <= 0)
         return _("Invalid amount");
-    if (nValue + nTransactionFee > GetBalance())
+    if (nValue > GetBalance())
         return _("Insufficient funds");
 
     // Parse bitcoin address
@@ -4029,5 +4046,5 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
     if (!scriptPubKey.SetBitcoinAddress(strAddress))
         return _("Invalid bitcoin address");
 
-    return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
+    return SendMoney(scriptPubKey, nValue, wtxNew, reservekeyRet, fAskFee, fAutoCommit);
 }

@@ -15,7 +15,7 @@ extern wxLocale g_locale;
 void HandleCtrlA(wxKeyEvent& event);
 void UIThreadCall(boost::function0<void>);
 int ThreadSafeMessageBox(const std::string& message, const std::string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1);
-bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent);
+bool ThreadSafeAskFee(int64 nFeeRequired, int64 nPayFee, const std::string& strCaption, wxWindow* parent);
 void CalledSetStatusBar(const std::string& strText, int nField);
 void MainFrameRepaint();
 void CreateMainWindow();
@@ -127,7 +127,8 @@ class COptionsDialog : public COptionsDialogBase
 protected:
     // Event handlers
     void OnListBox(wxCommandEvent& event);
-    void OnKillFocusTransactionFee(wxFocusEvent& event);
+    void OnKillFocusBaseTransactionFee(wxFocusEvent& event);
+    void OnKillFocusPerKBTransactionFee(wxFocusEvent& event);
     void OnCheckBoxUseProxy(wxCommandEvent& event);
     void OnKillFocusProxy(wxFocusEvent& event);
 
