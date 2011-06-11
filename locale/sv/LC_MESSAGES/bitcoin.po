@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-11 00:11+0100\n"
-"PO-Revision-Date: 2011-06-11 02:09+0100\n"
+"POT-Creation-Date: 2011-06-11 21:58+0100\n"
+"PO-Revision-Date: 2011-06-12 00:12+0100\n"
 "Last-Translator: Codler <github>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -11,186 +11,183 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
+"X-Poedit-Bookmarks: 35,-1,-1,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: ../../..\n"
 
-#: ../../../init.cpp:140
-msgid " beta"
-msgstr " beta"
-
-#: ../../../init.cpp:142
+#: ../../../init.cpp:141
 msgid "Bitcoin version"
 msgstr "Bitcoin version"
 
-#: ../../../init.cpp:143
+#: ../../../init.cpp:142
 msgid "Usage:"
 msgstr "Användning:"
 
-#: ../../../init.cpp:145
+#: ../../../init.cpp:144
 msgid "Send command to -server or bitcoind\n"
 msgstr "Skicka kommando till -server eller bitcoind\n"
 
-#: ../../../init.cpp:146
+#: ../../../init.cpp:145
 msgid "List commands\n"
 msgstr "Lista kommandon\n"
 
-#: ../../../init.cpp:147
+#: ../../../init.cpp:146
 msgid "Get help for a command\n"
-msgstr "Få hjälp från en kommando\n"
+msgstr "Få hjälp om kommandon\n"
 
-#: ../../../init.cpp:148
+#: ../../../init.cpp:147
 msgid "Options:\n"
 msgstr "Val:\n"
 
-#: ../../../init.cpp:149
+#: ../../../init.cpp:148
 msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "Specify configuration file (default: bitcoin.conf)\n"
+msgstr "Ange konfigurationsfil (standard: bitcoin.conf)\n"
+
+#: ../../../init.cpp:149
+msgid "Specify pid file (default: bitcoind.pid)\n"
+msgstr "Ange pid-fil (standard: bitcoind.pid)\n"
 
 #: ../../../init.cpp:150
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "Specificera pid-fil (standard: bitcoind.pid)\n"
-
-#: ../../../init.cpp:151
 msgid "Generate coins\n"
 msgstr "Generera mynt\n"
 
-#: ../../../init.cpp:152
+#: ../../../init.cpp:151
 msgid "Don't generate coins\n"
-msgstr "Genetera inte mynt\n"
+msgstr "Generera inte mynt\n"
 
-#: ../../../init.cpp:153
+#: ../../../init.cpp:152
 msgid "Start minimized\n"
 msgstr "Starta minimerad\n"
 
-#: ../../../init.cpp:154
+#: ../../../init.cpp:153
 msgid "Specify data directory\n"
-msgstr "Specificera data mappen\n"
+msgstr "Ange data mappen\n"
+
+#: ../../../init.cpp:154
+msgid "Connect through socks4 proxy\n"
+msgstr "Anslut via socks4 proxy\n"
 
 #: ../../../init.cpp:155
-msgid "Connect through socks4 proxy\n"
-msgstr "Ansluter via socks4 proxy\n"
-
-#: ../../../init.cpp:156
 msgid "Allow DNS lookups for addnode and connect\n"
 msgstr "Tillåt DNS uppslagningar för addnode och connect\n"
 
-#: ../../../init.cpp:157
+#: ../../../init.cpp:156
 msgid "Add a node to connect to\n"
 msgstr "Lägg till en nod att ansluta till\n"
 
-#: ../../../init.cpp:158
+#: ../../../init.cpp:157
 msgid "Connect only to the specified node\n"
 msgstr "Anslut endast till specifik nod\n"
 
-#: ../../../init.cpp:159
+#: ../../../init.cpp:158
 msgid "Don't accept connections from outside\n"
-msgstr "Acceptera inte anslutningar från utsidan\n"
+msgstr "Acceptera ej anslutningar från utsidan\n"
 
-#: ../../../init.cpp:162
+#: ../../../init.cpp:161
 msgid "Don't attempt to use UPnP to map the listening port\n"
-msgstr "Försök inte att använda UPnP för att mappa avslyssningsporten\n"
+msgstr "Försöker inte använda UPnP till avslyssningsport\n"
 
-#: ../../../init.cpp:164
+#: ../../../init.cpp:163
 msgid "Attempt to use UPnP to map the listening port\n"
-msgstr "Försöker att använda UPnP för att mappa avlyssningsporten\n"
+msgstr "Försöker använda UPnP till avlyssningsport\n"
 
-#: ../../../init.cpp:167
+#: ../../../init.cpp:166
 msgid "Fee per KB to add to transactions you send\n"
-msgstr "Avgift per KB att lägga till transaktionen du sänder\n"
+msgstr "Avgift per KB som läggs på transaktionen när du sänder\n"
 
-#: ../../../init.cpp:169
+#: ../../../init.cpp:168
 msgid "Accept command line and JSON-RPC commands\n"
-msgstr "Accepterar kommandoraden och JSON-RPC kommando\n"
+msgstr "Accepterar kommandorad och JSON-RPC kommando\n"
 
-#: ../../../init.cpp:172
+#: ../../../init.cpp:171
 msgid "Run in the background as a daemon and accept commands\n"
-msgstr "Kör daemon i bakgrunden och acceptera kommando\n"
+msgstr "Kör i bakgrund som daemon och accepterar kommando\n"
 
-#: ../../../init.cpp:174
+#: ../../../init.cpp:173
 msgid "Use the test network\n"
 msgstr "Använd test nätverk\n"
 
-#: ../../../init.cpp:175
+#: ../../../init.cpp:174
 msgid "Username for JSON-RPC connections\n"
 msgstr "Användarnamn till JSON-RPC anslutning\n"
 
-#: ../../../init.cpp:176
+#: ../../../init.cpp:175
 msgid "Password for JSON-RPC connections\n"
 msgstr "Lösenord till JSON-RPC anslutning\n"
 
-#: ../../../init.cpp:177
+#: ../../../init.cpp:176
 msgid "Listen for JSON-RPC connections on <port> (default: 8332)\n"
 msgstr "Lyssnar på JSON-RPC anslutningar på <port> (standard: 8332)\n"
 
-#: ../../../init.cpp:178
+#: ../../../init.cpp:177
 msgid "Allow JSON-RPC connections from specified IP address\n"
 msgstr "Tillåt JSON-RPC anslutningar från specifik IP-adress\n"
 
-#: ../../../init.cpp:179
+#: ../../../init.cpp:178
 msgid "Send commands to node running on <ip> (default: 127.0.0.1)\n"
 msgstr "Skicka kommando till noden som körs på <ip> (standard: 127.0.0.1)\n"
 
-#: ../../../init.cpp:180
+#: ../../../init.cpp:179
 msgid "Set key pool size to <n> (default: 100)\n"
 msgstr "Sätt nyckel pool storlek till <n> (standard: 100)\n"
 
-#: ../../../init.cpp:181
+#: ../../../init.cpp:180
 msgid "Rescan the block chain for missing wallet transactions\n"
 msgstr "Scanna om block kedja efter saknade plånbokstransaktioner\n"
 
-#: ../../../init.cpp:185
+#: ../../../init.cpp:184
 msgid ""
 "\n"
 "SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
-"SSL val: (Se Bitcoin Wiki för SSL inställningsinstruktioner)\n"
+"SSL val: (Se på Bitcoin Wiki för SSL installation instruktioner)\n"
+
+#: ../../../init.cpp:185
+msgid "Use OpenSSL (https) for JSON-RPC connections\n"
+msgstr "Använd OpenSSL (https) till JSON-RPC anslutningar\n"
 
 #: ../../../init.cpp:186
-msgid "Use OpenSSL (https) for JSON-RPC connections\n"
-msgstr "Använd OpenSSL (https) för JSON-RPC anslutningar\n"
-
-#: ../../../init.cpp:187
 msgid "Server certificate file (default: server.cert)\n"
 msgstr "Server certifikatfil (standard: server.cert)\n"
 
-#: ../../../init.cpp:188
+#: ../../../init.cpp:187
 msgid "Server private key (default: server.pem)\n"
 msgstr "Server privat nyckel (standard: server.pem)\n"
 
-#: ../../../init.cpp:189
+#: ../../../init.cpp:188
 msgid "Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
-msgstr "Acceptabel kryptering (standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+msgstr "Acceptabla krypteringar (standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
 
-#: ../../../init.cpp:193
+#: ../../../init.cpp:192
 msgid "This help message\n"
-msgstr "Denna hjälp meddelande\n"
+msgstr "Detta hjälpmeddelande\n"
 
-#: ../../../init.cpp:330
+#: ../../../init.cpp:329
 #, c-format
 msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
 msgstr "Kan inte sätta lås på data mappen %s.  Bitcoin körs troligen redan."
 
-#: ../../../init.cpp:356
+#: ../../../init.cpp:355
 msgid "Error loading addr.dat      \n"
 msgstr "Fel vid laddning av addr.dat      \n"
 
-#: ../../../init.cpp:362
+#: ../../../init.cpp:361
 msgid "Error loading blkindex.dat      \n"
 msgstr "Fel vid laddning av blkindex.dat      \n"
 
-#: ../../../init.cpp:369
+#: ../../../init.cpp:368
 msgid "Error loading wallet.dat      \n"
 msgstr "Fel vid laddning av wallet.dat      \n"
 
-#: ../../../init.cpp:449
+#: ../../../init.cpp:448
 msgid "Invalid -proxy address"
 msgstr "Ogiltig -proxy adress"
 
-#: ../../../init.cpp:472
+#: ../../../init.cpp:471
 msgid "Invalid amount for -paytxfee=<amount>"
 msgstr "Ogiltig belopp på -paytxfee=<belopp>"
 
-#: ../../../init.cpp:476
+#: ../../../init.cpp:475
 msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
 msgstr "Varning: -paytxfee är satt väldigt högt.  Denna är transaktionsavgiften som du kommer att betala om du skickar en transaktion."
 
@@ -957,8 +954,8 @@ msgid "Warning: Please check that your computer's date and time are correct.  If
 msgstr "Varning: Var god och kolla att din dator har rätt datum och klockslag.  Om din klocka är fel så kommer Bitcoin inte att fungera."
 
 #: ../../../util.cpp:899
-msgid "-beta"
-msgstr "-beta"
+msgid "beta"
+msgstr "beta"
 
 #: ../../../uibase.h:147
 msgid "Transaction Details"
@@ -976,3 +973,5 @@ msgstr "Om Bitcoin"
 msgid "Your Bitcoin Addresses"
 msgstr "Dina Bitcoin Adresser"
 
+#~ msgid " beta"
+#~ msgstr " beta"
