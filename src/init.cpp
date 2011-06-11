@@ -137,7 +137,6 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
-        string beta = VERSION_IS_BETA ? _(" beta") : "";
         string strUsage = string() +
           _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
