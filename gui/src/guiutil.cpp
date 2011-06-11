@@ -33,5 +33,6 @@ void GUIUtil::setupAmountWidget(QLineEdit *widget, QWidget *parent)
     amountValidator->setDecimals(8);
     amountValidator->setBottom(0.0);
     widget->setValidator(amountValidator);
+    widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 

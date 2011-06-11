@@ -1,6 +1,7 @@
 #include "optionsdialog.h"
 #include "optionsmodel.h"
 #include "monitoreddatamapper.h"
+#include "guiutil.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -144,18 +145,23 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     QVBoxLayout *layout = new QVBoxLayout();
 
     bitcoin_at_startup = new QCheckBox(tr("&Start Bitcoin on window system startup"));
+    bitcoin_at_startup->setToolTip(tr("Automatically start Bitcoin after the computer is turned on"));
     layout->addWidget(bitcoin_at_startup);
 
     minimize_to_tray = new QCheckBox(tr("&Minimize to the tray instead of the taskbar"));
+    minimize_to_tray->setToolTip(tr("Show only a tray icon after minimizing the window"));
     layout->addWidget(minimize_to_tray);
 
     map_port_upnp = new QCheckBox(tr("Map port using &UPnP"));
+    map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled."));
     layout->addWidget(map_port_upnp);
 
     minimize_on_close = new QCheckBox(tr("M&inimize on close"));
+    minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu."));
     layout->addWidget(minimize_on_close);
 
-    connect_socks4 = new QCheckBox(tr("&Connect through socks4 proxy:"));
+    connect_socks4 = new QCheckBox(tr("&Connect through SOCKS4 proxy:"));
+    connect_socks4->setToolTip(tr("Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)"));
     layout->addWidget(connect_socks4);
 
     QHBoxLayout *proxy_hbox = new QHBoxLayout();
@@ -166,6 +172,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     proxy_ip->setMaximumWidth(140);
     proxy_ip->setEnabled(false);
     proxy_ip->setValidator(new QRegExpValidator(QRegExp("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"), this));
+    proxy_ip->setToolTip(tr("IP address of the proxy (e.g. 127.0.0.1)"));
     proxy_ip_label->setBuddy(proxy_ip);
     proxy_hbox->addWidget(proxy_ip);
     QLabel *proxy_port_label = new QLabel(tr("&Port: "));
@@ -174,6 +181,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     proxy_port->setMaximumWidth(55);
     proxy_port->setValidator(new QIntValidator(0, 65535, this));
     proxy_port->setEnabled(false);
+    proxy_port->setToolTip(tr("Port of the proxy (e.g. 1234)"));
     proxy_port_label->setBuddy(proxy_port);
     proxy_hbox->addWidget(proxy_port);
     proxy_hbox->addStretch(1);
@@ -188,12 +196,10 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     QLabel *fee_label = new QLabel(tr("Pay transaction &fee"));
     fee_hbox->addWidget(fee_label);
     fee_edit = new QLineEdit();
-    fee_edit->setMaximumWidth(70);
+    fee_edit->setMaximumWidth(100);
+    fee_edit->setToolTip(tr("Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended."));
 
-    QDoubleValidator *amountValidator = new QDoubleValidator(this);
-    amountValidator->setDecimals(8);
-    amountValidator->setBottom(0.0);
-    fee_edit->setValidator(amountValidator);
+    GUIUtil::setupAmountWidget(fee_edit, this);
 
     fee_label->setBuddy(fee_edit);
     fee_hbox->addWidget(fee_edit);

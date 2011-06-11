@@ -75,10 +75,13 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     address = new QLineEdit();
     address->setReadOnly(true);
     address->setFont(GUIUtil::bitcoinAddressFont());
+    address->setToolTip(tr("Your current default receiving address"));
     hbox_address->addWidget(address);
     
     QPushButton *button_new = new QPushButton(tr("&New..."));
+    button_new->setToolTip(tr("Create new receiving address"));
     QPushButton *button_clipboard = new QPushButton(tr("&Copy to clipboard"));
+    button_clipboard->setToolTip(tr("Copy current receiving address to the system clipboard"));
     hbox_address->addWidget(button_new);
     hbox_address->addWidget(button_clipboard);
     
@@ -89,6 +92,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     labelBalance = new QLabel();
     labelBalance->setFont(QFont("Monospace"));
+    labelBalance->setToolTip(tr("Your current balance"));
     hbox_balance->addWidget(labelBalance);
     hbox_balance->addStretch(1);
     
@@ -108,15 +112,18 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelConnections = new QLabel();
     labelConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     labelConnections->setMinimumWidth(130);
+    labelConnections->setToolTip(tr("Number of connections to other clients"));
     
     labelBlocks = new QLabel();
     labelBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     labelBlocks->setMinimumWidth(130);
-    
+    labelBlocks->setToolTip(tr("Number of blocks in the block chain"));
+
     labelTransactions = new QLabel();
     labelTransactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     labelTransactions->setMinimumWidth(130);
-    
+    labelTransactions->setToolTip(tr("Number of transactions in your wallet"));
+
     statusBar()->addPermanentWidget(labelConnections);
     statusBar()->addPermanentWidget(labelBlocks);
     statusBar()->addPermanentWidget(labelTransactions);
@@ -131,12 +138,19 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 void BitcoinGUI::createActions()
 {
     quit = new QAction(QIcon(":/icons/quit"), tr("&Exit"), this);
+    quit->setToolTip(tr("Quit application"));
     sendcoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
+    sendcoins->setToolTip(tr("Send coins to a bitcoin address"));
     addressbook = new QAction(QIcon(":/icons/address-book"), tr("&Address Book"), this);
+    addressbook->setToolTip(tr("Edit the list of stored addresses and labels"));
     about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
+    about->setToolTip(tr("Show information about Bitcoin"));
     receivingAddresses = new QAction(QIcon(":/icons/receiving-addresses"), tr("Your &Receiving Addresses..."), this);
+    receivingAddresses->setToolTip(tr("Show the list of receiving addresses and edit their labels"));
     options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
+    options->setToolTip(tr("Modify configuration options for bitcoin"));
     openBitcoin = new QAction(QIcon(":/icons/bitcoin"), "Open &Bitcoin", this);
+    openBitcoin->setToolTip(tr("Show the Bitcoin window"));
 
     connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(sendcoins, SIGNAL(triggered()), this, SLOT(sendcoinsClicked()));

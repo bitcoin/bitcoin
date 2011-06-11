@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>736</width>
-    <height>140</height>
+    <height>149</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,6 +44,9 @@
      </item>
      <item row="3" column="1">
       <widget class="QLineEdit" name="payTo">
+       <property name="toolTip">
+        <string>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</string>
+       </property>
        <property name="maxLength">
         <number>34</number>
        </property>
@@ -57,6 +60,9 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Amount of bitcoins to send (e.g. 0.05)</string>
+       </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
@@ -64,6 +70,9 @@
      </item>
      <item row="3" column="2">
       <widget class="QPushButton" name="pasteButton">
+       <property name="toolTip">
+        <string>Paste address from system clipboard</string>
+       </property>
        <property name="text">
         <string>&amp;Paste</string>
        </property>
@@ -74,6 +83,9 @@
      </item>
      <item row="3" column="3">
       <widget class="QPushButton" name="addressBookButton">
+       <property name="toolTip">
+        <string>Look up adress in address book</string>
+       </property>
        <property name="text">
         <string>Address &amp;Book...</string>
        </property>
@@ -126,6 +138,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="sendButton">
+       <property name="toolTip">
+        <string>Confirm the send action</string>
+       </property>
        <property name="text">
         <string>&amp;Send</string>
        </property>
@@ -145,6 +160,9 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string>Abort the send action</string>
        </property>
        <property name="standardButtons">
         <set>QDialogButtonBox::Cancel</set>
