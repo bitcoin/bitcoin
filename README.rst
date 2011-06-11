@@ -30,10 +30,10 @@ This has been implemented:
 
 This has to be done:
 
+- Integrate with main bitcoin tree
+
 - Start at system start
 
 - Internationalization (convert WX language files)
 
 - Build on Windows
-
-- More thorough testing of the view with all the kinds of transactions (sendmany, generation)
