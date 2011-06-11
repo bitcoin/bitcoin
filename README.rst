@@ -37,3 +37,25 @@ This has to be done:
 - Internationalization (convert WX language files)
 
 - Build on Windows
+
+Build instructions
+===================
+
+First, make sure that the required packages for Qt4 development of your
+distribution are installed, for Debian and Ubuntu these are:
+
+::
+
+    apt-get install qt4-qmake libqt4-dev
+
+then execute the following:
+
+::
+
+    qmake
+    make
+
+Alternatively, install Qt Creator and open the `bitcoin.pro` file.
+
+An executable named `bitcoin` will be built.
+
