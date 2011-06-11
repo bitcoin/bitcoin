@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET =
 DEPENDPATH += .
-INCLUDEPATH += gui/include core/include cryptopp/include json/include
+INCLUDEPATH += src src/json src/cryptopp src/qt
 unix:LIBS += -lssl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
 macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0
 
@@ -11,97 +11,97 @@ QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-invalid-offsetof -
 # WINDOWS defines, -DSSL, look at build system
 
 # Input
-DEPENDPATH += gui/include core/include cryptopp/include core/include json/include
-HEADERS += gui/include/bitcoingui.h \
-    gui/include/transactiontablemodel.h \
-    gui/include/addresstablemodel.h \
-    gui/include/optionsdialog.h \
-    gui/include/sendcoinsdialog.h \
-    gui/include/addressbookdialog.h \
-    gui/include/aboutdialog.h \
-    gui/include/editaddressdialog.h \
-    gui/include/bitcoinaddressvalidator.h \
-    core/include/base58.h \
-    core/include/bignum.h \
-    core/include/util.h \
-    core/include/uint256.h \
-    core/include/serialize.h \
-    cryptopp/include/cryptopp/stdcpp.h \
-    cryptopp/include/cryptopp/smartptr.h \
-    cryptopp/include/cryptopp/simple.h \
-    cryptopp/include/cryptopp/sha.h \
-    cryptopp/include/cryptopp/secblock.h \
-    cryptopp/include/cryptopp/pch.h \
-    cryptopp/include/cryptopp/misc.h \
-    cryptopp/include/cryptopp/iterhash.h \
-    cryptopp/include/cryptopp/cryptlib.h \
-    cryptopp/include/cryptopp/cpu.h \
-    cryptopp/include/cryptopp/config.h \
-    core/include/strlcpy.h \
-    core/include/main.h \
-    core/include/net.h \
-    core/include/key.h \
-    core/include/db.h \
-    core/include/script.h \
-    core/include/noui.h \
-    core/include/init.h \
-    core/include/headers.h \
-    core/include/irc.h \
-    json/include/json/json_spirit_writer_template.h \
-    json/include/json/json_spirit_writer.h \
-    json/include/json/json_spirit_value.h \
-    json/include/json/json_spirit_utils.h \
-    json/include/json/json_spirit_stream_reader.h \
-    json/include/json/json_spirit_reader_template.h \
-    json/include/json/json_spirit_reader.h \
-    json/include/json/json_spirit_error_position.h \
-    json/include/json/json_spirit.h \
-    core/include/rpc.h \
-    gui/include/clientmodel.h \
-    gui/include/guiutil.h \
-    gui/include/transactionrecord.h \
-    gui/include/guiconstants.h \
-    gui/include/optionsmodel.h \
-    gui/include/monitoreddatamapper.h \
-    core/include/externui.h \
-    gui/include/transactiondesc.h \
-    gui/include/transactiondescdialog.h
-SOURCES += gui/src/bitcoin.cpp gui/src/bitcoingui.cpp \
-    gui/src/transactiontablemodel.cpp \
-    gui/src/addresstablemodel.cpp \
-    gui/src/optionsdialog.cpp \
-    gui/src/sendcoinsdialog.cpp \
-    gui/src/addressbookdialog.cpp \
-    gui/src/aboutdialog.cpp \
-    gui/src/editaddressdialog.cpp \
-    gui/src/bitcoinaddressvalidator.cpp \
-    cryptopp/src/sha.cpp \
-    cryptopp/src/cpu.cpp \
-    core/src/util.cpp \
-    core/src/script.cpp \
-    core/src/main.cpp \
-    core/src/init.cpp \
-    core/src/rpc.cpp \
-    core/src/net.cpp \
-    core/src/irc.cpp \
-    core/src/db.cpp \
-    json/src/json_spirit_writer.cpp \
-    json/src/json_spirit_value.cpp \
-    json/src/json_spirit_reader.cpp \
-    gui/src/clientmodel.cpp \
-    gui/src/guiutil.cpp \
-    gui/src/transactionrecord.cpp \
-    gui/src/optionsmodel.cpp \
-    gui/src/monitoreddatamapper.cpp \
-    gui/src/transactiondesc.cpp \
-    gui/src/transactiondescdialog.cpp
+DEPENDPATH += src/qt src src/cryptopp src json/include
+HEADERS += src/qt/bitcoingui.h \
+    src/qt/transactiontablemodel.h \
+    src/qt/addresstablemodel.h \
+    src/qt/optionsdialog.h \
+    src/qt/sendcoinsdialog.h \
+    src/qt/addressbookdialog.h \
+    src/qt/aboutdialog.h \
+    src/qt/editaddressdialog.h \
+    src/qt/bitcoinaddressvalidator.h \
+    src/base58.h \
+    src/bignum.h \
+    src/util.h \
+    src/uint256.h \
+    src/serialize.h \
+    src/cryptopp/stdcpp.h \
+    src/cryptopp/smartptr.h \
+    src/cryptopp/simple.h \
+    src/cryptopp/sha.h \
+    src/cryptopp/secblock.h \
+    src/cryptopp/pch.h \
+    src/cryptopp/misc.h \
+    src/cryptopp/iterhash.h \
+    src/cryptopp/cryptlib.h \
+    src/cryptopp/cpu.h \
+    src/cryptopp/config.h \
+    src/strlcpy.h \
+    src/main.h \
+    src/net.h \
+    src/key.h \
+    src/db.h \
+    src/script.h \
+    src/noui.h \
+    src/init.h \
+    src/headers.h \
+    src/irc.h \
+    src/json/json_spirit_writer_template.h \
+    src/json/json_spirit_writer.h \
+    src/json/json_spirit_value.h \
+    src/json/json_spirit_utils.h \
+    src/json/json_spirit_stream_reader.h \
+    src/json/json_spirit_reader_template.h \
+    src/json/json_spirit_reader.h \
+    src/json/json_spirit_error_position.h \
+    src/json/json_spirit.h \
+    src/rpc.h \
+    src/qt/clientmodel.h \
+    src/qt/guiutil.h \
+    src/qt/transactionrecord.h \
+    src/qt/guiconstants.h \
+    src/qt/optionsmodel.h \
+    src/qt/monitoreddatamapper.h \
+    src/externui.h \
+    src/qt/transactiondesc.h \
+    src/qt/transactiondescdialog.h
+SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
+    src/qt/transactiontablemodel.cpp \
+    src/qt/addresstablemodel.cpp \
+    src/qt/optionsdialog.cpp \
+    src/qt/sendcoinsdialog.cpp \
+    src/qt/addressbookdialog.cpp \
+    src/qt/aboutdialog.cpp \
+    src/qt/editaddressdialog.cpp \
+    src/qt/bitcoinaddressvalidator.cpp \
+    src/cryptopp/sha.cpp \
+    src/cryptopp/cpu.cpp \
+    src/util.cpp \
+    src/script.cpp \
+    src/main.cpp \
+    src/init.cpp \
+    src/rpc.cpp \
+    src/net.cpp \
+    src/irc.cpp \
+    src/db.cpp \
+    src/json/json_spirit_writer.cpp \
+    src/json/json_spirit_value.cpp \
+    src/json/json_spirit_reader.cpp \
+    src/qt/clientmodel.cpp \
+    src/qt/guiutil.cpp \
+    src/qt/transactionrecord.cpp \
+    src/qt/optionsmodel.cpp \
+    src/qt/monitoreddatamapper.cpp \
+    src/qt/transactiondesc.cpp \
+    src/qt/transactiondescdialog.cpp
 
 RESOURCES += \
-    gui/bitcoin.qrc
+    src/qt/bitcoin.qrc
 
 FORMS += \
-    gui/forms/sendcoinsdialog.ui \
-    gui/forms/addressbookdialog.ui \
-    gui/forms/aboutdialog.ui \
-    gui/forms/editaddressdialog.ui \
-    gui/forms/transactiondescdialog.ui
+    src/qt/forms/sendcoinsdialog.ui \
+    src/qt/forms/addressbookdialog.ui \
+    src/qt/forms/aboutdialog.ui \
+    src/qt/forms/editaddressdialog.ui \
+    src/qt/forms/transactiondescdialog.ui
