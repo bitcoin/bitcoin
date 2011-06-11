@@ -366,8 +366,10 @@ string GetAccountAddress(string strAccount, bool bForceNew=false)
     if (account.vchPubKey.empty() || bForceNew)
     {
         if (!GetBoolArg("-nocrypt") && GetKeyPoolSize() == 0)
+        {
             if (!walletdb.ReadAccount(strAccount, account))
                 throw JSONRPCError(-13, "Error: Please enter the wallet password with walletpassword first.");
+        }
         else
         {
             account.vchPubKey = GetOrReuseKeyFromPool();
