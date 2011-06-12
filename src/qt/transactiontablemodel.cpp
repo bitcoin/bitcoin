@@ -51,8 +51,9 @@ struct TransactionTablePriv
 
     void refreshWallet()
     {
+#ifdef WALLET_UPDATE_DEBUG
         qDebug() << "refreshWallet";
-
+#endif
         /* Query entire wallet from core.
          */
         cachedWallet.clear();
@@ -72,8 +73,9 @@ struct TransactionTablePriv
     {
         /* Walk through updated transactions, update model as needed.
          */
+#ifdef WALLET_UPDATE_DEBUG
         qDebug() << "updateWallet";
-
+#endif
         /* Sort update list, and iterate through it in reverse, so that model updates
            can be emitted from end to beginning (so that earlier updates will not influence
            the indices of latter ones).
@@ -103,8 +105,10 @@ struct TransactionTablePriv
                     inModel = true;
                 }
 
+#ifdef WALLET_UPDATE_DEBUG
                 qDebug() << "  " << QString::fromStdString(hash.ToString()) << inWallet << " " << inModel
                         << lowerIndex << "-" << upperIndex;
+#endif
 
                 if(inWallet && !inModel)
                 {
