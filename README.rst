@@ -2,7 +2,8 @@ Bitcoin-qt: Qt4 based GUI replacement for Bitcoin
 =================================================
 
 **Warning** **Warning** **Warning**
-Pre-alpha stuff! Use on testnet only!
+
+Pre-alpha stuff! I'm using this client myself on the production network, and I haven't noticed any glitches, but remember: always backup your wallet! Testing on the testnet is recommended.
 
 This has been implemented:
 
@@ -55,7 +56,7 @@ then execute the following:
     qmake
     make
 
-Alternatively, install Qt Creator and open the `bitcoin.pro` file.
+Alternatively, install Qt Creator and open the `bitcoin-qt.pro` file.
 
-An executable named `bitcoin` will be built.
+An executable named `bitcoin-qt` will be built.
 

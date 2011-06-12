@@ -105,3 +105,6 @@ FORMS += \
     src/qt/forms/aboutdialog.ui \
     src/qt/forms/editaddressdialog.ui \
     src/qt/forms/transactiondescdialog.ui
+
+CODECFORTR = UTF-8
+TRANSLATIONS = src/qt/locale/bitcoin_nl.ts
