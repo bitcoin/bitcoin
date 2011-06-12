@@ -260,6 +260,29 @@ AC_SUBST(GUI_CPPFLAGS)
 AC_SUBST(GUI_SUBDIRS)
 AM_CONDITIONAL([BUILD_WX], [test x$have_wx = xyes])
 
+dnl **********************************************************************
+dnl Check for MSG_NOSIGNAL
+dnl **********************************************************************
+AC_MSG_CHECKING(for MSG_NOSIGNAL)
+AC_TRY_COMPILE([#include <sys/socket.h>],
+ [ int f = MSG_NOSIGNAL; ],
+ [ AC_MSG_RESULT(yes)
+   AC_DEFINE(HAVE_MSG_NOSIGNAL, 1,
+             [Define this symbol if you have MSG_NOSIGNAL]) ],
+ [ AC_MSG_RESULT(no)]
+)
+
+dnl **********************************************************************
+dnl Check for SO_NOSIGPIPE (Darwin equivalent for MSG_NOSIGNAL)
+dnl **********************************************************************
+AC_MSG_CHECKING(for SO_NOSIGPIPE )
+AC_TRY_COMPILE([#include <sys/socket.h>],
+ [ int f = SO_NOSIGPIPE; ],
+ [ AC_MSG_RESULT(yes)
+   AC_DEFINE(HAVE_SO_NOSIGPIPE, 1,
+             [Define this symbol if you have SO_NOSIGPIPE]) ],
+ [ AC_MSG_RESULT(no)]
+)
 
 dnl ==============================================================
 dnl compile with full warnings and debugging symbols

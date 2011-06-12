@@ -64,7 +64,11 @@ static bool Send(SOCKET hSocket, const char* pszSend)
     const char* pszEnd = psz + strlen(psz);
     while (psz < pszEnd)
     {
+#ifdef HAVE_MSG_NOSIGNAL
         int ret = send(hSocket, psz, pszEnd - psz, MSG_NOSIGNAL);
+#else        
+        int ret = send(hSocket, psz, pszEnd - psz, 0);
+#endif
         if (ret < 0)
             return false;
         psz += ret;
