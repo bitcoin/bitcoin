@@ -139,7 +139,6 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
-        string beta = VERSION_IS_BETA ? _(" beta") : "";
         string strUsage = string() +
           _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
@@ -154,6 +153,7 @@ bool AppInit2(int argc, char* argv[])
             "  -gen=0           \t\t  " + _("Don't generate coins\n") +
             "  -min             \t\t  " + _("Start minimized\n") +
             "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
+            "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)\n") +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect\n") +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
@@ -416,6 +416,13 @@ bool AppInit2(int argc, char* argv[])
     {
         PrintBlockTree();
         return false;
+    }
+
+    if (mapArgs.count("-timeout"))
+    {
+        int nNewTimeout = GetArg("-timeout", 5000);
+        if (nNewTimeout > 0 && nNewTimeout < 600000)
+            nConnectTimeout = nNewTimeout;
     }
 
     if (mapArgs.count("-printblock"))
