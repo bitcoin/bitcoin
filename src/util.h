@@ -140,14 +140,14 @@ inline int myclosesocket(SOCKET& hSocket)
     return ret;
 }
 #define closesocket(s)      myclosesocket(s)
-
+#if 0
 #ifndef GUI
 inline const char* _(const char* psz)
 {
     return psz;
 }
 #endif
-
+#endif
 
 
 
@@ -177,8 +177,8 @@ void RandAddSeed();
 void RandAddSeedPerfmon();
 int OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
-std::string strprintf(const char* format, ...);
-bool error(const char* format, ...);
+std::string strprintf(const std::string &format, ...);
+bool error(const std::string &format, ...);
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);

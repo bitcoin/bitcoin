@@ -2,6 +2,7 @@
 
 #include "guiutil.h"
 #include "main.h"
+#include "externui.h"
 
 #include <QString>
 

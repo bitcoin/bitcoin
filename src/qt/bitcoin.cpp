@@ -87,6 +87,14 @@ void MainFrameRepaint()
 {
 }
 
+/*
+   Translate string to current locale using Qt.
+ */
+std::string _(const char* psz)
+{
+    return QCoreApplication::translate("bitcoin-core", psz).toStdString();
+}
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
