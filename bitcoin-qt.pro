@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET =
 DEPENDPATH += .
 INCLUDEPATH += src src/json src/cryptopp src/qt
-unix:LIBS += -lssl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
+unix:LIBS += -lssl -lcrypto -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
 macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0
 
 # disable quite some warnings becuase bitcoin core "sins" a lot
