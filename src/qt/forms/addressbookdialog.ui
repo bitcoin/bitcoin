@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="sendTab">
       <property name="toolTip">
@@ -159,38 +159,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>receiveTableView</sender>
-   <signal>doubleClicked(QModelIndex)</signal>
-   <receiver>editButton</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>334</x>
-     <y>249</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>333</x>
-     <y>326</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sendTableView</sender>
-   <signal>doubleClicked(QModelIndex)</signal>
-   <receiver>editButton</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>329</x>
-     <y>261</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>332</x>
-     <y>326</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

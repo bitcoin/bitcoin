@@ -285,7 +285,7 @@ void BitcoinGUI::sendcoinsClicked()
 
 void BitcoinGUI::addressbookClicked()
 {
-    AddressBookDialog dlg;
+    AddressBookDialog dlg(AddressBookDialog::ForEditing);
     dlg.setModel(model->getAddressTableModel());
     dlg.setTab(AddressBookDialog::SendingTab);
     dlg.exec();
@@ -293,7 +293,7 @@ void BitcoinGUI::addressbookClicked()
 
 void BitcoinGUI::receivingAddressesClicked()
 {
-    AddressBookDialog dlg;
+    AddressBookDialog dlg(AddressBookDialog::ForEditing);
     dlg.setModel(model->getAddressTableModel());
     dlg.setTab(AddressBookDialog::ReceivingTab);
     dlg.exec();

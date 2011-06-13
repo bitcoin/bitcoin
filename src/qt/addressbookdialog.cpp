@@ -8,12 +8,24 @@
 #include <QClipboard>
 #include <QDebug>
 
-AddressBookDialog::AddressBookDialog(QWidget *parent) :
+AddressBookDialog::AddressBookDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddressBookDialog),
     model(0)
 {
     ui->setupUi(this);
+
+    switch(mode)
+    {
+    case ForSending:
+        connect(ui->receiveTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_buttonBox_accepted()));
+        connect(ui->sendTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_buttonBox_accepted()));
+        break;
+    case ForEditing:
+        connect(ui->receiveTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
+        connect(ui->sendTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
+        break;
+    }
 }
 
 AddressBookDialog::~AddressBookDialog()
@@ -126,6 +138,7 @@ void AddressBookDialog::on_newAddressButton_clicked()
 
 void AddressBookDialog::on_tabWidget_currentChanged(int index)
 {
+    // Enable/disable buttons based on selected tab
     switch(index)
     {
     case SendingTab:
@@ -166,3 +179,4 @@ void AddressBookDialog::on_buttonBox_accepted()
         reject();
     }
 }
+

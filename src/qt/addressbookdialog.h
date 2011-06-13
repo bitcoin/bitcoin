@@ -17,13 +17,18 @@ class AddressBookDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit AddressBookDialog(QWidget *parent = 0);
-    ~AddressBookDialog();
-
-    enum {
+    enum Tabs {
         SendingTab = 0,
         ReceivingTab = 1
-    } Tabs;
+    };
+
+    enum Mode {
+        ForSending, // Pick address for sending
+        ForEditing  // Open address book for editing
+    };
+
+    explicit AddressBookDialog(Mode mode, QWidget *parent = 0);
+    ~AddressBookDialog();
 
     void setModel(AddressTableModel *model);
     void setTab(int tab);

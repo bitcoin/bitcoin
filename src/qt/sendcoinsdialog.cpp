@@ -100,7 +100,7 @@ void SendCoinsDialog::on_pasteButton_clicked()
 
 void SendCoinsDialog::on_addressBookButton_clicked()
 {
-    AddressBookDialog dlg;
+    AddressBookDialog dlg(AddressBookDialog::ForSending);
     dlg.setModel(model->getAddressTableModel());
     dlg.setTab(AddressBookDialog::SendingTab);
     dlg.exec();
