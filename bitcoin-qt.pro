@@ -94,7 +94,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/optionsmodel.cpp \
     src/qt/monitoreddatamapper.cpp \
     src/qt/transactiondesc.cpp \
-    src/qt/transactiondescdialog.cpp
+    src/qt/transactiondescdialog.cpp \
+    src/qt/bitcoinstrings.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
