@@ -261,7 +261,7 @@ void BitcoinGUI::setTabsModel(QAbstractItemModel *transaction_model)
         transaction_table->verticalHeader()->hide();
 
         transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Status, 120);
+                TransactionTableModel::Status, 145);
         transaction_table->horizontalHeader()->resizeSection(
                 TransactionTableModel::Date, 120);
         transaction_table->horizontalHeader()->setResizeMode(

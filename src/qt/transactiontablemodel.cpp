@@ -274,13 +274,13 @@ QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) con
         status = tr("Open until ") + GUIUtil::DateTimeStr(wtx->status.open_for);
         break;
     case TransactionStatus::Offline:
-        status = tr("%1/offline").arg(wtx->status.depth);
+        status = tr("Offline (%1)").arg(wtx->status.depth);
         break;
     case TransactionStatus::Unconfirmed:
-        status = tr("%1/unconfirmed").arg(wtx->status.depth);
+        status = tr("Unconfirmed (%1)").arg(wtx->status.depth);
         break;
     case TransactionStatus::HaveConfirmations:
-        status = tr("%1 confirmations").arg(wtx->status.depth);
+        status = tr("Confirmed (%1)").arg(wtx->status.depth);
         break;
     }
 
@@ -400,13 +400,45 @@ QVariant TransactionTableModel::formatTxCredit(const TransactionRecord *wtx) con
     }
 }
 
+QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx) const
+{
+    switch(wtx->status.status)
+    {
+    case TransactionStatus::OpenUntilBlock:
+    case TransactionStatus::OpenUntilDate:
+        return QColor(64,64,255);
+        break;
+    case TransactionStatus::Offline:
+        return QColor(192,192,192);
+    case TransactionStatus::Unconfirmed:
+        if(wtx->status.depth)
+        {
+            return QColor(255,0,0);
+        }
+        else
+        {
+            return QColor(192,192,192);
+        }
+    case TransactionStatus::HaveConfirmations:
+        return QColor(0,255,0);
+    }
+    return QColor(0,0,0);
+}
+
 QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid())
         return QVariant();
     TransactionRecord *rec = static_cast<TransactionRecord*>(index.internalPointer());
 
-    if(role == Qt::DisplayRole)
+    if(role == Qt::DecorationRole)
+    {
+        if(index.column() == Status)
+        {
+            return formatTxDecoration(rec);
+        }
+    }
+    else if(role == Qt::DisplayRole)
     {
         /* Delegate to specific column handlers */
         switch(index.column())

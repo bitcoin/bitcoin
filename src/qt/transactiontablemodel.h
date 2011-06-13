@@ -47,6 +47,7 @@ private:
     QVariant formatTxDescription(const TransactionRecord *wtx) const;
     QVariant formatTxDebit(const TransactionRecord *wtx) const;
     QVariant formatTxCredit(const TransactionRecord *wtx) const;
+    QVariant formatTxDecoration(const TransactionRecord *wtx) const;
 
 private slots:
     void update();
