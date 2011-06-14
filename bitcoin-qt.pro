@@ -2,13 +2,15 @@ TEMPLATE = app
 TARGET =
 DEPENDPATH += .
 INCLUDEPATH += src src/json src/cryptopp src/qt
+
+# for boost 1.37, add -mt to the boost libraries
 unix:LIBS += -lssl -lcrypto -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
 macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0
 
-# disable quite some warnings becuase bitcoin core "sins" a lot
+# disable quite some warnings because bitcoin core "sins" a lot
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts  -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch
 
-# WINDOWS defines, -DSSL, look at build system
+# TODO: WINDOWS defines, -DSSL
 
 # Input
 DEPENDPATH += src/qt src src/cryptopp src json/include
