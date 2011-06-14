@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-06-11 21:58+0100\n"
-"PO-Revision-Date: 2011-06-12 00:12+0100\n"
+"PO-Revision-Date: 2011-06-14 09:01+0100\n"
 "Last-Translator: Codler <github>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
-"X-Poedit-Bookmarks: 35,-1,-1,-1,-1,-1,-1,-1,-1,-1\n"
+"X-Poedit-Bookmarks: 35,145,-1,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: ../../..\n"
 
 #: ../../../init.cpp:141
@@ -682,15 +682,13 @@ msgid "&Send Bitcoins"
 msgstr "&Skicka Bitcoins"
 
 #: ../../../ui.cpp:2722
-#, fuzzy
 msgid "O&ptions..."
-msgstr "O&ptions..."
+msgstr "&Inställningar..."
 
 #: ../../../ui.cpp:2725
 #: ../../../uibase.cpp:25
-#, fuzzy
 msgid "E&xit"
-msgstr "E&xit"
+msgstr "&Avsluta"
 
 #: ../../../ui.cpp:2951
 msgid "Program has crashed and will terminate.  "
@@ -702,15 +700,15 @@ msgstr "&Fil"
 
 #: ../../../uibase.cpp:32
 msgid "&Your Receiving Addresses..."
-msgstr "&Din Mottagar adress..."
+msgstr "&Dina Mottagningsadresser..."
 
 #: ../../../uibase.cpp:36
 msgid "&Options..."
-msgstr "&Val..."
+msgstr "&Inställningar..."
 
 #: ../../../uibase.cpp:39
 msgid "&Settings"
-msgstr "&Inställning"
+msgstr "&Inställningar"
 
 #: ../../../uibase.cpp:43
 msgid "&About..."
@@ -789,18 +787,17 @@ msgid "&Start Bitcoin on system startup"
 msgstr "&Starta Bitcoin vid system uppstart"
 
 #: ../../../uibase.cpp:348
-#, fuzzy
 msgid "&Minimize to the tray instead of the taskbar"
-msgstr "&Minimerar till tray istället för aktivitetsfält"
+msgstr "&Minimerar till systemfältet istället för aktivitetsfält"
 
 #: ../../../uibase.cpp:351
+#, fuzzy
 msgid "Map port using &UPnP"
 msgstr "Mapp port använder &UPnP"
 
 #: ../../../uibase.cpp:354
-#, fuzzy
 msgid "M&inimize to the tray on close"
-msgstr "M&inimize to the tray on close"
+msgstr "M&inimera till systemfältet vid stängning"
 
 #: ../../../uibase.cpp:360
 msgid "&Connect through socks4 proxy: "
@@ -815,6 +812,7 @@ msgid " &Port:"
 msgstr " &Port:"
 
 #: ../../../uibase.cpp:392
+#, fuzzy
 msgid "Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."
 msgstr "Frivillig transaktionsavgift per KB som garanterar att din transaktion bearbetas snabbt. Flesta transaktioner är 1KB.  Most transactions are 1KB.  Avgift 0.01 rekommenderas."
 
@@ -852,6 +850,7 @@ msgid "version"
 msgstr "version"
 
 #: ../../../uibase.cpp:525
+#, fuzzy
 msgid ""
 "Copyright (c) 2009-2011 Bitcoin Developers\n"
 "\n"
@@ -877,7 +876,7 @@ msgstr ""
 
 #: ../../../uibase.cpp:581
 msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Ange en Bitcoin adress (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Ange en Bitcoin adress (t.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../uibase.cpp:595
 msgid "Pay &To:"
@@ -888,9 +887,8 @@ msgid "&Paste"
 msgstr "&Klistra in"
 
 #: ../../../uibase.cpp:613
-#, fuzzy
 msgid " Address &Book..."
-msgstr " Adress &Bok..."
+msgstr " Adress&bok..."
 
 #: ../../../uibase.cpp:620
 msgid "&Amount:"
@@ -920,6 +918,7 @@ msgstr ""
 "Ansluter..."
 
 #: ../../../uibase.cpp:761
+#, fuzzy
 msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
 msgstr "Dessa är dina Bitcoin adresser för mottagning av betalningar.  Du rekommenderas att ge olika till varje avsändare så du kan ha koll på vem som betalar dig.  Den markerade adressen är visar i huvudfönstret."
 
@@ -938,18 +937,20 @@ msgid "Sending"
 msgstr "Skickar"
 
 #: ../../../uibase.cpp:857
+#, fuzzy
 msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
 msgstr "Dessa är dina Bitcoin adresser för mottagning av betalningar.  Du kan ge olika till varje avsändare så du kan ha koll på vem som betalar dig.  Den markerade adressen är visar i huvudfönstret."
 
 #: ../../../uibase.cpp:870
 msgid "Receiving"
-msgstr "Mottar"
+msgstr "Mottagning"
 
 #: ../../../uibase.cpp:880
 msgid "&Delete"
 msgstr "&Ta bort"
 
 #: ../../../util.cpp:866
+#, fuzzy
 msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
 msgstr "Varning: Var god och kolla att din dator har rätt datum och klockslag.  Om din klocka är fel så kommer Bitcoin inte att fungera."
 
@@ -963,7 +964,7 @@ msgstr "Transaktion detaljer"
 
 #: ../../../uibase.h:199
 msgid "Options"
-msgstr "Val"
+msgstr "Inställningar"
 
 #: ../../../uibase.h:228
 msgid "About Bitcoin"
