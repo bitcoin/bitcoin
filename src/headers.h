@@ -40,6 +40,7 @@
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
+#include <openssl/pem.h>
 #include <db_cxx.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -102,6 +102,14 @@ public:
         return true;
     }
 
+    bool SetPrivKeyPem(FILE* file)
+    {
+        if (PEM_read_ECPrivateKey(file, &pkey, NULL, NULL) == NULL)
+            return false;
+        fSet = true;
+        return true;
+    }
+
     CPrivKey GetPrivKey() const
     {
         unsigned int nSize = i2d_ECPrivateKey(pkey, NULL);

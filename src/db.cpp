@@ -950,6 +950,32 @@ void BackupWallet(const string& strDest)
     }
 }
 
+string ImportPemFile(const string& strFile, const string& strAccount)
+{
+    CAutoFile filein = fopen(strFile.c_str(), "r");
+    if (!filein)
+        throw runtime_error(strprintf("ImportPemFile() : failed to open file %s", strFile.c_str()));
+
+    CKey key;
+    if (!key.SetPrivKeyPem(filein))
+        throw runtime_error(strprintf("ImportPemFile() : failed to read key from file %s", strFile.c_str()));
+
+    string strAddress = PubKeyToAddress(key.GetPubKey());
+
+    // XXX AddKey seems to be called with cs_main and cs_mapWallet.  Do we need them?
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        // XXX Should make sure not to overwrite a key.
+        if (!AddKey(key))
+            throw runtime_error("ImportPemFile() : AddKey failed");
+    }
+
+    SetAddressBookName(strAddress, strAccount);
+
+    return strAddress;
+}
+
 
 void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
 {
