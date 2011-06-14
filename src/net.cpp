@@ -3,6 +3,11 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
+#include "irc.h"
+#include "db.h"
+#include "net.h"
+#include "init.h"
+#include "strlcpy.h"
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniwget.h>

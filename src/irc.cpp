@@ -3,6 +3,9 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
+#include "irc.h"
+#include "net.h"
+#include "strlcpy.h"
 
 using namespace std;
 using namespace boost;

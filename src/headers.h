@@ -48,7 +48,6 @@
 #include <limits.h>
 #include <float.h>
 #include <assert.h>
-#include <memory>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -56,29 +55,8 @@
 #include <list>
 #include <deque>
 #include <map>
-#include <set>
-#include <algorithm>
-#include <numeric>
+
 #include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
-#include <boost/tuple/tuple_io.hpp>
-#include <boost/array.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/thread.hpp>
-#include <boost/interprocess/sync/file_lock.hpp>
-#include <boost/interprocess/sync/interprocess_mutex.hpp>
-#include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
-#include <boost/date_time/gregorian/gregorian_types.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/config.hpp>
-#include <boost/program_options/detail/config_file.hpp>
-#include <boost/program_options/parsers.hpp>
 
 #ifdef __WXMSW__
 #include <windows.h>
@@ -110,7 +88,6 @@
 
 #pragma hdrstop
 
-#include "strlcpy.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "util.h"
@@ -118,18 +95,13 @@
 #include "bignum.h"
 #include "base58.h"
 #include "script.h"
-#include "db.h"
-#include "net.h"
-#include "irc.h"
 #include "main.h"
-#include "rpc.h"
 #ifdef GUI
 #include "uibase.h"
 #include "ui.h"
 #else
 #include "noui.h"
 #endif
-#include "init.h"
 
 #ifdef GUI
 #include "xpm/addressbook16.xpm"
