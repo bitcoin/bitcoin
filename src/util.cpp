@@ -895,8 +895,10 @@ string FormatVersion(int nVersion)
 string FormatFullVersion()
 {
     string s = FormatVersion(VERSION) + pszSubVer;
-    if (VERSION_IS_BETA)
-        s += "-" + _("beta");
+    if (VERSION_IS_BETA) {
+        s += "-";
+        s += _("beta");
+    }
     return s;
 }
 
