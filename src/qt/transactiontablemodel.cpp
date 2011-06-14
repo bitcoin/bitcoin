@@ -443,8 +443,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         /* Delegate to specific column handlers */
         switch(index.column())
         {
-        case Status:
-            return formatTxStatus(rec);
+        //case Status:
+        //    return formatTxStatus(rec);
         case Date:
             return formatTxDate(rec);
         case Description:
@@ -470,6 +470,13 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return rec->debit;
         case Credit:
             return rec->credit;
+        }
+    }
+    else if (role == Qt::ToolTipRole)
+    {
+        if(index.column() == Status)
+        {
+            return formatTxStatus(rec);
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -522,6 +529,21 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
         else if (role == Qt::TextAlignmentRole)
         {
             return column_alignments[section];
+        } else if (role == Qt::ToolTipRole)
+        {
+            switch(section)
+            {
+            case Status:
+                return tr("Transaction status. Hover over this field to show number of transactions.");
+            case Date:
+                return tr("Date and time that the transaction was received.");
+            case Description:
+                return tr("Short description of the transaction.");
+            case Debit:
+                return tr("Amount removed from balance.");
+            case Credit:
+                return tr("Amount added to balance.");
+            }
         }
     }
     return QVariant();

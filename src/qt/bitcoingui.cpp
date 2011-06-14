@@ -71,7 +71,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Address: <address>: New... : Paste to clipboard
     QHBoxLayout *hbox_address = new QHBoxLayout();
-    hbox_address->addWidget(new QLabel(tr("Your Bitcoin Address:")));
+    hbox_address->addWidget(new QLabel(tr("Your Bitcoin address:")));
     address = new QLineEdit();
     address->setReadOnly(true);
     address->setFont(GUIUtil::bitcoinAddressFont());
@@ -261,7 +261,7 @@ void BitcoinGUI::setTabsModel(QAbstractItemModel *transaction_model)
         transaction_table->verticalHeader()->hide();
 
         transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Status, 145);
+                TransactionTableModel::Status, 23);
         transaction_table->horizontalHeader()->resizeSection(
                 TransactionTableModel::Date, 120);
         transaction_table->horizontalHeader()->setResizeMode(
