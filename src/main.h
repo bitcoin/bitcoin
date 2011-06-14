@@ -24,6 +24,13 @@ class CBlockIndex;
 class CWalletTx;
 class CKeyItem;
 
+class CMessageHeader;
+class CAddress;
+class CInv;
+class CRequestTracker;
+class CNode;
+class CBlockIndex;
+
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
@@ -78,6 +85,9 @@ extern int fUseUPnP;
 
 
 
+class CReserveKey;
+class CTxDB;
+class CTxIndex;
 
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");

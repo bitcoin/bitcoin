@@ -3,6 +3,10 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
+#include "init.h"
+#include "strlcpy.h"
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/convenience.hpp>
 #ifdef _MSC_VER
 #include <crtdbg.h>
 #endif
