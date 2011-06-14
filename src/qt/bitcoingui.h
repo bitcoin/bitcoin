@@ -40,6 +40,7 @@ private:
     QLineEdit *address;
     QLabel *labelBalance;
     QLabel *labelConnections;
+    QLabel *labelConnectionsIcon;
     QLabel *labelBlocks;
     QLabel *labelTransactions;
 

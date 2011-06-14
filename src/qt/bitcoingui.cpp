@@ -108,12 +108,12 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     
     // Create status bar
     statusBar();
-    
+
     labelConnections = new QLabel();
     labelConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    labelConnections->setMinimumWidth(130);
+    labelConnections->setMinimumWidth(150);
     labelConnections->setToolTip(tr("Number of connections to other clients"));
-    
+
     labelBlocks = new QLabel();
     labelBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     labelBlocks->setMinimumWidth(130);
@@ -345,7 +345,17 @@ void BitcoinGUI::setAddress(const QString &addr)
 
 void BitcoinGUI::setNumConnections(int count)
 {
-    labelConnections->setText(QLocale::system().toString(count)+" "+tr("connections(s)", "", count));
+    QString icon;
+    switch(count)
+    {
+    case 0: icon = ":/icons/connect0"; break;
+    case 1: icon = ":/icons/connect1"; break;
+    case 2: icon = ":/icons/connect2"; break;
+    case 3: icon = ":/icons/connect3"; break;
+    default: icon = ":/icons/connect4"; break;
+    }
+    labelConnections->setTextFormat(Qt::RichText);
+    labelConnections->setText("<img src=\""+icon+"\"> " + QLocale::system().toString(count)+" "+tr("connection(s)", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
