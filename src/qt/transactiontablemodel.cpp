@@ -10,6 +10,7 @@
 #include <QList>
 #include <QColor>
 #include <QTimer>
+#include <QIcon>
 #include <QtAlgorithms>
 
 const QString TransactionTableModel::Sent = "s";
@@ -112,7 +113,7 @@ struct TransactionTablePriv
 
                 if(inWallet && !inModel)
                 {
-                    /* Added */
+                    /* Added -- insert at the right position */
                     QList<TransactionRecord> toInsert =
                             TransactionRecord::decomposeTransaction(mi->second);
                     if(!toInsert.isEmpty()) /* only if something to insert */
@@ -129,7 +130,7 @@ struct TransactionTablePriv
                 }
                 else if(!inWallet && inModel)
                 {
-                    /* Removed */
+                    /* Removed -- remove entire transaction from table */
                     parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
                     cachedWallet.erase(lower, upper);
                     parent->endRemoveRows();
@@ -413,14 +414,14 @@ QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Unconfirmed:
         if(wtx->status.depth)
         {
-            return QColor(255,0,0);
+            return QIcon(":/icons/bitcoin");
         }
         else
         {
-            return QColor(192,192,192);
+            return QIcon::fromTheme("stock_lock.png");
         }
     case TransactionStatus::HaveConfirmations:
-        return QColor(0,255,0);
+        return QIcon::fromTheme("stock_lock-ok.png");
     }
     return QColor(0,0,0);
 }
