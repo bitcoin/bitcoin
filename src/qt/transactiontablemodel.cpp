@@ -414,14 +414,14 @@ QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Unconfirmed:
         if(wtx->status.depth)
         {
-            return QIcon(":/icons/bitcoin");
+            return QIcon(":/icons/transaction1");
         }
         else
         {
-            return QIcon::fromTheme("stock_lock.png");
+            return QIcon(":/icons/transaction0");
         }
     case TransactionStatus::HaveConfirmations:
-        return QIcon::fromTheme("stock_lock-ok.png");
+        return QIcon(":/icons/transaction2");
     }
     return QColor(0,0,0);
 }

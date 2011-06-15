@@ -10,6 +10,9 @@
         <file alias="connect2">res/icons/connect2_16.png</file>
         <file alias="connect3">res/icons/connect3_16.png</file>
         <file alias="connect4">res/icons/connect4_16.png</file>
+        <file alias="transaction0">res/icons/transaction0.png</file>
+        <file alias="transaction1">res/icons/transaction1.png</file>
+        <file alias="transaction2">res/icons/transaction2.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
