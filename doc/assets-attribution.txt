@@ -1,0 +1,21 @@
+Icon: src/qt/res/icons/send.png
+Icon Pack: Vista Style Arrow
+Designer: Icons Land
+License: Freeware Non-commercial
+http://findicons.com/icon/231371/right3green
+
+Icon: src/qt/res/icons/address-book.png
+Icon Pack: Farm-Fresh Web
+Designer: FatCow Web Hosting
+License: Creative Commons Attribution (by)
+http://findicons.com/icon/163938/book_open
+
+Icon: src/qt/res/icons/connect*.png
+Icon Pack: Human-O2
+Designer: schollidesign
+License: GNU/GPL
+http://findicons.com/icon/93743/blocks_gnome_netstatus_0
+
+Icon: src/qt/res/icons/transaction*.png
+Designer: md2k7
+https://forum.bitcoin.org/index.php?topic=15276.0
