@@ -16,7 +16,14 @@
 
   { insert useful info here }
  
+  Build output expected:
+  1. linux 32-bit and 64-bit binaries + source
+  2. windows 32-bit binary + source
+  3. windows installer
+
 * upload source and builds to SF
+
+* create SHA1SUMS for builds, and PGP-sign it
 
 * update bitcoin.org version
 
