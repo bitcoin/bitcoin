@@ -349,9 +349,9 @@ void BitcoinGUI::setNumConnections(int count)
     switch(count)
     {
     case 0: icon = ":/icons/connect0"; break;
-    case 1: icon = ":/icons/connect1"; break;
-    case 2: icon = ":/icons/connect2"; break;
-    case 3: icon = ":/icons/connect3"; break;
+    case 1: case 2: icon = ":/icons/connect1"; break;
+    case 3: case 4: icon = ":/icons/connect2"; break;
+    case 5: case 6: icon = ":/icons/connect3"; break;
     default: icon = ":/icons/connect4"; break;
     }
     labelConnections->setTextFormat(Qt::RichText);
