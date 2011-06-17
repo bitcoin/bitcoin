@@ -488,11 +488,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     else if (role == Qt::ForegroundRole)
     {
         /* Non-confirmed transactions are grey */
-        if(rec->status.confirmed)
-        {
-            return QColor(0, 0, 0);
-        }
-        else
+        if(!rec->status.confirmed)
         {
             return QColor(128, 128, 128);
         }
