@@ -23,3 +23,5 @@ http://findicons.com/icon/93743/blocks_gnome_netstatus_0
 Icon: src/qt/res/icons/transaction*.png
 Designer: md2k7
 https://forum.bitcoin.org/index.php?topic=15276.0
+License: You are free to do with these icons as you wish, including selling,
+ copying, modifying etc.
