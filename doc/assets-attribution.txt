@@ -1,3 +1,7 @@
+Icon: src/qt/res/icons/clock*.png
+Designer: Wladimir van der Laan
+License: Creative Commons Attribution
+
 Icon: src/qt/res/icons/send.png
 Icon Pack: Vista Style Arrow
 Designer: Icons Land

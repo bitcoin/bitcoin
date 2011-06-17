@@ -5,14 +5,19 @@
         <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
         <file alias="toolbar">res/icons/toolbar.png</file>
-        <file alias="connect0">res/icons/connect0_16.png</file>
-        <file alias="connect1">res/icons/connect1_16.png</file>
-        <file alias="connect2">res/icons/connect2_16.png</file>
-        <file alias="connect3">res/icons/connect3_16.png</file>
-        <file alias="connect4">res/icons/connect4_16.png</file>
-        <file alias="transaction0">res/icons/transaction0.png</file>
-        <file alias="transaction1">res/icons/transaction1.png</file>
-        <file alias="transaction2">res/icons/transaction2.png</file>
+        <file alias="connect_0">res/icons/connect0_16.png</file>
+        <file alias="connect_1">res/icons/connect1_16.png</file>
+        <file alias="connect_2">res/icons/connect2_16.png</file>
+        <file alias="connect_3">res/icons/connect3_16.png</file>
+        <file alias="connect_4">res/icons/connect4_16.png</file>
+        <file alias="transaction_0">res/icons/transaction0.png</file>
+        <file>res/icons/transaction1.png</file>
+        <file alias="transaction_confirmed">res/icons/transaction2.png</file>
+        <file alias="transaction_1">res/icons/clock1.png</file>
+        <file alias="transaction_2">res/icons/clock2.png</file>
+        <file alias="transaction_3">res/icons/clock3.png</file>
+        <file alias="transaction_4">res/icons/clock4.png</file>
+        <file alias="transaction_5">res/icons/clock5.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>

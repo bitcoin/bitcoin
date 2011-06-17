@@ -412,16 +412,17 @@ QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Offline:
         return QColor(192,192,192);
     case TransactionStatus::Unconfirmed:
-        if(wtx->status.depth)
+        switch(wtx->status.depth)
         {
-            return QIcon(":/icons/transaction1");
-        }
-        else
-        {
-            return QIcon(":/icons/transaction0");
-        }
+        case 0: return QIcon(":/icons/transaction_0");
+        case 1: return QIcon(":/icons/transaction_1");
+        case 2: return QIcon(":/icons/transaction_2");
+        case 3: return QIcon(":/icons/transaction_3");
+        case 4: return QIcon(":/icons/transaction_4");
+        default: return QIcon(":/icons/transaction_5");
+        };
     case TransactionStatus::HaveConfirmations:
-        return QIcon(":/icons/transaction2");
+        return QIcon(":/icons/transaction_confirmed");
     }
     return QColor(0,0,0);
 }
