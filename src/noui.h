@@ -5,6 +5,8 @@
 #define BITCOIN_NOUI_H
 
 #include <string>
+#include <boost/function.hpp>
+#include "wallet.h"
 
 typedef void wxWindow;
 #define wxYES                   0x00000002
