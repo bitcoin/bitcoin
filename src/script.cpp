@@ -1042,9 +1042,40 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
                     return false;
                 if (hash != 0)
                 {
+                    CPrivKey vchPrivKey;
+                    if(!GetBoolArg("-nocrypt"))
+                    {
+                        uint256 hashPubKey = Hash(vchPubKey.begin(), vchPubKey.end());
+                        unsigned char chIV[32];
+                        memcpy(&chIV, &hashPubKey, 32);
+
+                        vector<unsigned char> vchCiphertext;
+                        vchCiphertext.resize(mapKeys[vchPubKey].size());
+                        memcpy(&vchCiphertext[0], &mapKeys[vchPubKey][0], vchCiphertext.size());
+
+                        vector<unsigned char> vchPlaintext;
+                        if (!cWalletCrypter.Decrypt(vchCiphertext, chIV, vchPlaintext)) //handles mlock()s for us
+                            return false;
+
+                        vchPrivKey.resize(vchPlaintext.size());
+                        MLOCK(vchPrivKey[0], vchPrivKey.size());
+                        memcpy(&vchPrivKey[0], &vchPlaintext[0], vchPlaintext.size());
+                        fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+                    }
+                    else
+                        vchPrivKey = mapKeys[vchPubKey];
+
                     vector<unsigned char> vchSig;
-                    if (!CKey::Sign(mapKeys[vchPubKey], hash, vchSig))
+                    if (!CKey::Sign(vchPrivKey, hash, vchSig))
+                    {
+                        if(!GetBoolArg("-nocrypt"))
+                            fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
                         return false;
+                    }
+
+                    if(!GetBoolArg("-nocrypt"))
+                        fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
+
                     vchSig.push_back((unsigned char)nHashType);
                     scriptSigRet << vchSig;
                 }
@@ -1060,9 +1091,40 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
                     return false;
                 if (hash != 0)
                 {
+                    CPrivKey vchPrivKey;
+                    if(!GetBoolArg("-nocrypt"))
+                    {
+                        uint256 hashPubKey = Hash(vchPubKey.begin(), vchPubKey.end());
+                        unsigned char chIV[32];
+                        memcpy(&chIV, &hashPubKey, 32);
+
+                        vector<unsigned char> vchCiphertext;
+                        vchCiphertext.resize(mapKeys[vchPubKey].size());
+                        memcpy(&vchCiphertext[0], &mapKeys[vchPubKey][0], vchCiphertext.size());
+
+                        vector<unsigned char> vchPlaintext;
+                        if (!cWalletCrypter.Decrypt(vchCiphertext, chIV, vchPlaintext)) //handles mlock()s for us
+                            return false;
+
+                        vchPrivKey.resize(vchPlaintext.size());
+                        MLOCK(vchPrivKey[0], vchPrivKey.size());
+                        memcpy(&vchPrivKey[0], &vchPlaintext[0], vchPlaintext.size());
+                        fill(vchPlaintext.begin(), vchPlaintext.end(), '\0');
+                    }
+                    else
+                        vchPrivKey = mapKeys[vchPubKey];
+
                     vector<unsigned char> vchSig;
-                    if (!CKey::Sign(mapKeys[vchPubKey], hash, vchSig))
+                    if (!CKey::Sign(vchPrivKey, hash, vchSig))
+                    {
+                        if(!GetBoolArg("-nocrypt"))
+                            fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
                         return false;
+                    }
+
+                    if(!GetBoolArg("-nocrypt"))
+                        fill(vchPrivKey.begin(), vchPrivKey.end(), '\0');
+
                     vchSig.push_back((unsigned char)nHashType);
                     scriptSigRet << vchSig << vchPubKey;
                 }
@@ -1087,8 +1149,40 @@ bool IsStandard(const CScript& scriptPubKey)
 
 bool IsMine(const CScript& scriptPubKey)
 {
-    CScript scriptSig;
-    return Solver(scriptPubKey, 0, 0, scriptSig);
+    vector<pair<opcodetype, valtype> > vSolution;
+    if (!Solver(scriptPubKey, vSolution))
+        return false;
+
+    // Compile solution
+    CRITICAL_BLOCK(cs_mapKeys)
+    {
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        {
+            if (item.first == OP_PUBKEY)
+            {
+                // Sign
+                const valtype& vchPubKey = item.second;
+                if (!mapKeys.count(vchPubKey))
+                    return false;
+            }
+            else if (item.first == OP_PUBKEYHASH)
+            {
+                // Sign and give pubkey
+                map<uint160, valtype>::iterator mi = mapPubKeys.find(uint160(item.second));
+                if (mi == mapPubKeys.end())
+                    return false;
+                const vector<unsigned char>& vchPubKey = (*mi).second;
+                if (!mapKeys.count(vchPubKey))
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 
