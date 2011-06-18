@@ -13,7 +13,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
 #ifdef USE_SSL
-#include <boost/asio/ssl.hpp> 
+#include <boost/asio/ssl.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
@@ -46,13 +46,13 @@ Object JSONRPCError(int code, const string& message)
 }
 
 
-void PrintConsole(const char* format, ...)
+void PrintConsole(const std::string &format, ...)
 {
     char buffer[50000];
     int limit = sizeof(buffer);
     va_list arg_ptr;
     va_start(arg_ptr, format);
-    int ret = _vsnprintf(buffer, limit, format, arg_ptr);
+    int ret = _vsnprintf(buffer, limit, format.c_str(), arg_ptr);
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
     {
@@ -843,7 +843,7 @@ Value sendmany(const Array& params, bool fHelp)
         CScript scriptPubKey;
         if (!scriptPubKey.SetBitcoinAddress(strAddress))
             throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
-        int64 nAmount = AmountFromValue(s.value_); 
+        int64 nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
@@ -1161,7 +1161,7 @@ Value listtransactions(const Array& params, bool fHelp)
         }
         // ret is now newest to oldest
     }
-    
+
     // Make sure we return only last nCount items (sends-to-self might give us an extra):
     if (ret.size() > nCount)
     {

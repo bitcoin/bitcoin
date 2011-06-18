@@ -98,7 +98,11 @@
 #include "uibase.h"
 #include "ui.h"
 #else
+#ifdef QT_GUI
+#include "qtui.h"
+#else
 #include "noui.h"
+#endif
 #endif
 
 #ifdef GUI

@@ -64,7 +64,7 @@ typedef unsigned long long  uint64;
 #endif
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
-#define PAIRTYPE(t1, t2)    pair<t1, t2>
+#define PAIRTYPE(t1, t2)    std::pair<t1, t2>
 
 // Used to bypass the rule against non-const reference to temporary
 // where it makes sense with wrappers such as CFlatData or CTxDB
@@ -139,14 +139,12 @@ inline int myclosesocket(SOCKET& hSocket)
     return ret;
 }
 #define closesocket(s)      myclosesocket(s)
-
-#ifndef GUI
+#if !defined(QT_GUI) && !defined(GUI)
 inline const char* _(const char* psz)
 {
     return psz;
 }
 #endif
-
 
 
 
@@ -176,8 +174,8 @@ void RandAddSeed();
 void RandAddSeedPerfmon();
 int OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
-std::string strprintf(const char* format, ...);
-bool error(const char* format, ...);
+std::string strprintf(const std::string &format, ...);
+bool error(const std::string &format, ...);
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
