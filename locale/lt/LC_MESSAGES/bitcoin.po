@@ -522,8 +522,8 @@ msgid "Warning: Please check that your computer's date and time are correct.  If
 msgstr "Perspėjimas: Prašome patikrinti kompiuterio laiką ir datą. Jei laikas neteisingai nustatytas, Bitcoin neveiks."
 
 #: ../../../src/util.cpp:899
-msgid "-beta"
-msgstr "-beta"
+msgid "beta"
+msgstr "beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -776,10 +776,6 @@ msgstr "Priėmimo"
 msgid "&Delete"
 msgstr "&Ištrinti"
 
-#: ../../../src/init.cpp:140
-msgid " beta"
-msgstr " beta"
-
 #: ../../../src/init.cpp:142
 msgid "Bitcoin version"
 msgstr "Bitcoin version"
@@ -973,55 +969,3 @@ msgstr "Apie Bitcoin"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "Jūsų Bitcoin Adresas"
-
-#~ msgid ""
-#~ "Error: This is an oversized transaction that requires a transaction fee "
-#~ "of %s  "
-#~ msgstr ""
-#~ "Klaida: Šis pervedimas yra labai didelis ir reikalauja %s pervedimo mokesčio "
-#~ "%s  "
-
-#~ msgid "version %s%s BETA"
-#~ msgstr "versija %s%s beta"
-
-#~ msgid "n/a"
-#~ msgstr "netaikoma"
-
-#~ msgid "Can't include a message when sending to a Bitcoin address"
-#~ msgstr "Negalite pridėti žinutės kai siunčiate i Bitcoin adresą"
-
-#~ msgid ""
-#~ "This is an oversized transaction that requires a transaction fee of %s"
-#~ msgstr "Šis pervedimas yra per didelis ir reikalauja pervedimo mokesčio %s"
-
-#~ msgid "&Generate Coins"
-#~ msgstr "&Generuoti monetas"
-
-#~ msgid ""
-#~ "Optional transaction fee you give to the nodes that process your "
-#~ "transactions."
-#~ msgstr "Pasirinktinas pervedimo mokestis, kurį duodate tinklo nodams."
-
-#~ msgid "&Limit coin generation to"
-#~ msgstr "&Apriboti monetų generavima iki"
-
-#~ msgid "processors"
-#~ msgstr "procesorių"
-
-#~ msgid "&From:"
-#~ msgstr "&Nuo:"
-
-#~ msgid "&Message:"
-#~ msgstr "Ž&inutė:"
-
-#~ msgid ""
-#~ "It's good policy to use a new address for each payment you receive.\n"
-#~ "\n"
-#~ "Label"
-#~ msgstr ""
-#~ "Rekomenduojama naudoti naują adresą kiekvienam pervedimui, kurį jūs gaunate.\n"
-#~ "\n"
-#~ "Pavadinimas"
-
-#~ msgid "Will appear as \"From: Unknown\""
-#~ msgstr "Bus rodoma kaip \"Nuo: Nežinomo\""

@@ -524,8 +524,8 @@ msgid "Warning: Please check that your computer's date and time are correct.  If
 msgstr "Warnung: Bitte überprüfen Sie die Richtigkeit des Datums und der Uhrzeit Ihres Computers. Falls Ihre Uhr falsch läuft, wird Bitcoin nicht richtig funktionieren."
 
 #: ../../../src/util.cpp:898
-msgid "-beta"
-msgstr "-Beta"
+msgid "beta"
+msgstr "Beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -777,10 +777,6 @@ msgstr "Empfange"
 msgid "&Delete"
 msgstr "&Löschen"
 
-#: ../../../src/init.cpp:145
-msgid " beta"
-msgstr " Beta"
-
 #: ../../../src/init.cpp:147
 msgid "Bitcoin version"
 msgstr "Bitcoin "
@@ -832,6 +828,10 @@ msgstr "Datenverzeichnis festlegen\n"
 #: ../../../src/init.cpp:160
 msgid "Connect through socks4 proxy\n"
 msgstr "Socks4-Proxy verwenden\n"
+
+#: ../../../src/init.cpp:161
+msgid "Specify connection timeout (in milliseconds)\n"
+msgstr "Verbindungs-Timeout in Milisekunden\n"
 
 #: ../../../src/init.cpp:161
 msgid "Allow DNS lookups for addnode and connect\n"
@@ -973,53 +973,3 @@ msgstr "Über Bitcoin"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "Ihre Bitcoin-Adressen"
-
-#~ msgid "Usage: bitcoin [options]"
-#~ msgstr "Verwendung: bitcoin [optionen]"
-
-#~ msgid ""
-#~ "Error: This is an oversized transaction that requires a transaction fee "
-#~ "of %s  "
-#~ msgstr ""
-#~ "Fehler: Die Überweisung ist sehr groß. Es wird eine Gebühr von %s "
-#~ "erhoben.  "
-
-#~ msgid "version %s%s BETA"
-#~ msgstr "Version %s%s BETA"
-
-#~ msgid "Will appear as \"From: Unknown\""
-#~ msgstr "Wird als \"Von: Unbekannt\" erscheinen"
-
-#~ msgid "n/a"
-#~ msgstr "Unbekannt"
-
-#~ msgid "Unknown"
-#~ msgstr "Unbekannt"
-
-#~ msgid "Can't include a message when sending to a Bitcoin address"
-#~ msgstr ""
-#~ "Beim Überweisen an eine Bitcoin-Adresse kann keine Nachricht angegeben "
-#~ "werden."
-
-#~ msgid ""
-#~ "This is an oversized transaction that requires a transaction fee of %s"
-#~ msgstr "Die Überweisung ist sehr groß. Es wird eine Gebühr von %s erhoben."
-
-#~ msgid ""
-#~ "Optional transaction fee you give to the nodes that process your "
-#~ "transactions."
-#~ msgstr ""
-#~ "Optionale Überweisungsgebühr, die Sie an den Teilnehmer entrichten, der "
-#~ "Ihre Überweisungen bearbeitet."
-
-#~ msgid "&Limit coin generation to"
-#~ msgstr "Erzeugung von Münzen auf"
-
-#~ msgid "processors"
-#~ msgstr "Prozessoren &beschränken"
-
-#~ msgid "&From:"
-#~ msgstr "&Von:"
-
-#~ msgid "&Message:"
-#~ msgstr "&Nachricht:"
