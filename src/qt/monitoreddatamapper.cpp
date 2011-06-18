@@ -26,9 +26,8 @@ void MonitoredDataMapper::addMapping(QWidget *widget, int section, const QByteAr
 
 void MonitoredDataMapper::addChangeMonitor(QWidget *widget)
 {
-    /* Watch user property of widget for changes, and connect
-       the signal to our viewModified signal.
-     */
+    // Watch user property of widget for changes, and connect
+    //  the signal to our viewModified signal.
     QMetaProperty prop = widget->metaObject()->userProperty();
     int signal = prop.notifySignalIndex();
     int method = this->metaObject()->indexOfMethod("viewModified()");

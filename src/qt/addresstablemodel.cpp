@@ -23,7 +23,7 @@ struct AddressTableEntry
         type(type), label(label), address(address) {}
 };
 
-/* Private implementation */
+// Private implementation
 struct AddressTablePriv
 {
     QList<AddressTableEntry> cachedAddressTable;
@@ -144,12 +144,12 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
             rec->label = value.toString();
             break;
         case Address:
-            /* Double-check that we're not overwriting receiving address */
+            // Double-check that we're not overwriting receiving address
             if(rec->type == AddressTableEntry::Sending)
             {
-                /* Remove old entry */
+                // Remove old entry
                 CWalletDB().EraseName(rec->address.toStdString());
-                /* Add new entry with new address */
+                // Add new entry with new address
                 SetAddressBookName(value.toString().toStdString(), rec->label.toStdString());
 
                 rec->address = value.toString();
@@ -191,7 +191,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & pa
 
 void AddressTableModel::updateList()
 {
-    /* Update internal model from Bitcoin core */
+    // Update internal model from Bitcoin core
     beginResetModel();
     priv->refreshAddressTable();
     endResetModel();
@@ -204,7 +204,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
 
     if(type == Send)
     {
-        /* Check for duplicate */
+        // Check for duplicate
         CRITICAL_BLOCK(cs_mapAddressBook)
         {
             if(mapAddressBook.count(strAddress))
@@ -215,14 +215,14 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     }
     else if(type == Receive)
     {
-        /* Generate a new address to associate with given label */
+        // Generate a new address to associate with given label
         strAddress = PubKeyToAddress(GetKeyFromKeyPool());
     }
     else
     {
         return QString();
     }
-    /* Add entry and update list */
+    // Add entry and update list
     SetAddressBookName(strAddress, strLabel);
     updateList();
     return QString::fromStdString(strAddress);
@@ -234,9 +234,8 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex & paren
     AddressTableEntry *rec = priv->index(row);
     if(count != 1 || !rec || rec->type == AddressTableEntry::Receiving)
     {
-        /* Can only remove one row at a time, and cannot remove rows not in model.
-           Also refuse to remove receiving addresses.
-         */
+        // Can only remove one row at a time, and cannot remove rows not in model.
+        // Also refuse to remove receiving addresses.
         return false;
     }
     CWalletDB().EraseName(rec->address.toStdString());

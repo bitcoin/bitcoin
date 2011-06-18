@@ -75,7 +75,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case ProxyIP:
             {
-                /* Use CAddress to parse IP */
+                // Use CAddress to parse and check IP
                 CAddress addr(value.toString().toStdString() + ":1");
                 if (addr.ip != INADDR_NONE)
                 {
@@ -111,7 +111,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 }
                 else
                 {
-                    successful = false; /* parse error */
+                    successful = false; // Parse error
                 }
             }
             break;

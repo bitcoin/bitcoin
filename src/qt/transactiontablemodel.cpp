@@ -17,7 +17,7 @@ const QString TransactionTableModel::Sent = "s";
 const QString TransactionTableModel::Received = "r";
 const QString TransactionTableModel::Other = "o";
 
-/* Comparison operator for sort/binary search of model tx list */
+// Comparison operator for sort/binary search of model tx list
 struct TxLessThan
 {
     bool operator()(const TransactionRecord &a, const TransactionRecord &b) const
@@ -34,7 +34,7 @@ struct TxLessThan
     }
 };
 
-/* Private implementation */
+// Private implementation
 struct TransactionTablePriv
 {
     TransactionTablePriv(TransactionTableModel *parent):
@@ -50,13 +50,13 @@ struct TransactionTablePriv
      */
     QList<TransactionRecord> cachedWallet;
 
+    /* Query entire wallet anew from core.
+     */
     void refreshWallet()
     {
 #ifdef WALLET_UPDATE_DEBUG
         qDebug() << "refreshWallet";
 #endif
-        /* Query entire wallet from core.
-         */
         cachedWallet.clear();
         CRITICAL_BLOCK(cs_mapWallet)
         {
@@ -67,20 +67,20 @@ struct TransactionTablePriv
         }
     }
 
-    /* Update our model of the wallet incrementally.
+    /* Update our model of the wallet incrementally, to synchronize our model of the wallet
+       with that of the core.
+
        Call with list of hashes of transactions that were added, removed or changed.
      */
     void updateWallet(const QList<uint256> &updated)
     {
-        /* Walk through updated transactions, update model as needed.
-         */
+        // Walk through updated transactions, update model as needed.
 #ifdef WALLET_UPDATE_DEBUG
         qDebug() << "updateWallet";
 #endif
-        /* Sort update list, and iterate through it in reverse, so that model updates
-           can be emitted from end to beginning (so that earlier updates will not influence
-           the indices of latter ones).
-         */
+        // Sort update list, and iterate through it in reverse, so that model updates
+        //  can be emitted from end to beginning (so that earlier updates will not influence
+        // the indices of latter ones).
         QList<uint256> updated_sorted = updated;
         qSort(updated_sorted);
 
@@ -113,7 +113,7 @@ struct TransactionTablePriv
 
                 if(inWallet && !inModel)
                 {
-                    /* Added -- insert at the right position */
+                    // Added -- insert at the right position
                     QList<TransactionRecord> toInsert =
                             TransactionRecord::decomposeTransaction(mi->second);
                     if(!toInsert.isEmpty()) /* only if something to insert */
@@ -130,14 +130,14 @@ struct TransactionTablePriv
                 }
                 else if(!inWallet && inModel)
                 {
-                    /* Removed -- remove entire transaction from table */
+                    // Removed -- remove entire transaction from table
                     parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
                     cachedWallet.erase(lower, upper);
                     parent->endRemoveRows();
                 }
                 else if(inWallet && inModel)
                 {
-                    /* Updated -- nothing to do, status update will take care of this */
+                    // Updated -- nothing to do, status update will take care of this
                 }
             }
         }
@@ -154,10 +154,9 @@ struct TransactionTablePriv
         {
             TransactionRecord *rec = &cachedWallet[idx];
 
-            /* If a status update is needed (blocks came in since last check),
-               update the status of this transaction from the wallet. Otherwise,
-               simply re-use the cached status.
-             */
+            // If a status update is needed (blocks came in since last check),
+            //  update the status of this transaction from the wallet. Otherwise,
+            // simply re-use the cached status.
             if(rec->statusUpdateNeeded())
             {
                 CRITICAL_BLOCK(cs_mapWallet)
@@ -193,7 +192,7 @@ struct TransactionTablePriv
 
 };
 
-/* Credit and Debit columns are right-aligned as they contain numbers */
+// Credit and Debit columns are right-aligned as they contain numbers
 static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter,
         Qt::AlignLeft|Qt::AlignVCenter,
@@ -225,7 +224,7 @@ void TransactionTableModel::update()
 {
     QList<uint256> updated;
 
-    /* Check if there are changes to wallet map */
+    // Check if there are changes to wallet map
     TRY_CRITICAL_BLOCK(cs_mapWallet)
     {
         if(!vWalletUpdated.empty())
@@ -242,9 +241,8 @@ void TransactionTableModel::update()
     {
         priv->updateWallet(updated);
 
-        /* Status (number of confirmations) and (possibly) description
-           columns changed for all rows.
-         */
+        // Status (number of confirmations) and (possibly) description
+        //  columns changed for all rows.
         emit dataChanged(index(0, Status), index(priv->size()-1, Status));
         emit dataChanged(index(0, Description), index(priv->size()-1, Description));
     }
@@ -442,11 +440,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     }
     else if(role == Qt::DisplayRole)
     {
-        /* Delegate to specific column handlers */
+        // Delegate to specific column handlers
         switch(index.column())
         {
-        //case Status:
-        //    return formatTxStatus(rec);
         case Date:
             return formatTxDate(rec);
         case Description:
@@ -459,7 +455,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     }
     else if(role == Qt::EditRole)
     {
-        /* Edit role is used for sorting so return the real values */
+        // Edit role is used for sorting so return the real values
         switch(index.column())
         {
         case Status:

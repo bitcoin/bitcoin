@@ -25,7 +25,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     GUIUtil::setupAddressWidget(ui->payTo, this);
     GUIUtil::setupAmountWidget(ui->payAmount, this);
 
-    /* Set initial address if provided */
+    // Set initial send-to address if provided
     if(!address.isEmpty())
     {
         ui->payTo->setText(address);
@@ -94,7 +94,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
 void SendCoinsDialog::on_pasteButton_clicked()
 {
-    /* Paste text from clipboard into recipient field */
+    // Paste text from clipboard into recipient field
     ui->payTo->setText(QApplication::clipboard()->text());
 }
 

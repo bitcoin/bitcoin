@@ -57,9 +57,8 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindo
         return true;
     bool payFee = false;
 
-    /* Call slot on GUI thread.
-       If called from another thread, use a blocking QueuedConnection.
-     */
+    // Call slot on GUI thread.
+    // If called from another thread, use a blocking QueuedConnection.
     Qt::ConnectionType connectionType = Qt::DirectConnection;
     if(QThread::currentThread() != QCoreApplication::instance()->thread())
     {

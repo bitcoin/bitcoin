@@ -207,7 +207,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 
     layout->addLayout(fee_hbox);
 
-    layout->addStretch(1); /* Extra space at bottom */
+    layout->addStretch(1); // Extra space at bottom
 
     setLayout(layout);
 
@@ -221,7 +221,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 
 void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
-    /* Map model to widgets */
+    // Map model to widgets
     mapper->addMapping(bitcoin_at_startup, OptionsModel::StartAtStartup);
     mapper->addMapping(minimize_to_tray, OptionsModel::MinimizeToTray);
     mapper->addMapping(map_port_upnp, OptionsModel::MapPortUPnP);

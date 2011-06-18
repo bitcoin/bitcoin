@@ -22,7 +22,7 @@ BitcoinAddressValidator::BitcoinAddressValidator(QObject *parent) :
 
 QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) const
 {
-    /* Correction */
+    // Correction
     for(int idx=0; idx<input.size(); ++idx)
     {
         switch(input.at(idx).unicode())
@@ -40,7 +40,7 @@ QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) co
         }
     }
 
-    /* Validation */
+    // Validation
     QValidator::State state = QValidator::Acceptable;
     for(int idx=0; idx<input.size(); ++idx)
     {
@@ -51,7 +51,7 @@ QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) co
            (ch >= 'A' && ch<='Z')) &&
            ch != 'l' && ch != 'I' && ch != '0' && ch != 'O')
         {
-            /* Alphanumeric and not a 'forbidden' character */
+            // Alphanumeric and not a 'forbidden' character
         }
         else
         {

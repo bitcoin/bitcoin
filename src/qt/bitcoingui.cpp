@@ -429,7 +429,7 @@ void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
 
 void BitcoinGUI::transactionDetails(const QModelIndex& idx)
 {
-    /* A transaction is doubleclicked */
+    // A transaction is doubleclicked
     TransactionDescDialog dlg(idx);
     dlg.exec();
 }
@@ -443,7 +443,7 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                     .data(Qt::EditRole).toULongLong();
     if((credit+debit)>0)
     {
-        /* On incoming transaction, make an info balloon */
+        // On incoming transaction, make an info balloon
         QString date = ttm->index(start, TransactionTableModel::Date, parent)
                         .data().toString();
         QString description = ttm->index(start, TransactionTableModel::Description, parent)

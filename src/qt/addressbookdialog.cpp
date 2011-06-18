@@ -36,10 +36,10 @@ AddressBookDialog::~AddressBookDialog()
 void AddressBookDialog::setModel(AddressTableModel *model)
 {
     this->model = model;
-    /* Refresh list from core */
+    // Refresh list from core
     model->updateList();
 
-    /* Receive filter */
+    // Receive filter
     QSortFilterProxyModel *receive_model = new QSortFilterProxyModel(this);
     receive_model->setSourceModel(model);
     receive_model->setDynamicSortFilter(true);
@@ -47,7 +47,7 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     receive_model->setFilterFixedString(AddressTableModel::Receive);
     ui->receiveTableView->setModel(receive_model);
 
-    /* Send filter */
+    // Send filter
     QSortFilterProxyModel *send_model = new QSortFilterProxyModel(this);
     send_model->setSourceModel(model);
     send_model->setDynamicSortFilter(true);
@@ -55,7 +55,7 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     send_model->setFilterFixedString(AddressTableModel::Send);
     ui->sendTableView->setModel(send_model);
 
-    /* Set column widths */
+    // Set column widths
     ui->receiveTableView->horizontalHeader()->resizeSection(
             AddressTableModel::Address, 320);
     ui->receiveTableView->horizontalHeader()->setResizeMode(
@@ -86,9 +86,8 @@ QTableView *AddressBookDialog::getCurrentTable()
 
 void AddressBookDialog::on_copyToClipboard_clicked()
 {
-    /* Copy currently selected address to clipboard
-       (or nothing, if nothing selected)
-     */
+    // Copy currently selected address to clipboard
+    //   (or nothing, if nothing selected)
     QTableView *table = getCurrentTable();
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
@@ -106,11 +105,11 @@ void AddressBookDialog::on_editButton_clicked()
     {
         return;
     }
-    /* Map selected index to source address book model */
+    // Map selected index to source address book model
     QAbstractProxyModel *proxy_model = static_cast<QAbstractProxyModel*>(getCurrentTable()->model());
     QModelIndex selected = proxy_model->mapToSource(indexes.at(0));
 
-    /* Double click also triggers edit button */
+    // Double click also triggers edit button
     EditAddressDialog dlg(
             ui->tabWidget->currentIndex() == SendingTab ?
             EditAddressDialog::EditSendingAddress :

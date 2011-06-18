@@ -6,9 +6,10 @@
 
 #include <QString>
 
-/* Taken straight from ui.cpp
-   TODO: Convert to use QStrings, Qt::Escape and tr()
- */
+// Taken straight from ui.cpp
+// TODO: Convert to use QStrings, Qt::Escape and tr()
+//   or: refactor and put describeAsHTML() into bitcoin core but that is unneccesary with better
+//       UI<->core API, no need to put display logic in core.
 
 using namespace std;
 

@@ -26,7 +26,8 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
     return true;
 }
 
-/* Decompose CWallet transaction to model transaction records.
+/*
+ * Decompose CWallet transaction to model transaction records.
  */
 QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx &wtx)
 {
