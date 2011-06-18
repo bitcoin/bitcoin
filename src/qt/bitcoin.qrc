@@ -17,6 +17,8 @@
         <file alias="transaction_3">res/icons/clock3.png</file>
         <file alias="transaction_4">res/icons/clock4.png</file>
         <file alias="transaction_5">res/icons/clock5.png</file>
+        <file alias="options">res/icons/configure.png</file>
+        <file alias="receiving_addresses">res/icons/receive.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>

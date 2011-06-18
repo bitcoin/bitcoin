@@ -145,7 +145,7 @@ void BitcoinGUI::createActions()
     addressbook->setToolTip(tr("Edit the list of stored addresses and labels"));
     about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
     about->setToolTip(tr("Show information about Bitcoin"));
-    receivingAddresses = new QAction(QIcon(":/icons/receiving-addresses"), tr("Your &Receiving Addresses..."), this);
+    receivingAddresses = new QAction(QIcon(":/icons/receiving_addresses"), tr("Your &Receiving Addresses..."), this);
     receivingAddresses->setToolTip(tr("Show the list of receiving addresses and edit their labels"));
     options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     options->setToolTip(tr("Modify configuration options for bitcoin"));
