@@ -26,6 +26,7 @@ map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 const int nTotalBlocksEstimate = 131000; // Conservative estimate of total nr of blocks on main chain
+const int nInitialBlockThreshold = 10000; // Regard blocks up until N-threshold as "initial download"
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 CBigNum bnBestChainWork = 0;
@@ -1172,7 +1173,7 @@ int GetTotalBlocksEstimate()
 
 bool IsInitialBlockDownload()
 {
-    if (pindexBest == NULL || nBestHeight < GetTotalBlocksEstimate())
+    if (pindexBest == NULL || nBestHeight < (GetTotalBlocksEstimate()-nInitialBlockThreshold))
         return true;
     static int64 nLastUpdate;
     static CBlockIndex* pindexLastBest;
