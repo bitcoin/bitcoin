@@ -36,6 +36,7 @@
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QProgressBar>
 
 #include <QDebug>
 
@@ -124,10 +125,19 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelTransactions->setMinimumWidth(130);
     labelTransactions->setToolTip(tr("Number of transactions in your wallet"));
 
+    // Progress bar for blocks download
+    progressBarLabel = new QLabel(tr("Downloading initial data..."));
+    progressBarLabel->setVisible(false);
+    progressBar = new QProgressBar();
+    progressBar->setToolTip(tr("Initial block chain download in progress"));
+    progressBar->setVisible(false);
+
+    statusBar()->addWidget(progressBarLabel);
+    statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(labelConnections);
     statusBar()->addPermanentWidget(labelBlocks);
     statusBar()->addPermanentWidget(labelTransactions);
-     
+
     // Action bindings
     connect(button_new, SIGNAL(clicked()), this, SLOT(newAddressClicked()));
     connect(button_clipboard, SIGNAL(clicked()), this, SLOT(copyClipboardClicked()));
@@ -360,6 +370,20 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count)
 {
+    int total = model->getTotalBlocksEstimate();
+    if(count < total)
+    {
+        progressBarLabel->setVisible(true);
+        progressBar->setVisible(true);
+        progressBar->setMaximum(total);
+        progressBar->setValue(count);
+    }
+    else
+    {
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+    }
+
     labelBlocks->setText(QLocale::system().toString(count)+" "+tr("block(s)", "", count));
 }
 

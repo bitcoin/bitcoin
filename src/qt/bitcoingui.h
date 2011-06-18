@@ -13,6 +13,7 @@ class QLineEdit;
 class QTableView;
 class QAbstractItemModel;
 class QModelIndex;
+class QProgressBar;
 QT_END_NAMESPACE
 
 class BitcoinGUI : public QMainWindow
@@ -43,6 +44,8 @@ private:
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocks;
     QLabel *labelTransactions;
+    QLabel *progressBarLabel;
+    QProgressBar *progressBar;
 
     QAction *quit;
     QAction *sendcoins;

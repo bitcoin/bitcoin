@@ -143,6 +143,12 @@ bool ClientModel::inInitialBlockDownload() const
     return IsInitialBlockDownload();
 }
 
+int ClientModel::getTotalBlocksEstimate() const
+{
+    return GetTotalBlocksEstimate();
+}
+
+
 OptionsModel *ClientModel::getOptionsModel()
 {
     return optionsModel;
