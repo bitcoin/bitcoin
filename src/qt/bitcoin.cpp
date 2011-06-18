@@ -96,6 +96,7 @@ std::string _(const char* psz)
 
 int main(int argc, char *argv[])
 {
+    Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
 
