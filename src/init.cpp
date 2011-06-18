@@ -2,6 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
+#include "db.h"
+#include "rpc.h"
+#include "net.h"
+#include "init.h"
+#include "strlcpy.h"
+#include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
 
 using namespace std;
 using namespace boost;

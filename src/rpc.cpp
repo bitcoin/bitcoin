@@ -4,12 +4,17 @@
 
 #include "headers.h"
 #include "cryptopp/sha.h"
+#include "db.h"
+#include "net.h"
+#include "init.h"
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/algorithm/string.hpp>
 #ifdef USE_SSL
 #include <boost/asio/ssl.hpp> 
+#include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 #endif
 #include "json/json_spirit_reader_template.h"

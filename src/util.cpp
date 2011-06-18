@@ -2,6 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
+#include "strlcpy.h"
+#include <boost/program_options/detail/config_file.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
+#include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;
@@ -893,8 +900,10 @@ string FormatVersion(int nVersion)
 string FormatFullVersion()
 {
     string s = FormatVersion(VERSION) + pszSubVer;
-    if (VERSION_IS_BETA)
-        s += _("-beta");
+    if (VERSION_IS_BETA) {
+        s += "-";
+        s += _("beta");
+    }
     return s;
 }
 
