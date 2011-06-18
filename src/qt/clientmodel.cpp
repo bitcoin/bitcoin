@@ -22,12 +22,12 @@ ClientModel::ClientModel(QObject *parent) :
     transactionTableModel = new TransactionTableModel(this);
 }
 
-qint64 ClientModel::getBalance()
+qint64 ClientModel::getBalance() const
 {
     return GetBalance();
 }
 
-QString ClientModel::getAddress()
+QString ClientModel::getAddress() const
 {
     std::vector<unsigned char> vchPubKey;
     if (CWalletDB("r").ReadDefaultKey(vchPubKey))
@@ -40,17 +40,17 @@ QString ClientModel::getAddress()
     }
 }
 
-int ClientModel::getNumConnections()
+int ClientModel::getNumConnections() const
 {
     return vNodes.size();
 }
 
-int ClientModel::getNumBlocks()
+int ClientModel::getNumBlocks() const
 {
     return nBestHeight;
 }
 
-int ClientModel::getNumTransactions()
+int ClientModel::getNumTransactions() const
 {
     int numTransactions = 0;
     CRITICAL_BLOCK(cs_mapWallet)
@@ -136,6 +136,11 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
             SetAddressBookName(strAddress, "");
 
     return OK;
+}
+
+bool ClientModel::inInitialBlockDownload() const
+{
+    return IsInitialBlockDownload();
 }
 
 OptionsModel *ClientModel::getOptionsModel()

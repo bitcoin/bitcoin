@@ -28,11 +28,14 @@ public:
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
 
-    qint64 getBalance();
-    QString getAddress();
-    int getNumConnections();
-    int getNumBlocks();
-    int getNumTransactions();
+    qint64 getBalance() const;
+    QString getAddress() const;
+    int getNumConnections() const;
+    int getNumBlocks() const;
+    int getNumTransactions() const;
+
+    /* Return true if core is doing initial block download */
+    bool inInitialBlockDownload() const;
 
     /* Set default address */
     void setAddress(const QString &defaultAddress);

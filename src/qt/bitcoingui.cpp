@@ -441,9 +441,10 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                     .data(Qt::EditRole).toULongLong();
     qint64 debit = ttm->index(start, TransactionTableModel::Debit, parent)
                     .data(Qt::EditRole).toULongLong();
-    if((credit+debit)>0)
+    if((credit+debit)>0 && !model->inInitialBlockDownload())
     {
         // On incoming transaction, make an info balloon
+        // Unless the initial block download is in progress, to prevent balloon-spam
         QString date = ttm->index(start, TransactionTableModel::Date, parent)
                         .data().toString();
         QString description = ttm->index(start, TransactionTableModel::Description, parent)
