@@ -274,7 +274,7 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
         vector<unsigned char> vchPubKey;
         if (ExtractHash160(txout.scriptPubKey, hash160))
             address = Hash160ToAddress(hash160);
-        else if (ExtractPubKey(txout.scriptPubKey, false, vchPubKey))
+        else if (ExtractPubKey(txout.scriptPubKey, NULL, vchPubKey))
             address = PubKeyToAddress(vchPubKey);
         else
         {
