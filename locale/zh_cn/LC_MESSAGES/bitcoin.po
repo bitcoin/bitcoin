@@ -17,10 +17,6 @@ msgstr ""
 "X-Poedit-Bookmarks: 77,-1,-1,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: ../../..\n"
 
-#: ../../../src/init.cpp:140
-msgid " beta"
-msgstr " 测试版"
-
 #: ../../../src/init.cpp:142
 msgid "Bitcoin version"
 msgstr "Bitcoin 版本"
@@ -951,8 +947,8 @@ msgid "Warning: Please check that your computer's date and time are correct.  If
 msgstr "警告: 请检查您的电脑日期和时间是否正确。 如果您的时钟不正确 Bitcoin 将无法正常工作。"
 
 #: ../../../src/util.cpp:899
-msgid "-beta"
-msgstr "-测试版"
+msgid "beta"
+msgstr "测试版"
 
 #: ../../../src/uibase.h:147
 msgid "Transaction Details"
@@ -969,49 +965,3 @@ msgstr "关于 Bitcoin"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "您的 Bitcoin 地址"
-
-#~ msgid ""
-#~ "Error: This is an oversized transaction that requires a transaction fee "
-#~ "of %s  "
-#~ msgstr ""
-#~ "错误: 交易额过大，需要交易佣金 "
-#~ "%s  "
-
-#~ msgid "version %s%s BETA"
-#~ msgstr "版本 %s%s BETA"
-
-#~ msgid "n/a"
-#~ msgstr "n/a"
-
-#~ msgid "Can't include a message when sending to a Bitcoin address"
-#~ msgstr "发送到 Bitcoin 地址时无法包含信息"
-
-#~ msgid ""
-#~ "Optional transaction fee you give to the nodes that process your "
-#~ "transactions."
-#~ msgstr ""
-#~ "可选择向处理您交易的节点支付交易佣金。"
-
-#~ msgid "&Limit coin generation to"
-#~ msgstr "限制货币生成(&L)"
-
-#~ msgid "processors"
-#~ msgstr "处理器"
-
-#~ msgid "&From:"
-#~ msgstr "来自(&F):"
-
-#~ msgid "&Message:"
-#~ msgstr "信息(&M):"
-
-#~ msgid ""
-#~ "It's good policy to use a new address for each payment you receive.\n"
-#~ "\n"
-#~ "Label"
-#~ msgstr ""
-#~ "最好能为您收到的每次付款使用不同的地址。\n"
-#~ "\n"
-#~ "标签"
-
-#~ msgid "Will appear as \"From: Unknown\""
-#~ msgstr "将显示为“来自: 未知”"
