@@ -96,7 +96,7 @@ public:
     {
         if (!MoneyRange(txout.nValue))
             throw std::runtime_error("CWallet::GetChange() : value out of range");
-        if (IsChange(txout) ? txout.nValue : 0);
+        return (IsChange(txout) ? txout.nValue : 0);
     }
     bool IsMine(const CTransaction& tx) const
     {

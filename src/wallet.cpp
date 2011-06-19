@@ -1006,8 +1006,8 @@ bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
             wtx = (*mi).second;
             return true;
         }
-        return false;
     }
+    return false;
 }
 
 bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)

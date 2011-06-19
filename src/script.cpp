@@ -1038,12 +1038,13 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
             {
                 // Sign
                 const valtype& vchPubKey = item.second;
-                if (!keystore.HaveKey(vchPubKey))
+                CPrivKey privkey;
+                if (!keystore.GetPrivKey(vchPubKey, privkey))
                     return false;
                 if (hash != 0)
                 {
                     vector<unsigned char> vchSig;
-                    if (!CKey::Sign(keystore.GetPrivKey(vchPubKey), hash, vchSig))
+                    if (!CKey::Sign(privkey, hash, vchSig))
                         return false;
                     vchSig.push_back((unsigned char)nHashType);
                     scriptSigRet << vchSig;
@@ -1056,12 +1057,13 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
                 if (mi == mapPubKeys.end())
                     return false;
                 const vector<unsigned char>& vchPubKey = (*mi).second;
-                if (!keystore.HaveKey(vchPubKey))
+                CPrivKey privkey;
+                if (!keystore.GetPrivKey(vchPubKey, privkey))
                     return false;
                 if (hash != 0)
                 {
                     vector<unsigned char> vchSig;
-                    if (!CKey::Sign(keystore.GetPrivKey(vchPubKey), hash, vchSig))
+                    if (!CKey::Sign(privkey, hash, vchSig))
                         return false;
                     vchSig.push_back((unsigned char)nHashType);
                     scriptSigRet << vchSig << vchPubKey;
