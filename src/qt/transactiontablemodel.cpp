@@ -276,7 +276,7 @@ QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) con
         status = tr("Offline (%1)").arg(wtx->status.depth);
         break;
     case TransactionStatus::Unconfirmed:
-        status = tr("Unconfirmed (%1)").arg(wtx->status.depth);
+        status = tr("Unconfirmed (%1/%2)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
         break;
     case TransactionStatus::HaveConfirmations:
         status = tr("Confirmed (%1)").arg(wtx->status.depth);
