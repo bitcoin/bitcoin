@@ -155,7 +155,16 @@ public:
     {
         if (!fFileBacked)
             return false;
+        mapAddressBook[strAddress] = strName;
         return CWalletDB(strWalletFile).WriteName(strAddress, strName);
+    }
+
+    bool DelAddressBookName(const std::string& strAddress)
+    {
+        if (!fFileBacked)
+            return false;
+        mapAddressBook.erase(strAddress);
+        return CWalletDB(strWalletFile).EraseName(strAddress);
     }
 
     void UpdatedTransaction(const uint256 &hashTx)
