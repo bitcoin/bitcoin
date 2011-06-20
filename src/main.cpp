@@ -6,6 +6,7 @@
 #include "net.h"
 #include "init.h"
 #include "cryptopp/sha.h"
+#include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 using namespace std;
