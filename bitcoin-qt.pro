@@ -68,7 +68,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/monitoreddatamapper.h \
     src/externui.h \
     src/qt/transactiondesc.h \
-    src/qt/transactiondescdialog.h
+    src/qt/transactiondescdialog.h \
+    src/qt/bitcoinamountfield.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -98,7 +99,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/monitoreddatamapper.cpp \
     src/qt/transactiondesc.cpp \
     src/qt/transactiondescdialog.cpp \
-    src/qt/bitcoinstrings.cpp
+    src/qt/bitcoinstrings.cpp \
+    src/qt/bitcoinamountfield.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

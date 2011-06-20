@@ -1,5 +1,6 @@
 #include "optionsdialog.h"
 #include "optionsmodel.h"
+#include "bitcoinamountfield.h"
 #include "monitoreddatamapper.h"
 #include "guiutil.h"
 
@@ -31,7 +32,7 @@ private:
     QCheckBox *connect_socks4;
     QLineEdit *proxy_ip;
     QLineEdit *proxy_port;
-    QLineEdit *fee_edit;
+    BitcoinAmountField *fee_edit;
 
 signals:
 
@@ -195,11 +196,8 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     fee_hbox->addSpacing(18);
     QLabel *fee_label = new QLabel(tr("Pay transaction &fee"));
     fee_hbox->addWidget(fee_label);
-    fee_edit = new QLineEdit();
-    fee_edit->setMaximumWidth(100);
+    fee_edit = new BitcoinAmountField();
     fee_edit->setToolTip(tr("Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended."));
-
-    GUIUtil::setupAmountWidget(fee_edit, this);
 
     fee_label->setBuddy(fee_edit);
     fee_hbox->addWidget(fee_edit);

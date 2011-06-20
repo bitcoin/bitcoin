@@ -23,7 +23,6 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->payTo, this);
-    GUIUtil::setupAmountWidget(ui->payAmount, this);
 
     // Set initial send-to address if provided
     if(!address.isEmpty())

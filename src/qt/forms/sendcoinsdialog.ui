@@ -52,22 +52,6 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="payAmount">
-       <property name="maximumSize">
-        <size>
-         <width>145</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="toolTip">
-        <string>Amount of bitcoins to send (e.g. 0.05)</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
      <item row="3" column="2">
       <widget class="QPushButton" name="pasteButton">
        <property name="toolTip">
@@ -103,6 +87,13 @@
        </property>
        <property name="text">
         <string>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="BitcoinAmountField" name="payAmount" native="true">
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
        </property>
       </widget>
      </item>
@@ -173,6 +164,22 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QWidget</extends>
+   <header>bitcoinamountfield.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>payTo</tabstop>
+  <tabstop>payAmount</tabstop>
+  <tabstop>pasteButton</tabstop>
+  <tabstop>addressBookButton</tabstop>
+  <tabstop>sendButton</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
  <resources>
   <include location="../bitcoin.qrc"/>
  </resources>
