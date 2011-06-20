@@ -7,6 +7,7 @@
 #include "net.h"
 #include "init.h"
 #include "strlcpy.h"
+#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 
