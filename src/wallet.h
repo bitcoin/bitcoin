@@ -153,17 +153,17 @@ public:
 
     bool SetAddressBookName(const std::string& strAddress, const std::string& strName)
     {
+        mapAddressBook[strAddress] = strName;
         if (!fFileBacked)
             return false;
-        mapAddressBook[strAddress] = strName;
         return CWalletDB(strWalletFile).WriteName(strAddress, strName);
     }
 
     bool DelAddressBookName(const std::string& strAddress)
     {
+        mapAddressBook.erase(strAddress);
         if (!fFileBacked)
             return false;
-        mapAddressBook.erase(strAddress);
         return CWalletDB(strWalletFile).EraseName(strAddress);
     }
 
