@@ -14,11 +14,15 @@ public:
     {
         return (mapKeys.count(vchPubKey) > 0);
     }
-    CPrivKey GetPrivKey(const std::vector<unsigned char> &vchPubKey) const
+    bool GetPrivKey(const std::vector<unsigned char> &vchPubKey, CPrivKey& keyOut) const
     {
         std::map<std::vector<unsigned char>, CPrivKey>::const_iterator mi = mapKeys.find(vchPubKey);
         if (mi != mapKeys.end())
-            return (*mi).second;
+        {
+            keyOut = (*mi).second;
+            return true;
+        }
+        return false;
     }
     std::vector<unsigned char> GenerateNewKey();
 };
