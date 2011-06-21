@@ -445,7 +445,7 @@ Value setaccount(const Array& params, bool fHelp)
     CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
     {
-        if (pwalletMain->mapAddressBook.count(address))
+        if (pwalletMain->HaveKey(address) && pwalletMain->mapAddressBook.count(address))
         {
             string strOldAccount = pwalletMain->mapAddressBook[address];
             if (address == GetAccountAddress(strOldAccount))
