@@ -69,6 +69,7 @@ void AddressBookDialog::setModel(AddressTableModel *model)
 void AddressBookDialog::setTab(int tab)
 {
     ui->tabWidget->setCurrentIndex(tab);
+    on_tabWidget_currentChanged(tab);
 }
 
 QTableView *AddressBookDialog::getCurrentTable()
