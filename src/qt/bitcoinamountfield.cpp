@@ -62,6 +62,7 @@ bool BitcoinAmountField::eventFilter(QObject *object, QEvent *event)
         if(keyEvent->key() == Qt::Key_Period || keyEvent->key() == Qt::Key_Comma)
         {
             decimals->setFocus();
+            decimals->selectAll();
         }
     }
     return false;
