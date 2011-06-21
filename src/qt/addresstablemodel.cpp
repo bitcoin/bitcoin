@@ -3,6 +3,7 @@
 #include "main.h"
 
 #include <QFont>
+#include <QColor>
 
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
@@ -21,6 +22,16 @@ struct AddressTableEntry
     AddressTableEntry() {}
     AddressTableEntry(Type type, const QString &label, const QString &address):
         type(type), label(label), address(address) {}
+
+    bool isDefaultAddress() const
+    {
+        std::vector<unsigned char> vchPubKey;
+        if (CWalletDB("r").ReadDefaultKey(vchPubKey))
+        {
+            return address == QString::fromStdString(PubKeyToAddress(vchPubKey));
+        }
+        return false;
+    }
 };
 
 // Private implementation
@@ -110,9 +121,30 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
     }
     else if (role == Qt::FontRole)
     {
+        QFont font;
         if(index.column() == Address)
         {
-            return GUIUtil::bitcoinAddressFont();
+            font = GUIUtil::bitcoinAddressFont();
+        }
+        if(rec->isDefaultAddress())
+        {
+            font.setBold(true);
+        }
+        return font;
+    }
+    else if (role == Qt::ForegroundRole)
+    {
+        // Show default address in alternative color
+        if(rec->isDefaultAddress())
+        {
+            return QColor(0,0,255);
+        }
+    }
+    else if (role == Qt::ToolTipRole)
+    {
+        if(rec->isDefaultAddress())
+        {
+            return tr("Default receiving address");
         }
     }
     else if (role == TypeRole)
