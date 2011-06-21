@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>458</width>
-    <height>113</height>
+    <height>114</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,7 +56,7 @@
      <item row="2" column="1">
       <widget class="QCheckBox" name="setAsDefault">
        <property name="text">
-        <string>Set as default address</string>
+        <string>Set as default receiving address</string>
        </property>
       </widget>
      </item>
