@@ -151,6 +151,7 @@ public:
     bool LoadWallet(bool& fFirstRunRet);
 //    bool BackupWallet(const std::string& strDest);
 
+    // requires cs_mapAddressBook lock
     bool SetAddressBookName(const std::string& strAddress, const std::string& strName)
     {
         mapAddressBook[strAddress] = strName;
@@ -159,6 +160,7 @@ public:
         return CWalletDB(strWalletFile).WriteName(strAddress, strName);
     }
 
+    // requires cs_mapAddressBook lock
     bool DelAddressBookName(const std::string& strAddress)
     {
         mapAddressBook.erase(strAddress);
