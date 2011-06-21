@@ -117,6 +117,8 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
             return rec->label;
         case Address:
             return rec->address;
+        case IsDefaultAddress:
+            return rec->isDefaultAddress();
         }
     }
     else if (role == Qt::FontRole)
@@ -187,6 +189,12 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
                 rec->address = value.toString();
             }
             break;
+        case IsDefaultAddress:
+            if(value.toBool())
+            {
+                setDefaultAddress(rec->address);
+            }
+            break;
         }
         emit dataChanged(index, index);
 
@@ -229,7 +237,7 @@ void AddressTableModel::updateList()
     endResetModel();
 }
 
-QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
+QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address, bool setAsDefault)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -247,8 +255,13 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     }
     else if(type == Receive)
     {
-        // Generate a new address to associate with given label
+        // Generate a new address to associate with given label, optionally
+        // set as default receiving address.
         strAddress = PubKeyToAddress(GetKeyFromKeyPool());
+        if(setAsDefault)
+        {
+            setDefaultAddress(QString::fromStdString(strAddress));
+        }
     }
     else
     {
@@ -273,4 +286,33 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex & paren
     CWalletDB().EraseName(rec->address.toStdString());
     updateList();
     return true;
+}
+
+QString AddressTableModel::getDefaultAddress() const
+{
+    std::vector<unsigned char> vchPubKey;
+    if (CWalletDB("r").ReadDefaultKey(vchPubKey))
+    {
+        return QString::fromStdString(PubKeyToAddress(vchPubKey));
+    }
+    else
+    {
+        return QString();
+    }
+}
+
+void AddressTableModel::setDefaultAddress(const QString &defaultAddress)
+{
+    uint160 hash160;
+    std::string strAddress = defaultAddress.toStdString();
+    if (!AddressToHash160(strAddress, hash160))
+        return;
+    if (!mapPubKeys.count(hash160))
+        return;
+    CWalletDB().WriteDefaultKey(mapPubKeys[hash160]);
+}
+
+void AddressTableModel::update()
+{
+    emit defaultAddressChanged(getDefaultAddress());
 }

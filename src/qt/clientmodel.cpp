@@ -27,19 +27,6 @@ qint64 ClientModel::getBalance() const
     return GetBalance();
 }
 
-QString ClientModel::getAddress() const
-{
-    std::vector<unsigned char> vchPubKey;
-    if (CWalletDB("r").ReadDefaultKey(vchPubKey))
-    {
-        return QString::fromStdString(PubKeyToAddress(vchPubKey));
-    }
-    else
-    {
-        return QString();
-    }
-}
-
 int ClientModel::getNumConnections() const
 {
     return vNodes.size();
@@ -63,23 +50,14 @@ int ClientModel::getNumTransactions() const
 void ClientModel::update()
 {
     // Plainly emit all signals for now. To be more efficient this should check
-    //   whether the values actually changed first.
+    //   whether the values actually changed first, although it'd be even better if these
+    //   were events coming in from the bitcoin core.
     emit balanceChanged(getBalance());
-    emit addressChanged(getAddress());
     emit numConnectionsChanged(getNumConnections());
     emit numBlocksChanged(getNumBlocks());
     emit numTransactionsChanged(getNumTransactions());
-}
 
-void ClientModel::setAddress(const QString &defaultAddress)
-{
-    uint160 hash160;
-    std::string strAddress = defaultAddress.toStdString();
-    if (!AddressToHash160(strAddress, hash160))
-        return;
-    if (!mapPubKeys.count(hash160))
-        return;
-    CWalletDB().WriteDefaultKey(mapPubKeys[hash160]);
+    addressTableModel->update();
 }
 
 ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payAmount)

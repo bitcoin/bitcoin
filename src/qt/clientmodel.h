@@ -29,7 +29,6 @@ public:
     TransactionTableModel *getTransactionTableModel();
 
     qint64 getBalance() const;
-    QString getAddress() const;
     int getNumConnections() const;
     int getNumBlocks() const;
     int getNumTransactions() const;
@@ -39,8 +38,6 @@ public:
     /* Return conservative estimate of total number of blocks, or 0 if unknown */
     int getTotalBlocksEstimate() const;
 
-    /* Set default address */
-    void setAddress(const QString &defaultAddress);
     /* Send coins */
     StatusCode sendCoins(const QString &payTo, qint64 payAmount);
 private:
@@ -50,7 +47,6 @@ private:
 
 signals:
     void balanceChanged(qint64 balance);
-    void addressChanged(const QString &address);
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);
     void numTransactionsChanged(int count);

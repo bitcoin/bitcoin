@@ -14,6 +14,7 @@
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
 #include "transactiondescdialog.h"
+#include "addresstablemodel.h"
 
 #include "main.h"
 
@@ -188,8 +189,8 @@ void BitcoinGUI::setModel(ClientModel *model)
     setNumBlocks(model->getNumBlocks());
     connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
-    setAddress(model->getAddress());
-    connect(model, SIGNAL(addressChanged(QString)), this, SLOT(setAddress(QString)));
+    setAddress(model->getAddressTableModel()->getDefaultAddress());
+    connect(model->getAddressTableModel(), SIGNAL(defaultAddressChanged(QString)), this, SLOT(setAddress(QString)));
 
     // Report errors from network/worker thread
     connect(model, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));    
@@ -329,11 +330,6 @@ void BitcoinGUI::newAddressClicked()
     if(dlg.exec())
     {
         QString newAddress = dlg.saveCurrentRow();
-        // Set returned address as new default addres
-        if(!newAddress.isEmpty())
-        {
-            model->setAddress(newAddress);
-        }
     }
 }
 

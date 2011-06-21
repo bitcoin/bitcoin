@@ -15,7 +15,8 @@ public:
 
     enum ColumnIndex {
         Label = 0,   /* User specified label */
-        Address = 1  /* Bitcoin address */
+        Address = 1,  /* Bitcoin address */
+        IsDefaultAddress = 2 /* Is default address? */
     };
 
     enum {
@@ -37,18 +38,25 @@ public:
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &label, const QString &address);
+    QString addRow(const QString &type, const QString &label, const QString &address, bool setAsDefault);
+
+    /* Set and get default address */
+    QString getDefaultAddress() const;
+    void setDefaultAddress(const QString &defaultAddress);
 
     /* Update address list from core. Invalidates any indices.
      */
     void updateList();
+
 private:
     AddressTablePriv *priv;
     QStringList columns;
+
 signals:
+    void defaultAddressChanged(const QString &address);
 
 public slots:
-
+    void update();
 };
 
 #endif // ADDRESSTABLEMODEL_H
