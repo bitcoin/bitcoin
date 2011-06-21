@@ -7,6 +7,8 @@ QT_BEGIN_NAMESPACE
 class QLineEdit;
 QT_END_NAMESPACE
 
+// Coin amount entry widget with separate parts for whole
+// coins and decimals.
 class BitcoinAmountField: public QWidget
 {
     Q_OBJECT

@@ -91,11 +91,7 @@
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="BitcoinAmountField" name="payAmount" native="true">
-       <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
-       </property>
-      </widget>
+      <widget class="BitcoinAmountField" name="payAmount" native="true"/>
      </item>
     </layout>
    </item>

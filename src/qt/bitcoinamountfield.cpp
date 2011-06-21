@@ -26,6 +26,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     layout->addWidget(new QLabel(QString(".")));
     layout->addWidget(decimals);
     layout->addStretch(1);
+    layout->setContentsMargins(0,0,0,0);
 
     setFocusPolicy(Qt::TabFocus);
     setLayout(layout);
