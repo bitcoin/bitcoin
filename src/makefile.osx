@@ -45,6 +45,7 @@ OBJS= \
     obj/main.o \
     obj/wallet.o \
     obj/rpc.o \
+    obj/rpcmonitor.o \
     obj/init.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o

@@ -47,6 +47,10 @@ map<uint256, CDataStream*> mapOrphanTransactions;
 multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
 
 
+CCriticalSection cs_mapMonitored;
+std::set<std::string> setMonitorTx;
+std::set<std::string> setMonitorBlocks;
+
 double dHashesPerSec;
 int64 nHPSTimerStart;
 
@@ -116,7 +120,15 @@ void static EraseFromWallets(uint256 hash)
 void static SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->AddToWalletIfInvolvingMe(tx, pblock, fUpdate);
+    {
+        if (pwallet->AddToWalletIfInvolvingMe(tx, pblock, fUpdate) && !setMonitorTx.empty())
+        {
+            extern void monitorTx(const CWalletTx&);
+            CWalletTx wtx;
+            pwallet->GetTransaction(tx.GetHash(), wtx);
+            monitorTx(wtx); // Push notification of new wallet txn
+        }
+    }
 }
 
 void static SetBestChain(const CBlockLocator& loc)
@@ -1298,6 +1310,12 @@ bool CBlock::AcceptBlock()
             BOOST_FOREACH(CNode* pnode, vNodes)
                 if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 118000))
                     pnode->PushInventory(CInv(MSG_BLOCK, hash));
+
+    if (hashBestChain == hash && (!setMonitorBlocks.empty()))
+    {
+        extern void monitorBlock(const CBlock&, const CBlockIndex*);
+        monitorBlock(*this, pindexBest);
+    }
 
     return true;
 }
