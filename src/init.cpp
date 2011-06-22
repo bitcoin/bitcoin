@@ -75,8 +75,7 @@ void HandleSIGTERM(int)
 //
 // Start
 //
-#if 0
-#ifndef GUI
+#if !defined(QT_GUI) && !defined(GUI)
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -87,7 +86,6 @@ int main(int argc, char* argv[])
 
     return 1;
 }
-#endif
 #endif
 
 bool AppInit(int argc, char* argv[])
@@ -228,10 +226,8 @@ bool AppInit2(int argc, char* argv[])
         fServer = GetBoolArg("-server");
 
     /* force fServer when running without GUI */
-#if 0
-#ifndef GUI
+#if !defined(QT_GUI) && !defined(GUI)
     fServer = true;
-#endif
 #endif
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
@@ -529,11 +525,9 @@ bool AppInit2(int argc, char* argv[])
         SetStartOnSystemStartup(true);
 #endif
 
-#if 0
-#ifndef GUI
+#if !defined(QT_GUI) && !defined(GUI)
     while (1)
         Sleep(5000);
-#endif
 #endif
 
     return true;

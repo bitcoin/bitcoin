@@ -100,7 +100,11 @@
 #include "uibase.h"
 #include "ui.h"
 #else
-#include "externui.h"
+#ifdef QT_GUI
+#include "qtui.h"
+#else
+#include "noui.h"
+#endif
 #endif
 
 #ifdef GUI
