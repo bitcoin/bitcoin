@@ -6,11 +6,13 @@
 #include "util.h"
 #include "init.h"
 #include "main.h"
-#include "externui.h"
+#include "qtui.h"
 
 #include <QApplication>
 #include <QMessageBox>
 #include <QThread>
+#include <QLocale>
+#include <QTranslator>
 
 // Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;
@@ -98,6 +100,13 @@ int main(int argc, char *argv[])
 {
     Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
+
+    // Load language file for system locale
+    QString locale = QLocale::system().name();
+    QTranslator translator;
+    translator.load("bitcoin_"+locale);
+    app.installTranslator(&translator);
+
     app.setQuitOnLastWindowClosed(false);
 
     try
