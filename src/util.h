@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
+#include <sys/mman.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -45,6 +46,15 @@ typedef unsigned long long  uint64;
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 #define printf              OutputDebugStringF
+
+#ifdef __WXMSW__
+// This is used to attempt to keep keying material out of swap
+// Note that VirtualLock does not provide this as a guarantee on Windows,
+// but, in practice, memory that has been VirtualLock'd almost never gets written to
+// the pagefile except in rare circumstances where memory is extremely low.
+#define mlock(p, n) VirtualLock((p), (n));
+#define munlock(p, n) VirtualUnlock((p), (n));
+#endif
 
 #ifdef snprintf
 #undef snprintf
