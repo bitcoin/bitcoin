@@ -536,7 +536,10 @@ bool AppInit2(int argc, char* argv[])
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
     if (fServer)
+    {
         CreateThread(ThreadRPCServer, NULL);
+        CreateThread(ThreadHTTPPOST, NULL);
+    }
 
 #if defined(__WXMSW__) && defined(GUI)
     if (fFirstRun)

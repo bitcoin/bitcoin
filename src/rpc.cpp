@@ -7,6 +7,8 @@
 #include "db.h"
 #include "net.h"
 #include "init.h"
+#include "rpc.h"
+
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>
@@ -35,6 +37,14 @@ using namespace json_spirit;
 void ThreadRPCServer2(void* parg);
 typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
 extern map<string, rpcfn_type> mapCallTable;
+
+// Split up rpc.cpp, it was getting unwieldy.
+// These are in rpcmonitor.cpp:
+extern Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex);
+extern Value listmonitored(const Array& params, bool fHelp);
+extern Value monitortx(const Array& params, bool fHelp);
+extern Value monitorblocks(const Array& params, bool fHelp);
+
 
 
 Object JSONRPCError(int code, const string& message)
@@ -201,17 +211,17 @@ Value getconnectioncount(const Array& params, bool fHelp)
 }
 
 
-double GetDifficulty()
+double GetDifficulty(const CBlockIndex* blockindex = pindexBest)
 {
     // Floating point number that is a multiple of the minimum difficulty,
     // minimum difficulty = 1.0.
 
-    if (pindexBest == NULL)
+    if (blockindex == NULL)
         return 1.0;
-    int nShift = (pindexBest->nBits >> 24) & 0xff;
+    int nShift = (blockindex->nBits >> 24) & 0xff;
 
     double dDiff =
-        (double)0x0000ffff / (double)(pindexBest->nBits & 0x00ffffff);
+        (double)0x0000ffff / (double)(blockindex->nBits & 0x00ffffff);
 
     while (nShift < 29)
     {
@@ -399,6 +409,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
 
     return ret;
 }
+
 
 
 
@@ -1286,7 +1297,6 @@ Value validateaddress(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     uint160 hash160;
     bool isValid = AddressToHash160(strAddress, hash160);
-
     Object ret;
     ret.push_back(Pair("isvalid", isValid));
     if (isValid)
@@ -1304,7 +1314,6 @@ Value validateaddress(const Array& params, bool fHelp)
     }
     return ret;
 }
-
 
 Value getwork(const Array& params, bool fHelp)
 {
@@ -1412,10 +1421,29 @@ Value getwork(const Array& params, bool fHelp)
 }
 
 
+Value getblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getblock <depth>\n"
+            "Returns details of the block at <depth> in the block chain.");
 
+    int nHeight = params[0].get_int();
 
+    if (nHeight < 0 || nHeight > nBestHeight)
+        throw runtime_error("Block number out of range.");
 
-
+    CBlock block;
+    CBlockIndex* pblockindex;
+    CRITICAL_BLOCK(cs_main)
+    {
+        pblockindex = mapBlockIndex[hashBestChain];
+        while (pblockindex->nHeight > nHeight)
+            pblockindex = pblockindex->pprev;
+        block.ReadFromDisk(pblockindex, true);
+    }
+    return blockToJSON(block, pblockindex);
+}
 
 
 
@@ -1465,6 +1493,11 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getwork",               &getwork),
     make_pair("listaccounts",          &listaccounts),
     make_pair("settxfee",              &settxfee),
+
+    make_pair("monitortx",             &monitortx),
+    make_pair("monitorblocks",         &monitorblocks),
+    make_pair("listmonitored",         &listmonitored),
+    make_pair("getblock",              &getblock),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -1490,6 +1523,12 @@ string pAllowInSafeMode[] =
     "backupwallet",
     "validateaddress",
     "getwork",
+
+    "monitortx",
+    "monitorblocks",
+    "listmonitored",
+    "getblock",
+    "gettransaction",
 };
 set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
 
@@ -1503,12 +1542,13 @@ set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllo
 // and to be compatible with other JSON-RPC implementations.
 //
 
-string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeaders)
+string HTTPPost(const string& host, const string& path, const string& strMsg,
+                const map<string,string>& mapRequestHeaders)
 {
     ostringstream s;
-    s << "POST / HTTP/1.1\r\n"
+    s << "POST " << path << " HTTP/1.1\r\n"
       << "User-Agent: bitcoin-json-rpc/" << FormatFullVersion() << "\r\n"
-      << "Host: 127.0.0.1\r\n"
+      << "Host: " << host << "\r\n"
       << "Content-Type: application/json\r\n"
       << "Content-Length: " << strMsg.size() << "\r\n"
       << "Accept: application/json\r\n";
@@ -1738,59 +1778,6 @@ bool ClientAllowed(const string& strAddress)
     return false;
 }
 
-#ifdef USE_SSL
-//
-// IOStream device that speaks SSL but can also speak non-SSL
-//
-class SSLIOStreamDevice : public iostreams::device<iostreams::bidirectional> {
-public:
-    SSLIOStreamDevice(SSLStream &streamIn, bool fUseSSLIn) : stream(streamIn)
-    {
-        fUseSSL = fUseSSLIn;
-        fNeedHandshake = fUseSSLIn;
-    }
-
-    void handshake(ssl::stream_base::handshake_type role)
-    {
-        if (!fNeedHandshake) return;
-        fNeedHandshake = false;
-        stream.handshake(role);
-    }
-    std::streamsize read(char* s, std::streamsize n)
-    {
-        handshake(ssl::stream_base::server); // HTTPS servers read first
-        if (fUseSSL) return stream.read_some(asio::buffer(s, n));
-        return stream.next_layer().read_some(asio::buffer(s, n));
-    }
-    std::streamsize write(const char* s, std::streamsize n)
-    {
-        handshake(ssl::stream_base::client); // HTTPS clients write first
-        if (fUseSSL) return asio::write(stream, asio::buffer(s, n));
-        return asio::write(stream.next_layer(), asio::buffer(s, n));
-    }
-    bool connect(const std::string& server, const std::string& port)
-    {
-        ip::tcp::resolver resolver(stream.get_io_service());
-        ip::tcp::resolver::query query(server.c_str(), port.c_str());
-        ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-        ip::tcp::resolver::iterator end;
-        boost::system::error_code error = asio::error::host_not_found;
-        while (error && endpoint_iterator != end)
-        {
-            stream.lowest_layer().close();
-            stream.lowest_layer().connect(*endpoint_iterator++, error);
-        }
-        if (error)
-            return false;
-        return true;
-    }
-
-private:
-    bool fNeedHandshake;
-    bool fUseSSL;
-    SSLStream& stream;
-};
-#endif
 
 void ThreadRPCServer(void* parg)
 {
@@ -2023,7 +2010,7 @@ Object CallRPC(const string& strMethod, const Array& params)
 
     // Send request
     string strRequest = JSONRPCRequest(strMethod, params, 1);
-    string strPost = HTTPPost(strRequest, mapRequestHeaders);
+    string strPost = HTTPPost("127.0.0.1", "/", strRequest, mapRequestHeaders);
     stream << strPost << std::flush;
 
     // Receive reply
@@ -2129,6 +2116,10 @@ int CommandLineRPC(int argc, char *argv[])
         }
         if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
 
+        if (strMethod == "monitortx"              && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "monitorblocks"          && n > 1) ConvertTo<bool>(params[1]);
+        if (strMethod == "getblock"               && n > 0) ConvertTo<boost::int64_t>(params[0]);
+
         // Execute
         Object reply = CallRPC(strMethod, params);
 
@@ -2177,9 +2168,6 @@ int CommandLineRPC(int argc, char *argv[])
     }
     return nRet;
 }
-
-
-
 
 #ifdef TEST
 int main(int argc, char *argv[])

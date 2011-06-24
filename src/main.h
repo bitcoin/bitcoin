@@ -65,6 +65,10 @@ extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 
+extern CCriticalSection cs_mapMonitored;
+extern std::set<std::string> setMonitorTx; // set of urls listening for new transactions
+extern std::set<std::string> setMonitorBlocks; // set of urls listening for new blocks
+
 // Settings
 extern int fGenerateBitcoins;
 extern int64 nTransactionFee;
