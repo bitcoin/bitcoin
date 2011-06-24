@@ -361,7 +361,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnections->setTextFormat(Qt::RichText);
-    labelConnections->setText("<img src=\""+icon+"\"> " + QLocale::system().toString(count)+" "+tr("connection(s)", "", count));
+    labelConnections->setText("<img src=\""+icon+"\"> " + tr("%n connection(s)", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
@@ -380,12 +380,12 @@ void BitcoinGUI::setNumBlocks(int count)
         progressBar->setVisible(false);
     }
 
-    labelBlocks->setText(QLocale::system().toString(count)+" "+tr("block(s)", "", count));
+    labelBlocks->setText(tr("%n block(s)", "", count));
 }
 
 void BitcoinGUI::setNumTransactions(int count)
 {
-    labelTransactions->setText(QLocale::system().toString(count)+" "+tr("transaction(s)", "", count));
+    labelTransactions->setText(tr("%n transaction(s)", "", count));
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message)

@@ -16,6 +16,7 @@
 #include <QIntValidator>
 #include <QDoubleValidator>
 #include <QRegExpValidator>
+#include <QDialogButtonBox>
 
 /* First (currently only) page of options */
 class MainOptionsPage : public QWidget
@@ -64,17 +65,10 @@ OptionsDialog::OptionsDialog(QWidget *parent):
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addLayout(main_layout);
 
-    QHBoxLayout *buttons = new QHBoxLayout();
-    buttons->addStretch(1);
-    QPushButton *ok_button = new QPushButton(tr("OK"));
-    buttons->addWidget(ok_button);
-    QPushButton *cancel_button = new QPushButton(tr("Cancel"));
-    buttons->addWidget(cancel_button);
-    apply_button = new QPushButton(tr("Apply"));
-    apply_button->setEnabled(false);
-    buttons->addWidget(apply_button);
-
-    layout->addLayout(buttons);
+    QDialogButtonBox *buttonbox = new QDialogButtonBox();
+    buttonbox->setStandardButtons(QDialogButtonBox::Apply|QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
+    apply_button = buttonbox->button(QDialogButtonBox::Apply);
+    layout->addWidget(buttonbox);
 
     setLayout(layout);
     setWindowTitle(tr("Options"));
@@ -89,9 +83,9 @@ OptionsDialog::OptionsDialog(QWidget *parent):
     connect(mapper, SIGNAL(currentIndexChanged(int)), this, SLOT(disableApply()));
 
     /* Event bindings */
-    connect(ok_button, SIGNAL(clicked()), this, SLOT(okClicked()));
-    connect(cancel_button, SIGNAL(clicked()), this, SLOT(cancelClicked()));
-    connect(apply_button, SIGNAL(clicked()), this, SLOT(applyClicked()));
+    connect(buttonbox->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(okClicked()));
+    connect(buttonbox->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(cancelClicked()));
+    connect(buttonbox->button(QDialogButtonBox::Apply), SIGNAL(clicked()), this, SLOT(applyClicked()));
 }
 
 void OptionsDialog::setModel(OptionsModel *model)
