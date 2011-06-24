@@ -2419,7 +2419,6 @@ int CommandLineRPC(int argc, char *argv[])
         // Parse reply
         const Value& result = find_value(reply, "result");
         const Value& error  = find_value(reply, "error");
-        const Value& id     = find_value(reply, "id");
 
         if (error.type() != null_type)
         {

@@ -722,8 +722,6 @@ void CWallet::ResendWalletTransactions()
 
 int64 CWallet::GetBalance() const
 {
-    int64 nStart = GetTimeMillis();
-
     int64 nTotal = 0;
     CRITICAL_BLOCK(cs_mapWallet)
     {
@@ -736,7 +734,6 @@ int64 CWallet::GetBalance() const
         }
     }
 
-    //printf("GetBalance() %"PRI64d"ms\n", GetTimeMillis() - nStart);
     return nTotal;
 }
 
