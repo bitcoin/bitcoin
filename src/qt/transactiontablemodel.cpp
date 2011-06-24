@@ -270,7 +270,7 @@ QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) con
         status = tr("Open for %n block(s)","",wtx->status.open_for);
         break;
     case TransactionStatus::OpenUntilDate:
-        status = tr("Open until ") + GUIUtil::DateTimeStr(wtx->status.open_for);
+        status = tr("Open until %1").arg(GUIUtil::DateTimeStr(wtx->status.open_for));
         break;
     case TransactionStatus::Offline:
         status = tr("Offline (%1)").arg(wtx->status.depth);
@@ -528,7 +528,7 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
             switch(section)
             {
             case Status:
-                return tr("Transaction status. Hover over this field to show number of transactions.");
+                return tr("Transaction status. Hover over this field to show number of confirmations.");
             case Date:
                 return tr("Date and time that the transaction was received.");
             case Description:
