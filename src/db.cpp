@@ -685,7 +685,7 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     CRITICAL_BLOCK(pwallet->cs_mapWallet)
-    CRITICAL_BLOCK(pwallet->cs_mapKeys)
+    CRITICAL_BLOCK(pwallet->cs_KeyStore)
     {
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -765,14 +765,20 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 vector<unsigned char> vchPubKey;
                 ssKey >> vchPubKey;
-                CWalletKey wkey;
+                CKey key;
                 if (strType == "key")
-                    ssValue >> wkey.vchPrivKey;
+                {
+                    CPrivKey pkey;
+                    ssValue >> pkey;
+                    key.SetPrivKey(pkey);
+                }
                 else
+                {
+                    CWalletKey wkey;
                     ssValue >> wkey;
-
-                pwallet->mapKeys[vchPubKey] = wkey.vchPrivKey;
-                mapPubKeys[Hash160(vchPubKey)] = vchPubKey;
+                    key.SetPrivKey(wkey.vchPrivKey);
+                }
+                pwallet->LoadKey(key);
             }
             else if (strType == "defaultkey")
             {

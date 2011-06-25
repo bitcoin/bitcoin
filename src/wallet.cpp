@@ -17,7 +17,8 @@ using namespace std;
 
 bool CWallet::AddKey(const CKey& key)
 {
-    this->CKeyStore::AddKey(key);
+    if (!CBasicKeyStore::AddKey(key))
+        return false;
     if (!fFileBacked)
         return true;
     return CWalletDB(strWalletFile).WriteKey(key.GetPubKey(), key.GetPrivKey());
@@ -783,7 +784,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
 
                     // Reserve a new key pair from key pool
                     vector<unsigned char> vchPubKey = reservekey.GetReservedKey();
-                    assert(mapKeys.count(vchPubKey));
+                    // assert(mapKeys.count(vchPubKey));
 
                     // Fill a vout to ourself, using same address type as the payment
                     CScript scriptChange;
@@ -957,7 +958,7 @@ bool CWallet::LoadWallet(bool& fFirstRunRet)
 
     if (!mapKeys.count(vchDefaultKey))
     {
-        // Create new default key
+        // Create new keyUser and set as default key
         RandAddSeedPerfmon();
 
         SetDefaultKey(GetKeyFromKeyPool());
@@ -1062,7 +1063,7 @@ void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
         setKeyPool.erase(setKeyPool.begin());
         if (!walletdb.ReadPool(nIndex, keypool))
             throw runtime_error("ReserveKeyFromKeyPool() : read failed");
-        if (!mapKeys.count(keypool.vchPubKey))
+        if (!HaveKey(keypool.vchPubKey))
             throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
         assert(!keypool.vchPubKey.empty());
         printf("keypool reserve %"PRI64d"\n", nIndex);

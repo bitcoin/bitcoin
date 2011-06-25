@@ -2382,7 +2382,7 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
     m_listCtrlReceiving->SetFocus();
 
     // Fill listctrl with address book data
-    CRITICAL_BLOCK(pwalletMain->cs_mapKeys)
+    CRITICAL_BLOCK(pwalletMain->cs_KeyStore)
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
     {
         string strDefaultReceiving = (string)pframeMain->m_textCtrlAddress->GetValue();

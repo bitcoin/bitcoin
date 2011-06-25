@@ -1030,7 +1030,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         return false;
 
     // Compile solution
-    CRITICAL_BLOCK(keystore.cs_mapKeys)
+    CRITICAL_BLOCK(keystore.cs_KeyStore)
     {
         BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
         {
