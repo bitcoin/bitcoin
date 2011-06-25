@@ -1889,7 +1889,9 @@ void ThreadRPCServer2(void* parg)
         // Restrict callers by IP
         if (!ClientAllowed(peer.address().to_string()))
         {
-            stream << HTTPReply(403, "") << std::flush;
+            // Only send a 403 if we're not using SSL to prevent a DoS during the SSL handshake.
+            if (!fUseSSL)
+                stream << HTTPReply(403, "") << std::flush;
             continue;
         }
 
