@@ -5,6 +5,7 @@
 #define BITCOIN_EXTERNUI_H
 
 #include <string>
+#include <boost/function/function0.hpp>
 
 typedef void wxWindow;
 #define wxYES                   0x00000002

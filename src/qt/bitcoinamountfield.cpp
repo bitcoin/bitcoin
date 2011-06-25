@@ -13,7 +13,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     amount->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
     amount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     amount->installEventFilter(this);
-    amount->setMaximumWidth(80);
+    amount->setMaximumWidth(100);
     decimals = new QLineEdit(this);
     decimals->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
     decimals->setMaxLength(8);

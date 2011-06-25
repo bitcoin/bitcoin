@@ -9,7 +9,7 @@
 
 QString GUIUtil::DateTimeStr(qint64 nTime)
 {
-    QDateTime date = QDateTime::fromMSecsSinceEpoch(nTime*1000);
+    QDateTime date = QDateTime::fromTime_t((qint32)nTime);
     return date.date().toString(Qt::SystemLocaleShortDate) + QString(" ") + date.toString("hh:mm");
 }
 
