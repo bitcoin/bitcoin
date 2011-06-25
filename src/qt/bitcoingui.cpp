@@ -127,10 +127,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelTransactions->setToolTip(tr("Number of transactions in your wallet"));
 
     // Progress bar for blocks download
-    progressBarLabel = new QLabel(tr("Downloading initial data..."));
+    progressBarLabel = new QLabel(tr("Synchronizing with network..."));
     progressBarLabel->setVisible(false);
     progressBar = new QProgressBar();
-    progressBar->setToolTip(tr("Initial block chain download in progress"));
+    progressBar->setToolTip(tr("Block chain synchronization in progress"));
     progressBar->setVisible(false);
 
     statusBar()->addWidget(progressBarLabel);

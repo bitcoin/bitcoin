@@ -183,13 +183,13 @@ door Thomas Bernard.
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="130"/>
-        <source>Downloading initial data...</source>
-        <translation>initiële download...</translation>
+        <source>Synchronizing with network...</source>
+        <translation>Synchroniseren met netwerk...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="133"/>
-        <source>Initial block chain download in progress</source>
-        <translation>initiële block-chain download is bezig</translation>
+        <source>Block chain synchronization in progress</source>
+        <translation>Bezig met blokken-database-synchronisatie</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="151"/>
