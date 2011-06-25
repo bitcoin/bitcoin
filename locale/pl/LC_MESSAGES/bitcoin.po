@@ -53,7 +53,7 @@ msgstr "&Pomoc"
 #: ../../../src/ui.cpp:1938
 #: ../../../src/ui.cpp:1973
 msgid "Send Coins"
-msgstr "Wyślij monety"
+msgstr "Wyślij Monety"
 
 #: ../../../src/uibase.cpp:56
 msgid "Address Book"
@@ -61,7 +61,7 @@ msgstr "Księga Adresowa"
 
 #: ../../../src/uibase.cpp:69
 msgid "Your Bitcoin Address:"
-msgstr "Twój adres Bitcoin:"
+msgstr "Twój Adres Bitcoin:"
 
 #: ../../../src/uibase.cpp:76
 msgid " &New... "
@@ -71,7 +71,7 @@ msgstr " &Nowy..."
 #: ../../../src/uibase.cpp:780
 #: ../../../src/uibase.cpp:883
 msgid " &Copy to Clipboard "
-msgstr "&Kopiuj do schowka"
+msgstr " &Kopiuj do schowka "
 
 #: ../../../src/uibase.cpp:93
 msgid "Balance:"
@@ -149,7 +149,7 @@ msgstr " &Port:"
 
 #: ../../../src/uibase.cpp:392
 msgid "Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."
-msgstr "Opcjonalna prowizja określona dla KB transakcji, która zapewni, że twoje transakcje będą szybko przetwarzane. Większość transakcji to 1KB. Rekomendowana prowizja to 0.01."
+msgstr "Opcjonalna prowizja określona dla KB transakcji, która zapewni, że twoje transakcje będą szybko przetworzone. Większość transakcji to 1KB. Rekomendowana prowizja to 0.01."
 
 #: ../../../src/uibase.cpp:399
 msgid "Pay transaction fee:"
@@ -328,7 +328,7 @@ msgstr "Niewłaściwy adres bitcoin"
 #: ../../../src/ui.cpp:216
 #, c-format
 msgid "This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?"
-msgstr "Ta transakcja jest poza limitem wielkości. W dalszym ciągu możesz wysłać ją z prowizją %s, która dotrze do węzłów przetwarzających twoją transakcję i pomogą utrzymać sieć. Chcesz zapłacić prowizję?"
+msgstr "Ta transakcja jest poza limitem wielkości. W dalszym ciągu możesz wysłać ją z prowizją %s, która dotrze do węzłów przetwarzających twoją transakcję i pomoże utrzymać sieć. Chcesz zapłacić prowizję?"
 
 #: ../../../src/ui.cpp:316
 msgid "Status"
@@ -363,7 +363,7 @@ msgstr "Otwarte dopóki %s"
 #: ../../../src/ui.cpp:534
 #, c-format
 msgid "%d/offline?"
-msgstr "%d/brak połączenia?"
+msgstr "%d/offline?"
 
 #: ../../../src/ui.cpp:536
 #, c-format
@@ -394,7 +394,7 @@ msgstr "Wygenerowano (nie zaakceptowano)"
 
 #: ../../../src/ui.cpp:649
 msgid "From: "
-msgstr "Nadawca:"
+msgstr "Od:"
 
 #: ../../../src/ui.cpp:673
 msgid "Received with: "
@@ -526,7 +526,7 @@ msgstr "Komentarz:"
 
 #: ../../../src/ui.cpp:1430
 msgid "Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours."
-msgstr "Wygenerowane monety muszą poczekać 120 bloków zanim mogą zostać wydane. Gdy wygenerowałeś ten blok, został rozgłoszony do sieci z przeznaczeniem do dodania do łańcucha bloków. Jeżeli nie uda się dodać bloku do łańcucha, zostanie oznaczony jako \"not accepted\" i nie będzie mógł być wydany. Sporadycznie dzieje się tak jeżeli inny węzeł wygeneruje blok nie dalej niż kilka sekund od ciebie."
+msgstr "Wygenerowane monety muszą poczekać 120 bloków zanim mogą zostać wydane. Gdy wygenerowałeś ten blok, został rozgłoszony do sieci z przeznaczeniem do dodania do łańcucha bloków. Jeżeli nie uda się dodać bloku do łańcucha, zostanie oznaczony jako \"nie zaakceptowany\" i nie będzie mógł zostać wydany. Sporadycznie dzieje się tak jeżeli inny węzeł wygeneruje blok nie dalej niż kilka sekund od ciebie."
 
 #: ../../../src/ui.cpp:1610
 msgid "Cannot write autostart/bitcoin.desktop file"
@@ -534,7 +534,7 @@ msgstr "Nie mogę zapisać pliku autostart/bitcoin.desktop"
 
 #: ../../../src/ui.cpp:1646
 msgid "Main"
-msgstr "Ogólne"
+msgstr "Główne"
 
 #: ../../../src/ui.cpp:1656
 msgid "&Start Bitcoin on window system startup"
@@ -555,15 +555,15 @@ msgstr "Nieprawidłowa kwota"
 
 #: ../../../src/ui.cpp:1933
 msgid "Amount exceeds your balance  "
-msgstr "Kwota przekracza twoje konto"
+msgstr "Kwota przekracza twój stan konta"
 
 #: ../../../src/ui.cpp:1938
 msgid "Total exceeds your balance when the "
-msgstr "Przekroczenie twojego salda gdy"
+msgstr "Przekroczenie twojego stanu konta gdy"
 
 #: ../../../src/ui.cpp:1938
 msgid " transaction fee is included  "
-msgstr " wliczona prowizja"
+msgstr " prowizja jest wliczona"
 
 #: ../../../src/ui.cpp:1956
 msgid "Payment sent  "
@@ -663,7 +663,7 @@ msgid ""
 "but the comment information will be blank."
 msgstr ""
 "Płatność została wysłana, ale odbiorca nie mógł jej zweryfikować.\n"
-"Transakcja została zarejestrowana i zostanie zapisana do odbiorcy,\n"
+"Transakcja została zarejestrowana i zostanie przypisana do odbiorcy,\n"
 "ale informacja w komentarzu będzie pusta."
 
 #: ../../../src/ui.cpp:2328
@@ -956,11 +956,11 @@ msgstr "Nieprawidłowa kwota w -paytxfee=<amount>"
 
 #: ../../../src/init.cpp:508
 msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
-msgstr "Ostrzeżenie: -paytxfee jest bardzo wysoka. To jest prowizja transakcji, którą zapłacisz jeżeli wyślesz transakcję."
+msgstr "Ostrzeżenie: ustawienie -paytxfee jest bardzo wysokie. To jest prowizja transakcji, którą zapłacisz jeżeli wyślesz transakcję."
 
 #: ../../../src/uibase.h:147
 msgid "Transaction Details"
-msgstr "Szczegóły transakcji"
+msgstr "Szczegóły Transakcji"
 
 #: ../../../src/uibase.h:199
 msgid "Options"
@@ -972,5 +972,5 @@ msgstr "O Bitcoin"
 
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
-msgstr "Twoje adresy Bitcoin"
+msgstr "Twoje Adresy Bitcoin"
 
