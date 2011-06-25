@@ -12,7 +12,7 @@ class CWalletTx;
 class CReserveKey;
 class CWalletDB;
 
-class CWallet : public CKeyStore
+class CWallet : public CCryptoKeyStore
 {
 private:
     bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
@@ -48,7 +48,10 @@ public:
 
     std::vector<unsigned char> vchDefaultKey;
 
+    // keystore implementation
     bool AddKey(const CKey& key);
+    bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
+
     bool AddToWallet(const CWalletTx& wtxIn);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false);
     bool EraseFromWallet(uint256 hash);
