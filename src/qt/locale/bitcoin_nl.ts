@@ -487,91 +487,118 @@ door Thomas Bernard.
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="55"/>
-        <location filename="../sendcoinsdialog.cpp" line="64"/>
-        <location filename="../sendcoinsdialog.cpp" line="70"/>
-        <location filename="../sendcoinsdialog.cpp" line="76"/>
-        <location filename="../sendcoinsdialog.cpp" line="82"/>
+        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="71"/>
+        <location filename="../sendcoinsdialog.cpp" line="77"/>
+        <location filename="../sendcoinsdialog.cpp" line="83"/>
+        <location filename="../sendcoinsdialog.cpp" line="89"/>
         <source>Send Coins</source>
         <translation>Verstuur coins</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="22"/>
         <source>&amp;Amount:</source>
-        <translation>&amp;Hoeveelheid:</translation>
+        <translation type="obsolete">&amp;Hoeveelheid:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="35"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="95"/>
         <source>Pay &amp;To:</source>
-        <translation>Betaan &amp;aan:</translation>
+        <translation>Betaal &amp;aan:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="48"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="27"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Voer een bitcoin-adres (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="58"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="47"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="60"/>
         <source>Paste address from system clipboard</source>
         <translation>Plak adres uit systeemplakbord</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="61"/>
         <source>&amp;Paste</source>
-        <translation>&amp;Plakken</translation>
+        <translation type="obsolete">&amp;Plakken</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="71"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="37"/>
         <source>Look up adress in address book</source>
-        <translation>Adres opzoeken in adresboek</translation>
+        <translation>Opzoeken in adresboek</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="74"/>
         <source>Address &amp;Book...</source>
-        <translation>Adres&amp;boek....</translation>
+        <translation type="obsolete">Adres&amp;boek....</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="89"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="70"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="82"/>
+        <source>A&amp;mount:</source>
+        <translation>&amp;Hoeveelheid:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="113"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Voer een bitcoin-adres (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="129"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="125"/>
+        <source>Add specified destination address to address book</source>
+        <translation>Voeg het ingevoerde doel-adres toe aan het adresboek</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="128"/>
+        <source>A&amp;dd to address book as</source>
+        <translation>&amp;Voeg toe aan adresboek als</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="138"/>
+        <source>Label to add address as</source>
+        <translation>Label om toe te kennen aan adres in adresboek</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="177"/>
         <source>Confirm the send action</source>
         <translation>Bevestig de zend-transactie</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="132"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="180"/>
         <source>&amp;Send</source>
         <translation>&amp;Versturen</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="152"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="200"/>
         <source>Abort the send action</source>
         <translation>De transactie annuleren</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>The amount to pay must be a valid number.</source>
         <translation>Het ingevoerde bedrag is geen geldig getal.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="65"/>
+        <location filename="../sendcoinsdialog.cpp" line="72"/>
         <source>The recepient address is not valid, please recheck.</source>
         <translation>Het verzendadres is niet geld.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="71"/>
+        <location filename="../sendcoinsdialog.cpp" line="78"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Het ingevoerde gedrag moet groter zijn dan 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="77"/>
+        <location filename="../sendcoinsdialog.cpp" line="84"/>
         <source>Amount exceeds your balance</source>
         <translation>Hoeveelheid overschrijdt uw huidige balans</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="83"/>
+        <location filename="../sendcoinsdialog.cpp" line="90"/>
         <source>Total exceeds your balance when the %1 transaction fee is included</source>
         <translation>Totaal overschrijdt uw huidige balans wanneer de %1 transactiefooi is meegerekend</translation>
     </message>
