@@ -39,7 +39,7 @@ public:
     int getTotalBlocksEstimate() const;
 
     /* Send coins */
-    StatusCode sendCoins(const QString &payTo, qint64 payAmount);
+    StatusCode sendCoins(const QString &payTo, qint64 payAmount, const QString &addToAddressBookAs=QString());
 private:
     OptionsModel *optionsModel;
     AddressTableModel *addressTableModel;

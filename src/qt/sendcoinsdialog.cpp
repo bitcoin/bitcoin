@@ -46,6 +46,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 {
     bool valid;
     QString payAmount = ui->payAmount->text();
+    QString label;
     qint64 payAmountParsed;
 
     valid = ParseMoney(payAmount.toStdString(), payAmountParsed);
@@ -58,7 +59,13 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    switch(model->sendCoins(ui->payTo->text(), payAmountParsed))
+    if(ui->addToAddressBook->isChecked())
+    {
+        // Add address to address book under label, if specified
+        label = ui->addAsLabel->text();
+    }
+
+    switch(model->sendCoins(ui->payTo->text(), payAmountParsed, label))
     {
     case ClientModel::InvalidAddress:
         QMessageBox::warning(this, tr("Send Coins"),
@@ -109,4 +116,9 @@ void SendCoinsDialog::on_addressBookButton_clicked()
 void SendCoinsDialog::on_buttonBox_rejected()
 {
     reject();
+}
+
+void SendCoinsDialog::on_addToAddressBook_toggled(bool checked)
+{
+    ui->addAsLabel->setEnabled(checked);
 }

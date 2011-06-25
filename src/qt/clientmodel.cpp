@@ -60,7 +60,7 @@ void ClientModel::update()
     addressTableModel->update();
 }
 
-ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payAmount)
+ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payAmount, const QString &addToAddressBookAs)
 {
     uint160 hash160 = 0;
     bool valid = false;
@@ -95,7 +95,7 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
         std::string strError = SendMoney(scriptPubKey, payAmount, wtx, true);
         if (strError == "")
         {
-            return OK;
+            // OK
         }
         else if (strError == "ABORTED")
         {
@@ -107,11 +107,12 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
             return MiscError;
         }
     }
+
     // Add addresses that we've sent to to the address book
     std::string strAddress = payTo.toStdString();
     CRITICAL_BLOCK(cs_mapAddressBook)
         if (!mapAddressBook.count(strAddress))
-            SetAddressBookName(strAddress, "");
+            SetAddressBookName(strAddress, addToAddressBookAs.toStdString());
 
     return OK;
 }

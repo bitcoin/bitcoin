@@ -23,6 +23,7 @@ private:
     ClientModel *model;
 
 private slots:
+    void on_addToAddressBook_toggled(bool checked);
     void on_buttonBox_rejected();
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
