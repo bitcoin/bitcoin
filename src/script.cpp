@@ -1089,8 +1089,40 @@ bool IsStandard(const CScript& scriptPubKey)
 
 bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
-    CScript scriptSig;
-    return Solver(keystore, scriptPubKey, 0, 0, scriptSig);
+    vector<pair<opcodetype, valtype> > vSolution;
+    if (!Solver(scriptPubKey, vSolution))
+        return false;
+
+    // Compile solution
+    CRITICAL_BLOCK(keystore.cs_KeyStore)
+    {
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        {
+            if (item.first == OP_PUBKEY)
+            {
+                // Sign
+                const valtype& vchPubKey = item.second;
+                if (!keystore.HaveKey(vchPubKey))
+                    return false;
+            }
+            else if (item.first == OP_PUBKEYHASH)
+            {
+                // Sign and give pubkey
+                map<uint160, valtype>::iterator mi = mapPubKeys.find(uint160(item.second));
+                if (mi == mapPubKeys.end())
+                    return false;
+                const vector<unsigned char>& vchPubKey = (*mi).second;
+                if (!keystore.HaveKey(vchPubKey))
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 

@@ -33,7 +33,8 @@ DEBUGFLAGS=-g -DwxDEBUG_LEVEL=0
 # ppc doesn't work because we don't support big-endian
 CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h init.h
+    script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h \
+    init.h crypter.h
 
 OBJS= \
     obj/util.o \
@@ -46,6 +47,7 @@ OBJS= \
     obj/wallet.o \
     obj/rpc.o \
     obj/init.o \
+    obj/crypter.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 

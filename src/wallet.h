@@ -26,6 +26,10 @@ public:
     std::set<int64> setKeyPool;
     CCriticalSection cs_setKeyPool;
 
+    typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
+    MasterKeyMap mapMasterKeys;
+    unsigned int nMasterKeyMaxID;
+
     CWallet()
     {
         fFileBacked = false;
@@ -51,6 +55,12 @@ public:
     // keystore implementation
     bool AddKey(const CKey& key);
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
+    bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool LoadCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
+
+    bool Unlock(const std::string& strWalletPassphrase);
+    bool ChangeWalletPassphrase(const std::string& strOldWalletPassphrase, const std::string& strNewWalletPassphrase);
+    bool EncryptWallet(const std::string& strWalletPassphrase);
 
     bool AddToWallet(const CWalletTx& wtxIn);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false);
@@ -67,10 +77,11 @@ public:
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToBitcoinAddress(std::string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
+    bool TopUpKeyPool();
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
     void ReturnKey(int64 nIndex);
-    std::vector<unsigned char> GetKeyFromKeyPool();
+    std::vector<unsigned char> GetOrReuseKeyFromPool();
     int64 GetOldestKeyPoolTime();
 
     bool IsMine(const CTxIn& txin) const;
@@ -176,6 +187,11 @@ public:
             if (mi != mapRequestCount.end())
                 (*mi).second++;
         }
+    }
+
+    int GetKeyPoolSize()
+    {
+        return setKeyPool.size();
     }
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
