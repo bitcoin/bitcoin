@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>736</width>
-    <height>149</height>
+    <height>193</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,10 +16,70 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="payTo">
+         <property name="toolTip">
+          <string>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</string>
+         </property>
+         <property name="maxLength">
+          <number>34</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="addressBookButton">
+         <property name="toolTip">
+          <string>Look up adress in address book</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../bitcoin.qrc">
+           <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
+         </property>
+         <property name="shortcut">
+          <string>Alt+A</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pasteButton">
+         <property name="toolTip">
+          <string>Paste address from system clipboard</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../bitcoin.qrc">
+           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+         </property>
+         <property name="shortcut">
+          <string>Alt+P</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>&amp;Amount:</string>
+        <string>A&amp;mount:</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -42,42 +102,6 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="payTo">
-       <property name="toolTip">
-        <string>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</string>
-       </property>
-       <property name="maxLength">
-        <number>34</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="2">
-      <widget class="QPushButton" name="pasteButton">
-       <property name="toolTip">
-        <string>Paste address from system clipboard</string>
-       </property>
-       <property name="text">
-        <string>&amp;Paste</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="3">
-      <widget class="QPushButton" name="addressBookButton">
-       <property name="toolTip">
-        <string>Look up adress in address book</string>
-       </property>
-       <property name="text">
-        <string>Address &amp;Book...</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="1">
       <widget class="QLabel" name="label_3">
        <property name="font">
@@ -91,7 +115,7 @@
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="BitcoinAmountField" name="payAmount" native="true"/>
+      <widget class="BitcoinAmountField" name="payAmount"/>
      </item>
      <item row="4" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -101,7 +125,7 @@
           <string>Add specified destination address to address book</string>
          </property>
          <property name="text">
-          <string>Add to address book as</string>
+          <string>A&amp;dd to address book as</string>
          </property>
         </widget>
        </item>
@@ -187,7 +211,7 @@
  <customwidgets>
   <customwidget>
    <class>BitcoinAmountField</class>
-   <extends>QWidget</extends>
+   <extends>QLineEdit</extends>
    <header>bitcoinamountfield.h</header>
    <container>1</container>
   </customwidget>
@@ -197,8 +221,8 @@
   <tabstop>addToAddressBook</tabstop>
   <tabstop>addAsLabel</tabstop>
   <tabstop>payAmount</tabstop>
-  <tabstop>pasteButton</tabstop>
   <tabstop>addressBookButton</tabstop>
+  <tabstop>pasteButton</tabstop>
   <tabstop>sendButton</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>

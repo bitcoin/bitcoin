@@ -26,7 +26,8 @@ Site: https://forum.bitcoin.org/index.php?topic=15276.0
 License: You are free to do with these icons as you wish, including selling,
  copying, modifying etc.
 
-Icon: src/qt/res/icons/configure.png, src/qt/res/icons/quit.png
+Icon: src/qt/res/icons/configure.png, src/qt/res/icons/quit.png,
+      src/qt/res/icons/editcopy.png, src/qt/res/icons/editpaste.png
 Designer: http://www.everaldo.com
 Icon Pack: Crystal SVG
 License: LGPL
