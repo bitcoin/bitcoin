@@ -119,6 +119,9 @@
      </item>
      <item row="4" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="spacing">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QCheckBox" name="addToAddressBook">
          <property name="toolTip">
