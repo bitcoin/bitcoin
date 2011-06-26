@@ -13,6 +13,8 @@
 #include <cstring>
 #include <cstdio>
 
+#include <sys/mman.h>
+
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
@@ -28,6 +30,15 @@ typedef unsigned long long  uint64;
 #if defined(_MSC_VER) && _MSC_VER < 1300
 #define for  if (false) ; else for
 #endif
+
+#ifdef __WXMSW__
+// This is used to attempt to keep keying material out of swap
+// Note that VirtualLock does not provide this as a guarantee on Windows,
+// but, in practice, memory that has been VirtualLock'd almost never gets written to
+// the pagefile except in rare circumstances where memory is extremely low.
+#define mlock(p, n) VirtualLock((p), (n));
+#endif
+
 class CScript;
 class CDataStream;
 class CAutoFile;
@@ -755,7 +766,8 @@ struct ser_streamplaceholder
 
 
 //
-// Allocator that clears its contents before deletion
+// Allocator that locks its contents from being paged
+// out of memory and clears its contents before deletion.
 //
 template<typename T>
 struct secure_allocator : public std::allocator<T>
@@ -776,6 +788,15 @@ struct secure_allocator : public std::allocator<T>
     ~secure_allocator() throw() {}
     template<typename _Other> struct rebind
     { typedef secure_allocator<_Other> other; };
+
+    T* allocate(std::size_t n, const void *hint = 0)
+    {
+        T *p;
+        p = std::allocator<T>::allocate(n, hint);
+        if (p != NULL)
+            mlock(p, sizeof(T) * n);
+        return p;
+    }
 
     void deallocate(T* p, std::size_t n)
     {
