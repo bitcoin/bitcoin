@@ -82,8 +82,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     
     QPushButton *button_new = new QPushButton(tr("&New..."));
     button_new->setToolTip(tr("Create new receiving address"));
+    button_new->setIcon(QIcon(":/icons/add"));
     QPushButton *button_clipboard = new QPushButton(tr("&Copy to clipboard"));
     button_clipboard->setToolTip(tr("Copy current receiving address to the system clipboard"));
+    button_clipboard->setIcon(QIcon(":/icons/editcopy"));
     hbox_address->addWidget(button_new);
     hbox_address->addWidget(button_clipboard);
     
