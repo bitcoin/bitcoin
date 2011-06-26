@@ -4,9 +4,16 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
+#include <stdexcept>
+#include <vector>
+
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
+
+#include "serialize.h"
+#include "uint256.h"
+#include "base58.h"
 
 // secp160k1
 // const unsigned int PRIVATE_KEY_SIZE = 192;
