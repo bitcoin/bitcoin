@@ -1070,6 +1070,65 @@ void CWallet::ReturnKey(int64 nIndex)
     printf("keypool return %"PRI64d"\n", nIndex);
 }
 
+bool CWallet::SetAddressBookName(const std::string& strAddress, const std::string& strName)
+{
+    if (!fFileBacked)
+        return false;
+    if(CWalletDB(strWalletFile).WriteName(strAddress, strName))
+    {
+        CRITICAL_BLOCK(cs_mapAddressBook)
+            mapAddressBook[strAddress] = strName;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool CWallet::EraseAddressBookName(const std::string& strAddress)
+{
+    if (!fFileBacked)
+        return false;
+    if(CWalletDB(strWalletFile).EraseName(strAddress))
+    {
+        CRITICAL_BLOCK(cs_mapAddressBook)
+            mapAddressBook.erase(strAddress);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+std::string CWallet::GetDefaultAddress()
+{
+    if (!fFileBacked)
+        return false;
+    std::vector<unsigned char> vchPubKey;
+    if (CWalletDB(strWalletFile, "r").ReadDefaultKey(vchPubKey))
+    {
+        return PubKeyToAddress(vchPubKey);
+    }
+    else
+    {
+        return "";
+    }
+}
+
+bool CWallet::SetDefaultAddress(const std::string& strAddress)
+{
+    uint160 hash160;
+    if (!AddressToHash160(strAddress, hash160))
+        return false;
+    if (!mapPubKeys.count(hash160))
+        return false;
+    return CWalletDB(strWalletFile).WriteDefaultKey(mapPubKeys[hash160]);
+}
+
+
 vector<unsigned char> CWallet::GetKeyFromKeyPool()
 {
     int64 nIndex = 0;
