@@ -962,21 +962,15 @@ bool CWallet::LoadWallet(bool& fFirstRunRet)
         return false;
     fFirstRunRet = vchDefaultKey.empty();
 
-    if (mapKeys.count(vchDefaultKey))
+    if (!mapKeys.count(vchDefaultKey))
     {
-        // Set keyUser
-        keyUser.SetPubKey(vchDefaultKey);
-        keyUser.SetPrivKey(mapKeys[vchDefaultKey]);
-    }
-    else
-    {
-        // Create new keyUser and set as default key
+        // Create new default key
         RandAddSeedPerfmon();
 
         vchDefaultKey = GetKeyFromKeyPool();
         if (!SetAddressBookName(PubKeyToAddress(vchDefaultKey), ""))
             return false;
-        CWalletDB(strWalletFile).WriteDefaultKey(keyUser.GetPubKey());
+        CWalletDB(strWalletFile).WriteDefaultKey(vchDefaultKey);
     }
 
     CreateThread(ThreadFlushWalletDB, &strWalletFile);
