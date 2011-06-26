@@ -16,7 +16,7 @@
 #include "transactiondescdialog.h"
 #include "addresstablemodel.h"
 
-#include "main.h"
+#include "headers.h"
 
 #include <QApplication>
 #include <QMainWindow>

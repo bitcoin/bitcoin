@@ -1021,7 +1021,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
 }
 
 
-bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& scriptSigRet)
+bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& scriptSigRet)
 {
     scriptSigRet.clear();
 
@@ -1030,7 +1030,7 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
         return false;
 
     // Compile solution
-    CRITICAL_BLOCK(cs_mapKeys)
+    CRITICAL_BLOCK(keystore.cs_mapKeys)
     {
         BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
         {
@@ -1038,12 +1038,13 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
             {
                 // Sign
                 const valtype& vchPubKey = item.second;
-                if (!mapKeys.count(vchPubKey))
+                CPrivKey privkey;
+                if (!keystore.GetPrivKey(vchPubKey, privkey))
                     return false;
                 if (hash != 0)
                 {
                     vector<unsigned char> vchSig;
-                    if (!CKey::Sign(mapKeys[vchPubKey], hash, vchSig))
+                    if (!CKey::Sign(privkey, hash, vchSig))
                         return false;
                     vchSig.push_back((unsigned char)nHashType);
                     scriptSigRet << vchSig;
@@ -1056,12 +1057,13 @@ bool Solver(const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& s
                 if (mi == mapPubKeys.end())
                     return false;
                 const vector<unsigned char>& vchPubKey = (*mi).second;
-                if (!mapKeys.count(vchPubKey))
+                CPrivKey privkey;
+                if (!keystore.GetPrivKey(vchPubKey, privkey))
                     return false;
                 if (hash != 0)
                 {
                     vector<unsigned char> vchSig;
-                    if (!CKey::Sign(mapKeys[vchPubKey], hash, vchSig))
+                    if (!CKey::Sign(privkey, hash, vchSig))
                         return false;
                     vchSig.push_back((unsigned char)nHashType);
                     scriptSigRet << vchSig << vchPubKey;
@@ -1085,14 +1087,14 @@ bool IsStandard(const CScript& scriptPubKey)
 }
 
 
-bool IsMine(const CScript& scriptPubKey)
+bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
     CScript scriptSig;
-    return Solver(scriptPubKey, 0, 0, scriptSig);
+    return Solver(keystore, scriptPubKey, 0, 0, scriptSig);
 }
 
 
-bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned char>& vchPubKeyRet)
+bool ExtractPubKey(const CScript& scriptPubKey, const CKeyStore* keystore, vector<unsigned char>& vchPubKeyRet)
 {
     vchPubKeyRet.clear();
 
@@ -1100,7 +1102,7 @@ bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned 
     if (!Solver(scriptPubKey, vSolution))
         return false;
 
-    CRITICAL_BLOCK(cs_mapKeys)
+    CRITICAL_BLOCK(cs_mapPubKeys)
     {
         BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
         {
@@ -1116,7 +1118,7 @@ bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned 
                     continue;
                 vchPubKey = (*mi).second;
             }
-            if (!fMineOnly || mapKeys.count(vchPubKey))
+            if (keystore == NULL || keystore->HaveKey(vchPubKey))
             {
                 vchPubKeyRet = vchPubKey;
                 return true;
@@ -1160,7 +1162,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 }
 
 
-bool SignSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType, CScript scriptPrereq)
+bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType, CScript scriptPrereq)
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
@@ -1171,7 +1173,7 @@ bool SignSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int 
     // The checksig op will also drop the signatures from its hash.
     uint256 hash = SignatureHash(scriptPrereq + txout.scriptPubKey, txTo, nIn, nHashType);
 
-    if (!Solver(txout.scriptPubKey, hash, nHashType, txin.scriptSig))
+    if (!Solver(keystore, txout.scriptPubKey, hash, nHashType, txin.scriptSig))
         return false;
 
     txin.scriptSig = scriptPrereq + txin.scriptSig;
@@ -1198,11 +1200,6 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
 
     if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nHashType))
         return false;
-
-    // Anytime a signature is successfully verified, it's proof the outpoint is spent,
-    // so lets update the wallet spent flag if it doesn't know due to wallet.dat being
-    // restored from backup or the user making copies of wallet.dat.
-    WalletUpdateSpent(txin.prevout);
 
     return true;
 }

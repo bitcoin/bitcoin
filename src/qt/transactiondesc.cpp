@@ -70,10 +70,10 @@ static string FormatTxStatus(const CWalletTx& wtx)
     }
 }
 
-string TransactionDesc::toHTML(CWalletTx &wtx)
+string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
 {
     string strHTML;
-    CRITICAL_BLOCK(cs_mapAddressBook)
+    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
     {
         strHTML.reserve(4000);
         strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
@@ -122,19 +122,19 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
                 // Credit
                 BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 {
-                    if (txout.IsMine())
+                    if (wallet->IsMine(txout))
                     {
                         vector<unsigned char> vchPubKey;
-                        if (ExtractPubKey(txout.scriptPubKey, true, vchPubKey))
+                        if (ExtractPubKey(txout.scriptPubKey, wallet, vchPubKey))
                         {
                             string strAddress = PubKeyToAddress(vchPubKey);
-                            if (mapAddressBook.count(strAddress))
+                            if (wallet->mapAddressBook.count(strAddress))
                             {
                                 strHTML += string() + _("<b>From:</b> ") + _("unknown") + "<br>";
                                 strHTML += _("<b>To:</b> ");
                                 strHTML += HtmlEscape(strAddress);
-                                if (!mapAddressBook[strAddress].empty())
-                                    strHTML += _(" (yours, label: ") + mapAddressBook[strAddress] + ")";
+                                if (!wallet->mapAddressBook[strAddress].empty())
+                                    strHTML += _(" (yours, label: ") + wallet->mapAddressBook[strAddress] + ")";
                                 else
                                     strHTML += _(" (yours)");
                                 strHTML += "<br>";
@@ -156,8 +156,8 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
             // Online transaction
             strAddress = wtx.mapValue["to"];
             strHTML += _("<b>To:</b> ");
-            if (mapAddressBook.count(strAddress) && !mapAddressBook[strAddress].empty())
-                strHTML += mapAddressBook[strAddress] + " ";
+            if (wallet->mapAddressBook.count(strAddress) && !wallet->mapAddressBook[strAddress].empty())
+                strHTML += wallet->mapAddressBook[strAddress] + " ";
             strHTML += HtmlEscape(strAddress) + "<br>";
         }
 
@@ -172,7 +172,7 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
             //
             int64 nUnmatured = 0;
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                nUnmatured += txout.GetCredit();
+                nUnmatured += wallet->GetCredit(txout);
             strHTML += _("<b>Credit:</b> ");
             if (wtx.IsInMainChain())
                 strHTML += strprintf(_("(%s matures in %d more blocks)"), FormatMoney(nUnmatured).c_str(), wtx.GetBlocksToMaturity());
@@ -191,11 +191,11 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
         {
             bool fAllFromMe = true;
             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                fAllFromMe = fAllFromMe && txin.IsMine();
+                fAllFromMe = fAllFromMe && wallet->IsMine(txin);
 
             bool fAllToMe = true;
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                fAllToMe = fAllToMe && txout.IsMine();
+                fAllToMe = fAllToMe && wallet->IsMine(txout);
 
             if (fAllFromMe)
             {
@@ -204,7 +204,7 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
                 //
                 BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 {
-                    if (txout.IsMine())
+                    if (wallet->IsMine(txout))
                         continue;
 
                     if (wtx.mapValue["to"].empty())
@@ -215,8 +215,8 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
                         {
                             string strAddress = Hash160ToAddress(hash160);
                             strHTML += _("<b>To:</b> ");
-                            if (mapAddressBook.count(strAddress) && !mapAddressBook[strAddress].empty())
-                                strHTML += mapAddressBook[strAddress] + " ";
+                            if (wallet->mapAddressBook.count(strAddress) && !wallet->mapAddressBook[strAddress].empty())
+                                strHTML += wallet->mapAddressBook[strAddress] + " ";
                             strHTML += strAddress;
                             strHTML += "<br>";
                         }
@@ -244,11 +244,11 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
                 // Mixed debit transaction
                 //
                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                    if (txin.IsMine())
-                        strHTML += _("<b>Debit:</b> ") + FormatMoney(-txin.GetDebit()) + "<br>";
+                    if (wallet->IsMine(txin))
+                        strHTML += _("<b>Debit:</b> ") + FormatMoney(-wallet->GetDebit(txin)) + "<br>";
                 BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                    if (txout.IsMine())
-                        strHTML += _("<b>Credit:</b> ") + FormatMoney(txout.GetCredit()) + "<br>";
+                    if (wallet->IsMine(txout))
+                        strHTML += _("<b>Credit:</b> ") + FormatMoney(wallet->GetCredit(txout)) + "<br>";
             }
         }
 
@@ -274,30 +274,30 @@ string TransactionDesc::toHTML(CWalletTx &wtx)
         {
             strHTML += "<hr><br>debug print<br><br>";
             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                if (txin.IsMine())
-                    strHTML += "<b>Debit:</b> " + FormatMoney(-txin.GetDebit()) + "<br>";
+                if(wallet->IsMine(txin))
+                    strHTML += "<b>Debit:</b> " + FormatMoney(-wallet->IsMine(txin)) + "<br>";
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                if (txout.IsMine())
-                    strHTML += "<b>Credit:</b> " + FormatMoney(txout.GetCredit()) + "<br>";
+                if(wallet->IsMine(txout))
+                    strHTML += "<b>Credit:</b> " + FormatMoney(wallet->IsMine(txout)) + "<br>";
 
             strHTML += "<br><b>Transaction:</b><br>";
             strHTML += HtmlEscape(wtx.ToString(), true);
 
             strHTML += "<br><b>Inputs:</b><br>";
-            CRITICAL_BLOCK(cs_mapWallet)
+            CRITICAL_BLOCK(wallet->cs_mapWallet)
             {
                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 {
                     COutPoint prevout = txin.prevout;
-                    map<uint256, CWalletTx>::iterator mi = mapWallet.find(prevout.hash);
-                    if (mi != mapWallet.end())
+                    map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(prevout.hash);
+                    if (mi != wallet->mapWallet.end())
                     {
                         const CWalletTx& prev = (*mi).second;
                         if (prevout.n < prev.vout.size())
                         {
                             strHTML += HtmlEscape(prev.ToString(), true);
                             strHTML += " &nbsp;&nbsp; " + FormatTxStatus(prev) + ", ";
-                            strHTML = strHTML + "IsMine=" + (prev.vout[prevout.n].IsMine() ? "true" : "false") + "<br>";
+                            strHTML = strHTML + "IsMine=" + (wallet->IsMine(prev.vout[prevout.n]) ? "true" : "false") + "<br>";
                         }
                     }
                 }

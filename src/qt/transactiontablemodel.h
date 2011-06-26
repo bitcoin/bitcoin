@@ -4,6 +4,7 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
+class CWallet;
 class TransactionTablePriv;
 class TransactionRecord;
 
@@ -11,7 +12,7 @@ class TransactionTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit TransactionTableModel(QObject *parent = 0);
+    explicit TransactionTableModel(CWallet* wallet, QObject *parent = 0);
     ~TransactionTableModel();
 
     enum {
@@ -39,9 +40,11 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 private:
+    CWallet* wallet;
     QStringList columns;
     TransactionTablePriv *priv;
 
+    std::string lookupAddress(const std::string &address) const;
     QVariant formatTxStatus(const TransactionRecord *wtx) const;
     QVariant formatTxDate(const TransactionRecord *wtx) const;
     QVariant formatTxDescription(const TransactionRecord *wtx) const;

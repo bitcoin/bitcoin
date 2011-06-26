@@ -5,6 +5,8 @@
 
 #include <QList>
 
+class CWallet;
+
 class TransactionStatus
 {
 public:
@@ -84,7 +86,7 @@ public:
     /* Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction(const CWalletTx &wtx);
-    static QList<TransactionRecord> decomposeTransaction(const CWalletTx &wtx);
+    static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
 
     /* Fixed */
     uint256 hash;

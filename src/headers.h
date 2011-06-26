@@ -91,10 +91,8 @@
 #include "serialize.h"
 #include "uint256.h"
 #include "util.h"
-#include "key.h"
 #include "bignum.h"
 #include "base58.h"
-#include "script.h"
 #include "main.h"
 #ifdef GUI
 #include "uibase.h"

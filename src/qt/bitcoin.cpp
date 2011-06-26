@@ -3,10 +3,9 @@
  */
 #include "bitcoingui.h"
 #include "clientmodel.h"
-#include "util.h"
+
+#include "headers.h"
 #include "init.h"
-#include "main.h"
-#include "qtui.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -114,7 +113,7 @@ int main(int argc, char *argv[])
         if(AppInit2(argc, argv))
         {
             BitcoinGUI window;
-            ClientModel model;
+            ClientModel model(pwalletMain);
             guiref = &window;
             window.setModel(&model);
 

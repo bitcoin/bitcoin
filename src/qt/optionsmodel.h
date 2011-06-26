@@ -3,6 +3,8 @@
 
 #include <QAbstractListModel>
 
+class CWallet;
+
 /* Interface from QT to configuration data structure for bitcoin client.
    To QT, the options are presented as a list with the different options
    laid out vertically.
@@ -13,7 +15,7 @@ class OptionsModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    explicit OptionsModel(QObject *parent = 0);
+    explicit OptionsModel(CWallet *wallet, QObject *parent = 0);
 
     enum OptionID {
         StartAtStartup,
@@ -35,6 +37,9 @@ public:
     qint64 getTransactionFee();
     bool getMinimizeToTray();
     bool getMinimizeOnClose();
+private:
+    // Wallet stores persistent options
+    CWallet *wallet;
 signals:
 
 public slots:

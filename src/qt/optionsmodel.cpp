@@ -1,11 +1,12 @@
 #include "optionsmodel.h"
-#include "main.h"
-#include "net.h"
+
+#include "headers.h"
 
 #include <QDebug>
 
-OptionsModel::OptionsModel(QObject *parent) :
-    QAbstractListModel(parent)
+OptionsModel::OptionsModel(CWallet *wallet, QObject *parent) :
+    QAbstractListModel(parent),
+    wallet(wallet)
 {
 }
 
@@ -48,7 +49,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     bool successful = true; /* set to false on parse error */
     if(role == Qt::EditRole)
     {
-        CWalletDB walletdb;
+        CWalletDB walletdb(wallet->strWalletFile);
         switch(index.row())
         {
         case StartAtStartup:

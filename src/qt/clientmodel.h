@@ -6,12 +6,13 @@
 class OptionsModel;
 class AddressTableModel;
 class TransactionTableModel;
+class CWallet;
 
 class ClientModel : public QObject
 {
     Q_OBJECT
 public:
-    explicit ClientModel(QObject *parent = 0);
+    explicit ClientModel(CWallet *wallet, QObject *parent = 0);
 
     enum StatusCode
     {
@@ -41,6 +42,8 @@ public:
     /* Send coins */
     StatusCode sendCoins(const QString &payTo, qint64 payAmount, const QString &addToAddressBookAs=QString());
 private:
+    CWallet *wallet;
+
     OptionsModel *optionsModel;
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;

@@ -1,5 +1,6 @@
 #include "transactionrecord.h"
 
+#include "headers.h"
 
 /* Return positive answer if transaction should be shown in list.
  */
@@ -29,7 +30,7 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx &wtx)
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx)
 {
     QList<TransactionRecord> parts;
     int64 nTime = wtx.nTimeDisplayed = wtx.GetTxTime();
@@ -59,7 +60,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
                 {
                     int64 nUnmatured = 0;
                     BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                        nUnmatured += txout.GetCredit();
+                        nUnmatured += wallet->GetCredit(txout);
                     sub.credit = nUnmatured;
                 }
             }
@@ -76,10 +77,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
                 sub.type = TransactionRecord::RecvWithAddress;
                 BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 {
-                    if (txout.IsMine())
+                    if(wallet->IsMine(txout))
                     {
                         std::vector<unsigned char> vchPubKey;
-                        if (ExtractPubKey(txout.scriptPubKey, true, vchPubKey))
+                        if (ExtractPubKey(txout.scriptPubKey, wallet, vchPubKey))
                         {
                             sub.address = PubKeyToAddress(vchPubKey);
                         }
@@ -93,11 +94,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
         {
             bool fAllFromMe = true;
             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                fAllFromMe = fAllFromMe && txin.IsMine();
+                fAllFromMe = fAllFromMe && wallet->IsMine(txin);
 
             bool fAllToMe = true;
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                fAllToMe = fAllToMe && txout.IsMine();
+                fAllToMe = fAllToMe && wallet->IsMine(txout);
 
             if (fAllFromMe && fAllToMe)
             {
@@ -120,13 +121,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
                     TransactionRecord sub(hash, nTime);
                     sub.idx = parts.size();
 
-                    if (txout.IsMine())
+                    if(wallet->IsMine(txout))
                     {
                         // Ignore parts sent to self, as this is usually the change
                         // from a transaction sent back to our own address.
                         continue;
                     }
-                    else if (!mapValue["to"].empty())
+                    else if(!mapValue["to"].empty())
                     {
                         // Sent to IP
                         sub.type = TransactionRecord::SendToIP;
@@ -160,9 +161,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWalletTx
                 //
                 bool fAllMine = true;
                 BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                    fAllMine = fAllMine && txout.IsMine();
+                    fAllMine = fAllMine && wallet->IsMine(txout);
                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                    fAllMine = fAllMine && txin.IsMine();
+                    fAllMine = fAllMine && wallet->IsMine(txin);
 
                 parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
             }

@@ -1,14 +1,15 @@
 #include "clientmodel.h"
-#include "main.h"
 #include "guiconstants.h"
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
+#include "headers.h"
+
 #include <QTimer>
 
-ClientModel::ClientModel(QObject *parent) :
-    QObject(parent), optionsModel(0), addressTableModel(0),
+ClientModel::ClientModel(CWallet *wallet, QObject *parent) :
+    QObject(parent), wallet(wallet), optionsModel(0), addressTableModel(0),
     transactionTableModel(0)
 {
     // Until signal notifications is built into the bitcoin core,
@@ -17,14 +18,14 @@ ClientModel::ClientModel(QObject *parent) :
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(MODEL_UPDATE_DELAY);
 
-    optionsModel = new OptionsModel(this);
-    addressTableModel = new AddressTableModel(this);
-    transactionTableModel = new TransactionTableModel(this);
+    optionsModel = new OptionsModel(wallet, this);
+    addressTableModel = new AddressTableModel(wallet, this);
+    transactionTableModel = new TransactionTableModel(wallet, this);
 }
 
 qint64 ClientModel::getBalance() const
 {
-    return GetBalance();
+    return wallet->GetBalance();
 }
 
 int ClientModel::getNumConnections() const
@@ -40,9 +41,9 @@ int ClientModel::getNumBlocks() const
 int ClientModel::getNumTransactions() const
 {
     int numTransactions = 0;
-    CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(wallet->cs_mapWallet)
     {
-        numTransactions = mapWallet.size();
+        numTransactions = wallet->mapWallet.size();
     }
     return numTransactions;
 }
@@ -92,7 +93,7 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
         CScript scriptPubKey;
         scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
 
-        std::string strError = SendMoney(scriptPubKey, payAmount, wtx, true);
+        std::string strError = wallet->SendMoney(scriptPubKey, payAmount, wtx, true);
         if (strError == "")
         {
             // OK
@@ -110,9 +111,11 @@ ClientModel::StatusCode ClientModel::sendCoins(const QString &payTo, qint64 payA
 
     // Add addresses that we've sent to to the address book
     std::string strAddress = payTo.toStdString();
-    CRITICAL_BLOCK(cs_mapAddressBook)
-        if (!mapAddressBook.count(strAddress))
-            SetAddressBookName(strAddress, addToAddressBookAs.toStdString());
+    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    {
+        if (!wallet->mapAddressBook.count(strAddress))
+            wallet->SetAddressBookName(strAddress, addToAddressBookAs.toStdString());
+    }
 
     return OK;
 }

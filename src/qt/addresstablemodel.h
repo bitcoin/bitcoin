@@ -5,12 +5,13 @@
 #include <QStringList>
 
 class AddressTablePriv;
+class CWallet;
 
 class AddressTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit AddressTableModel(QObject *parent = 0);
+    explicit AddressTableModel(CWallet *wallet, QObject *parent = 0);
     ~AddressTableModel();
 
     enum ColumnIndex {
@@ -49,6 +50,7 @@ public:
     void updateList();
 
 private:
+    CWallet *wallet;
     AddressTablePriv *priv;
     QStringList columns;
 

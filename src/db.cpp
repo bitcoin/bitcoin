@@ -5,13 +5,11 @@
 #include "headers.h"
 #include "db.h"
 #include "net.h"
-#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 using namespace std;
 using namespace boost;
-
-void ThreadFlushWalletDB(void* parg);
 
 
 unsigned int nWalletDBUpdated;
@@ -151,7 +149,7 @@ void CDB::Close()
         --mapFileUseCount[strFile];
 }
 
-void CloseDb(const string& strFile)
+void static CloseDb(const string& strFile)
 {
     CRITICAL_BLOCK(cs_db)
     {
@@ -360,7 +358,7 @@ bool CTxDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
     return Write(string("bnBestInvalidWork"), bnBestInvalidWork);
 }
 
-CBlockIndex* InsertBlockIndex(uint256 hash)
+CBlockIndex static * InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
         return NULL;
@@ -585,8 +583,19 @@ bool LoadAddresses()
 // CWalletDB
 //
 
-static set<int64> setKeyPool;
-static CCriticalSection cs_setKeyPool;
+bool CWalletDB::WriteName(const string& strAddress, const string& strName)
+{
+    nWalletDBUpdated++;
+    return Write(make_pair(string("name"), strAddress), strName);
+}
+
+bool CWalletDB::EraseName(const string& strAddress)
+{
+    // This should only be used for sending addresses, never for receiving addresses,
+    // receiving addresses must always have an address book entry if they're not change return.
+    nWalletDBUpdated++;
+    return Erase(make_pair(string("name"), strAddress));
+}
 
 bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
 {
@@ -661,9 +670,9 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 }
 
 
-bool CWalletDB::LoadWallet()
+bool CWalletDB::LoadWallet(CWallet* pwallet)
 {
-    vchDefaultKey.clear();
+    pwallet->vchDefaultKey.clear();
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
 
@@ -675,8 +684,8 @@ bool CWalletDB::LoadWallet()
 #endif
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
-    CRITICAL_BLOCK(cs_mapWallet)
-    CRITICAL_BLOCK(cs_mapKeys)
+    CRITICAL_BLOCK(pwallet->cs_mapWallet)
+    CRITICAL_BLOCK(pwallet->cs_mapKeys)
     {
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -703,14 +712,15 @@ bool CWalletDB::LoadWallet()
             {
                 string strAddress;
                 ssKey >> strAddress;
-                ssValue >> mapAddressBook[strAddress];
+                ssValue >> pwallet->mapAddressBook[strAddress];
             }
             else if (strType == "tx")
             {
                 uint256 hash;
                 ssKey >> hash;
-                CWalletTx& wtx = mapWallet[hash];
+                CWalletTx& wtx = pwallet->mapWallet[hash];
                 ssValue >> wtx;
+                wtx.pwallet = pwallet;
 
                 if (wtx.GetHash() != hash)
                     printf("Error in wallet.dat, hash mismatch\n");
@@ -761,18 +771,18 @@ bool CWalletDB::LoadWallet()
                 else
                     ssValue >> wkey;
 
-                mapKeys[vchPubKey] = wkey.vchPrivKey;
+                pwallet->mapKeys[vchPubKey] = wkey.vchPrivKey;
                 mapPubKeys[Hash160(vchPubKey)] = vchPubKey;
             }
             else if (strType == "defaultkey")
             {
-                ssValue >> vchDefaultKey;
+                ssValue >> pwallet->vchDefaultKey;
             }
             else if (strType == "pool")
             {
                 int64 nIndex;
                 ssKey >> nIndex;
-                setKeyPool.insert(nIndex);
+                pwallet->setKeyPool.insert(nIndex);
             }
             else if (strType == "version")
             {
@@ -804,7 +814,7 @@ bool CWalletDB::LoadWallet()
     }
 
     BOOST_FOREACH(uint256 hash, vWalletUpgrade)
-        WriteTx(hash, mapWallet[hash]);
+        WriteTx(hash, pwallet->mapWallet[hash]);
 
     printf("nFileVersion = %d\n", nFileVersion);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
@@ -832,36 +842,9 @@ bool CWalletDB::LoadWallet()
     return true;
 }
 
-bool LoadWallet(bool& fFirstRunRet)
-{
-    fFirstRunRet = false;
-    if (!CWalletDB("cr+").LoadWallet())
-        return false;
-    fFirstRunRet = vchDefaultKey.empty();
-
-    if (mapKeys.count(vchDefaultKey))
-    {
-        // Set keyUser
-        keyUser.SetPubKey(vchDefaultKey);
-        keyUser.SetPrivKey(mapKeys[vchDefaultKey]);
-    }
-    else
-    {
-        // Create new keyUser and set as default key
-        RandAddSeedPerfmon();
-
-        CWalletDB walletdb;
-        vchDefaultKey = GetKeyFromKeyPool();
-        walletdb.WriteDefaultKey(vchDefaultKey);
-        walletdb.WriteName(PubKeyToAddress(vchDefaultKey), "");
-    }
-
-    CreateThread(ThreadFlushWalletDB, NULL);
-    return true;
-}
-
 void ThreadFlushWalletDB(void* parg)
 {
+    const string& strFile = ((const string*)parg)[0];
     static bool fOneThread;
     if (fOneThread)
         return;
@@ -897,7 +880,6 @@ void ThreadFlushWalletDB(void* parg)
 
                 if (nRefCount == 0 && !fShutdown)
                 {
-                    string strFile = "wallet.dat";
                     map<string, int>::iterator mi = mapFileUseCount.find(strFile);
                     if (mi != mapFileUseCount.end())
                     {
@@ -920,26 +902,27 @@ void ThreadFlushWalletDB(void* parg)
     }
 }
 
-void BackupWallet(const string& strDest)
+bool BackupWallet(const CWallet& wallet, const string& strDest)
 {
+    if (!wallet.fFileBacked)
+        return false;
     while (!fShutdown)
     {
         CRITICAL_BLOCK(cs_db)
         {
-            const string strFile = "wallet.dat";
-            if (!mapFileUseCount.count(strFile) || mapFileUseCount[strFile] == 0)
+            if (!mapFileUseCount.count(wallet.strWalletFile) || mapFileUseCount[wallet.strWalletFile] == 0)
             {
                 // Flush log data to the dat file
-                CloseDb(strFile);
+                CloseDb(wallet.strWalletFile);
                 dbenv.txn_checkpoint(0, 0, 0);
-                dbenv.lsn_reset(strFile.c_str(), 0);
-                mapFileUseCount.erase(strFile);
+                dbenv.lsn_reset(wallet.strWalletFile.c_str(), 0);
+                mapFileUseCount.erase(wallet.strWalletFile);
 
                 // Copy wallet.dat
-                filesystem::path pathSrc(GetDataDir() + "/" + strFile);
+                filesystem::path pathSrc(GetDataDir() + "/" + wallet.strWalletFile);
                 filesystem::path pathDest(strDest);
                 if (filesystem::is_directory(pathDest))
-                    pathDest = pathDest / strFile;
+                    pathDest = pathDest / wallet.strWalletFile;
 #if BOOST_VERSION >= 104000
                 filesystem::copy_file(pathSrc, pathDest, filesystem::copy_option::overwrite_if_exists);
 #else
@@ -947,83 +930,10 @@ void BackupWallet(const string& strDest)
 #endif
                 printf("copied wallet.dat to %s\n", pathDest.string().c_str());
 
-                return;
+                return true;
             }
         }
         Sleep(100);
     }
-}
-
-
-void CWalletDB::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
-{
-    nIndex = -1;
-    keypool.vchPubKey.clear();
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(cs_mapWallet)
-    CRITICAL_BLOCK(cs_setKeyPool)
-    {
-        // Top up key pool
-        int64 nTargetSize = max(GetArg("-keypool", 100), (int64)0);
-        while (setKeyPool.size() < nTargetSize+1)
-        {
-            int64 nEnd = 1;
-            if (!setKeyPool.empty())
-                nEnd = *(--setKeyPool.end()) + 1;
-            if (!Write(make_pair(string("pool"), nEnd), CKeyPool(GenerateNewKey())))
-                throw runtime_error("ReserveKeyFromKeyPool() : writing generated key failed");
-            setKeyPool.insert(nEnd);
-            printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
-        }
-
-        // Get the oldest key
-        assert(!setKeyPool.empty());
-        nIndex = *(setKeyPool.begin());
-        setKeyPool.erase(setKeyPool.begin());
-        if (!Read(make_pair(string("pool"), nIndex), keypool))
-            throw runtime_error("ReserveKeyFromKeyPool() : read failed");
-        if (!mapKeys.count(keypool.vchPubKey))
-            throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
-        assert(!keypool.vchPubKey.empty());
-        printf("keypool reserve %"PRI64d"\n", nIndex);
-    }
-}
-
-void CWalletDB::KeepKey(int64 nIndex)
-{
-    // Remove from key pool
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(cs_mapWallet)
-    {
-        Erase(make_pair(string("pool"), nIndex));
-    }
-    printf("keypool keep %"PRI64d"\n", nIndex);
-}
-
-void CWalletDB::ReturnKey(int64 nIndex)
-{
-    // Return to key pool
-    CRITICAL_BLOCK(cs_setKeyPool)
-        setKeyPool.insert(nIndex);
-    printf("keypool return %"PRI64d"\n", nIndex);
-}
-
-vector<unsigned char> GetKeyFromKeyPool()
-{
-    CWalletDB walletdb;
-    int64 nIndex = 0;
-    CKeyPool keypool;
-    walletdb.ReserveKeyFromKeyPool(nIndex, keypool);
-    walletdb.KeepKey(nIndex);
-    return keypool.vchPubKey;
-}
-
-int64 GetOldestKeyPoolTime()
-{
-    CWalletDB walletdb;
-    int64 nIndex = 0;
-    CKeyPool keypool;
-    walletdb.ReserveKeyFromKeyPool(nIndex, keypool);
-    walletdb.ReturnKey(nIndex);
-    return keypool.nTime;
+    return false;
 }

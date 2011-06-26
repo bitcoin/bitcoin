@@ -2,8 +2,9 @@
 #include "guiutil.h"
 #include "transactionrecord.h"
 #include "guiconstants.h"
-#include "main.h"
 #include "transactiondesc.h"
+
+#include "headers.h"
 
 #include <QLocale>
 #include <QDebug>
@@ -37,11 +38,12 @@ struct TxLessThan
 // Private implementation
 struct TransactionTablePriv
 {
-    TransactionTablePriv(TransactionTableModel *parent):
+    TransactionTablePriv(CWallet *wallet, TransactionTableModel *parent):
+            wallet(wallet),
             parent(parent)
     {
     }
-
+    CWallet *wallet;
     TransactionTableModel *parent;
 
     /* Local cache of wallet.
@@ -58,11 +60,11 @@ struct TransactionTablePriv
         qDebug() << "refreshWallet";
 #endif
         cachedWallet.clear();
-        CRITICAL_BLOCK(cs_mapWallet)
+        CRITICAL_BLOCK(wallet->cs_mapWallet)
         {
-            for(std::map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+            for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
-                cachedWallet.append(TransactionRecord::decomposeTransaction(it->second));
+                cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
             }
         }
     }
@@ -84,14 +86,14 @@ struct TransactionTablePriv
         QList<uint256> updated_sorted = updated;
         qSort(updated_sorted);
 
-        CRITICAL_BLOCK(cs_mapWallet)
+        CRITICAL_BLOCK(wallet->cs_mapWallet)
         {
             for(int update_idx = updated_sorted.size()-1; update_idx >= 0; --update_idx)
             {
                 const uint256 &hash = updated_sorted.at(update_idx);
                 /* Find transaction in wallet */
-                std::map<uint256, CWalletTx>::iterator mi = mapWallet.find(hash);
-                bool inWallet = mi != mapWallet.end();
+                std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
+                bool inWallet = mi != wallet->mapWallet.end();
                 /* Find bounds of this transaction in model */
                 QList<TransactionRecord>::iterator lower = qLowerBound(
                     cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
@@ -100,6 +102,7 @@ struct TransactionTablePriv
                 int lowerIndex = (lower - cachedWallet.begin());
                 int upperIndex = (upper - cachedWallet.begin());
 
+                // Determine if transaction is in model already
                 bool inModel = false;
                 if(lower != upper)
                 {
@@ -115,7 +118,7 @@ struct TransactionTablePriv
                 {
                     // Added -- insert at the right position
                     QList<TransactionRecord> toInsert =
-                            TransactionRecord::decomposeTransaction(mi->second);
+                            TransactionRecord::decomposeTransaction(wallet, mi->second);
                     if(!toInsert.isEmpty()) /* only if something to insert */
                     {
                         parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
@@ -159,11 +162,11 @@ struct TransactionTablePriv
             // simply re-use the cached status.
             if(rec->statusUpdateNeeded())
             {
-                CRITICAL_BLOCK(cs_mapWallet)
+                CRITICAL_BLOCK(wallet->cs_mapWallet)
                 {
-                    std::map<uint256, CWalletTx>::iterator mi = mapWallet.find(rec->hash);
+                    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
 
-                    if(mi != mapWallet.end())
+                    if(mi != wallet->mapWallet.end())
                     {
                         rec->updateStatus(mi->second);
                     }
@@ -179,12 +182,12 @@ struct TransactionTablePriv
 
     QString describe(TransactionRecord *rec)
     {
-        CRITICAL_BLOCK(cs_mapWallet)
+        CRITICAL_BLOCK(wallet->cs_mapWallet)
         {
-            std::map<uint256, CWalletTx>::iterator mi = mapWallet.find(rec->hash);
-            if(mi != mapWallet.end())
+            std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
+            if(mi != wallet->mapWallet.end())
             {
-                return QString::fromStdString(TransactionDesc::toHTML(mi->second));
+                return QString::fromStdString(TransactionDesc::toHTML(wallet, mi->second));
             }
         }
         return QString("");
@@ -202,9 +205,10 @@ static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter
     };
 
-TransactionTableModel::TransactionTableModel(QObject *parent):
+TransactionTableModel::TransactionTableModel(CWallet* wallet, QObject *parent):
         QAbstractTableModel(parent),
-        priv(new TransactionTablePriv(this))
+        wallet(wallet),
+        priv(new TransactionTablePriv(wallet, this))
 {
     columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
 
@@ -225,15 +229,15 @@ void TransactionTableModel::update()
     QList<uint256> updated;
 
     // Check if there are changes to wallet map
-    TRY_CRITICAL_BLOCK(cs_mapWallet)
+    TRY_CRITICAL_BLOCK(wallet->cs_mapWallet)
     {
-        if(!vWalletUpdated.empty())
+        if(!wallet->vWalletUpdated.empty())
         {
-            BOOST_FOREACH(uint256 hash, vWalletUpdated)
+            BOOST_FOREACH(uint256 hash, wallet->vWalletUpdated)
             {
                 updated.append(hash);
             }
-            vWalletUpdated.clear();
+            wallet->vWalletUpdated.clear();
         }
     }
 
@@ -302,13 +306,13 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
      address[0:12]... (label)
    otherwise just return address
  */
-std::string lookupAddress(const std::string &address)
+std::string TransactionTableModel::lookupAddress(const std::string &address) const
 {
     std::string description;
-    CRITICAL_BLOCK(cs_mapAddressBook)
+    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
     {
-        std::map<std::string, std::string>::iterator mi = mapAddressBook.find(address);
-        if (mi != mapAddressBook.end() && !(*mi).second.empty())
+        std::map<std::string, std::string>::iterator mi = wallet->mapAddressBook.find(address);
+        if (mi != wallet->mapAddressBook.end() && !(*mi).second.empty())
         {
             std::string label = (*mi).second;
             description += address.substr(0,12) + "... ";
