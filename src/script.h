@@ -586,6 +586,22 @@ public:
         while (GetOp(pc, opcode));
     }
 
+    void FindAndDelete(const std::vector<unsigned char> &vch)
+    {
+        if (vch.empty())
+            return;
+        iterator pc = begin();
+        iterator prev_pc = pc;
+        opcodetype opcode;
+        std::vector<unsigned char> vchPushValue;
+        while (GetOp(pc, opcode, vchPushValue)) {
+            if (vchPushValue == vch)
+                erase(prev_pc, pc);
+
+            prev_pc = pc;
+        }
+    }
+
 
     int GetSigOpCount() const
     {
