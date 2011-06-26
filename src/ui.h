@@ -262,7 +262,7 @@ public:
     wxString GetSelectedAddress();
     wxString GetSelectedSendingAddress();
     wxString GetSelectedReceivingAddress();
-    bool CheckIfMine(const std::string& strAddress, const std::string& strTitle);
+    bool CheckSendingAddress(const std::string& strAddress, const std::string& strTitle);
 };
 
 
