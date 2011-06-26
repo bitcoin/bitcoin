@@ -265,6 +265,7 @@ void BitcoinGUI::setTabsModel(QAbstractItemModel *transaction_model)
 
         QTableView *transaction_table = transactionViews.at(i);
         transaction_table->setModel(proxy_model);
+        transaction_table->setAlternatingRowColors(true);
         transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
         transaction_table->setSortingEnabled(true);
@@ -275,12 +276,12 @@ void BitcoinGUI::setTabsModel(QAbstractItemModel *transaction_model)
                 TransactionTableModel::Status, 23);
         transaction_table->horizontalHeader()->resizeSection(
                 TransactionTableModel::Date, 120);
+        transaction_table->horizontalHeader()->resizeSection(
+                TransactionTableModel::Type, 120);
         transaction_table->horizontalHeader()->setResizeMode(
-                TransactionTableModel::Description, QHeaderView::Stretch);
+                TransactionTableModel::ToAddress, QHeaderView::Stretch);
         transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Debit, 79);
-        transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Credit, 79);
+                TransactionTableModel::Amount, 79);
     }
 
     connect(transaction_model, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
@@ -457,23 +458,24 @@ void BitcoinGUI::transactionDetails(const QModelIndex& idx)
 void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int end)
 {
     TransactionTableModel *ttm = model->getTransactionTableModel();
-    qint64 credit = ttm->index(start, TransactionTableModel::Credit, parent)
+    qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
                     .data(Qt::EditRole).toULongLong();
-    qint64 debit = ttm->index(start, TransactionTableModel::Debit, parent)
-                    .data(Qt::EditRole).toULongLong();
-    if((credit+debit)>0 && !model->inInitialBlockDownload())
+    if(amount>0 && !model->inInitialBlockDownload())
     {
         // On incoming transaction, make an info balloon
         // Unless the initial block download is in progress, to prevent balloon-spam
         QString date = ttm->index(start, TransactionTableModel::Date, parent)
                         .data().toString();
-        QString description = ttm->index(start, TransactionTableModel::Description, parent)
+        QString type = ttm->index(start, TransactionTableModel::Type, parent)
+                        .data().toString();
+        QString address = ttm->index(start, TransactionTableModel::ToAddress, parent)
                         .data().toString();
 
         trayIcon->showMessage(tr("Incoming transaction"),
-                              "Date: " + date + "\n" +
-                              "Amount: " + QString::fromStdString(FormatMoney(credit+debit, true)) + "\n" +
-                              description,
+                              tr("Date: ") + date + "\n" +
+                              tr("Amount: ") + QString::fromStdString(FormatMoney(amount, true)) + "\n" +
+                              tr("Type: ") + type + "\n" +
+                              tr("Address: ") + address + "\n",
                               QSystemTrayIcon::Information);
     }
 }

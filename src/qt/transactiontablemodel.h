@@ -18,9 +18,9 @@ public:
     enum {
         Status = 0,
         Date = 1,
-        Description = 2,
-        Debit = 3,
-        Credit = 4
+        Type = 2,
+        ToAddress = 3,
+        Amount = 4
     } ColumnIndex;
 
     enum {
@@ -47,9 +47,9 @@ private:
     std::string lookupAddress(const std::string &address) const;
     QVariant formatTxStatus(const TransactionRecord *wtx) const;
     QVariant formatTxDate(const TransactionRecord *wtx) const;
-    QVariant formatTxDescription(const TransactionRecord *wtx) const;
-    QVariant formatTxDebit(const TransactionRecord *wtx) const;
-    QVariant formatTxCredit(const TransactionRecord *wtx) const;
+    QVariant formatTxType(const TransactionRecord *wtx) const;
+    QVariant formatTxToAddress(const TransactionRecord *wtx) const;
+    QVariant formatTxAmount(const TransactionRecord *wtx) const;
     QVariant formatTxDecoration(const TransactionRecord *wtx) const;
 
 private slots:

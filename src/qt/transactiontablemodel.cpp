@@ -18,6 +18,15 @@ const QString TransactionTableModel::Sent = "s";
 const QString TransactionTableModel::Received = "r";
 const QString TransactionTableModel::Other = "o";
 
+// Credit and Debit columns are right-aligned as they contain numbers
+static int column_alignments[] = {
+        Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignRight|Qt::AlignVCenter
+    };
+
 // Comparison operator for sort/binary search of model tx list
 struct TxLessThan
 {
@@ -195,22 +204,12 @@ struct TransactionTablePriv
 
 };
 
-// Credit and Debit columns are right-aligned as they contain numbers
-static int column_alignments[] = {
-        Qt::AlignLeft|Qt::AlignVCenter,
-        Qt::AlignLeft|Qt::AlignVCenter,
-        Qt::AlignLeft|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignLeft|Qt::AlignVCenter
-    };
-
 TransactionTableModel::TransactionTableModel(CWallet* wallet, QObject *parent):
         QAbstractTableModel(parent),
         wallet(wallet),
         priv(new TransactionTablePriv(wallet, this))
 {
-    columns << tr("Status") << tr("Date") << tr("Description") << tr("Debit") << tr("Credit");
+    columns << tr("Status") << tr("Date") << tr("Type") << tr("Address") << tr("Amount");
 
     priv->refreshWallet();
 
@@ -248,7 +247,7 @@ void TransactionTableModel::update()
         // Status (number of confirmations) and (possibly) description
         //  columns changed for all rows.
         emit dataChanged(index(0, Status), index(priv->size()-1, Status));
-        emit dataChanged(index(0, Description), index(priv->size()-1, Description));
+        emit dataChanged(index(0, ToAddress), index(priv->size()-1, ToAddress));
     }
 }
 
@@ -326,42 +325,70 @@ std::string TransactionTableModel::lookupAddress(const std::string &address) con
     return description;
 }
 
-QVariant TransactionTableModel::formatTxDescription(const TransactionRecord *wtx) const
+QVariant TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
 {
     QString description;
 
     switch(wtx->type)
     {
     case TransactionRecord::RecvWithAddress:
-        description = tr("Received with: ") + QString::fromStdString(lookupAddress(wtx->address));
+        description = tr("Received with");
         break;
     case TransactionRecord::RecvFromIP:
-        description = tr("Received from IP: ") + QString::fromStdString(wtx->address);
+        description = tr("Received from IP");
         break;
     case TransactionRecord::SendToAddress:
-        description = tr("Sent to: ") + QString::fromStdString(lookupAddress(wtx->address));
+        description = tr("Sent to");
         break;
     case TransactionRecord::SendToIP:
-        description = tr("Sent to IP: ") + QString::fromStdString(wtx->address);
+        description = tr("Sent to IP");
         break;
     case TransactionRecord::SendToSelf:
         description = tr("Payment to yourself");
         break;
     case TransactionRecord::Generated:
+        description = tr("Generated");
+        break;
+    }
+    return QVariant(description);
+}
+
+QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx) const
+{
+    QString description;
+
+    switch(wtx->type)
+    {
+    case TransactionRecord::RecvWithAddress:
+        description = QString::fromStdString(lookupAddress(wtx->address));
+        break;
+    case TransactionRecord::RecvFromIP:
+        description = QString::fromStdString(wtx->address);
+        break;
+    case TransactionRecord::SendToAddress:
+        description = QString::fromStdString(lookupAddress(wtx->address));
+        break;
+    case TransactionRecord::SendToIP:
+        description = QString::fromStdString(wtx->address);
+        break;
+    case TransactionRecord::SendToSelf:
+        description = QString();
+        break;
+    case TransactionRecord::Generated:
         switch(wtx->status.maturity)
         {
         case TransactionStatus::Immature:
-            description = tr("Generated (matures in %n more blocks)", "",
+            description = tr("(matures in %n more blocks)", "",
                            wtx->status.matures_in);
             break;
         case TransactionStatus::Mature:
-            description = tr("Generated");
+            description = QString();
             break;
         case TransactionStatus::MaturesWarning:
-            description = tr("Generated - Warning: This block was not received by any other nodes and will probably not be accepted!");
+            description = tr("(Warning: This block was not received by any other nodes and will probably not be accepted!)");
             break;
         case TransactionStatus::NotAccepted:
-            description = tr("Generated (not accepted)");
+            description = tr("(not accepted)");
             break;
         }
         break;
@@ -369,38 +396,14 @@ QVariant TransactionTableModel::formatTxDescription(const TransactionRecord *wtx
     return QVariant(description);
 }
 
-QVariant TransactionTableModel::formatTxDebit(const TransactionRecord *wtx) const
+QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx) const
 {
-    if(wtx->debit)
+    QString str = QString::fromStdString(FormatMoney(wtx->credit + wtx->debit));
+    if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)
     {
-        QString str = QString::fromStdString(FormatMoney(wtx->debit));
-        if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)
-        {
-            str = QString("[") + str + QString("]");
-        }
-        return QVariant(str);
+        str = QString("[") + str + QString("]");
     }
-    else
-    {
-        return QVariant();
-    }
-}
-
-QVariant TransactionTableModel::formatTxCredit(const TransactionRecord *wtx) const
-{
-    if(wtx->credit)
-    {
-        QString str = QString::fromStdString(FormatMoney(wtx->credit));
-        if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)
-        {
-            str = QString("[") + str + QString("]");
-        }
-        return QVariant(str);
-    }
-    else
-    {
-        return QVariant();
-    }
+    return QVariant(str);
 }
 
 QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx) const
@@ -449,12 +452,12 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         {
         case Date:
             return formatTxDate(rec);
-        case Description:
-            return formatTxDescription(rec);
-        case Debit:
-            return formatTxDebit(rec);
-        case Credit:
-            return formatTxCredit(rec);
+        case Type:
+            return formatTxType(rec);
+        case ToAddress:
+            return formatTxToAddress(rec);
+        case Amount:
+            return formatTxAmount(rec);
         }
     }
     else if(role == Qt::EditRole)
@@ -466,12 +469,12 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return QString::fromStdString(rec->status.sortKey);
         case Date:
             return rec->time;
-        case Description:
-            return formatTxDescription(rec);
-        case Debit:
-            return rec->debit;
-        case Credit:
-            return rec->credit;
+        case Type:
+            return formatTxType(rec);
+        case ToAddress:
+            return formatTxToAddress(rec);
+        case Amount:
+            return rec->credit + rec->debit;
         }
     }
     else if (role == Qt::ToolTipRole)
@@ -491,6 +494,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         if(!rec->status.confirmed)
         {
             return QColor(128, 128, 128);
+        }
+        if(index.column() == Amount && (rec->credit+rec->debit) < 0)
+        {
+            return QColor(255, 0, 0);
         }
     }
     else if (role == TypeRole)
@@ -535,12 +542,12 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Transaction status. Hover over this field to show number of confirmations.");
             case Date:
                 return tr("Date and time that the transaction was received.");
-            case Description:
-                return tr("Short description of the transaction.");
-            case Debit:
-                return tr("Amount removed from balance.");
-            case Credit:
-                return tr("Amount added to balance.");
+            case Type:
+                return tr("Type of transaction.");
+            case ToAddress:
+                return tr("Destination address of transaction.");
+            case Amount:
+                return tr("Amount removed from or added to balance.");
             }
         }
     }
