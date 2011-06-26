@@ -47,7 +47,6 @@ public:
     mutable CCriticalSection cs_mapAddressBook;
 
     std::vector<unsigned char> vchDefaultKey;
-    CKey keyUser;
 
     bool AddKey(const CKey& key);
     bool AddToWallet(const CWalletTx& wtxIn);
