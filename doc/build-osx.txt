@@ -1,4 +1,5 @@
 Copyright (c) 2010 Laszlo Hanyecz
+Copyright (c) 2011 Bitcoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -6,20 +7,26 @@ the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
 cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
 software written by Thomas Bernard.
 
-
 Mac OS X build instructions
-Laszlo Hanyecz (solar@heliacal.net)
+Written by
+    Laszlo Hanyecz <solar@heliacal.net>
+    Denis Roio <jaromil@dyne.org>
 
+Tested on 10.5 and 10.6 Intel.
 
-Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
+PPC is not supported because it's big-endian.
 
 All of the commands should be executed in Terminal.app.. it's in
 /Applications/Utilities
 
-You need to install XCode with all the options checked so that the compiler
-and everything is available in /usr not just /Developer
-I think it comes on the DVD but you can get the current version from
+You need to install XCode with all the options checked so that the
+compiler and everything is available in /usr not just /Developer I
+think it comes on the DVD but you can get the current version from
 http://developer.apple.com
+
+You also need to install MacPorts which provide the dependencies
+necessary to compile bitcoin. In particular you need to install ports
+for: git-core, boost, openssl and miniupnp, see http://www.macports.org
 
 
 1.  Pick a directory to work inside.. something like ~/bitcoin works.  The
@@ -41,15 +48,18 @@ name of the directory, for example /Users/james/bitcoin/deps for a user named
 2.  Check out the trunk version of the bitcoin code from subversion:
 
 cd ~/bitcoin
-svn checkout https://bitcoin.svn.sourceforge.net/svnroot/bitcoin/trunk
+git clone https://github.com/bitcoin/bitcoin.git trunk
 
-This will make ~/bitcoin/trunk for you with all the files from subversion. 
+This will make ~/bitcoin/trunk for you with all the files from github. 
 
 3.  Get and build the dependencies
 
 
 Boost
 -----
+
+Install the needed boost packages from MacPorts, or manually.
+Below instructions for manual installation.
 
 Download from http://www.boost.org/users/download/
 I'm assuming it ended up in ~/Downloads..
@@ -79,6 +89,9 @@ This is what my output looked like at the end:
 
 OpenSSL
 -------
+
+Install the needed boost packages from MacPorts, or manually.
+Below instructions for manual installation.
 
 Download from http://www.openssl.org/source/
 
@@ -120,7 +133,7 @@ lib/libcrypto.a (for architecture x86_64):	current ar archive random library
 miniupnpc
 ---------
 
-The process for miniupnpc (optional) is similar to that of OpenSSL.
+Miniupnpc has to be installed manually
 
 Download from http://miniupnp.tuxfamily.org/files/.
 
@@ -160,6 +173,9 @@ lib/libminiupnpc.a (for architecture x86_64):	current ar archive random library
 Berkeley DB
 -----------
 
+Install the needed boost packages from MacPorts, or manually.
+Below instructions for manual installation.
+
 Download from http://freshmeat.net/projects/berkeleydb/
 
 cd ~/bitcoin/deps
@@ -171,9 +187,7 @@ cd db-4.8.26/build_unix
 wxWidgets
 ---------
 
-This is the big one..
-
-Check it out from svn
+Check it out from svn since that is fixed to work at the moment
 
 cd ~/bitcoin/deps
 svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk
@@ -237,7 +251,16 @@ make install
 Now you should be able to build bitcoin
 
 cd ~/bitcoin/trunk
-make -f makefile.osx bitcoin
+
+./configure
+
+add relevant flags:
+	  --enable-gui=wx # Bitcoin with wxWidgets GUI
+	  --enable-upnp=on # use off to compile it in, but default off 
+see more options with ./configure --help including debug and profile
+
+then type
+make
 
 Before you can run it, you need to create an application bundle for Mac OS.
 Create the directories in terminal using mkdir and copy the files into place.
