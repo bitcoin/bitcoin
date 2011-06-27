@@ -152,26 +152,10 @@ public:
 //    bool BackupWallet(const std::string& strDest);
 
     // requires cs_mapAddressBook lock
-    bool SetAddressBookName(const std::string& strAddress, const std::string& strName)
-    {
-        if (mapAddressBook[strAddress] == strName)
-            return false;
-        mapAddressBook[strAddress] = strName;
-        if (!fFileBacked)
-            return false;
-        return CWalletDB(strWalletFile).WriteName(strAddress, strName);
-    }
+    bool SetAddressBookName(const std::string& strAddress, const std::string& strName);
 
     // requires cs_mapAddressBook lock
-    bool DelAddressBookName(const std::string& strAddress)
-    {
-        if (!mapAddressBook.count(strAddress))
-            return false;
-        mapAddressBook.erase(strAddress);
-        if (!fFileBacked)
-            return false;
-        return CWalletDB(strWalletFile).EraseName(strAddress);
-    }
+    bool DelAddressBookName(const std::string& strAddress);
 
     void UpdatedTransaction(const uint256 &hashTx)
     {
