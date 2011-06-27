@@ -804,6 +804,30 @@ Value sendfrom(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+int64 AddressAmountList(Object& list, vector<pair<CScript, int64> >& vecAA)
+{
+    set<string> setAddress;
+    int64 totalAmount = 0;
+    BOOST_FOREACH(const Pair& s, list)
+    {
+        uint160 hash160;
+        string strAddress = s.name_;
+
+        if (setAddress.count(strAddress))
+            throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+strAddress);
+        setAddress.insert(strAddress);
+
+        CScript scriptPubKey;
+        if (!scriptPubKey.SetBitcoinAddress(strAddress))
+            throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
+        int64 nAmount = AmountFromValue(s.value_);
+        totalAmount += nAmount;
+
+        vecAA.push_back(make_pair(scriptPubKey, nAmount));
+    }
+    return totalAmount;
+}
+
 Value sendmany(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
@@ -822,27 +846,8 @@ Value sendmany(const Array& params, bool fHelp)
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["comment"] = params[3].get_str();
 
-    set<string> setAddress;
     vector<pair<CScript, int64> > vecSend;
-
-    int64 totalAmount = 0;
-    BOOST_FOREACH(const Pair& s, sendTo)
-    {
-        uint160 hash160;
-        string strAddress = s.name_;
-
-        if (setAddress.count(strAddress))
-            throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+strAddress);
-        setAddress.insert(strAddress);
-
-        CScript scriptPubKey;
-        if (!scriptPubKey.SetBitcoinAddress(strAddress))
-            throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
-        int64 nAmount = AmountFromValue(s.value_); 
-        totalAmount += nAmount;
-
-        vecSend.push_back(make_pair(scriptPubKey, nAmount));
-    }
+    int64 totalAmount = AddressAmountList(sendTo, vecSend);
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
