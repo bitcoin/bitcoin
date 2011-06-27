@@ -1169,6 +1169,48 @@ Value listtransactions(const Array& params, bool fHelp)
     return ret;
 }
 
+Value listtransactionsaftertime(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+                            "listtransactionsaftertime [account] [time=0]\n"
+                            "Returns all transactions after time [time] for account [account].");
+    
+    string strAccount = "*";
+    if (params.size() > 0)
+        strAccount = params[0].get_str();
+    int64 time = 0;
+    if (params.size() > 1)
+        time = params[1].get_int64();
+    
+    Array ret;
+    CWalletDB walletdb(pwalletMain->strWalletFile);
+    
+    CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+    {
+        // Firs: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap:
+        typedef pair<CWalletTx*, CAccountingEntry*> TxPair;
+        typedef vector<TxPair > TxItems;
+        TxItems txItems;
+        
+        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+        {
+            CWalletTx* wtx = &((*it).second);
+            if (wtx->GetTxTime() > time)
+                ListTransactions(*wtx, strAccount, 0, true, ret);
+        }
+        list<CAccountingEntry> acentries;
+        walletdb.ListAccountCreditDebit(strAccount, acentries);
+        BOOST_FOREACH(CAccountingEntry& entry, acentries)
+        {
+            if (entry.nTime > time)
+                AcentryToJSON(entry, strAccount, ret);
+        }
+    }
+    
+    return ret;
+}
+
 Value listaccounts(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -1462,6 +1504,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("sendmany",              &sendmany),
     make_pair("gettransaction",        &gettransaction),
     make_pair("listtransactions",      &listtransactions),
+    make_pair("listtransactionsaftertime",      &listtransactionsaftertime),
     make_pair("getwork",               &getwork),
     make_pair("listaccounts",          &listaccounts),
     make_pair("settxfee",              &settxfee),
@@ -2118,6 +2161,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "listtransactionsaftertime"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "sendmany"               && n > 1)
         {
