@@ -265,27 +265,14 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
         nFee = nDebit - nValueOut;
     }
 
-    // Sent/received.  Standard client will never generate a send-to-multiple-recipients,
-    // but non-standard clients might (so return a list of address/amount pairs)
+    // Sent/received.
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
-        string address;
-        uint160 hash160;
-        vector<unsigned char> vchPubKey;
-        if (ExtractHash160(txout.scriptPubKey, hash160))
-            address = Hash160ToAddress(hash160);
-        else if (ExtractPubKey(txout.scriptPubKey, NULL, vchPubKey))
-            address = PubKeyToAddress(vchPubKey);
-        else
-        {
-            printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-                   this->GetHash().ToString().c_str());
-            address = " unknown ";
-        }
-
         // Don't report 'change' txouts
         if (nDebit > 0 && pwallet->IsChange(txout))
             continue;
+
+        string address = txout.GetAddress();
 
         if (nDebit > 0)
             listSent.push_back(make_pair(address, txout.nValue));
