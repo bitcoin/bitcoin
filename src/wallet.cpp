@@ -1004,6 +1004,28 @@ bool CWallet::DelAddressBookName(const string& strAddress)
     return CWalletDB(strWalletFile).EraseName(strAddress);
 }
 
+string CWallet::GetDefaultAddress()
+{
+    if (!fFileBacked)
+        return false;
+    std::vector<unsigned char> vchPubKey;
+    if (CWalletDB(strWalletFile, "r").ReadDefaultKey(vchPubKey))
+    {
+        return PubKeyToAddress(vchPubKey);
+    }
+    else
+        return "";
+}
+
+bool CWallet::SetDefaultAddress(const string& strAddress)
+{
+    uint160 hash160;
+    if (!AddressToHash160(strAddress, hash160))
+        return false;
+    if (!mapPubKeys.count(hash160))
+        return false;
+    return CWalletDB(strWalletFile).WriteDefaultKey(mapPubKeys[hash160]);
+}
 
 void CWallet::PrintWallet(const CBlock& block)
 {

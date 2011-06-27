@@ -157,6 +157,9 @@ public:
     // requires cs_mapAddressBook lock
     bool DelAddressBookName(const std::string& strAddress);
 
+    std::string GetDefaultAddress();
+    bool SetDefaultAddress(const std::string& strAddress);
+
     void UpdatedTransaction(const uint256 &hashTx)
     {
         CRITICAL_BLOCK(cs_mapWallet)
