@@ -720,6 +720,106 @@ bool CWallet::SelectCoins(int64 nTargetValue, set<pair<const CWalletTx*,unsigned
 
 
 
+bool CWallet::CreateExactTransaction(const vector<uint256>& vecTxIn, const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64 nFee)
+{
+    int64 nValue = 0;
+    BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
+    {
+        if (nValue < 0)
+            return false;
+        nValue += s.second;
+    }
+    if (vecSend.empty() || nValue < 0)
+        return false;
+    if (vecTxIn.empty())
+        return false;
+
+    wtxNew.pwallet = this;
+
+    CRITICAL_BLOCK(cs_main)
+    {
+        // txdb must be opened before the mapWallet lock
+        CTxDB txdb("r");
+        CRITICAL_BLOCK(cs_mapWallet)
+        {
+            wtxNew.vin.clear();
+            wtxNew.vout.clear();
+            wtxNew.fFromMe = true;
+
+            int64 nValueIn = 0;
+            double dPriority = 0;
+            set<pair<const CWalletTx*,unsigned int> > setCoins;
+
+            BOOST_FOREACH (const uint256& hash, vecTxIn)
+            {
+                const CWalletTx *pcoin = &mapWallet[hash];
+
+                for (int i = 0; i < pcoin->vout.size(); i++)
+                {
+                    if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
+                        continue;
+
+                    int64 nValue = pcoin->vout[i].nValue;
+                    if (nValue <= 0)
+                        continue;
+                    string address = pcoin->vout[i].GetAddress();
+                    string account = mapAddressBook[address];
+
+                    printf("CreateExactTransaction: addr %s acct %s amount %lld\n", address.c_str(), account.c_str(), nValue);
+                    if (account != wtxNew.strFromAccount)
+                        continue;
+                    setCoins.insert(make_pair(pcoin, i));
+                    nValueIn += nValue;
+                    dPriority += (double)nValue * pcoin->GetDepthInMainChain();
+                }
+            }
+
+            // vouts to the payees
+            BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
+                wtxNew.vout.push_back(CTxOut(s.second, s.first));
+
+            // Fill vin
+            BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+                wtxNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
+
+            // Sign
+            int nIn = 0;
+            BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+                if (!SignSignature(*this, *coin.first, wtxNew, nIn++))
+                    return false;
+
+            // Limit size
+            unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK);
+            if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
+                return false;
+            dPriority /= nBytes;
+
+            // Check that enough fee is included
+            int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+            bool fAllowFree = CTransaction::AllowFree(dPriority);
+            int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+            if (nFee < max(nPayFee, nMinFee))
+            {
+                printf("CreateExactTransaction: Dangerously low fee %lld < max(%lld,%lld)\n", nFee, nPayFee, nMinFee);
+                /* XXX: We hope the user knows what is she doing. */
+                // return false;
+            }
+
+            // Credit equals debit?
+            int64 nTotalValue = nValue + nFee;
+            if (nTotalValue != nValueIn) {
+                printf("CreateExactTransaction: Outgoing value %lld != incoming value %lld\n", nTotalValue, nValueIn);
+                return false;
+            }
+
+            // Fill vtxPrev by copying from previous transactions vtxPrev
+            wtxNew.AddSupportingTransactions(txdb);
+            wtxNew.fTimeReceivedIsTxTime = true;
+        }
+    }
+    return true;
+}
+
 bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet)
 {
     int64 nValue = 0;
