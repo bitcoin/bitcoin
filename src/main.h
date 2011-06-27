@@ -338,6 +338,22 @@ public:
         scriptPubKey = scriptPubKeyIn;
     }
 
+    std::string GetAddress() const
+    {
+        uint160 hash160;
+        std::vector<unsigned char> vchPubKey;
+        if (ExtractHash160(scriptPubKey, hash160))
+            return Hash160ToAddress(hash160);
+        else if (ExtractPubKey(scriptPubKey, NULL, vchPubKey))
+            return PubKeyToAddress(vchPubKey);
+        else
+        {
+            printf("CTxOut::GetAddress: Unknown transaction type found: %s\n",
+                   scriptPubKey.ToString().c_str());
+            return " unknown ";
+        }
+    }
+
     IMPLEMENT_SERIALIZE
     (
         READWRITE(nValue);

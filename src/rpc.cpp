@@ -804,6 +804,30 @@ Value sendfrom(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+int64 AddressAmountList(Object& list, vector<pair<CScript, int64> >& vecAA)
+{
+    set<string> setAddress;
+    int64 totalAmount = 0;
+    BOOST_FOREACH(const Pair& s, list)
+    {
+        uint160 hash160;
+        string strAddress = s.name_;
+
+        if (setAddress.count(strAddress))
+            throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+strAddress);
+        setAddress.insert(strAddress);
+
+        CScript scriptPubKey;
+        if (!scriptPubKey.SetBitcoinAddress(strAddress))
+            throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
+        int64 nAmount = AmountFromValue(s.value_);
+        totalAmount += nAmount;
+
+        vecAA.push_back(make_pair(scriptPubKey, nAmount));
+    }
+    return totalAmount;
+}
+
 Value sendmany(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
@@ -822,27 +846,8 @@ Value sendmany(const Array& params, bool fHelp)
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["comment"] = params[3].get_str();
 
-    set<string> setAddress;
     vector<pair<CScript, int64> > vecSend;
-
-    int64 totalAmount = 0;
-    BOOST_FOREACH(const Pair& s, sendTo)
-    {
-        uint160 hash160;
-        string strAddress = s.name_;
-
-        if (setAddress.count(strAddress))
-            throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+strAddress);
-        setAddress.insert(strAddress);
-
-        CScript scriptPubKey;
-        if (!scriptPubKey.SetBitcoinAddress(strAddress))
-            throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
-        int64 nAmount = AmountFromValue(s.value_); 
-        totalAmount += nAmount;
-
-        vecSend.push_back(make_pair(scriptPubKey, nAmount));
-    }
+    int64 totalAmount = AddressAmountList(sendTo, vecSend);
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
@@ -862,6 +867,56 @@ Value sendmany(const Array& params, bool fHelp)
                 throw JSONRPCError(-6, "Insufficient funds");
             throw JSONRPCError(-4, "Transaction creation failed");
         }
+        if (!pwalletMain->CommitTransaction(wtx, keyChange))
+            throw JSONRPCError(-4, "Transaction commit failed");
+    }
+
+    return wtx.GetHash().GetHex();
+}
+
+Value sendexact(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 4 || params.size() > 5)
+        throw runtime_error(
+            "sendexact <fromaccount> [transaction,...] {dstaddress:amount,...} <txfeeamount> [comment]\n"
+            "Claim all bitcoins received for <fromaccount> within the given list\n"
+            "of transactions and distribute them into given list of addresses while\n"
+            "paying the specified tx fee. You can use listtransactions and\n"
+            "gettransaction to pick transactions to source bitcoins from. You must\n"
+            "spend all coins from these transactions.\n"
+            "Amounts are double-precision floating point numbers.");
+
+    string strAccount = AccountFromValue(params[0]);
+    Array listTx = params[1].get_array();
+    Object sendTo = params[2].get_obj();
+    int64 nTxFee = 0.0;
+    if (params[3].get_real() != 0.0)
+        nTxFee = AmountFromValue(params[3]);        // rejects 0.0 amounts
+
+    CWalletTx wtx;
+    wtx.strFromAccount = strAccount;
+    if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
+        wtx.mapValue["comment"] = params[4].get_str();
+
+    set<string> setTx;
+    vector<uint256> vecTx;
+    BOOST_FOREACH(const Value& s, listTx)
+    {
+        uint256 hash;
+        hash.SetHex(s.get_str());
+        vecTx.push_back(hash);
+    }
+
+    vector<pair<CScript, int64> > vecSend;
+    int64 totalAmount = AddressAmountList(sendTo, vecSend);
+
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+    {
+        CReserveKey keyChange(pwalletMain);
+        bool fCreated = pwalletMain->CreateExactTransaction(vecTx, vecSend, wtx, keyChange, nTxFee);
+        if (!fCreated)
+            throw JSONRPCError(-4, "Transaction creation failed");
         if (!pwalletMain->CommitTransaction(wtx, keyChange))
             throw JSONRPCError(-4, "Transaction commit failed");
     }
@@ -1460,6 +1515,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("move",                  &movecmd),
     make_pair("sendfrom",              &sendfrom),
     make_pair("sendmany",              &sendmany),
+    make_pair("sendexact",             &sendexact),
     make_pair("gettransaction",        &gettransaction),
     make_pair("listtransactions",      &listtransactions),
     make_pair("getwork",               &getwork),
@@ -2127,7 +2183,21 @@ int CommandLineRPC(int argc, char *argv[])
                 throw runtime_error("type mismatch");
             params[1] = v.get_obj();
         }
-        if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "sendmany"               && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "sendexact"              && n > 2)
+        {
+            string s = params[1].get_str();
+            Value v;
+            if (!read_string(s, v) || v.type() != array_type)
+                throw runtime_error("type mismatch");
+            params[1] = v.get_array();
+
+            s = params[2].get_str();
+            if (!read_string(s, v) || v.type() != obj_type)
+                throw runtime_error("type mismatch");
+            params[2] = v.get_obj();
+        }
+        if (strMethod == "sendexact"              && n > 3) ConvertTo<double>(params[3]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);
