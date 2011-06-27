@@ -74,9 +74,15 @@ obj/nogui/%.o: %.cpp $(HEADERS)
 bitcoind: $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
+obj/test/%.o: test/%.cpp $(HEADERS)
+	$(CXX) -c $(CFLAGS) -o $@ $<
+
+test_bitcoin: obj/test/test_bitcoin.o
+	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
 
 clean:
-	-rm -f bitcoin bitcoind
+	-rm -f bitcoin bitcoind test_bitcoin
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
+	-rm -f obj/test/*.o
 	-rm -f cryptopp/obj/*.o

@@ -81,9 +81,17 @@ obj/nogui/%.o: %.cpp $(HEADERS)
 bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
+obj/test/%.o: obj/test/%.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
+
+test_bitcoin: obj/test/test_bitcoin.o
+	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
+	-del /Q bitcoin bitcoind test_bitcoin
 	-del /Q obj\*
 	-del /Q obj\nogui\*
+	-del /Q obj\test\*
 	-del /Q cryptopp\obj\*
+	-del /Q test\*.o
 	-del /Q headers.h.gch
