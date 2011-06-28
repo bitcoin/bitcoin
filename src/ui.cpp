@@ -365,6 +365,11 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     if (CWalletDB(pwalletMain->strWalletFile,"r").ReadDefaultKey(vchPubKey))
         m_textCtrlAddress->SetValue(PubKeyToAddress(vchPubKey));
 
+    if (pwalletMain->IsCrypted())
+        m_menuOptions->Remove(m_menuOptionsEncryptWallet);
+    else
+        m_menuOptions->Remove(m_menuOptionsChangeWalletPassphrase);
+
     // Fill listctrl with wallet transactions
     RefreshListCtrl();
 }
@@ -1202,6 +1207,9 @@ void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
     }
     fill(strWalletPass.begin(), strWalletPass.end(), '\0');
     wxMessageBox(_("Wallet Encrypted.\nRemember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."), "Bitcoin");
+
+    m_menuOptions->Remove(m_menuOptionsEncryptWallet);
+    m_menuOptions->Insert(m_menuOptions->GetMenuItemCount() - 1, m_menuOptionsChangeWalletPassphrase);
 }
 
 void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
