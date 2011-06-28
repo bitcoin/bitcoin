@@ -15,6 +15,7 @@
 #include "optionsmodel.h"
 #include "transactiondescdialog.h"
 #include "addresstablemodel.h"
+#include "transactionview.h"
 
 #include "headers.h"
 
@@ -29,12 +30,9 @@
 #include <QToolBar>
 #include <QStatusBar>
 #include <QLabel>
-#include <QTableView>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QHeaderView>
 #include <QLocale>
-#include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
 #include <QProgressBar>
@@ -104,7 +102,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     vbox->addLayout(hbox_address);
     vbox->addLayout(hbox_balance);
 
-    vbox->addWidget(createTabs());
+    transactionView = new TransactionView(this);
+    connect(transactionView, SIGNAL(doubleClicked(const QModelIndex&)), this, SLOT(transactionDetails(const QModelIndex&)));
+    vbox->addWidget(transactionView);
 
     QWidget *centralwidget = new QWidget(this);
     centralwidget->setLayout(vbox);
@@ -198,7 +198,11 @@ void BitcoinGUI::setModel(ClientModel *model)
     connect(model, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));    
 
     // Put transaction list in tabs
-    setTabsModel(model->getTransactionTableModel());
+    transactionView->setModel(model->getTransactionTableModel());
+
+    // Balloon popup for new transaction
+    connect(model->getTransactionTableModel(), SIGNAL(rowsInserted(const QModelIndex &, int, int)),
+            this, SLOT(incomingTransaction(const QModelIndex &, int, int)));
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -225,69 +229,6 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
         // Doubleclick on system tray icon triggers "open bitcoin"
         openBitcoin->trigger();
     }
-}
-
-QWidget *BitcoinGUI::createTabs()
-{
-    QStringList tab_labels;
-    tab_labels  << tr("All transactions")
-                << tr("Sent/Received")
-                << tr("Sent")
-                << tr("Received");
-
-    QTabWidget *tabs = new QTabWidget(this);
-    for(int i = 0; i < tab_labels.size(); ++i)
-    {
-        QTableView *view = new QTableView(this);
-        tabs->addTab(view, tab_labels.at(i));
-
-        connect(view, SIGNAL(doubleClicked(const QModelIndex&)), this, SLOT(transactionDetails(const QModelIndex&)));
-        transactionViews.append(view);
-    }
-
-    return tabs;
-}
-
-void BitcoinGUI::setTabsModel(QAbstractItemModel *transaction_model)
-{
-    QStringList tab_filters;
-    tab_filters << "^."
-            << "^["+TransactionTableModel::Sent+TransactionTableModel::Received+"]"
-            << "^["+TransactionTableModel::Sent+"]"
-            << "^["+TransactionTableModel::Received+"]";
-
-    for(int i = 0; i < transactionViews.size(); ++i)
-    {
-        QSortFilterProxyModel *proxy_model = new QSortFilterProxyModel(this);
-        proxy_model->setSourceModel(transaction_model);
-        proxy_model->setDynamicSortFilter(true);
-        proxy_model->setFilterRole(TransactionTableModel::TypeRole);
-        proxy_model->setFilterRegExp(QRegExp(tab_filters.at(i)));
-        proxy_model->setSortRole(Qt::EditRole);
-
-        QTableView *transaction_table = transactionViews.at(i);
-        transaction_table->setModel(proxy_model);
-        transaction_table->setAlternatingRowColors(true);
-        transaction_table->setSelectionBehavior(QAbstractItemView::SelectRows);
-        transaction_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
-        transaction_table->setSortingEnabled(true);
-        transaction_table->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
-        transaction_table->verticalHeader()->hide();
-
-        transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Status, 23);
-        transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Date, 120);
-        transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Type, 120);
-        transaction_table->horizontalHeader()->setResizeMode(
-                TransactionTableModel::ToAddress, QHeaderView::Stretch);
-        transaction_table->horizontalHeader()->resizeSection(
-                TransactionTableModel::Amount, 79);
-    }
-
-    connect(transaction_model, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
-            this, SLOT(incomingTransaction(const QModelIndex &, int, int)));
 }
 
 void BitcoinGUI::sendcoinsClicked()

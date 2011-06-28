@@ -6,6 +6,7 @@
 
 class TransactionTableModel;
 class ClientModel;
+class TransactionView;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -56,12 +57,11 @@ private:
     QAction *openBitcoin;
 
     QSystemTrayIcon *trayIcon;
-    QList<QTableView *> transactionViews;
+    TransactionView *transactionView;
 
     void createActions();
     QWidget *createTabs();
     void createTrayIcon();
-    void setTabsModel(QAbstractItemModel *transaction_model);
 
 public slots:
     void setBalance(qint64 balance);

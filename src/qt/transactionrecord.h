@@ -1,11 +1,12 @@
 #ifndef TRANSACTIONRECORD_H
 #define TRANSACTIONRECORD_H
 
-#include "main.h"
+#include "uint256.h"
 
 #include <QList>
 
 class CWallet;
+class CWalletTx;
 
 class TransactionStatus
 {

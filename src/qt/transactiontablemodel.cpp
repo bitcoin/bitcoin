@@ -12,6 +12,7 @@
 #include <QColor>
 #include <QTimer>
 #include <QIcon>
+#include <QDateTime>
 #include <QtAlgorithms>
 
 const QString TransactionTableModel::Sent = "s";
@@ -301,26 +302,37 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     }
 }
 
+/* Look up label for address in address book, if not found return empty string.
+   This should really move to the wallet class.
+ */
+QString TransactionTableModel::labelForAddress(const std::string &address) const
+{
+    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    {
+        std::map<std::string, std::string>::iterator mi = wallet->mapAddressBook.find(address);
+        if (mi != wallet->mapAddressBook.end())
+        {
+            return QString::fromStdString(mi->second);
+        }
+    }
+    return QString();
+}
+
 /* Look up address in address book, if found return
      address[0:12]... (label)
    otherwise just return address
  */
-std::string TransactionTableModel::lookupAddress(const std::string &address) const
+QString TransactionTableModel::lookupAddress(const std::string &address) const
 {
-    std::string description;
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    QString label = labelForAddress(address);
+    QString description;
+    if(label.isEmpty())
     {
-        std::map<std::string, std::string>::iterator mi = wallet->mapAddressBook.find(address);
-        if (mi != wallet->mapAddressBook.end() && !(*mi).second.empty())
-        {
-            std::string label = (*mi).second;
-            description += address.substr(0,12) + "... ";
-            description += "(" + label + ")";
-        }
-        else
-        {
-            description += address;
-        }
+        description = QString::fromStdString(address);
+    }
+    else
+    {
+        description = QString::fromStdString(address.substr(0,12)) + QString("... (") + label + QString(")");
     }
     return description;
 }
@@ -360,13 +372,13 @@ QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx) 
     switch(wtx->type)
     {
     case TransactionRecord::RecvWithAddress:
-        description = QString::fromStdString(lookupAddress(wtx->address));
+        description = lookupAddress(wtx->address);
         break;
     case TransactionRecord::RecvFromIP:
         description = QString::fromStdString(wtx->address);
         break;
     case TransactionRecord::SendToAddress:
-        description = QString::fromStdString(lookupAddress(wtx->address));
+        description = lookupAddress(wtx->address);
         break;
     case TransactionRecord::SendToIP:
         description = QString::fromStdString(wtx->address);
@@ -502,23 +514,27 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     }
     else if (role == TypeRole)
     {
-        /* Role for filtering tabs by type */
-        switch(rec->type)
-        {
-        case TransactionRecord::RecvWithAddress:
-        case TransactionRecord::RecvFromIP:
-            return TransactionTableModel::Received;
-        case TransactionRecord::SendToAddress:
-        case TransactionRecord::SendToIP:
-        case TransactionRecord::SendToSelf:
-            return TransactionTableModel::Sent;
-        default:
-            return TransactionTableModel::Other;
-        }
+        return rec->type;
+    }
+    else if (role == DateRole)
+    {
+        return QDateTime::fromTime_t(static_cast<uint>(rec->time));
     }
     else if (role == LongDescriptionRole)
     {
         return priv->describe(rec);
+    }
+    else if (role == AddressRole)
+    {
+        return QString::fromStdString(rec->address);
+    }
+    else if (role == LabelRole)
+    {
+        return labelForAddress(rec->address);
+    }
+    else if (role == AbsoluteAmountRole)
+    {
+        return llabs(rec->credit + rec->debit);
     }
     return QVariant();
 }

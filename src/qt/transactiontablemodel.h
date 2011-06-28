@@ -23,9 +23,20 @@ public:
         Amount = 4
     } ColumnIndex;
 
+    // Roles to get specific information from a transaction row
     enum {
+        // Type of transaction
         TypeRole = Qt::UserRole,
-        LongDescriptionRole = Qt::UserRole+1
+        // Date and time this transaction was created
+        DateRole,
+        // Long description (HTML format)
+        LongDescriptionRole,
+        // Address of transaction
+        AddressRole,
+        // Label of address related to transaction
+        LabelRole,
+        // Absolute net amount of transaction
+        AbsoluteAmountRole
     } RoleIndex;
 
     /* TypeRole values */
@@ -44,7 +55,8 @@ private:
     QStringList columns;
     TransactionTablePriv *priv;
 
-    std::string lookupAddress(const std::string &address) const;
+    QString labelForAddress(const std::string &address) const;
+    QString lookupAddress(const std::string &address) const;
     QVariant formatTxStatus(const TransactionRecord *wtx) const;
     QVariant formatTxDate(const TransactionRecord *wtx) const;
     QVariant formatTxType(const TransactionRecord *wtx) const;

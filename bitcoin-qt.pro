@@ -72,7 +72,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/transactiondescdialog.h \
     src/qt/bitcoinamountfield.h \
     src/wallet.h \
-    src/keystore.h
+    src/keystore.h \
+    src/qt/transactionfilterproxy.h \
+    src/qt/transactionview.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -105,7 +107,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/bitcoinstrings.cpp \
     src/qt/bitcoinamountfield.cpp \
     src/wallet.cpp \
-    src/keystore.cpp
+    src/keystore.cpp \
+    src/qt/transactionfilterproxy.cpp \
+    src/qt/transactionview.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

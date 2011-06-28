@@ -12,9 +12,6 @@
 #include <QLocale>
 #include <QDebug>
 
-#include "util.h"
-#include "base58.h"
-
 SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
@@ -49,7 +46,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     QString label;
     qint64 payAmountParsed;
 
-    valid = ParseMoney(payAmount.toStdString(), payAmountParsed);
+    valid = GUIUtil::parseMoney(payAmount, &payAmountParsed);
 
     if(!valid)
     {
@@ -88,7 +85,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     case ClientModel::AmountWithFeeExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Total exceeds your balance when the %1 transaction fee is included").
-                arg(QString::fromStdString(FormatMoney(model->getOptionsModel()->getTransactionFee()))),
+            arg(GUIUtil::formatMoney(model->getOptionsModel()->getTransactionFee())),
             QMessageBox::Ok, QMessageBox::Ok);
         ui->payAmount->setFocus();
         break;

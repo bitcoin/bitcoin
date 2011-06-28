@@ -1,0 +1,53 @@
+#ifndef TRANSACTIONVIEW_H
+#define TRANSACTIONVIEW_H
+
+#include <QWidget>
+
+class TransactionTableModel;
+class TransactionFilterProxy;
+
+QT_BEGIN_NAMESPACE
+class QTableView;
+class QComboBox;
+class QLineEdit;
+QT_END_NAMESPACE
+
+class TransactionView : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit TransactionView(QWidget *parent = 0);
+
+    void setModel(TransactionTableModel *model);
+
+    enum DateEnum
+    {
+        All,
+        Today,
+        ThisWeek,
+        ThisMonth,
+        ThisYear,
+        Range
+    };
+
+private:
+    TransactionTableModel *model;
+    TransactionFilterProxy *transactionProxyModel;
+    QTableView *transactionView;
+
+    QComboBox *dateWidget;
+    QComboBox *typeWidget;
+    QLineEdit *addressWidget;
+    QLineEdit *amountWidget;
+
+signals:
+
+public slots:
+    void chooseDate(int idx);
+    void chooseType(int idx);
+    void changedPrefix(const QString &prefix);
+    void changedAmount(const QString &amount);
+
+};
+
+#endif // TRANSACTIONVIEW_H
