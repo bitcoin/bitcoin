@@ -149,13 +149,10 @@ public:
 
     bool LoadWallet(bool& fFirstRunRet);
 //    bool BackupWallet(const std::string& strDest);
-
-    bool SetAddressBookName(const std::string& strAddress, const std::string& strName)
-    {
-        if (!fFileBacked)
-            return false;
-        return CWalletDB(strWalletFile).WriteName(strAddress, strName);
-    }
+    bool SetAddressBookName(const std::string& strAddress, const std::string& strName);
+    bool EraseAddressBookName(const std::string& strAddress);
+    std::string GetDefaultAddress();
+    bool SetDefaultAddress(const std::string& strAddress);
 
     void UpdatedTransaction(const uint256 &hashTx)
     {
