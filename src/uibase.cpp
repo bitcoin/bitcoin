@@ -32,11 +32,9 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_menuOptionsChangeYourAddress = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( _("&Your Receiving Addresses...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsChangeYourAddress );
 	
-	wxMenuItem* m_menuOptionsEncryptWallet;
 	m_menuOptionsEncryptWallet = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( _("&Encrypt Wallet...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsEncryptWallet );
 	
-	wxMenuItem* m_menuOptionsChangeWalletPassphrase;
 	m_menuOptionsChangeWalletPassphrase = new wxMenuItem( m_menuOptions, wxID_ANY, wxString( _("&Change Wallet Encryption Passphrase...") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menuOptions->Append( m_menuOptionsChangeWalletPassphrase );
 	

@@ -117,6 +117,8 @@ class CMainFrameBase : public wxFrame
 	
 	public:
 		wxMenu* m_menuOptions;
+		wxMenuItem* m_menuOptionsEncryptWallet;
+		wxMenuItem* m_menuOptionsChangeWalletPassphrase;
 		wxStatusBar* m_statusBar;
 		wxTextCtrl* m_textCtrlAddress;
 		wxListCtrl* m_listCtrlAll;

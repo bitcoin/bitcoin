@@ -171,7 +171,7 @@
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">&amp;Encrypt Wallet...</property>
                         <property name="name">m_menuOptionsEncryptWallet</property>
-                        <property name="permission">none</property>
+                        <property name="permission">public</property>
                         <property name="shortcut"></property>
                         <property name="unchecked_bitmap"></property>
                         <event name="OnMenuSelection">OnMenuOptionsEncryptWallet</event>
@@ -186,7 +186,7 @@
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">&amp;Change Wallet Encryption Passphrase...</property>
                         <property name="name">m_menuOptionsChangeWalletPassphrase</property>
-                        <property name="permission">none</property>
+                        <property name="permission">public</property>
                         <property name="shortcut"></property>
                         <property name="unchecked_bitmap"></property>
                         <event name="OnMenuSelection">OnMenuOptionsChangeWalletPassphrase</event>
