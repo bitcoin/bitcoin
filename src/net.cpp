@@ -159,7 +159,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
         else
 #endif
         {
-            printf("connect() failed: %s\n",WSAGetLastError());
+            printf("connect() failed: %i\n",WSAGetLastError());
             closesocket(hSocket);
             return false;
         }
