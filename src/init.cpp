@@ -80,6 +80,7 @@ void HandleSIGTERM(int)
 // Start
 //
 #ifndef GUI
+#ifndef NOMAIN
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -90,6 +91,7 @@ int main(int argc, char* argv[])
 
     return 1;
 }
+#endif
 #endif
 
 bool AppInit(int argc, char* argv[])

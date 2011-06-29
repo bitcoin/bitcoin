@@ -532,13 +532,13 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-Value sendescrow(const Array& params, bool fHelp)
+Value sendmultisign(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendescrow <escrowaddrs> <amount> [comment] [comment-to]\n"
-            "<escrowaddrs> is of the form <n>,<addr>,<addr...>\n"
-            "where <n> of the addresses must sign to redeem the escrow\n"
+            "sendmultisign <multisignaddrs> <amount> [comment] [comment-to]\n"
+            "<multisignaddrs> is of the form <n>,<addr>,<addr...>\n"
+            "where <n> of the addresses must sign to redeem the multisign\n"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             );
 
@@ -556,7 +556,7 @@ Value sendescrow(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     {
-        string strError = pwalletMain->SendMoneyToEscrow(strAddress, nAmount, wtx);
+        string strError = pwalletMain->SendMoneyToMultisign(strAddress, nAmount, wtx);
         if (strError != "")
             throw JSONRPCError(-4, strError);
     }
@@ -564,12 +564,12 @@ Value sendescrow(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-Value redeemescrow(const Array& params, bool fHelp)
+Value redeemmultisign(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-            "redeemescrow <inputtx> <addr> [<txhex>]\n"
-            "where <inputtx> is the escrow transaction ID\n"
+            "redeemmultisign <inputtx> <addr> [<txhex>]\n"
+            "where <inputtx> is the multisign transaction ID\n"
             "<addr> is the destination bitcoin address\n"
             "<txhex> is a partially signed transaction\n"
             "the output is either ['partial', <txhex>] if more signatures are needed\n"
@@ -592,7 +592,7 @@ Value redeemescrow(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     {
-        pair<string,string> result = pwalletMain->SendMoneyFromEscrow(strAddress, nInputTx, strPartialTx, wtx);
+        pair<string,string> result = pwalletMain->SendMoneyFromMultisign(strAddress, nInputTx, strPartialTx, wtx);
         if (result.first == "error")
             throw JSONRPCError(-4, result.second);
         Array ret;
@@ -1535,8 +1535,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getwork",               &getwork),
     make_pair("listaccounts",          &listaccounts),
     make_pair("settxfee",              &settxfee),
-    make_pair("sendescrow",            &sendescrow),
-    make_pair("redeemescrow",          &redeemescrow),
+    make_pair("sendmultisign",         &sendmultisign),
+    make_pair("redeemmultisign",       &redeemmultisign),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2170,7 +2170,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "sendescrow"             && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "sendmultisign"             && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
