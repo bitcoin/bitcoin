@@ -4,6 +4,9 @@
 
 CXX=g++
 
+INCLUDEPATHS= \
+ -I.
+
 WXINCLUDEPATHS=$(shell wx-config --cxxflags)
 
 WXLIBS=$(shell wx-config --libs)
@@ -37,7 +40,7 @@ LIBS+= \
 
 
 DEBUGFLAGS=-g -D__WXDEBUG__
-CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS)
+CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h init.h
 
@@ -55,6 +58,10 @@ OBJS= \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
+TESTS= \
+    obj/test/test_bitcoin.o \
+    obj/test/uint160_tests.o \
+    obj/test/uint256_tests.o
 
 all: bitcoin
 
@@ -76,10 +83,10 @@ bitcoind: $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 obj/test/%.o: test/%.cpp $(HEADERS)
-	$(CXX) -c $(CFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-test_bitcoin: obj/test/test_bitcoin.o
-	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
+test_bitcoin: $(TESTS) $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
+	$(CXX) $(CXXFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
 
 clean:
 	-rm -f bitcoin bitcoind test_bitcoin

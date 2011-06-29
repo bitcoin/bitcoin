@@ -1,4 +1,6 @@
-#include "../uint256.h"
+#include <boost/test/unit_test.hpp>
+
+#include "uint256.h"
 
 BOOST_AUTO_TEST_SUITE(uint160_tests)
 
