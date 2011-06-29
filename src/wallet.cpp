@@ -272,10 +272,13 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
         string address;
         uint160 hash160;
         vector<unsigned char> vchPubKey;
+        extern bool ExtractEscrowAddress(const CScript& scriptPubKey, string& address);
         if (ExtractHash160(txout.scriptPubKey, hash160))
             address = Hash160ToAddress(hash160);
         else if (ExtractPubKey(txout.scriptPubKey, NULL, vchPubKey))
             address = PubKeyToAddress(vchPubKey);
+        else if (ExtractEscrowAddress(txout.scriptPubKey, address))
+        	;
         else
         {
             printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
