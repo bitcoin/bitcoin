@@ -1,3 +1,9 @@
+* update (commit) version in sources
+
+* update (commit) version in OSX app bundle
+
+  * CFBundleShortVersionString should have value like 0.3.23
+  * CFBundleVersion should have value like 323
 
 * tag version in git
 
