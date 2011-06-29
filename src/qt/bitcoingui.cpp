@@ -344,7 +344,7 @@ void BitcoinGUI::copyClipboardClicked()
 
 void BitcoinGUI::setBalance(qint64 balance)
 {
-    labelBalance->setText(QString::fromStdString(FormatMoney(balance)));
+    labelBalance->setText(QString::fromStdString(FormatMoney(balance)) + QString(" BTC"));
 }
 
 void BitcoinGUI::setAddress(const QString &addr)
