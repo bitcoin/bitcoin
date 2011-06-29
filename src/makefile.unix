@@ -60,6 +60,7 @@ OBJS= \
 
 TESTS= \
     obj/test/test_bitcoin.o \
+    obj/test/script_tests.o \
     obj/test/uint160_tests.o \
     obj/test/uint256_tests.o
 
