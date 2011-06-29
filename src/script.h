@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/foreach.hpp>
+
 class CTransaction;
 
 enum
