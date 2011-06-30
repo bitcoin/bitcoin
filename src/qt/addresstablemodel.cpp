@@ -134,12 +134,12 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         }
         return font;
     }
-    else if (role == Qt::ForegroundRole)
+    else if (role == Qt::BackgroundRole)
     {
         // Show default address in alternative color
         if(priv->isDefaultAddress(rec))
         {
-            return QColor(0,0,255);
+            return QColor(255,255,128);
         }
     }
     else if (role == Qt::ToolTipRole)

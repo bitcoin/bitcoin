@@ -72,6 +72,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toolbar->addAction(sendcoins);
     toolbar->addAction(addressbook);
+    toolbar->addAction(receivingAddresses);
 
     // Address: <address>: New... : Paste to clipboard
     QHBoxLayout *hbox_address = new QHBoxLayout();
@@ -162,7 +163,7 @@ void BitcoinGUI::createActions()
     addressbook->setToolTip(tr("Edit the list of stored addresses and labels"));
     about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
     about->setToolTip(tr("Show information about Bitcoin"));
-    receivingAddresses = new QAction(QIcon(":/icons/receiving_addresses"), tr("Your &Receiving Addresses..."), this);
+    receivingAddresses = new QAction(QIcon(":/icons/receiving_addresses"), tr("&Receiving Addresses..."), this);
     receivingAddresses->setToolTip(tr("Show the list of receiving addresses and edit their labels"));
     options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     options->setToolTip(tr("Modify configuration options for bitcoin"));
