@@ -10,6 +10,7 @@ QT_BEGIN_NAMESPACE
 class QTableView;
 class QComboBox;
 class QLineEdit;
+class QModelIndex;
 QT_END_NAMESPACE
 
 class TransactionView : public QWidget
@@ -41,6 +42,7 @@ private:
     QLineEdit *amountWidget;
 
 signals:
+    void doubleClicked(const QModelIndex&);
 
 public slots:
     void chooseDate(int idx);
