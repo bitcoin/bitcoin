@@ -46,6 +46,8 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     receive_model->setFilterRole(AddressTableModel::TypeRole);
     receive_model->setFilterFixedString(AddressTableModel::Receive);
     ui->receiveTableView->setModel(receive_model);
+    ui->receiveTableView->sortByColumn(0, Qt::AscendingOrder);
+
 
     // Send filter
     QSortFilterProxyModel *send_model = new QSortFilterProxyModel(this);
@@ -54,6 +56,7 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     send_model->setFilterRole(AddressTableModel::TypeRole);
     send_model->setFilterFixedString(AddressTableModel::Send);
     ui->sendTableView->setModel(send_model);
+    ui->sendTableView->sortByColumn(0, Qt::AscendingOrder);
 
     // Set column widths
     ui->receiveTableView->horizontalHeader()->resizeSection(
