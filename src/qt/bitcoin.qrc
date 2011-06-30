@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/icons">
+    <qresource prefix="/icons" lang="edit">
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="bitcoin">res/icons/bitcoin.png</file>
         <file alias="quit">res/icons/quit.png</file>
@@ -24,6 +24,8 @@
         <file alias="add">res/icons/add.png</file>
         <file alias="bitcoin_testnet">res/icons/bitcoin_testnet.png</file>
         <file alias="toolbar_testnet">res/icons/toolbar_testnet.png</file>
+        <file alias="edit">res/icons/edit.png</file>
+        <file alias="editdelete">res/icons/editdelete.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
