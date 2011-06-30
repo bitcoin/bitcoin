@@ -114,7 +114,14 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case Label:
-            return rec->label;
+            if(rec->label.isEmpty())
+            {
+                return tr("(no label)");
+            }
+            else
+            {
+                return rec->label;
+            }
         case Address:
             return rec->address;
         case IsDefaultAddress:
