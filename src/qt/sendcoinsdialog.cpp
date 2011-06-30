@@ -48,10 +48,10 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     valid = GUIUtil::parseMoney(payAmount, &payAmountParsed);
 
-    if(!valid)
+    if(!valid || payAmount.isEmpty())
     {
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("The amount to pay must be a valid number."),
+            tr("Must fill in an amount to pay."),
             QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
