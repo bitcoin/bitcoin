@@ -39,6 +39,11 @@ void ClientModel::update()
     emit numBlocksChanged(getNumBlocks());
 }
 
+bool ClientModel::isTestNet() const
+{
+    return fTestNet;
+}
+
 bool ClientModel::inInitialBlockDownload() const
 {
     return IsInitialBlockDownload();

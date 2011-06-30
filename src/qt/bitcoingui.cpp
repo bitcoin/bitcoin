@@ -182,6 +182,17 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 {
     this->clientModel = clientModel;
 
+    if(clientModel->isTestNet())
+    {
+        setWindowTitle(tr("Bitcoin [testnet]"));
+        setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+        if(trayIcon)
+        {
+            trayIcon->setToolTip(tr("Bitcoin [testnet]"));
+            trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+        }
+    }
+
     // Keep up to date with client
     setNumConnections(clientModel->getNumConnections());
     connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
@@ -229,6 +240,7 @@ void BitcoinGUI::createTrayIcon()
 
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setContextMenu(trayIconMenu);
+    trayIcon->setToolTip("Bitcoin client");
     trayIcon->setIcon(QIcon(":/icons/toolbar"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));

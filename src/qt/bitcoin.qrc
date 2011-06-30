@@ -22,6 +22,8 @@
         <file alias="editpaste">res/icons/editpaste.png</file>
         <file alias="editcopy">res/icons/editcopy.png</file>
         <file alias="add">res/icons/add.png</file>
+        <file alias="bitcoin_testnet">res/icons/bitcoin_testnet.png</file>
+        <file alias="toolbar_testnet">res/icons/toolbar_testnet.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
