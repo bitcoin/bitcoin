@@ -6,7 +6,7 @@
 namespace Ui {
     class SendCoinsDialog;
 }
-class ClientModel;
+class WalletModel;
 
 class SendCoinsDialog : public QDialog
 {
@@ -16,11 +16,11 @@ public:
     explicit SendCoinsDialog(QWidget *parent = 0, const QString &address = "");
     ~SendCoinsDialog();
 
-    void setModel(ClientModel *model);
+    void setModel(WalletModel *model);
 
 private:
     Ui::SendCoinsDialog *ui;
-    ClientModel *model;
+    WalletModel *model;
 
 private slots:
     void on_addToAddressBook_toggled(bool checked);

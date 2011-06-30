@@ -10,6 +10,7 @@
 #include "optionsdialog.h"
 #include "aboutdialog.h"
 #include "clientmodel.h"
+#include "walletmodel.h"
 #include "guiutil.h"
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
@@ -42,7 +43,10 @@
 #include <iostream>
 
 BitcoinGUI::BitcoinGUI(QWidget *parent):
-    QMainWindow(parent), trayIcon(0)
+    QMainWindow(parent),
+    clientModel(0),
+    walletModel(0),
+    trayIcon(0)
 {
     resize(850, 550);
     setWindowTitle(tr("Bitcoin"));
@@ -174,34 +178,43 @@ void BitcoinGUI::createActions()
     connect(openBitcoin, SIGNAL(triggered()), this, SLOT(show()));
 }
 
-void BitcoinGUI::setModel(ClientModel *model)
+void BitcoinGUI::setClientModel(ClientModel *clientModel)
 {
-    this->model = model;
+    this->clientModel = clientModel;
 
     // Keep up to date with client
-    setBalance(model->getBalance());
-    connect(model, SIGNAL(balanceChanged(qint64)), this, SLOT(setBalance(qint64)));
+    setNumConnections(clientModel->getNumConnections());
+    connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
-    setNumConnections(model->getNumConnections());
-    connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
-
-    setNumTransactions(model->getNumTransactions());
-    connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
-
-    setNumBlocks(model->getNumBlocks());
-    connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
-
-    setAddress(model->getAddressTableModel()->getDefaultAddress());
-    connect(model->getAddressTableModel(), SIGNAL(defaultAddressChanged(QString)), this, SLOT(setAddress(QString)));
+    setNumBlocks(clientModel->getNumBlocks());
+    connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
     // Report errors from network/worker thread
-    connect(model, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));    
+    connect(clientModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
+}
+
+void BitcoinGUI::setWalletModel(WalletModel *walletModel)
+{
+    this->walletModel = walletModel;
+
+    // Keep up to date with wallet
+    setBalance(walletModel->getBalance());
+    connect(walletModel, SIGNAL(balanceChanged(qint64)), this, SLOT(setBalance(qint64)));
+
+    setNumTransactions(walletModel->getNumTransactions());
+    connect(walletModel, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
+
+    setAddress(walletModel->getAddressTableModel()->getDefaultAddress());
+    connect(walletModel->getAddressTableModel(), SIGNAL(defaultAddressChanged(QString)), this, SLOT(setAddress(QString)));
+
+    // Report errors from wallet thread
+    connect(walletModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
 
     // Put transaction list in tabs
-    transactionView->setModel(model->getTransactionTableModel());
+    transactionView->setModel(walletModel->getTransactionTableModel());
 
     // Balloon popup for new transaction
-    connect(model->getTransactionTableModel(), SIGNAL(rowsInserted(const QModelIndex &, int, int)),
+    connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(const QModelIndex &, int, int)),
             this, SLOT(incomingTransaction(const QModelIndex &, int, int)));
 }
 
@@ -234,14 +247,14 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 void BitcoinGUI::sendcoinsClicked()
 {
     SendCoinsDialog dlg;
-    dlg.setModel(model);
+    dlg.setModel(walletModel);
     dlg.exec();
 }
 
 void BitcoinGUI::addressbookClicked()
 {
     AddressBookDialog dlg(AddressBookDialog::ForEditing);
-    dlg.setModel(model->getAddressTableModel());
+    dlg.setModel(walletModel->getAddressTableModel());
     dlg.setTab(AddressBookDialog::SendingTab);
     dlg.exec();
 }
@@ -249,7 +262,7 @@ void BitcoinGUI::addressbookClicked()
 void BitcoinGUI::receivingAddressesClicked()
 {
     AddressBookDialog dlg(AddressBookDialog::ForEditing);
-    dlg.setModel(model->getAddressTableModel());
+    dlg.setModel(walletModel->getAddressTableModel());
     dlg.setTab(AddressBookDialog::ReceivingTab);
     dlg.exec();
 }
@@ -257,7 +270,7 @@ void BitcoinGUI::receivingAddressesClicked()
 void BitcoinGUI::optionsClicked()
 {
     OptionsDialog dlg;
-    dlg.setModel(model->getOptionsModel());
+    dlg.setModel(clientModel->getOptionsModel());
     dlg.exec();
 }
 
@@ -270,7 +283,7 @@ void BitcoinGUI::aboutClicked()
 void BitcoinGUI::newAddressClicked()
 {
     EditAddressDialog dlg(EditAddressDialog::NewReceivingAddress);
-    dlg.setModel(model->getAddressTableModel());
+    dlg.setModel(walletModel->getAddressTableModel());
     if(dlg.exec())
     {
         QString newAddress = dlg.saveCurrentRow();
@@ -310,7 +323,7 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count)
 {
-    int total = model->getTotalBlocksEstimate();
+    int total = clientModel->getTotalBlocksEstimate();
     if(count < total)
     {
         progressBarLabel->setVisible(true);
@@ -353,7 +366,7 @@ void BitcoinGUI::changeEvent(QEvent *e)
 {
     if (e->type() == QEvent::WindowStateChange)
     {
-        if(model->getOptionsModel()->getMinimizeToTray())
+        if(clientModel->getOptionsModel()->getMinimizeToTray())
         {
             if (isMinimized())
             {
@@ -371,8 +384,8 @@ void BitcoinGUI::changeEvent(QEvent *e)
 
 void BitcoinGUI::closeEvent(QCloseEvent *event)
 {
-    if(!model->getOptionsModel()->getMinimizeToTray() &&
-       !model->getOptionsModel()->getMinimizeOnClose())
+    if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
+       !clientModel->getOptionsModel()->getMinimizeOnClose())
     {
         qApp->quit();
     }
@@ -400,10 +413,10 @@ void BitcoinGUI::transactionDetails(const QModelIndex& idx)
 
 void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int end)
 {
-    TransactionTableModel *ttm = model->getTransactionTableModel();
+    TransactionTableModel *ttm = walletModel->getTransactionTableModel();
     qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
                     .data(Qt::EditRole).toULongLong();
-    if(amount>0 && !model->inInitialBlockDownload())
+    if(amount>0 && !clientModel->inInitialBlockDownload())
     {
         // On incoming transaction, make an info balloon
         // Unless the initial block download is in progress, to prevent balloon-spam

@@ -3,6 +3,7 @@
  */
 #include "bitcoingui.h"
 #include "clientmodel.h"
+#include "walletmodel.h"
 
 #include "headers.h"
 #include "init.h"
@@ -113,9 +114,11 @@ int main(int argc, char *argv[])
         if(AppInit2(argc, argv))
         {
             BitcoinGUI window;
-            ClientModel model(pwalletMain);
+            ClientModel clientModel(pwalletMain);
+            WalletModel walletModel(pwalletMain);
             guiref = &window;
-            window.setModel(&model);
+            window.setClientModel(&clientModel);
+            window.setWalletModel(&walletModel);
 
             window.show();
 

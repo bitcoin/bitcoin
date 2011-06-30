@@ -1,6 +1,6 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
-#include "clientmodel.h"
+#include "walletmodel.h"
 #include "guiutil.h"
 
 #include "addressbookdialog.h"
@@ -29,7 +29,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     }
 }
 
-void SendCoinsDialog::setModel(ClientModel *model)
+void SendCoinsDialog::setModel(WalletModel *model)
 {
     this->model = model;
 }
@@ -64,32 +64,32 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     switch(model->sendCoins(ui->payTo->text(), payAmountParsed, label))
     {
-    case ClientModel::InvalidAddress:
+    case WalletModel::InvalidAddress:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("The recepient address is not valid, please recheck."),
             QMessageBox::Ok, QMessageBox::Ok);
         ui->payTo->setFocus();
         break;
-    case ClientModel::InvalidAmount:
+    case WalletModel::InvalidAmount:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("The amount to pay must be larger than 0."),
             QMessageBox::Ok, QMessageBox::Ok);
         ui->payAmount->setFocus();
         break;
-    case ClientModel::AmountExceedsBalance:
+    case WalletModel::AmountExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Amount exceeds your balance"),
             QMessageBox::Ok, QMessageBox::Ok);
         ui->payAmount->setFocus();
         break;
-    case ClientModel::AmountWithFeeExceedsBalance:
+    case WalletModel::AmountWithFeeExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Total exceeds your balance when the %1 transaction fee is included").
             arg(GUIUtil::formatMoney(model->getOptionsModel()->getTransactionFee())),
             QMessageBox::Ok, QMessageBox::Ok);
         ui->payAmount->setFocus();
         break;
-    case ClientModel::OK:
+    case WalletModel::OK:
         accept();
         break;
     }

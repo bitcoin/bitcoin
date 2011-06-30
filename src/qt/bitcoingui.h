@@ -6,6 +6,7 @@
 
 class TransactionTableModel;
 class ClientModel;
+class WalletModel;
 class TransactionView;
 
 QT_BEGIN_NAMESPACE
@@ -22,7 +23,8 @@ class BitcoinGUI : public QMainWindow
     Q_OBJECT
 public:
     explicit BitcoinGUI(QWidget *parent = 0);
-    void setModel(ClientModel *model);
+    void setClientModel(ClientModel *clientModel);
+    void setWalletModel(WalletModel *walletModel);
     
     /* Transaction table tab indices */
     enum {
@@ -37,7 +39,8 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    ClientModel *model;
+    ClientModel *clientModel;
+    WalletModel *walletModel;
 
     QLineEdit *address;
     QLabel *labelBalance;
