@@ -1488,6 +1488,29 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 }
 
 
+Value walletlock(const Array& params, bool fHelp)
+{
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
+        throw runtime_error(
+            "walletlock\n"
+            "Removes the wallet encryption key from memory, locking the wallet.\n"
+            "After calling this method, you will need to call walletpassphrase again\n"
+            "before being able to call any methods which require the wallet to be unlocked.");
+    if (fHelp)
+        return true;
+    if (!pwalletMain->IsCrypted())
+        throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletlock was called.");
+
+    pwalletMain->Lock();
+    CRITICAL_BLOCK(cs_nWalletUnlockTime)
+    {
+        nWalletUnlockTime = 0;
+    }
+
+    return Value::null;
+}
+
+
 Value encryptwallet(const Array& params, bool fHelp)
 {
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
@@ -1704,6 +1727,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("keypoolrefill",          &keypoolrefill),
     make_pair("walletpassphrase",       &walletpassphrase),
     make_pair("walletpassphrasechange", &walletpassphrasechange),
+    make_pair("walletlock",             &walletlock),
     make_pair("encryptwallet",          &encryptwallet),
     make_pair("validateaddress",        &validateaddress),
     make_pair("getbalance",             &getbalance),
@@ -1740,6 +1764,7 @@ string pAllowInSafeMode[] =
     "backupwallet",
     "keypoolrefill",
     "walletpassphrase",
+    "walletlock",
     "validateaddress",
     "getwork",
 };
