@@ -15,10 +15,6 @@
 #include <QDateTime>
 #include <QtAlgorithms>
 
-const QString TransactionTableModel::Sent = "s";
-const QString TransactionTableModel::Received = "r";
-const QString TransactionTableModel::Other = "o";
-
 // Credit and Debit columns are right-aligned as they contain numbers
 static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter,
