@@ -61,8 +61,8 @@ TransactionView::TransactionView(QWidget *parent) :
 
     amountWidget = new QLineEdit(this);
     amountWidget->setPlaceholderText("Min amount");
-    amountWidget->setMaximumWidth(79);
-    amountWidget->setMinimumWidth(79);
+    amountWidget->setMaximumWidth(100);
+    amountWidget->setMinimumWidth(100);
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
     hlayout->addWidget(amountWidget);
 
@@ -115,7 +115,7 @@ void TransactionView::setModel(TransactionTableModel *model)
     transactionView->horizontalHeader()->setResizeMode(
             TransactionTableModel::ToAddress, QHeaderView::Stretch);
     transactionView->horizontalHeader()->resizeSection(
-            TransactionTableModel::Amount, 79);
+            TransactionTableModel::Amount, 100);
 
 }
 
