@@ -1,14 +1,18 @@
 #include "aboutdialog.h"
 #include "ui_aboutdialog.h"
-
-#include "util.h"
+#include "clientmodel.h"
 
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AboutDialog)
 {
     ui->setupUi(this);
-    ui->versionLabel->setText(QString::fromStdString(FormatFullVersion()));
+
+}
+
+void AboutDialog::setModel(ClientModel *model)
+{
+    ui->versionLabel->setText(model->formatFullVersion());
 }
 
 AboutDialog::~AboutDialog()

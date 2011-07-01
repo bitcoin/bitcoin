@@ -29,6 +29,8 @@ public:
     // Return conservative estimate of total number of blocks, or 0 if unknown
     int getTotalBlocksEstimate() const;
 
+    QString formatFullVersion() const;
+
 private:
     CWallet *wallet;
 

@@ -6,6 +6,7 @@
 namespace Ui {
     class AboutDialog;
 }
+class ClientModel;
 
 class AboutDialog : public QDialog
 {
@@ -15,6 +16,7 @@ public:
     explicit AboutDialog(QWidget *parent = 0);
     ~AboutDialog();
 
+    void setModel(ClientModel *model);
 private:
     Ui::AboutDialog *ui;
 

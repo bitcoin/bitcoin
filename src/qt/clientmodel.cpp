@@ -59,3 +59,7 @@ OptionsModel *ClientModel::getOptionsModel()
     return optionsModel;
 }
 
+QString ClientModel::formatFullVersion() const
+{
+    return QString::fromStdString(FormatFullVersion());
+}

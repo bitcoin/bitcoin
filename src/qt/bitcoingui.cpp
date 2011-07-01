@@ -18,8 +18,6 @@
 #include "addresstablemodel.h"
 #include "transactionview.h"
 
-#include "headers.h"
-
 #include <QApplication>
 #include <QMainWindow>
 #include <QMenuBar>
@@ -290,6 +288,7 @@ void BitcoinGUI::optionsClicked()
 void BitcoinGUI::aboutClicked()
 {
     AboutDialog dlg;
+    dlg.setModel(clientModel);
     dlg.exec();
 }
 
@@ -311,7 +310,7 @@ void BitcoinGUI::copyClipboardClicked()
 
 void BitcoinGUI::setBalance(qint64 balance)
 {
-    labelBalance->setText(QString::fromStdString(FormatMoney(balance)) + QString(" BTC"));
+    labelBalance->setText(GUIUtil::formatMoney(balance) + QString(" BTC"));
 }
 
 void BitcoinGUI::setAddress(const QString &addr)
@@ -410,7 +409,7 @@ void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
     QString strMessage =
         tr("This transaction is over the size limit.  You can still send it for a fee of %1, "
           "which goes to the nodes that process your transaction and helps to support the network.  "
-          "Do you want to pay the fee?").arg(QString::fromStdString(FormatMoney(nFeeRequired)));
+          "Do you want to pay the fee?").arg(GUIUtil::formatMoney(nFeeRequired));
     QMessageBox::StandardButton retval = QMessageBox::question(
           this, tr("Sending..."), strMessage,
           QMessageBox::Yes|QMessageBox::Cancel, QMessageBox::Yes);
@@ -442,7 +441,7 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
 
         trayIcon->showMessage(tr("Incoming transaction"),
                               tr("Date: ") + date + "\n" +
-                              tr("Amount: ") + QString::fromStdString(FormatMoney(amount, true)) + "\n" +
+                              tr("Amount: ") + GUIUtil::formatMoney(amount, true) + "\n" +
                               tr("Type: ") + type + "\n" +
                               tr("Address: ") + address + "\n",
                               QSystemTrayIcon::Information);
