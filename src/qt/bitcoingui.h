@@ -42,7 +42,6 @@ private:
     ClientModel *clientModel;
     WalletModel *walletModel;
 
-    QLineEdit *address;
     QLabel *labelBalance;
     QLabel *labelConnections;
     QLabel *labelConnectionsIcon;
@@ -68,7 +67,6 @@ private:
 
 public slots:
     void setBalance(qint64 balance);
-    void setAddress(const QString &address);
     void setNumConnections(int count);
     void setNumBlocks(int count);
     void setNumTransactions(int count);
@@ -85,8 +83,6 @@ private slots:
     void optionsClicked();
     void receivingAddressesClicked();
     void aboutClicked();
-    void newAddressClicked();
-    void copyClipboardClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void transactionDetails(const QModelIndex& idx);
     void incomingTransaction(const QModelIndex & parent, int start, int end);

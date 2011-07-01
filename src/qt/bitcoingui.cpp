@@ -72,24 +72,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     toolbar->addAction(addressbook);
     toolbar->addAction(receivingAddresses);
 
-    // Address: <address>: New... : Paste to clipboard
-    QHBoxLayout *hbox_address = new QHBoxLayout();
-    hbox_address->addWidget(new QLabel(tr("Your Bitcoin address:")));
-    address = new QLineEdit();
-    address->setReadOnly(true);
-    address->setFont(GUIUtil::bitcoinAddressFont());
-    address->setToolTip(tr("Your current default receiving address"));
-    hbox_address->addWidget(address);
-    
-    QPushButton *button_new = new QPushButton(tr("&New address..."));
-    button_new->setToolTip(tr("Create new receiving address"));
-    button_new->setIcon(QIcon(":/icons/add"));
-    QPushButton *button_clipboard = new QPushButton(tr("&Copy to clipboard"));
-    button_clipboard->setToolTip(tr("Copy current receiving address to the system clipboard"));
-    button_clipboard->setIcon(QIcon(":/icons/editcopy"));
-    hbox_address->addWidget(button_new);
-    hbox_address->addWidget(button_clipboard);
-
     // Balance: <balance>
     QHBoxLayout *hbox_balance = new QHBoxLayout();
     hbox_balance->addWidget(new QLabel(tr("Balance:")));
@@ -102,7 +84,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     hbox_balance->addStretch(1);
     
     QVBoxLayout *vbox = new QVBoxLayout();
-    vbox->addLayout(hbox_address);
     vbox->addLayout(hbox_balance);
 
     transactionView = new TransactionView(this);
@@ -144,10 +125,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addPermanentWidget(labelBlocks);
     statusBar()->addPermanentWidget(labelTransactions);
 
-    // Action bindings
-    connect(button_new, SIGNAL(clicked()), this, SLOT(newAddressClicked()));
-    connect(button_clipboard, SIGNAL(clicked()), this, SLOT(copyClipboardClicked()));
-
     createTrayIcon();
 }
 
@@ -162,7 +139,7 @@ void BitcoinGUI::createActions()
     about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
     about->setToolTip(tr("Show information about Bitcoin"));
     receivingAddresses = new QAction(QIcon(":/icons/receiving_addresses"), tr("&Receiving Addresses..."), this);
-    receivingAddresses->setToolTip(tr("Show the list of receiving addresses and edit their labels"));
+    receivingAddresses->setToolTip(tr("Show the list of addresses for receiving payments"));
     options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     options->setToolTip(tr("Modify configuration options for bitcoin"));
     openBitcoin = new QAction(QIcon(":/icons/bitcoin"), "Open &Bitcoin", this);
@@ -213,9 +190,6 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
 
     setNumTransactions(walletModel->getNumTransactions());
     connect(walletModel, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
-
-    setAddress(walletModel->getAddressTableModel()->getDefaultAddress());
-    connect(walletModel->getAddressTableModel(), SIGNAL(defaultAddressChanged(QString)), this, SLOT(setAddress(QString)));
 
     // Report errors from wallet thread
     connect(walletModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
@@ -292,30 +266,9 @@ void BitcoinGUI::aboutClicked()
     dlg.exec();
 }
 
-void BitcoinGUI::newAddressClicked()
-{
-    EditAddressDialog dlg(EditAddressDialog::NewReceivingAddress);
-    dlg.setModel(walletModel->getAddressTableModel());
-    if(dlg.exec())
-    {
-        QString newAddress = dlg.saveCurrentRow();
-    }
-}
-
-void BitcoinGUI::copyClipboardClicked()
-{
-    // Copy text in address to clipboard
-    QApplication::clipboard()->setText(address->text());
-}
-
 void BitcoinGUI::setBalance(qint64 balance)
 {
     labelBalance->setText(GUIUtil::formatMoney(balance) + QString(" BTC"));
-}
-
-void BitcoinGUI::setAddress(const QString &addr)
-{
-    address->setText(addr);
 }
 
 void BitcoinGUI::setNumConnections(int count)
