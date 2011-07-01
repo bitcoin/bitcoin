@@ -332,7 +332,7 @@ QString TransactionTableModel::lookupAddress(const std::string &address) const
     }
     else
     {
-        description = QString::fromStdString(address.substr(0,12)) + QString("... (") + label + QString(")");
+        description = label + QString(" (") + QString::fromStdString(address.substr(0,12)) + QString("...)");
     }
     return description;
 }
