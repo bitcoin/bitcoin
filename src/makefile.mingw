@@ -2,8 +2,6 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-USE_UPNP:=0
-
 INCLUDEPATHS= \
  -I"C:\boost-1.43.0-mgw" \
  -I"C:\db-4.7.25.NC-mgw\build_unix" \
@@ -35,12 +33,22 @@ CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(I
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h init.h
 
-ifdef USE_UPNP
- INCLUDEPATHS += -I"C:\upnpc-exe-win32-20110215"
- LIBPATHS += -L"C:\upnpc-exe-win32-20110215"
- LIBS += -l miniupnpc -l iphlpapi
- DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
-endif
+
+bitcoin.exe: USE_UPNP:=1
+	ifdef USE_UPNP
+		INCLUDEPATHS += -I"C:\upnpc-exe-win32-20110215"
+		LIBPATHS += -L"C:\upnpc-exe-win32-20110215"
+		LIBS += -l miniupnpc -l iphlpapi
+		DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+	endif
+
+bitcoind.exe: USE_UPNP:=0
+	ifdef USE_UPNP
+		INCLUDEPATHS += -I"C:\upnpc-exe-win32-20110215"
+		LIBPATHS += -L"C:\upnpc-exe-win32-20110215"
+		LIBS += -l miniupnpc -l iphlpapi
+		DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+	endif
 
 LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
 
