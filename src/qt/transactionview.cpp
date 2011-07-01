@@ -36,6 +36,7 @@ TransactionView::TransactionView(QWidget *parent) :
     dateWidget->addItem(tr("Today"), Today);
     dateWidget->addItem(tr("This week"), ThisWeek);
     dateWidget->addItem(tr("This month"), ThisMonth);
+    dateWidget->addItem(tr("Last month"), LastMonth);
     dateWidget->addItem(tr("This year"), ThisYear);
     dateWidget->addItem(tr("Range..."), Range);
     hlayout->addWidget(dateWidget);
@@ -147,6 +148,11 @@ void TransactionView::chooseDate(int idx)
                 QDateTime(QDate(current.year(), current.month(), 1)),
                 TransactionFilterProxy::MAX_DATE);
         break;
+    case LastMonth:
+        transactionProxyModel->setDateRange(
+                QDateTime(QDate(current.year(), current.month()-1, 1)),
+                QDateTime(QDate(current.year(), current.month(), 1)));
+        break;
     case ThisYear:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), 1, 1)),
@@ -172,7 +178,7 @@ void TransactionView::changedPrefix(const QString &prefix)
 
 void TransactionView::changedAmount(const QString &amount)
 {
-    qint64 amount_parsed;
+    qint64 amount_parsed = 0;
     if(GUIUtil::parseMoney(amount, &amount_parsed))
     {
         transactionProxyModel->setMinAmount(amount_parsed);
