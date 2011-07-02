@@ -57,11 +57,15 @@ TransactionView::TransactionView(QWidget *parent) :
     hlayout->addWidget(typeWidget);
 
     addressWidget = new QLineEdit(this);
+#if QT_VERSION >= 0x040700
     addressWidget->setPlaceholderText("Enter address or label to search");
+#endif
     hlayout->addWidget(addressWidget);
 
     amountWidget = new QLineEdit(this);
+#if QT_VERSION >= 0x040700
     amountWidget->setPlaceholderText("Min amount");
+#endif
     amountWidget->setMaximumWidth(100);
     amountWidget->setMinimumWidth(100);
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
