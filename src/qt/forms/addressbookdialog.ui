@@ -29,6 +29,9 @@
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QTableView" name="sendTableView">
+         <property name="toolTip">
+          <string>Double-click to edit address or label</string>
+         </property>
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
@@ -71,6 +74,9 @@
        </item>
        <item>
         <widget class="QTableView" name="receiveTableView">
+         <property name="toolTip">
+          <string>Double-click to edit address or label</string>
+         </property>
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
@@ -132,20 +138,6 @@
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="editButton">
-       <property name="toolTip">
-        <string>Edit the currently selected address</string>
-       </property>
-       <property name="text">
-        <string>&amp;Edit...</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../bitcoin.qrc">
-         <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
        </property>
       </widget>
      </item>
