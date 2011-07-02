@@ -9,6 +9,10 @@
 #include "init.h"
 #include "strlcpy.h"
 
+#ifdef __WXMSW__
+#include <string.h>
+#endif
+
 #ifdef USE_UPNP
 #include <miniupnpc/miniwget.h>
 #include <miniupnpc/miniupnpc.h>
@@ -148,7 +152,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
             }
             if (nRet != 0)
             {
-                printf("connect() failed after select(): %i\n",nRet);
+                printf("connect() failed after select(): %s\n",strerror(nRet));
                 closesocket(hSocket);
                 return false;
             }
