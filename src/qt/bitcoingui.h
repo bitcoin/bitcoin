@@ -51,10 +51,10 @@ private:
     QProgressBar *progressBar;
 
     QAction *quit;
-    QAction *sendcoins;
+    QAction *sendCoins;
     QAction *addressbook;
     QAction *about;
-    QAction *receivingAddresses;
+    QAction *receiveCoins;
     QAction *options;
     QAction *openBitcoin;
 
@@ -78,10 +78,10 @@ public slots:
     void askFee(qint64 nFeeRequired, bool *payFee);
 
 private slots:
-    void sendcoinsClicked();
+    void sendCoinsClicked();
     void addressbookClicked();
     void optionsClicked();
-    void receivingAddressesClicked();
+    void receiveCoinsClicked();
     void aboutClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void transactionDetails(const QModelIndex& idx);

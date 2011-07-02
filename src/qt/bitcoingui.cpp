@@ -25,14 +25,12 @@
 #include <QIcon>
 #include <QTabWidget>
 #include <QVBoxLayout>
-#include <QWidget>
 #include <QToolBar>
 #include <QStatusBar>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QLocale>
-#include <QClipboard>
 #include <QMessageBox>
 #include <QProgressBar>
 
@@ -54,12 +52,12 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Menus
     QMenu *file = menuBar()->addMenu("&File");
-    file->addAction(sendcoins);
+    file->addAction(sendCoins);
+    file->addAction(receiveCoins);
     file->addSeparator();
     file->addAction(quit);
     
     QMenu *settings = menuBar()->addMenu("&Settings");
-    settings->addAction(receivingAddresses);
     settings->addAction(options);
 
     QMenu *help = menuBar()->addMenu("&Help");
@@ -68,9 +66,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Toolbar
     QToolBar *toolbar = addToolBar("Main toolbar");
     toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    toolbar->addAction(sendcoins);
+    toolbar->addAction(sendCoins);
+    toolbar->addAction(receiveCoins);
     toolbar->addAction(addressbook);
-    toolbar->addAction(receivingAddresses);
 
     // Balance: <balance>
     QHBoxLayout *hbox_balance = new QHBoxLayout();
@@ -132,23 +130,23 @@ void BitcoinGUI::createActions()
 {
     quit = new QAction(QIcon(":/icons/quit"), tr("&Exit"), this);
     quit->setToolTip(tr("Quit application"));
-    sendcoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
-    sendcoins->setToolTip(tr("Send coins to a bitcoin address"));
+    sendCoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
+    sendCoins->setToolTip(tr("Send coins to a bitcoin address"));
     addressbook = new QAction(QIcon(":/icons/address-book"), tr("&Address Book"), this);
     addressbook->setToolTip(tr("Edit the list of stored addresses and labels"));
     about = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
     about->setToolTip(tr("Show information about Bitcoin"));
-    receivingAddresses = new QAction(QIcon(":/icons/receiving_addresses"), tr("&Receiving Addresses..."), this);
-    receivingAddresses->setToolTip(tr("Show the list of addresses for receiving payments"));
+    receiveCoins = new QAction(QIcon(":/icons/receiving_addresses"), tr("&Receive coins"), this);
+    receiveCoins->setToolTip(tr("Show the list of addresses for receiving payments"));
     options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     options->setToolTip(tr("Modify configuration options for bitcoin"));
     openBitcoin = new QAction(QIcon(":/icons/bitcoin"), "Open &Bitcoin", this);
     openBitcoin->setToolTip(tr("Show the Bitcoin window"));
 
     connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(sendcoins, SIGNAL(triggered()), this, SLOT(sendcoinsClicked()));
+    connect(sendCoins, SIGNAL(triggered()), this, SLOT(sendCoinsClicked()));
     connect(addressbook, SIGNAL(triggered()), this, SLOT(addressbookClicked()));
-    connect(receivingAddresses, SIGNAL(triggered()), this, SLOT(receivingAddressesClicked()));
+    connect(receiveCoins, SIGNAL(triggered()), this, SLOT(receiveCoinsClicked()));
     connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(about, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(openBitcoin, SIGNAL(triggered()), this, SLOT(show()));
@@ -206,7 +204,7 @@ void BitcoinGUI::createTrayIcon()
 {
     QMenu *trayIconMenu = new QMenu(this);
     trayIconMenu->addAction(openBitcoin);
-    trayIconMenu->addAction(sendcoins);
+    trayIconMenu->addAction(sendCoins);
     trayIconMenu->addAction(options);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quit);
@@ -229,7 +227,7 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
-void BitcoinGUI::sendcoinsClicked()
+void BitcoinGUI::sendCoinsClicked()
 {
     SendCoinsDialog dlg;
     dlg.setModel(walletModel);
@@ -244,7 +242,7 @@ void BitcoinGUI::addressbookClicked()
     dlg.exec();
 }
 
-void BitcoinGUI::receivingAddressesClicked()
+void BitcoinGUI::receiveCoinsClicked()
 {
     AddressBookDialog dlg(AddressBookDialog::ForEditing);
     dlg.setModel(walletModel->getAddressTableModel());
