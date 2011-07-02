@@ -977,6 +977,24 @@ bool CWallet::LoadWallet(bool& fFirstRunRet)
     return true;
 }
 
+
+bool CWallet::SetAddressBookName(const string& strAddress, const string& strName)
+{
+    mapAddressBook[strAddress] = strName;
+    if (!fFileBacked)
+        return false;
+    return CWalletDB(strWalletFile).WriteName(strAddress, strName);
+}
+
+bool CWallet::DelAddressBookName(const string& strAddress)
+{
+    mapAddressBook.erase(strAddress);
+    if (!fFileBacked)
+        return false;
+    return CWalletDB(strWalletFile).EraseName(strAddress);
+}
+
+
 void CWallet::PrintWallet(const CBlock& block)
 {
     CRITICAL_BLOCK(cs_mapWallet)

@@ -332,12 +332,15 @@ Value getnewaddress(const Array& params, bool fHelp)
     // Generate a new key that is added to wallet
     string strAddress = PubKeyToAddress(pwalletMain->GetKeyFromKeyPool());
 
-    pwalletMain->SetAddressBookName(strAddress, strAccount);
+    // This could be done in the same main CS as GetKeyFromKeyPool.
+    CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
+       pwalletMain->SetAddressBookName(strAddress, strAccount);
+
     return strAddress;
 }
 
 
-// requires cs_main, cs_mapWallet locks
+// requires cs_main, cs_mapWallet, cs_mapAddressBook locks
 string GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     string strAddress;
@@ -393,6 +396,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+    CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
     {
         ret = GetAccountAddress(strAccount);
     }
@@ -431,9 +435,10 @@ Value setaccount(const Array& params, bool fHelp)
             if (strAddress == GetAccountAddress(strOldAccount))
                 GetAccountAddress(strOldAccount, true);
         }
+
+        pwalletMain->SetAddressBookName(strAddress, strAccount);
     }
 
-    pwalletMain->SetAddressBookName(strAddress, strAccount);
     return Value::null;
 }
 

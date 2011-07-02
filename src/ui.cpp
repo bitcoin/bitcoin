@@ -1186,7 +1186,8 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
     string strAddress = PubKeyToAddress(pwalletMain->GetKeyFromKeyPool());
 
     // Save
-    pwalletMain->SetAddressBookName(strAddress, strName);
+    CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
+        pwalletMain->SetAddressBookName(strAddress, strName);
     SetDefaultReceivingAddress(strAddress);
 }
 
@@ -2444,7 +2445,8 @@ void CAddressBookDialog::OnListEndLabelEdit(wxListEvent& event)
     if (event.IsEditCancelled())
         return;
     string strAddress = (string)GetItemText(m_listCtrl, event.GetIndex(), 1);
-    pwalletMain->SetAddressBookName(strAddress, string(event.GetText()));
+    CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
+        pwalletMain->SetAddressBookName(strAddress, string(event.GetText()));
     pframeMain->RefreshListCtrl();
 }
 
@@ -2479,7 +2481,8 @@ void CAddressBookDialog::OnButtonDelete(wxCommandEvent& event)
         if (m_listCtrl->GetItemState(nIndex, wxLIST_STATE_SELECTED))
         {
             string strAddress = (string)GetItemText(m_listCtrl, nIndex, 1);
-            CWalletDB(pwalletMain->strWalletFile).EraseName(strAddress);
+            CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
+                pwalletMain->DelAddressBookName(strAddress);
             m_listCtrl->DeleteItem(nIndex);
         }
     }
@@ -2538,9 +2541,12 @@ void CAddressBookDialog::OnButtonEdit(wxCommandEvent& event)
     }
 
     // Write back
-    if (strAddress != strAddressOrg)
-        CWalletDB(pwalletMain->strWalletFile).EraseName(strAddressOrg);
-    pwalletMain->SetAddressBookName(strAddress, strName);
+    CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
+    {
+        if (strAddress != strAddressOrg)
+            pwalletMain->DelAddressBookName(strAddressOrg);
+        pwalletMain->SetAddressBookName(strAddress, strName);
+    }
     m_listCtrl->SetItem(nIndex, 1, strAddress);
     m_listCtrl->SetItemText(nIndex, strName);
     pframeMain->RefreshListCtrl();
@@ -2580,7 +2586,8 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
     }
 
     // Add to list and select it
-    pwalletMain->SetAddressBookName(strAddress, strName);
+    CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
+        pwalletMain->SetAddressBookName(strAddress, strName);
     int nIndex = InsertLine(m_listCtrl, strName, strAddress);
     SetSelection(m_listCtrl, nIndex);
     m_listCtrl->SetFocus();
