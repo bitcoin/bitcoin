@@ -34,6 +34,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex & parent) const;
     bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
+    Qt::ItemFlags flags(const QModelIndex & index) const;
 
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.

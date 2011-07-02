@@ -36,6 +36,7 @@ public:
 private:
     Ui::AddressBookDialog *ui;
     AddressTableModel *model;
+    Mode mode;
     QString returnValue;
 
     QTableView *getCurrentTable();

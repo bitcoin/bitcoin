@@ -109,7 +109,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case Label:
-            if(rec->label.isEmpty())
+            if(rec->label.isEmpty() && role == Qt::DisplayRole)
             {
                 return tr("(no label)");
             }
@@ -159,6 +159,9 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
             rec->label = value.toString();
             break;
         case Address:
+            // Refuse to set invalid address
+            if(!validateAddress(value.toString()))
+                return false;
             // Double-check that we're not overwriting receiving address
             if(rec->type == AddressTableEntry::Sending)
             {
@@ -188,6 +191,23 @@ QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation,
         }
     }
     return QVariant();
+}
+
+Qt::ItemFlags AddressTableModel::flags(const QModelIndex & index) const
+{
+    if(!index.isValid())
+        return 0;
+    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
+
+    Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+    // Can edit address and label for sending addresses,
+    // and only label for receiving addresses.
+    if(rec->type == AddressTableEntry::Sending ||
+      (rec->type == AddressTableEntry::Receiving && index.column()==Label))
+    {
+        retval |= Qt::ItemIsEditable;
+    }
+    return retval;
 }
 
 QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & parent) const

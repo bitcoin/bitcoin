@@ -227,10 +227,10 @@
  </customwidgets>
  <tabstops>
   <tabstop>payTo</tabstop>
-  <tabstop>addAsLabel</tabstop>
-  <tabstop>payAmount</tabstop>
   <tabstop>addressBookButton</tabstop>
   <tabstop>pasteButton</tabstop>
+  <tabstop>addAsLabel</tabstop>
+  <tabstop>payAmount</tabstop>
   <tabstop>sendButton</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>

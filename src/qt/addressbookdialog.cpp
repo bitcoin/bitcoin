@@ -11,19 +11,16 @@
 AddressBookDialog::AddressBookDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddressBookDialog),
-    model(0)
+    model(0),
+    mode(mode)
 {
     ui->setupUi(this);
-
     switch(mode)
     {
     case ForSending:
         connect(ui->receiveTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_buttonBox_accepted()));
         connect(ui->sendTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_buttonBox_accepted()));
-        break;
-    case ForEditing:
-        connect(ui->receiveTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
-        connect(ui->sendTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
+        ui->sendTableView->setFocus();
         break;
     }
 }
@@ -66,6 +63,12 @@ void AddressBookDialog::setModel(AddressTableModel *model)
             AddressTableModel::Address, 320);
     ui->sendTableView->horizontalHeader()->setResizeMode(
             AddressTableModel::Label, QHeaderView::Stretch);
+
+    if(mode == ForSending)
+    {
+        // Auto-select first row when in sending mode
+        ui->sendTableView->selectRow(0);
+    }
 }
 
 void AddressBookDialog::setTab(int tab)
