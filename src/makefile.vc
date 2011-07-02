@@ -46,7 +46,7 @@ LIBS=$(LIBS) \
 DEBUGFLAGS=/Os
 CFLAGS=/MD /c /nologo /EHsc /GR /Zm300 $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h wallet.h
 
 OBJS= \
     obj\util.obj \
@@ -54,7 +54,9 @@ OBJS= \
     obj\db.obj \
     obj\net.obj \
     obj\irc.obj \
+	obj\keystore.obj \
     obj\main.obj \
+	obj\wallet.obj \
     obj\rpc.obj \
     obj\init.obj
 
@@ -81,7 +83,11 @@ obj\net.obj: $(HEADERS)
 
 obj\irc.obj: $(HEADERS)
 
+obj\keystore.obj: $(HEADERS)
+
 obj\main.obj: $(HEADERS)
+
+obj\wallet.obj: $(HEADERS)
 
 obj\rpc.obj: $(HEADERS)
 
@@ -117,7 +123,11 @@ obj\nogui\net.obj: $(HEADERS)
 
 obj\nogui\irc.obj: $(HEADERS)
 
+obj\nogui\keystore.obj: $(HEADERS)
+
 obj\nogui\main.obj: $(HEADERS)
+
+obj\nogui\wallet.obj: $(HEADERS)
 
 obj\nogui\rpc.obj: $(HEADERS)
 
