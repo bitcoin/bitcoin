@@ -19,19 +19,16 @@ EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
     case NewReceivingAddress:
         setWindowTitle(tr("New receiving address"));
         ui->addressEdit->setEnabled(false);
-        ui->setAsDefault->setChecked(true);
         break;
     case NewSendingAddress:
         setWindowTitle(tr("New sending address"));
-        ui->setAsDefault->setVisible(false);
         break;
     case EditReceivingAddress:
         setWindowTitle(tr("Edit receiving address"));
-        ui->addressEdit->setReadOnly(true);
+        ui->addressEdit->setDisabled(true);
         break;
     case EditSendingAddress:
         setWindowTitle(tr("Edit sending address"));
-        ui->setAsDefault->setVisible(false);
         break;
     }
 
@@ -50,7 +47,6 @@ void EditAddressDialog::setModel(AddressTableModel *model)
     mapper->setModel(model);
     mapper->addMapping(ui->labelEdit, AddressTableModel::Label);
     mapper->addMapping(ui->addressEdit, AddressTableModel::Address);
-    mapper->addMapping(ui->setAsDefault, AddressTableModel::IsDefaultAddress);
 }
 
 void EditAddressDialog::loadRow(int row)
@@ -68,8 +64,7 @@ QString EditAddressDialog::saveCurrentRow()
         address = model->addRow(
                 mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
                 ui->labelEdit->text(),
-                ui->addressEdit->text(),
-                ui->setAsDefault->isChecked());
+                ui->addressEdit->text());
         if(address.isEmpty())
         {
             QMessageBox::warning(this, windowTitle(),

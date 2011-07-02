@@ -3,6 +3,7 @@
 #include "transactionrecord.h"
 #include "guiconstants.h"
 #include "transactiondesc.h"
+#include "walletmodel.h"
 
 #include "headers.h"
 
@@ -201,9 +202,10 @@ struct TransactionTablePriv
 
 };
 
-TransactionTableModel::TransactionTableModel(CWallet* wallet, QObject *parent):
+TransactionTableModel::TransactionTableModel(CWallet* wallet, WalletModel *parent):
         QAbstractTableModel(parent),
         wallet(wallet),
+        walletModel(parent),
         priv(new TransactionTablePriv(wallet, this))
 {
     columns << tr("Status") << tr("Date") << tr("Type") << tr("Address") << tr("Amount");
@@ -298,29 +300,13 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     }
 }
 
-/* Look up label for address in address book, if not found return empty string.
-   This should really move to the wallet class.
- */
-QString TransactionTableModel::labelForAddress(const std::string &address) const
-{
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
-    {
-        std::map<std::string, std::string>::iterator mi = wallet->mapAddressBook.find(address);
-        if (mi != wallet->mapAddressBook.end())
-        {
-            return QString::fromStdString(mi->second);
-        }
-    }
-    return QString();
-}
-
 /* Look up address in address book, if found return
      address[0:12]... (label)
    otherwise just return address
  */
 QString TransactionTableModel::lookupAddress(const std::string &address) const
 {
-    QString label = labelForAddress(address);
+    QString label = walletModel->labelForAddress(QString::fromStdString(address));
     QString description;
     if(label.isEmpty())
     {
@@ -526,7 +512,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     }
     else if (role == LabelRole)
     {
-        return labelForAddress(rec->address);
+        return walletModel->labelForAddress(QString::fromStdString(rec->address));
     }
     else if (role == AbsoluteAmountRole)
     {

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>458</width>
-    <height>114</height>
+    <width>457</width>
+    <height>126</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,6 +29,13 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="labelEdit">
+       <property name="toolTip">
+        <string>The label associated with this address book entry</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
@@ -39,24 +46,10 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="labelEdit">
-       <property name="toolTip">
-        <string>The label associated with this address book entry</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="addressEdit">
        <property name="toolTip">
         <string>The address associated with this address book entry. This can only be modified for sending addresses.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QCheckBox" name="setAsDefault">
-       <property name="text">
-        <string>Set as default receiving address</string>
        </property>
       </widget>
      </item>

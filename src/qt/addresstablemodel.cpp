@@ -70,11 +70,6 @@ struct AddressTablePriv
             return 0;
         }
     }
-
-    bool isDefaultAddress(const AddressTableEntry *rec)
-    {
-        return rec->address == QString::fromStdString(wallet->GetDefaultAddress());
-    }
 };
 
 AddressTableModel::AddressTableModel(CWallet *wallet, QObject *parent) :
@@ -124,8 +119,6 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
             }
         case Address:
             return rec->address;
-        case IsDefaultAddress:
-            return priv->isDefaultAddress(rec);
         }
     }
     else if (role == Qt::FontRole)
@@ -135,26 +128,7 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         {
             font = GUIUtil::bitcoinAddressFont();
         }
-        if(priv->isDefaultAddress(rec))
-        {
-            font.setBold(true);
-        }
         return font;
-    }
-    else if (role == Qt::BackgroundRole)
-    {
-        // Show default address in alternative color
-        if(priv->isDefaultAddress(rec))
-        {
-            return QColor(255,255,128);
-        }
-    }
-    else if (role == Qt::ToolTipRole)
-    {
-        if(priv->isDefaultAddress(rec))
-        {
-            return tr("Default receiving address");
-        }
     }
     else if (role == TypeRole)
     {
@@ -194,12 +168,6 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
                 wallet->SetAddressBookName(value.toString().toStdString(), rec->label.toStdString());
 
                 rec->address = value.toString();
-            }
-            break;
-        case IsDefaultAddress:
-            if(value.toBool())
-            {
-                setDefaultAddress(rec->address);
             }
             break;
         }
@@ -244,7 +212,7 @@ void AddressTableModel::updateList()
     endResetModel();
 }
 
-QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address, bool setAsDefault)
+QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -265,10 +233,6 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         // Generate a new address to associate with given label, optionally
         // set as default receiving address.
         strAddress = PubKeyToAddress(wallet->GetKeyFromKeyPool());
-        if(setAsDefault)
-        {
-            setDefaultAddress(QString::fromStdString(strAddress));
-        }
     }
     else
     {
@@ -295,17 +259,7 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex & paren
     return true;
 }
 
-QString AddressTableModel::getDefaultAddress() const
-{
-    return QString::fromStdString(wallet->GetDefaultAddress());
-}
-
-void AddressTableModel::setDefaultAddress(const QString &defaultAddress)
-{
-    wallet->SetDefaultAddress(defaultAddress.toStdString());
-}
-
 void AddressTableModel::update()
 {
-    emit defaultAddressChanged(getDefaultAddress());
+
 }

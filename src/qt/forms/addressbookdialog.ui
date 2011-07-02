@@ -59,7 +59,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is your default receiving address.</string>
+          <string>These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</string>
          </property>
          <property name="textFormat">
           <enum>Qt::AutoText</enum>

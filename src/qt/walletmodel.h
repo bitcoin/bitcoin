@@ -33,6 +33,10 @@ public:
     qint64 getBalance() const;
     int getNumTransactions() const;
 
+    /* Look up label for address in address book, if not found return empty string.
+     */
+    QString labelForAddress(const QString &address) const;
+
     /* Send coins */
     StatusCode sendCoins(const QString &payTo, qint64 payAmount, const QString &addToAddressBookAs=QString());
 private:

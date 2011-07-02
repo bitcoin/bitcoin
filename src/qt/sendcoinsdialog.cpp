@@ -56,11 +56,8 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    if(ui->addToAddressBook->isChecked())
-    {
-        // Add address to address book under label, if specified
-        label = ui->addAsLabel->text();
-    }
+    // Add address to address book under label, if specified
+    label = ui->addAsLabel->text();
 
     switch(model->sendCoins(ui->payTo->text(), payAmountParsed, label))
     {
@@ -108,6 +105,7 @@ void SendCoinsDialog::on_addressBookButton_clicked()
     dlg.setTab(AddressBookDialog::SendingTab);
     dlg.exec();
     ui->payTo->setText(dlg.getReturnValue());
+    ui->payAmount->setFocus();
 }
 
 void SendCoinsDialog::on_buttonBox_rejected()
@@ -115,7 +113,7 @@ void SendCoinsDialog::on_buttonBox_rejected()
     reject();
 }
 
-void SendCoinsDialog::on_addToAddressBook_toggled(bool checked)
+void SendCoinsDialog::on_payTo_textChanged(const QString &address)
 {
-    ui->addAsLabel->setEnabled(checked);
+    ui->addAsLabel->setText(model->labelForAddress(address));
 }

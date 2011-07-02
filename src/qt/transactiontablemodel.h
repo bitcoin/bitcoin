@@ -7,12 +7,13 @@
 class CWallet;
 class TransactionTablePriv;
 class TransactionRecord;
+class WalletModel;
 
 class TransactionTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit TransactionTableModel(CWallet* wallet, QObject *parent = 0);
+    explicit TransactionTableModel(CWallet* wallet, WalletModel *parent = 0);
     ~TransactionTableModel();
 
     enum {
@@ -47,10 +48,10 @@ public:
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 private:
     CWallet* wallet;
+    WalletModel *walletModel;
     QStringList columns;
     TransactionTablePriv *priv;
 
-    QString labelForAddress(const std::string &address) const;
     QString lookupAddress(const std::string &address) const;
     QVariant formatTxStatus(const TransactionRecord *wtx) const;
     QVariant formatTxDate(const TransactionRecord *wtx) const;

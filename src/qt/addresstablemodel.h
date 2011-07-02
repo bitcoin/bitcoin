@@ -16,8 +16,7 @@ public:
 
     enum ColumnIndex {
         Label = 0,   /* User specified label */
-        Address = 1,  /* Bitcoin address */
-        IsDefaultAddress = 2 /* Is default address? */
+        Address = 1  /* Bitcoin address */
     };
 
     enum {
@@ -39,11 +38,7 @@ public:
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &label, const QString &address, bool setAsDefault);
-
-    /* Set and get default address */
-    QString getDefaultAddress() const;
-    void setDefaultAddress(const QString &defaultAddress);
+    QString addRow(const QString &type, const QString &label, const QString &address);
 
     /* Update address list from core. Invalidates any indices.
      */

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>660</width>
-    <height>151</height>
+    <height>193</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -123,26 +123,32 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QCheckBox" name="addToAddressBook">
-         <property name="toolTip">
-          <string>Add specified destination address to address book</string>
-         </property>
-         <property name="text">
-          <string>A&amp;dd to address book as</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QLineEdit" name="addAsLabel">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="toolTip">
           <string>Label to add address as</string>
          </property>
+         <property name="placeholderText">
+          <string>Enter a label for this address to add it to your address book</string>
+         </property>
         </widget>
        </item>
       </layout>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>&amp;Label:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy">
+        <cstring>addAsLabel</cstring>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -221,7 +227,6 @@
  </customwidgets>
  <tabstops>
   <tabstop>payTo</tabstop>
-  <tabstop>addToAddressBook</tabstop>
   <tabstop>addAsLabel</tabstop>
   <tabstop>payAmount</tabstop>
   <tabstop>addressBookButton</tabstop>
