@@ -4,7 +4,7 @@ RequestExecutionLevel highest
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.3.23
+!define VERSION 0.3.24
 !define COMPANY "Bitcoin project"
 !define URL http://www.bitcoin.org/
 
@@ -39,12 +39,12 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile bitcoin-0.3.23-win32-setup.exe
+OutFile bitcoin-0.3.24-win32-setup.exe
 InstallDir $PROGRAMFILES\Bitcoin
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 0.3.23.0
+VIProductVersion 0.3.24.0
 VIAddVersionKey ProductName Bitcoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
