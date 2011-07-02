@@ -65,12 +65,6 @@ QString EditAddressDialog::saveCurrentRow()
                 mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
                 ui->labelEdit->text(),
                 ui->addressEdit->text());
-        if(address.isEmpty())
-        {
-            QMessageBox::warning(this, windowTitle(),
-                tr("The address %1 is already in the address book.").arg(ui->addressEdit->text()),
-                QMessageBox::Ok, QMessageBox::Ok);
-        }
         break;
     case EditReceivingAddress:
     case EditSendingAddress:
@@ -82,3 +76,28 @@ QString EditAddressDialog::saveCurrentRow()
     }
     return address;
 }
+
+void EditAddressDialog::accept()
+{
+    if(mode == NewSendingAddress || mode == EditSendingAddress)
+    {
+        // For sending addresses, check validity
+        // Not needed for receiving addresses, as those are generated
+        if(!model->validateAddress(ui->addressEdit->text()))
+        {
+            QMessageBox::warning(this, windowTitle(),
+                tr("The entered address \"%1\" is not a valid bitcoin address.").arg(ui->addressEdit->text()),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+        }
+    }
+    if(saveCurrentRow().isEmpty())
+    {
+        QMessageBox::warning(this, windowTitle(),
+            tr("The entered address \"%1\" is already in the address book.").arg(ui->addressEdit->text()),
+            QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    QDialog::accept();
+}
+

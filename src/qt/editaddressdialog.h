@@ -29,9 +29,12 @@ public:
 
     void setModel(AddressTableModel *model);
     void loadRow(int row);
-    QString saveCurrentRow();
+
+    void accept();
 
 private:
+    QString saveCurrentRow();
+
     Ui::EditAddressDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;

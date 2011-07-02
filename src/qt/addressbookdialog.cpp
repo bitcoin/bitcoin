@@ -48,7 +48,6 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     ui->receiveTableView->setModel(receive_model);
     ui->receiveTableView->sortByColumn(0, Qt::AscendingOrder);
 
-
     // Send filter
     QSortFilterProxyModel *send_model = new QSortFilterProxyModel(this);
     send_model->setSourceModel(model);
@@ -120,10 +119,7 @@ void AddressBookDialog::on_editButton_clicked()
             EditAddressDialog::EditReceivingAddress);
     dlg.setModel(model);
     dlg.loadRow(selected.row());
-    if(dlg.exec())
-    {
-        dlg.saveCurrentRow();
-    }
+    dlg.exec();
 }
 
 void AddressBookDialog::on_newAddressButton_clicked()
@@ -133,10 +129,7 @@ void AddressBookDialog::on_newAddressButton_clicked()
             EditAddressDialog::NewSendingAddress :
             EditAddressDialog::NewReceivingAddress);
     dlg.setModel(model);
-    if(dlg.exec())
-    {
-        dlg.saveCurrentRow();
-    }
+    dlg.exec();
 }
 
 void AddressBookDialog::on_tabWidget_currentChanged(int index)

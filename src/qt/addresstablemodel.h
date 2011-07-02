@@ -44,6 +44,10 @@ public:
      */
     void updateList();
 
+    /* Check address for validity
+     */
+    bool validateAddress(const QString &address);
+
 private:
     CWallet *wallet;
     AddressTablePriv *priv;

@@ -263,3 +263,10 @@ void AddressTableModel::update()
 {
 
 }
+
+bool AddressTableModel::validateAddress(const QString &address)
+{
+    uint160 hash160 = 0;
+
+    return AddressToHash160(address.toStdString(), hash160);
+}
