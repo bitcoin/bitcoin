@@ -28,6 +28,7 @@ struct WalletFixture
     WalletFixture()
     {
         fTestNet = true;
+        nTransactionFee = 0;
         bool fFirst = true;
 
         wallet = new CWallet("test_wallet1.dat");
@@ -90,27 +91,38 @@ BOOST_AUTO_TEST_CASE(multisign_script)
     BOOST_CHECK(address == string("multisign(") + strMultisignAddress + ")");
 }
 
+#define SENDMS(wallet, value, partial) res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, value, partial, wtxRedeem, false)
+
 BOOST_AUTO_TEST_CASE(multisign_redeem)
 {
     CScript script;
     BOOST_CHECK(MakeMultisignScript(strMultisignAddress, script) == "");
     CWalletTx wtxSend;
-    wtxSend.vout.push_back(CTxOut(int64(COIN), script));
+    wtxSend.vout.push_back(CTxOut(COIN, script));
     uint256 hashSend = wtxSend.GetHash();
 
     CWalletTx wtxRedeem;
     pair<string,string> res;
-    res = wallet->SendMoneyFromMultisignTx("aaaaaaa", wtxSend, "", wtxRedeem, false);
+    res = wallet->SendMoneyFromMultisignTx("aaaaaaa", wtxSend, COIN, "", wtxRedeem, false);
 
     BOOST_CHECK(res == make_pair(string("error"), string(_("Invalid bitcoin address"))));
 
-    res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+    SENDMS(wallet, COIN, "");
     BOOST_CHECK(res.first == "verified");
 
-    res = wallet2->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+    SENDMS(wallet2, COIN, "");
     BOOST_CHECK(res.first == "verified");
 
-    res = wallet3->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+// Deserialize and check the outputs
+    CScript scriptOut;
+    scriptOut.SetBitcoinAddress(strAddressOut);
+    CDataStream ss(ParseHex(res.second));
+    ss >> wtxRedeem;
+    BOOST_CHECK(wtxRedeem.vout.size() == 1);
+    BOOST_CHECK(wtxRedeem.vout[0].nValue == COIN);
+    BOOST_CHECK(wtxRedeem.vout[0].scriptPubKey == scriptOut);
+
+    SENDMS(wallet3, COIN, "");
     BOOST_CHECK(res.first == "partial");
 }
 
@@ -119,28 +131,29 @@ BOOST_AUTO_TEST_CASE(multisign_redeem2)
     CScript script;
     BOOST_CHECK(MakeMultisignScript(strMultisignAddress2, script) == "");
     CWalletTx wtxSend;
-    wtxSend.vout.push_back(CTxOut(int64(COIN), script));
+    wtxSend.vout.push_back(CTxOut(COIN, script));
     uint256 hashSend = wtxSend.GetHash();
 
     CWalletTx wtxRedeem;
     pair<string,string> res;
 
-    res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+    SENDMS(wallet, COIN, "");
     BOOST_CHECK(res.first == "partial");
 
-    res = wallet2->SendMoneyFromMultisignTx(strAddressOut, wtxSend, res.second, wtxRedeem, false);
+    SENDMS(wallet2, COIN, res.second);
     BOOST_CHECK(res.first == "verified");
 
     wtxRedeem = CWalletTx();
 
-    res = wallet2->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+    SENDMS(wallet2, COIN, "");
     BOOST_CHECK(res.first == "partial");
 
-    res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, res.second, wtxRedeem, false);
+    SENDMS(wallet, COIN, res.second);
     BOOST_CHECK(res.first == "verified");
 
     wtxRedeem = CWalletTx();
-    res = wallet3->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+    SENDMS(wallet, COIN, "");
+    SENDMS(wallet3, COIN, res.second);
     BOOST_CHECK(res.first == "partial");
 }
 
@@ -149,32 +162,86 @@ BOOST_AUTO_TEST_CASE(multisign_redeem2of3)
     CScript script;
     BOOST_CHECK(MakeMultisignScript(strMultisignAddress2of3, script) == "");
     CWalletTx wtxSend;
-    wtxSend.vout.push_back(CTxOut(int64(COIN), script));
+    wtxSend.vout.push_back(CTxOut(COIN, script));
     uint256 hashSend = wtxSend.GetHash();
 
     CWalletTx wtxRedeem;
     pair<string,string> res;
 
-    res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+    SENDMS(wallet, COIN, "");
     BOOST_CHECK(res.first == "partial");
 
-    res = wallet2->SendMoneyFromMultisignTx(strAddressOut, wtxSend, res.second, wtxRedeem, false);
+    SENDMS(wallet2, COIN, res.second);
     BOOST_CHECK(res.first == "verified");
 
     wtxRedeem = CWalletTx();
 
-    res = wallet2->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+    SENDMS(wallet2, COIN, "");
     BOOST_CHECK(res.first == "partial");
 
-    res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, res.second, wtxRedeem, false);
+    SENDMS(wallet, COIN, res.second);
     BOOST_CHECK(res.first == "verified");
 
     wtxRedeem = CWalletTx();
-    res = wallet3->SendMoneyFromMultisignTx(strAddressOut, wtxSend, "", wtxRedeem, false);
+
+    SENDMS(wallet3, COIN, "");
     BOOST_CHECK(res.first == "partial");
 
-    res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, res.second, wtxRedeem, false);
+    SENDMS(wallet, COIN, res.second);
     BOOST_CHECK(res.first == "verified");
+}
+
+BOOST_AUTO_TEST_CASE(multisign_redeem_change)
+{
+    // Test with change and transaction fee
+    nTransactionFee = 100;
+
+    CScript script;
+    BOOST_CHECK(MakeMultisignScript(strMultisignAddress2, script) == "");
+    CWalletTx wtxSend;
+    wtxSend.vout.push_back(CTxOut(COIN + 100, script));
+    uint256 hashSend = wtxSend.GetHash();
+
+    CWalletTx wtxRedeem;
+    pair<string,string> res;
+
+    // Insufficient funds
+    SENDMS(wallet, COIN + 1, "");
+    BOOST_CHECK(res.first == "error");
+
+    // Change mismatches
+    SENDMS(wallet, COIN, "");
+    BOOST_CHECK(res.first == "partial");
+
+    SENDMS(wallet2, COIN - 1, res.second);
+    BOOST_CHECK(res.first == "error");
+
+    wtxRedeem = CWalletTx();
+    SENDMS(wallet, COIN - 1, "");
+    BOOST_CHECK(res.first == "partial");
+
+    SENDMS(wallet2, COIN, res.second);
+    BOOST_CHECK(res.first == "error");
+
+    // Correct
+    wtxRedeem = CWalletTx();
+    SENDMS(wallet, COIN - 1, "");
+    SENDMS(wallet2, COIN - 1, res.second);
+    BOOST_CHECK(res.first == "verified");
+
+    wtxRedeem = CWalletTx();
+
+// Deserialize and check the outputs
+    CScript scriptOut;
+    scriptOut.SetBitcoinAddress(strAddressOut);
+    CDataStream ss(ParseHex(res.second));
+    ss >> wtxRedeem;
+    BOOST_CHECK(wtxRedeem.vout.size() == 2);
+    cout << wtxRedeem.vout[0].nValue << "\n";
+    BOOST_CHECK(wtxRedeem.vout[0].nValue == COIN - 1);
+    BOOST_CHECK(wtxRedeem.vout[0].scriptPubKey == scriptOut);
+    BOOST_CHECK(wtxRedeem.vout[1].nValue == 1);
+    BOOST_CHECK(wtxRedeem.vout[1].scriptPubKey == script);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

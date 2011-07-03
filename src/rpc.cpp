@@ -536,8 +536,8 @@ Value sendmultisign(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendmultisign <multisignaddrs> <amount> [comment] [comment-to]\n"
-            "<multisignaddrs> is of the form <n>,<addr>,<addr...>\n"
+            "sendmultisign <multisignaddr> <amount> [comment] [comment-to]\n"
+            "<multisignaddr> is of the form <n>,<addr>,<addr...>\n"
             "where <n> of the addresses must sign to redeem the multisign\n"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             );
@@ -566,9 +566,9 @@ Value sendmultisign(const Array& params, bool fHelp)
 
 Value redeemmultisign(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 3)
+    if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "redeemmultisign <inputtx> <addr> [<txhex>]\n"
+            "redeemmultisign <inputtx> <addr> <amount> [<txhex>]\n"
             "where <inputtx> is the multisign transaction ID\n"
             "<addr> is the destination bitcoin address\n"
             "<txhex> is a partially signed transaction\n"
@@ -578,11 +578,15 @@ Value redeemmultisign(const Array& params, bool fHelp)
 
     string strInputTx = params[0].get_str();
     string strAddress = params[1].get_str();
+
+    // Amount
+    int64 nAmount = AmountFromValue(params[2]);
+
     string strPartialTx;
 
-    if (params.size() == 3)
+    if (params.size() == 4)
     {
-        strPartialTx = params[2].get_str();
+        strPartialTx = params[3].get_str();
     }
 
     uint256 nInputTx;
@@ -592,7 +596,7 @@ Value redeemmultisign(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     {
-        pair<string,string> result = pwalletMain->SendMoneyFromMultisign(strAddress, nInputTx, strPartialTx, wtx);
+        pair<string,string> result = pwalletMain->SendMoneyFromMultisign(strAddress, nInputTx, nAmount, strPartialTx, wtx);
         if (result.first == "error")
             throw JSONRPCError(-4, result.second);
         Array ret;

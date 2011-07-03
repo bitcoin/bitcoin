@@ -1270,7 +1270,7 @@ bool CWallet::CommitTransactionWithForeignInput(CWalletTx& wtxNew, uint256 hashI
 // strPartialTx - optional, a partially signed (by the counterparties) tx in hex
 // wtxNew - the tx we are constructing
 //
-pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransaction txInput, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
+pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransaction txInput, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
 {
     CReserveKey reservekey(this);
 
@@ -1306,14 +1306,23 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
     if (!scriptOut.SetBitcoinAddress(strAddress))
         return make_pair("error", _("Invalid bitcoin address"));
 
+    if (nValue - nTransactionFee < nAmount)
+        return make_pair("error", _("Insufficient funds in input transaction for output and fee"));
+
+    bool fChange = nValue > nAmount + nTransactionFee;
+    CTxOut outChange = CTxOut(nValue - nAmount - nTransactionFee, scriptPubKey);
+    CTxOut outMain = CTxOut(nAmount, scriptOut);
+
     if (strPartialTx.size() == 0)
     {
         // If no partial tx, create an empty one
         wtxNew.vin.clear();
         wtxNew.vout.clear();
         wtxNew.vin.push_back(CTxIn(txInput.GetHash(), nOut));
-        // Parse bitcoin address
-        wtxNew.vout.push_back(CTxOut(nValue - nTransactionFee, scriptOut));
+        wtxNew.vout.push_back(outMain);
+        // Change is last by convention
+        if (fChange)
+            wtxNew.vout.push_back(outChange);
     }
     else
     {
@@ -1321,8 +1330,22 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
         vector<unsigned char> vchPartial = ParseHex(strPartialTx);
         CDataStream ss(vchPartial);
         ss >> wtxNew;
-        if (wtxNew.vout.size() != 1 || wtxNew.vout[0].scriptPubKey != scriptOut)
-            return make_pair("error", _("Partial tx not going to the address you specified"));
+        if (fChange)
+        {
+            // Have change
+            if (wtxNew.vout.size() != 2)
+                return make_pair("error", _("Partial tx did not have exactly one change output"));
+            if (wtxNew.vout[1] != outChange)
+                return make_pair("error", _("Partial tx has different change output"));
+        }
+        else {
+            // No change
+            if (wtxNew.vout.size() != 1)
+                return make_pair("error", _("Partial tx has unnecessary change output"));
+        }
+
+        if (wtxNew.vout[0] != outMain)
+            return make_pair("error", _("Partial tx doesn't have the same output"));
     }
 
     // Get the hash that we have to sign
@@ -1482,7 +1505,7 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
     return make_pair("partial", HexStr(ss.begin(), ss.end()));
 }
 
-pair<string,string> CWallet::SendMoneyFromMultisign(string strAddress, uint256 hashInputTx, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
+pair<string,string> CWallet::SendMoneyFromMultisign(string strAddress, uint256 hashInputTx, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
 {
     // Find the multisign coin
     CTxDB txdb("r");
@@ -1493,7 +1516,7 @@ pair<string,string> CWallet::SendMoneyFromMultisign(string strAddress, uint256 h
     if (!txInput.ReadFromDisk(txindex.pos))
         return make_pair("error", _("Input tx not found"));
 
-    return SendMoneyFromMultisignTx(strAddress, txInput, strPartialTx, wtxNew, fSubmit, fAskFee);
+    return SendMoneyFromMultisignTx(strAddress, txInput, nAmount, strPartialTx, wtxNew, fSubmit, fAskFee);
 }
 
 string MakeMultisignScript(string strAddresses, CScript& scriptPubKey)
