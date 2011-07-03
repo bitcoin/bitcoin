@@ -70,10 +70,15 @@ BOOST_AUTO_TEST_CASE(multisign_address_format)
     CScript script;
     fTestNet = true;
     BOOST_CHECK(MakeMultisignScript("1", script) == _("Invalid multisign address format"));
+    script = CScript();
     BOOST_CHECK(MakeMultisignScript(string("2,") + strAddress1, script) == _("Invalid multisign address format"));
+    script = CScript();
     BOOST_CHECK(MakeMultisignScript(string("0,") + strAddress1, script) == _("Invalid multisign address format"));
+    script = CScript();
     BOOST_CHECK(MakeMultisignScript(strMultisignAddress, script) == "");
+    script = CScript();
     BOOST_CHECK(MakeMultisignScript(strMultisignAddress2, script) == "");
+    script = CScript();
     BOOST_CHECK(MakeMultisignScript(string("2,") + strAddress1 + ",v" + strAddress2, script) == "Invalid bitcoin address");
 }
 

@@ -1571,6 +1571,25 @@ string MakeMultisignScript(string strAddresses, CScript& scriptPubKey)
     scriptPubKey << strs.size();
     scriptPubKey << OP_CHECKMULTISIG;
 
+    // Pad with enough to get around GetSigOpCount check
+    int nPadding = 37*10 - scriptPubKey.size();
+
+    // Max argument size is 520
+    while (nPadding > 520)
+    {
+        vector<unsigned char> padding(520, 0);
+        scriptPubKey << padding;
+        scriptPubKey << OP_DROP;
+        nPadding -= 520;
+    }
+
+    if (nPadding > 0)
+    {
+        vector<unsigned char> padding(nPadding, 0);
+        scriptPubKey << padding;
+        scriptPubKey << OP_DROP;
+    }
+
     return "";
 }
 
