@@ -11,6 +11,11 @@
 
 #ifdef __WXMSW__
 #include <string.h>
+// This file can be downloaded as a part of the Windows Platform SDK
+// and is required for Bitcoin binaries to work properly on versions
+// of Windows before XP.  If you are doing builds of Bitcoin for
+// public release, you should uncomment this line.
+//#include <WSPiApi.h>
 #endif
 
 #ifdef USE_UPNP
