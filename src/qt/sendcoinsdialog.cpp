@@ -18,7 +18,9 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     model(0)
 {
     ui->setupUi(this);
-
+#if QT_VERSION >= 0x040700
+    ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
+#endif
     GUIUtil::setupAddressWidget(ui->payTo, this);
 
     // Set initial send-to address if provided
