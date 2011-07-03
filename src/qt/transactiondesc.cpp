@@ -1,7 +1,8 @@
 #include <transactiondesc.h>
 
 #include "guiutil.h"
-#include "main.h"
+
+#include "headers.h"
 #include "qtui.h"
 
 #include <QString>

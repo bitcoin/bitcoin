@@ -113,21 +113,23 @@ int main(int argc, char *argv[])
     {
         if(AppInit2(argc, argv))
         {
-            BitcoinGUI window;
-            ClientModel clientModel(pwalletMain);
-            WalletModel walletModel(pwalletMain);
-            guiref = &window;
-            window.setClientModel(&clientModel);
-            window.setWalletModel(&walletModel);
+            {
+                // Put this in a block, so that BitcoinGUI is cleaned up properly before
+                // calling shutdown.
+                BitcoinGUI window;
+                ClientModel clientModel(pwalletMain);
+                WalletModel walletModel(pwalletMain);
+                guiref = &window;
+                window.setClientModel(&clientModel);
+                window.setWalletModel(&walletModel);
 
-            window.show();
+                window.show();
 
-            int retval = app.exec();
+                app.exec();
 
-            guiref = 0;
+                guiref = 0;
+            }
             Shutdown(NULL);
-
-            return retval;
         }
         else
         {
@@ -138,4 +140,5 @@ int main(int argc, char *argv[])
     } catch (...) {
         PrintException(NULL, "Runaway exception");
     }
+    return 0;
 }

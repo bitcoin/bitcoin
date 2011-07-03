@@ -1,6 +1,7 @@
 #include "guiutil.h"
 #include "bitcoinaddressvalidator.h"
-#include "util.h"
+
+#include "headers.h"
 
 #include <QString>
 #include <QDateTime>

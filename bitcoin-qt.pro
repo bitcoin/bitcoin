@@ -1,18 +1,19 @@
 TEMPLATE = app
 TARGET =
-DEPENDPATH += .
 INCLUDEPATH += src src/json src/cryptopp src/qt
 DEFINES += QT_GUI
+# DEFINES += SSL
+CONFIG += no_include_pwd
 
 # for boost 1.37, add -mt to the boost libraries
 unix:LIBS += -lssl -lcrypto -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -ldb_cxx
 macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
 macx:LIBS += -lboost_thread-mt
+windows:DEFINES += __WXMSW__
+windows:LIBS += -lssl -lcrypto -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -lboost_program_options-mgw44-mt-1_43 -lboost_thread-mgw44-mt-1_43 -ldb_cxx -lws2_32 -lgdi32
 
 # disable quite some warnings because bitcoin core "sins" a lot
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts  -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch
-
-# TODO: WINDOWS defines, -DSSL
 
 # Input
 DEPENDPATH += src/qt src src/cryptopp src json/include
@@ -60,7 +61,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/json/json_spirit_reader.h \
     src/json/json_spirit_error_position.h \
     src/json/json_spirit.h \
-    src/rpc.h \
     src/qt/clientmodel.h \
     src/qt/guiutil.h \
     src/qt/transactionrecord.h \
@@ -75,7 +75,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/keystore.h \
     src/qt/transactionfilterproxy.h \
     src/qt/transactionview.h \
-    src/qt/walletmodel.h
+    src/qt/walletmodel.h \
+    src/bitcoinrpc.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -91,7 +92,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/script.cpp \
     src/main.cpp \
     src/init.cpp \
-    src/rpc.cpp \
     src/net.cpp \
     src/irc.cpp \
     src/db.cpp \
@@ -111,7 +111,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/keystore.cpp \
     src/qt/transactionfilterproxy.cpp \
     src/qt/transactionview.cpp \
-    src/qt/walletmodel.cpp
+    src/qt/walletmodel.cpp \
+    src/bitcoinrpc.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

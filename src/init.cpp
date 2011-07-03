@@ -3,7 +3,7 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
 #include "db.h"
-#include "rpc.h"
+#include "bitcoinrpc.h"
 #include "net.h"
 #include "init.h"
 #include "strlcpy.h"
