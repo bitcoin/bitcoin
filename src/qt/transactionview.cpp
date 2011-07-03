@@ -23,8 +23,10 @@ TransactionView::TransactionView(QWidget *parent) :
     transactionView(0)
 {
     // Build filter row
+    setContentsMargins(0,0,0,0);
+
     QHBoxLayout *hlayout = new QHBoxLayout();
-    hlayout->setContentsMargins(QMargins(0,0,0,0));
+    hlayout->setContentsMargins(0,0,0,0);
     hlayout->setSpacing(0);
 
     hlayout->addSpacing(23);
@@ -72,6 +74,8 @@ TransactionView::TransactionView(QWidget *parent) :
     hlayout->addWidget(amountWidget);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
+    vlayout->setContentsMargins(0,0,0,0);
+    vlayout->setSpacing(0);
 
     QTableView *view = new QTableView(this);
     vlayout->addLayout(hlayout);
