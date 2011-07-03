@@ -599,7 +599,7 @@ public:
             if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
                 n++;
             else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-                n += 20;
+                n += 5;
         }
         return n;
     }
