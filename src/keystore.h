@@ -13,7 +13,7 @@ public:
 
     virtual bool AddKey(const CKey& key) =0;
     virtual bool HaveKey(const std::vector<unsigned char> &vchPubKey) const =0;
-    virtual bool GetPrivKey(const std::vector<unsigned char> &vchPubKey, CPrivKey& keyOut) const =0;
+    virtual bool GetPrivKey(const std::vector<unsigned char> &vchPubKey, CKey& keyOut) const =0;
     virtual std::vector<unsigned char> GenerateNewKey();
 };
 
@@ -30,12 +30,12 @@ public:
     {
         return (mapKeys.count(vchPubKey) > 0);
     }
-    bool GetPrivKey(const std::vector<unsigned char> &vchPubKey, CPrivKey& keyOut) const
+    bool GetPrivKey(const std::vector<unsigned char> &vchPubKey, CKey& keyOut) const
     {
         std::map<std::vector<unsigned char>, CPrivKey>::const_iterator mi = mapKeys.find(vchPubKey);
         if (mi != mapKeys.end())
         {
-            keyOut = (*mi).second;
+            keyOut.SetPrivKey((*mi).second);
             return true;
         }
         return false;
@@ -109,7 +109,7 @@ public:
             return CBasicKeyStore::HaveKey(vchPubKey);
         return mapCryptedKeys.count(vchPubKey) > 0;
     }
-    bool GetPrivKey(const std::vector<unsigned char> &vchPubKey, CPrivKey& keyOut) const;
+    bool GetPrivKey(const std::vector<unsigned char> &vchPubKey, CKey& keyOut) const;
 };
 
 #endif

@@ -100,7 +100,7 @@ bool CCryptoKeyStore::AddCryptedKey(const std::vector<unsigned char> &vchPubKey,
     return true;
 }
 
-bool CCryptoKeyStore::GetPrivKey(const std::vector<unsigned char> &vchPubKey, CPrivKey& keyOut) const
+bool CCryptoKeyStore::GetPrivKey(const std::vector<unsigned char> &vchPubKey, CKey& keyOut) const
 {
     CRITICAL_BLOCK(cs_vMasterKey)
     {
@@ -114,9 +114,7 @@ bool CCryptoKeyStore::GetPrivKey(const std::vector<unsigned char> &vchPubKey, CP
             CSecret vchSecret;
             if (!DecryptSecret(vMasterKey, (*mi).second, Hash((*mi).first.begin(), (*mi).first.end()), vchSecret))
                 return false;
-            CKey key;
-            key.SetSecret(vchSecret);
-            keyOut = key.GetPrivKey();
+            keyOut.SetSecret(vchSecret);
             return true;
         }
     }

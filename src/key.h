@@ -220,22 +220,6 @@ public:
             return false;
         return true;
     }
-
-    static bool Sign(const CPrivKey& vchPrivKey, uint256 hash, std::vector<unsigned char>& vchSig)
-    {
-        CKey key;
-        if (!key.SetPrivKey(vchPrivKey))
-            return false;
-        return key.Sign(hash, vchSig);
-    }
-
-    static bool Verify(const std::vector<unsigned char>& vchPubKey, uint256 hash, const std::vector<unsigned char>& vchSig)
-    {
-        CKey key;
-        if (!key.SetPubKey(vchPubKey))
-            return false;
-        return key.Verify(hash, vchSig);
-    }
 };
 
 #endif
