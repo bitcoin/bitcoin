@@ -56,7 +56,6 @@ OBJS= \
     obj/main.o \
     obj/wallet.o \
     obj/rpc.o \
-    obj/init.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
@@ -70,20 +69,25 @@ obj/%.o: %.cpp $(HEADERS)
 cryptopp/obj/%.o: cryptopp/%.cpp
 	$(CXX) -c $(CXXFLAGS) -O3 -o $@ $<
 
-bitcoin: $(OBJS) obj/ui.o obj/uibase.o
+bitcoin: $(OBJS) obj/init.o obj/ui.o obj/uibase.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-bitcoind: $(OBJS:obj/%=obj/nogui/%)
+obj/init-nomain.o: init.cpp $(HEADERS)
+	$(CXX) -c $(CXXFLAGS) -DNOMAIN -o $@ $<
+
+bitcoind: $(OBJS:obj/%=obj/nogui/%) obj/nogui/init.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 obj/test/%.o: test/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
 
-test_bitcoin: obj/test/test_bitcoin.o
+obj/nogui/test/test_bitcoin.o: test/wallet_tests.cpp
+
+test_bitcoin: obj/nogui/test/test_bitcoin.o $(OBJS:obj/%=obj/nogui/%) obj/init-nomain.o
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
 
 clean:

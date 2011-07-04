@@ -5,6 +5,7 @@
 #include "headers.h"
 #include "db.h"
 #include "cryptopp/sha.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -272,10 +273,13 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
         string address;
         uint160 hash160;
         vector<unsigned char> vchPubKey;
+        extern bool ExtractMultisignAddress(const CScript& scriptPubKey, string& address);
         if (ExtractHash160(txout.scriptPubKey, hash160))
             address = Hash160ToAddress(hash160);
         else if (ExtractPubKey(txout.scriptPubKey, NULL, vchPubKey))
             address = PubKeyToAddress(vchPubKey);
+        else if (ExtractMultisignAddress(txout.scriptPubKey, address))
+        	;
         else
         {
             printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
@@ -1133,3 +1137,496 @@ void CReserveKey::ReturnKey()
     nIndex = -1;
     vchPubKey.clear();
 }
+
+// Extract addresses that vote and number of required votes in an multisign transaction
+// from the scriptPubKey
+bool ExtractMultisignAddresses(const CScript& scriptPubKey, vector<uint160>& addresses, int& nVotes)
+{
+    extern CBigNum CastToBigNum(const vector<unsigned char>& vch);
+
+    opcodetype opcode;
+    vector<unsigned char> vch;
+
+    CScript::const_iterator pc1 = scriptPubKey.begin();
+
+    // size
+    if (!scriptPubKey.GetOp(pc1, opcode, vch))
+        return false;
+
+    if (!scriptPubKey.GetOp(pc1, opcode, vch) || opcode != OP_ROLL)
+        return false;
+
+    if (!scriptPubKey.GetOp(pc1, opcode, vch) || opcode != OP_DUP)
+        return false;
+
+    // nVotes
+    if (!scriptPubKey.GetOp(pc1, opcode, vch))
+        return false;
+
+    if (opcode >= OP_1 && opcode <= OP_16)
+        nVotes = (int)opcode - (int)(OP_1 - 1);
+    else
+    {
+        try
+        {
+            nVotes = CastToBigNum(vch).getint();
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    if (!scriptPubKey.GetOp(pc1, opcode, vch) ||
+            opcode != OP_GREATERTHANOREQUAL)
+        return false;
+
+    while (scriptPubKey.GetOp(pc1, opcode, vch))
+    {
+        if (opcode == OP_HASH160)
+        {
+            if (!scriptPubKey.GetOp(pc1, opcode, vch))
+                return false;
+            if (vch.size() != sizeof(uint160))
+                continue;
+            addresses.push_back(uint160(vch));
+        }
+    }
+
+    return true;
+}
+
+// true iff scriptPubKey contains an multisign transaction
+// TBD: do we need tighther checking of script?
+bool IsMultisignScript(const CScript& scriptPubKey)
+{
+    int nVotes;
+    vector<uint160> addresses;
+
+    return ExtractMultisignAddresses(scriptPubKey, addresses, nVotes);
+}
+
+// Get a UI rendition of the scriptPubKey if it is an multisign transaction
+bool ExtractMultisignAddress(const CScript& scriptPubKey, string& address)
+{
+    address = "";
+    int nVotes;
+    vector<uint160> addresses;
+
+    if (!ExtractMultisignAddresses(scriptPubKey, addresses, nVotes))
+        return false;
+
+    address = strprintf("multisign(%d", nVotes);
+
+    BOOST_FOREACH(uint160 hash, addresses)
+    {
+        address += "," +  Hash160ToAddress(hash);
+    }
+
+    address += ")";
+    if (nVotes > addresses.size() || nVotes < 1)
+        return false;
+    return true;
+}
+
+// Tweak CommitTransaction to allow spending from a transaction that is not
+// in our wallet.  The original sendtomultisign might have been done by someone else.
+bool CWallet::CommitTransactionWithForeignInput(CWalletTx& wtxNew, uint256 hashInputTx, CReserveKey& reservekey)
+{
+    CRITICAL_BLOCK(cs_main)
+    {
+        printf("CommitTransaction:\n%s", wtxNew.ToString().c_str());
+        CRITICAL_BLOCK(cs_mapWallet)
+        {
+            // This is only to keep the database open to defeat the auto-flush for the
+            // duration of this scope.  This is the only place where this optimization
+            // maybe makes sense; please don't do it anywhere else.
+            CWalletDB* pwalletdb = fFileBacked ? new CWalletDB(strWalletFile,"r") : NULL;
+
+            // Take key pair from key pool so it won't be used again
+            reservekey.KeepKey();
+
+            // Add tx to wallet, because if it has change it's also ours,
+            // otherwise just for transaction history.
+            AddToWallet(wtxNew);
+
+            // Mark old coins as spent
+            set<CWalletTx*> setCoins;
+            BOOST_FOREACH(const CTxIn& txin, wtxNew.vin)
+            {
+                // Skip marking as spent if this is the multisign send tx
+                if (txin.prevout.hash == hashInputTx)
+                    continue;
+                CWalletTx &pcoin = mapWallet[txin.prevout.hash];
+                pcoin.MarkSpent(txin.prevout.n);
+                pcoin.WriteToDisk();
+                vWalletUpdated.push_back(pcoin.GetHash());
+            }
+
+            if (fFileBacked)
+                delete pwalletdb;
+        }
+
+        // Track how many getdata requests our transaction gets
+        CRITICAL_BLOCK(cs_mapRequestCount)
+            mapRequestCount[wtxNew.GetHash()] = 0;
+
+        // Broadcast
+        if (!wtxNew.AcceptToMemoryPool())
+        {
+            // This must not fail. The transaction has already been signed and recorded.
+            printf("CommitTransaction() : Error: Transaction not valid");
+            return false;
+        }
+        wtxNew.RelayWalletTransaction();
+    }
+    MainFrameRepaint();
+    return true;
+}
+
+// Redeem money from a multisign coin
+// 
+// strAddress - the address to send to
+// hashInputTx - the multisign coin
+// strPartialTx - optional, a partially signed (by the counterparties) tx in hex
+// wtxNew - the tx we are constructing
+//
+pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransaction txInput, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
+{
+    CReserveKey reservekey(this);
+
+    int nVotes;
+    vector<uint160> addresses;
+
+    CScript scriptPubKey;
+    int64 nValue;
+    int nOut = 0;
+
+    // Find the multisign output.  Normally there will be an multisign output and
+    // a change output.
+    BOOST_FOREACH(const CTxOut& out, txInput.vout)
+    {
+        if (ExtractMultisignAddresses(out.scriptPubKey, addresses, nVotes))
+        {
+            scriptPubKey = out.scriptPubKey;
+            nValue = out.nValue;
+            break;
+        }
+        nOut++;
+    }
+
+    if (addresses.size() == 0)
+    {
+        return make_pair("error", _("Could not decode input transaction"));
+    }
+
+    // Handle keys in reverse order due to script being stack based
+    //reverse(addresses.begin(), addresses.end());
+
+    CScript scriptOut;
+    if (!scriptOut.SetBitcoinAddress(strAddress))
+        return make_pair("error", _("Invalid bitcoin address"));
+
+    if (nValue - nTransactionFee < nAmount)
+        return make_pair("error", _("Insufficient funds in input transaction for output and fee"));
+
+    bool fChange = nValue > nAmount + nTransactionFee;
+    CTxOut outChange = CTxOut(nValue - nAmount - nTransactionFee, scriptPubKey);
+    CTxOut outMain = CTxOut(nAmount, scriptOut);
+
+    if (strPartialTx.size() == 0)
+    {
+        // If no partial tx, create an empty one
+        wtxNew.vin.clear();
+        wtxNew.vout.clear();
+        wtxNew.vin.push_back(CTxIn(txInput.GetHash(), nOut));
+        wtxNew.vout.push_back(outMain);
+        // Change is last by convention
+        if (fChange)
+            wtxNew.vout.push_back(outChange);
+    }
+    else
+    {
+        // If we have a partial tx, make sure it has the expected output
+        vector<unsigned char> vchPartial = ParseHex(strPartialTx);
+        CDataStream ss(vchPartial);
+        ss >> wtxNew;
+        if (fChange)
+        {
+            // Have change
+            if (wtxNew.vout.size() != 2)
+                return make_pair("error", _("Partial tx did not have exactly one change output"));
+            if (wtxNew.vout[1] != outChange)
+                return make_pair("error", _("Partial tx has different change output"));
+        }
+        else {
+            // No change
+            if (wtxNew.vout.size() != 1)
+                return make_pair("error", _("Partial tx has unnecessary change output"));
+        }
+
+        if (wtxNew.vout[0] != outMain)
+            return make_pair("error", _("Partial tx doesn't have the same output"));
+    }
+
+    // Get the hash that we have to sign
+    extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+    uint256 hash = SignatureHash(scriptPubKey, wtxNew, 0, SIGHASH_ALL);
+
+    // Iterate over the old script and construct a new script
+    CScript scriptSigOld = wtxNew.vin[0].scriptSig;
+    CScript::const_iterator pcOld = scriptSigOld.begin();
+
+    vector<vector<unsigned char> > vvchKeys;
+    vector<vector<unsigned char> > vvchSigs;
+
+    opcodetype opcode;
+
+    if (scriptSigOld.size() == 0)
+    {
+        vector<unsigned char> vch;
+
+        // Fill with empty keys and sigs for placeholding
+        for (int i = 0 ; i < addresses.size() ; i++)
+        {
+            vvchKeys.push_back(vch);
+            vvchSigs.push_back(vch);
+        }
+    }
+    else
+    {
+        vector<unsigned char> vch;
+
+        if (!scriptSigOld.GetOp(pcOld, opcode, vch) || opcode != OP_0)
+            throw runtime_error("bad multisign script - 0");
+
+        // Go over the sigs
+        while (true)
+        {
+            if (!scriptSigOld.GetOp(pcOld, opcode, vch))
+                throw runtime_error("bad multisign script - 1");
+            if (opcode >= OP_1 && opcode <= OP_16)
+                break;
+            vvchSigs.push_back(vch);
+        }
+
+        // This includes placeholders empty sigs
+        if (vvchSigs.size() != addresses.size())
+        {
+            throw runtime_error("bad multisign script - 2");
+        }
+
+        while (scriptSigOld.GetOp(pcOld, opcode, vch))
+        {
+            vvchKeys.push_back(vch);
+        }
+
+        if (vvchKeys.size() != addresses.size())
+        {
+            throw runtime_error("bad multisign script - 2");
+        }
+    }
+
+    CScript scriptSigNew;
+    CScript scriptSigNewWithPlaceholders;
+
+    // Work around bug in OP_MULTISIGVERIFY - one too many items popped off stack
+    scriptSigNew << OP_0;
+    scriptSigNewWithPlaceholders << OP_0;
+
+    // Number of non-placeholder sigs
+    int nSigs = 0;
+
+    // Sign everything that we can sign
+    CRITICAL_BLOCK(cs_mapKeys)
+    {
+        int ikey = 0;
+
+        BOOST_FOREACH(const uint160& address, addresses)
+        {
+            string currentAddress = Hash160ToAddress(address);
+
+            map<uint160, vector<unsigned char> >::iterator mi = mapPubKeys.find(address);
+            if (mi == mapPubKeys.end() || !mapKeys.count((*mi).second))
+            {
+                // We can't sign this input
+                scriptSigNewWithPlaceholders << vvchSigs[ikey];
+                if (vvchSigs[ikey].size())
+                {
+                    scriptSigNew << vvchSigs[ikey];
+                    nSigs++;
+                }
+            }
+            else
+            {
+                // Found the key - sign this input
+                const vector<unsigned char>& vchPubKey = (*mi).second;
+
+                // Fill in pubkey
+                vvchKeys[ikey] = vchPubKey;
+
+                vector<unsigned char> vchSig;
+
+                if (!CKey::Sign(mapKeys[vchPubKey], hash, vchSig))
+                    return make_pair("error", _("failed to sign with one of our keys"));
+                vchSig.push_back((unsigned char)SIGHASH_ALL);
+                scriptSigNewWithPlaceholders << vchSig;
+                scriptSigNew << vchSig;
+                nSigs++;
+            }
+
+            ikey++;
+        }
+    }
+
+    scriptSigNew << nSigs;
+    scriptSigNewWithPlaceholders << nSigs;
+
+    BOOST_FOREACH(const vector<unsigned char>& vchPubKey, vvchKeys)
+    {
+        scriptSigNew << vchPubKey;
+        scriptSigNewWithPlaceholders << vchPubKey;
+    }
+
+    // Use the new scriptSig
+    wtxNew.vin[0].scriptSig = scriptSigNew;
+
+    // Check if it verifies.  If we had to push any placeholders for signatures, it
+    // will not, and we have to ask the user to have the counterparties sign.
+    extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int nHashType);
+
+    if (VerifyScript(scriptSigNew, scriptPubKey, wtxNew, 0, 0))
+    {
+        if (fSubmit)
+        {
+            // It verifies - we are done and can commit
+            if (!CommitTransactionWithForeignInput(wtxNew, txInput.GetHash(), reservekey))
+                return make_pair("error", _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."));
+
+            return make_pair("complete", wtxNew.GetHash().GetHex());
+        }
+        else
+        {
+            // If we were asked not to submit, serialize without placeholders
+            CDataStream ss;
+            ss.reserve(10000);
+            ss << wtxNew;
+
+            return make_pair("verified", HexStr(ss.begin(), ss.end()));
+        }
+    }
+
+    // It does not verify - serialize and convert to hex for other party signature
+    wtxNew.vin[0].scriptSig = scriptSigNewWithPlaceholders;
+
+    CDataStream ss;
+    ss.reserve(10000);
+    ss << wtxNew;
+
+    return make_pair("partial", HexStr(ss.begin(), ss.end()));
+}
+
+pair<string,string> CWallet::SendMoneyFromMultisign(string strAddress, uint256 hashInputTx, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
+{
+    // Find the multisign coin
+    CTxDB txdb("r");
+    CTxIndex txindex;
+    if (!txdb.ReadTxIndex(hashInputTx, txindex))
+        return make_pair("error", _("Input tx not found"));
+    CTransaction txInput;
+    if (!txInput.ReadFromDisk(txindex.pos))
+        return make_pair("error", _("Input tx not found"));
+
+    return SendMoneyFromMultisignTx(strAddress, txInput, nAmount, strPartialTx, wtxNew, fSubmit, fAskFee);
+}
+
+string MakeMultisignScript(string strAddresses, CScript& scriptPubKey)
+{
+    std::vector<std::string> strs;
+    boost::split(strs, strAddresses, boost::is_any_of(","));
+    if (strs.size() < 2)
+        return _("Invalid multisign address format");
+
+    int nVotes = atoi(strs[0].c_str());
+    strs.erase(strs.begin());
+    if (nVotes < 1 || nVotes > strs.size())
+        return _("Invalid multisign address format");
+
+    // sig1 sig2 ... nsig pub1 pub2 ...
+    // Check all the pubkeys.  Each must match the respective hash160
+    // or be zero.
+
+    scriptPubKey
+        << strs.size()
+        << OP_ROLL // pub1 pub2 ... nsig
+        << OP_DUP
+        << nVotes
+        << OP_GREATERTHANOREQUAL
+        << OP_VERIFY;
+
+    BOOST_FOREACH(string strAddress, strs)
+    {
+        // For each address, check it and increment running votes
+        uint160 hash160;
+        if (!AddressToHash160(strAddress, hash160))
+            return _("Invalid bitcoin address");
+
+        // ... sig pkey
+        scriptPubKey     // ... pub_i-1
+            << strs.size()
+            << OP_ROLL   // ... pub_i
+            << OP_SIZE   // ... pub_i non-empty?
+            << OP_NOT    // ... pub_i empty?
+            << OP_OVER   // ... pub_i empty? pub_i 
+            << OP_HASH160
+            << hash160
+            << OP_EQUAL  // ... pub_i empty? hashequals?
+            << OP_BOOLOR // ... pub_i success?
+            << OP_VERIFY;
+    }
+
+    // sig1 sig2 ... nsig pub1 pub2 ...
+    scriptPubKey << strs.size();
+    scriptPubKey << OP_CHECKMULTISIG;
+
+    // Pad with enough to get around GetSigOpCount check
+    int nPadding = 37*10 - scriptPubKey.size();
+
+    // Max argument size is 520
+    while (nPadding > 520)
+    {
+        vector<unsigned char> padding(520, 0);
+        scriptPubKey << padding;
+        scriptPubKey << OP_DROP;
+        nPadding -= 520;
+    }
+
+    if (nPadding > 0)
+    {
+        vector<unsigned char> padding(nPadding, 0);
+        scriptPubKey << padding;
+        scriptPubKey << OP_DROP;
+    }
+
+    return "";
+}
+
+// Send money to multisign
+// requires cs_main lock
+string CWallet::SendMoneyToMultisign(string strAddresses, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+{
+    // Check amount
+    if (nValue <= 0)
+        return _("Invalid amount");
+    if (nValue + nTransactionFee > GetBalance())
+        return _("Insufficient funds");
+
+    CScript scriptPubKey;
+    string strResult = MakeMultisignScript(strAddresses, scriptPubKey);
+    if (strResult != "")
+        return strResult;
+
+    // The rest is the same as a regular send
+    return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
+}
+

@@ -537,6 +537,80 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+Value sendmultisign(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "sendmultisign <multisignaddr> <amount> [comment] [comment-to]\n"
+            "<multisignaddr> is of the form <n>,<addr>,<addr...>\n"
+            "where <n> of the addresses must sign to redeem the multisign\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001"
+            );
+
+    string strAddress = params[0].get_str();
+
+    // Amount
+    int64 nAmount = AmountFromValue(params[1]);
+
+    // Wallet comments
+    CWalletTx wtx;
+    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
+        wtx.mapValue["comment"] = params[2].get_str();
+    if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
+        wtx.mapValue["to"]      = params[3].get_str();
+
+    CRITICAL_BLOCK(cs_main)
+    {
+        string strError = pwalletMain->SendMoneyToMultisign(strAddress, nAmount, wtx);
+        if (strError != "")
+            throw JSONRPCError(-4, strError);
+    }
+
+    return wtx.GetHash().GetHex();
+}
+
+Value redeemmultisign(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 3 || params.size() > 4)
+        throw runtime_error(
+            "redeemmultisign <inputtx> <addr> <amount> [<txhex>]\n"
+            "where <inputtx> is the multisign transaction ID\n"
+            "<addr> is the destination bitcoin address\n"
+            "<txhex> is a partially signed transaction\n"
+            "the output is either ['partial', <txhex>] if more signatures are needed\n"
+            "or ['complete', <txid>] if the transaction was broadcast\n"
+            );
+
+    string strInputTx = params[0].get_str();
+    string strAddress = params[1].get_str();
+
+    // Amount
+    int64 nAmount = AmountFromValue(params[2]);
+
+    string strPartialTx;
+
+    if (params.size() == 4)
+    {
+        strPartialTx = params[3].get_str();
+    }
+
+    uint256 nInputTx;
+    nInputTx.SetHex(strInputTx);
+
+    CWalletTx wtx;
+
+    CRITICAL_BLOCK(cs_main)
+    {
+        pair<string,string> result = pwalletMain->SendMoneyFromMultisign(strAddress, nInputTx, nAmount, strPartialTx, wtx);
+        if (result.first == "error")
+            throw JSONRPCError(-4, result.second);
+        Array ret;
+        ret.push_back(result.first);
+        ret.push_back(result.second);
+        return ret;
+    }
+}
+
 
 Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
@@ -1470,6 +1544,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getwork",               &getwork),
     make_pair("listaccounts",          &listaccounts),
     make_pair("settxfee",              &settxfee),
+    make_pair("sendmultisign",         &sendmultisign),
+    make_pair("redeemmultisign",       &redeemmultisign),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2109,6 +2185,8 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "sendmultisign"          && n > 1) ConvertTo<double>(params[1]);
+        if (strMethod == "redeemmultisign"        && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);

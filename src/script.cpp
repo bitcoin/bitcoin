@@ -1082,8 +1082,9 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
 
 bool IsStandard(const CScript& scriptPubKey)
 {
+    extern bool IsMultisignScript(const CScript& scriptPubKey);
     vector<pair<opcodetype, valtype> > vSolution;
-    return Solver(scriptPubKey, vSolution);
+    return Solver(scriptPubKey, vSolution) || IsMultisignScript(scriptPubKey);
 }
 
 

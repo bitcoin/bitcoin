@@ -60,9 +60,13 @@ public:
     bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
     bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
+    bool CommitTransactionWithForeignInput(CWalletTx& wtxNew, uint256 hashInputTx, CReserveKey& reservekey);
     bool BroadcastTransaction(CWalletTx& wtxNew);
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToBitcoinAddress(std::string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
+    std::pair<std::string, std::string> SendMoneyFromMultisign(std::string strAddress, uint256 hashInputTx, int64 nAmount, std::string strPartialTx, CWalletTx& wtxNew, bool fSubmit=true, bool fAskFee=false);
+    std::pair<std::string, std::string> SendMoneyFromMultisignTx(std::string strAddress, CTransaction txInput, int64 nAmount, std::string strPartialTx, CWalletTx& wtxNew, bool fSubmit=true, bool fAskFee=false);
+    std::string SendMoneyToMultisign(std::string strAddresses, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
