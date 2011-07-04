@@ -1,0 +1,111 @@
+# Copyright (c) 2009-2010 Satoshi Nakamoto
+# Distributed under the MIT/X11 software license, see the accompanying
+# file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+DEPSDIR:=/usr/i586-mingw32msvc
+
+INCLUDEPATHS= \
+ -I"$(DEPSDIR)/boost_1_43_0" \
+ -I"$(DEPSDIR)/db-4.7.25.NC/build_unix" \
+ -I"$(DEPSDIR)/openssl-1.0.0d/include" \
+ -I"$(DEPSDIR)/wxWidgets-2.9.1/lib/gcc_lib/mswud" \
+ -I"$(DEPSDIR)/wxWidgets-2.9.1/include" \
+ -I"$(DEPSDIR)/wxWidgets-2.9.1/lib/wx/include/i586-mingw32msvc-msw-unicode-static-2.9/" \
+ -I"$(DEPSDIR)"
+
+LIBPATHS= \
+ -L"$(DEPSDIR)/boost_1_43_0/stage/lib" \
+ -L"$(DEPSDIR)/db-4.7.25.NC/build_unix" \
+ -L"$(DEPSDIR)/openssl-1.0.0d" \
+ -L"$(DEPSDIR)/wxWidgets-2.9.1/lib"
+
+WXLIBS= -l wx_mswu-2.9-i586-mingw32msvc
+
+LIBS= \
+ -l boost_system-mt-s \
+ -l boost_filesystem-mt-s \
+ -l boost_program_options-mt-s \
+ -l boost_thread_win32-mt-s \
+ -l db_cxx \
+ -l ssl \
+ -l crypto
+
+DEFS=-D_MT -DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL
+DEBUGFLAGS=-g -D__WXDEBUG__
+CFLAGS=-O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
+    script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h init.h
+
+bitcoin.exe: USE_UPNP:=1
+	ifdef USE_UPNP
+		INCLUDEPATHS += -I"$(DEPSDIR)/upnpc-exe-win32-20110215"
+		LIBPATHS += -L"$(DEPSDIR)/upnpc-exe-win32-20110215"
+		LIBS += -l miniupnpc -l iphlpapi
+		DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+	endif
+
+bitcoind.exe: USE_UPNP:=0
+	ifdef USE_UPNP
+		INCLUDEPATHS += -I"$(DEPSDIR)/upnpc-exe-win32-20110215"
+		LIBPATHS += -L"$(DEPSDIR)/upnpc-exe-win32-20110215"
+		LIBS += -l miniupnpc -l iphlpapi
+		DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+	endif
+
+LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
+
+OBJS= \
+    obj/util.o \
+    obj/script.o \
+    obj/db.o \
+    obj/net.o \
+    obj/irc.o \
+    obj/keystore.o \
+    obj/main.o \
+    obj/wallet.o \
+    obj/rpc.o \
+    obj/init.o \
+    cryptopp/obj/sha.o \
+    cryptopp/obj/cpu.o
+
+
+all: bitcoin.exe
+
+
+obj/%.o: %.cpp $(HEADERS)
+	i586-mingw32msvc-g++ -c $(CFLAGS) -DGUI -o $@ $<
+
+cryptopp/obj/%.o: cryptopp/%.cpp
+	i586-mingw32msvc-g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
+
+obj/ui_res.o: ../share/ui.rc  ../share/pixmaps/bitcoin.ico ../share/pixmaps/check.ico ../share/pixmaps/send16.bmp ../share/pixmaps/send16mask.bmp ../share/pixmaps/send16masknoshadow.bmp ../share/pixmaps/send20.bmp ../share/pixmaps/send20mask.bmp ../share/pixmaps/addressbook16.bmp ../share/pixmaps/addressbook16mask.bmp ../share/pixmaps/addressbook20.bmp ../share/pixmaps/addressbook20mask.bmp
+	i586-mingw32msvc-windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
+
+bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o
+	i586-mingw32msvc-g++ $(CFLAGS) -mwindows -Wl,--subsystem,windows -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
+
+
+obj/nogui/%.o: %.cpp $(HEADERS)
+	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
+
+bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
+	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+
+
+obj/test/%.o: obj/test/%.cpp $(HEADERS)
+	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
+
+test_bitcoin.exe: obj/test/test_bitcoin.o
+	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework-mt-s
+
+
+clean:
+	-rm -f obj/*.o
+	-rm -f obj/nogui/*.o
+	-rm -f obj/test/*.o
+	-rm -f cryptopp/obj/*.o
+	-rm -f test/*.o
+	-rm -f headers.h.gch
+	-rm -f bitcoin.exe
+	-rm -f bitcoind.exe
+	-rm -f test_bitcoin.exe
