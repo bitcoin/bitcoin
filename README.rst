@@ -39,8 +39,11 @@ This has to be done:
 
 - Build on Windows
 
-Build instructions
+Build instructions 
 ===================
+
+Debian
+-------
 
 First, make sure that the required packages for Qt4 development of your
 distribution are installed, for Debian and Ubuntu these are:
@@ -61,6 +64,25 @@ then execute the following:
 Alternatively, install Qt Creator and open the `bitcoin-qt.pro` file.
 
 An executable named `bitcoin-qt` will be built.
+
+
+Windows
+--------
+
+Windows build instructions:
+
+- Download the `QT Windows SDK`_ and install it. You don't need the Symbian stuff, just the desktop Qt.
+
+- Download and extract the `dependencies archive`_  [#]_, or compile openssl, boost and dbcxx yourself.
+
+- Copy the contents of the folder "deps" to "X:\QtSDK\mingw", replace X:\ with the location where you installed the Qt SDK. Make sure that the contents of "deps/include" end up in the current "include" directory and such.
+
+- Open the .pro file in QT creator and build as normal (ctrl-B)
+
+.. _`QT Windows SDK`: http://qt.nokia.com/downloads/sdk-windows-cpp
+.. _`dependencies archive`: http://download.visucore.com/bitcoin/qtgui_deps_1.zip
+.. [#] PGP signature: http://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
+.. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
 
 Berkely DB version warning
 ==========================
