@@ -20,7 +20,10 @@
 
 * perform gitian builds
 
-  { insert useful info here }
+  * From the bitcoin source dir
+  $ cd ../gitian-builder
+  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian.yml
+  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian-win32.yml
  
   Build output expected:
   1. linux 32-bit and 64-bit binaries + source
