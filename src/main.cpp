@@ -1584,7 +1584,8 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     }
 
     // Update best block in wallet (so we can detect restored wallets)
-    if (!IsInitialBlockDownload())
+    bool fInitialDownload = IsInitialBlockDownload();
+    if (!fInitialDownload)
     {
         CWalletDB walletdb;
         const CBlockLocator locator(pindexNew);
@@ -1600,6 +1601,23 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
     printf("SetBestChain: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
+
+    if (!fInitialDownload)
+    {
+        // Support block notification
+        string strPidfile = mapArgs["-blknotifypidfile"];
+        if(strPidfile != "")
+        {
+            FILE *file = fopen(strPidfile.c_str(), "r");
+            if(file)
+            {
+                int nPid = 0;
+                if ((fscanf(file, "%d", &nPid) == 1) && (nPid > 1))
+                    kill((pid_t) nPid, SIGUSR1);
+                fclose(file);
+            }
+        }
+    }
 
     return true;
 }
