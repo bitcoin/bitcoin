@@ -1818,15 +1818,20 @@ Value getwork(const Array& params, bool fHelp)
                     delete pblock;
                 vNewBlock.clear();
             }
+
+            // Create new block
+            CBlock* pNewBlock;
+            ThreadSafeRPC();
+            pNewBlock = CreateNewBlock(reservekey);
+            ThreadUnsafeRPC();
+            if (!pNewBlock)
+                throw JSONRPCError(-7, "Out of memory");
+            vNewBlock.push_back(pNewBlock);
+            pblock = pNewBlock;
+
             nTransactionsUpdatedLast = nTransactionsUpdated;
             pindexPrev = pindexBest;
             nStart = GetTime();
-
-            // Create new block
-            pblock = CreateNewBlock(reservekey);
-            if (!pblock)
-                throw JSONRPCError(-7, "Out of memory");
-            vNewBlock.push_back(pblock);
         }
 
         // Update nTime
