@@ -967,7 +967,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             {
                 // Only counting our own bitcoin addresses and not ip addresses
                 uint160 hash160 = txout.scriptPubKey.GetBitcoinAddressHash160();
-                if (hash160 == 0 || !mapPubKeys.count(hash160)) // IsMine
+                if (hash160 == 0 || !pwalletMain->HaveKey(hash160)) // IsMine
                     continue;
 
                 tallyitem& item = mapTally[hash160];
@@ -1242,7 +1242,7 @@ Value listaccounts(const Array& params, bool fHelp)
     {
         BOOST_FOREACH(const PAIRTYPE(string, string)& entry, pwalletMain->mapAddressBook) {
             uint160 hash160;
-            if(AddressToHash160(entry.first, hash160) && mapPubKeys.count(hash160)) // This address belongs to me
+            if(AddressToHash160(entry.first, hash160) && pwalletMain->HaveKey(hash160)) // This address belongs to me
                 mapAccountBalances[entry.second] = 0;
         }
 
@@ -1564,7 +1564,7 @@ Value validateaddress(const Array& params, bool fHelp)
         // version of the address:
         string currentAddress = Hash160ToAddress(hash160);
         ret.push_back(Pair("address", currentAddress));
-        ret.push_back(Pair("ismine", (mapPubKeys.count(hash160) > 0)));
+        ret.push_back(Pair("ismine", (pwalletMain->HaveKey(hash160) > 0)));
         CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
         {
             if (pwalletMain->mapAddressBook.count(currentAddress))

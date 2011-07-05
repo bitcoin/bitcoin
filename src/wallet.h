@@ -104,10 +104,10 @@ public:
     }
     bool IsChange(const CTxOut& txout) const
     {
-        std::vector<unsigned char> vchPubKey;
-        if (ExtractPubKey(txout.scriptPubKey, this, vchPubKey))
+        uint160 hash160;
+        if (ExtractHash160(txout.scriptPubKey, this, hash160))
             CRITICAL_BLOCK(cs_mapAddressBook)
-                if (!mapAddressBook.count(PubKeyToAddress(vchPubKey)))
+                if (!mapAddressBook.count(Hash160ToAddress(hash160)))
                     return true;
         return false;
     }

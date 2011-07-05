@@ -238,9 +238,10 @@ void SetDefaultReceivingAddress(const string& strAddress)
         uint160 hash160;
         if (!AddressToHash160(strAddress, hash160))
             return;
-        if (!mapPubKeys.count(hash160))
+        vector<unsigned char> vchPubKey;
+        if (!pwalletMain->GetPubKey(hash160, vchPubKey))
             return;
-        pwalletMain->SetDefaultKey(mapPubKeys[hash160]);
+        pwalletMain->SetDefaultKey(vchPubKey);
         pframeMain->m_textCtrlAddress->SetValue(strAddress);
     }
 }
@@ -703,15 +704,15 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             {
                 if (pwalletMain->IsMine(txout))
                 {
-                    vector<unsigned char> vchPubKey;
-                    if (ExtractPubKey(txout.scriptPubKey, pwalletMain, vchPubKey))
+                    uint160 hash160;
+                    if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
                     {
                         CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
                         {
                             //strDescription += _("Received payment to ");
                             //strDescription += _("Received with address ");
                             strDescription += _("Received with: ");
-                            string strAddress = PubKeyToAddress(vchPubKey);
+                            string strAddress = Hash160ToAddress(hash160);
                             map<string, string>::iterator mi = pwalletMain->mapAddressBook.find(strAddress);
                             if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
                             {
@@ -786,7 +787,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 {
                     // Sent to Bitcoin Address
                     uint160 hash160;
-                    if (ExtractHash160(txout.scriptPubKey, hash160))
+                    if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
                         strAddress = Hash160ToAddress(hash160);
                 }
 
@@ -1502,10 +1503,10 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                 {
                     if (pwalletMain->IsMine(txout))
                     {
-                        vector<unsigned char> vchPubKey;
-                        if (ExtractPubKey(txout.scriptPubKey, pwalletMain, vchPubKey))
+                        uint160 hash160;
+                        if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
                         {
-                            string strAddress = PubKeyToAddress(vchPubKey);
+                            string strAddress = Hash160ToAddress(hash160);
                             if (pwalletMain->mapAddressBook.count(strAddress))
                             {
                                 strHTML += string() + _("<b>From:</b> ") + _("unknown") + "<br>";
@@ -1589,7 +1590,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                     {
                         // Offline transaction
                         uint160 hash160;
-                        if (ExtractHash160(txout.scriptPubKey, hash160))
+                        if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
                         {
                             string strAddress = Hash160ToAddress(hash160);
                             strHTML += _("<b>To:</b> ");
@@ -2630,7 +2631,7 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
             string strAddress = item.first;
             string strName = item.second;
             uint160 hash160;
-            bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
+            bool fMine = (AddressToHash160(strAddress, hash160) && pwalletMain->HaveKey(hash160));
             wxListCtrl* plistCtrl = fMine ? m_listCtrlReceiving : m_listCtrlSending;
             int nIndex = InsertLine(plistCtrl, strName, strAddress);
             if (strAddress == (fMine ? strDefaultReceiving : string(strInitSelected)))
@@ -2741,7 +2742,7 @@ void CAddressBookDialog::OnButtonCopy(wxCommandEvent& event)
 bool CAddressBookDialog::CheckIfMine(const string& strAddress, const string& strTitle)
 {
     uint160 hash160;
-    bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
+    bool fMine = (AddressToHash160(strAddress, hash160) && pwalletMain->HaveKey(hash160));
     if (fMine)
         wxMessageBox(_("This is one of your own addresses for receiving payments and cannot be entered in the address book.  "), strTitle);
     return fMine;
