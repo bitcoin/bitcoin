@@ -52,7 +52,7 @@ inline int ThreadSafeMessageBox(const std::string& message, const std::string& c
 
 inline bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
 {
-    return true;
+    return false;
 }
 
 inline void CalledSetStatusBar(const std::string& strText, int nField)

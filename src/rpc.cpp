@@ -315,9 +315,13 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    obj.push_back(Pair("forcetxfee",    fForceFee));
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    obj.push_back(Pair("pooledtx",      (uint64_t)nPooledTx));
+    obj.push_back(Pair("currentblocktx",(uint64_t)nLastBlockTx));
+    obj.push_back(Pair("currentblocksize",(uint64_t)nLastBlockSize));
     return obj;
 }
 
@@ -482,7 +486,7 @@ Value settxfee(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
-            "settxfee <amount>\n"
+            "settxfee <amount> [force]\n"
             "<amount> is a real and is rounded to the nearest 0.00000001");
 
     // Amount
@@ -491,6 +495,8 @@ Value settxfee(const Array& params, bool fHelp)
         nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
 
     nTransactionFee = nAmount;
+    if (params.size() > 1)
+        fForceFee = params[1].get_bool();
     return true;
 }
 
@@ -523,7 +529,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (pwalletMain->IsLocked())
         throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-    string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx);
+    string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx, fForceFee);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -786,7 +792,7 @@ Value sendfrom(const Array& params, bool fHelp)
         throw JSONRPCError(-6, "Account has insufficient funds");
 
     // Send
-    string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx);
+    string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx, fForceFee);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -850,7 +856,7 @@ Value sendmany(const Array& params, bool fHelp)
     // Send
     CReserveKey keyChange(pwalletMain);
     int64 nFeeRequired = 0;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, fForceFee);
     if (!fCreated)
     {
         if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
@@ -2289,6 +2295,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
+        if (strMethod == "settxfee"               && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);

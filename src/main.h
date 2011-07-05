@@ -59,7 +59,10 @@ extern CBigNum bnBestChainWork;
 extern CBigNum bnBestInvalidWork;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
+extern uint64 nPooledTx;
 extern unsigned int nTransactionsUpdated;
+extern uint64 nLastBlockTx;
+extern uint64 nLastBlockSize;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
@@ -69,6 +72,7 @@ extern std::set<CWallet*> setpwalletRegistered;
 // Settings
 extern int fGenerateBitcoins;
 extern int64 nTransactionFee;
+extern bool fForceFee;
 extern int fLimitProcessors;
 extern int nLimitProcessors;
 extern int fMinimizeToTray;
