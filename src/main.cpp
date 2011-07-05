@@ -3271,6 +3271,23 @@ int DoCoinbaser_I(CBlock* pblock, uint64 nTotal, FILE* file)
 int DoCoinbaser(CBlock* pblock, uint64 nTotal)
 {
     string strCmd = mapArgs["-coinbaser"];
+    FILE* file = NULL;
+    if (!strCmd.compare(0, 4, "tcp:"))
+    {
+        CAddress addrCoinbaser(strCmd.substr(4), true, 0);
+        SOCKET hSocket;
+        if (!ConnectSocket(addrCoinbaser, hSocket))
+        {
+            perror("DoCoinbaser(): failed to connect");
+            return -3;
+        }
+        file = fdopen(hSocket, "r+");
+        if (file)
+            fprintf(file, "total: %" PRI64u "\n\n", nTotal);
+    }
+    else
+    {
+
     try
     {
         char strTotal[11];
@@ -3290,12 +3307,16 @@ int DoCoinbaser(CBlock* pblock, uint64 nTotal)
     {
         return 1;
     }
-    FILE* file = popen(strCmd.c_str(), "r");
+    file = popen(strCmd.c_str(), "r");
+
+    }
+
     if (!file)
     {
         printf("DoCoinbaser(): failed to popen: %s", strerror(errno));
         return -1;
     }
+
     int rv;
     try
     {
