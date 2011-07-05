@@ -387,8 +387,16 @@ bool AppInit2(int argc, char* argv[])
     nStart = GetTimeMillis();
     bool fFirstRun;
     pwalletMain = new CWallet("wallet.dat");
-    if (!pwalletMain->LoadWallet(fFirstRun))
-        strErrors += _("Error loading wallet.dat      \n");
+    int nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
+    if (nLoadWalletRet != DB_LOAD_OK)
+    {
+        if (nLoadWalletRet == DB_CORRUPT)
+            strErrors += _("Error loading wallet.dat: Wallet corrupted      \n");
+        else if (nLoadWalletRet == DB_TOO_NEW)
+            strErrors += _("Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n");
+        else
+            strErrors += _("Error loading wallet.dat      \n");
+    }
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     RegisterWallet(pwalletMain);
