@@ -12,13 +12,13 @@ public:
     mutable CCriticalSection cs_KeyStore;
 
     virtual bool AddKey(const CKey& key) =0;
-    virtual bool HaveKey(const uint160 &hashAddress) const =0;
-    virtual bool GetKey(const uint160 &hashAddress, CKey& keyOut) const =0;
-    virtual bool GetPubKey(const uint160 &hashAddress, std::vector<unsigned char>& vchPubKeyOut) const;
+    virtual bool HaveKey(const CBitcoinAddress &address) const =0;
+    virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
+    virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
     virtual std::vector<unsigned char> GenerateNewKey();
 };
 
-typedef std::map<uint160, CSecret> KeyMap;
+typedef std::map<CBitcoinAddress, CSecret> KeyMap;
 
 class CBasicKeyStore : public CKeyStore
 {
@@ -27,13 +27,13 @@ protected:
 
 public:
     bool AddKey(const CKey& key);
-    bool HaveKey(const uint160 &hashAddress) const
+    bool HaveKey(const CBitcoinAddress &address) const
     {
-        return (mapKeys.count(hashAddress) > 0);
+        return (mapKeys.count(address) > 0);
     }
-    bool GetKey(const uint160 &hashAddress, CKey& keyOut) const
+    bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const
     {
-        KeyMap::const_iterator mi = mapKeys.find(hashAddress);
+        KeyMap::const_iterator mi = mapKeys.find(address);
         if (mi != mapKeys.end())
         {
             keyOut.SetSecret((*mi).second);
@@ -43,7 +43,7 @@ public:
     }
 };
 
-typedef std::map<uint160, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;
+typedef std::map<CBitcoinAddress, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;
 
 class CCryptoKeyStore : public CBasicKeyStore
 {
@@ -106,14 +106,14 @@ public:
     virtual bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     std::vector<unsigned char> GenerateNewKey();
     bool AddKey(const CKey& key);
-    bool HaveKey(const uint160 &hashAddress) const
+    bool HaveKey(const CBitcoinAddress &address) const
     {
         if (!IsCrypted())
-            return CBasicKeyStore::HaveKey(hashAddress);
-        return mapCryptedKeys.count(hashAddress) > 0;
+            return CBasicKeyStore::HaveKey(address);
+        return mapCryptedKeys.count(address) > 0;
     }
-    bool GetKey(const uint160 &hashAddress, CKey& keyOut) const;
-    bool GetPubKey(const uint160 &hashAddress, std::vector<unsigned char>& vchPubKeyOut) const;
+    bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const;
+    bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
 };
 
 #endif

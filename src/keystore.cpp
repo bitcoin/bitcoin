@@ -16,10 +16,10 @@ std::vector<unsigned char> CKeyStore::GenerateNewKey()
     return key.GetPubKey();
 }
 
-bool CKeyStore::GetPubKey(const uint160 &hashAddress, std::vector<unsigned char> &vchPubKeyOut) const
+bool CKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const
 {
     CKey key;
-    if (!GetKey(hashAddress, key))
+    if (!GetKey(address, key))
         return false;
     vchPubKeyOut = key.GetPubKey();
     return true;
@@ -28,7 +28,7 @@ bool CKeyStore::GetPubKey(const uint160 &hashAddress, std::vector<unsigned char>
 bool CBasicKeyStore::AddKey(const CKey& key)
 {
     CRITICAL_BLOCK(cs_KeyStore)
-        mapKeys[Hash160(key.GetPubKey())] = key.GetSecret();
+        mapKeys[key.GetAddress()] = key.GetSecret();
     return true;
 }
 
@@ -98,19 +98,19 @@ bool CCryptoKeyStore::AddCryptedKey(const std::vector<unsigned char> &vchPubKey,
         if (!SetCrypted())
             return false;
 
-        mapCryptedKeys[Hash160(vchPubKey)] = make_pair(vchPubKey, vchCryptedSecret);
+        mapCryptedKeys[CBitcoinAddress(vchPubKey)] = make_pair(vchPubKey, vchCryptedSecret);
     }
     return true;
 }
 
-bool CCryptoKeyStore::GetKey(const uint160 &hashAddress, CKey& keyOut) const
+bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
 {
     CRITICAL_BLOCK(cs_vMasterKey)
     {
         if (!IsCrypted())
-            return CBasicKeyStore::GetKey(hashAddress, keyOut);
+            return CBasicKeyStore::GetKey(address, keyOut);
 
-        CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(hashAddress);
+        CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
         {
             const std::vector<unsigned char> &vchPubKey = (*mi).second.first;
@@ -125,14 +125,14 @@ bool CCryptoKeyStore::GetKey(const uint160 &hashAddress, CKey& keyOut) const
     return false;
 }
 
-bool CCryptoKeyStore::GetPubKey(const uint160 &hashAddress, std::vector<unsigned char>& vchPubKeyOut) const
+bool CCryptoKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const
 {
     CRITICAL_BLOCK(cs_vMasterKey)
     {
         if (!IsCrypted())
-            return CKeyStore::GetPubKey(hashAddress, vchPubKeyOut);
+            return CKeyStore::GetPubKey(address, vchPubKeyOut);
 
-        CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(hashAddress);
+        CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
         {
             vchPubKeyOut = (*mi).second.first;

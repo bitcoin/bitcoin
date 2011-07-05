@@ -1123,7 +1123,7 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 }
 
 
-bool ExtractHash160(const CScript& scriptPubKey, const CKeyStore* keystore, uint160& hash160Ret)
+bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
     vector<pair<opcodetype, valtype> > vSolution;
     if (!Solver(scriptPubKey, vSolution))
@@ -1135,18 +1135,11 @@ bool ExtractHash160(const CScript& scriptPubKey, const CKeyStore* keystore, uint
         {
             uint160 hash160;
             if (item.first == OP_PUBKEY)
-            {
-                hash160 = Hash160(item.second);
-            }
+                addressRet.SetAddress(item.second);
             else if (item.first == OP_PUBKEYHASH)
-            {
-                hash160 = uint160(item.second);
-            }
-            if (keystore == NULL || keystore->HaveKey(hash160))
-            {
-                hash160Ret = hash160;
+                addressRet.SetAddress(uint160(item.second));
+            if (keystore == NULL || keystore->HaveKey(addressRet))
                 return true;
-            }
         }
     }
     return false;

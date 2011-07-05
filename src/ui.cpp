@@ -235,11 +235,11 @@ void SetDefaultReceivingAddress(const string& strAddress)
         return;
     if (strAddress != pframeMain->m_textCtrlAddress->GetValue())
     {
-        uint160 hash160;
-        if (!AddressToHash160(strAddress, hash160))
+        CBitcoinAddress address(strAddress);
+        if (!address.IsValid())
             return;
         vector<unsigned char> vchPubKey;
-        if (!pwalletMain->GetPubKey(hash160, vchPubKey))
+        if (!pwalletMain->GetPubKey(address, vchPubKey))
             return;
         pwalletMain->SetDefaultKey(vchPubKey);
         pframeMain->m_textCtrlAddress->SetValue(strAddress);
@@ -367,7 +367,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     // Fill your address text box
     vector<unsigned char> vchPubKey;
     if (CWalletDB(pwalletMain->strWalletFile,"r").ReadDefaultKey(vchPubKey))
-        m_textCtrlAddress->SetValue(PubKeyToAddress(vchPubKey));
+        m_textCtrlAddress->SetValue(CBitcoinAddress(vchPubKey).ToString());
 
     if (pwalletMain->IsCrypted())
         m_menuOptions->Remove(m_menuOptionsEncryptWallet);
@@ -704,24 +704,23 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
             {
                 if (pwalletMain->IsMine(txout))
                 {
-                    uint160 hash160;
-                    if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
+                    CBitcoinAddress address;
+                    if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
                     {
                         CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
                         {
                             //strDescription += _("Received payment to ");
                             //strDescription += _("Received with address ");
                             strDescription += _("Received with: ");
-                            string strAddress = Hash160ToAddress(hash160);
-                            map<string, string>::iterator mi = pwalletMain->mapAddressBook.find(strAddress);
+                            map<CBitcoinAddress, string>::iterator mi = pwalletMain->mapAddressBook.find(address);
                             if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
                             {
                                 string strLabel = (*mi).second;
-                                strDescription += strAddress.substr(0,12) + "... ";
+                                strDescription += address.ToString().substr(0,12) + "... ";
                                 strDescription += "(" + strLabel + ")";
                             }
                             else
-                                strDescription += strAddress;
+                                strDescription += address.ToString();
                         }
                     }
                     break;
@@ -786,9 +785,9 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 else
                 {
                     // Sent to Bitcoin Address
-                    uint160 hash160;
-                    if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
-                        strAddress = Hash160ToAddress(hash160);
+                    CBitcoinAddress address;
+                    if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
+                        strAddress = address.ToString();
                 }
 
                 string strDescription = _("To: ");
@@ -1115,7 +1114,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     m_statusBar->SetStatusText(strStatus, 2);
 
     // Update receiving address
-    string strDefaultAddress = PubKeyToAddress(pwalletMain->vchDefaultKey);
+    string strDefaultAddress = CBitcoinAddress(pwalletMain->vchDefaultKey).ToString();
     if (m_textCtrlAddress->GetValue() != strDefaultAddress)
         m_textCtrlAddress->SetValue(strDefaultAddress);
 }
@@ -1394,7 +1393,7 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
             return;
 
         // Generate new key
-        strAddress = PubKeyToAddress(pwalletMain->GetOrReuseKeyFromPool());
+        strAddress = CBitcoinAddress(pwalletMain->GetOrReuseKeyFromPool()).ToString();
 
         if (fWasLocked)
             pwalletMain->Lock();
@@ -1503,17 +1502,16 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                 {
                     if (pwalletMain->IsMine(txout))
                     {
-                        uint160 hash160;
-                        if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
+                        CBitcoinAddress address;
+                        if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
                         {
-                            string strAddress = Hash160ToAddress(hash160);
-                            if (pwalletMain->mapAddressBook.count(strAddress))
+                            if (pwalletMain->mapAddressBook.count(address))
                             {
                                 strHTML += string() + _("<b>From:</b> ") + _("unknown") + "<br>";
                                 strHTML += _("<b>To:</b> ");
-                                strHTML += HtmlEscape(strAddress);
-                                if (!pwalletMain->mapAddressBook[strAddress].empty())
-                                    strHTML += _(" (yours, label: ") + pwalletMain->mapAddressBook[strAddress] + ")";
+                                strHTML += HtmlEscape(address.ToString());
+                                if (!pwalletMain->mapAddressBook[address].empty())
+                                    strHTML += _(" (yours, label: ") + pwalletMain->mapAddressBook[address] + ")";
                                 else
                                     strHTML += _(" (yours)");
                                 strHTML += "<br>";
@@ -1589,13 +1587,13 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                     if (wtx.mapValue["to"].empty())
                     {
                         // Offline transaction
-                        uint160 hash160;
-                        if (ExtractHash160(txout.scriptPubKey, pwalletMain, hash160))
+                        CBitcoinAddress address;
+                        if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
                         {
-                            string strAddress = Hash160ToAddress(hash160);
+                            string strAddress = address.ToString();
                             strHTML += _("<b>To:</b> ");
-                            if (pwalletMain->mapAddressBook.count(strAddress) && !pwalletMain->mapAddressBook[strAddress].empty())
-                                strHTML += pwalletMain->mapAddressBook[strAddress] + " ";
+                            if (pwalletMain->mapAddressBook.count(address) && !pwalletMain->mapAddressBook[address].empty())
+                                strHTML += pwalletMain->mapAddressBook[address] + " ";
                             strHTML += strAddress;
                             strHTML += "<br>";
                         }
@@ -2156,8 +2154,8 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
         }
 
         // Parse bitcoin address
-        uint160 hash160;
-        bool fBitcoinAddress = AddressToHash160(strAddress, hash160);
+        CBitcoinAddress address(strAddress);
+        bool fBitcoinAddress = address.IsValid();
 
         if (fBitcoinAddress)
         {
@@ -2170,7 +2168,7 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
 
                 // Send to bitcoin address
                 CScript scriptPubKey;
-                scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
+                scriptPubKey.SetBitcoinAddress(address);
 
                 string strError = pwalletMain->SendMoney(scriptPubKey, nValue, wtx, true);
                 if (strError == "")
@@ -2214,7 +2212,7 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
         }
 
         CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
-            if (!pwalletMain->mapAddressBook.count(strAddress))
+            if (!pwalletMain->mapAddressBook.count(address))
                 pwalletMain->SetAddressBookName(strAddress, "");
 
         EndModal(true);
@@ -2626,15 +2624,14 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
     {
         string strDefaultReceiving = (string)pframeMain->m_textCtrlAddress->GetValue();
-        BOOST_FOREACH(const PAIRTYPE(string, string)& item, pwalletMain->mapAddressBook)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
         {
-            string strAddress = item.first;
+            const CBitcoinAddress& address = item.first;
             string strName = item.second;
-            uint160 hash160;
-            bool fMine = (AddressToHash160(strAddress, hash160) && pwalletMain->HaveKey(hash160));
+            bool fMine = pwalletMain->HaveKey(address);
             wxListCtrl* plistCtrl = fMine ? m_listCtrlReceiving : m_listCtrlSending;
-            int nIndex = InsertLine(plistCtrl, strName, strAddress);
-            if (strAddress == (fMine ? strDefaultReceiving : string(strInitSelected)))
+            int nIndex = InsertLine(plistCtrl, strName, address.ToString());
+            if (address.ToString() == (fMine ? strDefaultReceiving : string(strInitSelected)))
                 plistCtrl->SetItemState(nIndex, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
         }
     }
@@ -2741,8 +2738,8 @@ void CAddressBookDialog::OnButtonCopy(wxCommandEvent& event)
 
 bool CAddressBookDialog::CheckIfMine(const string& strAddress, const string& strTitle)
 {
-    uint160 hash160;
-    bool fMine = (AddressToHash160(strAddress, hash160) && pwalletMain->HaveKey(hash160));
+    CBitcoinAddress address(strAddress);
+    bool fMine = address.IsValid() && pwalletMain->HaveKey(address);
     if (fMine)
         wxMessageBox(_("This is one of your own addresses for receiving payments and cannot be entered in the address book.  "), strTitle);
     return fMine;
@@ -2828,7 +2825,7 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
                 return;
 
             // Generate new key
-            strAddress = PubKeyToAddress(pwalletMain->GetOrReuseKeyFromPool());
+            strAddress = CBitcoinAddress(pwalletMain->GetOrReuseKeyFromPool()).ToString();
 
             if (fWasLocked)
                 pwalletMain->Lock();

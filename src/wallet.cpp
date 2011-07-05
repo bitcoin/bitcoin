@@ -270,7 +270,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
             if (txout.scriptPubKey == scriptDefaultKey)
             {
                 SetDefaultKey(GetOrReuseKeyFromPool());
-                SetAddressBookName(PubKeyToAddress(vchDefaultKey), "");
+                SetAddressBookName(CBitcoinAddress(vchDefaultKey), "");
             }
         }
 
@@ -406,8 +406,8 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
-void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, list<pair<string, int64> >& listReceived,
-                           list<pair<string, int64> >& listSent, int64& nFee, string& strSentAccount) const
+void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, list<pair<CBitcoinAddress, int64> >& listReceived,
+                           list<pair<CBitcoinAddress, int64> >& listSent, int64& nFee, string& strSentAccount) const
 {
     nGeneratedImmature = nGeneratedMature = nFee = 0;
     listReceived.clear();
@@ -435,12 +435,9 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
     // but non-standard clients might (so return a list of address/amount pairs)
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
-        string address;
-        uint160 hash160;
+        CBitcoinAddress address;
         vector<unsigned char> vchPubKey;
-        if (ExtractHash160(txout.scriptPubKey, pwallet, hash160))
-            address = Hash160ToAddress(hash160);
-        else
+        if (!ExtractAddress(txout.scriptPubKey, pwallet, address))
         {
             printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                    this->GetHash().ToString().c_str());
@@ -468,25 +465,25 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
     int64 allGeneratedImmature, allGeneratedMature, allFee;
     allGeneratedImmature = allGeneratedMature = allFee = 0;
     string strSentAccount;
-    list<pair<string, int64> > listReceived;
-    list<pair<string, int64> > listSent;
+    list<pair<CBitcoinAddress, int64> > listReceived;
+    list<pair<CBitcoinAddress, int64> > listSent;
     GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
 
     if (strAccount == "")
         nGenerated = allGeneratedMature;
     if (strAccount == strSentAccount)
     {
-        BOOST_FOREACH(const PAIRTYPE(string,int64)& s, listSent)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64)& s, listSent)
             nSent += s.second;
         nFee = allFee;
     }
     CRITICAL_BLOCK(pwallet->cs_mapAddressBook)
     {
-        BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listReceived)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64)& r, listReceived)
         {
             if (pwallet->mapAddressBook.count(r.first))
             {
-                map<string, string>::const_iterator mi = pwallet->mapAddressBook.find(r.first);
+                map<CBitcoinAddress, string>::const_iterator mi = pwallet->mapAddressBook.find(r.first);
                 if (mi != pwallet->mapAddressBook.end() && (*mi).second == strAccount)
                     nReceived += r.second;
             }
@@ -955,7 +952,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
 
                     // Fill a vout to ourself, using same address type as the payment
                     CScript scriptChange;
-                    if (vecSend[0].first.GetBitcoinAddressHash160() != 0)
+                    if (vecSend[0].first.GetBitcoinAddress().IsValid())
                         scriptChange.SetBitcoinAddress(vchPubKey);
                     else
                         scriptChange << vchPubKey << OP_CHECKSIG;
@@ -1104,7 +1101,7 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
 
 
 // requires cs_main lock
-string CWallet::SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
+string CWallet::SendMoneyToBitcoinAddress(const CBitcoinAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee)
 {
     // Check amount
     if (nValue <= 0)
@@ -1114,8 +1111,7 @@ string CWallet::SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWall
 
     // Parse bitcoin address
     CScript scriptPubKey;
-    if (!scriptPubKey.SetBitcoinAddress(strAddress))
-        return _("Invalid bitcoin address");
+    scriptPubKey.SetBitcoinAddress(address);
 
     return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
 }
@@ -1139,7 +1135,7 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
         RandAddSeedPerfmon();
 
         SetDefaultKey(GetOrReuseKeyFromPool());
-        if (!SetAddressBookName(PubKeyToAddress(vchDefaultKey), ""))
+        if (!SetAddressBookName(CBitcoinAddress(vchDefaultKey), ""))
             return DB_LOAD_FAIL;
     }
 
@@ -1148,20 +1144,20 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
 }
 
 
-bool CWallet::SetAddressBookName(const string& strAddress, const string& strName)
+bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& strName)
 {
-    mapAddressBook[strAddress] = strName;
+    mapAddressBook[address] = strName;
     if (!fFileBacked)
         return false;
-    return CWalletDB(strWalletFile).WriteName(strAddress, strName);
+    return CWalletDB(strWalletFile).WriteName(address.ToString(), strName);
 }
 
-bool CWallet::DelAddressBookName(const string& strAddress)
+bool CWallet::DelAddressBookName(const CBitcoinAddress& address)
 {
-    mapAddressBook.erase(strAddress);
+    mapAddressBook.erase(address);
     if (!fFileBacked)
         return false;
-    return CWalletDB(strWalletFile).EraseName(strAddress);
+    return CWalletDB(strWalletFile).EraseName(address.ToString());
 }
 
 
