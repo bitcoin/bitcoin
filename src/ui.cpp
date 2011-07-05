@@ -240,7 +240,7 @@ void SetDefaultReceivingAddress(const string& strAddress)
             return;
         if (!mapPubKeys.count(hash160))
             return;
-        CWalletDB(pwalletMain->strWalletFile).WriteDefaultKey(mapPubKeys[hash160]);
+        pwalletMain->SetDefaultKey(mapPubKeys[hash160]);
         pframeMain->m_textCtrlAddress->SetValue(strAddress);
     }
 }

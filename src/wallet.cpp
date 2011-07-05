@@ -98,14 +98,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             if (txout.scriptPubKey == scriptDefaultKey)
-            {
-                if (!fFileBacked)
-                    continue;
-                CWalletDB walletdb(strWalletFile);
-                vchDefaultKey = GetKeyFromKeyPool();
-                walletdb.WriteDefaultKey(vchDefaultKey);
-                walletdb.WriteName(PubKeyToAddress(vchDefaultKey), "");
-            }
+                SetDefaultKey(GetKeyFromKeyPool());
         }
 
         // Notify UI
@@ -967,10 +960,9 @@ bool CWallet::LoadWallet(bool& fFirstRunRet)
         // Create new default key
         RandAddSeedPerfmon();
 
-        vchDefaultKey = GetKeyFromKeyPool();
+        SetDefaultKey(GetKeyFromKeyPool());
         if (!SetAddressBookName(PubKeyToAddress(vchDefaultKey), ""))
             return false;
-        CWalletDB(strWalletFile).WriteDefaultKey(vchDefaultKey);
     }
 
     CreateThread(ThreadFlushWalletDB, &strWalletFile);
@@ -1020,6 +1012,17 @@ bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
         }
     }
     return false;
+}
+
+bool CWallet::SetDefaultKey(const std::vector<unsigned char> &vchPubKey)
+{
+    if (fFileBacked)
+    {
+        if (!CWalletDB(strWalletFile).WriteDefaultKey(vchPubKey))
+            return false;
+    }
+    vchDefaultKey = vchPubKey;
+    return true;
 }
 
 bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)
@@ -1133,3 +1136,4 @@ void CReserveKey::ReturnKey()
     nIndex = -1;
     vchPubKey.clear();
 }
+
