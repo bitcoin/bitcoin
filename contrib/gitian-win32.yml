@@ -74,7 +74,8 @@ script: |
   cd src
   sed 's/$(DEBUGFLAGS)//' < makefile.linux-mingw > makefile.linux-mingw.2 && mv makefile.linux-mingw.2 makefile.linux-mingw
   sed 's|//#include <WSPiApi.h>|#include <WSPiApi.h>|' < net.cpp > net.cpp.2 && mv net.cpp.2 net.cpp
-  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoin.exe bitcoind.exe
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoin.exe USE_UPNP=1
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoind.exe USE_UPNP=0
   i586-mingw32msvc-strip bitcoin.exe
   i586-mingw32msvc-strip bitcoind.exe
   makensis ../share/setup.nsi

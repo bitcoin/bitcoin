@@ -6,7 +6,7 @@ architectures:
 - "i386"
 - "amd64"
 packages: 
-- "libdb4.7++-dev
+- "libdb4.7++-dev"
 - "libxxf86vm-dev"
 - "libgtk2.0-dev"
 - "libboost-all-dev"
@@ -51,6 +51,7 @@ script: |
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
   sed 's/$(DEBUGFLAGS)//' < makefile.unix > makefile.unix.2 && mv makefile.unix.2 makefile.unix
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin bitcoind
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin USE_UPNP=1
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
