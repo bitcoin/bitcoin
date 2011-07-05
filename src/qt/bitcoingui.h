@@ -8,6 +8,7 @@ class TransactionTableModel;
 class ClientModel;
 class WalletModel;
 class TransactionView;
+class OverviewPage;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -16,6 +17,7 @@ class QTableView;
 class QAbstractItemModel;
 class QModelIndex;
 class QProgressBar;
+class QStackedWidget;
 QT_END_NAMESPACE
 
 class BitcoinGUI : public QMainWindow
@@ -42,7 +44,10 @@ private:
     ClientModel *clientModel;
     WalletModel *walletModel;
 
-    QLabel *labelBalance;
+    QStackedWidget *centralWidget;
+    OverviewPage *overviewPage;
+    QWidget *transactionsPage;
+
     QLabel *labelConnections;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocks;
@@ -50,6 +55,8 @@ private:
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
 
+    QAction *overviewAction;
+    QAction *historyAction;
     QAction *quit;
     QAction *sendCoins;
     QAction *addressbook;
@@ -86,6 +93,9 @@ private slots:
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void transactionDetails(const QModelIndex& idx);
     void incomingTransaction(const QModelIndex & parent, int start, int end);
+
+    void gotoOverviewTab();
+    void gotoHistoryTab();
 };
 
 #endif

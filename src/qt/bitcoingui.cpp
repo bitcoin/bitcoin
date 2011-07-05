@@ -17,6 +17,7 @@
 #include "transactiondescdialog.h"
 #include "addresstablemodel.h"
 #include "transactionview.h"
+#include "overviewpage.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -33,6 +34,7 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QProgressBar>
+#include <QStackedWidget>
 
 #include <QDebug>
 
@@ -66,32 +68,28 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Toolbar
     QToolBar *toolbar = addToolBar("Main toolbar");
     toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    toolbar->addAction(overviewAction);
+    toolbar->addAction(historyAction);
+    toolbar->addSeparator();
     toolbar->addAction(sendCoins);
     toolbar->addAction(receiveCoins);
     toolbar->addAction(addressbook);
 
-    // Balance: <balance>
-    QHBoxLayout *hbox_balance = new QHBoxLayout();
-    hbox_balance->addWidget(new QLabel(tr("Balance:")));
-    hbox_balance->addSpacing(5);/* Add some spacing between the label and the text */
+    overviewPage = new OverviewPage();
 
-    labelBalance = new QLabel();
-    labelBalance->setFont(QFont("Monospace", -1, QFont::Bold));
-    labelBalance->setToolTip(tr("Your current balance"));
-    labelBalance->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
-    hbox_balance->addWidget(labelBalance);
-    hbox_balance->addStretch(1);
-    
     QVBoxLayout *vbox = new QVBoxLayout();
-    vbox->addLayout(hbox_balance);
 
     transactionView = new TransactionView(this);
     connect(transactionView, SIGNAL(doubleClicked(const QModelIndex&)), this, SLOT(transactionDetails(const QModelIndex&)));
     vbox->addWidget(transactionView);
 
-    QWidget *centralwidget = new QWidget(this);
-    centralwidget->setLayout(vbox);
-    setCentralWidget(centralwidget);
+    transactionsPage = new QWidget(this);
+    transactionsPage->setLayout(vbox);
+
+    centralWidget = new QStackedWidget(this);
+    centralWidget->addWidget(overviewPage);
+    centralWidget->addWidget(transactionsPage);
+    setCentralWidget(centralWidget);
     
     // Create status bar
     statusBar();
@@ -125,10 +123,23 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addPermanentWidget(labelTransactions);
 
     createTrayIcon();
+
+    gotoOverviewTab();
 }
 
 void BitcoinGUI::createActions()
 {
+    QActionGroup *tabGroup = new QActionGroup(this);
+    overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
+    overviewAction->setCheckable(true);
+    tabGroup->addAction(overviewAction);
+    historyAction = new QAction(QIcon(":/icons/history"), tr("&History"), this);
+    historyAction->setCheckable(true);
+    tabGroup->addAction(historyAction);
+
+    connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewTab()));
+    connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryTab()));
+
     quit = new QAction(QIcon(":/icons/quit"), tr("&Exit"), this);
     quit->setToolTip(tr("Quit application"));
     sendCoins = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
@@ -267,7 +278,7 @@ void BitcoinGUI::aboutClicked()
 
 void BitcoinGUI::setBalance(qint64 balance)
 {
-    labelBalance->setText(GUIUtil::formatMoney(balance) + QString(" BTC"));
+    overviewPage->setBalance(balance);
 }
 
 void BitcoinGUI::setNumConnections(int count)
@@ -398,4 +409,16 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                               tr("Address: ") + address + "\n",
                               QSystemTrayIcon::Information);
     }
+}
+
+void BitcoinGUI::gotoOverviewTab()
+{
+    overviewAction->setChecked(true);
+    centralWidget->setCurrentWidget(overviewPage);
+}
+
+void BitcoinGUI::gotoHistoryTab()
+{
+    historyAction->setChecked(true);
+    centralWidget->setCurrentWidget(transactionsPage);
 }

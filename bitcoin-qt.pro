@@ -76,7 +76,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/transactionfilterproxy.h \
     src/qt/transactionview.h \
     src/qt/walletmodel.h \
-    src/bitcoinrpc.h
+    src/bitcoinrpc.h \
+    src/qt/overviewpage.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -112,7 +113,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactionfilterproxy.cpp \
     src/qt/transactionview.cpp \
     src/qt/walletmodel.cpp \
-    src/bitcoinrpc.cpp
+    src/bitcoinrpc.cpp \
+    src/qt/overviewpage.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -122,7 +124,8 @@ FORMS += \
     src/qt/forms/addressbookdialog.ui \
     src/qt/forms/aboutdialog.ui \
     src/qt/forms/editaddressdialog.ui \
-    src/qt/forms/transactiondescdialog.ui
+    src/qt/forms/transactiondescdialog.ui \
+    src/qt/forms/overviewpage.ui
 
 CODECFORTR = UTF-8
 TRANSLATIONS = src/qt/locale/bitcoin_nl.ts

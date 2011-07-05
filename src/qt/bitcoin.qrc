@@ -26,6 +26,8 @@
         <file alias="toolbar_testnet">res/icons/toolbar_testnet.png</file>
         <file alias="edit">res/icons/edit.png</file>
         <file alias="editdelete">res/icons/editdelete.png</file>
+        <file alias="history">res/icons/history.png</file>
+        <file alias="overview">res/icons/overview.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
