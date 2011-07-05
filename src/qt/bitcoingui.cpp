@@ -78,6 +78,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelBalance = new QLabel();
     labelBalance->setFont(QFont("Monospace", -1, QFont::Bold));
     labelBalance->setToolTip(tr("Your current balance"));
+    labelBalance->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
     hbox_balance->addWidget(labelBalance);
     hbox_balance->addStretch(1);
     
