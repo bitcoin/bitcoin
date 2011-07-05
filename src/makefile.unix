@@ -8,6 +8,8 @@ WXINCLUDEPATHS=$(shell wx-config --cxxflags)
 
 WXLIBS=$(shell wx-config --libs)
 
+USE_UPNP:=0
+
 DEFS=-DNOPCH -DFOURWAYSSE2 -DUSE_SSL
 
 # for boost 1.37, add -mt to the boost libraries
@@ -21,17 +23,10 @@ LIBS= \
    -l ssl \
    -l crypto
 
-bitcoin: USE_UPNP:=1
-	ifdef USE_UPNP
-		LIBS += -l miniupnpc
-		DEFS += -DUSE_UPNP=$(USE_UPNP)
-	endif
-
-bitcoind: USE_UPNP:=0
-	ifdef USE_UPNP
-		LIBS += -l miniupnpc
-		DEFS += -DUSE_UPNP=$(USE_UPNP)
-	endif
+ifdef USE_UPNP
+	LIBS += -l miniupnpc
+	DEFS += -DUSE_UPNP=$(USE_UPNP)
+endif
 
 LIBS+= \
  -Wl,-Bdynamic \
