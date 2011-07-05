@@ -3051,20 +3051,41 @@ int DoCoinbaser_I(CBlock* pblock, uint64 nTotal, FILE* file)
 int DoCoinbaser(CBlock* pblock, uint64 nTotal)
 {
     string strCmd = mapArgs["-coinbaser"];
-    try
+    FILE* file = NULL;
+    bool fIsProcess = false;
+    if (!strCmd.compare(0, 4, "tcp:"))
     {
-        boost::replace_all(strCmd, "%d", boost::lexical_cast<std::string>(nTotal));
+        CService addrCoinbaser(strCmd.substr(4), true);
+        SOCKET hSocket;
+        if (!ConnectSocket(addrCoinbaser, hSocket))
+        {
+            perror("DoCoinbaser(): failed to connect");
+            return -3;
+        }
+        file = fdopen(hSocket, "r+");
+        if (file)
+            fprintf(file, "total: %" PRI64u "\n\n", nTotal);
     }
-    catch (...)
+    else
     {
-        return 1;
+        try
+        {
+            boost::replace_all(strCmd, "%d", boost::lexical_cast<std::string>(nTotal));
+        }
+        catch (...)
+        {
+            return 1;
+        }
+        file = popen(strCmd.c_str(), "r");
+        fIsProcess = true;
     }
-    FILE* file = popen(strCmd.c_str(), "r");
+
     if (!file)
     {
         printf("DoCoinbaser(): failed to popen: %s", strerror(errno));
         return -1;
     }
+
     int rv;
     try
     {
@@ -3074,7 +3095,10 @@ int DoCoinbaser(CBlock* pblock, uint64 nTotal)
     {
         rv = 1;
     }
-    pclose(file);
+    if (fIsProcess)
+        pclose(file);
+    else
+        fclose(file);
     if (rv)
         pblock->vtx[0].vout.resize(1);
     return rv;
