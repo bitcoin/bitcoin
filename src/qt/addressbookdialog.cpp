@@ -104,27 +104,6 @@ void AddressBookDialog::on_copyToClipboard_clicked()
     }
 }
 
-void AddressBookDialog::on_editButton_clicked()
-{
-    QModelIndexList indexes = getCurrentTable()->selectionModel()->selectedRows();
-    if(indexes.isEmpty())
-    {
-        return;
-    }
-    // Map selected index to source address book model
-    QAbstractProxyModel *proxy_model = static_cast<QAbstractProxyModel*>(getCurrentTable()->model());
-    QModelIndex selected = proxy_model->mapToSource(indexes.at(0));
-
-    // Double click also triggers edit button
-    EditAddressDialog dlg(
-            ui->tabWidget->currentIndex() == SendingTab ?
-            EditAddressDialog::EditSendingAddress :
-            EditAddressDialog::EditReceivingAddress);
-    dlg.setModel(model);
-    dlg.loadRow(selected.row());
-    dlg.exec();
-}
-
 void AddressBookDialog::on_newAddressButton_clicked()
 {
     EditAddressDialog dlg(

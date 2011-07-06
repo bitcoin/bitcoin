@@ -46,7 +46,6 @@ private slots:
     void on_deleteButton_clicked();
     void on_tabWidget_currentChanged(int index);
     void on_newAddressButton_clicked();
-    void on_editButton_clicked();
     void on_copyToClipboard_clicked();
 };
 
