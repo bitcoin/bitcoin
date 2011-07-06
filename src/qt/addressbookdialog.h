@@ -10,6 +10,7 @@ class AddressTableModel;
 
 QT_BEGIN_NAMESPACE
 class QTableView;
+class QItemSelection;
 QT_END_NAMESPACE
 
 class AddressBookDialog : public QDialog
@@ -44,9 +45,9 @@ private:
 private slots:
     void on_buttonBox_accepted();
     void on_deleteButton_clicked();
-    void on_tabWidget_currentChanged(int index);
     void on_newAddressButton_clicked();
     void on_copyToClipboard_clicked();
+    void selectionChanged();
 };
 
 #endif // ADDRESSBOOKDIALOG_H

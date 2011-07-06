@@ -23,6 +23,8 @@ AddressBookDialog::AddressBookDialog(Mode mode, QWidget *parent) :
         ui->sendTableView->setFocus();
         break;
     }
+
+    connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(selectionChanged()));
 }
 
 AddressBookDialog::~AddressBookDialog()
@@ -64,6 +66,11 @@ void AddressBookDialog::setModel(AddressTableModel *model)
     ui->sendTableView->horizontalHeader()->setResizeMode(
             AddressTableModel::Label, QHeaderView::Stretch);
 
+    connect(ui->receiveTableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            this, SLOT(selectionChanged()));
+    connect(ui->sendTableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            this, SLOT(selectionChanged()));
+
     if(mode == ForSending)
     {
         // Auto-select first row when in sending mode
@@ -74,7 +81,7 @@ void AddressBookDialog::setModel(AddressTableModel *model)
 void AddressBookDialog::setTab(int tab)
 {
     ui->tabWidget->setCurrentIndex(tab);
-    on_tabWidget_currentChanged(tab);
+    selectionChanged();
 }
 
 QTableView *AddressBookDialog::getCurrentTable()
@@ -114,20 +121,6 @@ void AddressBookDialog::on_newAddressButton_clicked()
     dlg.exec();
 }
 
-void AddressBookDialog::on_tabWidget_currentChanged(int index)
-{
-    // Enable/disable buttons based on selected tab
-    switch(index)
-    {
-    case SendingTab:
-        ui->deleteButton->setEnabled(true);
-        break;
-    case ReceivingTab:
-        ui->deleteButton->setEnabled(false);
-        break;
-    }
-}
-
 void AddressBookDialog::on_deleteButton_clicked()
 {
     QTableView *table = getCurrentTable();
@@ -158,3 +151,27 @@ void AddressBookDialog::on_buttonBox_accepted()
     }
 }
 
+void AddressBookDialog::selectionChanged()
+{
+    // Set button states based on selected tab and selection
+    QTableView *table = getCurrentTable();
+
+    if(table->selectionModel()->hasSelection())
+    {
+        switch(ui->tabWidget->currentIndex())
+        {
+        case SendingTab:
+            ui->deleteButton->setEnabled(true);
+            break;
+        case ReceivingTab:
+            ui->deleteButton->setEnabled(false);
+            break;
+        }
+        ui->copyToClipboard->setEnabled(true);
+    }
+    else
+    {
+        ui->deleteButton->setEnabled(false);
+        ui->copyToClipboard->setEnabled(false);
+    }
+}
