@@ -190,7 +190,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 
     if(clientModel->isTestNet())
     {
-        QString title_testnet = tr("Bitcoin Wallet [testnet]");
+        QString title_testnet = windowTitle() + QString(" ") + tr("[testnet]");
         setWindowTitle(title_testnet);
         setWindowIcon(QIcon(":icons/bitcoin_testnet"));
         if(trayIcon)
