@@ -26,10 +26,16 @@
       <property name="fieldGrowthPolicy">
        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
       </property>
+      <property name="horizontalSpacing">
+       <number>12</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>12</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Balance</string>
+         <string>Balance:</string>
         </property>
        </widget>
       </item>
@@ -37,6 +43,20 @@
        <widget class="QLabel" name="labelBalance">
         <property name="text">
          <string>123.456 BTC</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Number of transactions:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="labelNumTransactions">
+        <property name="text">
+         <string>0</string>
         </property>
        </widget>
       </item>

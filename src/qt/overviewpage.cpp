@@ -30,3 +30,8 @@ void OverviewPage::setBalance(qint64 balance)
 {
     ui->labelBalance->setText(GUIUtil::formatMoney(balance) + QString(" BTC"));
 }
+
+void OverviewPage::setNumTransactions(int count)
+{
+    ui->labelNumTransactions->setText(QLocale::system().toString(count));
+}

@@ -17,6 +17,7 @@ public:
 
 public slots:
     void setBalance(qint64 balance);
+    void setNumTransactions(int count);
 
 private:
     Ui::OverviewPage *ui;

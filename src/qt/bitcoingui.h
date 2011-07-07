@@ -51,7 +51,6 @@ private:
     QLabel *labelConnections;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocks;
-    QLabel *labelTransactions;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
 

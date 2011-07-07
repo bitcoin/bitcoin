@@ -104,11 +104,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelBlocks->setMinimumWidth(130);
     labelBlocks->setToolTip(tr("Number of blocks in the block chain"));
 
-    labelTransactions = new QLabel();
-    labelTransactions->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    labelTransactions->setMinimumWidth(130);
-    labelTransactions->setToolTip(tr("Number of transactions in your wallet"));
-
     // Progress bar for blocks download
     progressBarLabel = new QLabel(tr("Synchronizing with network..."));
     progressBarLabel->setVisible(false);
@@ -120,7 +115,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(labelConnections);
     statusBar()->addPermanentWidget(labelBlocks);
-    statusBar()->addPermanentWidget(labelTransactions);
 
     createTrayIcon();
 
@@ -133,7 +127,7 @@ void BitcoinGUI::createActions()
     overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
     overviewAction->setCheckable(true);
     tabGroup->addAction(overviewAction);
-    historyAction = new QAction(QIcon(":/icons/history"), tr("&History"), this);
+    historyAction = new QAction(QIcon(":/icons/history"), tr("&Transactions"), this);
     historyAction->setCheckable(true);
     tabGroup->addAction(historyAction);
 
@@ -318,7 +312,7 @@ void BitcoinGUI::setNumBlocks(int count)
 
 void BitcoinGUI::setNumTransactions(int count)
 {
-    labelTransactions->setText(tr("%n transaction(s)", "", count));
+    overviewPage->setNumTransactions(count);
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message)
