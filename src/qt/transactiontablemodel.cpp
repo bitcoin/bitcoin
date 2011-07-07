@@ -320,7 +320,7 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
 }
 
 /* Look up address in address book, if found return
-     address[0:12]... (label)
+     address (label)
    otherwise just return address
  */
 QString TransactionTableModel::lookupAddress(const std::string &address) const
@@ -333,7 +333,7 @@ QString TransactionTableModel::lookupAddress(const std::string &address) const
     }
     else
     {
-        description = label + QString(" (") + QString::fromStdString(address.substr(0,12)) + QString("...)");
+        description = label + QString(" (") + QString::fromStdString(address) + QString(")");
     }
     return description;
 }
