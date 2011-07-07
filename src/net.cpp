@@ -30,6 +30,34 @@ using namespace boost;
 
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
 
+option<int> timeoutOpt(
+    "net", "hide", "timeout", 5000,
+    "=<n>", _("Specify connection timeout (in milliseconds)"));
+
+option<bool> nolistenOpt(
+    "net", "show", "nolisten", false, true,
+    "", _("Don't accept connections from outside"));
+
+option<vector<string> > addnodeOpt(
+    "net", "show", "addnode", vector<string>(),
+    "=<ip> ...", _("Add a node to connect to"));
+
+option<vector<string> > connectOpt(
+    "net", "show", "connect", vector<string>(),
+    "=<ip> ...", _("Connect only to the specified node"));
+
+option<bool> dnsOpt(
+    "net", "hide", "dns", false,
+    "", _("Allow DNS lookups for addnode and connect"));
+
+option<int> portOpt("net", "hide", "port", 0);
+option<bool> noircOpt("net", "hide", "noirc", false, true);
+option<int> dropmessagestestOpt("net", "test", "dropmessagestest", 0);
+option<int> maxconnectionsOpt("net", "hide", "maxconnections", 125);
+option<int> maxreceivebufferOpt("net", "hide", "maxreceivebuffer", 10*1000);
+option<int> maxsendbufferOpt("net", "hide", "maxsendbuffer", 10*1000);
+
+
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
 void ThreadOpenConnections2(void* parg);
@@ -46,7 +74,6 @@ bool OpenNetworkConnection(const CAddress& addrConnect);
 // Global state variables
 //
 bool fClient = false;
-bool fAllowDNS = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
 CAddress addrLocalHost("0.0.0.0", 0, false, nLocalServices);
 CNode* pnodeLocalHost = NULL;
@@ -65,7 +92,6 @@ map<CInv, int64> mapAlreadyAskedFor;
 
 // Settings
 int fUseProxy = false;
-int nConnectTimeout = 5000;
 CAddress addrProxy("127.0.0.1",9050);
 
 
@@ -73,7 +99,7 @@ CAddress addrProxy("127.0.0.1",9050);
 
 unsigned short GetListenPort()
 {
-    return (unsigned short)(GetArg("-port", GetDefaultPort()));
+    return (unsigned short) portOpt[GetDefaultPort()];
 }
 
 void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
@@ -93,6 +119,13 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout)
 {
+    if (nTimeout == -1)
+    {  // check range on option parsing
+        nTimeout = timeoutOpt();
+        if (nTimeout <= 0 && nTimeout >= 600000)
+            nTimeout = 5000;
+    }
+
     hSocketRet = INVALID_SOCKET;
 
     SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -409,7 +442,7 @@ bool GetMyExternalIP(unsigned int& ipRet)
 void ThreadGetMyExternalIP(void* parg)
 {
     // Wait for IRC to get it first
-    if (!GetBoolArg("-noirc"))
+    if (!noircOpt())
     {
         for (int i = 0; i < 2 * 60; i++)
         {
@@ -882,7 +915,7 @@ void ThreadSocketHandler2(void* parg)
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
                     printf("socket error accept failed: %d\n", WSAGetLastError());
             }
-            else if (nInbound >= GetArg("-maxconnections", 125) - MAX_OUTBOUND_CONNECTIONS)
+            else if (nInbound >= maxconnectionsOpt() - MAX_OUTBOUND_CONNECTIONS)
             {
                 closesocket(hSocket);
             }
@@ -924,7 +957,8 @@ void ThreadSocketHandler2(void* parg)
                     CDataStream& vRecv = pnode->vRecv;
                     unsigned int nPos = vRecv.size();
 
-                    if (nPos > ReceiveBufferSize()) {
+                    if (nPos > 1000*maxreceivebufferOpt())
+                    {
                         if (!pnode->fDisconnect)
                             printf("socket recv flood control disconnect (%d bytes)\n", vRecv.size());
                         pnode->CloseSocketDisconnect();
@@ -989,7 +1023,9 @@ void ThreadSocketHandler2(void* parg)
                                 pnode->CloseSocketDisconnect();
                             }
                         }
-                        if (vSend.size() > SendBufferSize()) {
+
+                        if (vSend.size() > 1000*maxsendbufferOpt())
+                        {
                             if (!pnode->fDisconnect)
                                 printf("socket send flood control disconnect (%d bytes)\n", vSend.size());
                             pnode->CloseSocketDisconnect();
@@ -1248,14 +1284,16 @@ void ThreadOpenConnections(void* parg)
 
 void ThreadOpenConnections2(void* parg)
 {
+    bool fAllowDNS = dnsOpt();
+
     printf("ThreadOpenConnections started\n");
 
     // Connect to specific addresses
-    if (mapArgs.count("-connect"))
+    if (+connectOpt)
     {
         for (int64 nLoop = 0;; nLoop++)
         {
-            BOOST_FOREACH(string strAddr, mapMultiArgs["-connect"])
+            BOOST_FOREACH(string strAddr, connectOpt())
             {
                 CAddress addr(strAddr, fAllowDNS);
                 if (addr.IsValid())
@@ -1271,9 +1309,9 @@ void ThreadOpenConnections2(void* parg)
     }
 
     // Connect to manually added nodes first
-    if (mapArgs.count("-addnode"))
+    if (+addnodeOpt)
     {
-        BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
+        BOOST_FOREACH(string strAddr, addnodeOpt())
         {
             CAddress addr(strAddr, fAllowDNS);
             if (addr.IsValid())
@@ -1301,7 +1339,7 @@ void ThreadOpenConnections2(void* parg)
                     if (!pnode->fInbound)
                         nOutbound++;
             int nMaxOutboundConnections = MAX_OUTBOUND_CONNECTIONS;
-            nMaxOutboundConnections = min(nMaxOutboundConnections, (int)GetArg("-maxconnections", 125));
+            nMaxOutboundConnections = min(nMaxOutboundConnections, maxconnectionsOpt());
             if (nOutbound < nMaxOutboundConnections)
                 break;
             Sleep(2000);
@@ -1541,6 +1579,9 @@ void ThreadMessageHandler2(void* parg)
 
 bool BindListenPort(string& strError)
 {
+    if (nolistenOpt())
+        return true;
+
     strError = "";
     int nOne = 1;
     addrLocalHost.port = htons(GetListenPort());
@@ -1676,7 +1717,7 @@ void StartNode(void* parg)
 #endif
     printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
-    if (fUseProxy || mapArgs.count("-connect") || fNoListen)
+    if (fUseProxy || +connectOpt || nolistenOpt())
     {
         // Proxies can't take incoming connections
         addrLocalHost.ip = CAddress("0.0.0.0").ip;
@@ -1696,8 +1737,9 @@ void StartNode(void* parg)
         MapPort(fUseUPnP);
 
     // Get addresses from IRC and advertise ours
-    if (!CreateThread(ThreadIRCSeed, NULL))
-        printf("Error: CreateThread(ThreadIRCSeed) failed\n");
+    if (!noircOpt() && !+connectOpt && !nolistenOpt())
+        if (!CreateThread(ThreadIRCSeed, NULL))
+            printf("Error: CreateThread(ThreadIRCSeed) failed\n");
 
     // Send and receive from sockets, accept connections
     pthread_t hThreadSocketHandler = CreateThread(ThreadSocketHandler, NULL, true);

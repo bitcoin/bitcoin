@@ -45,11 +45,12 @@ LIBS=$(LIBS) \
 
 DEBUGFLAGS=/Os
 CFLAGS=/MD /c /nologo /EHsc /GR /Zm300 $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
+HEADERS=headers.h strlcpy.h serialize.h uint256.h option.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h wallet.h keystore.h
 
 OBJS= \
     obj\util.obj \
+    obj\option.obj \
     obj\script.obj \
     obj\db.obj \
     obj\net.obj \

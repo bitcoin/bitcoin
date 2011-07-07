@@ -32,6 +32,44 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
+
+option<string> rpcuserOpt("rpc", "show", "rpcuser", "",
+    "=<user>", _("Username for JSON-RPC connections"));
+
+option<string> rpcpasswordOpt("rpc", "show", "rpcpassword", "",
+    "=<pw>", _("Password for JSON-RPC connections"));
+
+option<string> rpcconnectOpt("rpc", "show", "rpcconnect", "127.0.0.1",
+    "=<ip>", _("Send commands to node running on <ip>"));
+
+option<int> rpcportOpt("rpc", "show", "rpcport", 8332,
+    "=<port>", _("Listen for JSON-RPC connections on <port>"));
+
+option<int> rpctimeoutOpt("rpc", "hide", "rpctimeout", 30, "=<time>");
+
+option<vector<string> > rpcallowipOpt(
+    "rpc", "show", "rpcallowip", vector<string>(),
+    "=<ip> ...", _("Allow JSON-RPC connections from specified IP address"));
+
+#ifdef USE_SSL
+option<bool> rpcsslOpt("rpc", "show", "rpcssl", false, true,
+    "", _("Use OpenSSL (https) for JSON-RPC connections"));
+
+option<string> rpcsslcertificatechainfileOpt(
+    "rpc", "hide", "rpcsslcertificatechainfile", "server.cert",
+    "=<file>", _("Server certificate file"));
+
+option<string> rpcsslprivatekeyfileOpt(
+    "rpc", "hide", "rpcsslprivatekeyfile", "server.pem",
+    "=<file>", _("Server private key file"));
+
+option<string> rpcsslciphersOpt(
+    "rpc", "hide", "rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH",
+    "", _("Acceptable ciphers"));
+#endif
+
+option<bool> disablesafemodeOpt("rpc", "hide", "disablesafemode", false, true);
+
 void ThreadRPCServer2(void* parg);
 typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
 extern map<string, rpcfn_type> mapCallTable;
@@ -167,6 +205,18 @@ Value stop(const Array& params, bool fHelp)
     return "bitcoin server stopping";
 }
 
+Value reloadconfig(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "reloadconfig\n"
+            "Reload bitcoin server configuration files.");
+
+    if (UpdateConfig(false))
+        return "configuration file has been reloaded";
+    else
+        return "error: configuration file has not been reloaded";
+}
 
 Value getblockcount(const Array& params, bool fHelp)
 {
@@ -1434,6 +1484,7 @@ pair<string, rpcfn_type> pCallTable[] =
 {
     make_pair("help",                  &help),
     make_pair("stop",                  &stop),
+    make_pair("reloadconfig",          &reloadconfig),
     make_pair("getblockcount",         &getblockcount),
     make_pair("getblocknumber",        &getblocknumber),
     make_pair("getconnectioncount",    &getconnectioncount),
@@ -1688,7 +1739,7 @@ bool HTTPAuthorized(map<string, string>& mapHeaders)
         return false;
     string strUser = strUserPass.substr(0, nColon);
     string strPassword = strUserPass.substr(nColon+1);
-    return (strUser == mapArgs["-rpcuser"] && strPassword == mapArgs["-rpcpassword"]);
+    return (strUser == rpcuserOpt() && strPassword == rpcpasswordOpt());
 }
 
 //
@@ -1737,7 +1788,7 @@ bool ClientAllowed(const string& strAddress)
 {
     if (strAddress == asio::ip::address_v4::loopback().to_string())
         return true;
-    const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
+    const vector<string>& vAllow = rpcallowipOpt();
     BOOST_FOREACH(string strAllow, vAllow)
         if (WildcardMatch(strAddress, strAllow))
             return true;
@@ -1821,13 +1872,9 @@ void ThreadRPCServer2(void* parg)
 {
     printf("ThreadRPCServer started\n");
 
-    if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
+    if (rpcuserOpt() == "" && rpcpasswordOpt() == "")
     {
-        string strWhatAmI = "To use bitcoind";
-        if (mapArgs.count("-server"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
-        else if (mapArgs.count("-daemon"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
+        string strWhatAmI = _("To send remote commands");
         PrintConsole(
             _("Warning: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"),
@@ -1837,11 +1884,11 @@ void ThreadRPCServer2(void* parg)
         return;
     }
 
-    bool fUseSSL = GetBoolArg("-rpcssl");
-    asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
+    bool fUseSSL = rpcsslOpt();
+    asio::ip::address bindAddress = +rpcallowipOpt ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
 
     asio::io_service io_service;
-    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
+    ip::tcp::endpoint endpoint(bindAddress, rpcportOpt());
     ip::tcp::acceptor acceptor(io_service, endpoint);
 
     acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
@@ -1851,17 +1898,16 @@ void ThreadRPCServer2(void* parg)
     if (fUseSSL)
     {
         context.set_options(ssl::context::no_sslv2);
-        filesystem::path certfile = GetArg("-rpcsslcertificatechainfile", "server.cert");
+        filesystem::path certfile = rpcsslcertificatechainfileOpt();
         if (!certfile.is_complete()) certfile = filesystem::path(GetDataDir()) / certfile;
         if (filesystem::exists(certfile)) context.use_certificate_chain_file(certfile.string().c_str());
         else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", certfile.string().c_str());
-        filesystem::path pkfile = GetArg("-rpcsslprivatekeyfile", "server.pem");
+        filesystem::path pkfile = rpcsslprivatekeyfileOpt();
         if (!pkfile.is_complete()) pkfile = filesystem::path(GetDataDir()) / pkfile;
         if (filesystem::exists(pkfile)) context.use_private_key_file(pkfile.string().c_str(), ssl::context::pem);
         else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pkfile.string().c_str());
 
-        string ciphers = GetArg("-rpcsslciphers",
-                                         "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
+        string ciphers = rpcsslciphersOpt();
         SSL_CTX_set_cipher_list(context.impl(), ciphers.c_str());
     }
 #else
@@ -1904,7 +1950,7 @@ void ThreadRPCServer2(void* parg)
         string strRequest;
 
         boost::thread api_caller(ReadHTTP, boost::ref(stream), boost::ref(mapHeaders), boost::ref(strRequest));
-        if (!api_caller.timed_join(boost::posix_time::seconds(GetArg("-rpctimeout", 30))))
+        if (!api_caller.timed_join(boost::posix_time::seconds(rpctimeoutOpt())))
         {   // Timed out:
             acceptor.cancel();
             printf("ThreadRPCServer ReadHTTP timeout\n");
@@ -1920,7 +1966,7 @@ void ThreadRPCServer2(void* parg)
         if (!HTTPAuthorized(mapHeaders))
         {
             // Deter brute-forcing short passwords
-            if (mapArgs["-rpcpassword"].size() < 15)
+            if (rpcpasswordOpt().size() < 15)
                 Sleep(50);
 
             stream << HTTPReply(401, "") << std::flush;
@@ -1967,7 +2013,7 @@ void ThreadRPCServer2(void* parg)
 
             // Observe safe mode
             string strWarning = GetWarnings("rpc");
-            if (strWarning != "" && !GetBoolArg("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+            if (strWarning != "" && !disablesafemodeOpt() && !setAllowInSafeMode.count(strMethod))
                 throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
 
             try
@@ -2000,14 +2046,16 @@ void ThreadRPCServer2(void* parg)
 
 Object CallRPC(const string& strMethod, const Array& params)
 {
-    if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
+    if (rpcuserOpt() == "" && rpcpasswordOpt() == "")
         throw runtime_error(strprintf(
             _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
               "If the file does not exist, create it with owner-readable-only file permissions."),
                 GetConfigFile().c_str()));
 
     // Connect to localhost
-    bool fUseSSL = GetBoolArg("-rpcssl");
+    bool fUseSSL = rpcsslOpt();
+    string host = rpcconnectOpt();
+    ostringstream out; out << rpcportOpt(); string port = out.str();
 #ifdef USE_SSL
     asio::io_service io_service;
     ssl::context context(io_service, ssl::context::sslv23);
@@ -2015,20 +2063,20 @@ Object CallRPC(const string& strMethod, const Array& params)
     SSLStream sslStream(io_service, context);
     SSLIOStreamDevice d(sslStream, fUseSSL);
     iostreams::stream<SSLIOStreamDevice> stream(d);
-    if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", "8332")))
+    if (!d.connect(host, port))
         throw runtime_error("couldn't connect to server");
 #else
     if (fUseSSL)
         throw runtime_error("-rpcssl=1, but bitcoin compiled without full openssl libraries.");
 
-    ip::tcp::iostream stream(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", "8332"));
+    ip::tcp::iostream stream(host, port);
     if (stream.fail())
         throw runtime_error("couldn't connect to server");
 #endif
 
 
     // HTTP basic authentication
-    string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
+    string strUserPass64 = EncodeBase64(rpcuserOpt() + ":" + rpcpasswordOpt());
     map<string, string> mapRequestHeaders;
     mapRequestHeaders["Authorization"] = string("Basic ") + strUserPass64;
 

@@ -5,6 +5,7 @@
 #include "db.h"
 #include "net.h"
 #include "init.h"
+#include "net.h"
 #include "cryptopp/sha.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -12,9 +13,16 @@
 using namespace std;
 using namespace boost;
 
+option<int> limitfreerelayOpt("main", "hide", "limitfreerelay", 15);
+option<bool> testsafemodeOpt("main", "test", "testsafemode", false, true);
+option<bool> allowreceivebyipOpt("main", "hide", "allowreceivebyip", false, true);
+option<bool> printpriorityOpt("main", "hide", "printpriority", false, true);
+
 //
 // Global state
 //
+
+CWallet* pwalletMain;
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -432,7 +440,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
                 nLastTime = nNow;
                 // -limitfreerelay unit is thousand-bytes-per-minute
                 // At default rate it would take over a month to fill 1GB
-                if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000 && !IsFromMe(*this))
+                if (dFreeCount > limitfreerelayOpt()*10*1000 && !IsFromMe(*this))
                     return error("AcceptToMemoryPool() : free transaction rejected by rate limiter");
                 if (fDebug)
                     printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
@@ -1654,7 +1662,7 @@ string GetWarnings(string strFor)
     int nPriority = 0;
     string strStatusBar;
     string strRPC;
-    if (GetBoolArg("-testsafemode"))
+    if (testsafemodeOpt())
         strRPC = "test";
 
     // Misc warnings like out of disk space and clock is wrong
@@ -1780,15 +1788,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     if (fDebug)
         printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
     printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
-    if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
+    int drop = dropmessagestestOpt();
+    if (drop > 0 && GetRand(drop) == 0)
     {
         printf("dropmessagestest DROPPING RECV MESSAGE\n");
         return true;
     }
-
-
-
-
 
     if (strCommand == "version")
     {
@@ -2054,7 +2059,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             CBlock block;
             block.ReadFromDisk(pindex, true);
             nBytes += block.GetSerializeSize(SER_NETWORK);
-            if (--nLimit <= 0 || nBytes >= SendBufferSize()/2)
+            if (--nLimit <= 0 || nBytes >= maxsendbufferOpt()/2)
             {
                 // When this block is requested, we'll send an inv that'll make them
                 // getblocks the next batch of inventory.
@@ -2200,7 +2205,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         uint256 hashReply;
         vRecv >> hashReply;
 
-        if (!GetBoolArg("-allowreceivebyip"))
+        if (!allowreceivebyipOpt())
         {
             pfrom->PushMessage("reply", hashReply, (int)2, string(""));
             return true;
@@ -2740,7 +2745,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
                 dPriority += (double)nValueIn * nConf;
 
-                if (fDebug && GetBoolArg("-printpriority"))
+                if (fDebug && printpriorityOpt())
                     printf("priority     nValueIn=%-12I64d nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
             }
 
@@ -2752,7 +2757,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             else
                 mapPriority.insert(make_pair(-dPriority, &(*mi).second));
 
-            if (fDebug && GetBoolArg("-printpriority"))
+            if (fDebug && printpriorityOpt())
             {
                 printf("priority %-20.1f %s\n%s", dPriority, tx.GetHash().ToString().substr(0,10).c_str(), tx.ToString().c_str());
                 if (porphan)

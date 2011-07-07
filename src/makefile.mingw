@@ -32,7 +32,7 @@ LIBS= \
 DEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
+HEADERS=headers.h strlcpy.h serialize.h uint256.h option.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h init.h
 
 ifdef USE_UPNP
@@ -46,6 +46,7 @@ LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell
 
 OBJS= \
     obj/util.o \
+    obj/option.o \
     obj/script.o \
     obj/db.o \
     obj/net.o \
