@@ -75,8 +75,12 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     toolbar->addAction(receiveCoins);
     toolbar->addAction(addressbook);
 
-    overviewPage = new OverviewPage();
+    QToolBar *toolbar2 = addToolBar("Transactions toolbar");
+    toolbar2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    toolbar2->addAction(exportAction);
 
+    // Overview page
+    overviewPage = new OverviewPage();
     QVBoxLayout *vbox = new QVBoxLayout();
 
     transactionView = new TransactionView(this);
@@ -146,8 +150,10 @@ void BitcoinGUI::createActions()
     receiveCoins->setToolTip(tr("Show the list of addresses for receiving payments"));
     options = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     options->setToolTip(tr("Modify configuration options for bitcoin"));
-    openBitcoin = new QAction(QIcon(":/icons/bitcoin"), "Open &Bitcoin", this);
+    openBitcoin = new QAction(QIcon(":/icons/bitcoin"), tr("Open &Bitcoin"), this);
     openBitcoin->setToolTip(tr("Show the Bitcoin window"));
+    exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
+    exportAction->setToolTip(tr("Export data in current view to a file"));
 
     connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(sendCoins, SIGNAL(triggered()), this, SLOT(sendCoinsClicked()));
@@ -156,6 +162,7 @@ void BitcoinGUI::createActions()
     connect(options, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(about, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(openBitcoin, SIGNAL(triggered()), this, SLOT(show()));
+    connect(exportAction, SIGNAL(triggered()), this, SLOT(exportClicked()));
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
@@ -410,10 +417,20 @@ void BitcoinGUI::gotoOverviewTab()
 {
     overviewAction->setChecked(true);
     centralWidget->setCurrentWidget(overviewPage);
+    exportAction->setEnabled(false);
 }
 
 void BitcoinGUI::gotoHistoryTab()
 {
     historyAction->setChecked(true);
     centralWidget->setCurrentWidget(transactionsPage);
+    exportAction->setEnabled(true);
 }
+
+void BitcoinGUI::exportClicked()
+{
+    // Redirect to the right view, as soon as export for other views
+    // (such as address book) is implemented.
+    transactionView->exportClicked();
+}
+

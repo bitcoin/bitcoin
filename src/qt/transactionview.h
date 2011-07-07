@@ -50,6 +50,7 @@ public slots:
     void chooseType(int idx);
     void changedPrefix(const QString &prefix);
     void changedAmount(const QString &amount);
+    void exportClicked();
 
 };
 

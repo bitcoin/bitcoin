@@ -254,3 +254,9 @@ bool TransactionRecord::statusUpdateNeeded()
 {
     return status.cur_num_blocks != nBestHeight;
 }
+
+std::string TransactionRecord::getTxID()
+{
+    return hash.ToString() + strprintf("-%03d", idx);
+}
+

@@ -394,12 +394,15 @@ QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx) 
     return QVariant(description);
 }
 
-QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx) const
+QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed) const
 {
     QString str = QString::fromStdString(FormatMoney(wtx->credit + wtx->debit));
-    if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)
+    if(showUnconfirmed)
     {
-        str = QString("[") + str + QString("]");
+        if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)
+        {
+            str = QString("[") + str + QString("]");
+        }
     }
     return QVariant(str);
 }
@@ -540,6 +543,18 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     else if (role == AbsoluteAmountRole)
     {
         return llabs(rec->credit + rec->debit);
+    }
+    else if (role == TxIDRole)
+    {
+        return QString::fromStdString(rec->getTxID());
+    }
+    else if (role == ConfirmedRole)
+    {
+        return rec->status.status == TransactionStatus::HaveConfirmations;
+    }
+    else if (role == FormattedAmountRole)
+    {
+        return formatTxAmount(rec, false);
     }
     return QVariant();
 }

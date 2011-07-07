@@ -25,6 +25,7 @@ public:
     } ColumnIndex;
 
     // Roles to get specific information from a transaction row
+    // These are independent of column
     enum {
         // Type of transaction
         TypeRole = Qt::UserRole,
@@ -36,8 +37,14 @@ public:
         AddressRole,
         // Label of address related to transaction
         LabelRole,
-        // Absolute net amount of transaction
-        AbsoluteAmountRole
+        // Absolute net amount of transaction, for filtering
+        AbsoluteAmountRole,
+        // Unique identifier
+        TxIDRole,
+        // Is transaction confirmed?
+        ConfirmedRole,
+        // Formatted amount, without brackets when unconfirmed
+        FormattedAmountRole
     } RoleIndex;
 
     int rowCount(const QModelIndex &parent) const;
@@ -57,7 +64,7 @@ private:
     QVariant formatTxDate(const TransactionRecord *wtx) const;
     QVariant formatTxType(const TransactionRecord *wtx) const;
     QVariant formatTxToAddress(const TransactionRecord *wtx) const;
-    QVariant formatTxAmount(const TransactionRecord *wtx) const;
+    QVariant formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
     QVariant formatTxDecoration(const TransactionRecord *wtx) const;
 
 private slots:

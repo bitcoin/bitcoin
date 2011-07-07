@@ -103,6 +103,9 @@ public:
     /* Status: can change with block chain update */
     TransactionStatus status;
 
+    /* Return the unique identifier for this transaction (part) */
+    std::string getTxID();
+
     /* Update status from wallet tx.
      */
     void updateStatus(const CWalletTx &wtx);

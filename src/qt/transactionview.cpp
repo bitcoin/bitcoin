@@ -1,11 +1,10 @@
 #include "transactionview.h"
 
-// Temp includes for filtering prototype
-// Move to TransactionFilterRow class
 #include "transactionfilterproxy.h"
 #include "transactionrecord.h"
 #include "transactiontablemodel.h"
 #include "guiutil.h"
+#include "csvmodelwriter.h"
 
 #include <QScrollBar>
 #include <QComboBox>
@@ -15,6 +14,9 @@
 #include <QLineEdit>
 #include <QTableView>
 #include <QHeaderView>
+#include <QPushButton>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include <QDebug>
 
@@ -76,6 +78,7 @@ TransactionView::TransactionView(QWidget *parent) :
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
+    //vlayout->addLayout(hlayout2);
 
     QTableView *view = new QTableView(this);
     vlayout->addLayout(hlayout);
@@ -196,3 +199,36 @@ void TransactionView::changedAmount(const QString &amount)
         transactionProxyModel->setMinAmount(0);
     }
 }
+
+void TransactionView::exportClicked()
+{
+    // CSV is currently the only supported format
+    QString filename = QFileDialog::getSaveFileName(
+            this,
+            tr("Export Transaction Data"),
+            QDir::currentPath(),
+            tr("Comma separated file (*.csv)"));
+    if(!filename.endsWith(".csv"))
+    {
+        filename += ".csv";
+    }
+
+    CSVModelWriter writer(filename);
+
+    // name, column, role
+    writer.setModel(transactionProxyModel);
+    writer.addColumn("Confirmed", 0, TransactionTableModel::ConfirmedRole);
+    writer.addColumn("Date", 0, TransactionTableModel::DateRole);
+    writer.addColumn("Type", TransactionTableModel::Type, Qt::EditRole);
+    writer.addColumn("Label", 0, TransactionTableModel::LabelRole);
+    writer.addColumn("Address", 0, TransactionTableModel::AddressRole);
+    writer.addColumn("Amount", 0, TransactionTableModel::FormattedAmountRole);
+    writer.addColumn("ID", 0, TransactionTableModel::TxIDRole);
+
+    if(!writer.write())
+    {
+        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+                              QMessageBox::Abort, QMessageBox::Abort);
+    }
+}
+

@@ -63,6 +63,7 @@ private:
     QAction *receiveCoins;
     QAction *options;
     QAction *openBitcoin;
+    QAction *exportAction;
 
     QSystemTrayIcon *trayIcon;
     TransactionView *transactionView;
@@ -92,6 +93,7 @@ private slots:
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void transactionDetails(const QModelIndex& idx);
     void incomingTransaction(const QModelIndex & parent, int start, int end);
+    void exportClicked();
 
     void gotoOverviewTab();
     void gotoHistoryTab();

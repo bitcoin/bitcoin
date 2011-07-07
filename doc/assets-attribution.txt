@@ -34,7 +34,8 @@ Designer: http://www.everaldo.com
 Icon Pack: Crystal SVG
 License: LGPL
 
-Icon: src/qt/res/icons/receive.png, src/qt/res/icons/history.png
+Icon: src/qt/res/icons/receive.png, src/qt/res/icons/history.png,
+      src/qt/res/icons/export.png
 Designer: Oxygen team
 Icon Pack: Oxygen
 License: Creative Common Attribution-ShareAlike 3.0 License or LGPL
