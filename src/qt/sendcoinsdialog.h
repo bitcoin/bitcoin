@@ -18,6 +18,11 @@ public:
 
     void setModel(WalletModel *model);
 
+public slots:
+    void clear();
+    void reject();
+    void accept();
+
 private:
     Ui::SendCoinsDialog *ui;
     WalletModel *model;

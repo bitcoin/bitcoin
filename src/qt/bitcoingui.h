@@ -9,6 +9,8 @@ class ClientModel;
 class WalletModel;
 class TransactionView;
 class OverviewPage;
+class AddressBookPage;
+class SendCoinsDialog;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -45,8 +47,12 @@ private:
     WalletModel *walletModel;
 
     QStackedWidget *centralWidget;
+
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
+    AddressBookPage *addressBookPage;
+    AddressBookPage *receiveCoinsPage;
+    SendCoinsDialog *sendCoinsPage;
 
     QLabel *labelConnections;
     QLabel *labelConnectionsIcon;
@@ -56,13 +62,13 @@ private:
 
     QAction *overviewAction;
     QAction *historyAction;
-    QAction *quit;
-    QAction *sendCoins;
-    QAction *addressbook;
-    QAction *about;
-    QAction *receiveCoins;
-    QAction *options;
-    QAction *openBitcoin;
+    QAction *quitAction;
+    QAction *sendCoinsAction;
+    QAction *addressBookAction;
+    QAction *aboutAction;
+    QAction *receiveCoinsAction;
+    QAction *optionsAction;
+    QAction *openBitcoinAction;
     QAction *exportAction;
 
     QSystemTrayIcon *trayIcon;
@@ -85,18 +91,20 @@ public slots:
     void askFee(qint64 nFeeRequired, bool *payFee);
 
 private slots:
-    void sendCoinsClicked();
-    void addressbookClicked();
+    // UI pages
+    void gotoOverviewPage();
+    void gotoHistoryPage();
+    void gotoAddressBookPage();
+    void gotoReceiveCoinsPage();
+    void gotoSendCoinsPage();
+
+    // Misc actions
     void optionsClicked();
-    void receiveCoinsClicked();
     void aboutClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void transactionDetails(const QModelIndex& idx);
     void incomingTransaction(const QModelIndex & parent, int start, int end);
     void exportClicked();
-
-    void gotoOverviewTab();
-    void gotoHistoryTab();
 };
 
 #endif

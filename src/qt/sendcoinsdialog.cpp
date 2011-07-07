@@ -3,7 +3,7 @@
 #include "walletmodel.h"
 #include "guiutil.h"
 
-#include "addressbookdialog.h"
+#include "addressbookpage.h"
 #include "optionsmodel.h"
 
 #include <QApplication>
@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QLocale>
 #include <QDebug>
+#include <QMessageBox>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     QDialog(parent),
@@ -61,6 +62,16 @@ void SendCoinsDialog::on_sendButton_clicked()
     // Add address to address book under label, if specified
     label = ui->addAsLabel->text();
 
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
+                          tr("Are you sure you want to send %1 BTC to %2 (%3)?").arg(GUIUtil::formatMoney(payAmountParsed), label, ui->payTo->text()),
+          QMessageBox::Yes|QMessageBox::Cancel,
+          QMessageBox::Cancel);
+
+    if(retval != QMessageBox::Yes)
+    {
+        return;
+    }
+
     switch(model->sendCoins(ui->payTo->text(), payAmountParsed, label))
     {
     case WalletModel::InvalidAddress:
@@ -102,9 +113,8 @@ void SendCoinsDialog::on_pasteButton_clicked()
 
 void SendCoinsDialog::on_addressBookButton_clicked()
 {
-    AddressBookDialog dlg(AddressBookDialog::ForSending);
+    AddressBookPage dlg(AddressBookPage::ForSending, AddressBookPage::SendingTab);
     dlg.setModel(model->getAddressTableModel());
-    dlg.setTab(AddressBookDialog::SendingTab);
     dlg.exec();
     ui->payTo->setText(dlg.getReturnValue());
     ui->payAmount->setFocus();
@@ -118,4 +128,22 @@ void SendCoinsDialog::on_buttonBox_rejected()
 void SendCoinsDialog::on_payTo_textChanged(const QString &address)
 {
     ui->addAsLabel->setText(model->labelForAddress(address));
+}
+
+void SendCoinsDialog::clear()
+{
+    ui->payTo->setText(QString());
+    ui->addAsLabel->setText(QString());
+    ui->payAmount->setText(QString());
+    ui->payTo->setFocus();
+}
+
+void SendCoinsDialog::reject()
+{
+    clear();
+}
+
+void SendCoinsDialog::accept()
+{
+    clear();
 }

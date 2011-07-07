@@ -1,10 +1,10 @@
-#ifndef ADDRESSBOOKDIALOG_H
-#define ADDRESSBOOKDIALOG_H
+#ifndef ADDRESSBOOKPAGE_H
+#define ADDRESSBOOKPAGE_H
 
 #include <QDialog>
 
 namespace Ui {
-    class AddressBookDialog;
+    class AddressBookPage;
 }
 class AddressTableModel;
 
@@ -13,7 +13,7 @@ class QTableView;
 class QItemSelection;
 QT_END_NAMESPACE
 
-class AddressBookDialog : public QDialog
+class AddressBookPage : public QDialog
 {
     Q_OBJECT
 
@@ -28,16 +28,20 @@ public:
         ForEditing  // Open address book for editing
     };
 
-    explicit AddressBookDialog(Mode mode, QWidget *parent = 0);
-    ~AddressBookDialog();
+    explicit AddressBookPage(Mode mode, Tabs tab, QWidget *parent = 0);
+    ~AddressBookPage();
 
     void setModel(AddressTableModel *model);
-    void setTab(int tab);
     const QString &getReturnValue() const { return returnValue; }
+
+public slots:
+    void done(int retval);
+
 private:
-    Ui::AddressBookDialog *ui;
+    Ui::AddressBookPage *ui;
     AddressTableModel *model;
     Mode mode;
+    Tabs tab;
     QString returnValue;
 
     QTableView *getCurrentTable();

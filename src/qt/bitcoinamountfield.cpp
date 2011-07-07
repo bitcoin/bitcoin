@@ -46,6 +46,11 @@ void BitcoinAmountField::setText(const QString &text)
         amount->setText(parts[0]);
         decimals->setText(parts[1]);
     }
+    else
+    {
+        amount->setText(QString());
+        decimals->setText(QString());
+    }
 }
 
 QString BitcoinAmountField::text() const
