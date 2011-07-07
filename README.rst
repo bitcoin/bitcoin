@@ -16,11 +16,11 @@ This has been implemented:
 
 - Tabbed interface
 
-- Ask for confirmation before sending coins
+- Asks for confirmation before sending coins
 
 - CSV export of transactions
 
-- User friendly transaction list with status icons
+- User friendly transaction list with status icons, and real-time filtering
 
 - Show alternative icon when on testnet
 
