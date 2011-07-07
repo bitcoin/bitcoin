@@ -3,41 +3,35 @@ Bitcoin-qt: Qt4 based GUI replacement for Bitcoin
 
 **Warning** **Warning** **Warning**
 
-Pre-alpha stuff! I'm using this client myself on the production network, and I haven't noticed any glitches, but remember: always backup your wallet! Testing on the testnet is recommended.
+Pre-alpha stuff! I'm using this client myself on the production network, and I haven't noticed any glitches, but remember: always backup your wallet.
+Testing on the testnet is recommended.
 
 This has been implemented:
 
 - qmake / QtCreator project (.pro)
 
-- All dialogs (main GUI, address book, send coins) and menus
+- Compatibility with Linux (both GNOME and KDE), MacOSX and Windows
 
-- Taskbar icon/menu
+- All functionality of the original client, including taskbar icon/menu
 
-- GUI only functionality (copy to clipboard, select address, address/transaction filter proxys)
+- Tabbed interface
 
-- Bitcoin core is made compatible with Qt4
+- Ask for confirmation before sending coins
 
-- Send coins dialog: address and input validation
+- CSV export of transactions
 
-- Address book and transactions views and models
+- User friendly transaction list with status icons
 
-- Options dialog
+- Show alternative icon when on testnet
 
-- Sending coins (including ask for fee when needed)
-
-- Show error messages from core
-
-- Show details dialog for transactions (on double click)
+- Progress bar on initial block download
 
 This has to be done:
-
-- Integrate with main bitcoin tree
 
 - Start at system start
 
 - Internationalization (convert WX language files)
 
-- Build on Windows
 
 Build instructions 
 ===================
