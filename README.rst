@@ -81,7 +81,7 @@ Windows build instructions:
 Berkely DB version warning
 ==========================
 
-A warning for people using the *static binary* version of Bitcoin (tl;dr: **Berkely DB databases are not forward compatible**).
+A warning for people using the *static binary* version of Bitcoin on a Linux/UNIX-ish system (tl;dr: **Berkely DB databases are not forward compatible**).
 
 The static binary version of Bitcoin is linked against libdb4.7 or libdb4.8 (see also `this Debian issue`_).
 

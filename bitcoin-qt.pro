@@ -130,4 +130,5 @@ FORMS += \
     src/qt/forms/overviewpage.ui
 
 CODECFORTR = UTF-8
-TRANSLATIONS = src/qt/locale/bitcoin_nl.ts
+TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts
+
