@@ -275,14 +275,33 @@ QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) con
         status = tr("Open until %1").arg(GUIUtil::DateTimeStr(wtx->status.open_for));
         break;
     case TransactionStatus::Offline:
-        status = tr("Offline (%1)").arg(wtx->status.depth);
+        status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
         break;
     case TransactionStatus::Unconfirmed:
-        status = tr("Unconfirmed (%1/%2)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
+        status = tr("Unconfirmed (%1/%2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
         break;
     case TransactionStatus::HaveConfirmations:
-        status = tr("Confirmed (%1)").arg(wtx->status.depth);
+        status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
         break;
+    }
+    if(wtx->type == TransactionRecord::Generated)
+    {
+        status += "\n";
+        switch(wtx->status.maturity)
+        {
+        case TransactionStatus::Immature:
+            status += tr("Generation matures in %n more blocks", "",
+                           wtx->status.matures_in);
+            break;
+        case TransactionStatus::Mature:
+            break;
+        case TransactionStatus::MaturesWarning:
+            status += tr("This block was not received by any other nodes and will probably not be accepted!");
+            break;
+        case TransactionStatus::NotAccepted:
+            status += tr("Generated but not accepted");
+            break;
+        }
     }
 
     return QVariant(status);
@@ -369,22 +388,7 @@ QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx) 
         description = QString();
         break;
     case TransactionRecord::Generated:
-        switch(wtx->status.maturity)
-        {
-        case TransactionStatus::Immature:
-            description = tr("(matures in %n more blocks)", "",
-                           wtx->status.matures_in);
-            break;
-        case TransactionStatus::Mature:
-            description = QString();
-            break;
-        case TransactionStatus::MaturesWarning:
-            description = tr("(Warning: This block was not received by any other nodes and will probably not be accepted!)");
-            break;
-        case TransactionStatus::NotAccepted:
-            description = tr("(not accepted)");
-            break;
-        }
+        description = QString();
         break;
     }
     return QVariant(description);
@@ -402,26 +406,45 @@ QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx) con
 
 QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx) const
 {
-    switch(wtx->status.status)
+    if(wtx->type == TransactionRecord::Generated)
     {
-    case TransactionStatus::OpenUntilBlock:
-    case TransactionStatus::OpenUntilDate:
-        return QColor(64,64,255);
-        break;
-    case TransactionStatus::Offline:
-        return QColor(192,192,192);
-    case TransactionStatus::Unconfirmed:
-        switch(wtx->status.depth)
+        switch(wtx->status.maturity)
         {
-        case 0: return QIcon(":/icons/transaction_0");
-        case 1: return QIcon(":/icons/transaction_1");
-        case 2: return QIcon(":/icons/transaction_2");
-        case 3: return QIcon(":/icons/transaction_3");
-        case 4: return QIcon(":/icons/transaction_4");
-        default: return QIcon(":/icons/transaction_5");
-        };
-    case TransactionStatus::HaveConfirmations:
-        return QIcon(":/icons/transaction_confirmed");
+        case TransactionStatus::Immature: {
+            int total = wtx->status.depth + wtx->status.matures_in;
+            int part = (wtx->status.depth * 4 / total) + 1;
+            return QIcon(QString(":/icons/transaction_%1").arg(part));
+            }
+        case TransactionStatus::Mature:
+            return QIcon(":/icons/transaction_confirmed");
+        case TransactionStatus::MaturesWarning:
+        case TransactionStatus::NotAccepted:
+            return QIcon(":/icons/transaction_0");
+        }
+    }
+    else
+    {
+        switch(wtx->status.status)
+        {
+        case TransactionStatus::OpenUntilBlock:
+        case TransactionStatus::OpenUntilDate:
+            return QColor(64,64,255);
+            break;
+        case TransactionStatus::Offline:
+            return QColor(192,192,192);
+        case TransactionStatus::Unconfirmed:
+            switch(wtx->status.depth)
+            {
+            case 0: return QIcon(":/icons/transaction_0");
+            case 1: return QIcon(":/icons/transaction_1");
+            case 2: return QIcon(":/icons/transaction_2");
+            case 3: return QIcon(":/icons/transaction_3");
+            case 4: return QIcon(":/icons/transaction_4");
+            default: return QIcon(":/icons/transaction_5");
+            };
+        case TransactionStatus::HaveConfirmations:
+            return QIcon(":/icons/transaction_confirmed");
+        }
     }
     return QColor(0,0,0);
 }
