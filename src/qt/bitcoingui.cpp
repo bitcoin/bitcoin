@@ -47,7 +47,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     trayIcon(0)
 {
     resize(850, 550);
-    setWindowTitle(tr("Bitcoin"));
+    setWindowTitle(tr("Bitcoin Wallet"));
     setWindowIcon(QIcon(":icons/bitcoin"));
 
     createActions();
@@ -170,11 +170,12 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 
     if(clientModel->isTestNet())
     {
-        setWindowTitle(tr("Bitcoin [testnet]"));
+        QString title_testnet = tr("Bitcoin Wallet [testnet]");
+        setWindowTitle(title_testnet);
         setWindowIcon(QIcon(":icons/bitcoin_testnet"));
         if(trayIcon)
         {
-            trayIcon->setToolTip(tr("Bitcoin [testnet]"));
+            trayIcon->setToolTip(title_testnet);
             trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
         }
     }

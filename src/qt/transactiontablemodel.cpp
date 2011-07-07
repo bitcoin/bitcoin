@@ -286,11 +286,11 @@ QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) con
     }
     if(wtx->type == TransactionRecord::Generated)
     {
-        status += "\n";
+        status += "\n\n";
         switch(wtx->status.maturity)
         {
         case TransactionStatus::Immature:
-            status += tr("Generation matures in %n more blocks", "",
+            status += tr("Mined balance will be available in %n more blocks", "",
                            wtx->status.matures_in);
             break;
         case TransactionStatus::Mature:
@@ -360,7 +360,7 @@ QVariant TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         description = tr("Payment to yourself");
         break;
     case TransactionRecord::Generated:
-        description = tr("Generated");
+        description = tr("Mined");
         break;
     }
     return QVariant(description);
