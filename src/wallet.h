@@ -149,10 +149,12 @@ public:
 
     bool LoadWallet(bool& fFirstRunRet);
 //    bool BackupWallet(const std::string& strDest);
+
+    // requires cs_mapAddressBook lock
     bool SetAddressBookName(const std::string& strAddress, const std::string& strName);
-    bool EraseAddressBookName(const std::string& strAddress);
-    std::string GetDefaultAddress();
-    bool SetDefaultAddress(const std::string& strAddress);
+
+    // requires cs_mapAddressBook lock
+    bool DelAddressBookName(const std::string& strAddress);
 
     void UpdatedTransaction(const uint256 &hashTx)
     {
@@ -174,6 +176,7 @@ public:
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
+    bool SetDefaultKey(const std::vector<unsigned char> &vchPubKey);
 };
 
 

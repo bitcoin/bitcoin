@@ -165,10 +165,13 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
             // Double-check that we're not overwriting receiving address
             if(rec->type == AddressTableEntry::Sending)
             {
-                // Remove old entry
-                wallet->EraseAddressBookName(rec->address.toStdString());
-                // Add new entry with new address
-                wallet->SetAddressBookName(value.toString().toStdString(), rec->label.toStdString());
+                CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+                {
+                    // Remove old entry
+                    wallet->DelAddressBookName(rec->address.toStdString());
+                    // Add new entry with new address
+                    wallet->SetAddressBookName(value.toString().toStdString(), rec->label.toStdString());
+                }
 
                 rec->address = value.toString();
             }
@@ -274,7 +277,10 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex & paren
         // Also refuse to remove receiving addresses.
         return false;
     }
-    wallet->EraseAddressBookName(rec->address.toStdString());
+    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    {
+        wallet->DelAddressBookName(rec->address.toStdString());
+    }
     updateList();
     return true;
 }

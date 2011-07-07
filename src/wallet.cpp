@@ -98,14 +98,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             if (txout.scriptPubKey == scriptDefaultKey)
-            {
-                if (!fFileBacked)
-                    continue;
-                CWalletDB walletdb(strWalletFile);
-                vchDefaultKey = GetKeyFromKeyPool();
-                walletdb.WriteDefaultKey(vchDefaultKey);
-                walletdb.WriteName(PubKeyToAddress(vchDefaultKey), "");
-            }
+                SetDefaultKey(GetKeyFromKeyPool());
         }
 #endif
         // Notify UI
@@ -967,15 +960,32 @@ bool CWallet::LoadWallet(bool& fFirstRunRet)
         // Create new default key
         RandAddSeedPerfmon();
 
-        vchDefaultKey = GetKeyFromKeyPool();
+        SetDefaultKey(GetKeyFromKeyPool());
         if (!SetAddressBookName(PubKeyToAddress(vchDefaultKey), ""))
             return false;
-        CWalletDB(strWalletFile).WriteDefaultKey(vchDefaultKey);
     }
 
     CreateThread(ThreadFlushWalletDB, &strWalletFile);
     return true;
 }
+
+
+bool CWallet::SetAddressBookName(const string& strAddress, const string& strName)
+{
+    mapAddressBook[strAddress] = strName;
+    if (!fFileBacked)
+        return false;
+    return CWalletDB(strWalletFile).WriteName(strAddress, strName);
+}
+
+bool CWallet::DelAddressBookName(const string& strAddress)
+{
+    mapAddressBook.erase(strAddress);
+    if (!fFileBacked)
+        return false;
+    return CWalletDB(strWalletFile).EraseName(strAddress);
+}
+
 
 void CWallet::PrintWallet(const CBlock& block)
 {
@@ -1002,6 +1012,17 @@ bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
         }
     }
     return false;
+}
+
+bool CWallet::SetDefaultKey(const std::vector<unsigned char> &vchPubKey)
+{
+    if (fFileBacked)
+    {
+        if (!CWalletDB(strWalletFile).WriteDefaultKey(vchPubKey))
+            return false;
+    }
+    vchDefaultKey = vchPubKey;
+    return true;
 }
 
 bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)
@@ -1070,65 +1091,6 @@ void CWallet::ReturnKey(int64 nIndex)
     printf("keypool return %"PRI64d"\n", nIndex);
 }
 
-bool CWallet::SetAddressBookName(const std::string& strAddress, const std::string& strName)
-{
-    if (!fFileBacked)
-        return false;
-    if(CWalletDB(strWalletFile).WriteName(strAddress, strName))
-    {
-        CRITICAL_BLOCK(cs_mapAddressBook)
-            mapAddressBook[strAddress] = strName;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool CWallet::EraseAddressBookName(const std::string& strAddress)
-{
-    if (!fFileBacked)
-        return false;
-    if(CWalletDB(strWalletFile).EraseName(strAddress))
-    {
-        CRITICAL_BLOCK(cs_mapAddressBook)
-            mapAddressBook.erase(strAddress);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-std::string CWallet::GetDefaultAddress()
-{
-    if (!fFileBacked)
-        return false;
-    std::vector<unsigned char> vchPubKey;
-    if (CWalletDB(strWalletFile, "r").ReadDefaultKey(vchPubKey))
-    {
-        return PubKeyToAddress(vchPubKey);
-    }
-    else
-    {
-        return "";
-    }
-}
-
-bool CWallet::SetDefaultAddress(const std::string& strAddress)
-{
-    uint160 hash160;
-    if (!AddressToHash160(strAddress, hash160))
-        return false;
-    if (!mapPubKeys.count(hash160))
-        return false;
-    return CWalletDB(strWalletFile).WriteDefaultKey(mapPubKeys[hash160]);
-}
-
-
 vector<unsigned char> CWallet::GetKeyFromKeyPool()
 {
     int64 nIndex = 0;
@@ -1174,3 +1136,4 @@ void CReserveKey::ReturnKey()
     nIndex = -1;
     vchPubKey.clear();
 }
+

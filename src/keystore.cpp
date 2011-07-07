@@ -29,5 +29,6 @@ bool CKeyStore::AddKey(const CKey& key)
         mapKeys[key.GetPubKey()] = key.GetPrivKey();
         mapPubKeys[Hash160(key.GetPubKey())] = key.GetPubKey();
     }
+    return true;
 }
 
