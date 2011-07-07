@@ -47,7 +47,6 @@ private:
     QTableView *getCurrentTable();
 
 private slots:
-    void on_buttonBox_accepted();
     void on_deleteButton_clicked();
     void on_newAddressButton_clicked();
     void on_copyToClipboard_clicked();

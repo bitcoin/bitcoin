@@ -113,11 +113,13 @@ void SendCoinsDialog::on_pasteButton_clicked()
 
 void SendCoinsDialog::on_addressBookButton_clicked()
 {
-    AddressBookPage dlg(AddressBookPage::ForSending, AddressBookPage::SendingTab);
+    AddressBookPage dlg(AddressBookPage::ForSending, AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
-    dlg.exec();
-    ui->payTo->setText(dlg.getReturnValue());
-    ui->payAmount->setFocus();
+    if(dlg.exec())
+    {
+        ui->payTo->setText(dlg.getReturnValue());
+        ui->payAmount->setFocus();
+    }
 }
 
 void SendCoinsDialog::on_buttonBox_rejected()

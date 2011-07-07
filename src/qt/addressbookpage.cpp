@@ -19,7 +19,8 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     switch(mode)
     {
     case ForSending:
-        connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_buttonBox_accepted()));
+        connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accept()));
+        ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
         ui->tableView->setFocus();
         break;
     case ForEditing:
@@ -34,6 +35,9 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     case ReceivingTab:
         break;
     }
+    ui->tableView->setTabKeyNavigation(false);
+
+    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
 
 AddressBookPage::~AddressBookPage()
@@ -127,26 +131,6 @@ void AddressBookPage::on_deleteButton_clicked()
     }
 }
 
-void AddressBookPage::on_buttonBox_accepted()
-{
-    QTableView *table = getCurrentTable();
-    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
-
-    foreach (QModelIndex index, indexes)
-    {
-        QVariant address = table->model()->data(index);
-        returnValue = address.toString();
-    }
-    if(!returnValue.isEmpty())
-    {
-        accept();
-    }
-    else
-    {
-        reject();
-    }
-}
-
 void AddressBookPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
@@ -177,5 +161,21 @@ void AddressBookPage::done(int retval)
     // When this is a tab/widget and not a model dialog, ignore "done"
     if(mode == ForEditing)
         return;
+
+    // Figure out which address was selected, and return it
+    QTableView *table = getCurrentTable();
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+
+    foreach (QModelIndex index, indexes)
+    {
+        QVariant address = table->model()->data(index);
+        returnValue = address.toString();
+    }
+
+    if(returnValue.isEmpty())
+    {
+        retval = Rejected;
+    }
+
     QDialog::done(retval);
 }

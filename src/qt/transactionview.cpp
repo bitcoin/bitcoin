@@ -89,6 +89,7 @@ TransactionView::TransactionView(QWidget *parent) :
     hlayout->addSpacing(width);
     // Always show scroll bar
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    view->setTabKeyNavigation(false);
 
     transactionView = view;
 
