@@ -107,6 +107,9 @@
          <property name="maxLength">
           <number>34</number>
          </property>
+         <property name="placeholderText">
+          <string/>
+         </property>
         </widget>
        </item>
        <item>
@@ -178,7 +181,7 @@
       <widget class="QPushButton" name="sendButton">
        <property name="minimumSize">
         <size>
-         <width>120</width>
+         <width>150</width>
          <height>0</height>
         </size>
        </property>
@@ -194,25 +197,6 @@
        </property>
        <property name="default">
         <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="toolTip">
-        <string>Abort the send action</string>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel</set>
-       </property>
-       <property name="centerButtons">
-        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -248,7 +232,6 @@
   <tabstop>addAsLabel</tabstop>
   <tabstop>payAmount</tabstop>
   <tabstop>sendButton</tabstop>
-  <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources>
   <include location="../bitcoin.qrc"/>

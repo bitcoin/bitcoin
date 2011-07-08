@@ -474,6 +474,7 @@ void BitcoinGUI::gotoReceiveCoinsPage()
 void BitcoinGUI::gotoSendCoinsPage()
 {
     sendCoinsAction->setChecked(true);
+    sendCoinsPage->clear();
     centralWidget->setCurrentWidget(sendCoinsPage);
     exportAction->setEnabled(false);
 }

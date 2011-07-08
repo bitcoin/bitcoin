@@ -23,6 +23,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
     ui->payTo->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
+
     GUIUtil::setupAddressWidget(ui->payTo, this);
 
     // Set initial send-to address if provided
