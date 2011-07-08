@@ -309,6 +309,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
@@ -324,13 +325,19 @@ Value getnewaddress(const Array& params, bool fHelp)
             "If [account] is specified (recommended), it is added to the address book "
             "so payments received with the address will be credited to [account].");
 
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool();
+
+    if (pwalletMain->GetKeyPoolSize() < 1)
+        throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
+
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
     if (params.size() > 0)
         strAccount = AccountFromValue(params[0]);
 
     // Generate a new key that is added to wallet
-    string strAddress = PubKeyToAddress(pwalletMain->GetKeyFromKeyPool());
+    string strAddress = PubKeyToAddress(pwalletMain->GetOrReuseKeyFromPool());
 
     // This could be done in the same main CS as GetKeyFromKeyPool.
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
@@ -346,37 +353,48 @@ string GetAccountAddress(string strAccount, bool bForceNew=false)
     string strAddress;
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.TxnBegin();
 
     CAccount account;
-    walletdb.ReadAccount(strAccount, account);
-
-    // Check if the current key has been used
-    if (!account.vchPubKey.empty())
+    CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
     {
-        CScript scriptPubKey;
-        scriptPubKey.SetBitcoinAddress(account.vchPubKey);
-        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-             it != pwalletMain->mapWallet.end() && !account.vchPubKey.empty();
-             ++it)
+        walletdb.ReadAccount(strAccount, account);
+
+        bool bKeyUsed = false;
+
+        // Check if the current key has been used
+        if (!account.vchPubKey.empty())
         {
-            const CWalletTx& wtx = (*it).second;
-            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                if (txout.scriptPubKey == scriptPubKey)
-                    account.vchPubKey.clear();
+            CScript scriptPubKey;
+            scriptPubKey.SetBitcoinAddress(account.vchPubKey);
+            for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
+                 it != pwalletMain->mapWallet.end() && !account.vchPubKey.empty();
+                 ++it)
+            {
+                const CWalletTx& wtx = (*it).second;
+                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+                    if (txout.scriptPubKey == scriptPubKey)
+                        bKeyUsed = true;
+            }
+        }
+
+        // Generate a new key
+        if (account.vchPubKey.empty() || bForceNew || bKeyUsed)
+        {
+            if (pwalletMain->GetKeyPoolSize() < 1)
+            {
+                if (bKeyUsed || bForceNew)
+                    throw JSONRPCError(-12, "Error: Keypool ran out, please call topupkeypool first");
+            }
+            else
+            {
+                account.vchPubKey = pwalletMain->GetOrReuseKeyFromPool();
+                string strAddress = PubKeyToAddress(account.vchPubKey);
+                pwalletMain->SetAddressBookName(strAddress, strAccount);
+                walletdb.WriteAccount(strAccount, account);
+            }
         }
     }
 
-    // Generate a new key
-    if (account.vchPubKey.empty() || bForceNew)
-    {
-        account.vchPubKey = pwalletMain->GetKeyFromKeyPool();
-        string strAddress = PubKeyToAddress(account.vchPubKey);
-        pwalletMain->SetAddressBookName(strAddress, strAccount);
-        walletdb.WriteAccount(strAccount, account);
-    }
-
-    walletdb.TxnCommit();
     strAddress = PubKeyToAddress(account.vchPubKey);
 
     return strAddress;
@@ -510,7 +528,12 @@ Value settxfee(const Array& params, bool fHelp)
 
 Value sendtoaddress(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
+        throw runtime_error(
+            "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001\n"
+            "requires wallet passphrase to be set with walletpassphrase first");
+    if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
             "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.00000001");
@@ -528,7 +551,11 @@ Value sendtoaddress(const Array& params, bool fHelp)
         wtx.mapValue["to"]      = params[3].get_str();
 
     CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
     {
+        if(pwalletMain->IsLocked())
+            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+
         string strError = pwalletMain->SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
         if (strError != "")
             throw JSONRPCError(-4, strError);
@@ -773,7 +800,12 @@ Value movecmd(const Array& params, bool fHelp)
 
 Value sendfrom(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 3 || params.size() > 6)
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() < 3 || params.size() > 6))
+        throw runtime_error(
+            "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001\n"
+            "requires wallet passphrase to be set with walletpassphrase first");
+    if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 3 || params.size() > 6))
         throw runtime_error(
             "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.00000001");
@@ -794,7 +826,11 @@ Value sendfrom(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+    CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
     {
+        if(pwalletMain->IsLocked())
+            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+
         // Check funds
         int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
         if (nAmount > nBalance)
@@ -809,9 +845,15 @@ Value sendfrom(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+
 Value sendmany(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
+        throw runtime_error(
+            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
+            "amounts are double-precision floating point numbers\n"
+            "requires wallet passphrase to be set with walletpassphrase first");
+    if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
             "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
             "amounts are double-precision floating point numbers");
@@ -851,7 +893,11 @@ Value sendmany(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+    CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
     {
+        if(pwalletMain->IsLocked())
+            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+
         // Check funds
         int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
         if (totalAmount > nBalance)
@@ -1281,6 +1327,198 @@ Value backupwallet(const Array& params, bool fHelp)
 }
 
 
+Value keypoolrefill(const Array& params, bool fHelp)
+{
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() > 0))
+        throw runtime_error(
+            "keypoolrefill\n"
+            "Fills the keypool, requires wallet passphrase to be set.");
+    if (!pwalletMain->IsCrypted() && (fHelp || params.size() > 0))
+        throw runtime_error(
+            "keypoolrefill\n"
+            "Fills the keypool.");
+
+    CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
+    {
+        if (pwalletMain->IsLocked())
+            throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+
+        pwalletMain->TopUpKeyPool();
+    }
+
+    if (pwalletMain->GetKeyPoolSize() < GetArg("-keypool", 100))
+        throw JSONRPCError(-4, "Error refreshing keypool.");
+
+    return Value::null;
+}
+
+
+void ThreadTopUpKeyPool(void* parg)
+{
+    pwalletMain->TopUpKeyPool();
+}
+
+void ThreadCleanWalletPassphrase(void* parg)
+{
+    static int64 nWakeTime;
+    int64 nMyWakeTime = GetTime() + *((int*)parg);
+    static CCriticalSection cs_nWakeTime;
+
+    if (nWakeTime == 0)
+    {
+        CRITICAL_BLOCK(cs_nWakeTime)
+        {
+            nWakeTime = nMyWakeTime;
+        }
+
+        while (GetTime() < nWakeTime)
+            Sleep(GetTime() - nWakeTime);
+
+        CRITICAL_BLOCK(cs_nWakeTime)
+        {
+            nWakeTime = 0;
+        }
+    }
+    else
+    {
+        CRITICAL_BLOCK(cs_nWakeTime)
+        {
+            if (nWakeTime < nMyWakeTime)
+                nWakeTime = nMyWakeTime;
+        }
+        free(parg);
+        return;
+    }
+
+    pwalletMain->Lock();
+
+    delete (int*)parg;
+}
+
+Value walletpassphrase(const Array& params, bool fHelp)
+{
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "walletpassphrase <passphrase> <timeout>\n"
+            "Stores the wallet decryption key in memory for <timeout> seconds.");
+    if (fHelp)
+        return true;
+    if (!pwalletMain->IsCrypted())
+        throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
+
+    if (!pwalletMain->IsLocked())
+        throw JSONRPCError(-17, "Error: Wallet is already unlocked.");
+
+    // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
+    string strWalletPass;
+    strWalletPass.reserve(100);
+    mlock(&strWalletPass[0], strWalletPass.capacity());
+    strWalletPass = params[0].get_str();
+
+    CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
+    {
+        if (strWalletPass.length() > 0)
+        {
+            if (!pwalletMain->Unlock(strWalletPass))
+            {
+                fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+                munlock(&strWalletPass[0], strWalletPass.capacity());
+                throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+            }
+            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+            munlock(&strWalletPass[0], strWalletPass.capacity());
+        }
+        else
+            throw runtime_error(
+                "walletpassphrase <passphrase> <timeout>\n"
+                "Stores the wallet decryption key in memory for <timeout> seconds.");
+    }
+
+    CreateThread(ThreadTopUpKeyPool, NULL);
+    int* pnSleepTime = new int(params[1].get_int());
+    CreateThread(ThreadCleanWalletPassphrase, pnSleepTime);
+
+    return Value::null;
+}
+
+
+Value walletpassphrasechange(const Array& params, bool fHelp)
+{
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+        throw runtime_error(
+            "walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
+            "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
+    if (fHelp)
+        return true;
+    if (!pwalletMain->IsCrypted())
+        throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
+
+    string strOldWalletPass;
+    strOldWalletPass.reserve(100);
+    mlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+    strOldWalletPass = params[0].get_str();
+
+    string strNewWalletPass;
+    strNewWalletPass.reserve(100);
+    mlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+    strNewWalletPass = params[1].get_str();
+
+    if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
+        throw runtime_error(
+            "walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
+            "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
+
+    if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
+    {
+        fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+        fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+        munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+        munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+        throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+    }
+    fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+    fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+    munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+    munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+
+    return Value::null;
+}
+
+
+Value encryptwallet(const Array& params, bool fHelp)
+{
+    if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
+        throw runtime_error(
+            "encryptwallet <passphrase>\n"
+            "Encrypts the wallet with <passphrase>.");
+    if (fHelp)
+        return true;
+    if (pwalletMain->IsCrypted())
+        throw JSONRPCError(-15, "Error: running with an encrypted wallet, but encryptwallet was called.");
+
+    string strWalletPass;
+    strWalletPass.reserve(100);
+    mlock(&strWalletPass[0], strWalletPass.capacity());
+    strWalletPass = params[0].get_str();
+
+    if (strWalletPass.length() < 1)
+        throw runtime_error(
+            "encryptwallet <passphrase>\n"
+            "Encrypts the wallet with <passphrase>.");
+
+    if (!pwalletMain->EncryptWallet(strWalletPass))
+    {
+        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+        munlock(&strWalletPass[0], strWalletPass.capacity());
+        throw JSONRPCError(-16, "Error: Failed to encrypt the wallet.");
+    }
+    fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+    munlock(&strWalletPass[0], strWalletPass.capacity());
+
+    return Value::null;
+}
+
+
 Value validateaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1432,44 +1670,48 @@ Value getwork(const Array& params, bool fHelp)
 
 pair<string, rpcfn_type> pCallTable[] =
 {
-    make_pair("help",                  &help),
-    make_pair("stop",                  &stop),
-    make_pair("getblockcount",         &getblockcount),
-    make_pair("getblocknumber",        &getblocknumber),
-    make_pair("getconnectioncount",    &getconnectioncount),
-    make_pair("getdifficulty",         &getdifficulty),
-    make_pair("getgenerate",           &getgenerate),
-    make_pair("setgenerate",           &setgenerate),
-    make_pair("gethashespersec",       &gethashespersec),
-    make_pair("getinfo",               &getinfo),
-    make_pair("getnewaddress",         &getnewaddress),
-    make_pair("getaccountaddress",     &getaccountaddress),
-    make_pair("setaccount",            &setaccount),
-    make_pair("setlabel",              &setaccount), // deprecated
-    make_pair("getaccount",            &getaccount),
-    make_pair("getlabel",              &getaccount), // deprecated
-    make_pair("getaddressesbyaccount", &getaddressesbyaccount),
-    make_pair("getaddressesbylabel",   &getaddressesbyaccount), // deprecated
-    make_pair("sendtoaddress",         &sendtoaddress),
-    make_pair("getamountreceived",     &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
-    make_pair("getallreceived",        &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
-    make_pair("getreceivedbyaddress",  &getreceivedbyaddress),
-    make_pair("getreceivedbyaccount",  &getreceivedbyaccount),
-    make_pair("getreceivedbylabel",    &getreceivedbyaccount), // deprecated
-    make_pair("listreceivedbyaddress", &listreceivedbyaddress),
-    make_pair("listreceivedbyaccount", &listreceivedbyaccount),
-    make_pair("listreceivedbylabel",   &listreceivedbyaccount), // deprecated
-    make_pair("backupwallet",          &backupwallet),
-    make_pair("validateaddress",       &validateaddress),
-    make_pair("getbalance",            &getbalance),
-    make_pair("move",                  &movecmd),
-    make_pair("sendfrom",              &sendfrom),
-    make_pair("sendmany",              &sendmany),
-    make_pair("gettransaction",        &gettransaction),
-    make_pair("listtransactions",      &listtransactions),
-    make_pair("getwork",               &getwork),
-    make_pair("listaccounts",          &listaccounts),
-    make_pair("settxfee",              &settxfee),
+    make_pair("help",                   &help),
+    make_pair("stop",                   &stop),
+    make_pair("getblockcount",          &getblockcount),
+    make_pair("getblocknumber",         &getblocknumber),
+    make_pair("getconnectioncount",     &getconnectioncount),
+    make_pair("getdifficulty",          &getdifficulty),
+    make_pair("getgenerate",            &getgenerate),
+    make_pair("setgenerate",            &setgenerate),
+    make_pair("gethashespersec",        &gethashespersec),
+    make_pair("getinfo",                &getinfo),
+    make_pair("getnewaddress",          &getnewaddress),
+    make_pair("getaccountaddress",      &getaccountaddress),
+    make_pair("setaccount",             &setaccount),
+    make_pair("setlabel",               &setaccount), // deprecated
+    make_pair("getaccount",             &getaccount),
+    make_pair("getlabel",               &getaccount), // deprecated
+    make_pair("getaddressesbyaccount",  &getaddressesbyaccount),
+    make_pair("getaddressesbylabel",    &getaddressesbyaccount), // deprecated
+    make_pair("sendtoaddress",          &sendtoaddress),
+    make_pair("getamountreceived",      &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
+    make_pair("getallreceived",         &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
+    make_pair("getreceivedbyaddress",   &getreceivedbyaddress),
+    make_pair("getreceivedbyaccount",   &getreceivedbyaccount),
+    make_pair("getreceivedbylabel",     &getreceivedbyaccount), // deprecated
+    make_pair("listreceivedbyaddress",  &listreceivedbyaddress),
+    make_pair("listreceivedbyaccount",  &listreceivedbyaccount),
+    make_pair("listreceivedbylabel",    &listreceivedbyaccount), // deprecated
+    make_pair("backupwallet",           &backupwallet),
+    make_pair("keypoolrefill",          &keypoolrefill),
+    make_pair("walletpassphrase",       &walletpassphrase),
+    make_pair("walletpassphrasechange", &walletpassphrasechange),
+    make_pair("encryptwallet",          &encryptwallet),
+    make_pair("validateaddress",        &validateaddress),
+    make_pair("getbalance",             &getbalance),
+    make_pair("move",                   &movecmd),
+    make_pair("sendfrom",               &sendfrom),
+    make_pair("sendmany",               &sendmany),
+    make_pair("gettransaction",         &gettransaction),
+    make_pair("listtransactions",       &listtransactions),
+    make_pair("getwork",                &getwork),
+    make_pair("listaccounts",           &listaccounts),
+    make_pair("settxfee",               &settxfee),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -1493,6 +1735,8 @@ string pAllowInSafeMode[] =
     "getaddressesbyaccount",
     "getaddressesbylabel", // deprecated
     "backupwallet",
+    "keypoolrefill",
+    "walletpassphrase",
     "validateaddress",
     "getwork",
 };
@@ -2130,6 +2374,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
         if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendmany"               && n > 1)
         {
             string s = params[1].get_str();

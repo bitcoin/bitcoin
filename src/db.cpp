@@ -778,7 +778,29 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
                     ssValue >> wkey;
                     key.SetPrivKey(wkey.vchPrivKey);
                 }
-                pwallet->LoadKey(key);
+                if (!pwallet->LoadKey(key))
+                    return false;
+            }
+            else if (strType == "mkey")
+            {
+                unsigned int nID;
+                ssKey >> nID;
+                CMasterKey kMasterKey;
+                ssValue >> kMasterKey;
+                if(pwallet->mapMasterKeys.count(nID) != 0)
+                    return false;
+                pwallet->mapMasterKeys[nID] = kMasterKey;
+                if (pwallet->nMasterKeyMaxID < nID)
+                    pwallet->nMasterKeyMaxID = nID;
+            }
+            else if (strType == "ckey")
+            {
+                vector<unsigned char> vchPubKey;
+                ssKey >> vchPubKey;
+                vector<unsigned char> vchPrivKey;
+                ssValue >> vchPrivKey;
+                if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
+                    return false;
             }
             else if (strType == "defaultkey")
             {

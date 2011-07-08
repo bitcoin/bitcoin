@@ -4,7 +4,7 @@
 #ifndef BITCOIN_KEYSTORE_H
 #define BITCOIN_KEYSTORE_H
 
-typedef std::vector<unsigned char, secure_allocator<unsigned char> > CMasterKey;
+#include "crypter.h"
 
 class CKeyStore
 {
@@ -17,10 +17,12 @@ public:
     virtual std::vector<unsigned char> GenerateNewKey();
 };
 
+typedef std::map<std::vector<unsigned char>, CPrivKey> KeyMap;
+
 class CBasicKeyStore : public CKeyStore
 {
 protected:
-    std::map<std::vector<unsigned char>, CPrivKey> mapKeys;
+    KeyMap mapKeys;
 
 public:
     bool AddKey(const CKey& key);
@@ -45,18 +47,13 @@ class CCryptoKeyStore : public CBasicKeyStore
 private:
     std::map<std::vector<unsigned char>, std::vector<unsigned char> > mapCryptedKeys;
 
-    CMasterKey vMasterKey;
+    CKeyingMaterial vMasterKey;
 
     // if fUseCrypto is true, mapKeys must be empty
     // if fUseCrypto is false, vMasterKey must be empty
     bool fUseCrypto;
 
 protected:
-    bool IsCrypted() const
-    {
-        return fUseCrypto;
-    }
-
     bool SetCrypted()
     {
         if (fUseCrypto)
@@ -64,25 +61,24 @@ protected:
         if (!mapKeys.empty())
             return false;
         fUseCrypto = true;
+        return true;
     }
 
     // will encrypt previously unencrypted keys
-    bool GenerateMasterKey();
+    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
 
-    bool GetMasterKey(CMasterKey &vMasterKeyOut) const
-    {
-        if (!IsCrypted())
-            return false;
-        if (IsLocked())
-            return false;
-        vMasterKeyOut = vMasterKey;
-        return true;
-    }
-    bool Unlock(const CMasterKey& vMasterKeyIn);
+    bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
+    mutable CCriticalSection cs_vMasterKey; //No guarantees master key wont get locked before you can use it, so lock this first
+
     CCryptoKeyStore() : fUseCrypto(false)
     {
+    }
+
+    bool IsCrypted() const
+    {
+        return fUseCrypto;
     }
 
     bool IsLocked() const
@@ -94,12 +90,18 @@ public:
 
     bool Lock()
     {
-        if (!SetCrypted())
-            return false;
-        vMasterKey.clear();
+        CRITICAL_BLOCK(cs_vMasterKey)
+        {
+            if (!SetCrypted())
+                return false;
+
+            vMasterKey.clear();
+        }
+        return true;
     }
 
     virtual bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    std::vector<unsigned char> GenerateNewKey();
     bool AddKey(const CKey& key);
     bool HaveKey(const std::vector<unsigned char> &vchPubKey) const
     {

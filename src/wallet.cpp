@@ -5,9 +5,9 @@
 #include "headers.h"
 #include "db.h"
 #include "cryptopp/sha.h"
+#include "crypter.h"
 
 using namespace std;
-
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -17,11 +17,120 @@ using namespace std;
 
 bool CWallet::AddKey(const CKey& key)
 {
-    if (!CBasicKeyStore::AddKey(key))
+    if (!CCryptoKeyStore::AddKey(key))
         return false;
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).WriteKey(key.GetPubKey(), key.GetPrivKey());
+    if (!IsCrypted())
+        return CWalletDB(strWalletFile).WriteKey(key.GetPubKey(), key.GetPrivKey());
+}
+
+bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchCryptedSecret)
+{
+    if (!CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret))
+        return false;
+    if (!fFileBacked)
+        return true;
+    return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey, vchCryptedSecret);
+}
+
+bool CWallet::Unlock(const string& strWalletPassphrase)
+{
+    CRITICAL_BLOCK(cs_vMasterKey)
+    {
+        if (!IsLocked())
+            return false;
+
+        CCrypter crypter;
+        CKeyingMaterial vMasterKey;
+
+        BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
+        {
+            if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+                return false;
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+                return false;
+            if (CCryptoKeyStore::Unlock(vMasterKey))
+                return true;
+        }
+    }
+    return false;
+}
+
+bool CWallet::ChangeWalletPassphrase(const string& strOldWalletPassphrase, const string& strNewWalletPassphrase)
+{
+    CRITICAL_BLOCK(cs_vMasterKey)
+    {
+        bool fWasLocked = IsLocked();
+
+        Lock();
+
+        CCrypter crypter;
+        CKeyingMaterial vMasterKey;
+        BOOST_FOREACH(MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
+        {
+            if(!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+                return false;
+            if(!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+                return false;
+            if (CCryptoKeyStore::Unlock(vMasterKey))
+            {
+                if (!crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+                    return false;
+                if (!crypter.Encrypt(vMasterKey, pMasterKey.second.vchCryptedKey))
+                    return false;
+                CWalletDB(strWalletFile).WriteMasterKey(pMasterKey.first, pMasterKey.second);
+                if (fWasLocked)
+                    Lock();
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CWallet::EncryptWallet(const string& strWalletPassphrase)
+{
+    //TODO: use db commits
+    CRITICAL_BLOCK(cs_mapPubKeys)
+    CRITICAL_BLOCK(cs_KeyStore)
+    CRITICAL_BLOCK(cs_vMasterKey)
+    {
+        if (IsCrypted())
+            return false;
+
+        CKeyingMaterial vMasterKey;
+        RandAddSeedPerfmon();
+
+        vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
+        RAND_bytes(&vMasterKey[0], WALLET_CRYPTO_KEY_SIZE);
+
+        CMasterKey kMasterKey;
+
+        RandAddSeedPerfmon();
+        kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
+        RAND_bytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
+
+        CCrypter crypter;
+        if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod))
+            return false;
+        if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey))
+            return false;
+
+        mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
+        if (fFileBacked)
+        {
+            DBFlush(false);
+            CWalletDB(strWalletFile).WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+            DBFlush(false);
+        }
+
+        if (!EncryptKeys(vMasterKey))
+            exit(1); //We now probably have half of our keys encrypted, and half not...die and let the user ask someone with experience to recover their wallet.
+
+        Lock();
+    }
+    return true;
 }
 
 void CWallet::WalletUpdateSpent(const CTransaction &tx)
@@ -99,7 +208,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             if (txout.scriptPubKey == scriptDefaultKey)
-                SetDefaultKey(GetKeyFromKeyPool());
+                SetDefaultKey(GetOrReuseKeyFromPool());
         }
 
         // Notify UI
@@ -904,15 +1013,24 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
 {
     CReserveKey reservekey(this);
     int64 nFeeRequired;
-    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
+    CRITICAL_BLOCK(cs_vMasterKey)
     {
-        string strError;
-        if (nValue + nFeeRequired > GetBalance())
-            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "), FormatMoney(nFeeRequired).c_str());
-        else
-            strError = _("Error: Transaction creation failed  ");
-        printf("SendMoney() : %s", strError.c_str());
-        return strError;
+        if (IsLocked())
+        {
+            string strError = _("Error: Wallet locked, unable to create transaction  ");
+            printf("SendMoney() : %s", strError.c_str());
+            return strError;
+        }
+        if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired))
+        {
+            string strError;
+            if (nValue + nFeeRequired > GetBalance())
+                strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "), FormatMoney(nFeeRequired).c_str());
+            else
+                strError = _("Error: Transaction creation failed  ");
+            printf("SendMoney() : %s", strError.c_str());
+            return strError;
+        }
     }
 
     if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
@@ -956,12 +1074,12 @@ bool CWallet::LoadWallet(bool& fFirstRunRet)
         return false;
     fFirstRunRet = vchDefaultKey.empty();
 
-    if (!mapKeys.count(vchDefaultKey))
+    if (!HaveKey(vchDefaultKey))
     {
         // Create new keyUser and set as default key
         RandAddSeedPerfmon();
 
-        SetDefaultKey(GetKeyFromKeyPool());
+        SetDefaultKey(GetOrReuseKeyFromPool());
         if (!SetAddressBookName(PubKeyToAddress(vchDefaultKey), ""))
             return false;
     }
@@ -1034,14 +1152,16 @@ bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)
     return true;
 }
 
-void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
+bool CWallet::TopUpKeyPool()
 {
-    nIndex = -1;
-    keypool.vchPubKey.clear();
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapWallet)
     CRITICAL_BLOCK(cs_setKeyPool)
+    CRITICAL_BLOCK(cs_vMasterKey)
     {
+        if (IsLocked())
+            return false;
+
         CWalletDB walletdb(strWalletFile);
 
         // Top up key pool
@@ -1052,13 +1172,31 @@ void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
             if (!setKeyPool.empty())
                 nEnd = *(--setKeyPool.end()) + 1;
             if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
-                throw runtime_error("ReserveKeyFromKeyPool() : writing generated key failed");
+                throw runtime_error("TopUpKeyPool() : writing generated key failed");
             setKeyPool.insert(nEnd);
             printf("keypool added key %"PRI64d", size=%d\n", nEnd, setKeyPool.size());
         }
+    }
+    return true;
+}
+
+void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
+{
+    nIndex = -1;
+    keypool.vchPubKey.clear();
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(cs_setKeyPool)
+    {
+        if (!IsLocked())
+            TopUpKeyPool();
 
         // Get the oldest key
-        assert(!setKeyPool.empty());
+        if(setKeyPool.empty())
+            return;
+
+        CWalletDB walletdb(strWalletFile);
+
         nIndex = *(setKeyPool.begin());
         setKeyPool.erase(setKeyPool.begin());
         if (!walletdb.ReadPool(nIndex, keypool))
@@ -1092,11 +1230,13 @@ void CWallet::ReturnKey(int64 nIndex)
     printf("keypool return %"PRI64d"\n", nIndex);
 }
 
-vector<unsigned char> CWallet::GetKeyFromKeyPool()
+vector<unsigned char> CWallet::GetOrReuseKeyFromPool()
 {
     int64 nIndex = 0;
     CKeyPool keypool;
     ReserveKeyFromKeyPool(nIndex, keypool);
+    if(nIndex == -1)
+        return vchDefaultKey;
     KeepKey(nIndex);
     return keypool.vchPubKey;
 }
@@ -1106,6 +1246,8 @@ int64 CWallet::GetOldestKeyPoolTime()
     int64 nIndex = 0;
     CKeyPool keypool;
     ReserveKeyFromKeyPool(nIndex, keypool);
+    if (nIndex == -1)
+        return GetTime();
     ReturnKey(nIndex);
     return keypool.nTime;
 }

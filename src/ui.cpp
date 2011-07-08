@@ -245,6 +245,41 @@ void SetDefaultReceivingAddress(const string& strAddress)
     }
 }
 
+bool GetWalletPassphrase()
+{
+    if (pwalletMain->IsLocked())
+    {
+        string strWalletPass;
+        strWalletPass.reserve(100);
+        mlock(&strWalletPass[0], strWalletPass.capacity());
+
+        // obtain current wallet encrypt/decrypt key, from passphrase
+        // Note that the passphrase is not mlock()d during this entry and could potentially
+        // be obtained from disk long after bitcoin has run.
+        strWalletPass = wxGetPasswordFromUser(_("Enter the current passphrase to the wallet."),
+                                              _("Passphrase")).ToStdString();
+
+        if (!strWalletPass.size())
+        {
+            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+            munlock(&strWalletPass[0], strWalletPass.capacity());
+            wxMessageBox(_("Please supply the current wallet decryption passphrase."), "Bitcoin");
+            return false;
+        }
+
+        if (!pwalletMain->Unlock(strWalletPass))
+        {
+            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+            munlock(&strWalletPass[0], strWalletPass.capacity());
+            wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "Bitcoin");
+            return false;
+        }
+        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+        munlock(&strWalletPass[0], strWalletPass.capacity());
+    }
+    return true;
+}
+
 
 
 
@@ -1122,6 +1157,166 @@ void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
         return;
 }
 
+void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
+{
+    // Options->Encrypt Wallet
+    if (pwalletMain->IsCrypted())
+    {
+        wxMessageBox(_("Wallet already encrypted."), "Bitcoin", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    string strWalletPass;
+    strWalletPass.reserve(100);
+    mlock(&strWalletPass[0], strWalletPass.capacity());
+
+    // obtain current wallet encrypt/decrypt key, from passphrase
+    // Note that the passphrase is not mlock()d during this entry and could potentially
+    // be obtained from disk long after bitcoin has run.
+    strWalletPass = wxGetPasswordFromUser(_("Enter the new passphrase to the wallet.\nPlease use a passphrase of 10 or more random characters, or eight or more words."),
+                                          _("Passphrase")).ToStdString();
+
+    if (!strWalletPass.size())
+    {
+        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+        munlock(&strWalletPass[0], strWalletPass.capacity());
+        wxMessageBox(_("Error: The supplied passphrase was too short."), "Bitcoin", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    if(wxMessageBox(_("WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\nAre you sure you wish to encrypt your wallet?"), "Bitcoin", wxYES_NO) != wxYES)
+        return;
+
+    string strWalletPassTest;
+    strWalletPassTest.reserve(100);
+    mlock(&strWalletPassTest[0], strWalletPassTest.capacity());
+    strWalletPassTest = wxGetPasswordFromUser(_("Please re-enter your new wallet passphrase."),
+                                              _("Passphrase")).ToStdString();
+
+    if (strWalletPassTest != strWalletPass)
+    {
+        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+        fill(strWalletPassTest.begin(), strWalletPassTest.end(), '\0');
+        munlock(&strWalletPass[0], strWalletPass.capacity());
+        munlock(&strWalletPassTest[0], strWalletPassTest.capacity());
+        wxMessageBox(_("Error: the supplied passphrases didn't match."), "Bitcoin", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    if (!pwalletMain->EncryptWallet(strWalletPass))
+    {
+        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+        fill(strWalletPassTest.begin(), strWalletPassTest.end(), '\0');
+        munlock(&strWalletPass[0], strWalletPass.capacity());
+        munlock(&strWalletPassTest[0], strWalletPassTest.capacity());
+        wxMessageBox(_("Wallet encryption failed."), "Bitcoin", wxOK | wxICON_ERROR);
+        return;
+    }
+    fill(strWalletPass.begin(), strWalletPass.end(), '\0');
+    fill(strWalletPassTest.begin(), strWalletPassTest.end(), '\0');
+    munlock(&strWalletPass[0], strWalletPass.capacity());
+    munlock(&strWalletPassTest[0], strWalletPassTest.capacity());
+    wxMessageBox(_("Wallet Encrypted.\nRemember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."), "Bitcoin");
+}
+
+void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
+{
+    // Options->Change Wallet Encryption Passphrase
+    if (!pwalletMain->IsCrypted())
+    {
+        wxMessageBox(_("Wallet is unencrypted, please encrypt it first."), "Bitcoin", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    string strOldWalletPass;
+    strOldWalletPass.reserve(100);
+    mlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+
+    // obtain current wallet encrypt/decrypt key, from passphrase
+    // Note that the passphrase is not mlock()d during this entry and could potentially
+    // be obtained from disk long after bitcoin has run.
+    strOldWalletPass = wxGetPasswordFromUser(_("Enter the current passphrase to the wallet."),
+                                             _("Passphrase")).ToStdString();
+
+    CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
+    {
+        bool fWasLocked = pwalletMain->IsLocked();
+        pwalletMain->Lock();
+
+        if (!strOldWalletPass.size() || !pwalletMain->Unlock(strOldWalletPass))
+        {
+            fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+            munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+            wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "Bitcoin", wxOK | wxICON_ERROR);
+            return;
+        }
+
+        if (fWasLocked)
+            pwalletMain->Lock();
+
+        string strNewWalletPass;
+        strNewWalletPass.reserve(100);
+        mlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+
+        // obtain new wallet encrypt/decrypt key, from passphrase
+        // Note that the passphrase is not mlock()d during this entry and could potentially
+        // be obtained from disk long after bitcoin has run.
+        strNewWalletPass = wxGetPasswordFromUser(_("Enter the new passphrase for the wallet."),
+                                                 _("Passphrase")).ToStdString();
+
+        if (!strNewWalletPass.size())
+        {
+            fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+            fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+            munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+            munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+            wxMessageBox(_("Error: The supplied passphrase was too short."), "Bitcoin", wxOK | wxICON_ERROR);
+            return;
+        }
+
+        string strNewWalletPassTest;
+        strNewWalletPassTest.reserve(100);
+        mlock(&strNewWalletPassTest[0], strNewWalletPassTest.capacity());
+
+        // obtain new wallet encrypt/decrypt key, from passphrase
+        // Note that the passphrase is not mlock()d during this entry and could potentially
+        // be obtained from disk long after bitcoin has run.
+        strNewWalletPassTest = wxGetPasswordFromUser(_("Re-enter the new passphrase for the wallet."),
+                                                     _("Passphrase")).ToStdString();
+
+        if (strNewWalletPassTest != strNewWalletPass)
+        {
+            fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+            fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+            fill(strNewWalletPassTest.begin(), strNewWalletPassTest.end(), '\0');
+            munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+            munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+            munlock(&strNewWalletPassTest[0], strNewWalletPassTest.capacity());
+            wxMessageBox(_("Error: the supplied passphrases didn't match."), "Bitcoin", wxOK | wxICON_ERROR);
+            return;
+        }
+
+        if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
+        {
+            fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+            fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+            fill(strNewWalletPassTest.begin(), strNewWalletPassTest.end(), '\0');
+            munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+            munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+            munlock(&strNewWalletPassTest[0], strNewWalletPassTest.capacity());
+            wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "Bitcoin", wxOK | wxICON_ERROR);
+            return;
+        }
+        fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
+        fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
+        fill(strNewWalletPassTest.begin(), strNewWalletPassTest.end(), '\0');
+        munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
+        munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
+        munlock(&strNewWalletPassTest[0], strNewWalletPassTest.capacity());
+        wxMessageBox(_("Wallet Passphrase Changed."), "Bitcoin");
+    }
+}
+
 void CMainFrame::OnMenuOptionsOptions(wxCommandEvent& event)
 {
     // Options->Options
@@ -1182,8 +1377,19 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
         return;
     string strName = dialog.GetValue();
 
-    // Generate new key
-    string strAddress = PubKeyToAddress(pwalletMain->GetKeyFromKeyPool());
+    string strAddress;
+    CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
+    {
+        bool fWasLocked = pwalletMain->IsLocked();
+        if (!GetWalletPassphrase())
+            return;
+
+        // Generate new key
+        strAddress = PubKeyToAddress(pwalletMain->GetOrReuseKeyFromPool());
+
+        if (fWasLocked)
+            pwalletMain->Lock();
+    }
 
     // Save
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
@@ -1947,7 +2153,12 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
         if (fBitcoinAddress)
         {
 	    CRITICAL_BLOCK(cs_main)
+            CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
 	    {
+                bool fWasLocked = pwalletMain->IsLocked();
+                if (!GetWalletPassphrase())
+                    return;
+
                 // Send to bitcoin address
                 CScript scriptPubKey;
                 scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
@@ -1956,13 +2167,22 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
                 if (strError == "")
                     wxMessageBox(_("Payment sent  "), _("Sending..."));
                 else if (strError == "ABORTED")
+                {
+                    if (fWasLocked)
+                        pwalletMain->Lock();
                     return; // leave send dialog open
+                }
                 else
                 {
                     wxMessageBox(strError + "  ", _("Sending..."));
                     EndModal(false);
+                    if (fWasLocked)
+                        pwalletMain->Lock();
                     return;
                 }
+
+                if (fWasLocked)
+                    pwalletMain->Lock();
 	    }
         }
         else
@@ -2246,16 +2466,27 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
             Error(_("Insufficient funds"));
             return;
         }
+
         CReserveKey reservekey(pwalletMain);
         int64 nFeeRequired;
-        if (!pwalletMain->CreateTransaction(scriptPubKey, nPrice, wtx, reservekey, nFeeRequired))
+        CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
         {
-            if (nPrice + nFeeRequired > pwalletMain->GetBalance())
-                Error(strprintf(_("This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds"), FormatMoney(nFeeRequired).c_str()));
-            else
-                Error(_("Transaction creation failed"));
-            return;
-        }
+            bool fWasLocked = pwalletMain->IsLocked();
+            if (!GetWalletPassphrase())
+                return;
+
+            if (!pwalletMain->CreateTransaction(scriptPubKey, nPrice, wtx, reservekey, nFeeRequired))
+            {
+                if (nPrice + nFeeRequired > pwalletMain->GetBalance())
+                    Error(strprintf(_("This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds"), FormatMoney(nFeeRequired).c_str()));
+                else
+                    Error(_("Transaction creation failed"));
+                return;
+            }
+
+            if (fWasLocked)
+                pwalletMain->Lock();
+       }
 
         // Transaction fee
         if (!ThreadSafeAskFee(nFeeRequired, _("Sending..."), this))
@@ -2581,8 +2812,18 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
             return;
         strName = dialog.GetValue();
 
-        // Generate new key
-        strAddress = PubKeyToAddress(pwalletMain->GetKeyFromKeyPool());
+        CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
+        {
+            bool fWasLocked = pwalletMain->IsLocked();
+            if (!GetWalletPassphrase())
+                return;
+
+            // Generate new key
+            strAddress = PubKeyToAddress(pwalletMain->GetOrReuseKeyFromPool());
+
+            if (fWasLocked)
+                pwalletMain->Lock();
+        }
     }
 
     // Add to list and select it
