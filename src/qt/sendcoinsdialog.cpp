@@ -140,6 +140,7 @@ void SendCoinsDialog::clear()
     ui->addAsLabel->setText(QString());
     ui->payAmount->setText(QString());
     ui->payTo->setFocus();
+    ui->sendButton->setDefault(true);
 }
 
 void SendCoinsDialog::reject()
