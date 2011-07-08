@@ -31,7 +31,13 @@ bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector
         return false;
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey, vchCryptedSecret);
+    CRITICAL_BLOCK(cs_pwalletdbEncryption)
+    {
+        if (pwalletdbEncryption)
+            return pwalletdbEncryption->WriteCryptedKey(vchPubKey, vchCryptedSecret);
+        else
+            return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey, vchCryptedSecret);
+    }
 }
 
 bool CWallet::Unlock(const string& strWalletPassphrase)
@@ -104,10 +110,10 @@ bool CWallet::ChangeWalletPassphrase(const string& strOldWalletPassphrase, const
 
 bool CWallet::EncryptWallet(const string& strWalletPassphrase)
 {
-    //TODO: use db commits
     CRITICAL_BLOCK(cs_mapPubKeys)
     CRITICAL_BLOCK(cs_KeyStore)
     CRITICAL_BLOCK(cs_vMasterKey)
+    CRITICAL_BLOCK(cs_pwalletdbEncryption)
     {
         if (IsCrypted())
             return false;
@@ -146,13 +152,26 @@ bool CWallet::EncryptWallet(const string& strWalletPassphrase)
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
         if (fFileBacked)
         {
-            DBFlush(false);
-            CWalletDB(strWalletFile).WriteMasterKey(nMasterKeyMaxID, kMasterKey);
-            DBFlush(false);
+            pwalletdbEncryption = new CWalletDB(strWalletFile);
+            pwalletdbEncryption->TxnBegin();
+            pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
         }
 
         if (!EncryptKeys(vMasterKey))
-            exit(1); //We now probably have half of our keys encrypted, and half not...die and let the user ask someone with experience to recover their wallet.
+        {
+            if (fFileBacked)
+                pwalletdbEncryption->TxnAbort();
+            exit(1); //We now probably have half of our keys encrypted in memory, and half not...die and let the user reload their unencrypted wallet.
+        }
+
+        if (fFileBacked)
+        {
+            if (!pwalletdbEncryption->TxnCommit())
+                exit(1); //We now have keys encrypted in memory, but no on disk...die to avoid confusion and let the user reload their unencrypted wallet.
+
+            pwalletdbEncryption->Close();
+            pwalletdbEncryption = NULL;
+        }
 
         Lock();
     }
