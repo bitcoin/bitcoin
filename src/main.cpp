@@ -1900,8 +1900,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return error("message addr size() = %d", vAddr.size());
 
         // Store the new addresses
-		CAddrDB addrDB;
-		addrDB.TxnBegin();
+        CAddrDB addrDB;
+        addrDB.TxnBegin();
         int64 nNow = GetAdjustedTime();
         int64 nSince = nNow - 10 * 60;
         BOOST_FOREACH(CAddress& addr, vAddr)
@@ -1944,7 +1944,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 }
             }
         }
-		addrDB.TxnCommit();  // Save addresses (it's ok if this fails)
+        addrDB.TxnCommit();  // Save addresses (it's ok if this fails)
         if (vAddr.size() < 1000)
             pfrom->fGetAddr = false;
     }

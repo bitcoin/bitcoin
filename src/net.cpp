@@ -455,10 +455,10 @@ bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
             // New address
             printf("AddAddress(%s)\n", addr.ToString().c_str());
             mapAddresses.insert(make_pair(addr.GetKey(), addr));
-			if (pAddrDB)
-				pAddrDB->WriteAddress(addr);
-			else
-				CAddrDB().WriteAddress(addr);
+            if (pAddrDB)
+                pAddrDB->WriteAddress(addr);
+            else
+                CAddrDB().WriteAddress(addr);
             return true;
         }
         else
@@ -480,12 +480,12 @@ bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
                 fUpdated = true;
             }
             if (fUpdated)
-			{
-				if (pAddrDB)
-					pAddrDB->WriteAddress(addrFound);
-				else
-					CAddrDB().WriteAddress(addrFound);
-			}
+            {
+                if (pAddrDB)
+                    pAddrDB->WriteAddress(addrFound);
+                else
+                    CAddrDB().WriteAddress(addrFound);
+            }
         }
     }
     return false;
@@ -1095,10 +1095,10 @@ void ThreadMapPort2(void* parg)
 
 #ifndef __WXMSW__
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0);
+                            port, port, lanaddr, 0, "TCP", 0);
 #else
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0, "0");
+                            port, port, lanaddr, 0, "TCP", 0, "0");
 #endif
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
