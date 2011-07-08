@@ -20,7 +20,7 @@ This has been implemented:
 
 - CSV export of transactions
 
-- User friendly transaction list with status icons, and real-time filtering
+- User friendly transaction list with status icons, real-time filtering and a context menu that allows editing and copying labels
 
 - Show alternative icon when on testnet
 
