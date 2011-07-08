@@ -84,7 +84,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QVBoxLayout *vbox = new QVBoxLayout();
 
     transactionView = new TransactionView(this);
-    connect(transactionView, SIGNAL(doubleClicked(const QModelIndex&)), this, SLOT(transactionDetails(const QModelIndex&)));
+    connect(transactionView, SIGNAL(doubleClicked(const QModelIndex&)), transactionView, SLOT(transactionDetails()));
     vbox->addWidget(transactionView);
 
     transactionsPage = new QWidget(this);
@@ -229,7 +229,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
     connect(walletModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
 
     // Put transaction list in tabs
-    transactionView->setModel(walletModel->getTransactionTableModel());
+    transactionView->setModel(walletModel);
 
     addressBookPage->setModel(walletModel->getAddressTableModel());
     receiveCoinsPage->setModel(walletModel->getAddressTableModel());
@@ -298,7 +298,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnections->setTextFormat(Qt::RichText);
-    labelConnections->setText("<img src=\""+icon+"\">" + tr("%n connection(s)", "", count));
+    labelConnections->setText("<img src=\""+icon+"\"> " + tr("%n connection(s)", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
@@ -409,13 +409,6 @@ void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
           this, tr("Sending..."), strMessage,
           QMessageBox::Yes|QMessageBox::Cancel, QMessageBox::Yes);
     *payFee = (retval == QMessageBox::Yes);
-}
-
-void BitcoinGUI::transactionDetails(const QModelIndex& idx)
-{
-    // A transaction is doubleclicked
-    TransactionDescDialog dlg(idx);
-    dlg.exec();
 }
 
 void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int end)

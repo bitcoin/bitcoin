@@ -1,6 +1,7 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
 #include "walletmodel.h"
+#include "addresstablemodel.h"
 #include "guiutil.h"
 
 #include "addressbookpage.h"
@@ -131,7 +132,7 @@ void SendCoinsDialog::on_buttonBox_rejected()
 
 void SendCoinsDialog::on_payTo_textChanged(const QString &address)
 {
-    ui->addAsLabel->setText(model->labelForAddress(address));
+    ui->addAsLabel->setText(model->getAddressTableModel()->labelForAddress(address));
 }
 
 void SendCoinsDialog::clear()

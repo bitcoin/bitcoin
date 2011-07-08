@@ -2,9 +2,13 @@
 
 #include "transactionfilterproxy.h"
 #include "transactionrecord.h"
+#include "walletmodel.h"
+#include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 #include "guiutil.h"
 #include "csvmodelwriter.h"
+#include "transactiondescdialog.h"
+#include "editaddressdialog.h"
 
 #include <QScrollBar>
 #include <QComboBox>
@@ -17,6 +21,10 @@
 #include <QPushButton>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QPoint>
+#include <QMenu>
+#include <QApplication>
+#include <QClipboard>
 
 #include <QDebug>
 
@@ -90,23 +98,47 @@ TransactionView::TransactionView(QWidget *parent) :
     // Always show scroll bar
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     view->setTabKeyNavigation(false);
+    view->setContextMenuPolicy(Qt::CustomContextMenu);
 
     transactionView = view;
 
+    // Actions
+    QAction *copyAddressAction = new QAction("Copy address", this);
+    QAction *copyLabelAction = new QAction("Copy label", this);
+    QAction *editLabelAction = new QAction("Edit label", this);
+    QAction *showDetailsAction = new QAction("Show details...", this);
+
+    contextMenu = new QMenu();
+    contextMenu->addAction(copyAddressAction);
+    contextMenu->addAction(copyLabelAction);
+    contextMenu->addAction(editLabelAction);
+    contextMenu->addAction(showDetailsAction);
+
+    // Connect actions
     connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
     connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
     connect(addressWidget, SIGNAL(textChanged(const QString&)), this, SLOT(changedPrefix(const QString&)));
     connect(amountWidget, SIGNAL(textChanged(const QString&)), this, SLOT(changedAmount(const QString&)));
 
     connect(view, SIGNAL(doubleClicked(const QModelIndex&)), this, SIGNAL(doubleClicked(const QModelIndex&)));
+
+    connect(view,
+            SIGNAL(customContextMenuRequested(const QPoint &)),
+            this,
+            SLOT(contextualMenu(const QPoint &)));
+
+    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
+    connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
+    connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
+    connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
 }
 
-void TransactionView::setModel(TransactionTableModel *model)
+void TransactionView::setModel(WalletModel *model)
 {
     this->model = model;
 
     transactionProxyModel = new TransactionFilterProxy(this);
-    transactionProxyModel->setSourceModel(model);
+    transactionProxyModel->setSourceModel(model->getTransactionTableModel());
     transactionProxyModel->setDynamicSortFilter(true);
 
     transactionProxyModel->setSortRole(Qt::EditRole);
@@ -233,3 +265,77 @@ void TransactionView::exportClicked()
     }
 }
 
+void TransactionView::contextualMenu(const QPoint &point)
+{
+    QModelIndex index = transactionView->indexAt(point);
+    if(index.isValid())
+    {
+        contextMenu->exec(QCursor::pos());
+    }
+}
+
+void TransactionView::copyAddress()
+{
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        QApplication::clipboard()->setText(selection.at(0).data(TransactionTableModel::AddressRole).toString());
+    }
+}
+
+void TransactionView::copyLabel()
+{
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        QApplication::clipboard()->setText(selection.at(0).data(TransactionTableModel::LabelRole).toString());
+    }
+}
+
+void TransactionView::editLabel()
+{
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        AddressTableModel *addressBook = model->getAddressTableModel();
+        QString address = selection.at(0).data(TransactionTableModel::AddressRole).toString();
+        if(address.isEmpty())
+        {
+            // If this transaction has no associated address, exit
+            return;
+        }
+        int idx = addressBook->lookupAddress(address);
+        if(idx != -1)
+        {
+            // Edit sending / receiving address
+            QModelIndex modelIdx = addressBook->index(idx, 0, QModelIndex());
+            // Determine type of address, launch appropriate editor dialog type
+            QString type = modelIdx.data(AddressTableModel::TypeRole).toString();
+
+            EditAddressDialog dlg(type==AddressTableModel::Receive
+                                         ? EditAddressDialog::EditReceivingAddress
+                                         : EditAddressDialog::EditSendingAddress,
+                                  this);
+            dlg.setModel(addressBook);
+            dlg.loadRow(idx);
+            dlg.exec();
+        }
+        else
+        {
+            // Add sending address
+            EditAddressDialog dlg(EditAddressDialog::NewSendingAddress,
+                                  this);
+            dlg.exec();
+        }
+    }
+}
+
+void TransactionView::showDetails()
+{
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        TransactionDescDialog dlg(selection.at(0));
+        dlg.exec();
+    }
+}

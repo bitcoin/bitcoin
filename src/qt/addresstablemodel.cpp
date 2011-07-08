@@ -296,3 +296,33 @@ bool AddressTableModel::validateAddress(const QString &address)
 
     return AddressToHash160(address.toStdString(), hash160);
 }
+
+/* Look up label for address in address book, if not found return empty string.
+ */
+QString AddressTableModel::labelForAddress(const QString &address) const
+{
+    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    {
+        std::map<std::string, std::string>::iterator mi = wallet->mapAddressBook.find(address.toStdString());
+        if (mi != wallet->mapAddressBook.end())
+        {
+            return QString::fromStdString(mi->second);
+        }
+    }
+    return QString();
+}
+
+int AddressTableModel::lookupAddress(const QString &address) const
+{
+    QModelIndexList lst = match(index(0, Address, QModelIndex()),
+                                Qt::EditRole, address, 1, Qt::MatchExactly);
+    if(lst.isEmpty())
+    {
+        return -1;
+    }
+    else
+    {
+        return lst.at(0).row();
+    }
+}
+

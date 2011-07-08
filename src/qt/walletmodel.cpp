@@ -123,18 +123,4 @@ TransactionTableModel *WalletModel::getTransactionTableModel()
     return transactionTableModel;
 }
 
-/* Look up label for address in address book, if not found return empty string.
- */
-QString WalletModel::labelForAddress(const QString &address) const
-{
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
-    {
-        std::map<std::string, std::string>::iterator mi = wallet->mapAddressBook.find(address.toStdString());
-        if (mi != wallet->mapAddressBook.end())
-        {
-            return QString::fromStdString(mi->second);
-        }
-    }
-    return QString();
-}
 

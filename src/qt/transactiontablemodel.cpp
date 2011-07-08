@@ -4,6 +4,7 @@
 #include "guiconstants.h"
 #include "transactiondesc.h"
 #include "walletmodel.h"
+#include "addresstablemodel.h"
 
 #include "headers.h"
 
@@ -325,7 +326,7 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
  */
 QString TransactionTableModel::lookupAddress(const std::string &address) const
 {
-    QString label = walletModel->labelForAddress(QString::fromStdString(address));
+    QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(address));
     QString description;
     if(label.isEmpty())
     {
@@ -538,7 +539,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     }
     else if (role == LabelRole)
     {
-        return walletModel->labelForAddress(QString::fromStdString(rec->address));
+        return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
     }
     else if (role == AbsoluteAmountRole)
     {

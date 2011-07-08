@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-class TransactionTableModel;
+class WalletModel;
 class TransactionFilterProxy;
 
 QT_BEGIN_NAMESPACE
@@ -11,6 +11,7 @@ class QTableView;
 class QComboBox;
 class QLineEdit;
 class QModelIndex;
+class QMenu;
 QT_END_NAMESPACE
 
 class TransactionView : public QWidget
@@ -19,7 +20,7 @@ class TransactionView : public QWidget
 public:
     explicit TransactionView(QWidget *parent = 0);
 
-    void setModel(TransactionTableModel *model);
+    void setModel(WalletModel *model);
 
     enum DateEnum
     {
@@ -33,7 +34,7 @@ public:
     };
 
 private:
-    TransactionTableModel *model;
+    WalletModel *model;
     TransactionFilterProxy *transactionProxyModel;
     QTableView *transactionView;
 
@@ -41,6 +42,11 @@ private:
     QComboBox *typeWidget;
     QLineEdit *addressWidget;
     QLineEdit *amountWidget;
+
+    QMenu *contextMenu;
+
+private slots:
+    void contextualMenu(const QPoint &);
 
 signals:
     void doubleClicked(const QModelIndex&);
@@ -51,6 +57,10 @@ public slots:
     void changedPrefix(const QString &prefix);
     void changedAmount(const QString &amount);
     void exportClicked();
+    void showDetails();
+    void copyAddress();
+    void editLabel();
+    void copyLabel();
 
 };
 
