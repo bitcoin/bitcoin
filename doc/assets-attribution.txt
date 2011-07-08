@@ -52,3 +52,9 @@ Designer: Jack Cai
 License: Creative Commons Attribution No Derivatives (by-nd)
 Site: http://findicons.com/icon/175944/home?id=176221#
 
+Icon: src/qt/res/icons/synced.png, 
+      src/qt/res/icons/notsynced.png
+Icon Pack: Gloss: Basic
+Designer: Momenticons
+License: Creative Commons Attribution (by) 
+Site: http://www.momenticons.com/

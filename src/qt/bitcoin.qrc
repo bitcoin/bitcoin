@@ -29,6 +29,8 @@
         <file alias="history">res/icons/history.png</file>
         <file alias="overview">res/icons/overview.png</file>
         <file alias="export">res/icons/export.png</file>
+        <file alias="synced">res/icons/synced.png</file>
+        <file alias="notsynced">res/icons/notsynced.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>

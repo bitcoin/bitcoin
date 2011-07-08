@@ -35,6 +35,7 @@
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QStackedWidget>
+#include <QDateTime>
 
 #include <QDebug>
 
@@ -109,11 +110,13 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelConnections = new QLabel();
     labelConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     labelConnections->setMinimumWidth(150);
+    labelConnections->setMaximumWidth(150);
     labelConnections->setToolTip(tr("Number of connections to other clients"));
 
     labelBlocks = new QLabel();
     labelBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    labelBlocks->setMinimumWidth(130);
+    labelBlocks->setMinimumWidth(150);
+    labelBlocks->setMaximumWidth(150);
     labelBlocks->setToolTip(tr("Number of blocks in the block chain"));
 
     // Progress bar for blocks download
@@ -295,7 +298,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnections->setTextFormat(Qt::RichText);
-    labelConnections->setText("<img src=\""+icon+"\"> " + tr("%n connection(s)", "", count));
+    labelConnections->setText("<img src=\""+icon+"\">" + tr("%n connection(s)", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
@@ -314,7 +317,34 @@ void BitcoinGUI::setNumBlocks(int count)
         progressBar->setVisible(false);
     }
 
-    labelBlocks->setText(tr("%n block(s)", "", count));
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime lastBlockDate = clientModel->getLastBlockDate();
+    int secs = lastBlockDate.secsTo(now);
+    QString text;
+    QString icon = ":/icons/notsynced";
+
+    // "Up to date" icon, and outdated icon
+    if(secs < 30*60)
+    {
+        text = "Up to date";
+        icon = ":/icons/synced";
+    }
+    else if(secs < 60*60)
+    {
+        text = tr("%n minute(s) ago","",secs/60);
+    }
+    else if(secs < 24*60*60)
+    {
+        text = tr("%n hour(s) ago","",secs/(60*60));
+    }
+    else
+    {
+        text = tr("%n day(s) ago","",secs/(60*60*24));
+    }
+
+    labelBlocks->setText("<img src=\""+icon+"\"> " + text);
+    labelBlocks->setToolTip(tr("%n block(s) in total, last block was generated %1", "", count)
+                            .arg(QLocale::system().toString(lastBlockDate)));
 }
 
 void BitcoinGUI::setNumTransactions(int count)

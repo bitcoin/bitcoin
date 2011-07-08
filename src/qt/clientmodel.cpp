@@ -7,6 +7,7 @@
 #include "headers.h"
 
 #include <QTimer>
+#include <QDateTime>
 
 ClientModel::ClientModel(CWallet *wallet, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(0)
@@ -28,6 +29,11 @@ int ClientModel::getNumConnections() const
 int ClientModel::getNumBlocks() const
 {
     return nBestHeight;
+}
+
+QDateTime ClientModel::getLastBlockDate() const
+{
+    return QDateTime::fromTime_t(pindexBest->GetBlockTime());
 }
 
 void ClientModel::update()

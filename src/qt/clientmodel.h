@@ -8,6 +8,10 @@ class AddressTableModel;
 class TransactionTableModel;
 class CWallet;
 
+QT_BEGIN_NAMESPACE
+class QDateTime;
+QT_END_NAMESPACE
+
 // Interface to Bitcoin network client
 class ClientModel : public QObject
 {
@@ -21,6 +25,8 @@ public:
 
     int getNumConnections() const;
     int getNumBlocks() const;
+
+    QDateTime getLastBlockDate() const;
 
     // Return true if client connected to testnet
     bool isTestNet() const;
