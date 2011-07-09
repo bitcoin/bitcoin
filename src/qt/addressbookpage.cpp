@@ -3,9 +3,12 @@
 
 #include "addresstablemodel.h"
 #include "editaddressdialog.h"
+#include "csvmodelwriter.h"
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QDebug>
 
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
@@ -51,29 +54,24 @@ void AddressBookPage::setModel(AddressTableModel *model)
     // Refresh list from core
     model->updateList();
 
+    proxyModel = new QSortFilterProxyModel(this);
+    proxyModel->setSourceModel(model);
+    proxyModel->setDynamicSortFilter(true);
     switch(tab)
     {
-    case ReceivingTab: {
+    case ReceivingTab:
         // Receive filter
-        QSortFilterProxyModel *receive_model = new QSortFilterProxyModel(this);
-        receive_model->setSourceModel(model);
-        receive_model->setDynamicSortFilter(true);
-        receive_model->setFilterRole(AddressTableModel::TypeRole);
-        receive_model->setFilterFixedString(AddressTableModel::Receive);
-        ui->tableView->setModel(receive_model);
-        ui->tableView->sortByColumn(0, Qt::AscendingOrder);
-        } break;
-    case SendingTab: {
+        proxyModel->setFilterRole(AddressTableModel::TypeRole);
+        proxyModel->setFilterFixedString(AddressTableModel::Receive);
+        break;
+    case SendingTab:
         // Send filter
-        QSortFilterProxyModel *send_model = new QSortFilterProxyModel(this);
-        send_model->setSourceModel(model);
-        send_model->setDynamicSortFilter(true);
-        send_model->setFilterRole(AddressTableModel::TypeRole);
-        send_model->setFilterFixedString(AddressTableModel::Send);
-        ui->tableView->setModel(send_model);
-        ui->tableView->sortByColumn(0, Qt::AscendingOrder);
-        } break;
+        proxyModel->setFilterRole(AddressTableModel::TypeRole);
+        proxyModel->setFilterFixedString(AddressTableModel::Send);
+        break;
     }
+    ui->tableView->setModel(proxyModel);
+    ui->tableView->sortByColumn(0, Qt::AscendingOrder);
 
     // Set column widths
     ui->tableView->horizontalHeader()->resizeSection(
@@ -178,4 +176,27 @@ void AddressBookPage::done(int retval)
     }
 
     QDialog::done(retval);
+}
+
+void AddressBookPage::exportClicked()
+{
+    // CSV is currently the only supported format
+    QString filename = QFileDialog::getSaveFileName(
+            this,
+            tr("Export Address Book Data"),
+            QDir::currentPath(),
+            tr("Comma separated file (*.csv)"));
+
+    CSVModelWriter writer(filename);
+
+    // name, column, role
+    writer.setModel(proxyModel);
+    writer.addColumn("Label", AddressTableModel::Label, Qt::EditRole);
+    writer.addColumn("Address", AddressTableModel::Address, Qt::EditRole);
+
+    if(!writer.write())
+    {
+        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+                              QMessageBox::Abort, QMessageBox::Abort);
+    }
 }

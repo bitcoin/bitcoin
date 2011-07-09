@@ -103,7 +103,6 @@ private slots:
     void aboutClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void incomingTransaction(const QModelIndex & parent, int start, int end);
-    void exportClicked();
 };
 
 #endif

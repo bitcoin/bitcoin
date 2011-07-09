@@ -241,10 +241,6 @@ void TransactionView::exportClicked()
             tr("Export Transaction Data"),
             QDir::currentPath(),
             tr("Comma separated file (*.csv)"));
-    if(!filename.endsWith(".csv"))
-    {
-        filename += ".csv";
-    }
 
     CSVModelWriter writer(filename);
 

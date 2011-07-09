@@ -184,7 +184,6 @@ void BitcoinGUI::createActions()
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(openBitcoinAction, SIGNAL(triggered()), this, SLOT(show()));
-    connect(exportAction, SIGNAL(triggered()), this, SLOT(exportClicked()));
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
@@ -440,28 +439,39 @@ void BitcoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
     centralWidget->setCurrentWidget(overviewPage);
+
     exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     centralWidget->setCurrentWidget(transactionsPage);
+
     exportAction->setEnabled(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), transactionView, SLOT(exportClicked()));
 }
 
 void BitcoinGUI::gotoAddressBookPage()
 {
     addressBookAction->setChecked(true);
     centralWidget->setCurrentWidget(addressBookPage);
-    exportAction->setEnabled(false); // TODO
+
+    exportAction->setEnabled(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), addressBookPage, SLOT(exportClicked()));
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()
 {
     receiveCoinsAction->setChecked(true);
     centralWidget->setCurrentWidget(receiveCoinsPage);
-    exportAction->setEnabled(false); // TODO
+
+    exportAction->setEnabled(true);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+    connect(exportAction, SIGNAL(triggered()), receiveCoinsPage, SLOT(exportClicked()));
 }
 
 void BitcoinGUI::gotoSendCoinsPage()
@@ -469,13 +479,8 @@ void BitcoinGUI::gotoSendCoinsPage()
     sendCoinsAction->setChecked(true);
     sendCoinsPage->clear();
     centralWidget->setCurrentWidget(sendCoinsPage);
-    exportAction->setEnabled(false);
-}
 
-void BitcoinGUI::exportClicked()
-{
-    // Redirect to the right view, as soon as export for other views
-    // (such as address book) is implemented.
-    transactionView->exportClicked();
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 

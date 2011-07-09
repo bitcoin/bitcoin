@@ -11,6 +11,7 @@ class AddressTableModel;
 QT_BEGIN_NAMESPACE
 class QTableView;
 class QItemSelection;
+class QSortFilterProxyModel;
 QT_END_NAMESPACE
 
 class AddressBookPage : public QDialog
@@ -36,6 +37,7 @@ public:
 
 public slots:
     void done(int retval);
+    void exportClicked();
 
 private:
     Ui::AddressBookPage *ui;
@@ -43,6 +45,7 @@ private:
     Mode mode;
     Tabs tab;
     QString returnValue;
+    QSortFilterProxyModel *proxyModel;
 
     QTableView *getCurrentTable();
 
