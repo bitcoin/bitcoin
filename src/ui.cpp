@@ -522,7 +522,7 @@ string FormatTxStatus(const CWalletTx& wtx)
     // Status
     if (!wtx.IsFinal())
     {
-        if (wtx.nLockTime < 500000000)
+        if (wtx.nLockTime < LOCKTIME_THRESHOLD)
             return strprintf(_("Open for %d blocks"), nBestHeight - wtx.nLockTime);
         else
             return strprintf(_("Open until %s"), DateTimeStr(wtx.nLockTime).c_str());
