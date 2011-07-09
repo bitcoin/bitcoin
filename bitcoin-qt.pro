@@ -12,6 +12,9 @@ macx:LIBS += -lboost_thread-mt
 windows:DEFINES += __WXMSW__
 windows:LIBS += -lssl -lcrypto -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -lboost_program_options-mgw44-mt-1_43 -lboost_thread-mgw44-mt-1_43 -ldb_cxx -lws2_32 -lgdi32
 
+# for extra security against potential buffer overflows
+QMAKE_CXXFLAGS += -fstack-protector 
+
 # disable quite some warnings because bitcoin core "sins" a lot
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts  -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch
 
