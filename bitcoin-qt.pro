@@ -14,6 +14,7 @@ windows:LIBS += -lssl -lcrypto -lboost_system-mgw44-mt-1_43 -lboost_filesystem-m
 
 # for extra security against potential buffer overflows
 QMAKE_CXXFLAGS += -fstack-protector 
+QMAKE_LFLAGS += -fstack-protector
 
 # disable quite some warnings because bitcoin core "sins" a lot
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts  -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch

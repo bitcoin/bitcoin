@@ -125,20 +125,20 @@ int main(int argc, char *argv[])
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);
 
-#ifdef Q_WS_WIN32
-                // Windows-specific customization
-                window.setAttribute(Qt::WA_TranslucentBackground);
-                window.setAttribute(Qt::WA_NoSystemBackground, false);
-                QPalette pal = window.palette();
-                QColor bg = pal.window().color();
-                bg.setAlpha(0);
-                pal.setColor(QPalette::Window, bg);
-                window.setPalette(pal);
-                window.ensurePolished();
-                window.setAttribute(Qt::WA_StyledBackground, false);
-#endif
                 if (QtWin::isCompositionEnabled())
                 {
+#ifdef Q_WS_WIN32
+                    // Windows-specific customization
+                    window.setAttribute(Qt::WA_TranslucentBackground);
+                    window.setAttribute(Qt::WA_NoSystemBackground, false);
+                    QPalette pal = window.palette();
+                    QColor bg = pal.window().color();
+                    bg.setAlpha(0);
+                    pal.setColor(QPalette::Window, bg);
+                    window.setPalette(pal);
+                    window.ensurePolished();
+                    window.setAttribute(Qt::WA_StyledBackground, false);
+#endif
                     QtWin::extendFrameIntoClientArea(&window);
                     window.setContentsMargins(0, 0, 0, 0);
                 }
