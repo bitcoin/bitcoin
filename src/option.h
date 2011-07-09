@@ -61,7 +61,7 @@ extern template class option<std::vector<std::string> >;
 
 std::string GetOptionsDescriptions(const std::string &groupMasks, const std::string &classMasks, bool showgroups=false);
 
-bool ParseCommandLine(int argc, char **argv);
-bool ParseConfigFile();
+bool ParseCommandLine(int argc, char **argv, std::string &strErrors);
+bool ParseConfigFile(std::string &strErrors);
 
 #endif

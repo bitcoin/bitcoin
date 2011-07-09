@@ -29,8 +29,8 @@ option<string> datadirOpt(
     "=<dir>", _("Specify data directory"));
 
 option<string> confOpt(
-    "init", "show", "conf", "bitcoin.conf", "=<file>",
-    _("Specify configuration file"));
+    "init", "show", "conf", "bitcoin.conf",
+    "=<file>", _("Specify configuration file"));
 
 option<bool> testnetOpt(
     "init", "show", "testnet", false, true,
@@ -50,8 +50,8 @@ option<bool> daemonOpt(
     "", _("Run in the background as a daemon and accept commands"));
 
 option<string> pidfileOpt(
-    "init", "hide", "pid", "bitcoin.pid", "=<file>",
-    _("Specify pid file"));
+    "init", "hide", "pid", "bitcoin.pid",
+    "=<file>", _("Specify pid file"));
 #endif
 
 option<bool> genOpt(
@@ -238,6 +238,8 @@ bool AppInit(int argc, char* argv[])
 
 bool AppInit2(int argc, char* argv[])
 {
+    string strErrors;
+
 #ifdef _MSC_VER
     // Turn off microsoft heap dump noise
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
@@ -266,13 +268,16 @@ bool AppInit2(int argc, char* argv[])
     //
 
     // Parse command line options
-    if (!ParseCommandLine(argc, argv))
-        return false;
+    if (!ParseCommandLine(argc, argv, strErrors))
+    {
+        cerr << strErrors << endl;
+        exit(1);
+    }
 
     if (+helpOpt)
     {
         PrintHelp();
-        return false;
+        exit(0);
     }
 
     // Compute pathDataDir and pathConfigFile from command line
@@ -284,13 +289,17 @@ bool AppInit2(int argc, char* argv[])
     strConfigFile = pathConfigFile.string();
 
     if (+confOpt && !fs::exists(pathConfigFile)) {
-        cerr << _("Error: Specified configuration file does not exist") << endl;
-        return false;
+        strErrors += string() + _("Error: Specified configuration file does not exist");
+        wxMessageBox(strErrors, "Bitcoin");
+        exit(1);
     }
 
     // Parse configuration file
-    if (!UpdateConfig(true))
-        return false;
+    if (!UpdateConfig(strErrors))
+    {
+        wxMessageBox(strErrors, "Bitcoin");
+        exit(1);
+    }
 
     // Update datadir in case it was defined in config file
     if (+datadirOpt)
@@ -298,8 +307,9 @@ bool AppInit2(int argc, char* argv[])
         pathDataDir = fs::system_complete(datadirOpt());
         if (!fs::is_directory(pathDataDir))
         {
-            cerr << _("Error: Specified directory does not exist") << endl;
-            return false;
+            strErrors += string() + _("Error: Specified directory does not exist");
+            wxMessageBox(strErrors, "Bitcoin");
+            exit(1);
         }
     }
 
@@ -447,7 +457,6 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Bind to the port early so we can tell if another instance is already running.
-    string strErrors;
     if (!BindListenPort(strErrors))
     {
         wxMessageBox(strErrors, "Bitcoin");
@@ -606,11 +615,25 @@ bool AppInit2(int argc, char* argv[])
 }
 
 
-bool UpdateConfig(bool messages)
+bool UpdateConfig(string &strError)
 {
 
-    if (!ParseConfigFile())
+    if (!ParseConfigFile(strError))
         return false;
+
+    if (+proxyOpt)
+    {
+        CAddress address(proxyOpt());
+        if (!address.IsValid())
+        {
+            strError += _("Invalid -proxy address");
+            return false;
+        }
+        fUseProxy = true;
+        addrProxy = address;
+    }
+    else
+        fUseProxy = false;
 
     fPrintToConsole = printtoconsoleOpt();
     fPrintToDebugger = printtodebuggerOpt();
@@ -619,18 +642,6 @@ bool UpdateConfig(bool messages)
     nTransactionFee = paytxfeeOpt();
 
     fGenerateBitcoins = genOpt();
-
-    fUseProxy = false;
-    if (+proxyOpt)
-    {
-        fUseProxy = true;
-        addrProxy = CAddress(proxyOpt());
-        if (!addrProxy.IsValid() && messages)
-        {
-            wxMessageBox(_("Invalid -proxy address"), "Bitcoin");
-            return false;
-        }
-    }
 
 #ifdef USE_UPNP
     fUseUPnP = fHaveUPnP && upnpOpt();

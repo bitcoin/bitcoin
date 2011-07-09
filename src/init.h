@@ -7,6 +7,6 @@
 void Shutdown(void* parg);
 bool AppInit(int argc, char* argv[]);
 bool AppInit2(int argc, char* argv[]);
-bool UpdateConfig(bool messages);
+bool UpdateConfig(std::string &strErrors);
 
 #endif

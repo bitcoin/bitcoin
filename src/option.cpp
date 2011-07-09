@@ -123,7 +123,7 @@ pair<string, string> CustomOptionParser(const string& s)
 
 }
 
-bool ParseCommandLine(int argc, char **argv)
+bool ParseCommandLine(int argc, char **argv, string &strErrors)
 {
     int opt_style =
         po::command_line_style::allow_long |
@@ -135,14 +135,14 @@ bool ParseCommandLine(int argc, char **argv)
     }
     catch (po::error &e)
     {
-        cerr << _("Error on command line:") << " " << e.what() << endl;
+        strErrors += string() + _("Error on command line:") + " " + e.what();
         return false;
     }
     po::notify(vmBase);
     return true;
 }
 
-bool ParseConfigFile()
+bool ParseConfigFile(string &strErrors)
 {
     fs::ifstream streamConfig(strConfigFile);
     po::variables_map vm = vmBase; // do not override cmd line
@@ -152,7 +152,7 @@ bool ParseConfigFile()
     }
     catch (po::error &e)
     {
-        cerr << _("Error in configuration file:") << " " << e.what() << endl;
+        strErrors += string() + _("Error in configuration file:") + " " + e.what();
         return false;
     }
     po::notify(vm);

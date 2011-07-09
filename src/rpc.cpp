@@ -212,10 +212,11 @@ Value reloadconfig(const Array& params, bool fHelp)
             "reloadconfig\n"
             "Reload bitcoin server configuration files.");
 
-    if (UpdateConfig(false))
+    string strErrors;
+    if (UpdateConfig(strErrors))
         return "configuration file has been reloaded";
     else
-        return "error: configuration file has not been reloaded";
+        return strErrors;
 }
 
 Value getblockcount(const Array& params, bool fHelp)
