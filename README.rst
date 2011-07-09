@@ -18,7 +18,7 @@ This has been implemented:
 
 - Asks for confirmation before sending coins
 
-- CSV export of transactions
+- CSV export of transactions and address book
 
 - User friendly transaction list with status icons, real-time filtering and a context menu that allows editing and copying labels
 
