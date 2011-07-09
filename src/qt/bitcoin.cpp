@@ -4,6 +4,7 @@
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
+#include "qtwin.h"
 
 #include "headers.h"
 #include "init.h"
@@ -119,9 +120,28 @@ int main(int argc, char *argv[])
                 BitcoinGUI window;
                 ClientModel clientModel(pwalletMain);
                 WalletModel walletModel(pwalletMain);
+
                 guiref = &window;
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);
+
+#ifdef Q_WS_WIN32
+                // Windows-specific customization
+                window.setAttribute(Qt::WA_TranslucentBackground);
+                window.setAttribute(Qt::WA_NoSystemBackground, false);
+                QPalette pal = window.palette();
+                QColor bg = pal.window().color();
+                bg.setAlpha(0);
+                pal.setColor(QPalette::Window, bg);
+                window.setPalette(pal);
+                window.ensurePolished();
+                window.setAttribute(Qt::WA_StyledBackground, false);
+#endif
+                if (QtWin::isCompositionEnabled())
+                {
+                    QtWin::extendFrameIntoClientArea(&window);
+                    window.setContentsMargins(0, 0, 0, 0);
+                }
 
                 window.show();
 
