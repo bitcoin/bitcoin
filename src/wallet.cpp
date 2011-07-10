@@ -108,6 +108,19 @@ bool CWallet::ChangeWalletPassphrase(const string& strOldWalletPassphrase, const
     return false;
 }
 
+
+// This class implements an addrIncoming entry that causes pre-0.4
+// clients to crash on startup if reading a private-key-encrypted wallet.
+class CCorruptAddress
+{
+public:
+    IMPLEMENT_SERIALIZE
+    (
+        if (nType & SER_DISK)
+            READWRITE(nVersion);
+    )
+};
+
 bool CWallet::EncryptWallet(const string& strWalletPassphrase)
 {
     CRITICAL_BLOCK(cs_mapPubKeys)
@@ -166,6 +179,8 @@ bool CWallet::EncryptWallet(const string& strWalletPassphrase)
 
         if (fFileBacked)
         {
+            CCorruptAddress corruptAddress;
+            pwalletdbEncryption->WriteSetting("addrIncoming", corruptAddress);
             if (!pwalletdbEncryption->TxnCommit())
                 exit(1); //We now have keys encrypted in memory, but no on disk...die to avoid confusion and let the user reload their unencrypted wallet.
 
