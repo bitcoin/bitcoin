@@ -91,6 +91,7 @@
 #include "serialize.h"
 #include "uint256.h"
 #include "util.h"
+#include "option.h"
 #include "bignum.h"
 #include "base58.h"
 #include "main.h"

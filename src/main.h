@@ -12,6 +12,8 @@
 
 #include <list>
 
+extern CWallet* pwalletMain;
+
 class CBlock;
 class CBlockIndex;
 class CWalletTx;

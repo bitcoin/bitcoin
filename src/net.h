@@ -12,6 +12,13 @@
 #include <arpa/inet.h>
 #endif
 
+extern option<bool> dnsOpt;
+extern option<int> dropmessagestestOpt;
+extern option<int> sendbuffersizeOpt;
+extern option<std::vector<std::string> > addnodeOpt;
+extern option<int> maxreceivebufferOpt;
+extern option<int> maxsendbufferOpt;
+
 class CMessageHeader;
 class CAddress;
 class CInv;
@@ -19,12 +26,9 @@ class CRequestTracker;
 class CNode;
 class CBlockIndex;
 extern int nBestHeight;
-extern int nConnectTimeout;
 
 
 
-inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 10*1000); }
-inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 10*1000); }
 inline unsigned short GetDefaultPort() { return fTestNet ? 18333 : 8333; }
 static const unsigned int PUBLISH_HOPS = 5;
 enum
@@ -35,7 +39,7 @@ enum
 
 
 
-bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout=nConnectTimeout);
+bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout=-1);
 bool Lookup(const char *pszName, std::vector<CAddress>& vaddr, int nServices, int nMaxSolutions, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool GetMyExternalIP(unsigned int& ipRet);
@@ -470,7 +474,6 @@ public:
 
 
 extern bool fClient;
-extern bool fAllowDNS;
 extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
 extern CNode* pnodeLocalHost;
@@ -698,7 +701,8 @@ public:
 
     void EndMessage()
     {
-        if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
+        int drop = dropmessagestestOpt();
+        if (drop > 0 && GetRand(drop) == 0)
         {
             printf("dropmessages DROPPING SEND MESSAGE\n");
             AbortMessage();

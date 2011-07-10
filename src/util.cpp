@@ -3,23 +3,18 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
 #include "strlcpy.h"
-#include <boost/program_options/detail/config_file.hpp>
-#include <boost/program_options/parsers.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
-#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;
 
-map<string, string> mapArgs;
-map<string, vector<string> > mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
-char pszSetDataDir[MAX_PATH] = "";
+string strDataDir = "";
+string strConfigFile = "";
 bool fRequestShutdown = false;
 bool fShutdown = false;
 bool fDaemon = false;
@@ -27,7 +22,6 @@ bool fServer = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
-bool fNoListen = false;
 bool fLogTimestamps = false;
 
 
@@ -173,7 +167,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         if (!fileout)
         {
             char pszFile[MAX_PATH+100];
-            GetDataDir(pszFile);
+            strlcpy(pszFile, strDataDir.c_str(), sizeof(pszFile));
             strlcat(pszFile, "/debug.log", sizeof(pszFile));
             fileout = fopen(pszFile, "a");
             if (fileout) setbuf(fileout, NULL); // unbuffered
@@ -388,7 +382,7 @@ bool ParseMoney(const char* pszIn, int64& nRet)
     for (; *p; p++)
         if (!isspace(*p))
             return false;
-    if (strWhole.size() > 14)
+    if (strWhole.size() > 10)
         return false;
     if (nUnits < 0 || nUnits > COIN)
         return false;
@@ -442,33 +436,6 @@ vector<unsigned char> ParseHex(const char* psz)
 vector<unsigned char> ParseHex(const string& str)
 {
     return ParseHex(str.c_str());
-}
-
-
-void ParseParameters(int argc, char* argv[])
-{
-    mapArgs.clear();
-    mapMultiArgs.clear();
-    for (int i = 1; i < argc; i++)
-    {
-        char psz[10000];
-        strlcpy(psz, argv[i], sizeof(psz));
-        char* pszValue = (char*)"";
-        if (strchr(psz, '='))
-        {
-            pszValue = strchr(psz, '=');
-            *pszValue++ = '\0';
-        }
-        #ifdef __WXMSW__
-        _strlwr(psz);
-        if (psz[0] == '/')
-            psz[0] = '-';
-        #endif
-        if (psz[0] != '-')
-            break;
-        mapArgs[psz] = pszValue;
-        mapMultiArgs[psz].push_back(pszValue);
-    }
 }
 
 
@@ -675,97 +642,14 @@ string GetDefaultDataDir()
 #endif
 }
 
-void GetDataDir(char* pszDir)
-{
-    // pszDir must be at least MAX_PATH length.
-    int nVariation;
-    if (pszSetDataDir[0] != 0)
-    {
-        strlcpy(pszDir, pszSetDataDir, MAX_PATH);
-        nVariation = 0;
-    }
-    else
-    {
-        // This can be called during exceptions by printf, so we cache the
-        // value so we don't have to do memory allocations after that.
-        static char pszCachedDir[MAX_PATH];
-        if (pszCachedDir[0] == 0)
-            strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
-        strlcpy(pszDir, pszCachedDir, MAX_PATH);
-        nVariation = 1;
-    }
-    if (fTestNet)
-    {
-        char* p = pszDir + strlen(pszDir);
-        if (p > pszDir && p[-1] != '/' && p[-1] != '\\')
-            *p++ = '/';
-        strcpy(p, "testnet");
-        nVariation += 2;
-    }
-    static bool pfMkdir[4];
-    if (!pfMkdir[nVariation])
-    {
-        pfMkdir[nVariation] = true;
-        boost::filesystem::create_directory(pszDir);
-    }
-}
-
 string GetDataDir()
 {
-    char pszDir[MAX_PATH];
-    GetDataDir(pszDir);
-    return pszDir;
+    return strDataDir;
 }
 
 string GetConfigFile()
 {
-    namespace fs = boost::filesystem;
-    fs::path pathConfig(GetArg("-conf", "bitcoin.conf"));
-    if (!pathConfig.is_complete())
-        pathConfig = fs::path(GetDataDir()) / pathConfig;
-    return pathConfig.string();
-}
-
-void ReadConfigFile(map<string, string>& mapSettingsRet,
-                    map<string, vector<string> >& mapMultiSettingsRet)
-{
-    namespace fs = boost::filesystem;
-    namespace pod = boost::program_options::detail;
-
-    fs::ifstream streamConfig(GetConfigFile());
-    if (!streamConfig.good())
-        return;
-
-    set<string> setOptions;
-    setOptions.insert("*");
-    
-    for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
-    {
-        // Don't overwrite existing settings so command line settings override bitcoin.conf
-        string strKey = string("-") + it->string_key;
-        if (mapSettingsRet.count(strKey) == 0)
-            mapSettingsRet[strKey] = it->value[0];
-        mapMultiSettingsRet[strKey].push_back(it->value[0]);
-    }
-}
-
-string GetPidFile()
-{
-    namespace fs = boost::filesystem;
-    fs::path pathConfig(GetArg("-pid", "bitcoind.pid"));
-    if (!pathConfig.is_complete())
-        pathConfig = fs::path(GetDataDir()) / pathConfig;
-    return pathConfig.string();
-}
-
-void CreatePidFile(string pidFile, pid_t pid)
-{
-    FILE* file;
-    if (file = fopen(pidFile.c_str(), "w"))
-    {
-        fprintf(file, "%d\n", pid);
-        fclose(file);
-    }
+    return strConfigFile;
 }
 
 int GetFilesize(FILE* file)

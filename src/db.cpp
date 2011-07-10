@@ -11,6 +11,8 @@
 using namespace std;
 using namespace boost;
 
+option<bool> checkblocksOpt("db", "hide", "checkblocks", false, true);
+option<bool> noflushwalletOpt("db", "hide", "noflushwallet", false, true);
 
 unsigned int nWalletDBUpdated;
 uint64 nAccountingEntryNumber = 0;
@@ -472,7 +474,7 @@ bool CTxDB::LoadBlockIndex()
     CBlockIndex* pindexFork = NULL;
     for (CBlockIndex* pindex = pindexBest; pindex && pindex->pprev; pindex = pindex->pprev)
     {
-        if (pindex->nHeight < nBestHeight-2500 && !mapArgs.count("-checkblocks"))
+        if (pindex->nHeight < nBestHeight-2500 && !checkblocksOpt())
             break;
         CBlock block;
         if (!block.ReadFromDisk(pindex))
@@ -827,17 +829,9 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
     if (fHaveUPnP)
         printf("fUseUPnP = %d\n", fUseUPnP);
 
-
     // Upgrade
     if (nFileVersion < VERSION)
-    {
-        // Get rid of old debug.log file in current directory
-        if (nFileVersion <= 105 && !pszSetDataDir[0])
-            unlink("debug.log");
-
         WriteVersion(VERSION);
-    }
-
 
     return true;
 }
@@ -849,7 +843,7 @@ void ThreadFlushWalletDB(void* parg)
     if (fOneThread)
         return;
     fOneThread = true;
-    if (mapArgs.count("-noflushwallet"))
+    if (noflushwalletOpt())
         return;
 
     unsigned int nLastSeen = nWalletDBUpdated;

@@ -253,12 +253,6 @@ void ThreadIRCSeed(void* parg)
 
 void ThreadIRCSeed2(void* parg)
 {
-    /* Dont advertise on IRC if we don't allow incoming connections */
-    if (mapArgs.count("-connect") || fNoListen)
-        return;
-
-    if (GetBoolArg("-noirc"))
-        return;
     printf("ThreadIRCSeed started\n");
     int nErrorWait = 10;
     int nRetryWait = 10;

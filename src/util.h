@@ -149,19 +149,11 @@ inline const char* _(const char* psz)
 
 
 
-
-
-
-
-
-
-
-extern std::map<std::string, std::string> mapArgs;
-extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugger;
-extern char pszSetDataDir[MAX_PATH];
+extern std::string strDataDir;
+extern std::string strConfigFile;
 extern bool fRequestShutdown;
 extern bool fShutdown;
 extern bool fDaemon;
@@ -169,7 +161,6 @@ extern bool fServer;
 extern bool fCommandLine;
 extern std::string strMiscWarning;
 extern bool fTestNet;
-extern bool fNoListen;
 extern bool fLogTimestamps;
 
 void RandAddSeed();
@@ -187,21 +178,16 @@ bool ParseMoney(const std::string& str, int64& nRet);
 bool ParseMoney(const char* pszIn, int64& nRet);
 std::vector<unsigned char> ParseHex(const char* psz);
 std::vector<unsigned char> ParseHex(const std::string& str);
-void ParseParameters(int argc, char* argv[]);
 const char* wxGetTranslation(const char* psz);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
 int GetFilesize(FILE* file);
-void GetDataDir(char* pszDirRet);
-std::string GetConfigFile();
-std::string GetPidFile();
-void CreatePidFile(std::string pidFile, pid_t pid);
-void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef __WXMSW__
 std::string MyGetSpecialFolderPath(int nFolder, bool fCreate);
 #endif
 std::string GetDefaultDataDir();
 std::string GetDataDir();
+std::string GetConfigFile();
 void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
@@ -430,35 +416,6 @@ inline bool IsSwitchChar(char c)
     return c == '-';
 #endif
 }
-
-inline std::string GetArg(const std::string& strArg, const std::string& strDefault)
-{
-    if (mapArgs.count(strArg))
-        return mapArgs[strArg];
-    return strDefault;
-}
-
-inline int64 GetArg(const std::string& strArg, int64 nDefault)
-{
-    if (mapArgs.count(strArg))
-        return atoi64(mapArgs[strArg]);
-    return nDefault;
-}
-
-inline bool GetBoolArg(const std::string& strArg)
-{
-    if (mapArgs.count(strArg))
-    {
-        if (mapArgs[strArg].empty())
-            return true;
-        return (atoi(mapArgs[strArg]) != 0);
-    }
-    return false;
-}
-
-
-
-
 
 
 
