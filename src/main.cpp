@@ -2059,7 +2059,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             CBlock block;
             block.ReadFromDisk(pindex, true);
             nBytes += block.GetSerializeSize(SER_NETWORK);
-            if (--nLimit <= 0 || nBytes >= maxsendbufferOpt()/2)
+            if (--nLimit <= 0 || nBytes >= 1000*maxsendbufferOpt()/2)
             {
                 // When this block is requested, we'll send an inv that'll make them
                 // getblocks the next batch of inventory.

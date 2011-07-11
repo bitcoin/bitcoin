@@ -54,9 +54,10 @@ option<int> portOpt("net", "hide", "port", 0);
 option<bool> noircOpt("net", "hide", "noirc", false, true);
 option<int> dropmessagestestOpt("net", "test", "dropmessagestest", 0);
 option<int> maxconnectionsOpt("net", "hide", "maxconnections", 125);
-option<int> maxreceivebufferOpt("net", "hide", "maxreceivebuffer", 10*1000);
-option<int> maxsendbufferOpt("net", "hide", "maxsendbuffer", 10*1000);
-
+option<int> maxreceivebufferOpt("net", "hide", "maxreceivebuffer", 10*1000,
+    "=<n>", "Size in kilobytes");
+option<int> maxsendbufferOpt("net", "hide", "maxsendbuffer", 10*1000,
+    "=<n>", "Size in kilobytes");
 
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
