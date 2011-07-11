@@ -342,7 +342,7 @@ void BitcoinGUI::setNumBlocks(int count)
     }
 
     labelBlocks->setText("<img src=\""+icon+"\"> " + text);
-    labelBlocks->setToolTip(tr("%n block(s) in total, last block was generated %1", "", count)
+    labelBlocks->setToolTip(tr("Downloaded %n block(s) of transaction history. Last block was generated %1.", "", count)
                             .arg(QLocale::system().toString(lastBlockDate)));
 }
 
