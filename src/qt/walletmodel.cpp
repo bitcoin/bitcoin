@@ -28,6 +28,11 @@ qint64 WalletModel::getBalance() const
     return wallet->GetBalance();
 }
 
+qint64 WalletModel::getUnconfirmedBalance() const
+{
+    return wallet->GetUnconfirmedBalance();
+}
+
 int WalletModel::getNumTransactions() const
 {
     int numTransactions = 0;

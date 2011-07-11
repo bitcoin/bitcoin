@@ -6,6 +6,7 @@
 namespace Ui {
     class OverviewPage;
 }
+class WalletModel;
 
 class OverviewPage : public QWidget
 {
@@ -15,12 +16,15 @@ public:
     explicit OverviewPage(QWidget *parent = 0);
     ~OverviewPage();
 
+    void setModel(WalletModel *model);
+
 public slots:
-    void setBalance(qint64 balance);
+    void setBalance(qint64 balance, qint64 unconfirmedBalance);
     void setNumTransactions(int count);
 
 private:
     Ui::OverviewPage *ui;
+    WalletModel *model;
 
 };
 

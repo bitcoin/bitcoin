@@ -16,13 +16,15 @@ This has been implemented:
 
 - Tabbed interface
 
+- Overview page with current balance, unconfirmed balance, etc
+
+- User friendly transaction list with status icons, real-time filtering and a context menu that allows editing and copying labels
+
 - Asks for confirmation before sending coins
 
 - CSV export of transactions and address book
 
-- User friendly transaction list with status icons, real-time filtering and a context menu that allows editing and copying labels
-
-- Show alternative icon when on testnet
+- Shows alternative icon when connected to testnet
 
 - Progress bar on initial block download
 

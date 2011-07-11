@@ -217,19 +217,13 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
 {
     this->walletModel = walletModel;
 
-    // Keep up to date with wallet
-    setBalance(walletModel->getBalance());
-    connect(walletModel, SIGNAL(balanceChanged(qint64)), this, SLOT(setBalance(qint64)));
-
-    setNumTransactions(walletModel->getNumTransactions());
-    connect(walletModel, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
-
     // Report errors from wallet thread
     connect(walletModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
 
     // Put transaction list in tabs
     transactionView->setModel(walletModel);
 
+    overviewPage->setModel(walletModel);
     addressBookPage->setModel(walletModel->getAddressTableModel());
     receiveCoinsPage->setModel(walletModel->getAddressTableModel());
     sendCoinsPage->setModel(walletModel);
@@ -278,11 +272,6 @@ void BitcoinGUI::aboutClicked()
     AboutDialog dlg;
     dlg.setModel(clientModel);
     dlg.exec();
-}
-
-void BitcoinGUI::setBalance(qint64 balance)
-{
-    overviewPage->setBalance(balance);
 }
 
 void BitcoinGUI::setNumConnections(int count)
@@ -344,11 +333,6 @@ void BitcoinGUI::setNumBlocks(int count)
     labelBlocks->setText("<img src=\""+icon+"\"> " + text);
     labelBlocks->setToolTip(tr("Downloaded %n block(s) of transaction history. Last block was generated %1.", "", count)
                             .arg(QLocale::system().toString(lastBlockDate)));
-}
-
-void BitcoinGUI::setNumTransactions(int count)
-{
-    overviewPage->setNumTransactions(count);
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message)

@@ -31,6 +31,7 @@ public:
     TransactionTableModel *getTransactionTableModel();
 
     qint64 getBalance() const;
+    qint64 getUnconfirmedBalance() const;
     int getNumTransactions() const;
 
     /* Send coins */

@@ -79,10 +79,8 @@ private:
     void createTrayIcon();
 
 public slots:
-    void setBalance(qint64 balance);
     void setNumConnections(int count);
     void setNumBlocks(int count);
-    void setNumTransactions(int count);
     void error(const QString &title, const QString &message);
     /* It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so use an indirected pointer.
