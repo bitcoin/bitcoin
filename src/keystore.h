@@ -19,17 +19,28 @@ public:
 
     // Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CBitcoinAddress &address) const =0;
-
-    // Retrieve a key corresponding to a given address from the store.
-    // Return true if succesful.
-    virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
-
-    // Retrieve only the public key corresponding to a given address.
-    // This may succeed even if GetKey fails (e.g., encrypted wallets)
+    virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const 
+    {
+        CSecret vchSecret;
+        if (!GetSecret(address, vchSecret))
+            return false;
+        if (!keyOut.SetSecret(vchSecret))
+            return false;
+        return true;
+    }
+    virtual void GetKeys(std::set<CBitcoinAddress> &setAddress) const =0;
     virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
 
     // Generate a new key, and add it to the store
     virtual std::vector<unsigned char> GenerateNewKey();
+    virtual bool GetSecret(const CBitcoinAddress &address, CSecret& vchSecret) const
+    {
+        CKey key;
+        if (!GetKey(address, key))
+            return false;
+        vchSecret = key.GetSecret();
+        return true;
+    }
 };
 
 typedef std::map<CBitcoinAddress, CSecret> KeyMap;
@@ -49,14 +60,27 @@ public:
             result = (mapKeys.count(address) > 0);
         return result;
     }
-    bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const
+    void GetKeys(std::set<CBitcoinAddress> &setAddress) const
+    {
+        setAddress.clear();
+        CRITICAL_BLOCK(cs_KeyStore)
+        {
+            KeyMap::const_iterator mi = mapKeys.begin();
+            while (mi != mapKeys.end())
+            {
+                setAddress.insert((*mi).first);
+                mi++;
+            }
+        }
+    }
+    bool GetSecret(const CBitcoinAddress &address, CSecret &vchSecret) const
     {
         CRITICAL_BLOCK(cs_KeyStore)
         {
             KeyMap::const_iterator mi = mapKeys.find(address);
             if (mi != mapKeys.end())
             {
-                keyOut.SetSecret((*mi).second);
+                vchSecret = (*mi).second;
                 return true;
             }
         }
@@ -131,8 +155,23 @@ public:
         }
         return false;
     }
-    bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const;
+    bool GetSecret(const CBitcoinAddress &address, CSecret& vchSecret) const;
     bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
+    void GetKeys(std::set<CBitcoinAddress> &setAddress) const
+    {
+        if (!IsCrypted())
+        {
+            CBasicKeyStore::GetKeys(setAddress);
+            return;
+        }
+        setAddress.clear();
+        CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
+        while (mi != mapCryptedKeys.end())
+        {
+            setAddress.insert((*mi).first);
+            mi++;
+        }
+    }
 };
 
 #endif

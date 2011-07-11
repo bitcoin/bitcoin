@@ -148,6 +148,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/editaddressdialog.cpp \
     src/qt/bitcoinaddressvalidator.cpp \
     src/util.cpp \
+    src/key.cpp \
     src/script.cpp \
     src/main.cpp \
     src/init.cpp \
