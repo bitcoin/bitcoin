@@ -110,6 +110,7 @@ HEADERS = \
 OBJS= \
     obj/checkpoints.o \
     obj/crypter.o \
+    obj/key.o \
     obj/db.o \
     obj/init.o \
     obj/irc.o \
