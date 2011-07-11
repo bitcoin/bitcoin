@@ -1,6 +1,7 @@
 Name Bitcoin
 
 RequestExecutionLevel highest
+SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
