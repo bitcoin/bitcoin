@@ -516,7 +516,7 @@ bool CTransaction::RemoveFromMemoryPool()
 
 
 
-int CMerkleTx::GetDepthInMainChain(int& nHeightRet) const
+int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
 {
     if (hashBlock == 0 || nIndex == -1)
         return 0;
@@ -537,7 +537,7 @@ int CMerkleTx::GetDepthInMainChain(int& nHeightRet) const
         fMerkleVerified = true;
     }
 
-    nHeightRet = pindex->nHeight;
+    pindexRet = pindex;
     return pindexBest->nHeight - pindex->nHeight + 1;
 }
 

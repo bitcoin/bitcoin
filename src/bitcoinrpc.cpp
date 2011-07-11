@@ -12,6 +12,7 @@
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #ifdef USE_SSL
 #include <boost/asio/ssl.hpp> 
 #include <boost/filesystem.hpp>
