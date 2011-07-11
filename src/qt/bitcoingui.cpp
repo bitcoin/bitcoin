@@ -399,7 +399,7 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
     TransactionTableModel *ttm = walletModel->getTransactionTableModel();
     qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
                     .data(Qt::EditRole).toULongLong();
-    if(amount>0 && !clientModel->inInitialBlockDownload())
+    if(!clientModel->inInitialBlockDownload())
     {
         // On incoming transaction, make an info balloon
         // Unless the initial block download is in progress, to prevent balloon-spam
@@ -410,7 +410,8 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
         QString address = ttm->index(start, TransactionTableModel::ToAddress, parent)
                         .data().toString();
 
-        trayIcon->showMessage(tr("Incoming transaction"),
+        trayIcon->showMessage((amount)<0 ? tr("Sent transaction") :
+                                           tr("Incoming transaction"),
                               tr("Date: ") + date + "\n" +
                               tr("Amount: ") + GUIUtil::formatMoney(amount, true) + "\n" +
                               tr("Type: ") + type + "\n" +
