@@ -5,22 +5,36 @@
 #ifndef BITCOIN_OPTION_H
 #define BITCOIN_OPTION_H
 
-// Possible uses of
-//
-//  option<T> fooOpt(
-//      "group", "class", "foo", default_val, [implicit_val,]
-//      "=<num>", _("Description of this option"));
-//
-// are
-//
-//  T value = fooOpt();         (get the current value)
-//  T value = fooOpt[default];  (use a special case default value)
-//  if (+fooOpt) { ... }        (was the option explicitely defined by the user)
-//
-// and the help message shows:
-//
-//  Options:
-//    -foo=<num>        Description of this option
+/*
+
+Possible uses of
+
+ option<T> fooOpt(
+     "group", option_class, "foo", default_val, [implicit_val,]
+     "=<num>", _("Description of this option"));
+
+are
+
+ T value = fooOpt();         (get the current value)
+ T value = fooOpt[default];  (use a special case default value)
+ if (+fooOpt) { ... }        (has the option been specified by the user)
+
+Τhe user can assign a value to an option through the command line
+(-foo=value) or from the configuration file (foo=value). An option
+can be specified without an explicit value if an implicit_val field is
+provided in its definition.
+
+The help message for this option is formatted as follows:
+
+ Options:
+   -foo=<num>        Description of this option
+
+In-use option_classes are:
+  "show": may appear on main help message
+  "hide": listed only using -help=allopts
+  "test" or other: never listed
+
+*/
 
 class money
 {
