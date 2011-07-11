@@ -159,25 +159,40 @@ inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>
 
 
 
-class CBitcoinAddress
+class CBase58Data
 {
 protected:
     unsigned char nVersion;
     std::vector<unsigned char> vchData;
 
-public:
-    bool SetAddress(const uint160& hash160)
+    CBase58Data()
     {
-        nVersion = fTestNet ? 111 : 0;
-        vchData.resize(20);
-        memcpy(&vchData[0], &hash160, 20);
-        return true;
+        nVersion = 0;
+        vchData.clear();
     }
 
-    bool SetAddress(const char* pszAddress)
+    ~CBase58Data()
+    {
+        memset(&vchData[0], 0, vchData.size());
+    }
+
+    void SetData(int nVersionIn, const void* pdata, size_t nSize)
+    {
+        nVersion = nVersionIn;
+        vchData.resize(nSize);
+        memcpy(&vchData[0], pdata, nSize);
+    }
+
+    void SetData(int nVersionIn, const unsigned char *pbegin, const unsigned char *pend)
+    {
+        SetData(nVersionIn, (void*)pbegin, pend - pbegin);
+    }
+
+public:
+    bool SetString(const char* psz)
     {
         std::vector<unsigned char> vchTemp;
-        DecodeBase58Check(pszAddress, vchTemp);
+        DecodeBase58Check(psz, vchTemp);
         if (vchTemp.empty())
         {
             vchData.clear();
@@ -187,17 +202,50 @@ public:
         nVersion = vchTemp[0];
         vchData.resize(vchTemp.size() - 1);
         memcpy(&vchData[0], &vchTemp[1], vchData.size());
+        memset(&vchTemp[0], 0, vchTemp.size());
         return true;
     }
 
-    bool SetAddress(const std::string& strAddress)
+    bool SetString(const std::string& str)
     {
-        return SetAddress(strAddress.c_str());
+        return SetString(str.c_str());
     }
 
-    bool SetAddress(const std::vector<unsigned char>& vchPubKey)
+    std::string ToString() const
     {
-        return SetAddress(Hash160(vchPubKey));
+        std::vector<unsigned char> vch(1, nVersion);
+        vch.insert(vch.end(), vchData.begin(), vchData.end());
+        return EncodeBase58Check(vch);
+    }
+
+    int CompareTo(const CBase58Data& b58) const
+    {
+        if (nVersion < b58.nVersion) return -1;
+        if (nVersion < b58.nVersion) return  1;
+        if (vchData < b58.vchData)   return -1;
+        if (vchData > b58.vchData)   return  1;
+        return 0;
+    }
+
+    bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
+    bool operator<=(const CBase58Data& b58) const { return CompareTo(b58) <= 0; }
+    bool operator>=(const CBase58Data& b58) const { return CompareTo(b58) >= 0; }
+    bool operator< (const CBase58Data& b58) const { return CompareTo(b58) <  0; }
+    bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
+};
+
+
+class CBitcoinAddress : public CBase58Data
+{
+public:
+    bool SetHash160(const uint160& hash160)
+    {
+        SetData(fTestNet ? 111 : 0, &hash160, 20);
+    }
+
+    bool SetPubKey(const std::vector<unsigned char>& vchPubKey)
+    {
+        return SetHash160(Hash160(vchPubKey));
     }
 
     bool IsValid() const
@@ -221,35 +269,26 @@ public:
 
     CBitcoinAddress()
     {
-        nVersion = 0;
-        vchData.clear();
     }
 
     CBitcoinAddress(uint160 hash160In)
     {
-        SetAddress(hash160In);
+        SetHash160(hash160In);
     }
 
     CBitcoinAddress(const std::vector<unsigned char>& vchPubKey)
     {
-        SetAddress(vchPubKey);
+        SetPubKey(vchPubKey);
     }
 
     CBitcoinAddress(const std::string& strAddress)
     {
-        SetAddress(strAddress);
+        SetString(strAddress);
     }
 
     CBitcoinAddress(const char* pszAddress)
     {
-        SetAddress(pszAddress);
-    }
-
-    std::string ToString() const
-    {
-        std::vector<unsigned char> vch(1, nVersion);
-        vch.insert(vch.end(), vchData.begin(), vchData.end());
-        return EncodeBase58Check(vch);
+        SetString(pszAddress);
     }
 
     uint160 GetHash160() const
@@ -259,21 +298,6 @@ public:
         memcpy(&hash160, &vchData[0], 20);
         return hash160;
     }
-
-    int CompareTo(const CBitcoinAddress& address) const
-    {
-        if (nVersion < address.nVersion) return -1;
-        if (nVersion < address.nVersion) return  1;
-        if (vchData < address.vchData)   return -1;
-        if (vchData > address.vchData)   return  1;
-        return 0;
-    }
-
-    bool operator==(const CBitcoinAddress& address) const { return CompareTo(address) == 0; }
-    bool operator<=(const CBitcoinAddress& address) const { return CompareTo(address) <= 0; }
-    bool operator>=(const CBitcoinAddress& address) const { return CompareTo(address) >= 0; }
-    bool operator< (const CBitcoinAddress& address) const { return CompareTo(address) <  0; }
-    bool operator> (const CBitcoinAddress& address) const { return CompareTo(address) >  0; }
 };
 
 #endif

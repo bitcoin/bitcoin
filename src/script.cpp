@@ -1135,9 +1135,9 @@ bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBit
         {
             uint160 hash160;
             if (item.first == OP_PUBKEY)
-                addressRet.SetAddress(item.second);
+                addressRet.SetPubKey(item.second);
             else if (item.first == OP_PUBKEYHASH)
-                addressRet.SetAddress(uint160(item.second));
+                addressRet.SetHash160((uint160)item.second);
             if (keystore == NULL || keystore->HaveKey(addressRet))
                 return true;
         }
