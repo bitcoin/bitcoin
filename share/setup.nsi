@@ -49,6 +49,7 @@ OutFile bitcoin-0.3.24-win32-setup.exe
 InstallDir $PROGRAMFILES\Bitcoin
 CRCCheck on
 XPStyle on
+BrandingText " "
 ShowInstDetails show
 VIProductVersion 0.3.24.0
 VIAddVersionKey ProductName Bitcoin
