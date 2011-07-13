@@ -346,7 +346,8 @@ enum DBErrors
 {
     DB_LOAD_OK,
     DB_CORRUPT,
-    DB_TOO_NEW
+    DB_TOO_NEW,
+    DB_LOAD_FAIL,
 };
 
 class CWalletDB : public CDB

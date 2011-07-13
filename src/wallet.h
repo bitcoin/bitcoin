@@ -167,7 +167,7 @@ public:
         walletdb.WriteBestBlock(loc);
     }
 
-    bool LoadWallet(bool& fFirstRunRet);
+    int LoadWallet(bool& fFirstRunRet);
 //    bool BackupWallet(const std::string& strDest);
 
     // requires cs_mapAddressBook lock
