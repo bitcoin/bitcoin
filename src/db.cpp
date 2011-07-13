@@ -685,7 +685,7 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     CRITICAL_BLOCK(pwallet->cs_mapWallet)
-    CRITICAL_BLOCK(pwallet->cs_mapKeys)
+    CRITICAL_BLOCK(pwallet->cs_KeyStore)
     {
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -765,14 +765,42 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 vector<unsigned char> vchPubKey;
                 ssKey >> vchPubKey;
-                CWalletKey wkey;
+                CKey key;
                 if (strType == "key")
-                    ssValue >> wkey.vchPrivKey;
+                {
+                    CPrivKey pkey;
+                    ssValue >> pkey;
+                    key.SetPrivKey(pkey);
+                }
                 else
+                {
+                    CWalletKey wkey;
                     ssValue >> wkey;
-
-                pwallet->mapKeys[vchPubKey] = wkey.vchPrivKey;
-                mapPubKeys[Hash160(vchPubKey)] = vchPubKey;
+                    key.SetPrivKey(wkey.vchPrivKey);
+                }
+                if (!pwallet->LoadKey(key))
+                    return false;
+            }
+            else if (strType == "mkey")
+            {
+                unsigned int nID;
+                ssKey >> nID;
+                CMasterKey kMasterKey;
+                ssValue >> kMasterKey;
+                if(pwallet->mapMasterKeys.count(nID) != 0)
+                    return false;
+                pwallet->mapMasterKeys[nID] = kMasterKey;
+                if (pwallet->nMasterKeyMaxID < nID)
+                    pwallet->nMasterKeyMaxID = nID;
+            }
+            else if (strType == "ckey")
+            {
+                vector<unsigned char> vchPubKey;
+                ssKey >> vchPubKey;
+                vector<unsigned char> vchPrivKey;
+                ssValue >> vchPrivKey;
+                if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
+                    return false;
             }
             else if (strType == "defaultkey")
             {
@@ -800,7 +828,6 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
                 if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
 #endif
                 if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;
-                if (strKey == "addrIncoming")       ssValue >> addrIncoming;
                 if (strKey == "fLimitProcessors")   ssValue >> fLimitProcessors;
                 if (strKey == "nLimitProcessors")   ssValue >> nLimitProcessors;
                 if (strKey == "fMinimizeToTray")    ssValue >> fMinimizeToTray;
@@ -819,7 +846,6 @@ bool CWalletDB::LoadWallet(CWallet* pwallet)
     printf("nFileVersion = %d\n", nFileVersion);
     printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
     printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
-    printf("addrIncoming = %s\n", addrIncoming.ToString().c_str());
     printf("fMinimizeToTray = %d\n", fMinimizeToTray);
     printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);
     printf("fUseProxy = %d\n", fUseProxy);

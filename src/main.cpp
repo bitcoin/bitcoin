@@ -55,7 +55,6 @@ int64 nHPSTimerStart;
 // Settings
 int fGenerateBitcoins = false;
 int64 nTransactionFee = 0;
-CAddress addrIncoming;
 int fLimitProcessors = false;
 int nLimitProcessors = 1;
 int fMinimizeToTray = true;
@@ -2213,7 +2212,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // Keep giving the same key to the same ip until they use it
         if (!mapReuseKey.count(pfrom->addr.ip))
-            mapReuseKey[pfrom->addr.ip] = pwalletMain->GetKeyFromKeyPool();
+            mapReuseKey[pfrom->addr.ip] = pwalletMain->GetOrReuseKeyFromPool();
 
         // Send back approval of order and pubkey to use
         CScript scriptPubKey;
