@@ -486,7 +486,7 @@ public:
     {
         // I'm not sure if this should push the script or concatenate scripts.
         // If there's ever a use for pushing a script onto a script, delete this member fn
-        assert(("warning: pushing a CScript onto a CScript with << is probably not intended, use + to concatenate", false));
+        assert(!"warning: pushing a CScript onto a CScript with << is probably not intended, use + to concatenate");
         return *this;
     }
 

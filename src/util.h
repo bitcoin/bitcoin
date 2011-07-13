@@ -264,7 +264,7 @@ public:
 // I'd rather be careful than suffer the other more error prone syntax.
 // The compiler will optimise away all this loop junk.
 #define CRITICAL_BLOCK(cs)     \
-    for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by CRITICAL_BLOCK!", !fcriticalblockonce)), fcriticalblockonce=false)  \
+    for (bool fcriticalblockonce=true; fcriticalblockonce; assert("break caught by CRITICAL_BLOCK!" && !fcriticalblockonce), fcriticalblockonce=false)  \
     for (CCriticalBlock criticalblock(cs); fcriticalblockonce && (cs.pszFile=__FILE__, cs.nLine=__LINE__, true); fcriticalblockonce=false, cs.pszFile=NULL, cs.nLine=0)
 
 class CTryCriticalBlock
@@ -278,7 +278,7 @@ public:
 };
 
 #define TRY_CRITICAL_BLOCK(cs)     \
-    for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by TRY_CRITICAL_BLOCK!", !fcriticalblockonce)), fcriticalblockonce=false)  \
+    for (bool fcriticalblockonce=true; fcriticalblockonce; assert("break caught by TRY_CRITICAL_BLOCK!" && !fcriticalblockonce), fcriticalblockonce=false)  \
     for (CTryCriticalBlock criticalblock(cs); fcriticalblockonce && (fcriticalblockonce = criticalblock.Entered()) && (cs.pszFile=__FILE__, cs.nLine=__LINE__, true); fcriticalblockonce=false, cs.pszFile=NULL, cs.nLine=0)
 
 
@@ -648,7 +648,7 @@ inline bool TerminateThread(pthread_t hthread, unsigned int nExitCode)
     return (pthread_cancel(hthread) == 0);
 }
 
-inline void ExitThread(unsigned int nExitCode)
+inline void ExitThread(size_t nExitCode)
 {
     pthread_exit((void*)nExitCode);
 }

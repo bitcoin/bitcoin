@@ -831,7 +831,7 @@ void ThreadSocketHandler2(void* parg)
         {
             BOOST_FOREACH(CNode* pnode, vNodes)
             {
-                if (pnode->hSocket == INVALID_SOCKET || pnode->hSocket < 0)
+                if (pnode->hSocket == INVALID_SOCKET)
                     continue;
                 FD_SET(pnode->hSocket, &fdsetRecv);
                 FD_SET(pnode->hSocket, &fdsetError);
@@ -1700,7 +1700,7 @@ void StartNode(void* parg)
         printf("Error: CreateThread(ThreadIRCSeed) failed\n");
 
     // Send and receive from sockets, accept connections
-    pthread_t hThreadSocketHandler = CreateThread(ThreadSocketHandler, NULL, true);
+    CreateThread(ThreadSocketHandler, NULL, true);
 
     // Initiate outbound connections
     if (!CreateThread(ThreadOpenConnections, NULL))
