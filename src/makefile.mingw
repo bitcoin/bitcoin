@@ -70,6 +70,7 @@ OBJS= \
     obj/net.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
+    obj/rpcdump.o \
     obj/script.o \
     obj/util.o \
     obj/wallet.o
