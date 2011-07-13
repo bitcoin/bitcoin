@@ -627,8 +627,6 @@ int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
 
 void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& entries)
 {
-    int64 nCreditDebit = 0;
-
     bool fAllAccounts = (strAccount == "*");
 
     Dbc* pcursor = GetCursor();

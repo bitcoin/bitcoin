@@ -706,7 +706,7 @@ int64 GetAccountBalance(const string& strAccount, int nMinDepth)
 
 Value getbalance(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 0 || params.size() > 2)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
             "getbalance [account] [minconf=1]\n"
             "If [account] is not specified, returns the server's total available balance.\n"
@@ -2419,7 +2419,6 @@ int CommandLineRPC(int argc, char *argv[])
         // Parse reply
         const Value& result = find_value(reply, "result");
         const Value& error  = find_value(reply, "error");
-        const Value& id     = find_value(reply, "id");
 
         if (error.type() != null_type)
         {
