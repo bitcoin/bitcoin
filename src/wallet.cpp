@@ -1130,8 +1130,9 @@ bool CWallet::LoadWallet(bool& fFirstRunRet)
     if (!fFileBacked)
         return false;
     fFirstRunRet = false;
-    if (!CWalletDB(strWalletFile,"cr+").LoadWallet(this))
-        return false;
+    int nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    if (nLoadWalletRet != DB_LOAD_OK)
+        return nLoadWalletRet;
     fFirstRunRet = vchDefaultKey.empty();
 
     if (!HaveKey(vchDefaultKey))
