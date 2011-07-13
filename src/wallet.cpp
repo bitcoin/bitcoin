@@ -268,7 +268,10 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             if (txout.scriptPubKey == scriptDefaultKey)
+            {
                 SetDefaultKey(GetOrReuseKeyFromPool());
+                SetAddressBookName(PubKeyToAddress(vchDefaultKey), "");
+            }
         }
 
         // Notify UI
