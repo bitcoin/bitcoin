@@ -342,6 +342,13 @@ public:
 
 
 
+enum DBErrors
+{
+    DB_LOAD_OK,
+    DB_CORRUPT,
+    DB_TOO_NEW
+};
+
 class CWalletDB : public CDB
 {
 public:
@@ -469,7 +476,7 @@ public:
     int64 GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
-    bool LoadWallet(CWallet* pwallet);
+    int LoadWallet(CWallet* pwallet);
 };
 
 #endif
