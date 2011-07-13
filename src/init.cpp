@@ -487,8 +487,16 @@ bool AppInit2(int argc, char* argv[])
     nStart = GetTimeMillis();
     bool fFirstRun;
     pwalletMain = new CWallet("wallet.dat");
-    if (!pwalletMain->LoadWallet(fFirstRun))
-        strErrors += string() + _("Error loading") + " wallet.dat\n";
+    int nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
+    if (nLoadWalletRet != DB_LOAD_OK)
+    {
+        if (nLoadWalletRet == DB_CORRUPT)
+            strErrors += strprintf(_("Error loading %s, Wallet corrupted"), "wallet.dat") + "\n";
+        else if (nLoadWalletRet == DB_TOO_NEW)
+            strErrors += strprintf(_("Error loading %s, Wallet requires newer version of Bitcoin"), "wallet.dat") + "\n";
+        else
+            strErrors += string() + _("Error loading") + " wallet.dat\n";
+    }
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     RegisterWallet(pwalletMain);
@@ -516,7 +524,6 @@ bool AppInit2(int argc, char* argv[])
         //// debug print
         printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
         printf("nBestHeight = %d\n",            nBestHeight);
-        printf("mapKeys.size() = %d\n",         pwalletMain->mapKeys.size());
         printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
         printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
         printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
