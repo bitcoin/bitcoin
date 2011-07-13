@@ -193,6 +193,9 @@ bool AppInit2(int argc, char* argv[])
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
+            "  -dnsseed         \t\t  " + _("Use DNS lookup for peer discovery\n") +
+            "  -irchost=<host>  \t\t  " + _("Connect to <host> for irc peer discovery\n") +
+            "  -ircport=<port>  \t\t  " + _("Connect to irc host using <port>\n") +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
             "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
