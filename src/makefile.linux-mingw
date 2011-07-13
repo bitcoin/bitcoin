@@ -37,7 +37,7 @@ DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
     script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h \
-    crypter.hinit.h
+    crypter.h init.h
 
 ifdef USE_UPNP
 	INCLUDEPATHS += -I"$(DEPSDIR)/upnpc-exe-win32-20110215"
