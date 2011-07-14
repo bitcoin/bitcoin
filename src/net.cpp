@@ -1166,6 +1166,8 @@ void DNSAddressSeed()
     if (!fTestNet)
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
+        CAddrDB addrDB;
+        addrDB.TxnBegin();
 
         for (int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
             vector<CAddress> vaddr;
@@ -1176,12 +1178,14 @@ void DNSAddressSeed()
                     if (addr.GetByte(3) != 127)
                     {
                         addr.nTime = 0;
-                        AddAddress(addr);
+                        AddAddress(addr, 0, &addrDB);
                         found++;
                     }
                 }
             }
         }
+
+        addrDB.TxnCommit();  // Save addresses (it's ok if this fails)
     }
 
     printf("%d addresses found from DNS seeds\n", found);
