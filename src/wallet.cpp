@@ -247,7 +247,6 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
             nGeneratedImmature = pwallet->GetCredit(*this);
         else
             nGeneratedMature = GetCredit();
-        return;
     }
 
     // Compute fee:
@@ -309,6 +308,8 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
             nSent += s.second;
         nFee = allFee;
     }
+
+    if (!IsCoinBase())
     CRITICAL_BLOCK(pwallet->cs_mapAddressBook)
     {
         BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listReceived)
