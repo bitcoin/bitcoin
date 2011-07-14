@@ -48,7 +48,7 @@ void WalletModel::update()
     // Plainly emit all signals for now. To be more efficient this should check
     //   whether the values actually changed first, although it'd be even better if these
     //   were events coming in from the bitcoin core.
-    emit balanceChanged(getBalance());
+    emit balanceChanged(getBalance(), wallet->GetUnconfirmedBalance());
     emit numTransactionsChanged(getNumTransactions());
 
     addressTableModel->update();

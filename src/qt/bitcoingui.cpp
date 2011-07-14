@@ -84,7 +84,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QVBoxLayout *vbox = new QVBoxLayout();
 
     transactionView = new TransactionView(this);
-    connect(transactionView, SIGNAL(doubleClicked(const QModelIndex&)), transactionView, SLOT(transactionDetails()));
+    connect(transactionView, SIGNAL(doubleClicked(const QModelIndex&)), transactionView, SLOT(showDetails()));
     vbox->addWidget(transactionView);
 
     transactionsPage = new QWidget(this);

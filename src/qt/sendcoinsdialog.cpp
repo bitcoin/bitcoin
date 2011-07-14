@@ -125,11 +125,6 @@ void SendCoinsDialog::on_addressBookButton_clicked()
     }
 }
 
-void SendCoinsDialog::on_buttonBox_rejected()
-{
-    reject();
-}
-
 void SendCoinsDialog::on_payTo_textChanged(const QString &address)
 {
     ui->addAsLabel->setText(model->getAddressTableModel()->labelForAddress(address));

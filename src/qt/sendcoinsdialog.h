@@ -29,7 +29,6 @@ private:
 
 private slots:
     void on_payTo_textChanged(const QString &address);
-    void on_buttonBox_rejected();
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void on_sendButton_clicked();

@@ -47,7 +47,7 @@ private:
     TransactionTableModel *transactionTableModel;
 
 signals:
-    void balanceChanged(qint64 balance);
+    void balanceChanged(qint64 balance, qint64 unconfirmedBalance);
     void numTransactionsChanged(int count);
 
     // Asynchronous error notification
