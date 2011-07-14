@@ -1323,7 +1323,10 @@ vector<unsigned char> CReserveKey::GetReservedKey()
         if (nIndex != -1)
             vchPubKey = keypool.vchPubKey;
         else
+        {
+            printf("CReserveKey::GetReservedKey(): Warning: using default key instead of a new key, top up your keypool.");
             vchPubKey = vchDefaultKey;
+        }
     }
     assert(!vchPubKey.empty());
     return vchPubKey;
