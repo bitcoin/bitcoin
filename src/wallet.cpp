@@ -1320,7 +1320,10 @@ vector<unsigned char> CReserveKey::GetReservedKey()
     {
         CKeyPool keypool;
         pwallet->ReserveKeyFromKeyPool(nIndex, keypool);
-        vchPubKey = keypool.vchPubKey;
+        if (nIndex != -1)
+            vchPubKey = keypool.vchPubKey;
+        else
+            vchPubKey = vchDefaultKey;
     }
     assert(!vchPubKey.empty());
     return vchPubKey;
