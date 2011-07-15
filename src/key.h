@@ -31,6 +31,41 @@
 // see www.keylength.com
 // script supports up to 75 for single byte push
 
+int static inline EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
+{
+    int ok = 0;
+    BN_CTX *ctx = NULL;
+    EC_POINT *pub_key = NULL;
+
+    if (!eckey) return 0;
+
+    const EC_GROUP *group = EC_KEY_get0_group(eckey);
+
+    if ((ctx = BN_CTX_new()) == NULL)
+        goto err;
+
+    pub_key = EC_POINT_new(group);
+
+    if (pub_key == NULL)
+        goto err;
+
+    if (!EC_POINT_mul(group, pub_key, priv_key, NULL, NULL, ctx))
+        goto err;
+
+    EC_KEY_set_private_key(eckey,priv_key);
+    EC_KEY_set_public_key(eckey,pub_key);
+
+    ok = 1;
+
+err:
+
+    if (pub_key)
+        EC_POINT_free(pub_key);
+    if (ctx != NULL)
+        BN_CTX_free(ctx);
+
+    return(ok);
+}
 
 
 class key_error : public std::runtime_error
@@ -42,8 +77,7 @@ public:
 
 // secure_allocator is defined in serialize.h
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
-
-
+typedef std::vector<unsigned char, secure_allocator<unsigned char> > CSecret;
 
 class CKey
 {
@@ -102,6 +136,38 @@ public:
         return true;
     }
 
+    bool SetSecret(const CSecret& vchSecret)
+    {
+        EC_KEY_free(pkey);
+        pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+        if (pkey == NULL)
+            throw key_error("CKey::SetSecret() : EC_KEY_new_by_curve_name failed");
+        if (vchSecret.size() != 32)
+            throw key_error("CKey::SetSecret() : secret must be 32 bytes");
+        BIGNUM *bn = BN_bin2bn(&vchSecret[0],32,BN_new());
+        if (bn == NULL) 
+            throw key_error("CKey::SetSecret() : BN_bin2bn failed");
+        if (!EC_KEY_regenerate_key(pkey,bn))
+            throw key_error("CKey::SetSecret() : EC_KEY_regenerate_key failed");
+        BN_clear_free(bn);
+        fSet = true;
+        return true;
+    }
+
+    CSecret GetSecret() const
+    {
+        CSecret vchRet;
+        vchRet.resize(32);
+        const BIGNUM *bn = EC_KEY_get0_private_key(pkey);
+        int nBytes = BN_num_bytes(bn);
+        if (bn == NULL)
+            throw key_error("CKey::GetSecret() : EC_KEY_get0_private_key failed");
+        int n=BN_bn2bin(bn,&vchRet[32 - nBytes]);
+        if (n != nBytes) 
+            throw key_error("CKey::GetSecret(): BN_bn2bin failed");
+        return vchRet;
+    }
+
     CPrivKey GetPrivKey() const
     {
         unsigned int nSize = i2d_ECPrivateKey(pkey, NULL);
@@ -153,22 +219,6 @@ public:
         if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
             return false;
         return true;
-    }
-
-    static bool Sign(const CPrivKey& vchPrivKey, uint256 hash, std::vector<unsigned char>& vchSig)
-    {
-        CKey key;
-        if (!key.SetPrivKey(vchPrivKey))
-            return false;
-        return key.Sign(hash, vchSig);
-    }
-
-    static bool Verify(const std::vector<unsigned char>& vchPubKey, uint256 hash, const std::vector<unsigned char>& vchSig)
-    {
-        CKey key;
-        if (!key.SetPubKey(vchPubKey))
-            return false;
-        return key.Verify(hash, vchSig);
     }
 };
 

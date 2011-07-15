@@ -38,7 +38,7 @@ struct AddressTablePriv
     {
         cachedAddressTable.clear();
 
-        CRITICAL_BLOCK(wallet->cs_mapKeys)
+        CRITICAL_BLOCK(cs_mapPubKeys)
         CRITICAL_BLOCK(wallet->cs_mapAddressBook)
         {
             BOOST_FOREACH(const PAIRTYPE(std::string, std::string)& item, wallet->mapAddressBook)
@@ -255,14 +255,15 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     {
         // Generate a new address to associate with given label, optionally
         // set as default receiving address.
-        strAddress = PubKeyToAddress(wallet->GetKeyFromKeyPool());
+        strAddress = PubKeyToAddress(wallet->GetOrReuseKeyFromPool());
     }
     else
     {
         return QString();
     }
     // Add entry and update list
-    wallet->SetAddressBookName(strAddress, strLabel);
+    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+        wallet->SetAddressBookName(strAddress, strLabel);
     updateList();
     return QString::fromStdString(strAddress);
 }

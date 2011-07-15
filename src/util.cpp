@@ -758,8 +758,8 @@ string GetPidFile()
 
 void CreatePidFile(string pidFile, pid_t pid)
 {
-    FILE* file;
-    if (file = fopen(pidFile.c_str(), "w"))
+    FILE* file = fopen(pidFile.c_str(), "w");
+    if (file)
     {
         fprintf(file, "%d\n", pid);
         fclose(file);
@@ -788,7 +788,9 @@ void ShrinkDebugFile()
         fseek(file, -sizeof(pch), SEEK_END);
         int nBytes = fread(pch, 1, sizeof(pch), file);
         fclose(file);
-        if (file = fopen(strFile.c_str(), "w"))
+
+        file = fopen(strFile.c_str(), "w");
+        if (file)
         {
             fwrite(pch, 1, nBytes, file);
             fclose(file);

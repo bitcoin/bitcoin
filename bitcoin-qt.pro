@@ -83,7 +83,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/bitcoinrpc.h \
     src/qt/overviewpage.h \
     src/qt/csvmodelwriter.h \
-    src/qt/qtwin.h
+    src/qt/qtwin.h \
+    src/crypter.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -122,7 +123,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/bitcoinrpc.cpp \
     src/qt/overviewpage.cpp \
     src/qt/csvmodelwriter.cpp \
-    src/qt/qtwin.cpp
+    src/qt/qtwin.cpp \
+    src/crypter.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
