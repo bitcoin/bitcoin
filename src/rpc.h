@@ -4,3 +4,13 @@
 
 void ThreadRPCServer(void* parg);
 int CommandLineRPC(int argc, char *argv[]);
+void Shutdown(void* parg);
+bool AppInit(int argc, char* argv[]);
+bool AppInit2(int argc, char* argv[]);
+
+#ifdef USE_POSIX_CAPABILITIES
+extern "C" {
+    extern int cCap_lock(void);
+}
+#endif
+
