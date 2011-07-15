@@ -71,7 +71,7 @@ Windows build instructions:
 
 - Download and extract the `dependencies archive`_  [#]_, or compile openssl, boost and dbcxx yourself.
 
-- Copy the contents of the folder "deps" to "X:\QtSDK\mingw", replace X:\ with the location where you installed the Qt SDK. Make sure that the contents of "deps/include" end up in the current "include" directory and such.
+- Copy the contents of the folder "deps" to "X:\\QtSDK\\mingw", replace X:\\ with the location where you installed the Qt SDK. Make sure that the contents of "deps\\include" end up in the current "include" directory.
 
 - Open the .pro file in QT creator and build as normal (ctrl-B)
 
