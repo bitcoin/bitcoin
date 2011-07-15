@@ -57,6 +57,7 @@ public:
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
     int64 GetBalance() const;
+    int64 GetUnconfirmedBalance() const;
     bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
     bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);

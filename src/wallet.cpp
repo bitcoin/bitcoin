@@ -570,6 +570,21 @@ int64 CWallet::GetBalance() const
     return nTotal;
 }
 
+int64 CWallet::GetUnconfirmedBalance() const
+{
+    int64 nTotal = 0;
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
+            if (pcoin->IsFinal() && pcoin->IsConfirmed())
+                continue;
+            nTotal += pcoin->GetAvailableCredit();
+        }
+    }
+    return nTotal;
+}
 
 bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 {
