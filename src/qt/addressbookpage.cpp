@@ -187,6 +187,8 @@ void AddressBookPage::exportClicked()
             QDir::currentPath(),
             tr("Comma separated file (*.csv)"));
 
+    if (filename.isNull()) return;
+
     CSVModelWriter writer(filename);
 
     // name, column, role
