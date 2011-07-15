@@ -1,0 +1,45 @@
+* update (commit) version in sources
+
+* update (commit) version in OSX app bundle
+
+  * CFBundleShortVersionString should have value like 0.3.23
+  * CFBundleVersion should have value like 323
+
+* tag version in git
+
+  $ git tag -a v0.3.23
+
+* write release notes.  git shortlog helps a lot:
+
+  $ git shortlog --no-merges v0.3.22..
+
+* create source-only archive
+
+  $ git archive --format=tar --prefix=bitcoin-0.3.23/ HEAD | \
+  	gzip -9c > ~/tmp/bitcoin-0.3.23-src.tar.gz 
+
+* perform gitian builds
+
+  * From the bitcoin source dir
+  $ cd ../gitian-builder
+  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian.yml
+  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian-win32.yml
+ 
+  Build output expected:
+  1. linux 32-bit and 64-bit binaries + source
+  2. windows 32-bit binary + source
+  3. windows installer
+
+* upload source and builds to SF
+
+* create SHA1SUMS for builds, and PGP-sign it
+
+* update bitcoin.org version
+
+* update forum version
+
+* update wiki
+
+* update wiki download links
+
+

@@ -1,7 +1,5 @@
-*~
-*.o
-moc_*.cpp
-*.pro.user
-qrc_*.cpp
-ui_*.cpp
-ui_*.h
+src/*.exe
+src/bitcoin
+src/bitcoind
+.*.swp
+*.*~*

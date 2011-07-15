@@ -1,7 +1,7 @@
 #ifndef CRYPTOPP_SHA_H
 #define CRYPTOPP_SHA_H
 
-#include "cryptopp/iterhash.h"
+#include "iterhash.h"
 
 NAMESPACE_BEGIN(CryptoPP)
 

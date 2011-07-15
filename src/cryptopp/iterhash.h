@@ -1,7 +1,7 @@
 #ifndef CRYPTOPP_ITERHASH_H
 #define CRYPTOPP_ITERHASH_H
 
-#include "cryptopp/secblock.h"
+#include "secblock.h"
 
 NAMESPACE_BEGIN(CryptoPP)
 

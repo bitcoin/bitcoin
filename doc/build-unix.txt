@@ -1,0 +1,110 @@
+Copyright (c) 2009-2010 Satoshi Nakamoto
+Distributed under the MIT/X11 software license, see the accompanying
+file license.txt or http://www.opensource.org/licenses/mit-license.php.
+This product includes software developed by the OpenSSL Project for use in
+the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
+cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
+software written by Thomas Bernard.
+
+
+UNIX BUILD NOTES
+================
+
+To Build
+--------
+
+cd src/
+
+make -f makefile.unix            # Bitcoin with wxWidgets GUI
+  or
+make -f makefile.unix bitcoind   # Headless bitcoin
+
+
+Dependencies
+------------
+sudo apt-get install build-essential
+sudo apt-get install libgtk2.0-dev
+sudo apt-get install libssl-dev
+sudo apt-get install libdb4.7-dev
+sudo apt-get install libdb4.7++-dev
+Boost 1.40+: sudo apt-get install libboost-all-dev
+or Boost 1.37: sudo apt-get install libboost1.37-dev
+
+If using Boost 1.37, append -mt to the boost libraries in the makefile.
+
+Requires wxWidgets 2.9.0 or greater, which uses UTF-8.  Don't try 2.8, it
+won't work.
+
+You need to download wxWidgets from http://www.wxwidgets.org/downloads/
+and build it yourself.  See the build instructions and configure parameters
+below.
+
+Requires miniupnpc for UPnP port mapping.  It can be downloaded from
+http://miniupnp.tuxfamily.org/files/.  UPnP support is compiled in and
+turned off by default.  Set USE_UPNP to a different value to control this:
+USE_UPNP=   no UPnP support, miniupnp not required;
+USE_UPNP=0  (the default) UPnP support turned off by default at runtime;
+USE_UPNP=1  UPnP support turned on by default at runtime.
+
+Licenses of statically linked libraries:
+wxWidgets      LGPL 2.1 with very liberal exceptions
+Berkeley DB    New BSD license with additional requirement that linked software must be free open source
+Boost          MIT-like license
+miniupnpc      New (3-clause) BSD license
+
+Versions used in this release:
+GCC          4.3.3
+OpenSSL      0.9.8g
+wxWidgets    2.9.0
+Berkeley DB  4.7.25.NC
+Boost        1.37
+miniupnpc    1.5
+
+
+Notes
+-----
+The UI layout is edited with wxFormBuilder.  The project file is
+uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
+classes that do the rote work of constructing all the UI elements.
+
+The release is built with GCC and then "strip bitcoin" to strip the debug
+symbols, which reduces the executable size by about 90%.
+
+
+wxWidgets
+---------
+cd /usr/local
+tar -xzvf wxWidgets-2.9.0.tar.gz
+cd wxWidgets-2.9.0
+mkdir buildgtk
+cd buildgtk
+../configure --with-gtk --enable-debug --disable-shared --enable-monolithic --without-libpng --disable-svg
+make
+sudo su
+make install
+ldconfig
+
+
+miniupnpc
+---------
+tar -xzvf miniupnpc-1.5.tar.gz
+cd miniupnpc-1.5
+make
+sudo su
+make install
+
+
+Berkeley DB
+-----------
+You need Berkeley DB 4.7.  Don't use 4.8, the database/log0000* files
+are incompatible.  If you have to build Berkeley DB yourself:
+../dist/configure --enable-cxx
+make
+
+
+Boost
+-----
+If you need to build Boost yourself:
+sudo su
+./bootstrap.sh
+./bjam install

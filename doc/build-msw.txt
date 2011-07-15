@@ -1,0 +1,107 @@
+Copyright (c) 2009-2011 Bitcoin Developers
+Distributed under the MIT/X11 software license, see the accompanying
+file license.txt or http://www.opensource.org/licenses/mit-license.php.
+This product includes software developed by the OpenSSL Project for use in
+the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
+cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
+software written by Thomas Bernard.
+
+
+WINDOWS BUILD NOTES
+===================
+
+Compilers Supported
+-------------------
+MinGW GCC  http://tdm-gcc.tdragon.net/
+   TDM-GCC with gcc 4.5.1 was used to build this release.
+MSYS 1.0.11 was also used (sh needed to compile some dependencies)
+
+
+Candidate releases were built with MSVC 10.0 (2010), but
+compiling with Visual C++ caused rendering artifacts when
+bitcoin was run.
+
+
+Dependencies
+------------
+Libraries you need to download separately and build:
+
+                default path               download
+wxWidgets       \wxwidgets-2.9.1-mgw       http://www.wxwidgets.org/downloads/
+OpenSSL         \openssl-1.0.0d-mgw        http://www.openssl.org/source/
+Berkeley DB     \db-4.7.25.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
+Boost           \boost-1.43.0-mgw          http://www.boost.org/users/download/
+miniupnpc       \upnpc-exe-win32-20110215  http://miniupnp.tuxfamily.org/files/
+
+Their licenses:
+wxWidgets      LGPL 2.1 with very liberal exceptions
+OpenSSL        Old BSD license with the problematic advertising requirement
+Berkeley DB    New BSD license with additional requirement that linked software must be free open source
+Boost          MIT-like license
+miniupnpc      New (3-clause) BSD license
+
+Versions used in this release:
+wxWidgets    2.9.1
+OpenSSL      1.0.0d
+Berkeley DB  4.7.25.NC
+Boost        1.43.0
+miniupnpc    1.5-20110215
+
+
+Notes
+-----
+The UI layout is edited with wxFormBuilder.  The project file is
+uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
+classes that do the rote work of constructing all the UI elements.
+
+wxWidgets
+---------
+DOS shell:
+cd \wxWidgets-2.9.1-mgw\build\msw
+mingw32-make -f makefile.gcc
+
+OpenSSL
+-------
+MSYS shell:
+un-tar sources with MSYS 'tar xfz' to avoid issue with symlinks (OpenSSL ticket 2377)
+change 'MAKE' env. variable from 'C:\MinGW32\bin\mingw32-make.exe' to '/c/MinGW32/bin/mingw32-make.exe'
+
+cd /c/openssl-1.0.0d-mgw
+./config
+make
+
+Berkeley DB
+-----------
+MSYS shell:
+cd /c/db-4.7.25.NC-mgw/build_unix
+sh ../dist/configure --enable-mingw --enable-cxx
+make
+
+
+Boost
+-----
+DOS prompt:
+downloaded boost jam 3.1.18
+cd \boost-1.43.0-mgw
+bjam toolset=gcc --build-type=complete stage
+
+Note:
+building with boost 1.45.0 failed because of boost ticket 4614, 4258
+builds fine with boost 1.43.0
+
+MiniUPnPc
+---------
+Building miniupnpc failed on Windows Server 2003, thus it is expected that a binary copy will be used.
+See http://miniupnp.tuxfamily.org/forum/viewtopic.php?t=642
+UPnP support is optional, make with USE_UPNP= to disable it.
+
+Get upnpc-exe-win32-20110215.zip and unzip it to \upnpc-exe-win32-20110215
+Get miniupnpc-1.5.20110215.tar.gz and copy *.h to \upnpc-exe-win32-20110215\miniupnpc
+
+Bitcoin
+-------
+DOS prompt:
+cd \bitcoin\src
+mingw32-make bitcoin.exe bitcoind.exe -f makefile.mingw
+strip bitcoin.exe
+strip bitcoind.exe

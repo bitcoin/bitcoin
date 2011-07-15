@@ -3,8 +3,8 @@
 #ifndef CRYPTOPP_SECBLOCK_H
 #define CRYPTOPP_SECBLOCK_H
 
-#include "cryptopp/config.h"
-#include "cryptopp/misc.h"
+#include "config.h"
+#include "misc.h"
 #include <assert.h>
 
 #if defined(CRYPTOPP_MEMALIGN_AVAILABLE) || defined(CRYPTOPP_MM_MALLOC_AVAILABLE) || defined(QNX)

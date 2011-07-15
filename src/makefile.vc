@@ -1,0 +1,145 @@
+# Copyright (c) 2009-2010 Satoshi Nakamoto
+# Distributed under the MIT/X11 software license, see the accompanying
+# file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+
+INCLUDEPATHS= \
+  /I"/boost" \
+  /I"/db/build_windows" \
+  /I"/openssl/include" \
+  /I"/wxwidgets/lib/vc_lib/mswu" \
+  /I"/wxwidgets/include" /
+  /I"/miniupnpc"
+
+LIBPATHS= \
+  /LIBPATH:"/boost/stage/lib" \
+  /LIBPATH:"/db/build_windows/Release" \
+  /LIBPATH:"/openssl/lib" \
+  /LIBPATH:"/wxwidgets/lib/vc_lib" \
+  /LIBPATH:"/miniupnpc/msvc/Release" \
+  /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmt.lib \
+  /NODEFAULTLIB:libcd.lib /NODEFAULTLIB:libcmtd.lib \
+  /NODEFAULTLIB:msvcrtd.lib
+
+WXLIBS=wxmsw29u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib
+
+USE_UPNP=0
+
+DEFS=/DWIN32 /D__WXMSW__ /D_WINDOWS /DNOPCH /DNOMINMAX
+
+LIBS= \
+  libboost_system-vc100-mt.lib \
+  libboost_filesystem-vc100-mt.lib \
+  libboost_program_options-vc100-mt.lib \
+  libboost_thread-vc100-mt.lib \
+  libdb47s.lib \
+  libeay32.lib
+
+!IFDEF USE_UPNP
+LIBS=$(LIBS) miniupnpc.lib
+DEFS=$(DEFS) /DUSE_UPNP=$(USE_UPNP)
+!ENDIF
+
+LIBS=$(LIBS) \
+  kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib ws2_32.lib shlwapi.lib
+
+DEBUGFLAGS=/Os
+CFLAGS=/MD /c /nologo /EHsc /GR /Zm300 $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h wallet.h keystore.h
+
+OBJS= \
+    obj\util.obj \
+    obj\script.obj \
+    obj\db.obj \
+    obj\net.obj \
+    obj\irc.obj \
+	obj\keystore.obj \
+    obj\main.obj \
+	obj\wallet.obj \
+    obj\rpc.obj \
+    obj\init.obj
+
+CRYPTOPP_OBJS= \
+    cryptopp\obj\sha.obj \
+    cryptopp\obj\cpu.obj
+
+RC=../share
+
+
+all: bitcoin.exe
+
+
+.cpp{obj}.obj:
+    cl $(CFLAGS) /DGUI /Fo$@ %s
+
+obj\util.obj: $(HEADERS)
+
+obj\script.obj: $(HEADERS)
+
+obj\db.obj: $(HEADERS)
+
+obj\net.obj: $(HEADERS)
+
+obj\irc.obj: $(HEADERS)
+
+obj\keystore.obj: $(HEADERS)
+
+obj\main.obj: $(HEADERS)
+
+obj\wallet.obj: $(HEADERS)
+
+obj\rpc.obj: $(HEADERS)
+
+obj\init.obj: $(HEADERS)
+
+obj\ui.obj: $(HEADERS)
+
+obj\uibase.obj: $(HEADERS)
+
+cryptopp\obj\sha.obj: cryptopp\sha.cpp
+    cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
+
+cryptopp\obj\cpu.obj: cryptopp\cpu.cpp
+    cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
+
+obj\ui.res: $(RC)/ui.rc $(RC)/pixmaps/bitcoin.ico $(RC)/pixmaps/check.ico $(RC)/pixmaps/send16.bmp $(RC)/pixmaps/send16mask.bmp $(RC)/pixmaps/send16masknoshadow.bmp $(RC)/pixmaps/send20.bmp $(RC)/pixmaps/send20mask.bmp $(RC)/pixmaps/addressbook16.bmp $(RC)/pixmaps/addressbook16mask.bmp $(RC)/pixmaps/addressbook20.bmp $(RC)/pixmaps/addressbook20mask.bmp
+    rc $(INCLUDEPATHS) $(DEFS) /Fo$@ %s
+
+bitcoin.exe: $(OBJS) $(CRYPTOPP_OBJS) obj\ui.obj obj\uibase.obj obj\ui.res
+    link /nologo /SUBSYSTEM:WINDOWS /OUT:$@ $(LIBPATHS) $** $(WXLIBS) $(LIBS)
+
+	
+.cpp{obj\nogui}.obj:
+    cl $(CFLAGS) /Fo$@ %s
+
+obj\nogui\util.obj: $(HEADERS)
+
+obj\nogui\script.obj: $(HEADERS)
+
+obj\nogui\db.obj: $(HEADERS)
+
+obj\nogui\net.obj: $(HEADERS)
+
+obj\nogui\irc.obj: $(HEADERS)
+
+obj\nogui\keystore.obj: $(HEADERS)
+
+obj\nogui\main.obj: $(HEADERS)
+
+obj\nogui\wallet.obj: $(HEADERS)
+
+obj\nogui\rpc.obj: $(HEADERS)
+
+obj\nogui\init.obj: $(HEADERS)
+
+bitcoind.exe: $(OBJS:obj\=obj\nogui\) $(CRYPTOPP_OBJS) obj\ui.res
+    link /nologo /OUT:$@ $(LIBPATHS) $** $(LIBS)
+
+
+clean:
+    -del /Q obj\*
+    -del /Q obj\nogui\*
+    -del /Q cryptopp\obj\*
+    -del /Q *.ilk
+    -del /Q *.pdb

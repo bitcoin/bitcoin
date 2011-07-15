@@ -5,14 +5,14 @@
 
 // use "cl /EP /P /DCRYPTOPP_GENERATE_X64_MASM sha.cpp" to generate MASM code
 
-#include "cryptopp/pch.h"
+#include "pch.h"
 
 #ifndef CRYPTOPP_IMPORTS
 #ifndef CRYPTOPP_GENERATE_X64_MASM
 
-#include "cryptopp/sha.h"
-#include "cryptopp/misc.h"
-#include "cryptopp/cpu.h"
+#include "sha.h"
+#include "misc.h"
+#include "cpu.h"
 
 NAMESPACE_BEGIN(CryptoPP)
 

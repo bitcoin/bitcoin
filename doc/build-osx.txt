@@ -1,0 +1,278 @@
+Copyright (c) 2010 Laszlo Hanyecz
+Portions Copyright (c) 2011 Douglas Huff
+Distributed under the MIT/X11 software license, see the accompanying file
+license.txt or http://www.opensource.org/licenses/mit-license.php.  This
+product includes software developed by the OpenSSL Project for use in the
+OpenSSL Toolkit (http://www.openssl.org/).  This product includes cryptographic
+software written by Eric Young (eay@cryptsoft.com) and UPnP software written by
+Thomas Bernard.
+
+
+Mac OS X build instructions
+Laszlo Hanyecz <solar@heliacal.net>
+Douglas Huff <dhuff@jrbobdobbs.org>
+
+
+Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
+
+All of the commands should be executed in Terminal.app.. it's in
+/Applications/Utilities
+
+You need to install XCode with all the options checked so that the compiler and
+everything is available in /usr not just /Developer I think it comes on the DVD
+but you can get the current version from http://developer.apple.com
+
+
+1.  Pick a directory to work inside.. something like ~/bitcoin works.  The
+structure I use looks like this:
+
+(~ is your home directory)
+
+~/bitcoin
+~/bitcoin/bitcoin       # Upstream source tree
+~/bitcoin/src           # source code (symlink to ~/bitcoin/bitcoin/src)
+~/bitcoin/deps          # dependencies.. like libraries and headers needed to compile
+~/bitcoin/Bitcoin.app   # the application bundle where you can run the app
+
+Just execute: mkdir ~/bitcoin
+This will create the top dir for you..
+
+WARNING: do not use the ~ notation with the configure scripts.. use the full
+name of the directory, for example /Users/james/bitcoin/deps for a user named
+'james'.  In my examples I am using 'macosuser' so make sure you change that.
+
+2.  Check out the bitcoin code from github:
+
+cd ~/bitcoin
+git clone https://github.com/bitcoin/bitcoin.git
+ln -s bitcoin/src src
+
+This will make ~/bitcoin/bitcoin for you with all the files from git. This puts
+the actual sources in ~/bitcoin/bitcoin/src and create a symlink src in
+~/bitcoin to this location.
+
+3.  Get and build the dependencies
+
+
+Boost
+-----
+
+Download from http://www.boost.org/users/download/
+I'm assuming it ended up in ~/Downloads..
+
+mkdir ~/bitcoin/deps
+cd ~/bitcoin/deps
+tar xvjf ~/Downloads/boost_1_42_0.tar.bz2
+cd boost_1_42_0
+./bootstrap.sh
+./bjam architecture=combined address-model=32_64 macosx-version=10.5 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/bitcoin/deps install
+
+If you're using Snow Leopard, you will need to specify 10.6 as your Mac OS X
+version instead of 10.5.
+
+This part takes a while.. use your judgement and fix it if something doesn't
+build for some reason.
+
+Change the prefix to whatever your directory is (my username in this example
+is macosuser).  I'm also running on 10.6 so i have macosx-version=10.6  change
+to 10.5 if you're using leopard.
+
+This is what my output looked like at the end:
+...failed updating 2 targets...
+...skipped 144 targets...
+...updated 8074 targets...
+
+
+OpenSSL
+-------
+
+(System or MacPorts openssl will work fine. Optional.)
+
+Download from http://www.openssl.org/source/
+
+We would like to build this as a 32 bit/64 bit library so we actually build it
+2 times and join it together here..  If you downloaded with safari it already
+uncompressed it so it will just be a tar not a tar.gz
+
+cd ~/bitcoin/deps
+tar xvf ~/Downloads/openssl-1.0.0.tar
+mv openssl-1.0.0 openssl-1.0.0-i386
+tar xvf ~/Downloads/openssl-1.0.0.tar
+mv openssl-1.0.0 openssl-1.0.0-x86_64
+# build i386 (32 bit intel) binary
+cd openssl-1.0.0-i386
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin-i386-cc && make
+make install # only do this on one of the architectures, to install the headers
+cd ..
+# build x86_64 (64 bit intel) binary
+cd openssl-1.0.0-x86_64
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin64-x86_64-cc && make
+cd ..
+
+# combine the libs
+cd ~/bitcoin/deps
+lipo -arch i386 openssl-1.0.0-i386/libcrypto.a -arch x86_64 openssl-1.0.0-x86_64/libcrypto.a -o lib/libcrypto.a -create
+lipo -arch i386 openssl-1.0.0-i386/libssl.a -arch x86_64 openssl-1.0.0-x86_64/libssl.a -o lib/libssl.a -create
+
+Verify your binaries
+
+file lib/libcrypto.a
+
+output should look like this:
+
+lib/libcrypto.a: Mach-O universal binary with 2 architectures
+lib/libcrypto.a (for architecture i386):  current ar archive random library
+lib/libcrypto.a (for architecture x86_64):  current ar archive random library
+
+
+miniupnpc
+---------
+
+(MacPorts miniupnpc package works fine. You will need to modify makefile.)
+
+The process for miniupnpc (optional) is similar to that of OpenSSL.
+
+Download from http://miniupnp.tuxfamily.org/files/.
+
+cd ~/bitcoin/deps
+tar xvf ~/Downloads/miniupnpc-1.5.tar
+mv miniupnpc-1.5 miniupnpc-1.5-x86_64
+tar xvf ~/Downloads/miniupnpc-1.5.tar
+mv miniupnpc-1.5 miniupnpc-1.5-i386
+# build x86_64 (64 bit intel) binary
+cd miniupnpc-1.5-x86_64
+export CFLAGS="-arch x86_64"
+export LDFLAGS="-arch x86_64"
+export PREFIX="/Users/macuser/bitcoin/deps"
+make && make install
+# build i386 (32 bit intel) binary
+cd miniupnpc-1.5-i386
+export CFLAGS="-arch i386"
+export LDFLAGS="-arch i386"
+export PREFIX="/Users/macuser/bitcoin/deps"
+make
+
+# combine the libs
+cd ~/bitcoin/deps
+lipo -arch i386 miniupnpc-1.5-i386/libminiupnpc.a -arch x86_64 miniupnpc-1.5-x86_64/libminiupnpc.a -o lib/libminiupnpc.a -create
+
+Verify your binaries
+
+file lib/libminiupnpc.a
+
+output should look like this:
+
+lib/libminiupnpc.a: Mach-O universal binary with 2 architectures
+lib/libminiupnpc.a (for architecture i386): current ar archive random library
+lib/libminiupnpc.a (for architecture x86_64): current ar archive random library
+
+
+Berkeley DB
+-----------
+
+(System or MacPorts version work fine.)
+
+Download from http://freshmeat.net/projects/berkeleydb/
+
+cd ~/bitcoin/deps
+tar xvf ~/Downloads/db-4.8.26.tar
+cd db-4.8.26/build_unix
+../dist/configure --prefix=/Users/macosuser/bitcoin/deps --enable-cxx && make && make install
+
+
+wxWidgets
+---------
+
+(The wxWidgets-devel MacPorts package will work but will throw annoying assertion dialogs.)
+
+This is the big one..
+
+Check it out from svn
+
+cd ~/bitcoin/deps
+svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk
+
+This will make a wxWidgets-trunk directory in deps.
+
+Use this script snippet, change your prefix to whatever your dir is:
+
+PREFIX=~/bitcoin/deps
+SRCDIR="$PREFIX/wxWidgets-trunk"
+BUILDDIR="$SRCDIR/macbuild"
+
+cd "$PREFIX" &&
+#svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk &&
+cd "$SRCDIR" &&
+
+[ -f include/wx/hashmap.h.orig ] || cp include/wx/hashmap.h include/wx/hashmap.h.orig &&
+sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashmap.h.orig > include/wx/hashmap.h &&
+
+[ -f include/wx/hashset.h.orig ] || cp include/wx/hashset.h include/wx/hashset.h.orig &&
+sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashset.h.orig > include/wx/hashset.h &&
+
+
+
+rm -vrf "$BUILDDIR" &&
+mkdir "$BUILDDIR" &&
+cd "$BUILDDIR" &&
+
+../configure --prefix="$PREFIX" \
+--with-osx_cocoa \
+--disable-shared \
+--disable-debug_flag \
+--with-macosx-version-min=10.5 \
+--enable-stl \
+--enable-utf8 \
+--enable-universal_binary \
+--with-libjpeg=builtin \
+--with-libpng=builtin \
+--with-regex=builtin \
+--with-libtiff=builtin \
+--with-zlib=builtin \
+--with-expat=builtin \
+--with-macosx-sdk=/Developer/SDKs/MacOSX10.5.sdk &&
+
+
+find . -name Makefile | 
+while read i; do 
+  echo $i; 
+  sed 's/-arch i386/-arch i386 -arch x86_64/g' < "$i" > "$i".new && 
+  mv "$i" "$i".old && 
+  mv "$i".new "$i"; 
+done
+
+
+
+make && 
+make install
+
+
+
+Now you should be able to build bitcoin
+
+cd ~/bitcoin/src
+make -f makefile.osx bitcoin
+
+Before you can run it, you need to create an application bundle for Mac OS.
+
+A bundle is provided in contrib/Bitcoin.app.
+
+Copy the bitcoin binary in to it like this:
+  cp -pR ~/bitcoin/bitcoin/contrib/Bitcoin.app ~/bitcoin/
+  cp ~/bitcoin/src/bitcoin ~/bitcoin/Bitcoin.app/Contents/MacOS/
+
+To run it you can just click the Bitcoin.app in Finder, or just do:
+open ~/bitcoin/Bitcoin.app
+
+If you want to run it with arguments you can just run it without backgrounding
+by specifying the full name in terminal:
+
+~/bitcoin/Bitcoin.app/Contents/MacOS/bitcoin -addnode=192.75.207.66
+
+You can also run it with arguments in the background with output going to the
+normal places for apps (Console) like this:
+
+open ~/bitcoin/Bitcoin.app --args -connect=192.75.207.66
+
+It is advisable to relocate Bitcoin.app to /Applications or $HOME/Applications.
+

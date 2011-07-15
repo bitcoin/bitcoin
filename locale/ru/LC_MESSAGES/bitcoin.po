@@ -1,0 +1,1021 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: m0Ray <m0ray@nm.ru>\n"
+"POT-Creation-Date: 2011-05-15 18:24+0100\n"
+"PO-Revision-Date: 2011-05-23 07:06+0500\n"
+"Last-Translator: m0Ray <m0ray@nm.ru>\n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../src/net.cpp:1499
+#, c-format
+msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
+msgstr "Не могу открыть порт %d. Возможно, Bitcoin уже запущен."
+
+#: ../../../src/ui.cpp:202
+#, c-format
+msgid "This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?"
+msgstr "Этот перевод превышает допустимый лимит.  Вы можете провести его с комиссией %s, которую получат узлы, обрабатывающие перевод, и поможет поддерживать сеть. Вы хотите заплатить комиссию?"
+
+#: ../../../src/ui.cpp:301
+msgid "Status"
+msgstr "Статус"
+
+#: ../../../src/ui.cpp:302
+msgid "Date"
+msgstr "Дата"
+
+#: ../../../src/ui.cpp:303
+msgid "Description"
+msgstr "Описание"
+
+#: ../../../src/ui.cpp:304
+msgid "Debit"
+msgstr "Расход"
+
+#: ../../../src/ui.cpp:305
+msgid "Credit"
+msgstr "Приход"
+
+#: ../../../src/ui.cpp:511
+#, c-format
+msgid "Open for %d blocks"
+msgstr "Открыто на %d блоков"
+
+#: ../../../src/ui.cpp:513
+#, c-format
+msgid "Open until %s"
+msgstr "Открыто до %s"
+
+#: ../../../src/ui.cpp:519
+#, c-format
+msgid "%d/offline?"
+msgstr "%d/оффлайн?"
+
+#: ../../../src/ui.cpp:521
+#, c-format
+msgid "%d/unconfirmed"
+msgstr "%d/не подтверждено"
+
+#: ../../../src/ui.cpp:523
+#, c-format
+msgid "%d confirmations"
+msgstr "%d подтверждений"
+
+#: ../../../src/ui.cpp:608
+msgid "Generated"
+msgstr "Сгенерировано"
+
+#: ../../../src/ui.cpp:616
+#, c-format
+msgid "Generated (%s matures in %d more blocks)"
+msgstr "Сгенерировано (%s станет доступно через %d блоков)"
+
+#: ../../../src/ui.cpp:620
+msgid "Generated - Warning: This block was not received by any other nodes and will probably not be accepted!"
+msgstr "Сгенерировано - Внимание: этот блок не был получен ни одним узлом и, скорее всего, не будет принят!"
+
+#: ../../../src/ui.cpp:624
+msgid "Generated (not accepted)"
+msgstr "Сгенерировано (не принято)"
+
+#: ../../../src/ui.cpp:634
+msgid "From: "
+msgstr "От: "
+
+#: ../../../src/ui.cpp:658
+msgid "Received with: "
+msgstr "Получено для: "
+
+#: ../../../src/ui.cpp:704
+msgid "Payment to yourself"
+msgstr "Платёж самому себе"
+
+#: ../../../src/ui.cpp:738
+msgid "To: "
+msgstr "Кому: "
+
+#: ../../../src/ui.cpp:1053
+msgid "    Generating"
+msgstr "    Генерация"
+
+#: ../../../src/ui.cpp:1055
+msgid "(not connected)"
+msgstr "(не подключен)"
+
+#: ../../../src/ui.cpp:1058
+#, c-format
+msgid "     %d connections     %d blocks     %d transactions"
+msgstr "     %d подключений     %d блоков     %d переводов"
+
+#: ../../../src/ui.cpp:1163
+#: ../../../src/ui.cpp:2527
+msgid "New Receiving Address"
+msgstr "Новый адрес получения"
+
+#: ../../../src/ui.cpp:1164
+#: ../../../src/ui.cpp:2528
+msgid ""
+"You should use a new address for each payment you receive.\n"
+"\n"
+"Label"
+msgstr ""
+"Рекомендуется использовать новый адрес для каждого получаемого платежа.\n"
+"\n"
+"Метка"
+
+#: ../../../src/ui.cpp:1233
+msgid "<b>Status:</b> "
+msgstr "<b>Статус:</b> "
+
+#: ../../../src/ui.cpp:1238
+msgid ", has not been successfully broadcast yet"
+msgstr ", ещё не был успешно разослан"
+
+#: ../../../src/ui.cpp:1240
+#, c-format
+msgid ", broadcast through %d node"
+msgstr ", рассылка через %d узел"
+
+#: ../../../src/ui.cpp:1242
+#, c-format
+msgid ", broadcast through %d nodes"
+msgstr ", рассылка через %d узлов"
+
+#: ../../../src/ui.cpp:1246
+msgid "<b>Date:</b> "
+msgstr "<b>Дата:</b> "
+
+#: ../../../src/ui.cpp:1254
+msgid "<b>Source:</b> Generated<br>"
+msgstr "<b>Источник:</b> Сгенерировано<br>"
+
+#: ../../../src/ui.cpp:1260
+#: ../../../src/ui.cpp:1278
+msgid "<b>From:</b> "
+msgstr "<b>От:</b> "
+
+#: ../../../src/ui.cpp:1278
+msgid "unknown"
+msgstr "аноним"
+
+#: ../../../src/ui.cpp:1279
+#: ../../../src/ui.cpp:1303
+#: ../../../src/ui.cpp:1362
+msgid "<b>To:</b> "
+msgstr "<b>Кому:</b> "
+
+#: ../../../src/ui.cpp:1282
+msgid " (yours, label: "
+msgstr " (ваш, метка: "
+
+#: ../../../src/ui.cpp:1284
+msgid " (yours)"
+msgstr " (ваш)"
+
+#: ../../../src/ui.cpp:1321
+#: ../../../src/ui.cpp:1333
+#: ../../../src/ui.cpp:1379
+#: ../../../src/ui.cpp:1396
+msgid "<b>Credit:</b> "
+msgstr "<b>Приход:</b> "
+
+#: ../../../src/ui.cpp:1323
+#, c-format
+msgid "(%s matures in %d more blocks)"
+msgstr "(%s станет доступно через %d блоков)"
+
+#: ../../../src/ui.cpp:1325
+msgid "(not accepted)"
+msgstr "(не принято)"
+
+#: ../../../src/ui.cpp:1370
+#: ../../../src/ui.cpp:1378
+#: ../../../src/ui.cpp:1393
+msgid "<b>Debit:</b> "
+msgstr "<b>Расход:</b> "
+
+#: ../../../src/ui.cpp:1384
+msgid "<b>Transaction fee:</b> "
+msgstr "<b>Комиссия:</b> "
+
+#: ../../../src/ui.cpp:1400
+msgid "<b>Net amount:</b> "
+msgstr "<b>Чистая сумма:</b> "
+
+#: ../../../src/ui.cpp:1407
+msgid "Message:"
+msgstr "Сообщение:"
+
+#: ../../../src/ui.cpp:1409
+msgid "Comment:"
+msgstr "Комментарий:"
+
+#: ../../../src/ui.cpp:1412
+msgid "Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours."
+msgstr "Сгенерированные монеты должны ждать 120 блоков, прежде чем они могут быть потрачены. Когда вы сгенерировали этот блок, он был разослан в сети для добавления в цепь блоков. Если не удалось добавить этот блок в цепь, он будет обозначен как \"не принятый\" и не может быть потрачен. Такое может случиться, если другой узел сгенерировал блок примерно в то же время, что и вы."
+
+#: ../../../src/ui.cpp:1592
+msgid "Cannot write autostart/bitcoin.desktop file"
+msgstr "Не удаётся записать файл autostart/bitcoin.desktop"
+
+#: ../../../src/ui.cpp:1628
+msgid "Main"
+msgstr "Основные"
+
+#: ../../../src/ui.cpp:1636
+msgid "&Start Bitcoin on window system startup"
+msgstr "&Запускать Bitcoin при запуске оконной системы"
+
+#: ../../../src/ui.cpp:1643
+msgid "&Minimize on close"
+msgstr "&Сворачивать при закрытии"
+
+#: ../../../src/ui.cpp:1785
+#, c-format
+msgid "version %s"
+msgstr "версия %s"
+
+#: ../../../src/ui.cpp:1897
+msgid "Error in amount  "
+msgstr "Ошибка в количестве  "
+
+#: ../../../src/ui.cpp:1897
+#: ../../../src/ui.cpp:1902
+#: ../../../src/ui.cpp:1907
+#: ../../../src/ui.cpp:1942
+#: ../../../src/uibase.cpp:55
+msgid "Send Coins"
+msgstr "Отправить монеты"
+
+#: ../../../src/ui.cpp:1902
+msgid "Amount exceeds your balance  "
+msgstr "Количество превышает ваш баланс  "
+
+#: ../../../src/ui.cpp:1907
+msgid "Total exceeds your balance when the "
+msgstr "Общая сумма превышает ваш баланс, когда "
+
+#: ../../../src/ui.cpp:1907
+msgid " transaction fee is included  "
+msgstr " комиссия включена  "
+
+#: ../../../src/ui.cpp:1925
+msgid "Payment sent  "
+msgstr "Платёж отправлен  "
+
+#: ../../../src/ui.cpp:1925
+#: ../../../src/ui.cpp:1930
+#: ../../../src/ui.cpp:2074
+#: ../../../src/ui.cpp:2227
+#: ../../../src/main.cpp:3999
+msgid "Sending..."
+msgstr "Отправка..."
+
+#: ../../../src/ui.cpp:1942
+msgid "Invalid address  "
+msgstr "Неверный адрес  "
+
+#: ../../../src/ui.cpp:1995
+#, c-format
+msgid "Sending %s to %s"
+msgstr "Отправка %s для %s"
+
+#: ../../../src/ui.cpp:2068
+#: ../../../src/ui.cpp:2101
+msgid "CANCELLED"
+msgstr "ОТМЕНЕНО"
+
+#: ../../../src/ui.cpp:2072
+msgid "Cancelled"
+msgstr "Отменено"
+
+#: ../../../src/ui.cpp:2074
+msgid "Transfer cancelled  "
+msgstr "Передача отменена  "
+
+#: ../../../src/ui.cpp:2127
+msgid "Error: "
+msgstr "Ошибка: "
+
+#: ../../../src/ui.cpp:2141
+#: ../../../src/ui.cpp:2212
+#: ../../../src/main.cpp:4018
+msgid "Insufficient funds"
+msgstr "Недостаточно средств"
+
+#: ../../../src/ui.cpp:2146
+msgid "Connecting..."
+msgstr "Подключение..."
+
+#: ../../../src/ui.cpp:2151
+msgid "Unable to connect"
+msgstr "Невозможно подключиться"
+
+#: ../../../src/ui.cpp:2156
+msgid "Requesting public key..."
+msgstr "Запрос публичного ключа..."
+
+#: ../../../src/ui.cpp:2168
+msgid "Received public key..."
+msgstr "Получен публичный ключ..."
+
+#: ../../../src/ui.cpp:2182
+msgid "Recipient is not accepting transactions sent by IP address"
+msgstr "Получатель не принимает переводы на IP-адрес"
+
+#: ../../../src/ui.cpp:2184
+msgid "Transfer was not accepted"
+msgstr "Передача не принята"
+
+#: ../../../src/ui.cpp:2193
+msgid "Invalid response received"
+msgstr "Получен неверный отклик"
+
+#: ../../../src/ui.cpp:2208
+msgid "Creating transaction..."
+msgstr "Создание перевода..."
+
+#: ../../../src/ui.cpp:2220
+#, c-format
+msgid "This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds"
+msgstr "Этот перевод требует уплаты комиссии минимум в %s, так как имеет большой объём, сложность или использует недавно полученные средства"
+
+#: ../../../src/ui.cpp:2222
+msgid "Transaction creation failed"
+msgstr "Не удалось создать перевод"
+
+#: ../../../src/ui.cpp:2229
+msgid "Transaction aborted"
+msgstr "Перевод прерван"
+
+#: ../../../src/ui.cpp:2237
+msgid "Lost connection, transaction cancelled"
+msgstr "Соединение разорвано, перевод отменён"
+
+#: ../../../src/ui.cpp:2253
+msgid "Sending payment..."
+msgstr "Отправка платежа..."
+
+#: ../../../src/ui.cpp:2259
+msgid "The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Перевод был отклонён.  Это могло произойти, если некоторые из монет в вашем кошельке уже были потрачены, например, если вы использовали копию wallet.dat, и монеты были потрачены в копии, но не отмечены израсходованными здесь."
+
+#: ../../../src/ui.cpp:2268
+msgid "Waiting for confirmation..."
+msgstr "Ожидание подтверждения..."
+
+#: ../../../src/ui.cpp:2286
+msgid ""
+"The payment was sent, but the recipient was unable to verify it.\n"
+"The transaction is recorded and will credit to the recipient,\n"
+"but the comment information will be blank."
+msgstr ""
+"Платёж был отправлен, но получатель не смог проверить его.\n"
+"Перевод был записан и будет начислен получателю,\n"
+"но поле комментария будет пустое."
+
+#: ../../../src/ui.cpp:2295
+msgid "Payment was sent, but an invalid response was received"
+msgstr "Платёж отправлен, но был получен неверный отклик"
+
+#: ../../../src/ui.cpp:2301
+msgid "Payment completed"
+msgstr "Платёж проведён"
+
+#: ../../../src/ui.cpp:2332
+#: ../../../src/ui.cpp:2478
+#: ../../../src/ui.cpp:2515
+msgid "Name"
+msgstr "Имя"
+
+#: ../../../src/ui.cpp:2333
+#: ../../../src/ui.cpp:2478
+#: ../../../src/ui.cpp:2515
+msgid "Address"
+msgstr "Адрес"
+
+#: ../../../src/ui.cpp:2335
+#: ../../../src/ui.cpp:2490
+msgid "Label"
+msgstr "Метка"
+
+#: ../../../src/ui.cpp:2336
+#: ../../../src/uibase.cpp:837
+msgid "Bitcoin Address"
+msgstr "Адрес Bitcoin"
+
+#: ../../../src/ui.cpp:2460
+msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
+msgstr "Это один из ваших собственных адресов для получения платежей, он не может быть внесён в адресную книгу.  "
+
+#: ../../../src/ui.cpp:2478
+#: ../../../src/ui.cpp:2484
+msgid "Edit Address"
+msgstr "Правка адреса"
+
+#: ../../../src/ui.cpp:2490
+msgid "Edit Address Label"
+msgstr "Правка метки адреса"
+
+#: ../../../src/ui.cpp:2515
+#: ../../../src/ui.cpp:2521
+msgid "Add Address"
+msgstr "Добавить адрес"
+
+#: ../../../src/ui.cpp:2598
+msgid "Bitcoin"
+msgstr "Bitcoin"
+
+#: ../../../src/ui.cpp:2600
+msgid "Bitcoin - Generating"
+msgstr "Bitcoin - Генерация"
+
+#: ../../../src/ui.cpp:2602
+msgid "Bitcoin - (not connected)"
+msgstr "Bitcoin - (не подключен)"
+
+#: ../../../src/ui.cpp:2681
+msgid "&Open Bitcoin"
+msgstr "&Открыть Bitcoin"
+
+#: ../../../src/ui.cpp:2682
+msgid "&Send Bitcoins"
+msgstr "&Открыть Bitcoin"
+
+#: ../../../src/ui.cpp:2683
+msgid "O&ptions..."
+msgstr "О&пции..."
+
+#: ../../../src/ui.cpp:2686
+#: ../../../src/uibase.cpp:25
+msgid "E&xit"
+msgstr "&Выход"
+
+#: ../../../src/ui.cpp:2902
+msgid "Program has crashed and will terminate.  "
+msgstr "Сбой программы, завершение.  "
+
+#: ../../../src/main.cpp:1868
+msgid "Warning: Disk space is low  "
+msgstr "Внимание: мало места на диске  "
+
+#: ../../../src/main.cpp:3992
+#, c-format
+msgid "Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "
+msgstr "Ошибка: Этот перевод требует уплаты комиссии минимум в %s, так как имеет большой объём, сложность или использует недавно полученные средства  "
+
+#: ../../../src/main.cpp:3994
+msgid "Error: Transaction creation failed  "
+msgstr "Ошибка: не удалось создать перевод  "
+
+#: ../../../src/main.cpp:4003
+msgid "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Перевод был отклонен. Это могло произойти, если некоторые из монет в вашем кошельке уже были потрачены, например, если вы использовали копию wallet.dat, и монеты были потрачены в копии, но не отмечены израсходованными здесь."
+
+#: ../../../src/main.cpp:4016
+msgid "Invalid amount"
+msgstr "Неверное количество"
+
+#: ../../../src/main.cpp:4023
+msgid "Invalid bitcoin address"
+msgstr "Неверный адрес bitcoin"
+
+#: ../../../src/rpc.cpp:1800
+#: ../../../src/rpc.cpp:1802
+#, c-format
+msgid "To use the %s option"
+msgstr "Чтобы использовать опцию %s"
+
+#: ../../../src/rpc.cpp:1804
+#, c-format
+msgid ""
+"Warning: %s, you must set rpcpassword=<password>\n"
+"in the configuration file: %s\n"
+"If the file does not exist, create it with owner-readable-only file permissions.\n"
+msgstr ""
+"Внимание: %s, вы должны установить rpcpassword=<пароль>\n"
+"в конфигурационном файле: %s\n"
+"Если файл не существует, создайте его с правами \"чтение только владельцем\".\n"
+
+#: ../../../src/rpc.cpp:1972
+#, c-format
+msgid ""
+"You must set rpcpassword=<password> in the configuration file:\n"
+"%s\n"
+"If the file does not exist, create it with owner-readable-only file permissions."
+msgstr ""
+"Вы должны установить rpcpassword=<пароль> в конфигурационном файле:\n"
+"%s\n"
+"Если файл не существует, создайте его с правами \"чтение только владельцем\"."
+
+#: ../../../src/util.cpp:865
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
+msgstr "Внимание: пожалуйста, проверьте дату и время на вашем компьютере. Если часы идут неверно, Bitcoin не будет работать правильно."
+
+#: ../../../src/util.cpp:898
+msgid "beta"
+msgstr "beta"
+
+#: ../../../src/uibase.cpp:28
+msgid "&File"
+msgstr "&Файл"
+
+#: ../../../src/uibase.cpp:32
+msgid "&Your Receiving Addresses..."
+msgstr "&Ваши адреса получения..."
+
+#: ../../../src/uibase.cpp:36
+msgid "&Options..."
+msgstr "&Опции"
+
+#: ../../../src/uibase.cpp:39
+msgid "&Settings"
+msgstr "&Настройки"
+
+#: ../../../src/uibase.cpp:43
+msgid "&About..."
+msgstr "&О программе..."
+
+#: ../../../src/uibase.cpp:46
+msgid "&Help"
+msgstr "&Справка"
+
+#: ../../../src/uibase.cpp:56
+msgid "Address Book"
+msgstr "Адресная книга"
+
+#: ../../../src/uibase.cpp:69
+msgid "Your Bitcoin Address:"
+msgstr "Ваш адрес Bitcoin:"
+
+#: ../../../src/uibase.cpp:76
+msgid " &New... "
+msgstr " &Новый... "
+
+#: ../../../src/uibase.cpp:79
+#: ../../../src/uibase.cpp:780
+#: ../../../src/uibase.cpp:883
+msgid " &Copy to Clipboard "
+msgstr " &Копировать в буфер обмена "
+
+#: ../../../src/uibase.cpp:93
+msgid "Balance:"
+msgstr "Баланс:"
+
+#: ../../../src/uibase.cpp:109
+msgid " All"
+msgstr " Все"
+
+#: ../../../src/uibase.cpp:109
+msgid " Sent"
+msgstr " Отправленные"
+
+#: ../../../src/uibase.cpp:109
+msgid " Received"
+msgstr " Полученные"
+
+#: ../../../src/uibase.cpp:109
+msgid " In Progress"
+msgstr " В процессе"
+
+#: ../../../src/uibase.cpp:130
+msgid "All Transactions"
+msgstr "Все переводы"
+
+#: ../../../src/uibase.cpp:141
+msgid "Sent/Received"
+msgstr "Отправленные/Полученные"
+
+#: ../../../src/uibase.cpp:152
+msgid "Sent"
+msgstr "Отправленные"
+
+#: ../../../src/uibase.cpp:163
+msgid "Received"
+msgstr "Полученные"
+
+#: ../../../src/uibase.cpp:302
+#: ../../../src/uibase.cpp:443
+#: ../../../src/uibase.cpp:542
+#: ../../../src/uibase.cpp:722
+#: ../../../src/uibase.cpp:783
+#: ../../../src/uibase.cpp:892
+#: ../../../src/uibase.cpp:981
+msgid "OK"
+msgstr "ОК"
+
+#: ../../../src/uibase.cpp:345
+msgid "&Start Bitcoin on system startup"
+msgstr "&Запускать Bitcoin при старте системы"
+
+#: ../../../src/uibase.cpp:348
+msgid "&Minimize to the tray instead of the taskbar"
+msgstr "&Сворачивать в трей вместо панели задач"
+
+#: ../../../src/uibase.cpp:351
+msgid "Map port using &UPnP"
+msgstr "Использовать &UPnP"
+
+#: ../../../src/uibase.cpp:354
+msgid "M&inimize to the tray on close"
+msgstr "С&ворачивать в трей при закрытии"
+
+#: ../../../src/uibase.cpp:360
+msgid "&Connect through socks4 proxy: "
+msgstr "&Подключаться через socks4 прокси: "
+
+#: ../../../src/uibase.cpp:371
+msgid "Proxy &IP:"
+msgstr "IP п&рокси-сервера:"
+
+#: ../../../src/uibase.cpp:379
+msgid " &Port:"
+msgstr " &Порт"
+
+#: ../../../src/uibase.cpp:392
+msgid "Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."
+msgstr "Необязательная комиссия за килобайт обеспечивает приоритет обработки перевода. Большинство транзакций имеют размер в 1КБ. Рекомендуется значение в 0.01."
+
+#: ../../../src/uibase.cpp:399
+msgid "Pay transaction fee:"
+msgstr "Комиссия:"
+
+#: ../../../src/uibase.cpp:420
+msgid "// [don't translate] Test panel 2 for future expansion"
+msgstr ""
+
+#: ../../../src/uibase.cpp:424
+msgid "// [don't translate] Let's not start multiple pages until the first page is filled up"
+msgstr ""
+
+#: ../../../src/uibase.cpp:446
+#: ../../../src/uibase.cpp:668
+#: ../../../src/uibase.cpp:727
+#: ../../../src/uibase.cpp:786
+#: ../../../src/uibase.cpp:895
+#: ../../../src/uibase.cpp:984
+msgid "Cancel"
+msgstr "Отмена"
+
+#: ../../../src/uibase.cpp:449
+msgid "&Apply"
+msgstr "&Применить"
+
+#: ../../../src/uibase.cpp:508
+msgid "Bitcoin "
+msgstr "Bitcoin "
+
+#: ../../../src/uibase.cpp:514
+msgid "version"
+msgstr "версия"
+
+#: ../../../src/uibase.cpp:525
+msgid ""
+"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"\n"
+"This is experimental software.\n"
+"\n"
+"Distributed under the MIT/X11 software license, see the accompanying file \n"
+"license.txt or http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"This product includes software developed by the OpenSSL Project for use in the \n"
+"OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
+"Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
+msgstr ""
+"Все права защищены (c) 2009-2010 Bitcoin Developers\n"
+"\n"
+"Это экспериментальное ПО.\n"
+"\n"
+"Распространяется под лицензией MIT/X11, см. файл\n"
+"license.txt или http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"Этот продукт включает ПО, разработанное проектом OpenSSL для использования в\n"
+"OpenSSL Toolkit (http://www.openssl.org/), и криптографическое ПО, написанное\n"
+"Eric Young (eay@cryptsoft.com) и UPnP программного обеспечения, написанного Thomas Bernard."
+
+#: ../../../src/uibase.cpp:581
+msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Введите адрес Bitcoin (напр. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+
+#: ../../../src/uibase.cpp:595
+msgid "Pay &To:"
+msgstr "&Кому:"
+
+#: ../../../src/uibase.cpp:610
+msgid "&Paste"
+msgstr "&Вставить"
+
+#: ../../../src/uibase.cpp:613
+msgid " Address &Book..."
+msgstr " А&дресная книга..."
+
+#: ../../../src/uibase.cpp:620
+msgid "&Amount:"
+msgstr "К&оличество:"
+
+#: ../../../src/uibase.cpp:630
+msgid "T&ransfer:"
+msgstr "&Передача:"
+
+#: ../../../src/uibase.cpp:636
+msgid " Standard"
+msgstr " Стандарт"
+
+#: ../../../src/uibase.cpp:663
+msgid "&Send"
+msgstr "Отп&равить"
+
+#: ../../../src/uibase.cpp:711
+msgid ""
+"\n"
+"\n"
+"Connecting..."
+msgstr ""
+"\n"
+"\n"
+"Подключение..."
+
+#: ../../../src/uibase.cpp:761
+msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Это ваши адреса для получения платежей.  Вы можете использовать разные для каждого отправителя, чтобы отслеживать, кто вам платит.  Выделенный адрес отображается в главном окне."
+
+#: ../../../src/uibase.cpp:774
+#: ../../../src/uibase.cpp:886
+msgid "&Edit..."
+msgstr "&Правка..."
+
+#: ../../../src/uibase.cpp:777
+#: ../../../src/uibase.cpp:889
+msgid " &New Address... "
+msgstr " &Новый адрес... "
+
+#: ../../../src/uibase.cpp:849
+msgid "Sending"
+msgstr "Отправка"
+
+#: ../../../src/uibase.cpp:857
+msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Это ваши адреса для получения платежей.  Вы можете использовать разные для каждого отправителя, чтобы отслеживать, кто вам платит.  Выделенный адрес отображается в главном окне."
+
+#: ../../../src/uibase.cpp:870
+msgid "Receiving"
+msgstr "Получение"
+
+#: ../../../src/uibase.cpp:880
+msgid "&Delete"
+msgstr "&Удалить"
+
+#: ../../../src/init.cpp:147
+msgid "Bitcoin version"
+msgstr "Bitcoin версия"
+
+#: ../../../src/init.cpp:148
+msgid "Usage:"
+msgstr "Использование"
+
+#: ../../../src/init.cpp:150
+msgid "Send command to -server or bitcoind\n"
+msgstr "Отправить команду bitcoin, запущенному с -server\n"
+
+#: ../../../src/init.cpp:151
+msgid "List commands\n"
+msgstr "Список команд\n"
+
+#: ../../../src/init.cpp:152
+msgid "Get help for a command\n"
+msgstr "Получить помощь для команды\n"
+
+#: ../../../src/init.cpp:153
+msgid "Options:\n"
+msgstr "Параметры:\n"
+
+#: ../../../src/init.cpp:154
+msgid "Specify configuration file (default: bitcoin.conf)\n"
+msgstr "Укажите конфигурационный файл (по умолчанию: bitcoin.conf)\n"
+
+#: ../../../src/init.cpp:155
+msgid "Specify pid file (default: bitcoind.pid)\n"
+msgstr "Укажите конфигурационный файл (по умолчанию: bitcoin.conf)\n"
+
+#: ../../../src/init.cpp:156
+msgid "Generate coins\n"
+msgstr "Генерировать монеты\n"
+
+#: ../../../src/init.cpp:157
+msgid "Don't generate coins\n"
+msgstr "Не генерировать монеты\n"
+
+#: ../../../src/init.cpp:158
+msgid "Start minimized\n"
+msgstr "Запускать свёрнутым\n"
+
+#: ../../../src/init.cpp:159
+msgid "Specify data directory\n"
+msgstr "Указать каталог данных\n"
+
+#: ../../../src/init.cpp:160
+msgid "Connect through socks4 proxy\n"
+msgstr "Подключаться через socks4 прокси\n"
+
+#: ../../../src/init.cpp:161
+msgid "Allow DNS lookups for addnode and connect\n"
+msgstr "Использовать DNS для добавления узлов и соединения\n"
+
+#: ../../../src/init.cpp:162
+msgid "Add a node to connect to\n"
+msgstr "Добавить узел для подключения\n"
+
+#: ../../../src/init.cpp:163
+msgid "Connect only to the specified node\n"
+msgstr "Подключаться только к указанному узлу\n"
+
+#: ../../../src/init.cpp:164
+msgid "Don't accept connections from outside\n"
+msgstr "Не принимать входящие соединения\n"
+
+#: ../../../src/init.cpp:167
+msgid "Don't attempt to use UPnP to map the listening port\n"
+msgstr "Не использовать UPnP для отображения порта входящих соединений\n"
+
+#: ../../../src/init.cpp:169
+msgid "Attempt to use UPnP to map the listening port\n"
+msgstr "Использовать UPnP для отображения порта входящих соединений\n"
+
+#: ../../../src/init.cpp:172
+msgid "Fee per KB to add to transactions you send\n"
+msgstr "Комиссия за 1 килобайт отправляемых транзакций\n"
+
+#: ../../../src/init.cpp:174
+msgid "Accept command line and JSON-RPC commands\n"
+msgstr "Принимать команды из командной строки и через JSON-RPC\n"
+
+#: ../../../src/init.cpp:177
+msgid "Run in the background as a daemon and accept commands\n"
+msgstr "Запустить в фоне как демон и принимать команды\n"
+
+#: ../../../src/init.cpp:179
+msgid "Use the test network\n"
+msgstr "Использовать тестовую сеть (testnet)\n"
+
+#: ../../../src/init.cpp:180
+msgid "Username for JSON-RPC connections\n"
+msgstr "Имя пользователя для JSON-RPC\n"
+
+#: ../../../src/init.cpp:181
+msgid "Password for JSON-RPC connections\n"
+msgstr "Пароль для JSON-RPC\n"
+
+#: ../../../src/init.cpp:182
+msgid "Listen for JSON-RPC connections on <port> (default: 8332)\n"
+msgstr "Порт входящих соединений JSON-RPC (по умолчанию 8332)\n"
+
+#: ../../../src/init.cpp:183
+msgid "Allow JSON-RPC connections from specified IP address\n"
+msgstr "Разрешить соединения JSON-RPC со следующих IP-адресов\n"
+
+#: ../../../src/init.cpp:184
+msgid "Send commands to node running on <ip> (default: 127.0.0.1)\n"
+msgstr "Посылать команды узлу с указанным адресом (по умолчанию 127.0.0.1)\n"
+
+#: ../../../src/init.cpp:185
+msgid "Set key pool size to <n> (default: 100)\n"
+msgstr "Установить размер пула адресов (по умолчанию 100)\n"
+
+#: ../../../src/init.cpp:181
+msgid "Rescan the block chain for missing wallet transactions\n"
+msgstr "Просканировать цепочку блоков в поисках утерянных переводов\n"
+
+#: ../../../src/init.cpp:182
+msgid "Purge all transactions from wallet and rescan\n"
+msgstr "Удалить все транзакции из кошелька и пересканировать цепочку блоков в поисках транзакций\n"
+
+#: ../../../src/init.cpp:190
+msgid ""
+"\n"
+"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+msgstr ""
+"\n"
+"Опции SSL: (прочтите документацию для правильной настройки)\n"
+
+#: ../../../src/init.cpp:191
+msgid "Use OpenSSL (https) for JSON-RPC connections\n"
+msgstr "Использовать OpenSSL (протокол https) для соединений JSON-RPC\n"
+
+#: ../../../src/init.cpp:192
+msgid "Server certificate file (default: server.cert)\n"
+msgstr "Файл сертификата сервера (по умолчанию server.cert)\n"
+
+#: ../../../src/init.cpp:193
+msgid "Server private key (default: server.pem)\n"
+msgstr "Приватный ключ сервера (по умолчанию server.pem)\n"
+
+#: ../../../src/init.cpp:194
+msgid "Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+msgstr "Приемлемые шифры (по умолчанию TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+
+#: ../../../src/init.cpp:198
+msgid "This help message\n"
+msgstr "Эта справка\n"
+
+#: ../../../src/init.cpp:335
+#, c-format
+msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
+msgstr "Не удаётся получить блокировку каталога с данными %s. Возможно, Bitcoin уже запущен."
+
+#: ../../../src/init.cpp:361
+msgid "Error loading addr.dat      \n"
+msgstr "Ошибка загрузки addr.dat      \n"
+
+#: ../../../src/init.cpp:367
+msgid "Error loading blkindex.dat      \n"
+msgstr "Ошибка загрузки blkindex.dat      \n"
+
+#: ../../../src/init.cpp:374
+msgid "Error loading wallet.dat      \n"
+msgstr "Ошибка загрузки wallet.dat      \n"
+
+#: ../../../src/init.cpp:454
+msgid "Invalid -proxy address"
+msgstr "Неверный адрес -proxy"
+
+#: ../../../src/init.cpp:477
+msgid "Invalid amount for -paytxfee=<amount>"
+msgstr "Неверное значение для -paytxfee=<amount>"
+
+#: ../../../src/init.cpp:481
+msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
+msgstr "Внимание: -paytxfee установлено в очень большое значение. Это комиссия, которую вы будете платить при переводе."
+
+#: ../../../src/uibase.h:147
+msgid "Transaction Details"
+msgstr "Подробности транзакции"
+
+#: ../../../src/uibase.h:199
+msgid "Options"
+msgstr "Опции"
+
+#: ../../../src/uibase.h:228
+msgid "About Bitcoin"
+msgstr "О Bitcoin"
+
+#: ../../../src/uibase.h:337
+msgid "Your Bitcoin Addresses"
+msgstr "Ваш адрес Bitcoin"
+
+#~ msgid ""
+#~ "Error: This is an oversized transaction that requires a transaction fee "
+#~ "of %s  "
+#~ msgstr ""
+#~ "Ошибка: этот перевод слишком большого размера, который требует комиссию "
+#~ "%s  "
+
+#~ msgid "version %s%s BETA"
+#~ msgstr "версия %s%s бета"
+
+#~ msgid "n/a"
+#~ msgstr "н/д"
+
+#~ msgid "Can't include a message when sending to a Bitcoin address"
+#~ msgstr "Не удаётся включить сообщение при отправке на адрес Bitcoin"
+
+#~ msgid ""
+#~ "This is an oversized transaction that requires a transaction fee of %s"
+#~ msgstr "Это слишком большой перевод, который требует комиссию в размере %s"
+
+#~ msgid ""
+#~ "Optional transaction fee you give to the nodes that process your "
+#~ "transactions."
+#~ msgstr ""
+#~ "Необязательная комиссия, которую вы даёте узлам, проводящим ваш перевод."
+
+#~ msgid "&Limit coin generation to"
+#~ msgstr "&Ограничить генерацию монет до"
+
+#~ msgid "processors"
+#~ msgstr "процессоров"
+
+#~ msgid "&From:"
+#~ msgstr "О&т:"
+
+#~ msgid "&Message:"
+#~ msgstr "&Сообщение:"
+
+#~ msgid ""
+#~ "It's good policy to use a new address for each payment you receive.\n"
+#~ "\n"
+#~ "Label"
+#~ msgstr ""
+#~ "Неплохо будет использовать новый адрес для каждого получаемого платежа.\n"
+#~ "\n"
+#~ "Метка"
+
+#~ msgid "Will appear as \"From: Unknown\""
+#~ msgstr "Будет отображаться как \"От: Аноним\""

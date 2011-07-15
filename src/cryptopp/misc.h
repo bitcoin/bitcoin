@@ -1,8 +1,8 @@
 #ifndef CRYPTOPP_MISC_H
 #define CRYPTOPP_MISC_H
 
-#include "cryptopp/cryptlib.h"
-#include "cryptopp/smartptr.h"
+#include "cryptlib.h"
+#include "smartptr.h"
 #include <string.h>		// for memcpy and memmove
 
 #ifdef _MSC_VER
