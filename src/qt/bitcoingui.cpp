@@ -55,14 +55,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Menus
     QMenu *file = menuBar()->addMenu("&File");
-    file->addAction(sendCoinsAction);
-    file->addAction(receiveCoinsAction);
+    file->addAction(optionsAction);
     file->addSeparator();
     file->addAction(quitAction);
     
-    QMenu *settings = menuBar()->addMenu("&Settings");
-    settings->addAction(optionsAction);
-
     QMenu *help = menuBar()->addMenu("&Help");
     help->addAction(aboutAction);
     
