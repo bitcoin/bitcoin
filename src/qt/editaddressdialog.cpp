@@ -79,23 +79,22 @@ QString EditAddressDialog::saveCurrentRow()
 
 void EditAddressDialog::accept()
 {
-    if(mode == NewSendingAddress || mode == EditSendingAddress)
+    if(saveCurrentRow().isEmpty())
     {
-        // For sending addresses, check validity
-        // Not needed for receiving addresses, as those are generated
-        if(!model->validateAddress(ui->addressEdit->text()))
+        switch(model->getEditStatus())
         {
+        case AddressTableModel::DUPLICATE_ADDRESS:
+            QMessageBox::warning(this, windowTitle(),
+                tr("The entered address \"%1\" is already in the address book.").arg(ui->addressEdit->text()),
+                QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
                 tr("The entered address \"%1\" is not a valid bitcoin address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
-    }
-    if(saveCurrentRow().isEmpty())
-    {
-        QMessageBox::warning(this, windowTitle(),
-            tr("The entered address \"%1\" is already in the address book.").arg(ui->addressEdit->text()),
-            QMessageBox::Ok, QMessageBox::Ok);
+
         return;
     }
     QDialog::accept();

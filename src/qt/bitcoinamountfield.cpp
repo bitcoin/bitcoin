@@ -1,4 +1,5 @@
 #include "bitcoinamountfield.h"
+#include "qvalidatedlineedit.h"
 
 #include <QLabel>
 #include <QLineEdit>
@@ -9,12 +10,12 @@
 BitcoinAmountField::BitcoinAmountField(QWidget *parent):
         QWidget(parent), amount(0), decimals(0)
 {
-    amount = new QLineEdit(this);
+    amount = new QValidatedLineEdit(this);
     amount->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
     amount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     amount->installEventFilter(this);
     amount->setMaximumWidth(100);
-    decimals = new QLineEdit(this);
+    decimals = new QValidatedLineEdit(this);
     decimals->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
     decimals->setMaxLength(8);
     decimals->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
@@ -29,8 +30,9 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     layout->addStretch(1);
     layout->setContentsMargins(0,0,0,0);
 
-    setFocusPolicy(Qt::TabFocus);
     setLayout(layout);
+
+    setFocusPolicy(Qt::TabFocus);
     setFocusProxy(amount);
 
     // If one if the widgets changes, the combined content changes as well
@@ -53,10 +55,28 @@ void BitcoinAmountField::setText(const QString &text)
     }
 }
 
+bool BitcoinAmountField::validate()
+{
+    bool valid = true;
+    if(amount->text().isEmpty())
+    {
+        amount->setValid(false);
+        valid = false;
+    }
+    if(decimals->text().isEmpty())
+    {
+        decimals->setValid(false);
+        valid = false;
+    }
+    return valid;
+}
+
 QString BitcoinAmountField::text() const
 {
     if(amount->text().isEmpty() || decimals->text().isEmpty())
+    {
         return QString();
+    }
     return amount->text() + QString(".") + decimals->text();
 }
 
@@ -74,4 +94,11 @@ bool BitcoinAmountField::eventFilter(QObject *object, QEvent *event)
         }
     }
     return false;
+}
+
+QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
+{
+    QWidget::setTabOrder(prev, amount);
+    QWidget::setTabOrder(amount, decimals);
+    return decimals;
 }

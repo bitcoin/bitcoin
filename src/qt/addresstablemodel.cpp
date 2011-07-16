@@ -1,5 +1,6 @@
 #include "addresstablemodel.h"
 #include "guiutil.h"
+#include "walletmodel.h"
 
 #include "headers.h"
 
@@ -72,8 +73,8 @@ struct AddressTablePriv
     }
 };
 
-AddressTableModel::AddressTableModel(CWallet *wallet, QObject *parent) :
-    QAbstractTableModel(parent),wallet(wallet),priv(0)
+AddressTableModel::AddressTableModel(CWallet *wallet, WalletModel *parent) :
+    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
     columns << tr("Label") << tr("Address");
     priv = new AddressTablePriv(wallet);
@@ -150,6 +151,8 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
         return false;
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
 
+    editStatus = OK;
+
     if(role == Qt::EditRole)
     {
         switch(index.column())
@@ -160,8 +163,11 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
             break;
         case Address:
             // Refuse to set invalid address
-            if(!validateAddress(value.toString()))
+            if(!walletModel->validateAddress(value.toString()))
+            {
+                editStatus = INVALID_ADDRESS;
                 return false;
+            }
             // Double-check that we're not overwriting receiving address
             if(rec->type == AddressTableEntry::Sending)
             {
@@ -240,13 +246,22 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
 
+    editStatus = OK;
+
+
     if(type == Send)
     {
+        if(!walletModel->validateAddress(address))
+        {
+            editStatus = INVALID_ADDRESS;
+            return QString();
+        }
         // Check for duplicate
         CRITICAL_BLOCK(wallet->cs_mapAddressBook)
         {
             if(wallet->mapAddressBook.count(strAddress))
             {
+                editStatus = DUPLICATE_ADDRESS;
                 return QString();
             }
         }
@@ -289,13 +304,6 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex & paren
 void AddressTableModel::update()
 {
 
-}
-
-bool AddressTableModel::validateAddress(const QString &address)
-{
-    uint160 hash160 = 0;
-
-    return AddressToHash160(address.toStdString(), hash160);
 }
 
 /* Look up label for address in address book, if not found return empty string.

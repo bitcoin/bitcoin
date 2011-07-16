@@ -57,5 +57,11 @@ QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) co
         }
     }
 
+    // Empty address is "intermediate" input
+    if(input.isEmpty())
+    {
+        state = QValidator::Intermediate;
+    }
+
     return state;
 }

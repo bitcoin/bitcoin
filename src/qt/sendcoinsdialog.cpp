@@ -1,43 +1,40 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
 #include "walletmodel.h"
-#include "addresstablemodel.h"
 #include "guiutil.h"
-
 #include "addressbookpage.h"
 #include "optionsmodel.h"
+#include "sendcoinsentry.h"
 
-#include <QApplication>
-#include <QClipboard>
+
 #include <QMessageBox>
 #include <QLocale>
 #include <QDebug>
-#include <QMessageBox>
 
-SendCoinsDialog::SendCoinsDialog(QWidget *parent, const QString &address) :
+SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
     model(0)
 {
     ui->setupUi(this);
-#if QT_VERSION >= 0x040700
-    ui->payTo->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
-    ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
-#endif
 
-    GUIUtil::setupAddressWidget(ui->payTo, this);
+    addEntry();
 
-    // Set initial send-to address if provided
-    if(!address.isEmpty())
-    {
-        ui->payTo->setText(address);
-        ui->payAmount->setFocus();
-    }
+    connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addEntry()));
 }
 
 void SendCoinsDialog::setModel(WalletModel *model)
 {
     this->model = model;
+
+    for(int i = 0; i < ui->entries->count(); ++i)
+    {
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            entry->setModel(model);
+        }
+    }
 }
 
 SendCoinsDialog::~SendCoinsDialog()
@@ -47,26 +44,38 @@ SendCoinsDialog::~SendCoinsDialog()
 
 void SendCoinsDialog::on_sendButton_clicked()
 {
-    bool valid;
-    QString payAmount = ui->payAmount->text();
-    QString label;
-    qint64 payAmountParsed;
-
-    valid = GUIUtil::parseMoney(payAmount, &payAmountParsed);
-
-    if(!valid || payAmount.isEmpty())
+    QList<SendCoinsRecipient> recipients;
+    bool valid = true;
+    for(int i = 0; i < ui->entries->count(); ++i)
     {
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Must fill in an amount to pay."),
-            QMessageBox::Ok, QMessageBox::Ok);
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            if(entry->validate())
+            {
+                recipients.append(entry->getValue());
+            }
+            else
+            {
+                valid = false;
+            }
+        }
+    }
+
+    if(!valid || recipients.isEmpty())
+    {
         return;
     }
 
-    // Add address to address book under label, if specified
-    label = ui->addAsLabel->text();
+    // Format confirmation message
+    QStringList formatted;
+    foreach(const SendCoinsRecipient &rcp, recipients)
+    {
+        formatted.append(tr("%1 BTC to %2 (%3)").arg(GUIUtil::formatMoney(rcp.amount), rcp.label, rcp.address));
+    }
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
-                          tr("Are you sure you want to send %1 BTC to %2 (%3)?").arg(GUIUtil::formatMoney(payAmountParsed), label, ui->payTo->text()),
+                          tr("Are you sure you want to send %1?").arg(formatted.join(tr(" and "))),
           QMessageBox::Yes|QMessageBox::Cancel,
           QMessageBox::Cancel);
 
@@ -75,32 +84,45 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    switch(model->sendCoins(ui->payTo->text(), payAmountParsed, label))
+    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients);
+    switch(sendstatus.status)
     {
     case WalletModel::InvalidAddress:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("The recepient address is not valid, please recheck."),
             QMessageBox::Ok, QMessageBox::Ok);
-        ui->payTo->setFocus();
         break;
     case WalletModel::InvalidAmount:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("The amount to pay must be larger than 0."),
             QMessageBox::Ok, QMessageBox::Ok);
-        ui->payAmount->setFocus();
         break;
     case WalletModel::AmountExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Amount exceeds your balance"),
             QMessageBox::Ok, QMessageBox::Ok);
-        ui->payAmount->setFocus();
         break;
     case WalletModel::AmountWithFeeExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Total exceeds your balance when the %1 transaction fee is included").
-            arg(GUIUtil::formatMoney(model->getOptionsModel()->getTransactionFee())),
+            arg(GUIUtil::formatMoney(sendstatus.fee)),
             QMessageBox::Ok, QMessageBox::Ok);
-        ui->payAmount->setFocus();
+        break;
+    case WalletModel::DuplicateAddress:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Duplicate address found, can only send to each address once in one send operation"),
+            QMessageBox::Ok, QMessageBox::Ok);
+        break;
+    case WalletModel::TransactionCreationFailed:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Error: Transaction creation failed  "),
+            QMessageBox::Ok, QMessageBox::Ok);
+        break;
+        break;
+    case WalletModel::TransactionCommitFailed:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."),
+            QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::OK:
         accept();
@@ -108,34 +130,23 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
 }
 
-void SendCoinsDialog::on_pasteButton_clicked()
-{
-    // Paste text from clipboard into recipient field
-    ui->payTo->setText(QApplication::clipboard()->text());
-}
-
-void SendCoinsDialog::on_addressBookButton_clicked()
-{
-    AddressBookPage dlg(AddressBookPage::ForSending, AddressBookPage::SendingTab, this);
-    dlg.setModel(model->getAddressTableModel());
-    if(dlg.exec())
-    {
-        ui->payTo->setText(dlg.getReturnValue());
-        ui->payAmount->setFocus();
-    }
-}
-
-void SendCoinsDialog::on_payTo_textChanged(const QString &address)
-{
-    ui->addAsLabel->setText(model->getAddressTableModel()->labelForAddress(address));
-}
-
 void SendCoinsDialog::clear()
 {
-    ui->payTo->setText(QString());
-    ui->addAsLabel->setText(QString());
-    ui->payAmount->setText(QString());
-    ui->payTo->setFocus();
+    // Remove entries until only one left
+    while(ui->entries->count() > 1)
+    {
+        delete ui->entries->takeAt(0)->widget();
+    }
+
+    // Reset the entry that is left to empty
+    SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
+    if(entry)
+    {
+        entry->clear();
+    }
+
+    updateRemoveEnabled();
+
     ui->sendButton->setDefault(true);
 }
 
@@ -147,4 +158,53 @@ void SendCoinsDialog::reject()
 void SendCoinsDialog::accept()
 {
     clear();
+}
+
+void SendCoinsDialog::addEntry()
+{
+    SendCoinsEntry *entry = new SendCoinsEntry(this);
+    entry->setModel(model);
+    ui->entries->addWidget(entry);
+    connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
+
+    updateRemoveEnabled();
+
+    // Focus the field, so that entry can start immediately
+    entry->clear();
+}
+
+void SendCoinsDialog::updateRemoveEnabled()
+{
+    // Remove buttons are enabled as soon as there is more than one send-entry
+    bool enabled = (ui->entries->count() > 1);
+    for(int i = 0; i < ui->entries->count(); ++i)
+    {
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            entry->setRemoveEnabled(enabled);
+        }
+    }
+    setupTabChain(0);
+}
+
+void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
+{
+    delete entry;
+    updateRemoveEnabled();
+}
+
+QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
+{
+    for(int i = 0; i < ui->entries->count(); ++i)
+    {
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            prev = entry->setupTabChain(prev);
+        }
+    }
+    QWidget::setTabOrder(prev, ui->addButton);
+    QWidget::setTabOrder(ui->addButton, ui->sendButton);
+    return ui->sendButton;
 }

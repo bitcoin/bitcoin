@@ -31,6 +31,7 @@
         <file alias="export">res/icons/export.png</file>
         <file alias="synced">res/icons/synced.png</file>
         <file alias="notsynced">res/icons/notsynced.png</file>
+        <file>res/icons/remove.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>

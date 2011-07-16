@@ -84,7 +84,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/overviewpage.h \
     src/qt/csvmodelwriter.h \
     src/qt/qtwin.h \
-    src/crypter.h
+    src/crypter.h \
+    src/qt/sendcoinsentry.h \
+    src/qt/qvalidatedlineedit.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -124,7 +126,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/overviewpage.cpp \
     src/qt/csvmodelwriter.cpp \
     src/qt/qtwin.cpp \
-    src/crypter.cpp
+    src/crypter.cpp \
+    src/qt/sendcoinsentry.cpp \
+    src/qt/qvalidatedlineedit.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -135,7 +139,8 @@ FORMS += \
     src/qt/forms/aboutdialog.ui \
     src/qt/forms/editaddressdialog.ui \
     src/qt/forms/transactiondescdialog.ui \
-    src/qt/forms/overviewpage.ui
+    src/qt/forms/overviewpage.ui \
+    src/qt/forms/sendcoinsentry.ui
 
 CODECFORTR = UTF-8
 TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts

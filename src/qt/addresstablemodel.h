@@ -6,12 +6,13 @@
 
 class AddressTablePriv;
 class CWallet;
+class WalletModel;
 
 class AddressTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit AddressTableModel(CWallet *wallet, QObject *parent = 0);
+    explicit AddressTableModel(CWallet *wallet, WalletModel *parent = 0);
     ~AddressTableModel();
 
     enum ColumnIndex {
@@ -19,9 +20,16 @@ public:
         Address = 1  /* Bitcoin address */
     };
 
-    enum {
+    enum RoleIndex {
         TypeRole = Qt::UserRole
-    } RoleIndex;
+    };
+
+    // Return status of last edit/insert operation
+    enum EditStatus {
+        OK = 0,
+        INVALID_ADDRESS = 1,
+        DUPLICATE_ADDRESS = 2
+    };
 
     static const QString Send; /* Send addres */
     static const QString Receive; /* Receive address */
@@ -45,10 +53,6 @@ public:
      */
     void updateList();
 
-    /* Check address for validity
-     */
-    bool validateAddress(const QString &address);
-
     /* Look up label for address in address book, if not found return empty string.
      */
     QString labelForAddress(const QString &address) const;
@@ -58,10 +62,14 @@ public:
      */
     int lookupAddress(const QString &address) const;
 
+    EditStatus getEditStatus() const { return editStatus; }
+
 private:
+    WalletModel *walletModel;
     CWallet *wallet;
     AddressTablePriv *priv;
     QStringList columns;
+    EditStatus editStatus;
 
 signals:
     void defaultAddressChanged(const QString &address);

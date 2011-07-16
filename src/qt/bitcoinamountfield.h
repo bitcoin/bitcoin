@@ -4,7 +4,7 @@
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
-class QLineEdit;
+class QValidatedLineEdit;
 QT_END_NAMESPACE
 
 // Coin amount entry widget with separate parts for whole
@@ -18,6 +18,10 @@ public:
 
     void setText(const QString &text);
     QString text() const;
+    bool validate();
+    // Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907)
+    // Hence we have to set it up manually
+    QWidget *setupTabChain(QWidget *prev);
 
 signals:
     void textChanged();
@@ -27,8 +31,8 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    QLineEdit *amount;
-    QLineEdit *decimals;
+    QValidatedLineEdit *amount;
+    QValidatedLineEdit *decimals;
 };
 
 

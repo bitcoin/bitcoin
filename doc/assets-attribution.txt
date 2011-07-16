@@ -29,7 +29,7 @@ License: You are free to do with these icons as you wish, including selling,
 Icon: src/qt/res/icons/configure.png, src/qt/res/icons/quit.png,
       src/qt/res/icons/editcopy.png, src/qt/res/icons/editpaste.png,
       src/qt/res/icons/add.png, src/qt/res/icons/edit.png,
-      src/qt/res/icons/editdelete.png
+      src/qt/res/icons/editdelete.png, src/qt/res/icons/remove.png (edited)
 Designer: http://www.everaldo.com
 Icon Pack: Crystal SVG
 License: LGPL
