@@ -3,7 +3,7 @@ Bitcoin-qt: Qt4 based GUI replacement for Bitcoin
 
 **Warning** **Warning** **Warning**
 
-Pre-alpha stuff! I'm using this client myself on the production network, and I haven't noticed any glitches, but remember: always backup your wallet.
+Alpha version! I'm using this client myself on the production network, and I haven't noticed any glitches, but remember: always backup your wallet.
 Testing on the testnet is recommended.
 
 This has been implemented:
@@ -27,6 +27,8 @@ This has been implemented:
 - Shows alternative icon when connected to testnet
 
 - Progress bar on initial block download
+
+- Sendmany support
 
 This has to be done:
 
