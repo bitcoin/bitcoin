@@ -28,7 +28,7 @@ This has been implemented:
 
 - Progress bar on initial block download
 
-- Sendmany support
+- Sendmany support in UI (send to multiple recipients as well)
 
 This has to be done:
 
