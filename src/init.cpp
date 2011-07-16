@@ -163,9 +163,12 @@ void PrintHelp()
         ss << endl;
         ss << _("Usage:") << endl;
         ss << "  bitcoin [options]                     " << endl;
-        ss << "  bitcoin [options] <command> [params]  " << _("Send command to -server or bitcoind") << endl;
-        ss << "  bitcoin [options] help                " << _("List commands") << endl;
-        ss << "  bitcoin [options] help <command>      " << _("Get help for a command") << endl;
+        ss << "  bitcoin [options] <command> [params]  "
+           << _("Send command to -server or bitcoind") << endl;
+        ss << "  bitcoin [options] help                "
+           << _("List commands") << endl;
+        ss << "  bitcoin [options] help <command>      "
+           << _("Get help for a command") << endl;
         ss << endl;
         ss << _("Options:") << endl;
         ss << GetOptionsDescriptions("init", "show");
@@ -289,7 +292,7 @@ bool AppInit2(int argc, char* argv[])
     strConfigFile = pathConfigFile.string();
 
     if (+confOpt && !fs::exists(pathConfigFile)) {
-        strErrors += string() + _("Error: Specified configuration file does not exist");
+        strErrors += _("Error: Specified configuration file does not exist");
         wxMessageBox(strErrors, "Bitcoin");
         exit(1);
     }
@@ -307,7 +310,7 @@ bool AppInit2(int argc, char* argv[])
         pathDataDir = fs::system_complete(datadirOpt());
         if (!fs::is_directory(pathDataDir))
         {
-            strErrors += string() + _("Error: Specified directory does not exist");
+            strErrors += _("Error: Specified directory does not exist");
             wxMessageBox(strErrors, "Bitcoin");
             exit(1);
         }
@@ -322,8 +325,6 @@ bool AppInit2(int argc, char* argv[])
         pathDataDir = pathDataDir / "testnet";
         if (!fs::exists(pathDataDir))
             fs::create_directory(pathDataDir);
-
-        cerr << _("Using testnet!") << " (datadir: " << pathDataDir << ")" << endl;
     }
 
     strDataDir = pathDataDir.string();
@@ -365,7 +366,7 @@ bool AppInit2(int argc, char* argv[])
         pid_t pid = fork();
         if (pid < 0)
         {
-            fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+            fprintf(stderr, "Error: fork() errno %d\n", errno);
             return false;
         }
         if (pid > 0)
@@ -374,14 +375,13 @@ bool AppInit2(int argc, char* argv[])
             if (!path.is_complete())
                 path =  pathDataDir / path;
             pathPidFile = path;
-            fs::ofstream PidFile(pathPidFile);
-            PidFile << pid << endl;;
+            fs::ofstream(pathPidFile) << pid << endl;;
             return true;
         }
 
         pid_t sid = setsid();
         if (sid < 0)
-            fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+            fprintf(stderr, "Error: setsid() errno %d\n", errno);
     }
 #endif
 
@@ -391,8 +391,13 @@ bool AppInit2(int argc, char* argv[])
     printf("Bitcoin version %s\n", FormatFullVersion().c_str());
 #ifdef GUI
     printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
-    printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
-    printf("Language file %s (%s)\n", (string("locale/") + (string)g_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)g_locale.GetLocale()).c_str());
+    printf("System default language is %d %s\n",
+           g_locale.GetSystemLanguage(),
+           ((string)g_locale.GetSysName()).c_str());
+    printf("Language file %s (%s)\n",
+           (string("locale/") + (string)g_locale.GetCanonicalName() +
+            "/LC_MESSAGES/bitcoin.mo").c_str(),
+           ((string)g_locale.GetLocale()).c_str());
 #endif
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
     printf("Using data directory %s\n", strDataDir.c_str());
@@ -445,18 +450,21 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
+    //
     // Make sure only a single bitcoin process is using the data directory.
-    string strLockFile = GetDataDir() + "/.lock";
-    FILE* file = fopen(strLockFile.c_str(), "a"); // empty lock file; created if it doesn't exist.
-    if (file) fclose(file);
-    static boost::interprocess::file_lock lock(strLockFile.c_str());
+    //
+    fs::path pathLockFile = pathDataDir / ".lock";
+    if (!fs::exists(pathLockFile))  // create empty .lock if it doesn't exist
+        fs::ofstream(pathLockFile).close();
+    static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
     {
         wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), "Bitcoin");
         return false;
     }
 
-    // Bind to the port early so we can tell if another instance is already running.
+    // Bind to the port early so we can tell if another instance is
+    // already running.
     if (!BindListenPort(strErrors))
     {
         wxMessageBox(strErrors, "Bitcoin");
@@ -474,13 +482,13 @@ bool AppInit2(int argc, char* argv[])
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
     if (!LoadAddresses())
-        strErrors += string() + _("Error loading") + " addr.dat\n";
+        strErrors += string(_("Error loading")) + " addr.dat\n";
     printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
-        strErrors += string() + _("Error loading") + " blkindex.dat\n";
+        strErrors += string(_("Error loading")) + " blkindex.dat\n";
     printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     printf("Loading wallet...\n");
@@ -491,11 +499,13 @@ bool AppInit2(int argc, char* argv[])
     if (nLoadWalletRet != DB_LOAD_OK)
     {
         if (nLoadWalletRet == DB_CORRUPT)
-            strErrors += strprintf(_("Error loading %s, Wallet corrupted"), "wallet.dat") + "\n";
+            strErrors += string(_("Error loading")) + "wallet.dat" + ", " +
+                _("Wallet corrupted") + "\n";
         else if (nLoadWalletRet == DB_TOO_NEW)
-            strErrors += strprintf(_("Error loading %s, Wallet requires newer version of Bitcoin"), "wallet.dat") + "\n";
+            strErrors += string(_("Error loading")) + "wallet.dat" + ", " +
+                _("Wallet requires newer version of Bitcoin") + "\n";
         else
-            strErrors += string() + _("Error loading") + " wallet.dat\n";
+            strErrors += string(_("Error loading")) + " wallet.dat\n";
     }
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
@@ -513,7 +523,9 @@ bool AppInit2(int argc, char* argv[])
     }
     if (pindexBest != pindexRescan)
     {
-        printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
+        printf("Rescanning last %i blocks (from block %i)...\n",
+               pindexBest->nHeight - pindexRescan->nHeight,
+               pindexRescan->nHeight);
         nStart = GetTimeMillis();
         pwalletMain->ScanForWalletTransactions(pindexRescan, true);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);

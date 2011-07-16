@@ -17,13 +17,13 @@
 // This file is a custom Bitcoin-like binding to boost::program_options
 
 using namespace std;
-using namespace boost;
-
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
 
-void validate(boost::any& v, const std::vector<std::string>& values, money* target_type, int)
+static void validate(
+    boost::any& v, const std::vector<std::string>& values,
+    money* target_type, int)
 {
     po::validators::check_first_occurrence(v);
     const string& s = po::validators::get_single_string(values);
@@ -31,7 +31,7 @@ void validate(boost::any& v, const std::vector<std::string>& values, money* targ
     if (!ParseMoney(s, value))
         throw po::validation_error(po::validation_error::invalid_option_value);
     else
-        v = any(money(value));
+        v = boost::any(money(value));
 }
 
 
@@ -64,9 +64,10 @@ void option<T>::notify(const T &val)
 }
 
 template <typename T>
-option<T>::option(const char *optGroup, const char *optClass,
-                  const char *optName, const T &def,
-                  const char *argDesc, const char *optDesc)
+option<T>::option(
+    const char *optGroup, const char *optClass,
+    const char *optName, const T &def,
+    const char *argDesc, const char *optDesc)
 {
     defined = false;
     value = def;
@@ -78,14 +79,16 @@ option<T>::option(const char *optGroup, const char *optClass,
     d.optDesc = optDesc;
     allOptionsDesc().push_back(d);
 
-    boost::function1<void, const T&> f = (lambda::_1 ->* &option<T>::notify)(this);
+    boost::function1<void, const T&> f =
+        (boost::lambda::_1 ->* &option<T>::notify)(this);
     allOptions().add_options()(optName, po::value<T>(&value)->notifier(f));
 }
 
 template <typename T>
-option<T>::option(const char *optGroup, const char *optClass,
-                  const char *optName, const T &def, const T &imp,
-                  const char *argDesc, const char *optDesc)
+option<T>::option(
+    const char *optGroup, const char *optClass,
+    const char *optName, const T &def, const T &imp,
+    const char *argDesc, const char *optDesc)
 {
     defined = false;
     value = def;
@@ -97,8 +100,10 @@ option<T>::option(const char *optGroup, const char *optClass,
     d.optDesc = optDesc;
     allOptionsDesc().push_back(d);
 
-    boost::function1<void, const T&> f = (lambda::_1 ->* &option<T>::notify)(this);
-    allOptions().add_options()(optName, po::value<T>(&value)->implicit_value(imp,"")->notifier(f));
+    boost::function1<void, const T&> f =
+        (boost::lambda::_1 ->* &option<T>::notify)(this);
+    allOptions().add_options()
+        (optName, po::value<T>(&value)->implicit_value(imp,"")->notifier(f));
 }
 
 template class option<bool>;
@@ -110,7 +115,7 @@ template class option<vector<string> >;
 
 static po::variables_map vmBase;
 
-pair<string, string> CustomOptionParser(const string& s)
+static pair<string, string> CustomOptionParser(const string& s)
 {
     if (s.size() < 2 || !IsSwitchChar(s[0]) || s[1] == '-')
         return make_pair(string(), string());
@@ -125,17 +130,22 @@ pair<string, string> CustomOptionParser(const string& s)
 
 bool ParseCommandLine(int argc, char **argv, string &strErrors)
 {
-    int opt_style =
+    int optStyle =
         po::command_line_style::allow_long |
-        po::command_line_style::long_allow_adjacent ;
+        po::command_line_style::long_allow_adjacent;
+
+    po::command_line_parser parser(argc, argv);
+    parser.extra_parser(CustomOptionParser);
+    parser.style(optStyle);
+    parser.options(allOptions());
 
     try
     {
-        po::store(po::command_line_parser(argc, argv).extra_parser(CustomOptionParser).style(opt_style).options(allOptions()).run(), vmBase);
+        po::store(parser.run(), vmBase);
     }
     catch (po::error &e)
     {
-        strErrors += string() + _("Error on command line:") + " " + e.what();
+        strErrors += string(_("Error on command line:")) + " " + e.what();
         return false;
     }
     po::notify(vmBase);
@@ -152,19 +162,20 @@ bool ParseConfigFile(string &strErrors)
     }
     catch (po::error &e)
     {
-        strErrors += string() + _("Error in configuration file:") + " " + e.what();
+        strErrors += string(_("Error in configuration file:")) + " " + e.what();
         return false;
     }
     po::notify(vm);
     return true;
 }
 
-bool optdescSortGroup(optattr d1, optattr d2)
+static bool optdescSortGroup(optattr d1, optattr d2)
 {
     return strcmp(d1.optGroup, d2.optGroup) < 0;
 }
 
-string GetOptionsDescriptions(const string &groupMasks, const string &classMasks, bool showgroups)
+string GetOptionsDescriptions(
+    const string &groupMasks, const string &classMasks, bool showgroups)
 {
     int pad = 24;
 
@@ -208,11 +219,11 @@ string GetOptionsDescriptions(const string &groupMasks, const string &classMasks
                 ss << "(" << d.optGroup << ")" << endl;
                 groupdisplayed = true;
             }
-            string optUsage = string() + "  -" + d.optName;
+            string optUsage = string("  -") + d.optName;
             if (d.argDesc) optUsage += d.argDesc;
             if (optUsage.size() >= pad) optUsage += "  \t";
             else optUsage.resize(pad, ' ');
-            if (d.optDesc) optUsage += string() + " " + d.optDesc;
+            if (d.optDesc) optUsage += string(" ") + d.optDesc;
             ss << optUsage << endl;
         }
     }

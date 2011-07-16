@@ -166,10 +166,8 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
 
         if (!fileout)
         {
-            char pszFile[MAX_PATH+100];
-            strlcpy(pszFile, strDataDir.c_str(), sizeof(pszFile));
-            strlcat(pszFile, "/debug.log", sizeof(pszFile));
-            fileout = fopen(pszFile, "a");
+            string strFile = strDataDir + "/debug.log";
+            fileout = fopen(strFile.c_str(), "a");
             if (fileout) setbuf(fileout, NULL); // unbuffered
         }
         if (fileout)
