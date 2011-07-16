@@ -29,7 +29,6 @@
 #ifdef GUI
 #include <wx/wx.h>
 #include <wx/stdpaths.h>
-#include <wx/snglinst.h>
 #include <wx/utils.h>
 #include <wx/clipbrd.h>
 #include <wx/taskbar.h>
