@@ -401,6 +401,18 @@ public:
         return Write(std::make_pair(std::string("key"), vchPubKey), vchPrivKey, false);
     }
 
+    bool EraseKey(const std::vector<unsigned char>& vchPubKey)
+    {
+        nWalletDBUpdated++;
+        return Erase(std::make_pair(std::string("key"), vchPubKey));
+    }
+
+    bool EraseCryptedKey(const std::vector<unsigned char>& vchPubKey)
+    {
+        nWalletDBUpdated++;
+        return Erase(std::make_pair(std::string("ckey"), vchPubKey));
+    }
+
     bool WriteCryptedKey(const std::vector<unsigned char>& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, bool fEraseUnencryptedKey = true)
     {
         nWalletDBUpdated++;

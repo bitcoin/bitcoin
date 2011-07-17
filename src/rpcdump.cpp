@@ -27,24 +27,6 @@ using namespace std;
 
 extern Object JSONRPCError(int code, const string& message);
 
-class CTxDump
-{
-public:
-    CBlockIndex *pindex;
-    int64 nValue;
-    bool fSpent;
-    CWalletTx* ptx;
-    int nOut;
-    CTxDump(CWalletTx* ptx = NULL, int nOut = -1)
-    {
-        pindex = NULL;
-        nValue = 0;
-        fSpent = false;
-        this->ptx = ptx;
-        this->nOut = nOut;
-    }
-};
-
 Value importprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
@@ -82,6 +64,40 @@ Value importprivkey(const Array& params, bool fHelp)
 
     return Value::null;
 }
+
+Value removeprivkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "removeprivkey <bitcoinprivkey>\n"
+            "Removes a private key (as returned by dumpprivkey) from your wallet.\n"
+            "Warning: this will remove transactions from your wallet, and may change the balance of unrelated accounts.\n");
+
+    string strSecret = params[0].get_str();
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(strSecret);
+
+    if (!fGood) throw JSONRPCError(-5,"Invalid private key");
+
+    CKey key;
+    key.SetSecret(vchSecret.GetSecret());
+    CBitcoinAddress address(key.GetPubKey());
+
+    CRITICAL_BLOCK(pwalletMain->cs_wallet)
+    {
+        pwalletMain->MarkDirty();
+        if (!pwalletMain->RemoveKey(address))
+            throw JSONRPCError(-4,"Error removing key from wallet");
+
+        pwalletMain->DelAddressBookName(address);
+    }
+
+    MainFrameRepaint();
+
+    return Value::null;
+}
+
+
 
 Value dumpprivkey(const Array& params, bool fHelp)
 {
