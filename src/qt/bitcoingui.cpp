@@ -292,17 +292,21 @@ void BitcoinGUI::setNumConnections(int count)
 void BitcoinGUI::setNumBlocks(int count)
 {
     int total = clientModel->getTotalBlocksEstimate();
+    QString tooltip;
+
     if(count < total)
     {
         progressBarLabel->setVisible(true);
         progressBar->setVisible(true);
         progressBar->setMaximum(total);
         progressBar->setValue(count);
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history.").arg(count).arg(total);
     }
     else
     {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
+        tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
 
     QDateTime now = QDateTime::currentDateTime();
@@ -329,10 +333,13 @@ void BitcoinGUI::setNumBlocks(int count)
     {
         text = tr("%n day(s) ago","",secs/(60*60*24));
     }
+    tooltip += QString("\n");
+    tooltip += tr("Last block was generated %1.").arg(QLocale::system().toString(lastBlockDate));
 
     labelBlocks->setText("<img src=\""+icon+"\"> " + text);
-    labelBlocks->setToolTip(tr("Downloaded %n block(s) of transaction history. Last block was generated %1.", "", count)
-                            .arg(QLocale::system().toString(lastBlockDate)));
+    labelBlocks->setToolTip(tooltip);
+    progressBarLabel->setToolTip(tooltip);
+    progressBar->setToolTip(tooltip);
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message)

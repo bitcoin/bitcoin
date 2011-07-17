@@ -73,6 +73,10 @@ private:
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
 
+    qint64 cachedBalance;
+    qint64 cachedUnconfirmedBalance;
+    qint64 cachedNumTransactions;
+
 signals:
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance);
     void numTransactionsChanged(int count);

@@ -11,7 +11,8 @@
 
 WalletModel::WalletModel(CWallet *wallet, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(0), addressTableModel(0),
-    transactionTableModel(0)
+    transactionTableModel(0),
+    cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0)
 {
     // Until signal notifications is built into the bitcoin core,
     //  simply update everything after polling using a timer.
@@ -46,11 +47,19 @@ int WalletModel::getNumTransactions() const
 
 void WalletModel::update()
 {
-    // Plainly emit all signals for now. To be more efficient this should check
-    //   whether the values actually changed first, although it'd be even better if these
-    //   were events coming in from the bitcoin core.
-    emit balanceChanged(getBalance(), wallet->GetUnconfirmedBalance());
-    emit numTransactionsChanged(getNumTransactions());
+    qint64 newBalance = getBalance();
+    qint64 newUnconfirmedBalance = getUnconfirmedBalance();
+    int newNumTransactions = getNumTransactions();
+
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance)
+        emit balanceChanged(newBalance, newUnconfirmedBalance);
+
+    if(cachedNumTransactions != newNumTransactions)
+        emit numTransactionsChanged(newNumTransactions);
+
+    cachedBalance = newBalance;
+    cachedUnconfirmedBalance = newUnconfirmedBalance;
+    cachedNumTransactions = newNumTransactions;
 
     addressTableModel->update();
 }
