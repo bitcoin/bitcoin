@@ -147,7 +147,7 @@
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
-         <normaloff>:/icons/res/icons/remove.png</normaloff>:/icons/res/icons/remove.png</iconset>
+         <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
       </widget>
      </item>
