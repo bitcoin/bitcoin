@@ -4,8 +4,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-05-15 18:18+0100\n"
-"PO-Revision-Date: 2011-05-26 22:34+0100\n"
-"Last-Translator: Jakob Kramer <censored@gmail.com>\n"
+"PO-Revision-Date: 2011-07-17 02:19+0100\n"
+"Last-Translator: Michael Bemmerl <mail@mx-server.de>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -239,12 +239,12 @@ msgstr "Bitcoin beim &Systemstart ausführen"
 
 #: ../../../src/ui.cpp:1643
 msgid "&Minimize on close"
-msgstr "Beim schließen &Minimieren"
+msgstr "Beim Schließen &minimieren"
 
 #: ../../../src/ui.cpp:1785
 #, c-format
 msgid "version %s"
-msgstr "version %s"
+msgstr "Version %s"
 
 #: ../../../src/ui.cpp:1897
 msgid "Error in amount  "
@@ -383,7 +383,7 @@ msgid ""
 msgstr ""
 "Die Zahlung wurde überwiesen, aber der Empfänger konnte sie nicht bestätigen.\n"
 "Die Überweisung wurde gespeichert und wird dem Empfänger gutgeschrieben,\n"
-"aber die begleitende Nachricht wird nicht ankommen."
+"aber die begleitende Nachricht wird leer sein."
 
 #: ../../../src/ui.cpp:2295
 msgid "Payment was sent, but an invalid response was received"
@@ -447,7 +447,7 @@ msgstr "Bitcoin - (nicht verbunden)"
 
 #: ../../../src/ui.cpp:2681
 msgid "&Open Bitcoin"
-msgstr "Bitcoin Ö&ffnen"
+msgstr "Bitcoin ö&ffnen"
 
 #: ../../../src/ui.cpp:2682
 msgid "&Send Bitcoins"
@@ -495,7 +495,7 @@ msgstr "Ungültige Bitcoin-Adresse"
 #: ../../../src/rpc.cpp:1802
 #, c-format
 msgid "To use the %s option"
-msgstr "Um die %s Option zu nutzen"
+msgstr "Um die %s-Option zu nutzen"
 
 #: ../../../src/rpc.cpp:1804
 #, c-format
@@ -504,8 +504,8 @@ msgid ""
 "in the configuration file: %s\n"
 "If the file does not exist, create it with owner-readable-only file permissions.\n"
 msgstr ""
-"Warnung: %s, Sie müssen rpcpassword=<password> einstellen\n"
-"in der Konfigurationsdatei: %s\n"
+"Warnung: %s, müssen Sie rpcpassword=<password>\n"
+"in der Konfigurationsdatei %s einstellen.\n"
 "Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten.\n"
 
 #: ../../../src/rpc.cpp:1972
@@ -515,8 +515,8 @@ msgid ""
 "%s\n"
 "If the file does not exist, create it with owner-readable-only file permissions."
 msgstr ""
-"Sie müssen rpcpassword=<password> in der Konfigurationsdatei einstellen:\n"
-"%s\n"
+"Sie müssen rpcpassword=<password> in der Konfigurationsdatei\n"
+"\"%s\" einstellen.\n"
 "Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten."
 
 #: ../../../src/util.cpp:865
@@ -533,11 +533,11 @@ msgstr "&Datei"
 
 #: ../../../src/uibase.cpp:32
 msgid "&Your Receiving Addresses..."
-msgstr "&Ihre Empfangs-Adressen ..."
+msgstr "&Ihre Empfangs-Adressen..."
 
 #: ../../../src/uibase.cpp:36
 msgid "&Options..."
-msgstr "&Optionen ..."
+msgstr "&Optionen..."
 
 #: ../../../src/uibase.cpp:39
 msgid "&Settings"
@@ -561,7 +561,7 @@ msgstr "Ihre Bitcoin-Adresse:"
 
 #: ../../../src/uibase.cpp:76
 msgid " &New... "
-msgstr " &Neu ... "
+msgstr " &Neu... "
 
 #: ../../../src/uibase.cpp:79
 #: ../../../src/uibase.cpp:780
@@ -637,7 +637,7 @@ msgstr "&Per Socks4-Proxy verbinden: "
 
 #: ../../../src/uibase.cpp:371
 msgid "Proxy &IP:"
-msgstr "Proxy &IP:"
+msgstr "Proxy-&IP:"
 
 #: ../../../src/uibase.cpp:379
 msgid " &Port:"
@@ -754,12 +754,12 @@ msgstr "Dies sind Ihre Bitcoin-Adressen zum Empfang von Zahlungen. Sie sollten v
 #: ../../../src/uibase.cpp:774
 #: ../../../src/uibase.cpp:886
 msgid "&Edit..."
-msgstr "&Bearbeiten ..."
+msgstr "&Bearbeiten..."
 
 #: ../../../src/uibase.cpp:777
 #: ../../../src/uibase.cpp:889
 msgid " &New Address... "
-msgstr " &Neue Adresse ... "
+msgstr " &Neue Adresse... "
 
 #: ../../../src/uibase.cpp:849
 msgid "Sending"
@@ -779,11 +779,11 @@ msgstr "&Löschen"
 
 #: ../../../src/init.cpp:147
 msgid "Bitcoin version"
-msgstr "Bitcoin "
+msgstr "Bitcoin Version"
 
 #: ../../../src/init.cpp:148
 msgid "Usage:"
-msgstr "Benutz:"
+msgstr "Verwendung:"
 
 #: ../../../src/init.cpp:150
 msgid "Send command to -server or bitcoind\n"
@@ -932,7 +932,7 @@ msgstr "Diese Anleitung\n"
 #: ../../../src/init.cpp:335
 #, c-format
 msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
-msgstr "Erhalte keinen Lock für Datenverzeichnis %s. Bitcoin läuft wahrscheinlich bereits."
+msgstr "Erhalte keine Datensperre für das Datenverzeichnis %s. Bitcoin läuft wahrscheinlich bereits."
 
 #: ../../../src/init.cpp:361
 msgid "Error loading addr.dat      \n"
@@ -956,7 +956,7 @@ msgstr "Ungültiger Betrag für -paytxfee=<amount>"
 
 #: ../../../src/init.cpp:481
 msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
-msgstr "Warnung: -paytxfee ist sehr hoch gesetzt. Das ist die Überweisungsgebühr, die Sie fürs Senden einer Überweisung zahlen."
+msgstr "Warnung: -paytxfee ist sehr hoch gesetzt. Das ist die Überweisungsgebühr, die Sie für das Senden einer Überweisung zahlen."
 
 #: ../../../src/uibase.h:147
 msgid "Transaction Details"
@@ -973,3 +973,4 @@ msgstr "Über Bitcoin"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "Ihre Bitcoin-Adressen"
+
