@@ -30,10 +30,12 @@
         <file alias="overview">res/icons/overview.png</file>
         <file alias="export">res/icons/export.png</file>
         <file alias="synced">res/icons/synced.png</file>
-        <file alias="notsynced">res/icons/notsynced.png</file>
-        <file>res/icons/remove.png</file>
+        <file alias="remove">res/icons/remove.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
+    </qresource>
+    <qresource prefix="/movies">
+        <file alias="update_spinner">res/movies/update_spinner.mng</file>
     </qresource>
 </RCC>

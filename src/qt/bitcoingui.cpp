@@ -36,6 +36,7 @@
 #include <QProgressBar>
 #include <QStackedWidget>
 #include <QDateTime>
+#include <QMovie>
 
 #include <QDebug>
 
@@ -107,17 +108,35 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create status bar
     statusBar();
 
+    // Status bar "Connections" notification
+    QFrame *frameConnections = new QFrame();
+    frameConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    frameConnections->setMinimumWidth(150);
+    frameConnections->setMaximumWidth(150);
+    QHBoxLayout *frameConnectionsLayout = new QHBoxLayout(frameConnections);
+    frameConnectionsLayout->setContentsMargins(3,0,3,0);
+    frameConnectionsLayout->setSpacing(3);
+    labelConnectionsIcon = new QLabel();
+    labelConnectionsIcon->setToolTip(tr("Number of connections to other clients"));
+    frameConnectionsLayout->addWidget(labelConnectionsIcon);
     labelConnections = new QLabel();
-    labelConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    labelConnections->setMinimumWidth(150);
-    labelConnections->setMaximumWidth(150);
     labelConnections->setToolTip(tr("Number of connections to other clients"));
+    frameConnectionsLayout->addWidget(labelConnections);
+    frameConnectionsLayout->addStretch();
 
+    // Status bar "Blocks" notification
+    QFrame *frameBlocks = new QFrame();
+    frameBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    frameBlocks->setMinimumWidth(150);
+    frameBlocks->setMaximumWidth(150);
+    QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
+    frameBlocksLayout->setContentsMargins(3,0,3,0);
+    frameBlocksLayout->setSpacing(3);
+    labelBlocksIcon = new QLabel();
+    frameBlocksLayout->addWidget(labelBlocksIcon);
     labelBlocks = new QLabel();
-    labelBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    labelBlocks->setMinimumWidth(150);
-    labelBlocks->setMaximumWidth(150);
-    labelBlocks->setToolTip(tr("Number of blocks in the block chain"));
+    frameBlocksLayout->addWidget(labelBlocks);
+    frameBlocksLayout->addStretch();
 
     // Progress bar for blocks download
     progressBarLabel = new QLabel(tr("Synchronizing with network..."));
@@ -128,10 +147,12 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
-    statusBar()->addPermanentWidget(labelConnections);
-    statusBar()->addPermanentWidget(labelBlocks);
+    statusBar()->addPermanentWidget(frameConnections);
+    statusBar()->addPermanentWidget(frameBlocks);
 
     createTrayIcon();
+
+    syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
     gotoOverviewPage();
 }
@@ -285,8 +306,8 @@ void BitcoinGUI::setNumConnections(int count)
     case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
     default: icon = ":/icons/connect_4"; break;
     }
-    labelConnections->setTextFormat(Qt::RichText);
-    labelConnections->setText("<img src=\""+icon+"\"> " + tr("%n connection(s)", "", count));
+    labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(16,16));
+    labelConnections->setText(tr("%n connection(s)", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
@@ -313,13 +334,13 @@ void BitcoinGUI::setNumBlocks(int count)
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
     int secs = lastBlockDate.secsTo(now);
     QString text;
-    QString icon = ":/icons/notsynced";
+    bool spinning = true;
 
     // "Up to date" icon, and outdated icon
     if(secs < 30*60)
     {
         text = "Up to date";
-        icon = ":/icons/synced";
+        spinning = false;
     }
     else if(secs < 60*60)
     {
@@ -334,9 +355,20 @@ void BitcoinGUI::setNumBlocks(int count)
         text = tr("%n day(s) ago","",secs/(60*60*24));
     }
     tooltip += QString("\n");
-    tooltip += tr("Last block was generated %1.").arg(QLocale::system().toString(lastBlockDate));
+    tooltip += tr("Last received block was generated %1.").arg(text);
 
-    labelBlocks->setText("<img src=\""+icon+"\"> " + text);
+    if(spinning)
+    {
+        labelBlocksIcon->setMovie(syncIconMovie);
+        syncIconMovie->start();
+    }
+    else
+    {
+        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(16,16));
+    }
+    labelBlocks->setText(text);
+
+    labelBlocksIcon->setToolTip(tooltip);
     labelBlocks->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
