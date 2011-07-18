@@ -25,7 +25,6 @@
         <file alias="bitcoin_testnet">res/icons/bitcoin_testnet.png</file>
         <file alias="toolbar_testnet">res/icons/toolbar_testnet.png</file>
         <file alias="edit">res/icons/edit.png</file>
-        <file alias="editdelete">res/icons/editdelete.png</file>
         <file alias="history">res/icons/history.png</file>
         <file alias="overview">res/icons/overview.png</file>
         <file alias="export">res/icons/export.png</file>

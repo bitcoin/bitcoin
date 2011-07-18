@@ -89,7 +89,7 @@
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
-         <normaloff>:/icons/editdelete</normaloff>:/icons/editdelete</iconset>
+         <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
       </widget>
      </item>
