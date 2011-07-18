@@ -317,23 +317,37 @@ Value getinfo(const Array& params, bool fHelp)
 
 Value getnewaddress(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "getnewaddress [account]\n"
+            "getnewaddress [account] [rawpubkey=false]\n"
             "Returns a new bitcoin address for receiving payments.  "
             "If [account] is specified (recommended), it is added to the address book "
-            "so payments received with the address will be credited to [account].");
+            "so payments received with the address will be credited to [account]."
+            "If [rawpubkey] is true, the address is returned along with its "
+            "pubkey in hexadecimal form.");
 
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
     if (params.size() > 0)
         strAccount = AccountFromValue(params[0]);
+    bool rawpubkey = false;
+    if (params.size() > 1)
+        rawpubkey = params[1].get_bool();
 
     // Generate a new key that is added to wallet
-    string strAddress = PubKeyToAddress(pwalletMain->GetKeyFromKeyPool());
+    vector<unsigned char> pubkey = pwalletMain->GetKeyFromKeyPool();
+    string strAddress = PubKeyToAddress(pubkey);
 
     pwalletMain->SetAddressBookName(strAddress, strAccount);
-    return strAddress;
+
+    if (rawpubkey) {
+        Object obj;
+        obj.push_back(Pair("address", strAddress));
+        obj.push_back(Pair("pubkey", HexStr(pubkey)));
+        return obj;
+    }
+    else
+        return strAddress;
 }
 
 
@@ -2097,6 +2111,7 @@ int CommandLineRPC(int argc, char *argv[])
         //
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "getnewaddress"          && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
