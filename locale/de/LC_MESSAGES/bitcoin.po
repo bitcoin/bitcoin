@@ -3,128 +3,436 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-15 18:18+0100\n"
-"PO-Revision-Date: 2011-05-26 22:34+0100\n"
-"Last-Translator: Jakob Kramer <censored@gmail.com>\n"
+"POT-Creation-Date: 2011-07-17 02:21+0100\n"
+"PO-Revision-Date: 2011-07-17 02:54+0100\n"
+"Last-Translator: Michael Bemmerl <mail@mx-server.de>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
-"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Virtaal 0.6.1\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SearchPath-0: ../../..\n"
 
-#: ../../../src/net.cpp:1499
+#: ../../../src/init.cpp:162
+msgid "Bitcoin version"
+msgstr "Bitcoin Version"
+
+#: ../../../src/init.cpp:163
+msgid "Usage:"
+msgstr "Verwendung:"
+
+#: ../../../src/init.cpp:165
+msgid "Send command to -server or bitcoind\n"
+msgstr "Sende Befehl zu -server oder bitcoind\n"
+
+#: ../../../src/init.cpp:166
+msgid "List commands\n"
+msgstr "Liste Befehle auf\n"
+
+#: ../../../src/init.cpp:167
+msgid "Get help for a command\n"
+msgstr "Hilfe für einen Befehl erhalten\n"
+
+#: ../../../src/init.cpp:168
+msgid "Options:\n"
+msgstr "Optionen:\n"
+
+#: ../../../src/init.cpp:169
+msgid "Specify configuration file (default: bitcoin.conf)\n"
+msgstr "Konfigurationsdatei bestimmen (Standard: bitcoin.conf)\n"
+
+#: ../../../src/init.cpp:170
+msgid "Specify pid file (default: bitcoind.pid)\n"
+msgstr "pid-Datei bestimmen (Standard: bitcoind.pid)\n"
+
+#: ../../../src/init.cpp:171
+msgid "Generate coins\n"
+msgstr "Münzen erzeugen\n"
+
+#: ../../../src/init.cpp:172
+msgid "Don't generate coins\n"
+msgstr "Keine Münzen erzeugen\n"
+
+#: ../../../src/init.cpp:173
+msgid "Start minimized\n"
+msgstr "Minimiert starten\n"
+
+#: ../../../src/init.cpp:174
+msgid "Specify data directory\n"
+msgstr "Datenverzeichnis festlegen\n"
+
+#: ../../../src/init.cpp:175
+msgid "Specify connection timeout (in milliseconds)\n"
+msgstr "Verbindungs-Timeout in Milisekunden\n"
+
+#: ../../../src/init.cpp:176
+msgid "Connect through socks4 proxy\n"
+msgstr "Socks4-Proxy verwenden\n"
+
+#: ../../../src/init.cpp:177
+msgid "Allow DNS lookups for addnode and connect\n"
+msgstr "DNS-Auflösung für addnode und connect erlauben\n"
+
+#: ../../../src/init.cpp:178
+msgid "Add a node to connect to\n"
+msgstr "Einen Teilnehmer hinzufügen, zu dem verbunden werden soll\n"
+
+#: ../../../src/init.cpp:179
+msgid "Connect only to the specified node\n"
+msgstr "Nur zu dem angegebenen Teilnehmer verbinden\n"
+
+#: ../../../src/init.cpp:180
+msgid "Don't accept connections from outside\n"
+msgstr "Akzeptiere keine externen Verbindungen\n"
+
+#: ../../../src/init.cpp:183
+msgid "Don't attempt to use UPnP to map the listening port\n"
+msgstr "Versuche nicht, UPnP zur Portweiterleitung zu nutzen\n"
+
+#: ../../../src/init.cpp:185
+msgid "Attempt to use UPnP to map the listening port\n"
+msgstr "Versuche, UPnP zur Portweiterleitung zu nutzen\n"
+
+#: ../../../src/init.cpp:188
+msgid "Fee per KB to add to transactions you send\n"
+msgstr "Gebühr pro KB für Überweisungen, die Sie tätigen\n"
+
+#: ../../../src/init.cpp:190
+msgid "Accept command line and JSON-RPC commands\n"
+msgstr "Akzeptiere Kommandozeile und JSON-RPC-Befehle\n"
+
+#: ../../../src/init.cpp:193
+msgid "Run in the background as a daemon and accept commands\n"
+msgstr "Laufe im Hintergrund als Daemon und akzeptiere Befehle\n"
+
+#: ../../../src/init.cpp:195
+msgid "Use the test network\n"
+msgstr "Nutze das Testnetzwerk\n"
+
+#: ../../../src/init.cpp:196
+msgid "Username for JSON-RPC connections\n"
+msgstr "Benutzername für JSON-RPC-Verbindungen\n"
+
+#: ../../../src/init.cpp:197
+msgid "Password for JSON-RPC connections\n"
+msgstr "Passwort für JSON-RPC-Verbindungen\n"
+
+#: ../../../src/init.cpp:198
+msgid "Listen for JSON-RPC connections on <port> (default: 8332)\n"
+msgstr "Horche für JSON-RPC-Verbindungen auf <port> (Standard: 8332)\n"
+
+#: ../../../src/init.cpp:199
+msgid "Allow JSON-RPC connections from specified IP address\n"
+msgstr "Erlaube JSON-RPC-Verbindungen von bestimmter IP-Adresse\n"
+
+#: ../../../src/init.cpp:200
+msgid "Send commands to node running on <ip> (default: 127.0.0.1)\n"
+msgstr "Sende Befehle zum Knoten mit <ip> (Standard: 127.0.0.1)\n"
+
+#: ../../../src/init.cpp:201
+msgid "Set key pool size to <n> (default: 100)\n"
+msgstr "Setze Key-Pool-Größe auf <n> (Standard: 100)\n"
+
+#: ../../../src/init.cpp:202
+msgid "Rescan the block chain for missing wallet transactions\n"
+msgstr "Frage die Block-Kette nach fehlenden Brieftaschen-Überweisungen ab\n"
+
+#: ../../../src/init.cpp:206
+msgid ""
+"\n"
+"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+msgstr ""
+"\n"
+"SSL-Optionen: (siehe das Bitcoin-Wiki für SSL-Installationsanleitungen)\n"
+
+#: ../../../src/init.cpp:207
+msgid "Use OpenSSL (https) for JSON-RPC connections\n"
+msgstr "Nutze OpenSSL (https) für JSON-RPC-Verbindungen\n"
+
+#: ../../../src/init.cpp:208
+msgid "Server certificate file (default: server.cert)\n"
+msgstr "Server-Zertifikatsdatei (Standard: server.cert)\n"
+
+#: ../../../src/init.cpp:209
+msgid "Server private key (default: server.pem)\n"
+msgstr "Server-Geheimschlüssel (Standard: server.pem)\n"
+
+#: ../../../src/init.cpp:210
+msgid "Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+msgstr "Anzunehmende Verschlüsselungen (Standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+
+#: ../../../src/init.cpp:214
+msgid "This help message\n"
+msgstr "Diese Anleitung\n"
+
+#: ../../../src/init.cpp:351
+#, c-format
+msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
+msgstr "Erhalte keine Datensperre für das Datenverzeichnis %s. Bitcoin läuft wahrscheinlich bereits."
+
+#: ../../../src/init.cpp:377
+msgid "Error loading addr.dat      \n"
+msgstr "Fehler beim Laden von addr.dat      \n"
+
+#: ../../../src/init.cpp:383
+msgid "Error loading blkindex.dat      \n"
+msgstr "Fehler beim Laden von blkindex.dat      \n"
+
+#: ../../../src/init.cpp:394
+msgid "Error loading wallet.dat: Wallet corrupted      \n"
+msgstr "Fehler beim Laden von wallet.dat: Brieftasche beschädigt      \n"
+
+#: ../../../src/init.cpp:396
+msgid "Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n"
+msgstr "Fehler beim Laden von wallet.dat: Die Brieftasche benötigt eine neuere Version von Bitcoin      \n"
+
+#: ../../../src/init.cpp:398
+msgid "Error loading wallet.dat      \n"
+msgstr "Fehler beim Laden von wallet.dat      \n"
+
+#: ../../../src/init.cpp:488
+msgid "Invalid -proxy address"
+msgstr "Ungültige -Proxy Adresse"
+
+#: ../../../src/init.cpp:513
+msgid "Invalid amount for -paytxfee=<amount>"
+msgstr "Ungültiger Betrag für -paytxfee=<amount>"
+
+#: ../../../src/init.cpp:517
+msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
+msgstr "Warnung: -paytxfee ist sehr hoch gesetzt. Das ist die Überweisungsgebühr, die Sie für das Senden einer Überweisung zahlen."
+
+#: ../../../src/main.cpp:1430
+msgid "Warning: Disk space is low  "
+msgstr "Warnung: Festplatte fast voll  "
+
+#: ../../../src/net.cpp:1615
 #, c-format
 msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
 msgstr "Kann nicht zu Port %d auf diesem Computer verbinden. Bitcoin läuft wahrscheinlich bereits."
 
-#: ../../../src/ui.cpp:202
+#: ../../../src/rpc.cpp:2100
+#: ../../../src/rpc.cpp:2102
+#, c-format
+msgid "To use the %s option"
+msgstr "Um die %s-Option zu nutzen"
+
+#: ../../../src/rpc.cpp:2104
+#, c-format
+msgid ""
+"Warning: %s, you must set rpcpassword=<password>\n"
+"in the configuration file: %s\n"
+"If the file does not exist, create it with owner-readable-only file permissions.\n"
+msgstr ""
+"Warnung: %s, müssen Sie rpcpassword=<password>\n"
+"in der Konfigurationsdatei %s einstellen.\n"
+"Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten.\n"
+
+#: ../../../src/rpc.cpp:2277
+#, c-format
+msgid ""
+"You must set rpcpassword=<password> in the configuration file:\n"
+"%s\n"
+"If the file does not exist, create it with owner-readable-only file permissions."
+msgstr ""
+"Sie müssen rpcpassword=<password> in der Konfigurationsdatei\n"
+"\"%s\" einstellen.\n"
+"Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten."
+
+#: ../../../src/ui.cpp:216
 #, c-format
 msgid "This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?"
 msgstr "Diese Überweisung übersteigt das Betragslimit. Sie können sie trotzdem tätigen, aber es wird eine Gebühr von %s erhoben, die an den Teilnehmer ausgeschüttet wird, der Ihre Überweisung bearbeitet und dadurch hilft, das Netzwerk am laufen zu halten. Möchten Sie die Gebühr entrichten?"
 
-#: ../../../src/ui.cpp:301
+#: ../../../src/ui.cpp:259
+#: ../../../src/ui.cpp:1246
+msgid "Enter the current passphrase to the wallet."
+msgstr "Geben Sie die derzeitige Passphrase der Brieftasche ein."
+
+# See http://dict.leo.org/forum/viewUnsolvedquery.php?idThread=465865&idForum=2&lp=ende&lang=de
+#: ../../../src/ui.cpp:260
+#: ../../../src/ui.cpp:1182
+#: ../../../src/ui.cpp:1199
+#: ../../../src/ui.cpp:1247
+#: ../../../src/ui.cpp:1273
+#: ../../../src/ui.cpp:1293
+msgid "Passphrase"
+msgstr "Passphrase"
+
+#: ../../../src/ui.cpp:266
+msgid "Please supply the current wallet decryption passphrase."
+msgstr "Bitte geben Sie die derzeitige Passphrase zur Entschlüsselung der Brieftasche an."
+
+#: ../../../src/ui.cpp:274
+#: ../../../src/ui.cpp:1258
+#: ../../../src/ui.cpp:1315
+msgid "The passphrase entered for the wallet decryption was incorrect."
+msgstr "Die eingegebene Passphrase zur Entschlüsselung der Brieftasche war inkorrekt."
+
+#: ../../../src/ui.cpp:351
 msgid "Status"
 msgstr "Status"
 
-#: ../../../src/ui.cpp:302
+#: ../../../src/ui.cpp:352
 msgid "Date"
 msgstr "Datum"
 
-#: ../../../src/ui.cpp:303
+#: ../../../src/ui.cpp:353
 msgid "Description"
 msgstr "Beschreibung"
 
-#: ../../../src/ui.cpp:304
+#: ../../../src/ui.cpp:354
 msgid "Debit"
 msgstr "Belastungen"
 
-#: ../../../src/ui.cpp:305
+#: ../../../src/ui.cpp:355
 msgid "Credit"
 msgstr "Gutschriften"
 
-#: ../../../src/ui.cpp:511
+#: ../../../src/ui.cpp:566
 #, c-format
 msgid "Open for %d blocks"
 msgstr "Offen für %d Blöcke"
 
-#: ../../../src/ui.cpp:513
+#: ../../../src/ui.cpp:568
 #, c-format
 msgid "Open until %s"
 msgstr "Offen bis %s"
 
-#: ../../../src/ui.cpp:519
+#: ../../../src/ui.cpp:574
 #, c-format
 msgid "%d/offline?"
 msgstr "%d/Offline?"
 
-#: ../../../src/ui.cpp:521
+#: ../../../src/ui.cpp:576
 #, c-format
 msgid "%d/unconfirmed"
 msgstr "%d/nicht bestätigt"
 
-#: ../../../src/ui.cpp:523
+#: ../../../src/ui.cpp:578
 #, c-format
 msgid "%d confirmations"
 msgstr "%d Bestätigungen"
 
-#: ../../../src/ui.cpp:608
+#: ../../../src/ui.cpp:663
 msgid "Generated"
 msgstr "Erzeugt"
 
-#: ../../../src/ui.cpp:616
+#: ../../../src/ui.cpp:671
 #, c-format
 msgid "Generated (%s matures in %d more blocks)"
 msgstr "Erzeugt (%s reifen nach %d weiteren Blöcken)"
 
-#: ../../../src/ui.cpp:620
+#: ../../../src/ui.cpp:675
 msgid "Generated - Warning: This block was not received by any other nodes and will probably not be accepted!"
 msgstr "Erzeugt - Warnung: Dieser Block wurde von keinem anderen Teilnehmer empfangen und wird wahrscheinlich nicht akzeptiert werden!"
 
-#: ../../../src/ui.cpp:624
+#: ../../../src/ui.cpp:679
 msgid "Generated (not accepted)"
 msgstr "Erzeugt (nicht akzeptiert)"
 
-#: ../../../src/ui.cpp:634
+#: ../../../src/ui.cpp:689
 msgid "From: "
 msgstr "Von: "
 
-#: ../../../src/ui.cpp:658
+#: ../../../src/ui.cpp:713
 msgid "Received with: "
 msgstr "Empfangen durch: "
 
-#: ../../../src/ui.cpp:704
+#: ../../../src/ui.cpp:759
 msgid "Payment to yourself"
 msgstr "Überweisung an Sie selbst"
 
-#: ../../../src/ui.cpp:738
+#: ../../../src/ui.cpp:793
 msgid "To: "
 msgstr "An: "
 
-#: ../../../src/ui.cpp:1053
+#: ../../../src/ui.cpp:1108
 msgid "    Generating"
 msgstr "    Erzeugen"
 
-#: ../../../src/ui.cpp:1055
+#: ../../../src/ui.cpp:1110
 msgid "(not connected)"
 msgstr "(nicht verbunden)"
 
-#: ../../../src/ui.cpp:1058
+#: ../../../src/ui.cpp:1113
 #, c-format
 msgid "     %d connections     %d blocks     %d transactions"
 msgstr "     %d Verbindungen     %d Blöcke     %d Überweisungen"
 
-#: ../../../src/ui.cpp:1163
-#: ../../../src/ui.cpp:2527
+#: ../../../src/ui.cpp:1170
+msgid "Wallet already encrypted."
+msgstr "Brieftasche bereits verschlüsselt."
+
+#: ../../../src/ui.cpp:1181
+msgid ""
+"Enter the new passphrase to the wallet.\n"
+"Please use a passphrase of 10 or more random characters, or eight or more words."
+msgstr ""
+"Geben Sie die neue Passphrase der Brieftasche ein.\n"
+"Bitte benutzen Sie eine Passphrase mit zehn oder mehr zufällig gewählten Zeichen, oder acht oder mehr Wörter."
+
+#: ../../../src/ui.cpp:1188
+#: ../../../src/ui.cpp:1281
+msgid "Error: The supplied passphrase was too short."
+msgstr "Fehler: Die angegebene Passphrase war zu kurz. "
+
+#: ../../../src/ui.cpp:1192
+msgid ""
+"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\n"
+"Are you sure you wish to encrypt your wallet?"
+msgstr ""
+"WARNUNG: Wenn Sie Ihre Brieftasche verschlüsseln und die Passphrase verlieren, werden Sie ALLE IHRE BITCOINS VERLIEREN!\n"
+"Sind Sie sicher, dass Sie Ihre Brieftasche verschlüsseln wollen?"
+
+#: ../../../src/ui.cpp:1198
+msgid "Please re-enter your new wallet passphrase."
+msgstr "Bitte geben Sie erneut Ihre neue Passphrase der Brieftasche ein."
+
+#: ../../../src/ui.cpp:1207
+#: ../../../src/ui.cpp:1303
+msgid "Error: the supplied passphrases didn't match."
+msgstr "Fehler: Die angegebenen Passphrasen stimmten nicht überein."
+
+#: ../../../src/ui.cpp:1217
+msgid "Wallet encryption failed."
+msgstr "Verschlüsselung der Brieftasche fehlgeschlagen."
+
+#: ../../../src/ui.cpp:1224
+msgid ""
+"Wallet Encrypted.\n"
+"Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."
+msgstr ""
+"Brieftasche verschlüsselt.\n"
+"Beachten Sie, dass das Verschlüsseln der Brieftasche Ihre Bitcoins nicht völlig vor Diebstahl durch Schadprogramme auf Ihrem Computer schützt."
+
+#: ../../../src/ui.cpp:1235
+msgid "Wallet is unencrypted, please encrypt it first."
+msgstr "Die Brieftasche ist nicht verschlüsselt, bitte verschlüsselen Sie sie erst."
+
+#: ../../../src/ui.cpp:1272
+msgid "Enter the new passphrase for the wallet."
+msgstr "Geben Sie die neue Passphrase der Brieftasche ein."
+
+#: ../../../src/ui.cpp:1292
+msgid "Re-enter the new passphrase for the wallet."
+msgstr "Geben Sie erneut die neue Passphrase der Brieftasche ein."
+
+#: ../../../src/ui.cpp:1324
+msgid "Wallet Passphrase Changed."
+msgstr "Die Passphrase der Brieftasche wurde geändert."
+
+#: ../../../src/ui.cpp:1381
+#: ../../../src/ui.cpp:2816
 msgid "New Receiving Address"
 msgstr "&Neue Empfangs-Adresse"
 
-#: ../../../src/ui.cpp:1164
-#: ../../../src/ui.cpp:2528
+#: ../../../src/ui.cpp:1382
+#: ../../../src/ui.cpp:2817
 msgid ""
 "You should use a new address for each payment you receive.\n"
 "\n"
@@ -134,248 +442,248 @@ msgstr ""
 "\n"
 "Beschreibung"
 
-#: ../../../src/ui.cpp:1233
+#: ../../../src/ui.cpp:1466
 msgid "<b>Status:</b> "
 msgstr "<b>Status:</b> "
 
-#: ../../../src/ui.cpp:1238
+#: ../../../src/ui.cpp:1471
 msgid ", has not been successfully broadcast yet"
 msgstr ", wurde noch nicht erfolgreich übertragen"
 
-#: ../../../src/ui.cpp:1240
+#: ../../../src/ui.cpp:1473
 #, c-format
 msgid ", broadcast through %d node"
 msgstr ", durch %d Teilnehmer übertragen"
 
-#: ../../../src/ui.cpp:1242
+#: ../../../src/ui.cpp:1475
 #, c-format
 msgid ", broadcast through %d nodes"
 msgstr ", durch %d Teilnehmer übertragen"
 
-#: ../../../src/ui.cpp:1246
+#: ../../../src/ui.cpp:1479
 msgid "<b>Date:</b> "
 msgstr "<b>Datum</b> "
 
-#: ../../../src/ui.cpp:1254
+#: ../../../src/ui.cpp:1487
 msgid "<b>Source:</b> Generated<br>"
 msgstr "<b>Quelle:</b> Erzeugt<br>"
 
-#: ../../../src/ui.cpp:1260
-#: ../../../src/ui.cpp:1278
+#: ../../../src/ui.cpp:1493
+#: ../../../src/ui.cpp:1511
 msgid "<b>From:</b> "
 msgstr "<b>Von:</b> "
 
-#: ../../../src/ui.cpp:1278
+#: ../../../src/ui.cpp:1511
 msgid "unknown"
 msgstr "Unbekannt"
 
-#: ../../../src/ui.cpp:1279
-#: ../../../src/ui.cpp:1303
-#: ../../../src/ui.cpp:1362
+#: ../../../src/ui.cpp:1512
+#: ../../../src/ui.cpp:1536
+#: ../../../src/ui.cpp:1595
 msgid "<b>To:</b> "
 msgstr "<b>An:</b> "
 
-#: ../../../src/ui.cpp:1282
+#: ../../../src/ui.cpp:1515
 msgid " (yours, label: "
 msgstr " (Eigene, Beschreibung: "
 
-#: ../../../src/ui.cpp:1284
+#: ../../../src/ui.cpp:1517
 msgid " (yours)"
 msgstr " (Eigene)"
 
-#: ../../../src/ui.cpp:1321
-#: ../../../src/ui.cpp:1333
-#: ../../../src/ui.cpp:1379
-#: ../../../src/ui.cpp:1396
+#: ../../../src/ui.cpp:1554
+#: ../../../src/ui.cpp:1566
+#: ../../../src/ui.cpp:1612
+#: ../../../src/ui.cpp:1629
 msgid "<b>Credit:</b> "
 msgstr "<b>Gutschrift:</b> "
 
-#: ../../../src/ui.cpp:1323
+#: ../../../src/ui.cpp:1556
 #, c-format
 msgid "(%s matures in %d more blocks)"
 msgstr "(%s reifen nach %d weiteren Blöcken)"
 
-#: ../../../src/ui.cpp:1325
+#: ../../../src/ui.cpp:1558
 msgid "(not accepted)"
 msgstr "(nicht akzeptiert)"
 
-#: ../../../src/ui.cpp:1370
-#: ../../../src/ui.cpp:1378
-#: ../../../src/ui.cpp:1393
+#: ../../../src/ui.cpp:1603
+#: ../../../src/ui.cpp:1611
+#: ../../../src/ui.cpp:1626
 msgid "<b>Debit:</b> "
 msgstr "<b>Belastung:</b> "
 
-#: ../../../src/ui.cpp:1384
+#: ../../../src/ui.cpp:1617
 msgid "<b>Transaction fee:</b> "
 msgstr "<b>Überweisungsgebühr:</b> "
 
-#: ../../../src/ui.cpp:1400
+#: ../../../src/ui.cpp:1633
 msgid "<b>Net amount:</b> "
 msgstr "<b>Nettobetrag:</b> "
 
-#: ../../../src/ui.cpp:1407
+#: ../../../src/ui.cpp:1640
 msgid "Message:"
 msgstr "Nachricht:"
 
-#: ../../../src/ui.cpp:1409
+#: ../../../src/ui.cpp:1642
 msgid "Comment:"
 msgstr "Kommentar:"
 
-#: ../../../src/ui.cpp:1412
+#: ../../../src/ui.cpp:1645
 msgid "Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours."
 msgstr "Erzeugte Münzen müssen 120 Blöcke lang reifen. Als Sie diesen Block erzeugt haben, wurde er an alle Teilnehmer übertragen, damit er zur Block-Kette hinzugefügt werden kann. Falls der Block es nicht in die Block-Kette schafft, wird die Beschreibung zu \"nicht akzeptiert\" geändert, und Sie können die Münzen nicht ausgeben. Dies kann manchmal passieren, wenn Sie und ein anderer Teilnehmer annähernd zeitgleich einen Block erzeugen."
 
-#: ../../../src/ui.cpp:1592
+#: ../../../src/ui.cpp:1825
 msgid "Cannot write autostart/bitcoin.desktop file"
 msgstr "Kann Datei autostart/bitcoin.desktop nicht schreiben"
 
-#: ../../../src/ui.cpp:1628
+#: ../../../src/ui.cpp:1861
 msgid "Main"
 msgstr "Haupt"
 
-#: ../../../src/ui.cpp:1636
+#: ../../../src/ui.cpp:1871
 msgid "&Start Bitcoin on window system startup"
 msgstr "Bitcoin beim &Systemstart ausführen"
 
-#: ../../../src/ui.cpp:1643
+#: ../../../src/ui.cpp:1878
 msgid "&Minimize on close"
-msgstr "Beim schließen &Minimieren"
+msgstr "Beim Schließen &minimieren"
 
-#: ../../../src/ui.cpp:1785
+#: ../../../src/ui.cpp:2020
 #, c-format
 msgid "version %s"
-msgstr "version %s"
+msgstr "Version %s"
 
-#: ../../../src/ui.cpp:1897
+#: ../../../src/ui.cpp:2143
 msgid "Error in amount  "
 msgstr "Fehler in Betrag  "
 
-#: ../../../src/ui.cpp:1897
-#: ../../../src/ui.cpp:1902
-#: ../../../src/ui.cpp:1907
-#: ../../../src/ui.cpp:1942
-#: ../../../src/uibase.cpp:55
+#: ../../../src/ui.cpp:2143
+#: ../../../src/ui.cpp:2148
+#: ../../../src/ui.cpp:2153
+#: ../../../src/ui.cpp:2202
+#: ../../../src/uibase.cpp:61
 msgid "Send Coins"
 msgstr "Überweisen"
 
-#: ../../../src/ui.cpp:1902
+#: ../../../src/ui.cpp:2148
 msgid "Amount exceeds your balance  "
 msgstr "Der Betrag übersteigt Ihr Guthaben  "
 
-#: ../../../src/ui.cpp:1907
+#: ../../../src/ui.cpp:2153
 msgid "Total exceeds your balance when the "
 msgstr "Der Betrag übersteigt Ihr Guthaben, wenn man die "
 
-#: ../../../src/ui.cpp:1907
+#: ../../../src/ui.cpp:2153
 msgid " transaction fee is included  "
 msgstr " Überweisungsgebühr berücksichtigt  "
 
-#: ../../../src/ui.cpp:1925
+#: ../../../src/ui.cpp:2176
 msgid "Payment sent  "
 msgstr "Zahlung überwiesen  "
 
-#: ../../../src/ui.cpp:1925
-#: ../../../src/ui.cpp:1930
-#: ../../../src/ui.cpp:2074
-#: ../../../src/ui.cpp:2227
-#: ../../../src/main.cpp:3999
+#: ../../../src/ui.cpp:2176
+#: ../../../src/ui.cpp:2185
+#: ../../../src/ui.cpp:2336
+#: ../../../src/ui.cpp:2500
+#: ../../../src/wallet.cpp:1097
 msgid "Sending..."
 msgstr "Überweise ..."
 
-#: ../../../src/ui.cpp:1942
+#: ../../../src/ui.cpp:2202
 msgid "Invalid address  "
 msgstr "Ungültige Adresse  "
 
-#: ../../../src/ui.cpp:1995
+#: ../../../src/ui.cpp:2257
 #, c-format
 msgid "Sending %s to %s"
 msgstr "Überweise %s an %s"
 
-#: ../../../src/ui.cpp:2068
-#: ../../../src/ui.cpp:2101
+#: ../../../src/ui.cpp:2330
+#: ../../../src/ui.cpp:2363
 msgid "CANCELLED"
 msgstr "ANNULLIERT"
 
-#: ../../../src/ui.cpp:2072
+#: ../../../src/ui.cpp:2334
 msgid "Cancelled"
 msgstr "Annulliert"
 
-#: ../../../src/ui.cpp:2074
+#: ../../../src/ui.cpp:2336
 msgid "Transfer cancelled  "
 msgstr "Überweisung annulliert  "
 
-#: ../../../src/ui.cpp:2127
+#: ../../../src/ui.cpp:2389
 msgid "Error: "
 msgstr "Fehler: "
 
-#: ../../../src/ui.cpp:2141
-#: ../../../src/ui.cpp:2212
-#: ../../../src/main.cpp:4018
+#: ../../../src/ui.cpp:2403
+#: ../../../src/ui.cpp:2474
+#: ../../../src/wallet.cpp:1116
 msgid "Insufficient funds"
 msgstr "Unzureichende Geldmittel"
 
-#: ../../../src/ui.cpp:2146
+#: ../../../src/ui.cpp:2408
 msgid "Connecting..."
 msgstr "Verbinde ..."
 
-#: ../../../src/ui.cpp:2151
+#: ../../../src/ui.cpp:2413
 msgid "Unable to connect"
 msgstr "Kann nicht verbinden"
 
-#: ../../../src/ui.cpp:2156
+#: ../../../src/ui.cpp:2418
 msgid "Requesting public key..."
 msgstr "Fordere öffentlichen Schlüssel an ..."
 
-#: ../../../src/ui.cpp:2168
+#: ../../../src/ui.cpp:2430
 msgid "Received public key..."
 msgstr "Öffentlicher Schlüssel empfangen ..."
 
-#: ../../../src/ui.cpp:2182
+#: ../../../src/ui.cpp:2444
 msgid "Recipient is not accepting transactions sent by IP address"
 msgstr "Empfänger akzeptiert keine Überweisungen von IP-Adressen"
 
-#: ../../../src/ui.cpp:2184
+#: ../../../src/ui.cpp:2446
 msgid "Transfer was not accepted"
 msgstr "Überweisung wurde nicht akzeptiert"
 
-#: ../../../src/ui.cpp:2193
+#: ../../../src/ui.cpp:2455
 msgid "Invalid response received"
 msgstr "Ungültige Antwort erhalten"
 
-#: ../../../src/ui.cpp:2208
+#: ../../../src/ui.cpp:2470
 msgid "Creating transaction..."
 msgstr "Erstelle Überweisung ..."
 
-#: ../../../src/ui.cpp:2220
+#: ../../../src/ui.cpp:2489
 #, c-format
 msgid "This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds"
 msgstr "Diese Überweisung benötigt eine Überweisungsgebühr von mindestens %s wegen ihres Betrags, Komplexität oder der Benutzung kürzlich erhaltener Geldmittel"
 
-#: ../../../src/ui.cpp:2222
+#: ../../../src/ui.cpp:2491
 msgid "Transaction creation failed"
 msgstr "Überweisung konnte nicht erzeugt werden."
 
-#: ../../../src/ui.cpp:2229
+#: ../../../src/ui.cpp:2502
 msgid "Transaction aborted"
 msgstr "Überweisung abgebrochen"
 
-#: ../../../src/ui.cpp:2237
+#: ../../../src/ui.cpp:2510
 msgid "Lost connection, transaction cancelled"
 msgstr "Verbindung verloren, Überweisungsvorgang abgebrochen"
 
-#: ../../../src/ui.cpp:2253
+#: ../../../src/ui.cpp:2526
 msgid "Sending payment..."
 msgstr "Überweise Zahlung ..."
 
-#: ../../../src/ui.cpp:2259
+#: ../../../src/ui.cpp:2532
 msgid "The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
 msgstr "Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. Bitcoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
 
-#: ../../../src/ui.cpp:2268
+#: ../../../src/ui.cpp:2541
 msgid "Waiting for confirmation..."
 msgstr "Warte auf Bestätigung ..."
 
-#: ../../../src/ui.cpp:2286
+#: ../../../src/ui.cpp:2559
 msgid ""
 "The payment was sent, but the recipient was unable to verify it.\n"
 "The transaction is recorded and will credit to the recipient,\n"
@@ -383,149 +691,88 @@ msgid ""
 msgstr ""
 "Die Zahlung wurde überwiesen, aber der Empfänger konnte sie nicht bestätigen.\n"
 "Die Überweisung wurde gespeichert und wird dem Empfänger gutgeschrieben,\n"
-"aber die begleitende Nachricht wird nicht ankommen."
+"aber die begleitende Nachricht wird leer sein."
 
-#: ../../../src/ui.cpp:2295
+#: ../../../src/ui.cpp:2568
 msgid "Payment was sent, but an invalid response was received"
 msgstr "Die Zahlung wurde überwiesen, aber die Antwort war fehlerhaft"
 
-#: ../../../src/ui.cpp:2301
+#: ../../../src/ui.cpp:2574
 msgid "Payment completed"
 msgstr "Zahlung ausgeführt"
 
-#: ../../../src/ui.cpp:2332
-#: ../../../src/ui.cpp:2478
-#: ../../../src/ui.cpp:2515
+#: ../../../src/ui.cpp:2616
+#: ../../../src/ui.cpp:2764
+#: ../../../src/ui.cpp:2804
 msgid "Name"
 msgstr "Name"
 
-#: ../../../src/ui.cpp:2333
-#: ../../../src/ui.cpp:2478
-#: ../../../src/ui.cpp:2515
+#: ../../../src/ui.cpp:2617
+#: ../../../src/ui.cpp:2764
+#: ../../../src/ui.cpp:2804
 msgid "Address"
 msgstr "Adresse"
 
-#: ../../../src/ui.cpp:2335
-#: ../../../src/ui.cpp:2490
+#: ../../../src/ui.cpp:2619
+#: ../../../src/ui.cpp:2776
 msgid "Label"
 msgstr "Beschreibung"
 
-#: ../../../src/ui.cpp:2336
-#: ../../../src/uibase.cpp:837
+#: ../../../src/ui.cpp:2620
+#: ../../../src/uibase.cpp:847
 msgid "Bitcoin Address"
 msgstr "Bitcoin-Adresse"
 
-#: ../../../src/ui.cpp:2460
+#: ../../../src/ui.cpp:2746
 msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
 msgstr "Dies ist eine Ihrer eigenen Adressen für den Zahlungseingang und kann deshalb nicht in das Adressbuch übernommen werden.  "
 
-#: ../../../src/ui.cpp:2478
-#: ../../../src/ui.cpp:2484
+#: ../../../src/ui.cpp:2764
+#: ../../../src/ui.cpp:2770
 msgid "Edit Address"
 msgstr "Adresse bearbeiten"
 
-#: ../../../src/ui.cpp:2490
+#: ../../../src/ui.cpp:2776
 msgid "Edit Address Label"
 msgstr "Beschreibung der Adresse bearbeiten"
 
-#: ../../../src/ui.cpp:2515
-#: ../../../src/ui.cpp:2521
+#: ../../../src/ui.cpp:2804
+#: ../../../src/ui.cpp:2810
 msgid "Add Address"
 msgstr "Adresse hinzufügen"
 
-#: ../../../src/ui.cpp:2598
+#: ../../../src/ui.cpp:2898
 msgid "Bitcoin"
 msgstr "Bitcoin"
 
-#: ../../../src/ui.cpp:2600
+#: ../../../src/ui.cpp:2900
 msgid "Bitcoin - Generating"
 msgstr "Bitcoin - Erzeuge"
 
-#: ../../../src/ui.cpp:2602
+#: ../../../src/ui.cpp:2902
 msgid "Bitcoin - (not connected)"
 msgstr "Bitcoin - (nicht verbunden)"
 
-#: ../../../src/ui.cpp:2681
+#: ../../../src/ui.cpp:2981
 msgid "&Open Bitcoin"
-msgstr "Bitcoin Ö&ffnen"
+msgstr "Bitcoin ö&ffnen"
 
-#: ../../../src/ui.cpp:2682
+#: ../../../src/ui.cpp:2982
 msgid "&Send Bitcoins"
 msgstr "Bitcoins &senden"
 
-#: ../../../src/ui.cpp:2683
+#: ../../../src/ui.cpp:2983
 msgid "O&ptions..."
 msgstr "O&ptionen ..."
 
-#: ../../../src/ui.cpp:2686
+#: ../../../src/ui.cpp:2986
 #: ../../../src/uibase.cpp:25
 msgid "E&xit"
 msgstr "B&eenden"
 
-#: ../../../src/ui.cpp:2902
+#: ../../../src/ui.cpp:3212
 msgid "Program has crashed and will terminate.  "
 msgstr "Das Programm ist abgestürzt und wird beendet.  "
-
-#: ../../../src/main.cpp:1868
-msgid "Warning: Disk space is low  "
-msgstr "Warnung: Festplatte fast voll  "
-
-#: ../../../src/main.cpp:3992
-#, c-format
-msgid "Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "
-msgstr "Fehler: Diese Überweisung benötigt eine Überweisungsgebühr von mindestens %s wegen ihrer Größe, Komplexität oder der Benutzung erst kürzlich erhaltener Geldmittel  "
-
-#: ../../../src/main.cpp:3994
-msgid "Error: Transaction creation failed  "
-msgstr "Fehler: Überweisung konnte nicht erzeugt werden.  "
-
-#: ../../../src/main.cpp:4003
-msgid "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
-msgstr "Fehler: Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. Bitcoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
-
-#: ../../../src/main.cpp:4016
-msgid "Invalid amount"
-msgstr "Ungültiger Betrag"
-
-#: ../../../src/main.cpp:4023
-msgid "Invalid bitcoin address"
-msgstr "Ungültige Bitcoin-Adresse"
-
-#: ../../../src/rpc.cpp:1800
-#: ../../../src/rpc.cpp:1802
-#, c-format
-msgid "To use the %s option"
-msgstr "Um die %s Option zu nutzen"
-
-#: ../../../src/rpc.cpp:1804
-#, c-format
-msgid ""
-"Warning: %s, you must set rpcpassword=<password>\n"
-"in the configuration file: %s\n"
-"If the file does not exist, create it with owner-readable-only file permissions.\n"
-msgstr ""
-"Warnung: %s, Sie müssen rpcpassword=<password> einstellen\n"
-"in der Konfigurationsdatei: %s\n"
-"Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten.\n"
-
-#: ../../../src/rpc.cpp:1972
-#, c-format
-msgid ""
-"You must set rpcpassword=<password> in the configuration file:\n"
-"%s\n"
-"If the file does not exist, create it with owner-readable-only file permissions."
-msgstr ""
-"Sie müssen rpcpassword=<password> in der Konfigurationsdatei einstellen:\n"
-"%s\n"
-"Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten."
-
-#: ../../../src/util.cpp:865
-msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
-msgstr "Warnung: Bitte überprüfen Sie die Richtigkeit des Datums und der Uhrzeit Ihres Computers. Falls Ihre Uhr falsch läuft, wird Bitcoin nicht richtig funktionieren."
-
-#: ../../../src/util.cpp:898
-msgid "beta"
-msgstr "Beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -533,154 +780,162 @@ msgstr "&Datei"
 
 #: ../../../src/uibase.cpp:32
 msgid "&Your Receiving Addresses..."
-msgstr "&Ihre Empfangs-Adressen ..."
+msgstr "&Ihre Empfangs-Adressen..."
 
-#: ../../../src/uibase.cpp:36
+#: ../../../src/uibase.cpp:35
+msgid "&Encrypt Wallet..."
+msgstr "Bri&eftasche verschlüsseln..."
+
+#: ../../../src/uibase.cpp:38
+msgid "&Change Wallet Encryption Passphrase..."
+msgstr "Passphrase der Vers&chlüsselung der Brieftasche ändern..."
+
+#: ../../../src/uibase.cpp:42
 msgid "&Options..."
-msgstr "&Optionen ..."
+msgstr "&Optionen..."
 
-#: ../../../src/uibase.cpp:39
+#: ../../../src/uibase.cpp:45
 msgid "&Settings"
 msgstr "&Einstellungen"
 
-#: ../../../src/uibase.cpp:43
+#: ../../../src/uibase.cpp:49
 msgid "&About..."
 msgstr "Ü&ber..."
 
-#: ../../../src/uibase.cpp:46
+#: ../../../src/uibase.cpp:52
 msgid "&Help"
 msgstr "&Hilfe"
 
-#: ../../../src/uibase.cpp:56
+#: ../../../src/uibase.cpp:62
 msgid "Address Book"
 msgstr "Adressbuch"
 
-#: ../../../src/uibase.cpp:69
+#: ../../../src/uibase.cpp:75
 msgid "Your Bitcoin Address:"
 msgstr "Ihre Bitcoin-Adresse:"
 
-#: ../../../src/uibase.cpp:76
+#: ../../../src/uibase.cpp:82
 msgid " &New... "
-msgstr " &Neu ... "
+msgstr " &Neu... "
 
-#: ../../../src/uibase.cpp:79
-#: ../../../src/uibase.cpp:780
-#: ../../../src/uibase.cpp:883
+#: ../../../src/uibase.cpp:85
+#: ../../../src/uibase.cpp:790
+#: ../../../src/uibase.cpp:893
 msgid " &Copy to Clipboard "
 msgstr " In die Zwischenablage &kopieren "
 
-#: ../../../src/uibase.cpp:93
+#: ../../../src/uibase.cpp:99
 msgid "Balance:"
 msgstr "Kontostand:"
 
-#: ../../../src/uibase.cpp:109
+#: ../../../src/uibase.cpp:115
 msgid " All"
 msgstr " Alle"
 
-#: ../../../src/uibase.cpp:109
+#: ../../../src/uibase.cpp:115
 msgid " Sent"
 msgstr " Überwiesen"
 
-#: ../../../src/uibase.cpp:109
+#: ../../../src/uibase.cpp:115
 msgid " Received"
 msgstr " Erhalten"
 
-#: ../../../src/uibase.cpp:109
+#: ../../../src/uibase.cpp:115
 msgid " In Progress"
 msgstr " In Bearbeitung"
 
-#: ../../../src/uibase.cpp:130
+#: ../../../src/uibase.cpp:136
 msgid "All Transactions"
 msgstr "Alle Überweisungen"
 
-#: ../../../src/uibase.cpp:141
+#: ../../../src/uibase.cpp:147
 msgid "Sent/Received"
 msgstr "Überwiesen/Erhalten"
 
-#: ../../../src/uibase.cpp:152
+#: ../../../src/uibase.cpp:158
 msgid "Sent"
 msgstr "Überwiesen"
 
-#: ../../../src/uibase.cpp:163
+#: ../../../src/uibase.cpp:169
 msgid "Received"
 msgstr "Erhalten"
 
-#: ../../../src/uibase.cpp:302
-#: ../../../src/uibase.cpp:443
-#: ../../../src/uibase.cpp:542
-#: ../../../src/uibase.cpp:722
-#: ../../../src/uibase.cpp:783
-#: ../../../src/uibase.cpp:892
-#: ../../../src/uibase.cpp:981
+#: ../../../src/uibase.cpp:312
+#: ../../../src/uibase.cpp:453
+#: ../../../src/uibase.cpp:552
+#: ../../../src/uibase.cpp:732
+#: ../../../src/uibase.cpp:793
+#: ../../../src/uibase.cpp:902
+#: ../../../src/uibase.cpp:991
 msgid "OK"
 msgstr "OK"
 
-#: ../../../src/uibase.cpp:345
+#: ../../../src/uibase.cpp:355
 msgid "&Start Bitcoin on system startup"
 msgstr "Bitcoin beim &Systemstart ausführen"
 
-#: ../../../src/uibase.cpp:348
+#: ../../../src/uibase.cpp:358
 msgid "&Minimize to the tray instead of the taskbar"
 msgstr "In den Infobereich statt in die Taskleiste &minimieren"
 
-#: ../../../src/uibase.cpp:351
+#: ../../../src/uibase.cpp:361
 msgid "Map port using &UPnP"
 msgstr "Portweiterleitung via &UPnP"
 
-#: ../../../src/uibase.cpp:354
+#: ../../../src/uibase.cpp:364
 msgid "M&inimize to the tray on close"
 msgstr "Beim Schließen in den Infobereich m&inimieren"
 
-#: ../../../src/uibase.cpp:360
+#: ../../../src/uibase.cpp:370
 msgid "&Connect through socks4 proxy: "
 msgstr "&Per Socks4-Proxy verbinden: "
 
-#: ../../../src/uibase.cpp:371
+#: ../../../src/uibase.cpp:381
 msgid "Proxy &IP:"
-msgstr "Proxy &IP:"
+msgstr "Proxy-&IP:"
 
-#: ../../../src/uibase.cpp:379
+#: ../../../src/uibase.cpp:389
 msgid " &Port:"
 msgstr " &Port:"
 
-#: ../../../src/uibase.cpp:392
+#: ../../../src/uibase.cpp:402
 msgid "Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."
 msgstr "Eine freiwillige Überweisungsgebühr pro KB, die dabei hilft, dass Ihre Überweisungen schnell durchgeführt werden. Die meisten Überweisungen sind 1 KB groß. Eine Gebühr von 0,01 ist empfohlen."
 
-#: ../../../src/uibase.cpp:399
+#: ../../../src/uibase.cpp:409
 msgid "Pay transaction fee:"
 msgstr "Überweisungsgebühr:"
 
-#: ../../../src/uibase.cpp:420
+#: ../../../src/uibase.cpp:430
 msgid "// [don't translate] Test panel 2 for future expansion"
 msgstr ""
 
-#: ../../../src/uibase.cpp:424
+#: ../../../src/uibase.cpp:434
 msgid "// [don't translate] Let's not start multiple pages until the first page is filled up"
 msgstr ""
 
-#: ../../../src/uibase.cpp:446
-#: ../../../src/uibase.cpp:668
-#: ../../../src/uibase.cpp:727
-#: ../../../src/uibase.cpp:786
-#: ../../../src/uibase.cpp:895
-#: ../../../src/uibase.cpp:984
+#: ../../../src/uibase.cpp:456
+#: ../../../src/uibase.cpp:678
+#: ../../../src/uibase.cpp:737
+#: ../../../src/uibase.cpp:796
+#: ../../../src/uibase.cpp:905
+#: ../../../src/uibase.cpp:994
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: ../../../src/uibase.cpp:449
+#: ../../../src/uibase.cpp:459
 msgid "&Apply"
 msgstr "&Anwenden"
 
-#: ../../../src/uibase.cpp:508
+#: ../../../src/uibase.cpp:518
 msgid "Bitcoin "
 msgstr "Bitcoin "
 
-#: ../../../src/uibase.cpp:514
+#: ../../../src/uibase.cpp:524
 msgid "version"
 msgstr "Version"
 
-#: ../../../src/uibase.cpp:525
+#: ../../../src/uibase.cpp:535
 msgid ""
 "Copyright (c) 2009-2011 Bitcoin Developers\n"
 "\n"
@@ -705,39 +960,39 @@ msgstr ""
 "kryptographische Software von Eric Young (eay@cryptsoft.com)\n"
 "und UPnP-Software, entwickelt von Thomas Bernard."
 
-#: ../../../src/uibase.cpp:581
+#: ../../../src/uibase.cpp:591
 msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 msgstr "Geben Sie eine Bitcoin-Adresse ein (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
-#: ../../../src/uibase.cpp:595
+#: ../../../src/uibase.cpp:605
 msgid "Pay &To:"
 msgstr "Überweisen &An:"
 
-#: ../../../src/uibase.cpp:610
+#: ../../../src/uibase.cpp:620
 msgid "&Paste"
 msgstr "&Einfügen"
 
-#: ../../../src/uibase.cpp:613
+#: ../../../src/uibase.cpp:623
 msgid " Address &Book..."
 msgstr " Address&buch..."
 
-#: ../../../src/uibase.cpp:620
+#: ../../../src/uibase.cpp:630
 msgid "&Amount:"
 msgstr "&Betrag:"
 
-#: ../../../src/uibase.cpp:630
+#: ../../../src/uibase.cpp:640
 msgid "T&ransfer:"
 msgstr "Ü&berweisung:"
 
-#: ../../../src/uibase.cpp:636
+#: ../../../src/uibase.cpp:646
 msgid " Standard"
 msgstr " Standard"
 
-#: ../../../src/uibase.cpp:663
+#: ../../../src/uibase.cpp:673
 msgid "&Send"
 msgstr "Ü&berweisen"
 
-#: ../../../src/uibase.cpp:711
+#: ../../../src/uibase.cpp:721
 msgid ""
 "\n"
 "\n"
@@ -747,229 +1002,82 @@ msgstr ""
 "\n"
 "Verbinde ..."
 
-#: ../../../src/uibase.cpp:761
+#: ../../../src/uibase.cpp:771
 msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
 msgstr "Dies sind Ihre Bitcoin-Adressen zum Empfang von Zahlungen. Sie sollten vielleicht jedem Überweisenden eine andere Adresse geben um nachvollziehen zu können von wem eine Zahlung stammt. Die markierte Adresse wird im Hauptfenster angezeigt."
 
-#: ../../../src/uibase.cpp:774
-#: ../../../src/uibase.cpp:886
+#: ../../../src/uibase.cpp:784
+#: ../../../src/uibase.cpp:896
 msgid "&Edit..."
-msgstr "&Bearbeiten ..."
+msgstr "&Bearbeiten..."
 
-#: ../../../src/uibase.cpp:777
-#: ../../../src/uibase.cpp:889
+#: ../../../src/uibase.cpp:787
+#: ../../../src/uibase.cpp:899
 msgid " &New Address... "
-msgstr " &Neue Adresse ... "
+msgstr " &Neue Adresse... "
 
-#: ../../../src/uibase.cpp:849
+#: ../../../src/uibase.cpp:859
 msgid "Sending"
 msgstr "Überweise"
 
-#: ../../../src/uibase.cpp:857
+#: ../../../src/uibase.cpp:867
 msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
 msgstr "Dies sind Ihre Bitcoin-Adressen zum Empfang von Zahlungen. Sie können jedem Überweisenden eine andere Adresse geben um nachvollziehen zu können von wem eine Zahlung stammt. Die markierte Adresse wird im Hauptfenster angezeigt."
 
-#: ../../../src/uibase.cpp:870
+#: ../../../src/uibase.cpp:880
 msgid "Receiving"
 msgstr "Empfange"
 
-#: ../../../src/uibase.cpp:880
+#: ../../../src/uibase.cpp:890
 msgid "&Delete"
 msgstr "&Löschen"
 
-#: ../../../src/init.cpp:147
-msgid "Bitcoin version"
-msgstr "Bitcoin "
+#: ../../../src/util.cpp:869
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
+msgstr "Warnung: Bitte überprüfen Sie die Richtigkeit des Datums und der Uhrzeit Ihres Computers. Falls Ihre Uhr falsch läuft, wird Bitcoin nicht richtig funktionieren."
 
-#: ../../../src/init.cpp:148
-msgid "Usage:"
-msgstr "Benutz:"
+#: ../../../src/util.cpp:903
+msgid "beta"
+msgstr "Beta"
 
-#: ../../../src/init.cpp:150
-msgid "Send command to -server or bitcoind\n"
-msgstr "Sende Befehl zu -server oder bitcoind\n"
+#: ../../../src/wallet.cpp:1081
+msgid "Error: Wallet locked, unable to create transaction  "
+msgstr "Fehler: Brieftasche ist verschlossen; Überweisung konnte nicht erstellt werden  "
 
-#: ../../../src/init.cpp:151
-msgid "List commands\n"
-msgstr "Liste Befehle auf\n"
-
-#: ../../../src/init.cpp:152
-msgid "Get help for a command\n"
-msgstr "Hilfe für einen Befehl erhalten\n"
-
-#: ../../../src/init.cpp:153
-msgid "Options:\n"
-msgstr "Optionen:\n"
-
-#: ../../../src/init.cpp:154
-msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "Konfigurationsdatei bestimmen (Standard: bitcoin.conf)\n"
-
-#: ../../../src/init.cpp:155
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "pid-Datei bestimmen (Standard: bitcoind.pid)\n"
-
-#: ../../../src/init.cpp:156
-msgid "Generate coins\n"
-msgstr "Münzen erzeugen\n"
-
-#: ../../../src/init.cpp:157
-msgid "Don't generate coins\n"
-msgstr "Keine Münzen erzeugen\n"
-
-#: ../../../src/init.cpp:158
-msgid "Start minimized\n"
-msgstr "Minimiert starten\n"
-
-#: ../../../src/init.cpp:159
-msgid "Specify data directory\n"
-msgstr "Datenverzeichnis festlegen\n"
-
-#: ../../../src/init.cpp:160
-msgid "Connect through socks4 proxy\n"
-msgstr "Socks4-Proxy verwenden\n"
-
-#: ../../../src/init.cpp:161
-msgid "Specify connection timeout (in milliseconds)\n"
-msgstr "Verbindungs-Timeout in Milisekunden\n"
-
-#: ../../../src/init.cpp:161
-msgid "Allow DNS lookups for addnode and connect\n"
-msgstr "DNS-Auflösung für addnode und connect erlauben\n"
-
-#: ../../../src/init.cpp:162
-msgid "Add a node to connect to\n"
-msgstr "Einen Teilnehmer hinzufügen, zu dem verbunden werden soll\n"
-
-#: ../../../src/init.cpp:163
-msgid "Connect only to the specified node\n"
-msgstr "Nur zu dem angegebenen Teilnehmer verbinden\n"
-
-#: ../../../src/init.cpp:164
-msgid "Don't accept connections from outside\n"
-msgstr "Akzeptiere keine externen Verbindungen\n"
-
-#: ../../../src/init.cpp:167
-msgid "Don't attempt to use UPnP to map the listening port\n"
-msgstr "Versuche nicht, UPnP zur Portweiterleitung zu nutzen\n"
-
-#: ../../../src/init.cpp:169
-msgid "Attempt to use UPnP to map the listening port\n"
-msgstr "Versuche, UPnP zur Portweiterleitung zu nutzen\n"
-
-#: ../../../src/init.cpp:172
-msgid "Fee per KB to add to transactions you send\n"
-msgstr "Gebühr pro KB für Überweisungen, die Sie tätigen\n"
-
-#: ../../../src/init.cpp:174
-msgid "Accept command line and JSON-RPC commands\n"
-msgstr "Akzeptiere Kommandozeile und JSON-RPC-Befehle\n"
-
-#: ../../../src/init.cpp:177
-msgid "Run in the background as a daemon and accept commands\n"
-msgstr "Laufe im Hintergrund als Daemon und akzeptiere Befehle\n"
-
-#: ../../../src/init.cpp:179
-msgid "Use the test network\n"
-msgstr "Nutze das Testnetzwerk\n"
-
-#: ../../../src/init.cpp:180
-msgid "Username for JSON-RPC connections\n"
-msgstr "Benutzername für JSON-RPC-Verbindungen\n"
-
-#: ../../../src/init.cpp:181
-msgid "Password for JSON-RPC connections\n"
-msgstr "Passwort für JSON-RPC-Verbindungen\n"
-
-#: ../../../src/init.cpp:182
-msgid "Listen for JSON-RPC connections on <port> (default: 8332)\n"
-msgstr "Horche für JSON-RPC-Verbindungen auf <port> (Standard: 8332)\n"
-
-#: ../../../src/init.cpp:183
-msgid "Allow JSON-RPC connections from specified IP address\n"
-msgstr "Erlaube JSON-RPC-Verbindungen von bestimmter IP-Adresse\n"
-
-#: ../../../src/init.cpp:184
-msgid "Send commands to node running on <ip> (default: 127.0.0.1)\n"
-msgstr "Sende Befehle zum Knoten mit <ip> (Standard: 127.0.0.1)\n"
-
-#: ../../../src/init.cpp:185
-msgid "Set key pool size to <n> (default: 100)\n"
-msgstr "Setze Key-Pool-Größe auf <n> (Standard: 100)\n"
-
-#: ../../../src/init.cpp:186
-msgid "Rescan the block chain for missing wallet transactions\n"
-msgstr "Frage die Block-Kette nach fehlenden Brieftaschen-Überweisungen ab\n"
-
-#: ../../../src/init.cpp:190
-msgid ""
-"\n"
-"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
-msgstr ""
-"\n"
-"SSL-Optionen: (siehe das Bitcoin-Wiki für SSL-Installationsanleitungen)\n"
-
-#: ../../../src/init.cpp:191
-msgid "Use OpenSSL (https) for JSON-RPC connections\n"
-msgstr "Nutze OpenSSL (https) für JSON-RPC-Verbindungen\n"
-
-#: ../../../src/init.cpp:192
-msgid "Server certificate file (default: server.cert)\n"
-msgstr "Server-Zertifikatsdatei (Standard: server.cert)\n"
-
-#: ../../../src/init.cpp:193
-msgid "Server private key (default: server.pem)\n"
-msgstr "Server-Geheimschlüssel (Standard: server.pem)\n"
-
-#: ../../../src/init.cpp:194
-msgid "Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
-msgstr "Anzunehmende Verschlüsselungen (Standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
-
-#: ../../../src/init.cpp:198
-msgid "This help message\n"
-msgstr "Diese Anleitung\n"
-
-#: ../../../src/init.cpp:335
+#: ../../../src/wallet.cpp:1089
 #, c-format
-msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
-msgstr "Erhalte keinen Lock für Datenverzeichnis %s. Bitcoin läuft wahrscheinlich bereits."
+msgid "Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "
+msgstr "Fehler: Diese Überweisung benötigt eine Überweisungsgebühr von mindestens %s wegen ihrer Größe, Komplexität oder der Benutzung erst kürzlich erhaltener Geldmittel  "
 
-#: ../../../src/init.cpp:361
-msgid "Error loading addr.dat      \n"
-msgstr "Fehler beim Laden von addr.dat      \n"
+#: ../../../src/wallet.cpp:1091
+msgid "Error: Transaction creation failed  "
+msgstr "Fehler: Überweisung konnte nicht erzeugt werden.  "
 
-#: ../../../src/init.cpp:367
-msgid "Error loading blkindex.dat      \n"
-msgstr "Fehler beim Laden von blkindex.dat      \n"
+#: ../../../src/wallet.cpp:1101
+msgid "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Fehler: Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. Bitcoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
 
-#: ../../../src/init.cpp:374
-msgid "Error loading wallet.dat      \n"
-msgstr "Fehler beim Laden von wallet.dat      \n"
+#: ../../../src/wallet.cpp:1114
+msgid "Invalid amount"
+msgstr "Ungültiger Betrag"
 
-#: ../../../src/init.cpp:454
-msgid "Invalid -proxy address"
-msgstr "Ungültige -Proxy Adresse"
+#: ../../../src/wallet.cpp:1121
+msgid "Invalid bitcoin address"
+msgstr "Ungültige Bitcoin-Adresse"
 
-#: ../../../src/init.cpp:477
-msgid "Invalid amount for -paytxfee=<amount>"
-msgstr "Ungültiger Betrag für -paytxfee=<amount>"
-
-#: ../../../src/init.cpp:481
-msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
-msgstr "Warnung: -paytxfee ist sehr hoch gesetzt. Das ist die Überweisungsgebühr, die Sie fürs Senden einer Überweisung zahlen."
-
-#: ../../../src/uibase.h:147
+#: ../../../src/uibase.h:151
 msgid "Transaction Details"
 msgstr "Überweisungsdetails"
 
-#: ../../../src/uibase.h:199
+#: ../../../src/uibase.h:203
 msgid "Options"
 msgstr "Optionen"
 
-#: ../../../src/uibase.h:228
+#: ../../../src/uibase.h:232
 msgid "About Bitcoin"
 msgstr "Über Bitcoin"
 
-#: ../../../src/uibase.h:337
+#: ../../../src/uibase.h:341
 msgid "Your Bitcoin Addresses"
 msgstr "Ihre Bitcoin-Adressen"
+
