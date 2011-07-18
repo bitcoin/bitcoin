@@ -173,14 +173,16 @@ protected:
 
     ~CBase58Data()
     {
-        memset(&vchData[0], 0, vchData.size());
+        if (!vchData.empty())
+            memset(&vchData[0], 0, vchData.size());
     }
 
     void SetData(int nVersionIn, const void* pdata, size_t nSize)
     {
         nVersion = nVersionIn;
         vchData.resize(nSize);
-        memcpy(&vchData[0], pdata, nSize);
+        if (!vchData.empty())
+            memcpy(&vchData[0], pdata, nSize);
     }
 
     void SetData(int nVersionIn, const unsigned char *pbegin, const unsigned char *pend)
@@ -201,7 +203,8 @@ public:
         }
         nVersion = vchTemp[0];
         vchData.resize(vchTemp.size() - 1);
-        memcpy(&vchData[0], &vchTemp[1], vchData.size());
+        if (!vchData.empty())
+            memcpy(&vchData[0], &vchTemp[1], vchData.size());
         memset(&vchTemp[0], 0, vchTemp.size());
         return true;
     }
@@ -221,7 +224,7 @@ public:
     int CompareTo(const CBase58Data& b58) const
     {
         if (nVersion < b58.nVersion) return -1;
-        if (nVersion < b58.nVersion) return  1;
+        if (nVersion > b58.nVersion) return  1;
         if (vchData < b58.vchData)   return -1;
         if (vchData > b58.vchData)   return  1;
         return 0;
