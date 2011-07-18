@@ -736,11 +736,15 @@ Value getbalance(const Array& params, bool fHelp)
             list<pair<string, int64> > listReceived;
             list<pair<string, int64> > listSent;
             wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
-            if (wtx.GetDepthInMainChain() >= nMinDepth)
-                BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listReceived)
-                    nBalance += r.second;
-            BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listSent)
-                nBalance -= r.second;
+            if (!wtx.IsCoinBase())
+            {
+                if (wtx.GetDepthInMainChain() >= nMinDepth)
+                    BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listReceived)
+                        nBalance += r.second;
+                BOOST_FOREACH(const PAIRTYPE(string,int64)& r, listSent)
+                    nBalance -= r.second;
+            }
+
             nBalance -= allFee;
             nBalance += allGeneratedMature;
         }
@@ -1084,6 +1088,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     {
         Object entry;
         entry.push_back(Pair("account", string("")));
+        entry.push_back(Pair("address", listReceived.front().first));
         if (nGeneratedImmature)
         {
             entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
@@ -1097,6 +1102,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         if (fLong)
             WalletTxToJSON(wtx, entry);
         ret.push_back(entry);
+
+        return;
     }
 
     // Sent
@@ -1260,11 +1267,15 @@ Value listaccounts(const Array& params, bool fHelp)
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
                 mapAccountBalances[""] += nGeneratedMature;
-                BOOST_FOREACH(const PAIRTYPE(string, int64)& r, listReceived)
-                    if (pwalletMain->mapAddressBook.count(r.first))
-                        mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
-                    else
-                        mapAccountBalances[""] += r.second;
+
+                if (!wtx.IsCoinBase())
+                {
+                    BOOST_FOREACH(const PAIRTYPE(string, int64)& r, listReceived)
+                        if (pwalletMain->mapAddressBook.count(r.first))
+                            mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
+                        else
+                            mapAccountBalances[""] += r.second;
+                }
             }
         }
     }
