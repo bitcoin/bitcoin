@@ -334,13 +334,11 @@ void BitcoinGUI::setNumBlocks(int count)
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
     int secs = lastBlockDate.secsTo(now);
     QString text;
-    bool spinning = true;
 
-    // "Up to date" icon, and outdated icon
-    if(secs < 30*60)
+    // Represent time from last generated block in human readable text
+    if(secs < 60)
     {
-        text = "Up to date";
-        spinning = false;
+        text = tr("%n second(s) ago","",secs);
     }
     else if(secs < 60*60)
     {
@@ -354,6 +352,16 @@ void BitcoinGUI::setNumBlocks(int count)
     {
         text = tr("%n day(s) ago","",secs/(60*60*24));
     }
+
+    // In the label we want to be less specific
+    QString labelText = text;
+    bool spinning = true;
+    if(secs < 30*60)
+    {
+        labelText = "Up to date";
+        spinning = false;
+    }
+
     tooltip += QString("\n");
     tooltip += tr("Last received block was generated %1.").arg(text);
 
@@ -366,7 +374,7 @@ void BitcoinGUI::setNumBlocks(int count)
     {
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(16,16));
     }
-    labelBlocks->setText(text);
+    labelBlocks->setText(labelText);
 
     labelBlocksIcon->setToolTip(tooltip);
     labelBlocks->setToolTip(tooltip);
