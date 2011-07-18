@@ -36,6 +36,7 @@
 #include <QProgressBar>
 #include <QStackedWidget>
 #include <QDateTime>
+#include <QMovie>
 
 #include <QDebug>
 
@@ -55,10 +56,14 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Menus
     QMenu *file = menuBar()->addMenu("&File");
-    file->addAction(optionsAction);
+    file->addAction(sendCoinsAction);
+    file->addAction(receiveCoinsAction);
     file->addSeparator();
     file->addAction(quitAction);
     
+    QMenu *settings = menuBar()->addMenu("&Settings");
+    settings->addAction(optionsAction);
+
     QMenu *help = menuBar()->addMenu("&Help");
     help->addAction(aboutAction);
     
@@ -103,17 +108,35 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create status bar
     statusBar();
 
+    // Status bar "Connections" notification
+    QFrame *frameConnections = new QFrame();
+    frameConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    frameConnections->setMinimumWidth(150);
+    frameConnections->setMaximumWidth(150);
+    QHBoxLayout *frameConnectionsLayout = new QHBoxLayout(frameConnections);
+    frameConnectionsLayout->setContentsMargins(3,0,3,0);
+    frameConnectionsLayout->setSpacing(3);
+    labelConnectionsIcon = new QLabel();
+    labelConnectionsIcon->setToolTip(tr("Number of connections to other clients"));
+    frameConnectionsLayout->addWidget(labelConnectionsIcon);
     labelConnections = new QLabel();
-    labelConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    labelConnections->setMinimumWidth(150);
-    labelConnections->setMaximumWidth(150);
     labelConnections->setToolTip(tr("Number of connections to other clients"));
+    frameConnectionsLayout->addWidget(labelConnections);
+    frameConnectionsLayout->addStretch();
 
+    // Status bar "Blocks" notification
+    QFrame *frameBlocks = new QFrame();
+    frameBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    frameBlocks->setMinimumWidth(150);
+    frameBlocks->setMaximumWidth(150);
+    QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
+    frameBlocksLayout->setContentsMargins(3,0,3,0);
+    frameBlocksLayout->setSpacing(3);
+    labelBlocksIcon = new QLabel();
+    frameBlocksLayout->addWidget(labelBlocksIcon);
     labelBlocks = new QLabel();
-    labelBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    labelBlocks->setMinimumWidth(150);
-    labelBlocks->setMaximumWidth(150);
-    labelBlocks->setToolTip(tr("Number of blocks in the block chain"));
+    frameBlocksLayout->addWidget(labelBlocks);
+    frameBlocksLayout->addStretch();
 
     // Progress bar for blocks download
     progressBarLabel = new QLabel(tr("Synchronizing with network..."));
@@ -124,10 +147,12 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
-    statusBar()->addPermanentWidget(labelConnections);
-    statusBar()->addPermanentWidget(labelBlocks);
+    statusBar()->addPermanentWidget(frameConnections);
+    statusBar()->addPermanentWidget(frameBlocks);
 
     createTrayIcon();
+
+    syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
     gotoOverviewPage();
 }
@@ -281,37 +306,39 @@ void BitcoinGUI::setNumConnections(int count)
     case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
     default: icon = ":/icons/connect_4"; break;
     }
-    labelConnections->setTextFormat(Qt::RichText);
-    labelConnections->setText("<img src=\""+icon+"\"> " + tr("%n connection(s)", "", count));
+    labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(16,16));
+    labelConnections->setText(tr("%n connection(s)", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
 {
     int total = clientModel->getTotalBlocksEstimate();
+    QString tooltip;
+
     if(count < total)
     {
         progressBarLabel->setVisible(true);
         progressBar->setVisible(true);
         progressBar->setMaximum(total);
         progressBar->setValue(count);
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history.").arg(count).arg(total);
     }
     else
     {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
+        tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
 
     QDateTime now = QDateTime::currentDateTime();
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
     int secs = lastBlockDate.secsTo(now);
     QString text;
-    QString icon = ":/icons/notsynced";
 
-    // "Up to date" icon, and outdated icon
-    if(secs < 30*60)
+    // Represent time from last generated block in human readable text
+    if(secs < 60)
     {
-        text = "Up to date";
-        icon = ":/icons/synced";
+        text = tr("%n second(s) ago","",secs);
     }
     else if(secs < 60*60)
     {
@@ -326,9 +353,33 @@ void BitcoinGUI::setNumBlocks(int count)
         text = tr("%n day(s) ago","",secs/(60*60*24));
     }
 
-    labelBlocks->setText("<img src=\""+icon+"\"> " + text);
-    labelBlocks->setToolTip(tr("Downloaded %n block(s) of transaction history. Last block was generated %1.", "", count)
-                            .arg(QLocale::system().toString(lastBlockDate)));
+    // In the label we want to be less specific
+    QString labelText = text;
+    bool spinning = true;
+    if(secs < 30*60)
+    {
+        labelText = "Up to date";
+        spinning = false;
+    }
+
+    tooltip += QString("\n");
+    tooltip += tr("Last received block was generated %1.").arg(text);
+
+    if(spinning)
+    {
+        labelBlocksIcon->setMovie(syncIconMovie);
+        syncIconMovie->start();
+    }
+    else
+    {
+        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(16,16));
+    }
+    labelBlocks->setText(labelText);
+
+    labelBlocksIcon->setToolTip(tooltip);
+    labelBlocks->setToolTip(tooltip);
+    progressBarLabel->setToolTip(tooltip);
+    progressBar->setToolTip(tooltip);
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message)

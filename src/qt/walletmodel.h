@@ -8,6 +8,13 @@ class AddressTableModel;
 class TransactionTableModel;
 class CWallet;
 
+struct SendCoinsRecipient
+{
+    QString address;
+    QString label;
+    qint64 amount;
+};
+
 // Interface to a Bitcoin wallet
 class WalletModel : public QObject
 {
@@ -22,6 +29,9 @@ public:
         InvalidAddress,
         AmountExceedsBalance,
         AmountWithFeeExceedsBalance,
+        DuplicateAddress,
+        TransactionCreationFailed,
+        TransactionCommitFailed,
         Aborted,
         MiscError
     };
@@ -34,8 +44,25 @@ public:
     qint64 getUnconfirmedBalance() const;
     int getNumTransactions() const;
 
-    /* Send coins */
-    StatusCode sendCoins(const QString &payTo, qint64 payAmount, const QString &addToAddressBookAs=QString());
+    // Check address for validity
+    bool validateAddress(const QString &address);
+
+    // Return status record for SendCoins
+    // fee is used in case status is "AmountWithFeeExceedsBalance"
+    // hex is filled with the transaction hash if status is "OK"
+    struct SendCoinsReturn
+    {
+        SendCoinsReturn(StatusCode status,
+                         qint64 fee=0,
+                         QString hex=QString()):
+            status(status), fee(fee), hex(hex) {}
+        StatusCode status;
+        qint64 fee;
+        QString hex;
+    };
+
+    // Send coins to list of recipients
+    SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients);
 private:
     CWallet *wallet;
 
@@ -45,6 +72,10 @@ private:
 
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
+
+    qint64 cachedBalance;
+    qint64 cachedUnconfirmedBalance;
+    qint64 cachedNumTransactions;
 
 signals:
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance);

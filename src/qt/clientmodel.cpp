@@ -10,7 +10,8 @@
 #include <QDateTime>
 
 ClientModel::ClientModel(CWallet *wallet, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(0)
+    QObject(parent), wallet(wallet), optionsModel(0),
+    cachedNumConnections(0), cachedNumBlocks(0)
 {
     // Until signal notifications is built into the bitcoin core,
     //  simply update everything after polling using a timer.
@@ -38,11 +39,16 @@ QDateTime ClientModel::getLastBlockDate() const
 
 void ClientModel::update()
 {
-    // Plainly emit all signals for now. To be more efficient this should check
-    //   whether the values actually changed first, although it'd be even better if these
-    //   were events coming in from the bitcoin core.
-    emit numConnectionsChanged(getNumConnections());
-    emit numBlocksChanged(getNumBlocks());
+    int newNumConnections = getNumConnections();
+    int newNumBlocks = getNumBlocks();
+
+    if(cachedNumConnections != newNumConnections)
+        emit numConnectionsChanged(newNumConnections);
+    if(cachedNumBlocks != newNumBlocks)
+        emit numBlocksChanged(newNumBlocks);
+
+    cachedNumConnections = newNumConnections;
+    cachedNumBlocks = newNumBlocks;
 }
 
 bool ClientModel::isTestNet() const

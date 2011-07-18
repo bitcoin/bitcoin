@@ -57,6 +57,7 @@ private:
     QLabel *labelConnections;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocks;
+    QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
 
@@ -73,6 +74,8 @@ private:
 
     QSystemTrayIcon *trayIcon;
     TransactionView *transactionView;
+
+    QMovie *syncIconMovie;
 
     void createActions();
     QWidget *createTabs();

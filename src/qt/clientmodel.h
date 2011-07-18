@@ -42,6 +42,9 @@ private:
 
     OptionsModel *optionsModel;
 
+    int cachedNumConnections;
+    int cachedNumBlocks;
+
 signals:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);

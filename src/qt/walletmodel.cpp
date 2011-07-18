@@ -7,10 +7,12 @@
 #include "headers.h"
 
 #include <QTimer>
+#include <QSet>
 
 WalletModel::WalletModel(CWallet *wallet, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(0), addressTableModel(0),
-    transactionTableModel(0)
+    transactionTableModel(0),
+    cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0)
 {
     // Until signal notifications is built into the bitcoin core,
     //  simply update everything after polling using a timer.
@@ -45,72 +47,122 @@ int WalletModel::getNumTransactions() const
 
 void WalletModel::update()
 {
-    // Plainly emit all signals for now. To be more efficient this should check
-    //   whether the values actually changed first, although it'd be even better if these
-    //   were events coming in from the bitcoin core.
-    emit balanceChanged(getBalance(), wallet->GetUnconfirmedBalance());
-    emit numTransactionsChanged(getNumTransactions());
+    qint64 newBalance = getBalance();
+    qint64 newUnconfirmedBalance = getUnconfirmedBalance();
+    int newNumTransactions = getNumTransactions();
+
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance)
+        emit balanceChanged(newBalance, newUnconfirmedBalance);
+
+    if(cachedNumTransactions != newNumTransactions)
+        emit numTransactionsChanged(newNumTransactions);
+
+    cachedBalance = newBalance;
+    cachedUnconfirmedBalance = newUnconfirmedBalance;
+    cachedNumTransactions = newNumTransactions;
 
     addressTableModel->update();
 }
 
-WalletModel::StatusCode WalletModel::sendCoins(const QString &payTo, qint64 payAmount, const QString &addToAddressBookAs)
+bool WalletModel::validateAddress(const QString &address)
 {
     uint160 hash160 = 0;
-    bool valid = false;
 
-    if(!AddressToHash160(payTo.toUtf8().constData(), hash160))
+    return AddressToHash160(address.toStdString(), hash160);
+}
+
+WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients)
+{
+    qint64 total = 0;
+    QSet<QString> setAddress;
+    QString hex;
+
+    if(recipients.empty())
     {
-        return InvalidAddress;
+        return OK;
     }
 
-    if(payAmount <= 0)
+    // Pre-check input data for validity
+    foreach(const SendCoinsRecipient &rcp, recipients)
     {
-        return InvalidAmount;
+        uint160 hash160 = 0;
+
+        if(!AddressToHash160(rcp.address.toUtf8().constData(), hash160))
+        {
+            return InvalidAddress;
+        }
+        setAddress.insert(rcp.address);
+
+        if(rcp.amount <= 0)
+        {
+            return InvalidAmount;
+        }
+        total += rcp.amount;
     }
 
-    if(payAmount > getBalance())
+    if(recipients.size() > setAddress.size())
+    {
+        return DuplicateAddress;
+    }
+
+    if(total > getBalance())
     {
         return AmountExceedsBalance;
     }
 
-    if((payAmount + nTransactionFee) > getBalance())
+    if((total + nTransactionFee) > getBalance())
     {
-        return AmountWithFeeExceedsBalance;
+        return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
     }
 
     CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(wallet->cs_mapWallet)
     {
-        // Send to bitcoin address
-        CWalletTx wtx;
-        CScript scriptPubKey;
-        scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
-
-        std::string strError = wallet->SendMoney(scriptPubKey, payAmount, wtx, true);
-        if (strError == "")
+        // Sendmany
+        std::vector<std::pair<CScript, int64> > vecSend;
+        foreach(const SendCoinsRecipient &rcp, recipients)
         {
-            // OK
+            CScript scriptPubKey;
+            scriptPubKey.SetBitcoinAddress(rcp.address.toStdString());
+            vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
         }
-        else if (strError == "ABORTED")
+
+        CWalletTx wtx;
+        CReserveKey keyChange(wallet);
+        int64 nFeeRequired = 0;
+        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
+
+        if(!fCreated)
+        {
+            if((total + nFeeRequired) > wallet->GetBalance())
+            {
+                return SendCoinsReturn(AmountWithFeeExceedsBalance, nFeeRequired);
+            }
+            return TransactionCreationFailed;
+        }
+        if(!ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString(), NULL))
         {
             return Aborted;
         }
-        else
+        if(!wallet->CommitTransaction(wtx, keyChange))
         {
-            emit error(tr("Sending..."), QString::fromStdString(strError));
-            return MiscError;
+            return TransactionCommitFailed;
         }
+        hex = QString::fromStdString(wtx.GetHash().GetHex());
     }
 
     // Add addresses that we've sent to to the address book
-    std::string strAddress = payTo.toStdString();
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    foreach(const SendCoinsRecipient &rcp, recipients)
     {
-        if (!wallet->mapAddressBook.count(strAddress))
-            wallet->SetAddressBookName(strAddress, addToAddressBookAs.toStdString());
+        std::string strAddress = rcp.address.toStdString();
+        CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+        {
+            if (!wallet->mapAddressBook.count(strAddress))
+                wallet->SetAddressBookName(strAddress, rcp.label.toStdString());
+        }
     }
 
-    return OK;
+    return SendCoinsReturn(OK, 0, hex);
 }
 
 OptionsModel *WalletModel::getOptionsModel()
