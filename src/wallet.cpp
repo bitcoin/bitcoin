@@ -681,7 +681,7 @@ void CWallet::ResendWalletTransactions()
         return;
     bool fFirst = (nNextTime == 0);
     nNextTime = GetTime() + GetRand(30 * 60);
-    if (fFirst)
+    if (fFirst && !GetBoolArg("-forceresendtx"))
         return;
 
     // Only do it if there's been a new block since last time
@@ -702,7 +702,7 @@ void CWallet::ResendWalletTransactions()
             CWalletTx& wtx = item.second;
             // Don't rebroadcast until it's had plenty of time that
             // it should have gotten in already by now.
-            if (nTimeBestReceived - (int64)wtx.nTimeReceived > 5 * 60)
+            if (nTimeBestReceived - (int64)wtx.nTimeReceived > 5 * 60 || GetBoolArg("-forceresendtx"))
                 mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
         }
         BOOST_FOREACH(PAIRTYPE(const unsigned int, CWalletTx*)& item, mapSorted)
