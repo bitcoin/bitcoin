@@ -102,6 +102,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 int GetTotalBlocksEstimate();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
+void ResendWalletTransactions(bool forceResend);
 
 
 
