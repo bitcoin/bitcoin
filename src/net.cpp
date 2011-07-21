@@ -1157,6 +1157,7 @@ static const char *strDNSSeed[] = {
     "bitseed.xf2.org",
     "bitseed.bitcoin.org.uk",
     "dnsseed.bluematt.me",
+    "dnsseed.unitedminers.com",
 };
 
 void DNSAddressSeed()
