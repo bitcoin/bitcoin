@@ -12,6 +12,8 @@ class QComboBox;
 class QLineEdit;
 class QModelIndex;
 class QMenu;
+class QFrame;
+class QDateTimeEdit;
 QT_END_NAMESPACE
 
 class TransactionView : public QWidget
@@ -45,8 +47,15 @@ private:
 
     QMenu *contextMenu;
 
+    QFrame *dateRangeWidget;
+    QDateTimeEdit *dateFrom;
+    QDateTimeEdit *dateTo;
+
+    QWidget *createDateRangeWidget();
+
 private slots:
     void contextualMenu(const QPoint &);
+    void dateRangeChanged();
 
 signals:
     void doubleClicked(const QModelIndex&);
