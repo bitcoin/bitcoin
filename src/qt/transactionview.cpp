@@ -25,6 +25,8 @@
 #include <QMenu>
 #include <QApplication>
 #include <QClipboard>
+#include <QLabel>
+#include <QDateTimeEdit>
 
 #include <QDebug>
 
@@ -90,6 +92,7 @@ TransactionView::TransactionView(QWidget *parent) :
 
     QTableView *view = new QTableView(this);
     vlayout->addLayout(hlayout);
+    vlayout->addWidget(createDateRangeWidget());
     vlayout->addWidget(view);
     vlayout->setSpacing(0);
     int width = view->verticalScrollBar()->sizeHint().width();
@@ -167,6 +170,7 @@ void TransactionView::setModel(WalletModel *model)
 void TransactionView::chooseDate(int idx)
 {
     QDate current = QDate::currentDate();
+    dateRangeWidget->setVisible(false);
     switch(dateWidget->itemData(idx).toInt())
     {
     case All:
@@ -203,10 +207,10 @@ void TransactionView::chooseDate(int idx)
                 TransactionFilterProxy::MAX_DATE);
         break;
     case Range:
-        // TODO ask specific range
+        dateRangeWidget->setVisible(true);
+        dateRangeChanged();
         break;
     }
-
 }
 
 void TransactionView::chooseType(int idx)
@@ -336,4 +340,47 @@ void TransactionView::showDetails()
         TransactionDescDialog dlg(selection.at(0));
         dlg.exec();
     }
+}
+
+QWidget *TransactionView::createDateRangeWidget()
+{
+    dateRangeWidget = new QFrame();
+    dateRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
+    dateRangeWidget->setContentsMargins(1,1,1,1);
+    QHBoxLayout *layout = new QHBoxLayout(dateRangeWidget);
+    layout->setContentsMargins(0,0,0,0);
+    layout->addSpacing(23);
+    layout->addWidget(new QLabel("Range:"));
+
+    dateFrom = new QDateTimeEdit(this);
+    dateFrom->setDisplayFormat("dd/MM/yy");
+    dateFrom->setCalendarPopup(true);
+    dateFrom->setMinimumWidth(100);
+    dateFrom->setDate(QDate::currentDate().addDays(-7));
+    layout->addWidget(dateFrom);
+    layout->addWidget(new QLabel("to"));
+
+    dateTo = new QDateTimeEdit(this);
+    dateTo->setDisplayFormat("dd/MM/yy");
+    dateTo->setCalendarPopup(true);
+    dateTo->setMinimumWidth(100);
+    dateTo->setDate(QDate::currentDate());
+    layout->addWidget(dateTo);
+    layout->addStretch();
+
+    // Hide by default
+    dateRangeWidget->setVisible(false);
+
+    // Notify on change
+    connect(dateFrom, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
+    connect(dateTo, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
+
+    return dateRangeWidget;
+}
+
+void TransactionView::dateRangeChanged()
+{
+    transactionProxyModel->setDateRange(
+            QDateTime(dateFrom->date()),
+            QDateTime(dateTo->date()).addDays(1));
 }

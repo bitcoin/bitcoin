@@ -18,6 +18,8 @@ public:
 
     void setText(const QString &text);
     QString text() const;
+
+    void clear();
     bool validate();
     // Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907)
     // Hence we have to set it up manually

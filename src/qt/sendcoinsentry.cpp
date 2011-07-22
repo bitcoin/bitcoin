@@ -68,7 +68,7 @@ void SendCoinsEntry::clear()
 {
     ui->payTo->clear();
     ui->addAsLabel->clear();
-    ui->payAmount->setText(QString());
+    ui->payAmount->clear();
     ui->payTo->setFocus();
 }
 
