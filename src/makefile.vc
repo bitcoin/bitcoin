@@ -41,12 +41,12 @@ DEFS=$(DEFS) /DUSE_UPNP=$(USE_UPNP)
 !ENDIF
 
 LIBS=$(LIBS) \
-  kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib ws2_32.lib shlwapi.lib
+  kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib ws2_32.lib shlwapi.lib iphlpapi.lib
 
 DEBUGFLAGS=/Os
 CFLAGS=/MD /c /nologo /EHsc /GR /Zm300 $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h wallet.h keystore.h
+    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h wallet.h keystore.h crypter.h
 
 OBJS= \
     obj\util.obj \
@@ -58,7 +58,8 @@ OBJS= \
     obj\main.obj \
 	obj\wallet.obj \
     obj\rpc.obj \
-    obj\init.obj
+    obj\init.obj \
+	obj\crypter.obj
 
 CRYPTOPP_OBJS= \
     cryptopp\obj\sha.obj \
@@ -92,6 +93,8 @@ obj\wallet.obj: $(HEADERS)
 obj\rpc.obj: $(HEADERS)
 
 obj\init.obj: $(HEADERS)
+
+obj\crypter.obj: $(HEADERS)
 
 obj\ui.obj: $(HEADERS)
 
