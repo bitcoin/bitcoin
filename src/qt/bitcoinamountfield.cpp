@@ -55,6 +55,12 @@ void BitcoinAmountField::setText(const QString &text)
     }
 }
 
+void BitcoinAmountField::clear()
+{
+    amount->clear();
+    decimals->clear();
+}
+
 bool BitcoinAmountField::validate()
 {
     bool valid = true;

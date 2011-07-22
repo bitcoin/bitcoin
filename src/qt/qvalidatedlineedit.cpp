@@ -35,3 +35,9 @@ void QValidatedLineEdit::markValid()
 {
     setValid(true);
 }
+
+void QValidatedLineEdit::clear()
+{
+    setValid(true);
+    QLineEdit::clear();
+}
