@@ -11,7 +11,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
         QWidget(parent), amount(0), decimals(0)
 {
     amount = new QValidatedLineEdit(this);
-    amount->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
+    amount->setValidator(new QRegExpValidator(QRegExp("[0-9]?"), this));
     amount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     amount->installEventFilter(this);
     amount->setMaximumWidth(100);
@@ -64,11 +64,6 @@ void BitcoinAmountField::clear()
 bool BitcoinAmountField::validate()
 {
     bool valid = true;
-    if(amount->text().isEmpty())
-    {
-        amount->setValid(false);
-        valid = false;
-    }
     if(decimals->text().isEmpty())
     {
         decimals->setValid(false);
@@ -79,9 +74,13 @@ bool BitcoinAmountField::validate()
 
 QString BitcoinAmountField::text() const
 {
-    if(amount->text().isEmpty() || decimals->text().isEmpty())
+    if(decimals->text().isEmpty())
     {
         return QString();
+    }
+    if(amount->text().isEmpty())
+    {
+        return QString("0.") + decimals->text();
     }
     return amount->text() + QString(".") + decimals->text();
 }
