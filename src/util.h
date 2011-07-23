@@ -167,7 +167,7 @@ extern bool fShutdown;
 extern bool fDaemon;
 extern bool fServer;
 extern bool fCommandLine;
-extern std::string strMiscWarning;
+extern std::string strMiscWarning, strRPCUser, strRPCPass;
 extern bool fTestNet;
 extern bool fNoListen;
 extern bool fLogTimestamps;
@@ -623,7 +623,10 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
         return (pthread_t)0;
     }
     if (!fWantHandle)
+    {
+        pthread_detach(hthread);
         return (pthread_t)-1;
+    }
     return hthread;
 }
 
