@@ -88,23 +88,114 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 }
 
 
-
-
-
-bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout)
+// get canonical identifier of an address' group
+// no two connections will be attempted to addresses with the same group
+vector<unsigned char> CAddress::GetGroup() const
 {
+    std::vector<unsigned char> vchRet;
+    int nClass = 0; // 0=IPv6, 1=IPv4, 255=unroutable
+    int nStartByte = 0;
+    int nBits = 16;
+
+    // for unroutable addresses, each address is considered different
+    if (!IsRoutable())
+    {
+        nClass = 255;
+        nBits = 128;
+    }
+    // for IPv4 addresses, '1' + the 16 higher-order bits of the IP
+    // includes mapped IPv4, SIIT translated IPv4, and the well-known prefix
+    else if (IsIPv4() || IsRFC6145() || IsRFC6052())
+    {
+        nClass = 1;
+        nStartByte = 12;
+    }
+    // for 6to4 tunneled addresses, use the encapsulated IPv4 address
+    else if (Is6to4())
+    {
+        nClass = 1;
+        nStartByte = 2;
+    }
+    // for Teredo-tunneled IPv6 addresses, use the encapsulated IPv4 address
+    else if (IsRFC4380())
+    {
+        vchRet.push_back(1);
+        vchRet.push_back(GetByte(3) ^ 0xFF);
+        vchRet.push_back(GetByte(2) ^ 0xFF);
+        return vchRet;
+    }
+    // for he.net, use /36 groups
+    else if (GetByte(15) == 0x20 && GetByte(14) == 0x11 && GetByte(13) == 0x04 && GetByte(12) == 0x70)
+        nBits = 36;
+    // for the rest of the IPv6 network, use /32 groups
+    else
+        nBits = 32;
+
+    vchRet.push_back(nClass);
+    while (nBits >= 8)
+    {
+        vchRet.push_back(GetByte(15 - nStartByte));
+        nStartByte++;
+        nBits -= 8;
+    }
+    if (nBits > 0)
+        vchRet.push_back(GetByte(15 - nStartByte) | ((1 << nBits) - 1));
+
+    return vchRet;
+}
+
+
+bool CAddress::ConnectSocket(SOCKET& hSocketRet, int nTimeout) const
+{
+    bool fProxy = (fUseProxy && IsRoutable());
+    struct sockaddr_storage sockaddr;
+    int nFamily = 0;
+    size_t nSockaddrLen = 0;
+    if (fProxy && !IsIPv4())
+    {
+         // TODO: implement IPv6 proxying
+         // for now, just fail
+         return false;
+    }
+
+    if ((!fProxy && IsIPv4()) || (fProxy && addrProxy.IsIPv4()))
+    {
+        struct sockaddr_in sockaddrI;
+        if (fProxy)
+            sockaddrI = addrProxy.GetSockAddrIPv4();
+        else
+            sockaddrI = GetSockAddrIPv4();
+        memcpy(&sockaddr, &sockaddrI, sizeof(sockaddrI));
+        nSockaddrLen = sizeof(sockaddrI);
+        nFamily = AF_INET;
+    }
+    else
+    {
+#ifdef USE_IPV6
+        struct sockaddr_in6 sockaddrI;
+        if (fProxy)
+            sockaddrI = addrProxy.GetSockAddrIPv6();
+        else
+            sockaddrI = GetSockAddrIPv6();
+        memcpy(&sockaddr, &sockaddrI, sizeof(sockaddrI));
+        nSockaddrLen = sizeof(sockaddrI);
+        nFamily = AF_INET6;
+#else
+        // IPv6 is not compiled in, just fail
+        return false;
+#endif
+    }
+
+
     hSocketRet = INVALID_SOCKET;
 
-    SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET hSocket = socket(nFamily, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
 #ifdef BSD
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
-
-    bool fProxy = (fUseProxy && addrConnect.IsRoutable());
-    struct sockaddr_in sockaddr = (fProxy ? addrProxy.GetSockAddr() : addrConnect.GetSockAddr());
 
 #ifdef __WXMSW__
     u_long fNonblock = 1;
@@ -119,7 +210,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
     }
 
 
-    if (connect(hSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
+    if (connect(hSocket, (struct sockaddr*)&sockaddr, nSockaddrLen) == SOCKET_ERROR)
     {
         // WSAEINVAL is here because some legacy version of winsock uses it
         if (WSAGetLastError() == WSAEINPROGRESS || WSAGetLastError() == WSAEWOULDBLOCK || WSAGetLastError() == WSAEINVAL)
@@ -168,7 +259,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
         else
 #endif
         {
-            printf("connect() failed: %i\n",WSAGetLastError());
+            printf("connect() failed: %s\n",strerror(WSAGetLastError()));
             closesocket(hSocket);
             return false;
         }
@@ -191,12 +282,12 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
         return false;
     }
 
-    if (fProxy)
+    if (fProxy && IsIPv4())
     {
-        printf("proxy connecting %s\n", addrConnect.ToString().c_str());
+        printf("proxy connecting %s\n", ToString().c_str());
         char pszSocks4IP[] = "\4\1\0\0\0\0\0\0user";
-        memcpy(pszSocks4IP + 2, &addrConnect.port, 2);
-        memcpy(pszSocks4IP + 4, &addrConnect.ip, 4);
+        memcpy(pszSocks4IP + 2, &port, 2);
+        memcpy(pszSocks4IP + 4, &ip[12], 4); // ugly: extract IPv4 part
         char* pszSocks4 = pszSocks4IP;
         int nSize = sizeof(pszSocks4IP);
 
@@ -219,7 +310,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
                 printf("ERROR: Proxy returned error %d\n", pchRet[1]);
             return false;
         }
-        printf("proxy connected %s\n", addrConnect.ToString().c_str());
+        printf("proxy connected %s\n", ToString().c_str());
     }
 
     hSocketRet = hSocket;
@@ -255,34 +346,62 @@ bool Lookup(const char *pszName, vector<CAddress>& vaddr, int nServices, int nMa
             if (port < 0 || port > USHRT_MAX)
                 port = USHRT_MAX;
         }
+        else
+        {
+            if (psz[0] == '[' && psz[strlen(psz)-1] == ']')
+            {
+                pszHost = psz+1;
+                psz[strlen(psz)-1] = 0;
+            }
+        }
     }
 
-    unsigned int addrIP = inet_addr(pszHost);
-    if (addrIP != INADDR_NONE)
+    struct addrinfo aiHint = {};
+    aiHint.ai_socktype = SOCK_STREAM;
+    aiHint.ai_protocol = IPPROTO_TCP;
+#ifdef __WXMSW__
+#  ifdef USE_IPV6
+    aiHint.ai_family = AF_UNSPEC;
+    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
+#  else
+    aiHint.ai_family = AF_INET;
+    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
+#  endif
+#else
+#  ifdef USE_IPV6
+    aiHint.ai_family = AF_INET6;
+    aiHint.ai_flags = AI_ADDRCONFIG | AI_V4MAPPED | AI_ALL | (fAllowLookup ? 0 : AI_NUMERICHOST);
+#  else
+    aiHint.ai_family = AF_INET;
+    aiHint.ai_flags = AI_ADDRCONFIG | (fAllowLookup ? 0 : AI_NUMERICHOST);
+#  endif
+#endif
+    struct addrinfo *aiRes = NULL;
+    int nErr = getaddrinfo(pszHost, NULL, &aiHint, &aiRes);
+    if (nErr)
+        return false;
+
+    struct addrinfo *aiTrav = aiRes;
+    while (aiTrav != NULL)
     {
-        // valid IP address passed
-        vaddr.push_back(CAddress(addrIP, port, nServices));
-        return true;
+        if (aiTrav->ai_family == AF_INET)
+        {
+            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in));
+            vaddr.push_back(CAddress(&((struct sockaddr_in*)(aiTrav->ai_addr))->sin_addr, port, nServices));
+        }
+
+#ifdef USE_IPV6
+        if (aiTrav->ai_family == AF_INET6)
+        {
+            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
+            vaddr.push_back(CAddress(&((struct sockaddr_in6*)(aiTrav->ai_addr))->sin6_addr, port, nServices));
+        }
+#endif
+
+        aiTrav = aiTrav->ai_next;
     }
 
-    if (!fAllowLookup)
-        return false;
-
-    struct hostent* phostent = gethostbyname(pszHost);
-    if (!phostent)
-        return false;
-
-    if (phostent->h_addrtype != AF_INET)
-        return false;
-
-    char** ppAddr = phostent->h_addr_list;
-    while (*ppAddr != NULL && vaddr.size() != nMaxSolutions)
-    {
-        CAddress addr(((struct in_addr*)ppAddr[0])->s_addr, port, nServices);
-        if (addr.IsValid())
-            vaddr.push_back(addr);
-        ppAddr++;
-    }
+    freeaddrinfo(aiRes);
 
     return (vaddr.size() > 0);
 }
@@ -297,10 +416,10 @@ bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLooku
     return fRet;
 }
 
-bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const char* pszKeyword, unsigned int& ipRet)
+bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const char* pszKeyword, CAddress& addressRet)
 {
     SOCKET hSocket;
-    if (!ConnectSocket(addrConnect, hSocket))
+    if (!addrConnect.ConnectSocket(hSocket))
         return error("GetMyExternalIP() : connection to %s failed", addrConnect.ToString().c_str());
 
     send(hSocket, pszGet, strlen(pszGet), MSG_NOSIGNAL);
@@ -333,9 +452,8 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
                 strLine.resize(strLine.size()-1);
             CAddress addr(strLine,0,true);
             printf("GetMyExternalIP() received [%s] %s\n", strLine.c_str(), addr.ToString().c_str());
-            if (addr.ip == 0 || addr.ip == INADDR_NONE || !addr.IsRoutable())
+            if (!addr.IsValid() || !addr.IsRoutable())
                 return false;
-            ipRet = addr.ip;
             return true;
         }
     }
@@ -344,7 +462,7 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
 }
 
 // We now get our external IP from the IRC server first and only use this as a backup
-bool GetMyExternalIP(unsigned int& ipRet)
+bool GetMyExternalIP(CAddress& ipRet)
 {
     CAddress addrConnect;
     const char* pszGet;
@@ -362,7 +480,7 @@ bool GetMyExternalIP(unsigned int& ipRet)
         //  <?php echo $_SERVER["REMOTE_ADDR"]; ?>
         if (nHost == 1)
         {
-            addrConnect = CAddress("91.198.22.70",80); // checkip.dyndns.org
+            addrConnect = CAddress("91.198.22.70", 80); // checkip.dyndns.org
 
             if (nLookup == 1)
             {
@@ -420,10 +538,11 @@ void ThreadGetMyExternalIP(void* parg)
     }
 
     // Fallback in case IRC fails to get it
-    if (GetMyExternalIP(addrLocalHost.ip))
+    CAddress addr;
+    if (GetMyExternalIP(addr))
     {
         printf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP().c_str());
-        if (addrLocalHost.IsRoutable())
+        if (GotLocalAddress(addr) && addrLocalHost.IsRoutable())
         {
             // If we already connected to a few before we had our IP, go back and addr them.
             // setAddrKnown automatically filters any duplicate sends.
@@ -444,7 +563,7 @@ bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
 {
     if (!addr.IsRoutable())
         return false;
-    if (addr.ip == addrLocalHost.ip)
+    if (CompareIP(addr, addrLocalHost) == 0)
         return false;
     addr.nTime = max((int64)0, (int64)addr.nTime - nTimePenalty);
     CRITICAL_BLOCK(cs_mapAddresses)
@@ -617,17 +736,6 @@ void CNode::CancelSubscribe(unsigned int nChannel)
 
 
 
-CNode* FindNode(unsigned int ip)
-{
-    CRITICAL_BLOCK(cs_vNodes)
-    {
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if (pnode->addr.ip == ip)
-                return (pnode);
-    }
-    return NULL;
-}
-
 CNode* FindNode(CAddress addr)
 {
     CRITICAL_BLOCK(cs_vNodes)
@@ -639,13 +747,24 @@ CNode* FindNode(CAddress addr)
     return NULL;
 }
 
+CNode* FindNodeByIP(CAddress addr)
+{
+    CRITICAL_BLOCK(cs_vNodes)
+    {
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            if (CompareIP(pnode->addr, addr) == 0)
+                return (pnode);
+    }
+    return NULL;
+}
+
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
 {
-    if (addrConnect.ip == addrLocalHost.ip)
+    if (CompareIP(addrConnect, addrLocalHost) == 0)
         return NULL;
 
     // Look for an existing connection
-    CNode* pnode = FindNode(addrConnect.ip);
+    CNode* pnode = FindNodeByIP(addrConnect);
     if (pnode)
     {
         if (nTimeout != 0)
@@ -666,7 +785,7 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
 
     // Connect
     SOCKET hSocket;
-    if (ConnectSocket(addrConnect, hSocket))
+    if (addrConnect.ConnectSocket(hSocket))
     {
         /// debug print
         printf("connected %s\n", addrConnect.ToString().c_str());
@@ -675,10 +794,10 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
 #ifdef __WXMSW__
         u_long nOne = 1;
         if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR)
-            printf("ConnectSocket() : ioctlsocket nonblocking setting failed, error %d\n", WSAGetLastError());
+            printf("ConnectNode() : ioctlsocket nonblocking setting failed, error %d\n", WSAGetLastError());
 #else
         if (fcntl(hSocket, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
-            printf("ConnectSocket() : fcntl nonblocking setting failed, error %d\n", errno);
+            printf("ConnectNode() : fcntl nonblocking setting failed, error %d\n", errno);
 #endif
 
         // Add node
@@ -875,10 +994,14 @@ void ThreadSocketHandler2(void* parg)
         //
         if (hListenSocket != INVALID_SOCKET && FD_ISSET(hListenSocket, &fdsetRecv))
         {
+#ifdef USE_IPV6
+            struct sockaddr_in6 sockaddr;
+#else
             struct sockaddr_in sockaddr;
+#endif
             socklen_t len = sizeof(sockaddr);
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
-            CAddress addr(sockaddr);
+            CAddress addr(&sockaddr);
             int nInbound = 0;
 
             CRITICAL_BLOCK(cs_vNodes)
@@ -1175,7 +1298,11 @@ void DNSAddressSeed()
             {
                 BOOST_FOREACH (CAddress& addr, vaddr)
                 {
-                    if (addr.GetByte(3) != 127)
+#ifdef USE_IPV6
+                    if (addr.IsValid() && addr.IsRoutable())
+#else
+                    if (addr.IsValid() && addr.IsIPv4() && addr.IsRoutable())
+#endif
                     {
                         addr.nTime = 0;
                         AddAddress(addr, 0, &addrDB);
@@ -1328,15 +1455,16 @@ void ThreadOpenConnections2(void* parg)
         {
             // Add seed nodes if IRC isn't working
             static bool fSeedUsed;
-            bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+            bool fTOR = (fUseProxy && addrProxy.GetPort() == 9050);
             if (mapAddresses.empty() && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
             {
                 for (int i = 0; i < ARRAYLEN(pnSeed); i++)
                 {
                     // It'll only connect to one or two seed nodes because once it connects,
                     // it'll get a pile of addresses with newer timestamps.
-                    CAddress addr;
-                    addr.ip = pnSeed[i];
+                    struct in_addr ip;
+                    ip.s_addr = pnSeed[i];
+                    CAddress addr(&ip);
                     addr.nTime = 0;
                     AddAddress(addr);
                 }
@@ -1353,8 +1481,14 @@ void ThreadOpenConnections2(void* parg)
                     nSeedDisconnected = GetTime();
                     CRITICAL_BLOCK(cs_vNodes)
                         BOOST_FOREACH(CNode* pnode, vNodes)
-                            if (setSeed.count(pnode->addr.ip))
-                                pnode->fDisconnect = true;
+                        {
+                            if (pnode->addr.IsIPv4())
+                            {
+                                sockaddr_in addr = pnode->addr.GetSockAddrIPv4();
+                                if (setSeed.count(addr.sin_addr.s_addr))
+                                    pnode->fDisconnect = true;
+                            }
+                        }
                 }
 
                 // Keep setting timestamps to 0 so they won't reconnect
@@ -1362,10 +1496,14 @@ void ThreadOpenConnections2(void* parg)
                 {
                     BOOST_FOREACH(PAIRTYPE(const vector<unsigned char>, CAddress)& item, mapAddresses)
                     {
-                        if (setSeed.count(item.second.ip) && item.second.nTime != 0)
+                        if (item.second.IsIPv4() && item.second.nTime != 0)
                         {
-                            item.second.nTime = 0;
-                            CAddrDB().WriteAddress(item.second);
+                            sockaddr_in addr = item.second.GetSockAddrIPv4();
+                            if (setSeed.count(addr.sin_addr.s_addr))
+                            {
+                                item.second.nTime = 0;
+                                CAddrDB().WriteAddress(item.second);
+                            }
                         }
                     }
                 }
@@ -1379,26 +1517,26 @@ void ThreadOpenConnections2(void* parg)
         CAddress addrConnect;
         int64 nBest = INT64_MIN;
 
-        // Only connect to one address per a.b.?.? range.
+        // Only connect to one address per group (a.b.0.0/16 for IPv4)
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
-        set<unsigned int> setConnected;
+        set<vector<unsigned char> > setConnected;
         CRITICAL_BLOCK(cs_vNodes)
             BOOST_FOREACH(CNode* pnode, vNodes)
-                setConnected.insert(pnode->addr.ip & 0x0000ffff);
+                setConnected.insert(pnode->addr.GetGroup());
 
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
             {
                 const CAddress& addr = item.second;
-                if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip & 0x0000ffff))
+                if (!addr.IsValid() || setConnected.count(addr.GetGroup()))
                     continue;
                 int64 nSinceLastSeen = GetAdjustedTime() - addr.nTime;
                 int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;
 
                 // Randomize the order in a deterministic way, putting the standard port first
-                int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
-                if (addr.port != htons(GetDefaultPort()))
+                int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.GetRandomized()) % (2 * 60 * 60);
+                if (addr.GetPort() != GetDefaultPort())
                     nRandomizer += 2 * 60 * 60;
 
                 // Last seen  Base retry frequency
@@ -1453,7 +1591,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
     //
     if (fShutdown)
         return false;
-    if (addrConnect.ip == addrLocalHost.ip || !addrConnect.IsIPv4() || FindNode(addrConnect.ip))
+    if (!CompareIP(addrConnect, addrLocalHost) || FindNodeByIP(addrConnect))
         return false;
 
     vnThreadsRunning[1]--;
@@ -1553,9 +1691,10 @@ void ThreadMessageHandler2(void* parg)
 
 bool BindListenPort(string& strError)
 {
+    unsigned short port = GetListenPort();
     strError = "";
     int nOne = 1;
-    addrLocalHost.port = htons(GetListenPort());
+    addrLocalHost.SetPort(port);
 
 #ifdef __WXMSW__
     // Initialize Windows Sockets
@@ -1570,7 +1709,11 @@ bool BindListenPort(string& strError)
 #endif
 
     // Create socket for listening for incoming connections
+#ifdef USE_IPV6
+    hListenSocket = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+#else
     hListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+#endif
     if (hListenSocket == INVALID_SOCKET)
     {
         strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %d)", WSAGetLastError());
@@ -1603,22 +1746,38 @@ bool BindListenPort(string& strError)
 
     // The sockaddr_in structure specifies the address family,
     // IP address, and port for the socket that is being bound
-    struct sockaddr_in sockaddr;
+#ifdef USE_IPV6
+    struct sockaddr_in6 sockaddr = {};
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin6_family = AF_INET6;
+    struct in6_addr addr = IN6ADDR_ANY_INIT;
+    sockaddr.sin6_addr = addr;   // bind to all IPs on this computer
+    sockaddr.sin6_port = htons(port);
+#  ifdef __WXMSW__
+    int nProtLevel = 10 /* PROTECTION_LEVEL_UNRESTRICTED */;
+    int nParameterId = 23 /* IPV6_PROTECTION_LEVEl */;
+    // this call is allowed to fail
+    setsockopt(hListenSocket, IPPROTO_IPV6, nParameterId, (const char*)&nProtLevel, sizeof(int));
+#  endif
+#else
+    struct sockaddr_in sockaddr = {};
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
-    sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
-    sockaddr.sin_port = htons(GetListenPort());
+    sockaddr.sin_addr.s_addr = INADDR_ANY;   // bind to all IPs on this computer
+    sockaddr.sin_port = htons(port);
+#endif
+
     if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to port %d on this computer.  Bitcoin is probably already running."), ntohs(sockaddr.sin_port));
+            strError = strprintf(_("Unable to bind to port %d on this computer.  Bitcoin is probably already running."), (int)port);
         else
-            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
+            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", (int)port, nErr);
         printf("%s\n", strError.c_str());
         return false;
     }
-    printf("Bound to port %d\n", ntohs(sockaddr.sin_port));
+    printf("Bound to port %d\n", (int)port);
 
     // Listen for incoming connections
     if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
@@ -1629,6 +1788,23 @@ bool BindListenPort(string& strError)
     }
 
     return true;
+}
+
+bool GotLocalAddress(const CAddress &addr)
+{
+#ifndef USE_IPV6
+    if (!addr.IsIPv4())
+        return false;
+#endif
+    int nOldReachability = addrLocalHost.GetReachability();
+    int nNewReachability = addr.GetReachability();
+    if (nNewReachability > nOldReachability)
+    {
+        addrLocalHost = addr;
+        addrLocalHost.nServices = nLocalServices;
+        return true;
+    }
+    return false;
 }
 
 void StartNode(void* parg)
@@ -1644,11 +1820,7 @@ void StartNode(void* parg)
         vector<CAddress> vaddr;
         if (Lookup(pszHostName, vaddr, nLocalServices, -1, true))
             BOOST_FOREACH (const CAddress &addr, vaddr)
-                if (addr.GetByte(3) != 127)
-                {
-                    addrLocalHost = addr;
-                    break;
-                }
+                GotLocalAddress(addr);
     }
 #else
     // Get local host ip
@@ -1668,20 +1840,20 @@ void StartNode(void* parg)
                 if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s4->sin_addr), pszIP, sizeof(pszIP)) != NULL)
                     printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
 
-                // Take the first IP that isn't loopback 127.x.x.x
-                CAddress addr(*(unsigned int*)&s4->sin_addr, GetListenPort(), nLocalServices);
-                if (addr.IsValid() && addr.GetByte(3) != 127)
-                {
-                    addrLocalHost = addr;
-                    break;
-                }
+                CAddress addr(&s4->sin_addr, GetListenPort(), nLocalServices);
+                GotLocalAddress(addr);
             }
+#ifdef USE_IPV6
             else if (ifa->ifa_addr->sa_family == AF_INET6)
             {
                 struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
                 if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s6->sin6_addr), pszIP, sizeof(pszIP)) != NULL)
                     printf("ipv6 %s: %s\n", ifa->ifa_name, pszIP);
+
+                CAddress addr(&s6->sin6_addr, GetListenPort(), nLocalServices);
+                GotLocalAddress(addr);
             }
+#endif
         }
         freeifaddrs(myaddrs);
     }
@@ -1691,7 +1863,7 @@ void StartNode(void* parg)
     if (fUseProxy || mapArgs.count("-connect") || fNoListen)
     {
         // Proxies can't take incoming connections
-        addrLocalHost.ip = CAddress("0.0.0.0").ip;
+        addrLocalHost = CAddress();
         printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
     }
     else

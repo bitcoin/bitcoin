@@ -826,13 +826,13 @@ int64 GetAdjustedTime()
     return GetTime() + nTimeOffset;
 }
 
-void AddTimeData(unsigned int ip, int64 nTime)
+void AddTimeData(const vector<unsigned char>& vchIp, int64 nTime)
 {
     int64 nOffsetSample = nTime - GetTime();
 
     // Ignore duplicates
-    static set<unsigned int> setKnown;
-    if (!setKnown.insert(ip).second)
+    static set<vector<unsigned char> > setKnown;
+    if (!setKnown.insert(vchIp).second)
         return;
 
     // Add data

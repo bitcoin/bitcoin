@@ -28,9 +28,13 @@ struct ircaddr
 
 string EncodeAddress(const CAddress& addr)
 {
+    if (!addr.IsIPv4())
+        return "";
+
+    struct sockaddr_in ip = addr.GetSockAddrIPv4();
     struct ircaddr tmp;
-    tmp.ip    = addr.ip;
-    tmp.port  = addr.port;
+    tmp.ip    = ip.sin_addr.s_addr;
+    tmp.port  = ip.sin_port;
 
     vector<unsigned char> vch(UBEGIN(tmp), UEND(tmp));
     return string("u") + EncodeBase58Check(vch);
@@ -47,7 +51,10 @@ bool DecodeAddress(string str, CAddress& addr)
         return false;
     memcpy(&tmp, &vch[0], sizeof(tmp));
 
-    addr = CAddress(tmp.ip, ntohs(tmp.port), NODE_NETWORK);
+    struct sockaddr_in ip;
+    ip.sin_addr.s_addr = tmp.ip;
+    ip.sin_port = tmp.port;
+    addr = CAddress(&ip, NODE_NETWORK);
     return true;
 }
 
@@ -203,7 +210,7 @@ bool RecvCodeLine(SOCKET hSocket, const char* psz1, string& strRet)
     }
 }
 
-bool GetIPFromIRC(SOCKET hSocket, string strMyName, unsigned int& ipRet)
+bool GetIPFromIRC(SOCKET hSocket, string strMyName, CAddress &addrRet)
 {
     Send(hSocket, strprintf("USERHOST %s\r", strMyName.c_str()).c_str());
 
@@ -226,10 +233,9 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, unsigned int& ipRet)
     printf("GetIPFromIRC() got userhost %s\n", strHost.c_str());
     if (fUseProxy)
         return false;
-    CAddress addr(strHost, 0, true);
-    if (!addr.IsValid())
+    addrRet = CAddress(strHost, 0, true);
+    if (!addrRet.IsValid())
         return false;
-    ipRet = addr.ip;
 
     return true;
 }
@@ -263,7 +269,7 @@ void ThreadIRCSeed2(void* parg)
     int nErrorWait = 10;
     int nRetryWait = 10;
     bool fNameInUse = false;
-    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+    bool fTOR = (fUseProxy && addrProxy.GetPort() == 9050);
 
     while (!fShutdown)
     {
@@ -278,7 +284,7 @@ void ThreadIRCSeed2(void* parg)
         }
 
         SOCKET hSocket;
-        if (!ConnectSocket(addrConnect, hSocket))
+        if (!addrConnect.ConnectSocket(hSocket))
         {
             printf("IRC connect failed\n");
             nErrorWait = nErrorWait * 11 / 10;
@@ -300,7 +306,7 @@ void ThreadIRCSeed2(void* parg)
         }
 
         string strMyName;
-        if (addrLocalHost.IsRoutable() && !fUseProxy && !fNameInUse)
+        if (addrLocalHost.IsIPv4() && addrLocalHost.IsRoutable() && !fUseProxy && !fNameInUse)
             strMyName = EncodeAddress(addrLocalHost);
         else
             strMyName = strprintf("x%u", GetRand(1000000000));
@@ -330,16 +336,19 @@ void ThreadIRCSeed2(void* parg)
 
         // Get our external IP from the IRC server and re-nick before joining the channel
         CAddress addrFromIRC;
-        if (GetIPFromIRC(hSocket, strMyName, addrFromIRC.ip))
+        if (GetIPFromIRC(hSocket, strMyName, addrFromIRC))
         {
             printf("GetIPFromIRC() returned %s\n", addrFromIRC.ToStringIP().c_str());
             if (!fUseProxy && addrFromIRC.IsRoutable())
             {
                 // IRC lets you to re-nick
                 fGotExternalIP = true;
-                addrLocalHost.ip = addrFromIRC.ip;
-                strMyName = EncodeAddress(addrLocalHost);
-                Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
+                GotLocalAddress(addrFromIRC);
+                if (addrLocalHost.IsIPv4())
+                {
+                    strMyName = EncodeAddress(addrLocalHost);
+                    Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
+                }
             }
         }
         

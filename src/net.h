@@ -10,6 +10,8 @@
 
 #ifndef __WXMSW__
 #include <arpa/inet.h>
+#else
+#include <ws2tcpip.h>
 #endif
 
 class CMessageHeader;
@@ -36,11 +38,11 @@ enum
 
 
 
-bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout=nConnectTimeout);
 bool Lookup(const char *pszName, std::vector<CAddress>& vaddr, int nServices, int nMaxSolutions, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool GetMyExternalIP(unsigned int& ipRet);
 bool AddAddress(CAddress addr, int64 nTimePenalty=0, CAddrDB *pAddrDB=NULL);
+bool GotLocalAddress(const CAddress &addr);
 void AddressCurrentlyConnected(const CAddress& addr);
 CNode* FindNode(unsigned int ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
@@ -151,11 +153,15 @@ static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0
 
 class CAddress
 {
+private:
+    // TCP/IP port in network byte order
+    uint16_t port;
+
+    // IPv6 address (possibly containing an IPv4 mapped address)
+    unsigned char ip[16];
+
 public:
     uint64 nServices;
-    unsigned char pchReserved[12];
-    unsigned int ip;
-    unsigned short port;
 
     // disk and network only
     unsigned int nTime;
@@ -163,25 +169,42 @@ public:
     // memory only
     unsigned int nLastTry;
 
+
+    // portIn is in network byte order
+    void Init(struct in_addr* pipv4Addr, unsigned short portIn, uint64 nServicesIn=NODE_NETWORK)
+    {
+        Init();
+        if (pipv4Addr != NULL)
+        {
+            memcpy(ip,    pchIPv4, 12);
+            memcpy(ip+12, pipv4Addr, 4);
+        }
+        port = portIn;
+        nServices = nServicesIn;
+    }
+
+    void Init(struct sockaddr_in* paddr, uint64 nServicesIn=NODE_NETWORK)
+    {
+        Init(&paddr->sin_addr, paddr->sin_port, nServicesIn);
+    }
+
     CAddress()
     {
         Init();
     }
 
-    CAddress(unsigned int ipIn, unsigned short portIn=0, uint64 nServicesIn=NODE_NETWORK)
+    // construct an IPv4 address - portIn is in host byte order
+    CAddress(struct in_addr* pipv4Addr, unsigned short portIn=0, uint64 nServicesIn=NODE_NETWORK)
     {
-        Init();
-        ip = ipIn;
-        port = htons(portIn == 0 ? GetDefaultPort() : portIn);
-        nServices = nServicesIn;
+        if (portIn == 0)
+            portIn = GetDefaultPort();
+        Init(pipv4Addr, htons(portIn), nServicesIn);
     }
 
-    explicit CAddress(const struct sockaddr_in& sockaddr, uint64 nServicesIn=NODE_NETWORK)
+    // construct an IPv4 address - portIn is in host byte order
+    CAddress(struct sockaddr_in* paddr, uint64 nServicesIn=NODE_NETWORK)
     {
-        Init();
-        ip = sockaddr.sin_addr.s_addr;
-        port = sockaddr.sin_port;
-        nServices = nServicesIn;
+        Init(paddr, nServicesIn);
     }
 
     explicit CAddress(const char* pszIn, int portIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK)
@@ -211,8 +234,7 @@ public:
     void Init()
     {
         nServices = NODE_NETWORK;
-        memcpy(pchReserved, pchIPv4, sizeof(pchReserved));
-        ip = INADDR_NONE;
+        memset(ip, 0, 16);
         port = htons(GetDefaultPort());
         nTime = 100000000;
         nLastTry = 0;
@@ -227,16 +249,31 @@ public:
         if ((nType & SER_DISK) || (nVersion >= 31402 && !(nType & SER_GETHASH)))
             READWRITE(nTime);
         READWRITE(nServices);
-        READWRITE(FLATDATA(pchReserved)); // for IPv6
-        READWRITE(ip);
+        READWRITE(FLATDATA(ip));
         READWRITE(port);
     )
 
+    bool ConnectSocket(SOCKET& hSocketRet, int nTimeout=nConnectTimeout) const;
+
+    int inline GetPort() const
+    {
+        return ntohs(port);
+    }
+
+    void SetPort(unsigned short portIn)
+    {
+        port = htons(portIn);
+    }
+
     friend inline bool operator==(const CAddress& a, const CAddress& b)
     {
-        return (memcmp(a.pchReserved, b.pchReserved, sizeof(a.pchReserved)) == 0 &&
-                a.ip   == b.ip &&
+        return (memcmp(a.ip, b.ip, sizeof(a.ip)) == 0 &&
                 a.port == b.port);
+    }
+
+    friend inline int CompareIP(const CAddress& a, const CAddress& b)
+    {
+        return memcmp(a.ip, b.ip, sizeof(a.ip));
     }
 
     friend inline bool operator!=(const CAddress& a, const CAddress& b)
@@ -246,16 +283,9 @@ public:
 
     friend inline bool operator<(const CAddress& a, const CAddress& b)
     {
-        int ret = memcmp(a.pchReserved, b.pchReserved, sizeof(a.pchReserved));
+        int ret = memcmp(a.ip, b.ip, sizeof(a.ip));
         if (ret < 0)
             return true;
-        else if (ret == 0)
-        {
-            if (ntohl(a.ip) < ntohl(b.ip))
-                return true;
-            else if (a.ip == b.ip)
-                return ntohs(a.port) < ntohs(b.port);
-        }
         return false;
     }
 
@@ -263,7 +293,7 @@ public:
     {
         CDataStream ss;
         ss.reserve(18);
-        ss << FLATDATA(pchReserved) << ip << port;
+        ss << FLATDATA(ip) << port;
 
         #if defined(_MSC_VER) && _MSC_VER < 1300
         return std::vector<unsigned char>((unsigned char*)&ss.begin()[0], (unsigned char*)&ss.end()[0]);
@@ -272,73 +302,200 @@ public:
         #endif
     }
 
-    struct sockaddr_in GetSockAddr() const
+    uint256 GetIPAsUint256() const
+    {
+       uint256 uint256 = 0;
+       memcpy(&uint256, ip, 16);
+       return uint256;
+    }
+
+    struct sockaddr_in GetSockAddrIPv4() const
     {
         struct sockaddr_in sockaddr;
         memset(&sockaddr, 0, sizeof(sockaddr));
         sockaddr.sin_family = AF_INET;
-        sockaddr.sin_addr.s_addr = ip;
+        memcpy(&sockaddr.sin_addr.s_addr, ip+12, 4);
         sockaddr.sin_port = port;
         return sockaddr;
     }
 
+    // IPv4-mapped addresses (::ffff:0:0/96)
     bool IsIPv4() const
     {
-        return (memcmp(pchReserved, pchIPv4, sizeof(pchIPv4)) == 0);
+        return (memcmp(ip, pchIPv4, sizeof(pchIPv4)) == 0);
     }
 
+    // IPv4 private networks (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)
     bool IsRFC1918() const
     {
-      return IsIPv4() && (GetByte(3) == 10 ||
-        (GetByte(3) == 192 && GetByte(2) == 168) ||
-        (GetByte(3) == 172 &&
-          (GetByte(2) >= 16 && GetByte(2) <= 31)));
+        return IsIPv4() && (GetByte(3) == 10 ||
+            (GetByte(3) == 192 && GetByte(2) == 168) ||
+            (GetByte(3) == 172 &&
+                (GetByte(2) >= 16 && GetByte(2) <= 31)));
     }
 
+    // IPv4 auto configuration (169.254.x.x)
     bool IsRFC3927() const
     {
-      return IsIPv4() && (GetByte(3) == 169 && GetByte(2) == 254);
+        return IsIPv4() && (GetByte(3) == 169 && GetByte(2) == 254);
     }
 
+    // IPv6 documentation address (2001:db8::/32)
+    bool IsRFC3849() const
+    {
+        return GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x0D && GetByte(12) == 0xB8;
+    }
+
+    // 6to4 tunneling (2002::/16)
+    bool Is6to4() const
+    {
+        return (GetByte(15) == 0x20 && GetByte(14) == 0x02);
+    }
+
+    // IPv6 Well-known prefix (64:ff9b::/96)
+    bool IsRFC6052() const
+    {
+        static const unsigned char pchRFC6052[] = {0,0x64,0xFF,0x9B,0,0,0,0,0,0,0,0};
+        return (memcmp(ip, pchRFC6052, sizeof(pchRFC6052)) == 0);
+    }
+
+    // IPv6 Teredo tunneling (2001::/32)
+    bool IsRFC4380() const
+    {
+        return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0 && GetByte(12) == 0);
+    }
+
+    // IPv6 stateless auto configuration (fe80::/64)
+    bool IsRFC4862() const
+    {
+        static const unsigned char pchRFC4862[] = {0xFE,0x80,0,0,0,0,0,0};
+        return (memcmp(ip, pchRFC4862, sizeof(pchRFC4862)) == 0);
+    }
+
+    // IPv6 unique local address (fc00::/7)
+    bool IsRFC4193() const
+    {
+        return ((GetByte(15) & 0xFE) == 0xFC);
+    }
+
+    // IPv4-translated addresses (::ffff:0:0:0/96)
+    bool IsRFC6145() const
+    {
+        static const unsigned char pchRFC6145[] = {0,0,0,0,0,0,0,0,0xFF,0xFF,0,0};
+        return (memcmp(ip, pchRFC6145, sizeof(pchRFC6145)) == 0);
+    }
+
+    // IPv6 and IPv4 loopback addresses
     bool IsLocal() const
     {
-      return IsIPv4() && (GetByte(3) == 127 ||
-          GetByte(3) == 0);
+        // IPv4 loopback
+       if (IsIPv4() && (GetByte(3) == 127 || GetByte(3) == 0))
+           return true;
+
+       // IPv6 loopback (::1/128)
+       static const unsigned char pchLocal[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+       if (memcmp(ip, pchLocal, 16) == 0)
+           return true;
+
+       return false;
     }
 
     bool IsRoutable() const
     {
-        return IsValid() &&
-            !(IsRFC1918() || IsRFC3927() || IsLocal());
+        return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || IsRFC4193() || IsLocal());
+    }
+
+    bool IsMulticast() const
+    {
+        return    (IsIPv4() && (GetByte(3) & 0xF0) == 0xE0)
+               || (GetByte(15) == 0xFF);
     }
 
     bool IsValid() const
     {
+        if (port == htons(USHRT_MAX))
+            return false;
+
         // Clean up 3-byte shifted addresses caused by garbage in size field
         // of addr messages from versions before 0.2.9 checksum.
         // Two consecutive addr messages look like this:
         // header20 vectorlen3 addr26 addr26 addr26 header20 vectorlen3 addr26 addr26 addr26...
         // so if the first length field is garbled, it reads the second batch
         // of addr misaligned by 3 bytes.
-        if (memcmp(pchReserved, pchIPv4+3, sizeof(pchIPv4)-3) == 0)
+        if (memcmp(ip, pchIPv4+3, sizeof(pchIPv4)-3) == 0)
             return false;
 
-        return (ip != 0 && ip != INADDR_NONE && port != htons(USHRT_MAX));
+        // unspecified IPv6 address (::/128)
+        unsigned char ipNone[16] = {};
+        if (memcmp(ip, ipNone, 16) == 0)
+            return false;
+
+        // documentation IPv6 address
+        if (IsRFC3849())
+            return false;
+
+        if (IsIPv4())
+        {
+            // INADDR_NONE
+            uint32_t ipNone = INADDR_NONE;
+            if (memcmp(ip+12, &ipNone, 4) == 0)
+                return false;
+
+            // 0
+            ipNone = 0;
+            if (memcmp(ip+12, &ipNone, 4) == 0)
+                return false;
+        }
+
+        return true;
     }
 
     unsigned char GetByte(int n) const
     {
-        return ((unsigned char*)&ip)[3-n];
+        return ip[15-n];
+    }
+
+    std::vector<unsigned char> GetGroup() const;
+
+    int64 GetRandomized() const
+    {
+        if (IsIPv4())
+        {
+            // reconstruct ip in reversed-byte order
+            // (the original definition of the randomizer used network-order integers on little endian architecture)
+            int64 ip = GetByte(0) << 24 + GetByte(1) << 16 + GetByte(2) << 8 + GetByte(3);
+            return ip * 7789;
+        }
+
+        // for IPv6 addresses, use separate multipliers for each byte
+        // these numbers are from the hexadecimal expansion of 3/Pi:
+        static const int64 nByteMult[16] = 
+            {0xF4764525, 0x75661FBE, 0xFA3B03BA, 0xEFCF4CA1, 0x4913E065, 0xDA655862, 0xFD7A1581, 0xCE19A812,
+             0x92B6A557, 0x6374BC50, 0x096DC65F, 0x0EBA5B2B, 0x7D2CE0AB, 0x09BE7ADE, 0x5CC350EF, 0xC618E6C7};
+        int64 nRet = 0;
+        for (int n=0; n<16; n++)
+            nRet += nByteMult[n]*GetByte(n);
+        return nRet;
     }
 
     std::string ToStringIPPort() const
     {
-        return strprintf("%u.%u.%u.%u:%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0), ntohs(port));
+        if (IsIPv4())
+            return strprintf("%u.%u.%u.%u:%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0), ntohs(port));
+        else
+            return "[" + ToStringIP() + strprintf("]:%u", ntohs(port));
     }
 
     std::string ToStringIP() const
     {
-        return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
+        if (IsIPv4())
+            return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
+        else
+            return strprintf("%x:%x:%x:%x:%x:%x:%x:%x",
+                             GetByte(15) << 8 | GetByte(14), GetByte(13) << 8 | GetByte(12),
+                             GetByte(11) << 8 | GetByte(10), GetByte(9) << 8 | GetByte(8),
+                             GetByte(7) << 8 | GetByte(6), GetByte(5) << 8 | GetByte(4),
+                             GetByte(3) << 8 | GetByte(2), GetByte(1) << 8 | GetByte(0));
     }
 
     std::string ToStringPort() const
@@ -348,13 +505,86 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("%u.%u.%u.%u:%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0), ntohs(port));
+        return ToStringIPPort();
     }
 
     void print() const
     {
         printf("CAddress(%s)\n", ToString().c_str());
     }
+
+    // 0 - invalid
+    // 1 - local ipv6
+    // 2 - local ipv4
+    // 3 - unroutable ipv6
+    // 4 - unroutable ipv4
+    // 5 - routable tunneled ipv6 (teredo)
+    // 6 - routable tunneled ipv6 (6to4, well-known prefix)
+    // 7 - routable ipv6
+    // 8 - routable ipv4
+    int GetReachability() const
+    {
+        if (!IsValid())
+            return 0;
+        if (!IsIPv4() && IsLocal())
+            return 1;
+        if (IsLocal())
+            return 2;
+        if (!IsIPv4() && !IsRoutable())
+            return 3;
+        if (!IsRoutable())
+            return 4;
+        if (IsRFC4380())
+            return 5;
+        if (Is6to4() || IsRFC6052())
+            return 6;
+        if (!IsIPv4())
+            return 7;
+        return 8;
+    }
+
+#ifdef USE_IPV6
+    // portIn is in network byte order
+    void Init(struct in6_addr* pipv6Addr, unsigned short portIn, uint64 nServicesIn=NODE_NETWORK)
+    {
+        Init();
+        if (pipv6Addr != NULL)
+            memcpy(ip, pipv6Addr, 16);
+        port = portIn;
+        nServices  = nServicesIn;
+    }
+
+    void Init(struct sockaddr_in6* paddr, uint64 nServicesIn=NODE_NETWORK)
+    {
+        Init(&paddr->sin6_addr, paddr->sin6_port, nServicesIn);
+    }
+
+    // construct an IPv6 address - portIn is in host byte order
+    CAddress(struct in6_addr* pipv6Addr, unsigned short portIn=0, uint64 nServicesIn=NODE_NETWORK)
+    {
+        if (portIn == 0)
+            portIn = GetDefaultPort();
+        Init(pipv6Addr, htons(portIn), nServicesIn);
+    }
+
+    // construct an IPv6 address - portIn is in host byte order
+    CAddress(struct sockaddr_in6* paddr, uint64 nServicesIn=NODE_NETWORK)
+    {
+        Init(paddr, nServicesIn);
+    }
+
+    struct sockaddr_in6 GetSockAddrIPv6() const
+    {
+        struct sockaddr_in6 sockaddr;
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        sockaddr.sin6_family = AF_INET6;
+        memcpy(&sockaddr.sin6_addr.s6_addr, ip, 16);
+        sockaddr.sin6_port = port;
+        return sockaddr;
+    }
+#endif
+
+
 };
 
 
@@ -1021,7 +1251,7 @@ inline void RelayMessage<>(const CInv& inv, const CDataStream& ss)
 //
 // Templates for the publish and subscription system.
 // The object being published as T& obj needs to have:
-//   a set<unsigned int> setSources member
+//   a set<CAddress> setSources member
 //   specializations of AdvertInsert and AdvertErase
 // Currently implemented for CTable and CProduct.
 //
@@ -1030,7 +1260,7 @@ template<typename T>
 void AdvertStartPublish(CNode* pfrom, unsigned int nChannel, unsigned int nHops, T& obj)
 {
     // Add to sources
-    obj.setSources.insert(pfrom->addr.ip);
+    obj.setSources.insert(pfrom->addr);
 
     if (!AdvertInsert(obj))
         return;
@@ -1059,7 +1289,7 @@ template<typename T>
 void AdvertRemoveSource(CNode* pfrom, unsigned int nChannel, unsigned int nHops, T& obj)
 {
     // Remove a source
-    obj.setSources.erase(pfrom->addr.ip);
+    obj.setSources.erase(pfrom->addr);
 
     // If no longer supported by any sources, cancel it
     if (obj.setSources.empty())

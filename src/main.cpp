@@ -1823,7 +1823,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
 
-        AddTimeData(pfrom->addr.ip, nTime);
+        AddTimeData(pfrom->addr.GetKey(), nTime);
 
         // Change version
         if (pfrom->nVersion >= 209)
@@ -1904,9 +1904,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             if (fShutdown)
                 return true;
-            // ignore IPv6 for now, since it isn't implemented anyway
-            if (!addr.IsIPv4())
-                continue;
             if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
                 addr.nTime = nNow - 5 * 24 * 60 * 60;
             AddAddress(addr, 2 * 60 * 60, &addrDB);
@@ -1921,8 +1918,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     static uint256 hashSalt;
                     if (hashSalt == 0)
                         RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
-                    uint256 hashRand = hashSalt ^ (((int64)addr.ip)<<32) ^ ((GetTime()+addr.ip)/(24*60*60));
-                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
+                    uint256 nIp = addr.GetIPAsUint256();
+                    uint256 hashRand = hashSalt;
+                    hashRand ^= nIp;
+                    int64 nNum = 0;
+                    memcpy(&nNum, &hashRand, 8);
+                    nNum += GetTime();
+                    nNum /= 24*60*60;
+                    hashRand ^= nNum;
                     multimap<uint256, CNode*> mapMix;
                     BOOST_FOREACH(CNode* pnode, vNodes)
                     {
@@ -2191,33 +2194,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     pfrom->PushAddress(addr);
             }
         }
-    }
-
-
-    else if (strCommand == "checkorder")
-    {
-        uint256 hashReply;
-        vRecv >> hashReply;
-
-        if (!GetBoolArg("-allowreceivebyip"))
-        {
-            pfrom->PushMessage("reply", hashReply, (int)2, string(""));
-            return true;
-        }
-
-        CWalletTx order;
-        vRecv >> order;
-
-        /// we have a chance to check the order here
-
-        // Keep giving the same key to the same ip until they use it
-        if (!mapReuseKey.count(pfrom->addr.ip))
-            mapReuseKey[pfrom->addr.ip] = pwalletMain->GetOrReuseKeyFromPool();
-
-        // Send back approval of order and pubkey to use
-        CScript scriptPubKey;
-        scriptPubKey << mapReuseKey[pfrom->addr.ip] << OP_CHECKSIG;
-        pfrom->PushMessage("reply", hashReply, (int)0, scriptPubKey);
     }
 
 
