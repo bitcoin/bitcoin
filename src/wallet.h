@@ -53,7 +53,7 @@ public:
     std::map<uint256, int> mapRequestCount;
     mutable CCriticalSection cs_mapRequestCount;
 
-    std::map<std::string, std::string> mapAddressBook;
+    std::map<CBitcoinAddress, std::string> mapAddressBook;
     mutable CCriticalSection cs_mapAddressBook;
 
     std::vector<unsigned char> vchDefaultKey;
@@ -81,7 +81,7 @@ public:
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     bool BroadcastTransaction(CWalletTx& wtxNew);
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
-    std::string SendMoneyToBitcoinAddress(std::string strAddress, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
+    std::string SendMoneyToBitcoinAddress(const CBitcoinAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
     bool TopUpKeyPool();
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
@@ -104,10 +104,10 @@ public:
     }
     bool IsChange(const CTxOut& txout) const
     {
-        std::vector<unsigned char> vchPubKey;
-        if (ExtractPubKey(txout.scriptPubKey, this, vchPubKey))
+        CBitcoinAddress address;
+        if (ExtractAddress(txout.scriptPubKey, this, address))
             CRITICAL_BLOCK(cs_mapAddressBook)
-                if (!mapAddressBook.count(PubKeyToAddress(vchPubKey)))
+                if (!mapAddressBook.count(address))
                     return true;
         return false;
     }
@@ -171,10 +171,10 @@ public:
 //    bool BackupWallet(const std::string& strDest);
 
     // requires cs_mapAddressBook lock
-    bool SetAddressBookName(const std::string& strAddress, const std::string& strName);
+    bool SetAddressBookName(const CBitcoinAddress& address, const std::string& strName);
 
     // requires cs_mapAddressBook lock
-    bool DelAddressBookName(const std::string& strAddress);
+    bool DelAddressBookName(const CBitcoinAddress& address);
 
     void UpdatedTransaction(const uint256 &hashTx)
     {
@@ -464,8 +464,8 @@ public:
         return nChangeCached;
     }
 
-    void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<std::string /* address */, int64> >& listReceived,
-                    std::list<std::pair<std::string /* address */, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
+    void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<CBitcoinAddress, int64> >& listReceived,
+                    std::list<std::pair<CBitcoinAddress, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
 
     void GetAccountAmounts(const std::string& strAccount, int64& nGenerated, int64& nReceived, 
                            int64& nSent, int64& nFee) const;
