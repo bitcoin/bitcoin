@@ -6,12 +6,12 @@ DEFINES += QT_GUI
 CONFIG += no_include_pwd
 
 # for boost 1.37, add -mt to the boost libraries
-unix:LIBS += -lssl -lcrypto -ldb_cxx
+LIBS += -lssl -lcrypto -ldb_cxx
 unix:!macx:LIBS += -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
 macx:LIBS += -lboost_system-mt -lboost_filesystem-mt -lboost_program_options-mt -lboost_thread-mt
+macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
+windows:LIBS += -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -lboost_program_options-mgw44-mt-1_43 -lboost_thread-mgw44-mt-1_43 -lws2_32 -lgdi32
 windows:DEFINES += __WXMSW__
-windows:LIBS += -lssl -lcrypto -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -lboost_program_options-mgw44-mt-1_43 -lboost_thread-mgw44-mt-1_43 -ldb_cxx -lws2_32 -lgdi32
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 # for extra security against potential buffer overflows
