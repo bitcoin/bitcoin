@@ -941,9 +941,17 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                     dPriority += (double)nCredit * pcoin.first->GetDepthInMainChain();
                 }
 
-                // Fill a vout back to self with any change
-                int64 nChange = nValueIn - nTotalValue;
-                if (nChange >= CENT)
+                int64 nChange = nValueIn - nValue - nFeeRet;
+                // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
+                // or until nChange becomes zero
+                if (nFeeRet < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+                {
+                    int64 nMoveToFee = min(nChange, MIN_TX_FEE - nFeeRet);
+                    nChange -= nMoveToFee;
+                    nFeeRet += nMoveToFee;
+                }
+
+                if (nChange > 0)
                 {
                     // Note: We use a new key here to keep it from being obvious which side is the change.
                     //  The drawback is that by not reusing a previous key, the change may be lost if a
