@@ -100,7 +100,7 @@
      <item>
       <widget class="QPushButton" name="addressBookButton">
        <property name="toolTip">
-        <string>Look up adress in address book</string>
+        <string>Choose adress from address book</string>
        </property>
        <property name="text">
         <string/>
@@ -123,7 +123,7 @@
      <item>
       <widget class="QPushButton" name="pasteButton">
        <property name="toolTip">
-        <string>Paste address from system clipboard</string>
+        <string>Paste address from clipboard</string>
        </property>
        <property name="text">
         <string/>
@@ -142,6 +142,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="deleteButton">
+       <property name="toolTip">
+        <string>Remove this recipient</string>
+       </property>
        <property name="text">
         <string/>
        </property>

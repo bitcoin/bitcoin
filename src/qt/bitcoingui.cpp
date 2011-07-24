@@ -162,10 +162,12 @@ void BitcoinGUI::createActions()
     QActionGroup *tabGroup = new QActionGroup(this);
 
     overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
+    overviewAction->setToolTip(tr("Show general overview of wallet"));
     overviewAction->setCheckable(true);
     tabGroup->addAction(overviewAction);
 
     historyAction = new QAction(QIcon(":/icons/history"), tr("&Transactions"), this);
+    historyAction->setToolTip(tr("Browse transaction history"));
     historyAction->setCheckable(true);
     tabGroup->addAction(historyAction);
 
@@ -199,7 +201,7 @@ void BitcoinGUI::createActions()
     openBitcoinAction = new QAction(QIcon(":/icons/bitcoin"), tr("Open &Bitcoin"), this);
     openBitcoinAction->setToolTip(tr("Show the Bitcoin window"));
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
-    exportAction->setToolTip(tr("Export data in current view to a file"));
+    exportAction->setToolTip(tr("Export the current view to a file"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));

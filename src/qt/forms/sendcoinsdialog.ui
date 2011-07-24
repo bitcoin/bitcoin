@@ -63,6 +63,9 @@
      </property>
      <item>
       <widget class="QPushButton" name="addButton">
+       <property name="toolTip">
+        <string>Send to multiple recipients at once</string>
+       </property>
        <property name="text">
         <string>&amp;Add recipient...</string>
        </property>
