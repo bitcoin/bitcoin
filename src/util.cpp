@@ -531,6 +531,25 @@ std::string DecodeBase64(const std::string &s)
 }
 
 
+char* ToHex(const char *ptr, int len, char *outbuf)
+{
+    static char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                               '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    char *outptr = outbuf;
+    unsigned char *iptr = (unsigned char *) ptr; 
+
+    while (len-- > 0)
+    {
+        *outptr++ = hexmap[*iptr>>4];
+        *outptr++ = hexmap[*iptr&15];
+        iptr++;
+     }
+
+     *outptr=0;
+     return outbuf;
+}
+
+
 const char* wxGetTranslation(const char* pszEnglish)
 {
 #ifdef GUI
