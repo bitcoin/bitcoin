@@ -6,10 +6,10 @@ QString BitcoinUnits::name(BitcoinUnits::Unit unit)
 {
     switch(unit)
     {
-    case BTC: return "BTC";
-    case mBTC: return "mBTC";
-    case uBTC: return "uBTC";
-    default: return "???";
+    case BTC: return QString("BTC");
+    case mBTC: return QString("mBTC");
+    case uBTC: return QString::fromUtf8("μBTC");
+    default: return QString("???");
     }
 }
 
@@ -17,10 +17,10 @@ QString BitcoinUnits::description(BitcoinUnits::Unit unit)
 {
     switch(unit)
     {
-    case BTC: return "Bitcoin";
-    case mBTC: return "Milli-bitcoin";
-    case uBTC: return "Micro-bitcoin";
-    default: return "???";
+    case BTC: return QString("Bitcoin");
+    case mBTC: return QString("Milli-bitcoin (1/1000)");
+    case uBTC: return QString("Micro-bitcoin (1/1000,000)");
+    default: return QString("???");
     }
 }
 
