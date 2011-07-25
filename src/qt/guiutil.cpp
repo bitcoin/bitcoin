@@ -37,13 +37,3 @@ void GUIUtil::setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setValidator(amountValidator);
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
-
-bool GUIUtil::parseMoney(const QString &amount, qint64 *val_out)
-{
-    return ParseMoney(amount.toStdString(), *val_out);
-}
-
-QString GUIUtil::formatMoney(qint64 amount, bool plussign)
-{
-    return QString::fromStdString(FormatMoney(amount, plussign));
-}

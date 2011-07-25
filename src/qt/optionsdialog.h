@@ -11,6 +11,7 @@ class QPushButton;
 QT_END_NAMESPACE
 class OptionsModel;
 class MainOptionsPage;
+class DisplayOptionsPage;
 class MonitoredDataMapper;
 
 class OptionsDialog : public QDialog
@@ -24,7 +25,8 @@ public:
 signals:
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void changePage(int index);
+
 private slots:
     void okClicked();
     void cancelClicked();
@@ -34,10 +36,13 @@ private slots:
 private:
     QListWidget *contents_widget;
     QStackedWidget *pages_widget;
-    MainOptionsPage *main_options_page;
     OptionsModel *model;
     MonitoredDataMapper *mapper;
     QPushButton *apply_button;
+
+    // Pages
+    MainOptionsPage *main_page;
+    DisplayOptionsPage *display_page;
 
     void setupMainPage();
 };

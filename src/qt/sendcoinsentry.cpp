@@ -1,6 +1,7 @@
 #include "sendcoinsentry.h"
 #include "ui_sendcoinsentry.h"
 #include "guiutil.h"
+#include "bitcoinunits.h"
 #include "addressbookpage.h"
 #include "walletmodel.h"
 #include "addresstablemodel.h"
@@ -103,7 +104,7 @@ SendCoinsRecipient SendCoinsEntry::getValue()
 
     rv.address = ui->payTo->text();
     rv.label = ui->addAsLabel->text();
-    GUIUtil::parseMoney(ui->payAmount->text(), &rv.amount);
+    BitcoinUnits::parse(BitcoinUnits::BTC, ui->payAmount->text(), &rv.amount);
 
     return rv;
 }

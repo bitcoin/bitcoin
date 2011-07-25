@@ -20,12 +20,6 @@ public:
     static void setupAddressWidget(QLineEdit *widget, QWidget *parent);
 
     static void setupAmountWidget(QLineEdit *widget, QWidget *parent);
-
-    // Convenience wrapper around ParseMoney that takes QString
-    static bool parseMoney(const QString &amount, qint64 *val_out);
-
-    // Convenience wrapper around FormatMoney that returns QString
-    static QString formatMoney(qint64 amount, bool plussign=false);
 };
 
 #endif // GUIUTIL_H

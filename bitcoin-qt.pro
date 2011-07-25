@@ -87,7 +87,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/qtwin.h \
     src/crypter.h \
     src/qt/sendcoinsentry.h \
-    src/qt/qvalidatedlineedit.h
+    src/qt/qvalidatedlineedit.h \
+    src/qt/bitcoinunits.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -129,7 +130,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/qtwin.cpp \
     src/crypter.cpp \
     src/qt/sendcoinsentry.cpp \
-    src/qt/qvalidatedlineedit.cpp
+    src/qt/qvalidatedlineedit.cpp \
+    src/qt/bitcoinunits.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

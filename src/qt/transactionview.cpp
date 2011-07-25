@@ -5,7 +5,7 @@
 #include "walletmodel.h"
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
-#include "guiutil.h"
+#include "bitcoinunits.h"
 #include "csvmodelwriter.h"
 #include "transactiondescdialog.h"
 #include "editaddressdialog.h"
@@ -227,7 +227,7 @@ void TransactionView::changedPrefix(const QString &prefix)
 void TransactionView::changedAmount(const QString &amount)
 {
     qint64 amount_parsed = 0;
-    if(GUIUtil::parseMoney(amount, &amount_parsed))
+    if(BitcoinUnits::parse(BitcoinUnits::BTC, amount, &amount_parsed))
     {
         transactionProxyModel->setMinAmount(amount_parsed);
     }

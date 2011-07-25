@@ -1,7 +1,7 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
 #include "walletmodel.h"
-#include "guiutil.h"
+#include "bitcoinunits.h"
 #include "addressbookpage.h"
 #include "optionsmodel.h"
 #include "sendcoinsentry.h"
@@ -71,7 +71,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
-        formatted.append(tr("%1 BTC to %2 (%3)").arg(GUIUtil::formatMoney(rcp.amount), rcp.label, rcp.address));
+        formatted.append(tr("%1 to %2 (%3)").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, rcp.amount), rcp.label, rcp.address));
     }
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
@@ -105,7 +105,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     case WalletModel::AmountWithFeeExceedsBalance:
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Total exceeds your balance when the %1 transaction fee is included").
-            arg(GUIUtil::formatMoney(sendstatus.fee)),
+            arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, sendstatus.fee)),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     case WalletModel::DuplicateAddress:

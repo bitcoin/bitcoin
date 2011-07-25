@@ -17,8 +17,9 @@
 #include <QDoubleValidator>
 #include <QRegExpValidator>
 #include <QDialogButtonBox>
+#include <QDebug>
 
-/* First (currently only) page of options */
+/* First page of options */
 class MainOptionsPage : public QWidget
 {
 public:
@@ -41,9 +42,23 @@ public slots:
 
 };
 
+class DisplayOptionsPage : public QWidget
+{
+public:
+    explicit DisplayOptionsPage(QWidget *parent=0);
+
+    void setMapper(MonitoredDataMapper *mapper);
+private:
+    QLineEdit *unit;
+signals:
+
+public slots:
+
+};
+
 OptionsDialog::OptionsDialog(QWidget *parent):
     QDialog(parent), contents_widget(0), pages_widget(0),
-    main_options_page(0), model(0)
+    model(0), main_page(0), display_page(0)
 {
     contents_widget = new QListWidget();
     contents_widget->setMaximumWidth(128);
@@ -53,8 +68,13 @@ OptionsDialog::OptionsDialog(QWidget *parent):
 
     QListWidgetItem *item_main = new QListWidgetItem(tr("Main"));
     contents_widget->addItem(item_main);
-    main_options_page = new MainOptionsPage(this);
-    pages_widget->addWidget(main_options_page);
+    main_page = new MainOptionsPage(this);
+    pages_widget->addWidget(main_page);
+
+    QListWidgetItem *item_display = new QListWidgetItem(tr("Display"));
+    //contents_widget->addItem(item_display);
+    display_page = new DisplayOptionsPage(this);
+    pages_widget->addWidget(display_page);
 
     contents_widget->setCurrentRow(0);
 
@@ -83,6 +103,8 @@ OptionsDialog::OptionsDialog(QWidget *parent):
     connect(mapper, SIGNAL(currentIndexChanged(int)), this, SLOT(disableApply()));
 
     /* Event bindings */
+    qDebug() << "setup";
+    connect(contents_widget, SIGNAL(currentRowChanged(int)), this, SLOT(changePage(int)));
     connect(buttonbox->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(okClicked()));
     connect(buttonbox->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(cancelClicked()));
     connect(buttonbox->button(QDialogButtonBox::Apply), SIGNAL(clicked()), this, SLOT(applyClicked()));
@@ -93,18 +115,16 @@ void OptionsDialog::setModel(OptionsModel *model)
     this->model = model;
 
     mapper->setModel(model);
-    main_options_page->setMapper(mapper);
+    main_page->setMapper(mapper);
+    display_page->setMapper(mapper);
 
     mapper->toFirst();
 }
 
-void OptionsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
+void OptionsDialog::changePage(int index)
 {
-    Q_UNUSED(previous);
-    if(current)
-    {
-        pages_widget->setCurrentIndex(contents_widget->row(current));
-    }
+    qDebug() << "page" << index;
+    pages_widget->setCurrentIndex(index);
 }
 
 void OptionsDialog::okClicked()
@@ -224,3 +244,25 @@ void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
     mapper->addMapping(fee_edit, OptionsModel::Fee);
 }
 
+DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
+        QWidget(parent)
+{
+    QVBoxLayout *layout = new QVBoxLayout();
+    QHBoxLayout *unit_hbox = new QHBoxLayout();
+    unit_hbox->addSpacing(18);
+    QLabel *unit_label = new QLabel(tr("&Unit: "));
+    unit_hbox->addWidget(unit_label);
+    unit = new QLineEdit();
+
+    unit_label->setBuddy(unit);
+    unit_hbox->addWidget(unit);
+
+    layout->addLayout(unit_hbox);
+    layout->addStretch();
+
+    setLayout(layout);
+}
+
+void DisplayOptionsPage::setMapper(MonitoredDataMapper *mapper)
+{
+}

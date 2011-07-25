@@ -2,7 +2,7 @@
 #include "ui_overviewpage.h"
 
 #include "walletmodel.h"
-#include "guiutil.h"
+#include "bitcoinunits.h"
 
 OverviewPage::OverviewPage(QWidget *parent) :
     QWidget(parent),
@@ -34,8 +34,8 @@ OverviewPage::~OverviewPage()
 
 void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance)
 {
-    ui->labelBalance->setText(GUIUtil::formatMoney(balance) + QString(" BTC"));
-    ui->labelUnconfirmed->setText(GUIUtil::formatMoney(unconfirmedBalance) + QString(" BTC"));
+    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, balance));
+    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, unconfirmedBalance));
 }
 
 void OverviewPage::setNumTransactions(int count)

@@ -1,5 +1,6 @@
 #include "bitcoinamountfield.h"
 #include "qvalidatedlineedit.h"
+#include "bitcoinunits.h"
 
 #include <QLabel>
 #include <QLineEdit>
@@ -11,7 +12,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
         QWidget(parent), amount(0), decimals(0)
 {
     amount = new QValidatedLineEdit(this);
-    amount->setValidator(new QRegExpValidator(QRegExp("[0-9]?"), this));
+    amount->setValidator(new QRegExpValidator(QRegExp("[0-9]*"), this));
     amount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     amount->installEventFilter(this);
     amount->setMaximumWidth(100);
@@ -26,7 +27,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     layout->addWidget(amount);
     layout->addWidget(new QLabel(QString(".")));
     layout->addWidget(decimals);
-    layout->addWidget(new QLabel(QString(" BTC")));
+    layout->addWidget(new QLabel(QString(" ") + BitcoinUnits::name(BitcoinUnits::BTC)));
     layout->addStretch(1);
     layout->setContentsMargins(0,0,0,0);
 
@@ -69,6 +70,13 @@ bool BitcoinAmountField::validate()
         decimals->setValid(false);
         valid = false;
     }
+    if(!BitcoinUnits::parse(BitcoinUnits::BTC, text(), 0))
+    {
+        amount->setValid(false);
+        decimals->setValid(false);
+        valid = false;
+    }
+
     return valid;
 }
 
