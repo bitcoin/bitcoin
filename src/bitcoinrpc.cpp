@@ -1830,24 +1830,6 @@ string EncodeBase64(string s)
     return result;
 }
 
-string DecodeBase64(string s)
-{
-    BIO *b64, *bmem;
-
-    char* buffer = static_cast<char*>(calloc(s.size(), sizeof(char)));
-
-    b64 = BIO_new(BIO_f_base64());
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bmem = BIO_new_mem_buf(const_cast<char*>(s.c_str()), s.size());
-    bmem = BIO_push(b64, bmem);
-    BIO_read(bmem, buffer, s.size());
-    BIO_free_all(bmem);
-
-    string result(buffer);
-    free(buffer);
-    return result;
-}
-
 bool HTTPAuthorized(map<string, string>& mapHeaders)
 {
     string strAuth = mapHeaders["authorization"];
