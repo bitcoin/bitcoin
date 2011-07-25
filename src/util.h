@@ -167,7 +167,7 @@ extern bool fShutdown;
 extern bool fDaemon;
 extern bool fServer;
 extern bool fCommandLine;
-extern std::string strMiscWarning;
+extern std::string strMiscWarning, strRPCUser, strRPCPass;
 extern bool fTestNet;
 extern bool fNoListen;
 extern bool fLogTimestamps;
@@ -209,6 +209,8 @@ int64 GetTime();
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
 std::string FormatFullVersion();
+std::string DecodeBase64(const std::string &s);
+char* ToHex(const char *ptr, int len, char *outbuf);
 
 
 
@@ -623,7 +625,10 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
         return (pthread_t)0;
     }
     if (!fWantHandle)
+    {
+        pthread_detach(hthread);
         return (pthread_t)-1;
+    }
     return hthread;
 }
 
