@@ -514,11 +514,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         /* Non-confirmed transactions are grey */
         if(!rec->status.confirmed)
         {
-            return QColor(128, 128, 128);
+            return COLOR_UNCONFIRMED;
         }
         if(index.column() == Amount && (rec->credit+rec->debit) < 0)
         {
-            return QColor(255, 0, 0);
+            return COLOR_NEGATIVE;
         }
     }
     else if (role == TypeRole)

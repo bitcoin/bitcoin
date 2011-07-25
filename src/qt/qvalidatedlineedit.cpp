@@ -1,5 +1,7 @@
 #include "qvalidatedlineedit.h"
 
+#include "guiconstants.h"
+
 QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
     QLineEdit(parent), valid(true)
 {
@@ -19,7 +21,7 @@ void QValidatedLineEdit::setValid(bool valid)
     }
     else
     {
-        setStyleSheet("background:#FF8080");
+        setStyleSheet(STYLE_INVALID);
     }
     this->valid = valid;
 }
