@@ -776,6 +776,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 if (pwalletMain->IsMine(txout))
                     continue;
 
+                CBitcoinAddress address;
                 string strAddress;
                 if (!mapValue["to"].empty())
                 {
@@ -785,15 +786,14 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 else
                 {
                     // Sent to Bitcoin Address
-                    CBitcoinAddress address;
-                    if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
+                    if (ExtractAddress(txout.scriptPubKey, NULL, address))
                         strAddress = address.ToString();
                 }
 
                 string strDescription = _("To: ");
                 CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
-                    if (pwalletMain->mapAddressBook.count(strAddress) && !pwalletMain->mapAddressBook[strAddress].empty())
-                        strDescription += pwalletMain->mapAddressBook[strAddress] + " ";
+                    if (pwalletMain->mapAddressBook.count(address) && !pwalletMain->mapAddressBook[address].empty())
+                        strDescription += pwalletMain->mapAddressBook[address] + " ";
                 strDescription += strAddress;
                 if (!mapValue["message"].empty())
                 {
