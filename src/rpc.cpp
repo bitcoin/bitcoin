@@ -33,7 +33,7 @@ using namespace boost::asio;
 using namespace json_spirit;
 
 void ThreadRPCServer2(void* parg);
-typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
+typedef Value(*rpcfn_type)(const Array& params, int api_version, bool fHelp);
 extern map<string, rpcfn_type> mapCallTable;
 
 
@@ -108,7 +108,7 @@ string AccountFromValue(const Value& value)
 ///
 
 
-Value help(const Array& params, bool fHelp)
+Value help(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -136,7 +136,7 @@ Value help(const Array& params, bool fHelp)
             Array params;
             rpcfn_type pfn = (*mi).second;
             if (setDone.insert(pfn).second)
-                (*pfn)(params, true);
+                (*pfn)(params, api_version, true);
         }
         catch (std::exception& e)
         {
@@ -155,7 +155,7 @@ Value help(const Array& params, bool fHelp)
 }
 
 
-Value stop(const Array& params, bool fHelp)
+Value stop(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -168,7 +168,7 @@ Value stop(const Array& params, bool fHelp)
 }
 
 
-Value getblockcount(const Array& params, bool fHelp)
+Value getblockcount(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -179,7 +179,7 @@ Value getblockcount(const Array& params, bool fHelp)
 }
 
 
-Value getblocknumber(const Array& params, bool fHelp)
+Value getblocknumber(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -190,7 +190,7 @@ Value getblocknumber(const Array& params, bool fHelp)
 }
 
 
-Value getconnectioncount(const Array& params, bool fHelp)
+Value getconnectioncount(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -227,7 +227,7 @@ double GetDifficulty()
     return dDiff;
 }
 
-Value getdifficulty(const Array& params, bool fHelp)
+Value getdifficulty(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -238,7 +238,7 @@ Value getdifficulty(const Array& params, bool fHelp)
 }
 
 
-Value getgenerate(const Array& params, bool fHelp)
+Value getgenerate(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -249,7 +249,7 @@ Value getgenerate(const Array& params, bool fHelp)
 }
 
 
-Value setgenerate(const Array& params, bool fHelp)
+Value setgenerate(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -277,7 +277,7 @@ Value setgenerate(const Array& params, bool fHelp)
 }
 
 
-Value gethashespersec(const Array& params, bool fHelp)
+Value gethashespersec(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -290,7 +290,7 @@ Value gethashespersec(const Array& params, bool fHelp)
 }
 
 
-Value getinfo(const Array& params, bool fHelp)
+Value getinfo(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -306,16 +306,17 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
     obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
+    obj.push_back(Pair("hashespersec",  gethashespersec(params, api_version, false)));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    obj.push_back(Pair("api_version",   api_version));
     return obj;
 }
 
 
-Value getnewaddress(const Array& params, bool fHelp)
+Value getnewaddress(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -382,7 +383,7 @@ string GetAccountAddress(string strAccount, bool bForceNew=false)
     return strAddress;
 }
 
-Value getaccountaddress(const Array& params, bool fHelp)
+Value getaccountaddress(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -406,7 +407,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
 
 
 
-Value setaccount(const Array& params, bool fHelp)
+Value setaccount(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -443,7 +444,7 @@ Value setaccount(const Array& params, bool fHelp)
 }
 
 
-Value getaccount(const Array& params, bool fHelp)
+Value getaccount(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -463,7 +464,7 @@ Value getaccount(const Array& params, bool fHelp)
 }
 
 
-Value getaddressesbyaccount(const Array& params, bool fHelp)
+Value getaddressesbyaccount(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -492,7 +493,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     return ret;
 }
 
-Value settxfee(const Array& params, bool fHelp)
+Value settxfee(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
@@ -508,7 +509,7 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
-Value sendtoaddress(const Array& params, bool fHelp)
+Value sendtoaddress(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
@@ -538,7 +539,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 }
 
 
-Value getreceivedbyaddress(const Array& params, bool fHelp)
+Value getreceivedbyaddress(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -600,7 +601,7 @@ void GetAccountPubKeys(string strAccount, set<CScript>& setPubKey)
 }
 
 
-Value getreceivedbyaccount(const Array& params, bool fHelp)
+Value getreceivedbyaccount(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -672,7 +673,7 @@ int64 GetAccountBalance(const string& strAccount, int nMinDepth)
 }
 
 
-Value getbalance(const Array& params, bool fHelp)
+Value getbalance(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 0 || params.size() > 2)
         throw runtime_error(
@@ -723,7 +724,7 @@ Value getbalance(const Array& params, bool fHelp)
 }
 
 
-Value movecmd(const Array& params, bool fHelp)
+Value movecmd(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
@@ -771,7 +772,7 @@ Value movecmd(const Array& params, bool fHelp)
 }
 
 
-Value sendfrom(const Array& params, bool fHelp)
+Value sendfrom(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
@@ -809,7 +810,7 @@ Value sendfrom(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-Value sendmany(const Array& params, bool fHelp)
+Value sendmany(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
@@ -987,7 +988,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     return ret;
 }
 
-Value listreceivedbyaddress(const Array& params, bool fHelp)
+Value listreceivedbyaddress(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -1003,7 +1004,7 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
     return ListReceived(params, false);
 }
 
-Value listreceivedbyaccount(const Array& params, bool fHelp)
+Value listreceivedbyaccount(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -1107,7 +1108,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
     }
 }
 
-Value listtransactions(const Array& params, bool fHelp)
+Value listtransactions(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() > 3)
         throw runtime_error(
@@ -1174,7 +1175,7 @@ Value listtransactions(const Array& params, bool fHelp)
     return ret;
 }
 
-Value listaccounts(const Array& params, bool fHelp)
+Value listaccounts(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -1230,7 +1231,7 @@ Value listaccounts(const Array& params, bool fHelp)
     return ret;
 }
 
-Value gettransaction(const Array& params, bool fHelp)
+Value gettransaction(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1267,7 +1268,7 @@ Value gettransaction(const Array& params, bool fHelp)
 }
 
 
-Value backupwallet(const Array& params, bool fHelp)
+Value backupwallet(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1281,7 +1282,7 @@ Value backupwallet(const Array& params, bool fHelp)
 }
 
 
-Value validateaddress(const Array& params, bool fHelp)
+Value validateaddress(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1311,7 +1312,7 @@ Value validateaddress(const Array& params, bool fHelp)
 }
 
 
-Value getwork(const Array& params, bool fHelp)
+Value getwork(const Array& params, int api_version, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -1579,7 +1580,18 @@ static string HTTPReply(int nStatus, const string& strMsg)
         strMsg.c_str());
 }
 
-int ReadHTTPStatus(std::basic_istream<char>& stream)
+string ReadHTTPRequestLine(std::basic_istream<char>& stream)
+{
+    string str;
+    getline(stream, str);
+    vector<string> vWords;
+    boost::split(vWords, str, boost::is_any_of(" "));
+    if (vWords.size() < 2)
+        return "";
+    return vWords[1];
+}
+
+int ReadHTTPResponseStatus(std::basic_istream<char>& stream)
 {
     string str;
     getline(stream, str);
@@ -1615,13 +1627,38 @@ int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHea
     return nLen;
 }
 
-int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet)
+bool ReadHTTPRequest(std::basic_istream<char>& stream, string& strUrl, map<string, string>& mapHeadersRet, string& strMessageRet)
+{
+    mapHeadersRet.clear();
+    strMessageRet = "";
+
+    // Read request URL
+    strUrl = ReadHTTPRequestLine(stream);
+    if (strUrl == "")
+        return false;
+
+    // Read headers
+    int nLen = ReadHTTPHeader(stream, mapHeadersRet);
+    if (nLen < 0 || nLen > MAX_SIZE)
+        return false;
+
+    if (nLen > 0)
+    {
+        vector<char> vch(nLen);
+        stream.read(&vch[0], nLen);
+        strMessageRet = string(vch.begin(), vch.end());
+    }
+
+    return true;
+}
+
+int ReadHTTPResponse(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet)
 {
     mapHeadersRet.clear();
     strMessageRet = "";
 
     // Read status
-    int nStatus = ReadHTTPStatus(stream);
+    int nStatus = ReadHTTPResponseStatus(stream);
 
     // Read header
     int nLen = ReadHTTPHeader(stream, mapHeadersRet);
@@ -1900,16 +1937,22 @@ void ThreadRPCServer2(void* parg)
             continue;
         }
 
+        string strUrl;
         map<string, string> mapHeaders;
         string strRequest;
 
-        boost::thread api_caller(ReadHTTP, boost::ref(stream), boost::ref(mapHeaders), boost::ref(strRequest));
+        int api_version = 0;
+
+        boost::thread api_caller(ReadHTTPRequest, boost::ref(stream), boost::ref(strUrl), boost::ref(mapHeaders), boost::ref(strRequest));
         if (!api_caller.timed_join(boost::posix_time::seconds(GetArg("-rpctimeout", 30))))
         {   // Timed out:
             acceptor.cancel();
-            printf("ThreadRPCServer ReadHTTP timeout\n");
+            printf("ThreadRPCServer ReadHTTPRequest timeout\n");
             continue;
         }
+
+        if (boost::starts_with(strUrl, "/bitcoin.v")) 
+            api_version = atoi(&(strUrl.c_str())[10]);
 
         // Check authorization
         if (mapHeaders.count("authorization") == 0)
@@ -1973,7 +2016,7 @@ void ThreadRPCServer2(void* parg)
             try
             {
                 // Execute
-                Value result = (*(*mi).second)(params, false);
+                Value result = (*(*mi).second)(params, api_version, false);
 
                 // Send reply
                 string strReply = JSONRPCReply(result, Value::null, id);
@@ -2040,7 +2083,7 @@ Object CallRPC(const string& strMethod, const Array& params)
     // Receive reply
     map<string, string> mapHeaders;
     string strReply;
-    int nStatus = ReadHTTP(stream, mapHeaders, strReply);
+    int nStatus = ReadHTTPResponse(stream, mapHeaders, strReply);
     if (nStatus == 401)
         throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
     else if (nStatus >= 400 && nStatus != 400 && nStatus != 404 && nStatus != 500)
