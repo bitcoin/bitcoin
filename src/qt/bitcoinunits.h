@@ -22,6 +22,8 @@ public:
     /// Static API
     // Get list of units, for dropdown box
     static QList<Unit> availableUnits();
+    // Is unit ID valid?
+    static bool valid(int unit);
     // Short name
     static QString name(int unit);
     // Longer description

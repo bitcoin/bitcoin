@@ -17,6 +17,19 @@ QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
     return unitlist;
 }
 
+bool BitcoinUnits::valid(int unit)
+{
+    switch(unit)
+    {
+    case BTC:
+    case mBTC:
+    case uBTC:
+        return true;
+    default:
+        return false;
+    }
+}
+
 QString BitcoinUnits::name(int unit)
 {
     switch(unit)
@@ -54,7 +67,7 @@ int BitcoinUnits::amountDigits(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8; // 21,000,000
+    case BTC: return 8; // 21,000,000 (# digits, without commas)
     case mBTC: return 11; // 21,000,000,000
     case uBTC: return 14; // 21,000,000,000,000
     default: return 0;
@@ -76,6 +89,8 @@ QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
+    if(!valid(unit))
+        return QString(); // Refuse to format invalid unit
     qint64 coin = factor(unit);
     int num_decimals = decimals(unit);
     qint64 n_abs = (n > 0 ? n : -n);
@@ -104,6 +119,8 @@ QString BitcoinUnits::formatWithUnit(int unit, qint64 amount, bool plussign)
 
 bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
 {
+    if(!valid(unit))
+        return false; // Refuse to parse invalid unit
     int num_decimals = decimals(unit);
     QStringList parts = value.split(".");
     if(parts.size() != 2 || parts.at(1).size() > num_decimals)
