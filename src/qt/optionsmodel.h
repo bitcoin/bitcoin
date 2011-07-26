@@ -18,14 +18,14 @@ public:
     explicit OptionsModel(CWallet *wallet, QObject *parent = 0);
 
     enum OptionID {
-        StartAtStartup,
-        MinimizeToTray,
-        MapPortUPnP,
-        MinimizeOnClose,
-        ConnectSOCKS4,
-        ProxyIP,
-        ProxyPort,
-        Fee,
+        StartAtStartup, // bool
+        MinimizeToTray, // bool
+        MapPortUPnP, // bool
+        MinimizeOnClose, // bool
+        ConnectSOCKS4, // bool
+        ProxyIP, // QString
+        ProxyPort, // QString
+        Fee, // qint64
         OptionIDRowCount
     };
 

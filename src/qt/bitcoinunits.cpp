@@ -2,7 +2,22 @@
 
 #include <QStringList>
 
-QString BitcoinUnits::name(BitcoinUnits::Unit unit)
+BitcoinUnits::BitcoinUnits(QObject *parent):
+        QAbstractListModel(parent),
+        unitlist(availableUnits())
+{
+}
+
+QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
+{
+    QList<BitcoinUnits::Unit> unitlist;
+    unitlist.append(BTC);
+    unitlist.append(mBTC);
+    unitlist.append(uBTC);
+    return unitlist;
+}
+
+QString BitcoinUnits::name(int unit)
 {
     switch(unit)
     {
@@ -13,18 +28,18 @@ QString BitcoinUnits::name(BitcoinUnits::Unit unit)
     }
 }
 
-QString BitcoinUnits::description(BitcoinUnits::Unit unit)
+QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Bitcoin");
-    case mBTC: return QString("Milli-bitcoin (1/1000)");
-    case uBTC: return QString("Micro-bitcoin (1/1000,000)");
+    case BTC: return QString("Bitcoins");
+    case mBTC: return QString("Milli-Bitcoins (1 / 1,000)");
+    case uBTC: return QString("Micro-Bitcoins (1 / 1,000,000)");
     default: return QString("???");
     }
 }
 
-qint64 BitcoinUnits::factor(BitcoinUnits::Unit unit)
+qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
@@ -35,7 +50,18 @@ qint64 BitcoinUnits::factor(BitcoinUnits::Unit unit)
     }
 }
 
-int BitcoinUnits::decimals(BitcoinUnits::Unit unit)
+int BitcoinUnits::amountDigits(int unit)
+{
+    switch(unit)
+    {
+    case BTC: return 8; // 21,000,000
+    case mBTC: return 11; // 21,000,000,000
+    case uBTC: return 14; // 21,000,000,000,000
+    default: return 0;
+    }
+}
+
+int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
@@ -46,7 +72,7 @@ int BitcoinUnits::decimals(BitcoinUnits::Unit unit)
     }
 }
 
-QString BitcoinUnits::format(BitcoinUnits::Unit unit, qint64 n, bool fPlus)
+QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -71,12 +97,12 @@ QString BitcoinUnits::format(BitcoinUnits::Unit unit, qint64 n, bool fPlus)
     return quotient_str + QString(".") + remainder_str;
 }
 
-QString BitcoinUnits::formatWithUnit(BitcoinUnits::Unit unit, qint64 amount, bool plussign)
+QString BitcoinUnits::formatWithUnit(int unit, qint64 amount, bool plussign)
 {
     return format(unit, amount, plussign) + QString(" ") + name(unit);
 }
 
-bool BitcoinUnits::parse(BitcoinUnits::Unit unit, const QString &value, qint64 *val_out)
+bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
 {
     int num_decimals = decimals(unit);
     QStringList parts = value.split(".");
@@ -93,4 +119,30 @@ bool BitcoinUnits::parse(BitcoinUnits::Unit unit, const QString &value, qint64 *
         *val_out = retvalue;
     }
     return ok;
+}
+
+int BitcoinUnits::rowCount(const QModelIndex &parent) const
+{
+    Q_UNUSED(parent);
+    return unitlist.size();
+}
+
+QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
+{
+    int row = index.row();
+    if(row >= 0 && row < unitlist.size())
+    {
+        Unit unit = unitlist.at(row);
+        switch(role)
+        {
+        case Qt::EditRole:
+        case Qt::DisplayRole:
+            return QVariant(name(unit));
+        case Qt::ToolTipRole:
+            return QVariant(description(unit));
+        case UnitRole:
+            return QVariant(static_cast<int>(unit));
+        }
+    }
+    return QVariant();
 }

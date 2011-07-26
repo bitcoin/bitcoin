@@ -5,6 +5,7 @@
 
 QT_BEGIN_NAMESPACE
 class QValidatedLineEdit;
+class QComboBox;
 QT_END_NAMESPACE
 
 // Coin amount entry widget with separate parts for whole
@@ -12,15 +13,21 @@ QT_END_NAMESPACE
 class BitcoinAmountField: public QWidget
 {
     Q_OBJECT
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged USER true);
+    //Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged USER true);
+    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY textChanged USER true);
 public:
     explicit BitcoinAmountField(QWidget *parent = 0);
 
-    void setText(const QString &text);
-    QString text() const;
+    qint64 value(bool *valid=0) const;
+    void setValue(qint64 value);
 
-    void clear();
+    // Mark current valid as invalid in UI
+    void setValid(bool valid);
     bool validate();
+
+    // Make field empty and ready for new input
+    void clear();
+
     // Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907)
     // Hence we have to set it up manually
     QWidget *setupTabChain(QWidget *prev);
@@ -35,6 +42,15 @@ protected:
 private:
     QValidatedLineEdit *amount;
     QValidatedLineEdit *decimals;
+    QComboBox *unit;
+    int currentUnit;
+
+    void setText(const QString &text);
+    QString text() const;
+
+private slots:
+    void unitChanged(int idx);
+
 };
 
 

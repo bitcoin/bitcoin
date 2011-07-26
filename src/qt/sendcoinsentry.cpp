@@ -87,6 +87,16 @@ bool SendCoinsEntry::validate()
     {
         retval = false;
     }
+    else
+    {
+        if(ui->payAmount->value() <= 0)
+        {
+            // Cannot send 0 coins or less
+            ui->payAmount->setValid(false);
+            retval = false;
+        }
+    }
+
 
     if(!ui->payTo->hasAcceptableInput() ||
        (model && !model->validateAddress(ui->payTo->text())))
@@ -104,7 +114,7 @@ SendCoinsRecipient SendCoinsEntry::getValue()
 
     rv.address = ui->payTo->text();
     rv.label = ui->addAsLabel->text();
-    BitcoinUnits::parse(BitcoinUnits::BTC, ui->payAmount->text(), &rv.amount);
+    rv.amount = ui->payAmount->value();
 
     return rv;
 }

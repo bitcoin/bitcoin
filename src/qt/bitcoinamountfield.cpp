@@ -7,9 +7,10 @@
 #include <QRegExpValidator>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QComboBox>
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent):
-        QWidget(parent), amount(0), decimals(0)
+        QWidget(parent), amount(0), decimals(0), currentUnit(-1)
 {
     amount = new QValidatedLineEdit(this);
     amount->setValidator(new QRegExpValidator(QRegExp("[0-9]*"), this));
@@ -18,7 +19,6 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     amount->setMaximumWidth(100);
     decimals = new QValidatedLineEdit(this);
     decimals->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
-    decimals->setMaxLength(8);
     decimals->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
     decimals->setMaximumWidth(75);
 
@@ -27,7 +27,9 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     layout->addWidget(amount);
     layout->addWidget(new QLabel(QString(".")));
     layout->addWidget(decimals);
-    layout->addWidget(new QLabel(QString(" ") + BitcoinUnits::name(BitcoinUnits::BTC)));
+    unit = new QComboBox(this);
+    unit->setModel(new BitcoinUnits(this));
+    layout->addWidget(unit);
     layout->addStretch(1);
     layout->setContentsMargins(0,0,0,0);
 
@@ -39,6 +41,10 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     // If one if the widgets changes, the combined content changes as well
     connect(amount, SIGNAL(textChanged(QString)), this, SIGNAL(textChanged()));
     connect(decimals, SIGNAL(textChanged(QString)), this, SIGNAL(textChanged()));
+    connect(unit, SIGNAL(currentIndexChanged(int)), this, SLOT(unitChanged(int)));
+
+    // TODO: set default based on configuration
+    unitChanged(unit->currentIndex());
 }
 
 void BitcoinAmountField::setText(const QString &text)
@@ -72,17 +78,22 @@ bool BitcoinAmountField::validate()
     }
     if(!BitcoinUnits::parse(BitcoinUnits::BTC, text(), 0))
     {
-        amount->setValid(false);
-        decimals->setValid(false);
+        setValid(false);
         valid = false;
     }
 
     return valid;
 }
 
+void BitcoinAmountField::setValid(bool valid)
+{
+    amount->setValid(valid);
+    decimals->setValid(valid);
+}
+
 QString BitcoinAmountField::text() const
 {
-    if(decimals->text().isEmpty())
+    if(decimals->text().isEmpty() && amount->text().isEmpty())
     {
         return QString();
     }
@@ -110,4 +121,52 @@ QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
     QWidget::setTabOrder(prev, amount);
     QWidget::setTabOrder(amount, decimals);
     return decimals;
+}
+
+qint64 BitcoinAmountField::value(bool *valid_out) const
+{
+    qint64 val_out = 0;
+    bool valid = BitcoinUnits::parse(currentUnit, text(), &val_out);
+    if(valid_out)
+    {
+        *valid_out = valid;
+    }
+    return val_out;
+}
+
+void BitcoinAmountField::setValue(qint64 value)
+{
+    setText(BitcoinUnits::format(currentUnit, value));
+}
+
+void BitcoinAmountField::unitChanged(int idx)
+{
+    // Use description tooltip for current unit for the combobox
+    unit->setToolTip(unit->itemData(idx, Qt::ToolTipRole).toString());
+
+    // Determine new unit ID
+    int newUnit = unit->itemData(idx, BitcoinUnits::UnitRole).toInt();
+
+    // Parse current value and convert to new unit
+    bool valid = false;
+    qint64 currentValue = value(&valid);
+
+    currentUnit = newUnit;
+
+    // Set max length after retrieving the value, to prevent truncation
+    amount->setMaxLength(BitcoinUnits::amountDigits(currentUnit));
+    decimals->setMaxLength(BitcoinUnits::decimals(currentUnit));
+
+    if(valid)
+    {
+        setValue(currentValue);
+    }
+    else
+    {
+        // If current value is invalid, just clear field
+        setText("");
+    }
+    setValid(true);
+
+
 }

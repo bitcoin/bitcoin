@@ -103,7 +103,6 @@ OptionsDialog::OptionsDialog(QWidget *parent):
     connect(mapper, SIGNAL(currentIndexChanged(int)), this, SLOT(disableApply()));
 
     /* Event bindings */
-    qDebug() << "setup";
     connect(contents_widget, SIGNAL(currentRowChanged(int)), this, SLOT(changePage(int)));
     connect(buttonbox->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(okClicked()));
     connect(buttonbox->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(cancelClicked()));

@@ -36,7 +36,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case ProxyPort:
             return QVariant(QString::fromStdString(addrProxy.ToStringPort()));
         case Fee:
-            return QVariant(QString::fromStdString(FormatMoney(nTransactionFee)));
+            return QVariant(nTransactionFee);
         default:
             return QVariant();
         }
@@ -104,16 +104,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             }
             break;
         case Fee: {
-                int64 retval;
-                if(ParseMoney(value.toString().toStdString(), retval))
-                {
-                    nTransactionFee = retval;
-                    walletdb.WriteSetting("nTransactionFee", nTransactionFee);
-                }
-                else
-                {
-                    successful = false; // Parse error
-                }
+            nTransactionFee = value.toLongLong();
+            walletdb.WriteSetting("nTransactionFee", nTransactionFee);
             }
             break;
         default:
