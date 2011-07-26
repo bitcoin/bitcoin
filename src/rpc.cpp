@@ -68,20 +68,85 @@ void PrintConsole(const char* format, ...)
 }
 
 
-int64 AmountFromValue(const Value& value)
+int64 AmountFromValue(const Value& value, bool allow_zero)
 {
-    double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
-        throw JSONRPCError(-3, "Invalid amount");
-    int64 nAmount = roundint64(dAmount * COIN);
-    if (!MoneyRange(nAmount))
-        throw JSONRPCError(-3, "Invalid amount");
-    return nAmount;
+    int64 nAmount;
+
+    switch (value.type()) {
+        case real_type:
+        case int_type: {
+            double dAmount = value.get_real();
+            if (dAmount < 0.0 || dAmount > 21000000.0 || (!allow_zero && dAmount == 0.0))
+                throw JSONRPCError(-3, "Invalid amount");
+            nAmount = roundint64(dAmount * COIN);
+            if (!MoneyRange(nAmount))
+                throw JSONRPCError(-3, "Invalid amount");
+            return nAmount;
+        }
+
+        case str_type: {
+            vector<string> vParts;
+            boost::split(vParts, value.get_str(), boost::is_any_of("."));
+
+            if (vParts.size() == 0 || vParts.size() > 2)
+                throw JSONRPCError(-3, "Invalid amount");
+
+            if (vParts[0].size() == 0 || vParts[0].size() > 8 || !isdigit(vParts[0][0]))
+                throw JSONRPCError(-3, "Invalid amount");
+
+            char *cEnd;
+
+            nAmount = strtoll(vParts[0].c_str(), &cEnd, 10) * COIN;
+
+            if (*cEnd != '\0')
+                throw JSONRPCError(-3, "Invalid amount");
+
+            if (vParts.size() == 2)
+            {
+                size_t nDigits = vParts[1].size();
+
+                if (nDigits == 0 || nDigits > 8 || !isdigit(vParts[1][0]))
+                    throw JSONRPCError(-3, "Invalid amount");
+
+                int64 nSatoshis = strtoll(vParts[1].c_str(), &cEnd, 10);
+
+                if (*cEnd != '\0')
+                    throw JSONRPCError(-3, "Invalid amount");
+
+                while (nDigits < 8) {
+                    nSatoshis *= 10;
+                    nDigits++;
+                }
+
+                nAmount += nSatoshis;
+            }
+
+            if ((nAmount > (21000000 * COIN)) || (!allow_zero && nAmount == 0))
+                throw JSONRPCError(-3, "Invalid amount");
+
+            return nAmount;
+        }
+    }
+
+    throw JSONRPCError(-3, "Amount must be specified as a number or string.");
 }
 
-Value ValueFromAmount(int64 amount)
+Value ValueFromAmount(int64 amount, int api_version)
 {
-    return (double)amount / (double)COIN;
+    if (api_version < 2)
+        return (double)amount / (double)COIN;
+
+    ostringstream s;
+
+    s.width(1);
+    s << (amount / COIN);
+    s << '.';
+
+    s.fill('0');
+    s.width(8);
+    s << (amount % COIN);
+
+    return s.str();
 }
 
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
@@ -299,7 +364,7 @@ Value getinfo(const Array& params, int api_version, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("version",       (int)VERSION));
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance(), api_version)));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
@@ -309,7 +374,7 @@ Value getinfo(const Array& params, int api_version, bool fHelp)
     obj.push_back(Pair("hashespersec",  gethashespersec(params, api_version, false)));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee, api_version)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     obj.push_back(Pair("api_version",   api_version));
     return obj;
@@ -502,8 +567,7 @@ Value settxfee(const Array& params, int api_version, bool fHelp)
 
     // Amount
     int64 nAmount = 0;
-    if (params[0].get_real() != 0.0)
-        nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
+    nAmount = AmountFromValue(params[0], true);
 
     nTransactionFee = nAmount;
     return true;
@@ -519,7 +583,7 @@ Value sendtoaddress(const Array& params, int api_version, bool fHelp)
     string strAddress = params[0].get_str();
 
     // Amount
-    int64 nAmount = AmountFromValue(params[1]);
+    int64 nAmount = AmountFromValue(params[1], false);
 
     // Wallet comments
     CWalletTx wtx;
@@ -576,7 +640,7 @@ Value getreceivedbyaddress(const Array& params, int api_version, bool fHelp)
         }
     }
 
-    return  ValueFromAmount(nAmount);
+    return  ValueFromAmount(nAmount, api_version);
 }
 
 
@@ -682,7 +746,7 @@ Value getbalance(const Array& params, int api_version, bool fHelp)
             "If [account] is specified, returns the balance in the account.");
 
     if (params.size() == 0)
-        return  ValueFromAmount(pwalletMain->GetBalance());
+        return  ValueFromAmount(pwalletMain->GetBalance(), api_version);
 
     int nMinDepth = 1;
     if (params.size() > 1)
@@ -713,14 +777,14 @@ Value getbalance(const Array& params, int api_version, bool fHelp)
             nBalance -= allFee;
             nBalance += allGeneratedMature;
         }
-        return  ValueFromAmount(nBalance);
+        return  ValueFromAmount(nBalance, api_version);
     }
 
     string strAccount = AccountFromValue(params[0]);
 
     int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
 
-    return ValueFromAmount(nBalance);
+    return ValueFromAmount(nBalance, api_version);
 }
 
 
@@ -733,7 +797,7 @@ Value movecmd(const Array& params, int api_version, bool fHelp)
 
     string strFrom = AccountFromValue(params[0]);
     string strTo = AccountFromValue(params[1]);
-    int64 nAmount = AmountFromValue(params[2]);
+    int64 nAmount = AmountFromValue(params[2], false);
     int nMinDepth = 1;
     if (params.size() > 3)
         nMinDepth = params[3].get_int();
@@ -781,7 +845,7 @@ Value sendfrom(const Array& params, int api_version, bool fHelp)
 
     string strAccount = AccountFromValue(params[0]);
     string strAddress = params[1].get_str();
-    int64 nAmount = AmountFromValue(params[2]);
+    int64 nAmount = AmountFromValue(params[2], false);
     int nMinDepth = 1;
     if (params.size() > 3)
         nMinDepth = params[3].get_int();
@@ -844,7 +908,7 @@ Value sendmany(const Array& params, int api_version, bool fHelp)
         CScript scriptPubKey;
         if (!scriptPubKey.SetBitcoinAddress(strAddress))
             throw JSONRPCError(-5, string("Invalid bitcoin address:")+strAddress);
-        int64 nAmount = AmountFromValue(s.value_); 
+        int64 nAmount = AmountFromValue(s.value_, false);
         totalAmount += nAmount;
 
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
@@ -887,7 +951,7 @@ struct tallyitem
     }
 };
 
-Value ListReceived(const Array& params, bool fByAccounts)
+Value ListReceived(const Array& params, bool fByAccounts, int api_version)
 {
     // Minimum confirmations
     int nMinDepth = 1;
@@ -963,7 +1027,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
                 obj.push_back(Pair("address",       strAddress));
                 obj.push_back(Pair("account",       strAccount));
                 obj.push_back(Pair("label",         strAccount)); // deprecated
-                obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
+                obj.push_back(Pair("amount",        ValueFromAmount(nAmount, api_version)));
                 obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
                 ret.push_back(obj);
             }
@@ -979,7 +1043,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             Object obj;
             obj.push_back(Pair("account",       (*it).first));
             obj.push_back(Pair("label",         (*it).first)); // deprecated
-            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
+            obj.push_back(Pair("amount",        ValueFromAmount(nAmount, api_version)));
             obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
             ret.push_back(obj);
         }
@@ -1001,7 +1065,7 @@ Value listreceivedbyaddress(const Array& params, int api_version, bool fHelp)
             "  \"amount\" : total amount received by the address\n"
             "  \"confirmations\" : number of confirmations of the most recent transaction included");
 
-    return ListReceived(params, false);
+    return ListReceived(params, false, api_version);
 }
 
 Value listreceivedbyaccount(const Array& params, int api_version, bool fHelp)
@@ -1016,10 +1080,10 @@ Value listreceivedbyaccount(const Array& params, int api_version, bool fHelp)
             "  \"amount\" : total amount received by addresses with this account\n"
             "  \"confirmations\" : number of confirmations of the most recent transaction included");
 
-    return ListReceived(params, true);
+    return ListReceived(params, true, api_version);
 }
 
-void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
+void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, int api_version, Array& ret)
 {
     int64 nGeneratedImmature, nGeneratedMature, nFee;
     string strSentAccount;
@@ -1037,12 +1101,12 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         if (nGeneratedImmature)
         {
             entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
-            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedImmature)));
+            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedImmature, api_version)));
         }
         else
         {
             entry.push_back(Pair("category", "generate"));
-            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedMature)));
+            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedMature, api_version)));
         }
         if (fLong)
             WalletTxToJSON(wtx, entry);
@@ -1058,8 +1122,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("account", strSentAccount));
             entry.push_back(Pair("address", s.first));
             entry.push_back(Pair("category", "send"));
-            entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
-            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            entry.push_back(Pair("amount", ValueFromAmount(-s.second, api_version)));
+            entry.push_back(Pair("fee", ValueFromAmount(-nFee, api_version)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
             ret.push_back(entry);
@@ -1081,7 +1145,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                     entry.push_back(Pair("account", account));
                     entry.push_back(Pair("address", r.first));
                     entry.push_back(Pair("category", "receive"));
-                    entry.push_back(Pair("amount", ValueFromAmount(r.second)));
+                    entry.push_back(Pair("amount", ValueFromAmount(r.second, api_version)));
                     if (fLong)
                         WalletTxToJSON(wtx, entry);
                     ret.push_back(entry);
@@ -1091,7 +1155,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 
 }
 
-void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Array& ret)
+void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, int api_version, Array& ret)
 {
     bool fAllAccounts = (strAccount == string("*"));
 
@@ -1101,7 +1165,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
         entry.push_back(Pair("account", acentry.strAccount));
         entry.push_back(Pair("category", "move"));
         entry.push_back(Pair("time", (boost::int64_t)acentry.nTime));
-        entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
+        entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit, api_version)));
         entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
         entry.push_back(Pair("comment", acentry.strComment));
         ret.push_back(entry);
@@ -1153,10 +1217,10 @@ Value listtransactions(const Array& params, int api_version, bool fHelp)
         {
             CWalletTx *const pwtx = (*it).second.first;
             if (pwtx != 0)
-                ListTransactions(*pwtx, strAccount, 0, true, ret);
+                ListTransactions(*pwtx, strAccount, 0, true, api_version, ret);
             CAccountingEntry *const pacentry = (*it).second.second;
             if (pacentry != 0)
-                AcentryToJSON(*pacentry, strAccount, ret);
+                AcentryToJSON(*pacentry, strAccount, api_version, ret);
 
             if (ret.size() >= nCount) break;
         }
@@ -1226,7 +1290,7 @@ Value listaccounts(const Array& params, int api_version, bool fHelp)
 
     Object ret;
     BOOST_FOREACH(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
-        ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
+        ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second, api_version)));
     }
     return ret;
 }
@@ -1253,14 +1317,14 @@ Value gettransaction(const Array& params, int api_version, bool fHelp)
         int64 nNet = nCredit - nDebit;
         int64 nFee = (wtx.IsFromMe() ? wtx.GetValueOut() - nDebit : 0);
 
-        entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
+        entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee, api_version)));
         if (wtx.IsFromMe())
-            entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+            entry.push_back(Pair("fee", ValueFromAmount(nFee, api_version)));
 
         WalletTxToJSON(pwalletMain->mapWallet[hash], entry);
 
         Array details;
-        ListTransactions(pwalletMain->mapWallet[hash], "*", 0, false, details);
+        ListTransactions(pwalletMain->mapWallet[hash], "*", 0, false, api_version, details);
         entry.push_back(Pair("details", details));
     }
 
@@ -2151,8 +2215,6 @@ int CommandLineRPC(int argc, char *argv[])
         //
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
@@ -2166,9 +2228,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
         if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]); // deprecated
         if (strMethod == "getbalance"             && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "move"                   && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "move"                   && n > 3) ConvertTo<boost::int64_t>(params[3]);
-        if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
