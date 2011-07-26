@@ -244,6 +244,7 @@ public:
     bool SetHash160(const uint160& hash160)
     {
         SetData(fTestNet ? 111 : 0, &hash160, 20);
+        return true;
     }
 
     bool SetPubKey(const std::vector<unsigned char>& vchPubKey)
