@@ -1667,6 +1667,114 @@ Value getwork(const Array& params, bool fHelp)
 }
 
 
+Value getrawtransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getrawtransaction <txid>\n"
+            "Get transaction <txid>'s data and associated metadata");
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    CTxDB txdb("r");
+    CTxIndex txindex;
+    CTransaction this_tx;
+    bool fFound = txdb.ReadTxIndex(hash, txindex);
+    if (fFound)
+    {
+        if (!this_tx.ReadFromDisk(txindex.pos))
+            throw JSONRPCError(-7, "this_tx.ReadFromDisk failed");
+    }
+    else
+        CRITICAL_BLOCK(cs_mapTransactions)
+        {
+            if (!mapTransactions.count(hash))
+                throw JSONRPCError(-5, "Transaction not found");
+            this_tx = mapTransactions[hash];
+        }
+
+
+    Array txins;
+    for (int i = 0; i < this_tx.vin.size(); i++)
+    {
+        Object previous_output;
+        previous_output.push_back(Pair("hash", this_tx.vin[i].prevout.hash.ToString()));
+        previous_output.push_back(Pair("index", (uint64_t)this_tx.vin[i].prevout.n));
+
+        Object txin;
+        txin.push_back(Pair("previous_output", previous_output));
+        txin.push_back(Pair("script", HexStr(this_tx.vin[i].scriptSig)));
+        txin.push_back(Pair("sequence", (uint64_t)this_tx.vin[i].nSequence));
+
+        txins.push_back(txin);
+    }
+
+    Array txouts;
+    for (int i = 0; i < this_tx.vout.size(); i++)
+    {
+        Object txout;
+        txout.push_back(Pair("value", (uint64_t)this_tx.vout[i].nValue));
+        txout.push_back(Pair("script2", HexStr(this_tx.vout[i].scriptPubKey)));
+
+        txouts.push_back(txout);
+    }
+
+    Object tx;
+    tx.push_back(Pair("version", this_tx.nVersion));
+    tx.push_back(Pair("txins", txins));
+    tx.push_back(Pair("txouts", txouts));
+    tx.push_back(Pair("lock_time", (uint64_t)this_tx.nLockTime));
+
+    Array parent_blocks;
+    if (fFound)
+    {
+        // There can be more than one block that include this transaction
+        // Only one can be found efficiently, though...
+        CBlock block;
+        if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+            throw JSONRPCError(-7, "block.ReadFromDisk failed");
+        parent_blocks.push_back(block.GetHash().ToString());
+    }
+
+    Array txout_claims;
+    for (int i = 0; i < this_tx.vout.size(); i++)
+        txout_claims.push_back(Array());
+    if (fFound)
+    {
+        for (int i = 0; i < txindex.vSpent.size(); i++)
+        {
+            if (txindex.vSpent[i].IsNull())
+                continue;
+            CTransaction next_tx;
+            if (!next_tx.ReadFromDisk(txindex.vSpent[i]))
+                throw JSONRPCError(-7, "next_tx.ReadFromDisk failed");
+            txout_claims[i].get_array().push_back(next_tx.GetHash().ToString());
+        }
+    }
+    CRITICAL_BLOCK(cs_mapTransactions)
+    {
+        for (int i = 0; i < this_tx.vout.size(); i++)
+        {
+            COutPoint outpoint(hash, i);
+            if (!mapNextTx.count(outpoint))
+                continue;
+            txout_claims[i].get_array().push_back(mapNextTx[outpoint].ptx->GetHash().ToString());
+        }
+    }
+
+    Object result;
+    result.push_back(Pair("tx", tx));
+    result.push_back(Pair("parent_blocks", parent_blocks));
+    result.push_back(Pair("txout_claims", txout_claims));
+    if (pindexBest != NULL)
+        result.push_back(Pair("as_of", pindexBest->GetBlockHash().ToString()));
+    else
+        result.push_back(Pair("as_of", Value::null));
+    return result;
+}
+
+
 
 
 
@@ -1725,6 +1833,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
+    make_pair("getrawtransaction",      &getrawtransaction),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -1753,6 +1862,7 @@ string pAllowInSafeMode[] =
     "walletlock",
     "validateaddress",
     "getwork",
+    "getrawtransaction",
 };
 set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
 
