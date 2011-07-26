@@ -16,26 +16,29 @@ This has been implemented:
 
 - Tabbed interface
 
-- Overview page with current balance, unconfirmed balance, etc
+- Overview page with current balance, unconfirmed balance, and such
 
-- User friendly transaction list with status icons, real-time filtering and a context menu that allows editing and copying labels
+- Better transaction list with status icons, real-time filtering and a context menu
 
-- Asks for confirmation before sending coins
+- Asks for confirmation before sending coins, for your own safety
 
-- CSV export of transactions and address book
+- CSV export of transactions and address book (for Excel bookkeeping)
+ 
+- Shows alternative icon when connected to testnet, so you never accidentally send real coins during testing
 
-- Shows alternative icon when connected to testnet
+- Shows a progress bar on initial block download, so that you don't have to wonder how many blocks it needs to download to be up to date
 
-- Progress bar on initial block download
+- Sendmany support, send to multiple recipients at the same time
 
-- Sendmany support in UI (send to multiple recipients as well)
+- Multiple unit support, can show subdivided bitcoins (uBTC, mBTC) for users that like large numbers
+
+- Support for English, German and Dutch languages
 
 This has to be done:
 
 - Start at system start
 
-- Internationalization (convert WX language files)
-
+- Support more languages
 
 Build instructions 
 ===================
