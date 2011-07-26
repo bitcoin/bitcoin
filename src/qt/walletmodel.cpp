@@ -66,9 +66,8 @@ void WalletModel::update()
 
 bool WalletModel::validateAddress(const QString &address)
 {
-    uint160 hash160 = 0;
-
-    return AddressToHash160(address.toStdString(), hash160);
+    CBitcoinAddress addressParsed(address.toStdString());
+    return addressParsed.IsValid();
 }
 
 WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients)
@@ -87,7 +86,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     {
         uint160 hash160 = 0;
 
-        if(!AddressToHash160(rcp.address.toUtf8().constData(), hash160))
+        if(!validateAddress(rcp.address))
         {
             return InvalidAddress;
         }

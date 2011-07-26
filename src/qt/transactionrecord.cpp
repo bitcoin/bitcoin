@@ -79,10 +79,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     if(wallet->IsMine(txout))
                     {
-                        std::vector<unsigned char> vchPubKey;
-                        if (ExtractPubKey(txout.scriptPubKey, wallet, vchPubKey))
+                        CBitcoinAddress address;
+                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
                         {
-                            sub.address = PubKeyToAddress(vchPubKey);
+                            sub.address = address.ToString();
                         }
                         break;
                     }
@@ -137,9 +137,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     {
                         // Sent to Bitcoin Address
                         sub.type = TransactionRecord::SendToAddress;
-                        uint160 hash160;
-                        if (ExtractHash160(txout.scriptPubKey, hash160))
-                            sub.address = Hash160ToAddress(hash160);
+                        CBitcoinAddress address;
+                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
+                        {
+                            sub.address = address.ToString();
+                        }
                     }
 
                     int64 nValue = txout.nValue;

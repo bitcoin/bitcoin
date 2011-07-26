@@ -125,17 +125,16 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                 {
                     if (wallet->IsMine(txout))
                     {
-                        vector<unsigned char> vchPubKey;
-                        if (ExtractPubKey(txout.scriptPubKey, wallet, vchPubKey))
+                        CBitcoinAddress address;
+                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
                         {
-                            string strAddress = PubKeyToAddress(vchPubKey);
-                            if (wallet->mapAddressBook.count(strAddress))
+                            if (wallet->mapAddressBook.count(address))
                             {
                                 strHTML += string() + _("<b>From:</b> ") + _("unknown") + "<br>";
                                 strHTML += _("<b>To:</b> ");
-                                strHTML += HtmlEscape(strAddress);
-                                if (!wallet->mapAddressBook[strAddress].empty())
-                                    strHTML += _(" (yours, label: ") + wallet->mapAddressBook[strAddress] + ")";
+                                strHTML += HtmlEscape(address.ToString());
+                                if (!wallet->mapAddressBook[address].empty())
+                                    strHTML += _(" (yours, label: ") + wallet->mapAddressBook[address] + ")";
                                 else
                                     strHTML += _(" (yours)");
                                 strHTML += "<br>";
@@ -211,14 +210,13 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                     if (wtx.mapValue["to"].empty())
                     {
                         // Offline transaction
-                        uint160 hash160;
-                        if (ExtractHash160(txout.scriptPubKey, hash160))
+                        CBitcoinAddress address;
+                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
                         {
-                            string strAddress = Hash160ToAddress(hash160);
                             strHTML += _("<b>To:</b> ");
-                            if (wallet->mapAddressBook.count(strAddress) && !wallet->mapAddressBook[strAddress].empty())
-                                strHTML += wallet->mapAddressBook[strAddress] + " ";
-                            strHTML += strAddress;
+                            if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
+                                strHTML += wallet->mapAddressBook[address] + " ";
+                            strHTML += address.ToString();
                             strHTML += "<br>";
                         }
                     }

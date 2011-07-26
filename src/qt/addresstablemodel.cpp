@@ -39,18 +39,18 @@ struct AddressTablePriv
     {
         cachedAddressTable.clear();
 
-        CRITICAL_BLOCK(cs_mapPubKeys)
+        CRITICAL_BLOCK(wallet->cs_KeyStore)
         CRITICAL_BLOCK(wallet->cs_mapAddressBook)
         {
-            BOOST_FOREACH(const PAIRTYPE(std::string, std::string)& item, wallet->mapAddressBook)
+            BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, std::string)& item, wallet->mapAddressBook)
             {
-                std::string strAddress = item.first;
-                std::string strName = item.second;
+                const CBitcoinAddress& address = item.first;
+                const std::string& strName = item.second;
                 uint160 hash160;
-                bool fMine = (AddressToHash160(strAddress, hash160) && mapPubKeys.count(hash160));
+                bool fMine = wallet->HaveKey(address);
                 cachedAddressTable.append(AddressTableEntry(fMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending,
                                   QString::fromStdString(strName),
-                                  QString::fromStdString(strAddress)));
+                                  QString::fromStdString(address.ToString())));
             }
         }
     }
@@ -268,9 +268,8 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     }
     else if(type == Receive)
     {
-        // Generate a new address to associate with given label, optionally
-        // set as default receiving address.
-        strAddress = PubKeyToAddress(wallet->GetOrReuseKeyFromPool());
+        // Generate a new address to associate with given label
+        strAddress = CBitcoinAddress(wallet->GetOrReuseKeyFromPool()).ToString();
     }
     else
     {
@@ -312,7 +311,8 @@ QString AddressTableModel::labelForAddress(const QString &address) const
 {
     CRITICAL_BLOCK(wallet->cs_mapAddressBook)
     {
-        std::map<std::string, std::string>::iterator mi = wallet->mapAddressBook.find(address.toStdString());
+        CBitcoinAddress address_parsed(address.toStdString());
+        std::map<CBitcoinAddress, std::string>::iterator mi = wallet->mapAddressBook.find(address_parsed);
         if (mi != wallet->mapAddressBook.end())
         {
             return QString::fromStdString(mi->second);
