@@ -490,16 +490,19 @@ static const int decode64_table[256]=
 
 std::string DecodeBase64(const std::string &s)
 {
-    char buf[1024];
-    if(s.length()>512) return "";
-    char *optr=buf;
+    char buf[512];
+    char *optr = buf;
+
+    if (s.length() > 512)
+        return "";
 
     int dec, mode=0, left=0;
     size_t index=0;
     for (int i=0; i<s.length(); i++)
     {
-         dec=decode64_table[s[i]];
-         if(dec==-1) break;
+         dec = decode64_table[s[i]];
+         if(dec == -1)
+             break;
          switch(mode)
          {
              case 0: // we have no bits and get 6
@@ -526,7 +529,7 @@ std::string DecodeBase64(const std::string &s)
          }
     }
 
-    *optr=0;   
+    *optr = 0;   
     return buf;
 }
 
@@ -545,7 +548,7 @@ char* ToHex(const char *ptr, int len, char *outbuf)
         iptr++;
      }
 
-     *outptr=0;
+     *outptr = 0;
      return outbuf;
 }
 
