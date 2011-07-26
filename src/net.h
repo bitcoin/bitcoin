@@ -42,7 +42,9 @@ bool Lookup(const char *pszName, std::vector<CAddress>& vaddr, int nServices, in
 bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool GetMyExternalIP(unsigned int& ipRet);
 bool AddAddress(CAddress addr, int64 nTimePenalty=0, CAddrDB *pAddrDB=NULL);
-bool GotLocalAddress(const CAddress &addr);
+bool AddLocalAddress(const CAddress &addr);
+bool IsLocalAddress(const CAddress &addr);
+const CAddress* GetLocalAddress(const CAddress &addrPartner);
 void AddressCurrentlyConnected(const CAddress& addr);
 CNode* FindNode(unsigned int ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
@@ -301,7 +303,6 @@ public:
         return std::vector<unsigned char>(ss.begin(), ss.end());
         #endif
     }
-
     uint256 GetIPAsUint256() const
     {
        uint256 uint256 = 0;
@@ -513,35 +514,46 @@ public:
         printf("CAddress(%s)\n", ToString().c_str());
     }
 
-    // 0 - invalid
-    // 1 - local ipv6
-    // 2 - local ipv4
-    // 3 - unroutable ipv6
-    // 4 - unroutable ipv4
-    // 5 - routable tunneled ipv6 (teredo)
-    // 6 - routable tunneled ipv6 (6to4, well-known prefix)
-    // 7 - routable ipv6
-    // 8 - routable ipv4
-    int GetReachability() const
+    // for IPv6 partners:        for unknown/Teredo partners:      for IPv4 partners:
+    // 0 - unroutable            // 0 - unroutable                 // 0 - unroutable
+    // 1 - teredo                // 1 - teredo                     // 1 - ipv4
+    // 2 - tunneled ipv6         // 2 - tunneled ipv6
+    // 3 - ipv4                  // 3 - ipv6
+    // 4 - ipv6                  // 4 - ipv4
+    int GetReachability(const CAddress *paddrPartner = NULL) const
     {
-        if (!IsValid())
+        if (!IsValid() || !IsRoutable())
             return 0;
-        if (!IsIPv4() && IsLocal())
-            return 1;
-        if (IsLocal())
-            return 2;
-        if (!IsIPv4() && !IsRoutable())
-            return 3;
-        if (!IsRoutable())
-            return 4;
+        if (paddrPartner && paddrPartner->IsIPv4())
+            return IsIPv4() ? 1 : 0;
         if (IsRFC4380())
-            return 5;
+            return 1;
         if (Is6to4() || IsRFC6052())
-            return 6;
-        if (!IsIPv4())
-            return 7;
-        return 8;
+            return 2;
+        bool fRealIPv6 = paddrPartner && !paddrPartner->IsRFC4380() && paddrPartner->IsValid() && paddrPartner->IsRoutable();
+        if (fRealIPv6)
+            return IsIPv4() ? 3 : 4;
+        else
+            return IsIPv4() ? 4 : 3;
     }
+
+    const CAddress* SelectCompatible(const std::set<CAddress>& setAddr) const
+    {
+        const CAddress* paddrBest = NULL;
+        int nBestScore = 0;
+        for (std::set<CAddress>::const_iterator mi = setAddr.begin(); mi != setAddr.end(); mi++)
+        {
+            int nScore = (*mi).GetReachability(this);
+            if (nScore > nBestScore)
+            {
+                paddrBest = &(*mi);
+                nBestScore = nScore;
+            }
+        }
+        return paddrBest;
+    }
+
+
 
 #ifdef USE_IPV6
     // portIn is in network byte order
@@ -703,7 +715,7 @@ public:
 extern bool fClient;
 extern bool fAllowDNS;
 extern uint64 nLocalServices;
-extern CAddress addrLocalHost;
+extern std::set<CAddress> vaddrLocalHost;
 extern CNode* pnodeLocalHost;
 extern uint64 nLocalHostNonce;
 extern boost::array<int, 10> vnThreadsRunning;
@@ -979,7 +991,13 @@ public:
         /// when NTP implemented, change to just nTime = GetAdjustedTime()
         int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
         CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
-        CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
+        CAddress addrMe("0.0.0.0");
+        if (!fUseProxy)
+        {
+            const CAddress *paddrMe = GetLocalAddress(addr);
+            if (paddrMe)
+                addrMe = *paddrMe;
+        }
         RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
         PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe,
                     nLocalHostNonce, std::string(pszSubVer), nBestHeight);

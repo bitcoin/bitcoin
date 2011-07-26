@@ -48,7 +48,8 @@ bool OpenNetworkConnection(const CAddress& addrConnect);
 bool fClient = false;
 bool fAllowDNS = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
-CAddress addrLocalHost("0.0.0.0", 0, false, nLocalServices);
+CCriticalSection cs_vaddrLocalHost;
+set<CAddress> vaddrLocalHost;
 CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 array<int, 10> vnThreadsRunning;
@@ -147,6 +148,7 @@ vector<unsigned char> CAddress::GetGroup() const
 
 bool CAddress::ConnectSocket(SOCKET& hSocketRet, int nTimeout) const
 {
+    printf("Attempting connect to %s\n", ToString().c_str());
     bool fProxy = (fUseProxy && IsRoutable());
     struct sockaddr_storage sockaddr;
     int nFamily = 0;
@@ -369,8 +371,8 @@ bool Lookup(const char *pszName, vector<CAddress>& vaddr, int nServices, int nMa
 #  endif
 #else
 #  ifdef USE_IPV6
-    aiHint.ai_family = AF_INET6;
-    aiHint.ai_flags = AI_ADDRCONFIG | AI_V4MAPPED | AI_ALL | (fAllowLookup ? 0 : AI_NUMERICHOST);
+    aiHint.ai_family = AF_UNSPEC;
+    aiHint.ai_flags = AI_ADDRCONFIG | (fAllowLookup ? 0 : AI_NUMERICHOST);
 #  else
     aiHint.ai_family = AF_INET;
     aiHint.ai_flags = AI_ADDRCONFIG | (fAllowLookup ? 0 : AI_NUMERICHOST);
@@ -541,17 +543,8 @@ void ThreadGetMyExternalIP(void* parg)
     CAddress addr;
     if (GetMyExternalIP(addr))
     {
-        printf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP().c_str());
-        if (GotLocalAddress(addr) && addrLocalHost.IsRoutable())
-        {
-            // If we already connected to a few before we had our IP, go back and addr them.
-            // setAddrKnown automatically filters any duplicate sends.
-            CAddress addr(addrLocalHost);
-            addr.nTime = GetAdjustedTime();
-            CRITICAL_BLOCK(cs_vNodes)
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    pnode->PushAddress(addr);
-        }
+        printf("GetMyExternalIP() returned %s\n", addr.ToStringIP().c_str());
+        AddLocalAddress(addr);
     }
 }
 
@@ -563,7 +556,7 @@ bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
 {
     if (!addr.IsRoutable())
         return false;
-    if (CompareIP(addr, addrLocalHost) == 0)
+    if (IsLocalAddress(addr))
         return false;
     addr.nTime = max((int64)0, (int64)addr.nTime - nTimePenalty);
     CRITICAL_BLOCK(cs_mapAddresses)
@@ -760,7 +753,7 @@ CNode* FindNodeByIP(CAddress addr)
 
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
 {
-    if (CompareIP(addrConnect, addrLocalHost) == 0)
+    if (IsLocalAddress(addrConnect))
         return NULL;
 
     // Look for an existing connection
@@ -1591,7 +1584,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
     //
     if (fShutdown)
         return false;
-    if (!CompareIP(addrConnect, addrLocalHost) || FindNodeByIP(addrConnect))
+    if (IsLocalAddress(addrConnect) || FindNodeByIP(addrConnect))
         return false;
 
     vnThreadsRunning[1]--;
@@ -1694,7 +1687,6 @@ bool BindListenPort(string& strError)
     unsigned short port = GetListenPort();
     strError = "";
     int nOne = 1;
-    addrLocalHost.SetPort(port);
 
 #ifdef __WXMSW__
     // Initialize Windows Sockets
@@ -1790,21 +1782,70 @@ bool BindListenPort(string& strError)
     return true;
 }
 
-bool GotLocalAddress(const CAddress &addr)
+bool AllowIncomingConnections()
 {
+    // Proxies can't take incoming connections
+    if (fUseProxy || mapArgs.count("-connect") || fNoListen)
+        return false;
+    return true;
+}
+
+const CAddress* GetLocalAddress(const CAddress &addrPartner)
+{
+    CRITICAL_BLOCK(cs_vaddrLocalHost)
+        return addrPartner.SelectCompatible(vaddrLocalHost);
+}
+
+bool IsLocalAddress(const CAddress &addr)
+{
+    // possible optimization: set port to GetListenPort() and use .count()?
+    CRITICAL_BLOCK(cs_vaddrLocalHost)
+        for (set<CAddress>::const_iterator mi = vaddrLocalHost.begin(); mi != vaddrLocalHost.end(); mi++)
+            if (CompareIP(*mi, addr) == 0)
+                return true;
+    return false;
+}
+
+bool AddLocalAddress(const CAddress &addr)
+{
+    if (!AllowIncomingConnections())
+        return false;
+
+    if (!addr.IsValid() || !addr.IsRoutable())
+        return false;
+
 #ifndef USE_IPV6
     if (!addr.IsIPv4())
         return false;
 #endif
-    int nOldReachability = addrLocalHost.GetReachability();
-    int nNewReachability = addr.GetReachability();
-    if (nNewReachability > nOldReachability)
+
+    CAddress addrNew(addr);
+    addrNew.SetPort(GetListenPort());
+    addrNew.nServices = nLocalServices;
+
+    CRITICAL_BLOCK(cs_vaddrLocalHost)
     {
-        addrLocalHost = addr;
-        addrLocalHost.nServices = nLocalServices;
-        return true;
+        if (vaddrLocalHost.count(addrNew))
+            return false;
+        vaddrLocalHost.insert(addrNew);
     }
-    return false;
+
+    printf("Added local address %s\n",addrNew.ToString().c_str());
+
+    // If we already connected to a few before we had our IP, go back and addr them.
+    // setAddrKnown automatically filters any duplicate sends.
+    CRITICAL_BLOCK(cs_vNodes)
+        BOOST_FOREACH(CNode* pnode, vNodes)
+        {
+            if (addr.GetReachability(&pnode->addr))
+            {
+                CAddress addrPush(addrNew);
+                addrPush.nTime = GetAdjustedTime();
+                pnode->PushAddress(addrPush);
+            }
+        }
+
+    return true;
 }
 
 void StartNode(void* parg)
@@ -1820,7 +1861,7 @@ void StartNode(void* parg)
         vector<CAddress> vaddr;
         if (Lookup(pszHostName, vaddr, nLocalServices, -1, true))
             BOOST_FOREACH (const CAddress &addr, vaddr)
-                GotLocalAddress(addr);
+                AddLocalAddress(addr);
     }
 #else
     // Get local host ip
@@ -1840,8 +1881,8 @@ void StartNode(void* parg)
                 if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s4->sin_addr), pszIP, sizeof(pszIP)) != NULL)
                     printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
 
-                CAddress addr(&s4->sin_addr, GetListenPort(), nLocalServices);
-                GotLocalAddress(addr);
+                CAddress addr(&s4->sin_addr);
+                AddLocalAddress(addr);
             }
 #ifdef USE_IPV6
             else if (ifa->ifa_addr->sa_family == AF_INET6)
@@ -1850,26 +1891,16 @@ void StartNode(void* parg)
                 if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s6->sin6_addr), pszIP, sizeof(pszIP)) != NULL)
                     printf("ipv6 %s: %s\n", ifa->ifa_name, pszIP);
 
-                CAddress addr(&s6->sin6_addr, GetListenPort(), nLocalServices);
-                GotLocalAddress(addr);
+                CAddress addr(&s6->sin6_addr);
+                AddLocalAddress(addr);
             }
 #endif
         }
         freeifaddrs(myaddrs);
     }
 #endif
-    printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
-
-    if (fUseProxy || mapArgs.count("-connect") || fNoListen)
-    {
-        // Proxies can't take incoming connections
-        addrLocalHost = CAddress();
-        printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
-    }
-    else
-    {
+    if (AllowIncomingConnections())
         CreateThread(ThreadGetMyExternalIP, NULL);
-    }
 
     //
     // Start threads

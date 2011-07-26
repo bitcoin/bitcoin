@@ -710,7 +710,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 string strAddress;
                 ssKey >> strAddress;
-                ssValue >> pwallet->mapAddressBook[strAddress];
+                ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress)];
             }
             else if (strType == "tx")
             {

@@ -1835,9 +1835,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (!pfrom->fInbound)
         {
             // Advertise our address
-            if (addrLocalHost.IsRoutable() && !fUseProxy)
+            const CAddress *paddrLocal = GetLocalAddress(pfrom->addr);
+            if (paddrLocal && !fUseProxy)
             {
-                CAddress addr(addrLocalHost);
+                CAddress addr(*paddrLocal);
                 addr.nTime = GetAdjustedTime();
                 pfrom->PushAddress(addr);
             }
@@ -2400,9 +2401,10 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     pnode->setAddrKnown.clear();
 
                     // Rebroadcast our address
-                    if (addrLocalHost.IsRoutable() && !fUseProxy)
+                    const CAddress *paddrLocal = GetLocalAddress(pnode->addr);
+                    if (paddrLocal && !fUseProxy)
                     {
-                        CAddress addr(addrLocalHost);
+                        CAddress addr(*paddrLocal);
                         addr.nTime = GetAdjustedTime();
                         pnode->PushAddress(addr);
                     }
