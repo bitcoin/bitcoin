@@ -66,6 +66,8 @@ void BitcoinAmountField::clear()
 {
     amount->clear();
     decimals->clear();
+    // TODO: set default based on configuration
+    unit->setCurrentIndex(0);
 }
 
 bool BitcoinAmountField::validate()
