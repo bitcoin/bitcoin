@@ -211,7 +211,7 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                     {
                         // Offline transaction
                         CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
+                        if (ExtractAddress(txout.scriptPubKey, 0, address))
                         {
                             strHTML += _("<b>To:</b> ");
                             if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())

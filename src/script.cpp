@@ -1122,27 +1122,34 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     return true;
 }
 
-
-bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
+// requires either keystore==0, or a lock on keystore->cs_KeyStore
+bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
     vector<pair<opcodetype, valtype> > vSolution;
     if (!Solver(scriptPubKey, vSolution))
         return false;
 
-    CRITICAL_BLOCK(keystore->cs_KeyStore)
+    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
     {
-        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
-        {
-            uint160 hash160;
-            if (item.first == OP_PUBKEY)
-                addressRet.SetPubKey(item.second);
-            else if (item.first == OP_PUBKEYHASH)
-                addressRet.SetHash160((uint160)item.second);
-            //if (keystore == NULL || keystore->HaveKey(addressRet))
-                return true;
-        }
+        if (item.first == OP_PUBKEY)
+            addressRet.SetPubKey(item.second);
+        else if (item.first == OP_PUBKEYHASH)
+            addressRet.SetHash160((uint160)item.second);
+        if (keystore == NULL || keystore->HaveKey(addressRet))
+            return true;
     }
 
+    return false;
+}
+
+
+bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
+{
+    if (keystore)
+        CRITICAL_BLOCK(keystore->cs_KeyStore)
+            return ExtractAddressInner(scriptPubKey, keystore, addressRet);
+    else
+        return ExtractAddressInner(scriptPubKey, NULL, addressRet);
     return false;
 }
 

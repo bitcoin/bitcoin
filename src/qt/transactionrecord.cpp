@@ -138,7 +138,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                         // Sent to Bitcoin Address
                         sub.type = TransactionRecord::SendToAddress;
                         CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
+                        if (ExtractAddress(txout.scriptPubKey, 0, address))
                         {
                             sub.address = address.ToString();
                         }
