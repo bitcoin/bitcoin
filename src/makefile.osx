@@ -9,6 +9,7 @@ CXX=llvm-g++
 DEPSDIR=/Users/macosuser/bitcoin/deps
 
 INCLUDEPATHS= \
+ -I. \
  -I"$(DEPSDIR)/include"
 
 LIBPATHS= \
@@ -51,6 +52,12 @@ OBJS= \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
+TESTS= \
+    obj/test/test_bitcoin.o \
+    obj/test/script_tests.o \
+    obj/test/uint160_tests.o \
+    obj/test/uint256_tests.o
+
 ifdef USE_UPNP
 	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
@@ -79,7 +86,7 @@ bitcoind: $(OBJS:obj/%=obj/nogui/%)
 obj/test/%.o: test/%.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
 
-test_bitcoin: obj/test/test_bitcoin.o
+test_bitcoin: $(TESTS) $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
 
 clean:

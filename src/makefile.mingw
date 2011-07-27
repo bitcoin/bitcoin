@@ -5,6 +5,7 @@
 USE_UPNP:=0
 
 INCLUDEPATHS= \
+ -I. \
  -I"C:\boost-1.43.0-mgw" \
  -I"C:\db-4.7.25.NC-mgw\build_unix" \
  -I"C:\openssl-1.0.0d-mgw\include" \
@@ -60,6 +61,11 @@ OBJS= \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
+TESTS= \
+    obj/test/test_bitcoin.o \
+    obj/test/script_tests.o \
+    obj/test/uint160_tests.o \
+    obj/test/uint256_tests.o
 
 all: bitcoin.exe
 
@@ -86,7 +92,7 @@ bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
 obj/test/%.o: obj/test/%.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-test_bitcoin: obj/test/test_bitcoin.o
+test_bitcoin: $(TESTS) $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
