@@ -119,17 +119,33 @@ QString BitcoinUnits::formatWithUnit(int unit, qint64 amount, bool plussign)
 
 bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
 {
-    if(!valid(unit))
-        return false; // Refuse to parse invalid unit
+    if(!valid(unit) || value.isEmpty())
+        return false; // Refuse to parse invalid unit or empty string
     int num_decimals = decimals(unit);
     QStringList parts = value.split(".");
-    if(parts.size() != 2 || parts.at(1).size() > num_decimals)
-        return false; // Max num decimals
-    bool ok = false;
-    QString str = parts[0] + parts[1].leftJustified(num_decimals, '0');
-    if(str.size()>18)
-        return false; // Bounds check
 
+    if(parts.size() > 2)
+    {
+        return false; // More than one dot
+    }
+    QString whole = parts[0];
+    QString decimals;
+
+    if(parts.size() > 1)
+    {
+        decimals = parts[1];
+    }
+    if(decimals.size() > num_decimals)
+    {
+        return false; // Exceeds max precision
+    }
+    bool ok = false;
+    QString str = whole + decimals.leftJustified(num_decimals, '0');
+
+    if(str.size() > 18)
+    {
+        return false; // Longer numbers will exceed 63 bits
+    }
     qint64 retvalue = str.toLongLong(&ok);
     if(val_out)
     {
