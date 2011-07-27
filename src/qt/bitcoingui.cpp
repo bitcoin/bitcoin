@@ -85,7 +85,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QVBoxLayout *vbox = new QVBoxLayout();
 
     transactionView = new TransactionView(this);
-    connect(transactionView, SIGNAL(doubleClicked(const QModelIndex&)), transactionView, SLOT(showDetails()));
+    connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
     vbox->addWidget(transactionView);
 
     transactionsPage = new QWidget(this);
@@ -252,8 +252,8 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
     sendCoinsPage->setModel(walletModel);
 
     // Balloon popup for new transaction
-    connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(const QModelIndex &, int, int)),
-            this, SLOT(incomingTransaction(const QModelIndex &, int, int)));
+    connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
+            this, SLOT(incomingTransaction(QModelIndex,int,int)));
 }
 
 void BitcoinGUI::createTrayIcon()

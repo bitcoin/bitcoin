@@ -120,15 +120,15 @@ TransactionView::TransactionView(QWidget *parent) :
     // Connect actions
     connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
     connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
-    connect(addressWidget, SIGNAL(textChanged(const QString&)), this, SLOT(changedPrefix(const QString&)));
-    connect(amountWidget, SIGNAL(textChanged(const QString&)), this, SLOT(changedAmount(const QString&)));
+    connect(addressWidget, SIGNAL(textChanged(QString)), this, SLOT(changedPrefix(QString)));
+    connect(amountWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAmount(QString)));
 
-    connect(view, SIGNAL(doubleClicked(const QModelIndex&)), this, SIGNAL(doubleClicked(const QModelIndex&)));
+    connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
 
     connect(view,
-            SIGNAL(customContextMenuRequested(const QPoint &)),
+            SIGNAL(customContextMenuRequested(QPoint)),
             this,
-            SLOT(contextualMenu(const QPoint &)));
+            SLOT(contextualMenu(QPoint)));
 
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
