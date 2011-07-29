@@ -271,36 +271,48 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         //
         if (fDebug)
         {
-            strHTML += "<hr><br>debug print<br><br>";
+            strHTML += "<hr><br>Debug information<br><br>";
             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 if(wallet->IsMine(txin))
-                    strHTML += "<b>Debit:</b> " + FormatMoney(-wallet->IsMine(txin)) + "<br>";
+                    strHTML += "<b>Debit:</b> " + FormatMoney(-wallet->GetDebit(txin)) + "<br>";
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if(wallet->IsMine(txout))
-                    strHTML += "<b>Credit:</b> " + FormatMoney(wallet->IsMine(txout)) + "<br>";
+                    strHTML += "<b>Credit:</b> " + FormatMoney(wallet->GetCredit(txout)) + "<br>";
 
             strHTML += "<br><b>Transaction:</b><br>";
             strHTML += HtmlEscape(wtx.ToString(), true);
 
-            strHTML += "<br><b>Inputs:</b><br>";
+            CTxDB txdb("r"); // To fetch source txouts
+
+            strHTML += "<br><b>Inputs:</b>";
+            strHTML += "<ul>";
             CRITICAL_BLOCK(wallet->cs_mapWallet)
             {
                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 {
                     COutPoint prevout = txin.prevout;
-                    map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(prevout.hash);
-                    if (mi != wallet->mapWallet.end())
+
+                    CTransaction prev;
+                    if(txdb.ReadDiskTx(prevout.hash, prev))
                     {
-                        const CWalletTx& prev = (*mi).second;
                         if (prevout.n < prev.vout.size())
                         {
-                            strHTML += HtmlEscape(prev.ToString(), true);
-                            strHTML += " &nbsp;&nbsp; " + FormatTxStatus(prev) + ", ";
-                            strHTML = strHTML + "IsMine=" + (wallet->IsMine(prev.vout[prevout.n]) ? "true" : "false") + "<br>";
+                            strHTML += "<li>";
+                            const CTxOut &vout = prev.vout[prevout.n];
+                            CBitcoinAddress address;
+                            if (ExtractAddress(vout.scriptPubKey, 0, address))
+                            {
+                                if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
+                                    strHTML += wallet->mapAddressBook[address] + " ";
+                                strHTML += address.ToString();
+                            }
+                            strHTML = strHTML + " Amount=" + FormatMoney(vout.nValue);
+                            strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) ? "true" : "false") + "</li>";
                         }
                     }
                 }
             }
+            strHTML += "</ul>";
         }
 
 
