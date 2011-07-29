@@ -4,6 +4,7 @@
 #include "bitcoinunits.h"
 #include "addressbookpage.h"
 #include "walletmodel.h"
+#include "optionsmodel.h"
 #include "addresstablemodel.h"
 
 #include "qapplication.h"
@@ -71,6 +72,10 @@ void SendCoinsEntry::clear()
     ui->addAsLabel->clear();
     ui->payAmount->clear();
     ui->payTo->setFocus();
+    if(model)
+    {
+        ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    }
 }
 
 void SendCoinsEntry::on_deleteButton_clicked()

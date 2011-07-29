@@ -9,6 +9,7 @@
 #include "csvmodelwriter.h"
 #include "transactiondescdialog.h"
 #include "editaddressdialog.h"
+#include "optionsmodel.h"
 
 #include <QScrollBar>
 #include <QComboBox>
@@ -227,7 +228,7 @@ void TransactionView::changedPrefix(const QString &prefix)
 void TransactionView::changedAmount(const QString &amount)
 {
     qint64 amount_parsed = 0;
-    if(BitcoinUnits::parse(BitcoinUnits::BTC, amount, &amount_parsed))
+    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
     {
         transactionProxyModel->setMinAmount(amount_parsed);
     }

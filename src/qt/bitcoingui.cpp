@@ -463,7 +463,7 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
         trayIcon->showMessage((amount)<0 ? tr("Sent transaction") :
                                            tr("Incoming transaction"),
                               tr("Date: ") + date + "\n" +
-                              tr("Amount: ") + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, amount, true) + "\n" +
+                              tr("Amount: ") + BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), amount, true) + "\n" +
                               tr("Type: ") + type + "\n" +
                               tr("Address: ") + address + "\n",
                               QSystemTrayIcon::Information);

@@ -3,10 +3,15 @@
 
 #include "walletmodel.h"
 #include "bitcoinunits.h"
+#include "optionsmodel.h"
+
+#include <QDebug>
 
 OverviewPage::OverviewPage(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::OverviewPage)
+    ui(new Ui::OverviewPage),
+    currentBalance(-1),
+    currentUnconfirmedBalance(-1)
 {
     ui->setupUi(this);
 
@@ -34,8 +39,11 @@ OverviewPage::~OverviewPage()
 
 void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance)
 {
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, balance));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, unconfirmedBalance));
+    int unit = model->getOptionsModel()->getDisplayUnit();
+    currentBalance = balance;
+    currentUnconfirmedBalance = unconfirmedBalance;
+    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
+    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance));
 }
 
 void OverviewPage::setNumTransactions(int count)
@@ -54,4 +62,11 @@ void OverviewPage::setModel(WalletModel *model)
     setNumTransactions(model->getNumTransactions());
     connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
 
+    connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(displayUnitChanged()));
+}
+
+void OverviewPage::displayUnitChanged()
+{
+    if(currentBalance != -1)
+        setBalance(currentBalance, currentUnconfirmedBalance);
 }

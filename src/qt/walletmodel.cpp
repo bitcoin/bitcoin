@@ -9,8 +9,8 @@
 #include <QTimer>
 #include <QSet>
 
-WalletModel::WalletModel(CWallet *wallet, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(0), addressTableModel(0),
+WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
+    QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
     transactionTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0)
 {
@@ -20,7 +20,6 @@ WalletModel::WalletModel(CWallet *wallet, QObject *parent) :
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(MODEL_UPDATE_DELAY);
 
-    optionsModel = new OptionsModel(wallet, this);
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 }

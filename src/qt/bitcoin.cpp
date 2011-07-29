@@ -4,6 +4,7 @@
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
+#include "optionsmodel.h"
 #include "qtwin.h"
 
 #include "headers.h"
@@ -118,8 +119,9 @@ int main(int argc, char *argv[])
                 // Put this in a block, so that BitcoinGUI is cleaned up properly before
                 // calling shutdown.
                 BitcoinGUI window;
-                ClientModel clientModel(pwalletMain);
-                WalletModel walletModel(pwalletMain);
+                OptionsModel optionsModel(pwalletMain);
+                ClientModel clientModel(&optionsModel);
+                WalletModel walletModel(pwalletMain, &optionsModel);
 
                 guiref = &window;
                 window.setClientModel(&clientModel);

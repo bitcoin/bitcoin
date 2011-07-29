@@ -9,8 +9,8 @@
 #include <QTimer>
 #include <QDateTime>
 
-ClientModel::ClientModel(CWallet *wallet, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(0),
+ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
+    QObject(parent), optionsModel(optionsModel),
     cachedNumConnections(0), cachedNumBlocks(0)
 {
     // Until signal notifications is built into the bitcoin core,
@@ -18,8 +18,6 @@ ClientModel::ClientModel(CWallet *wallet, QObject *parent) :
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(MODEL_UPDATE_DELAY);
-
-    optionsModel = new OptionsModel(wallet, this);
 }
 
 int ClientModel::getNumConnections() const

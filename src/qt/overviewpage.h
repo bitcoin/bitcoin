@@ -25,7 +25,11 @@ public slots:
 private:
     Ui::OverviewPage *ui;
     WalletModel *model;
+    qint64 currentBalance;
+    qint64 currentUnconfirmedBalance;
 
+private slots:
+    void displayUnitChanged();
 };
 
 #endif // OVERVIEWPAGE_H

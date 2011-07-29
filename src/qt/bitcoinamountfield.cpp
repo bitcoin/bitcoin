@@ -1,5 +1,6 @@
 #include "bitcoinamountfield.h"
 #include "qvalidatedlineedit.h"
+#include "qvaluecombobox.h"
 #include "bitcoinunits.h"
 
 #include <QLabel>
@@ -8,6 +9,7 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QComboBox>
+#include <QDebug>
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent):
         QWidget(parent), amount(0), decimals(0), currentUnit(-1)
@@ -27,7 +29,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     layout->addWidget(amount);
     layout->addWidget(new QLabel(QString(".")));
     layout->addWidget(decimals);
-    unit = new QComboBox(this);
+    unit = new QValueComboBox(this);
     unit->setModel(new BitcoinUnits(this));
     layout->addWidget(unit);
     layout->addStretch(1);
@@ -78,7 +80,7 @@ bool BitcoinAmountField::validate()
         decimals->setValid(false);
         valid = false;
     }
-    if(!BitcoinUnits::parse(BitcoinUnits::BTC, text(), 0))
+    if(!BitcoinUnits::parse(currentUnit, text(), 0))
     {
         setValid(false);
         valid = false;
@@ -169,6 +171,9 @@ void BitcoinAmountField::unitChanged(int idx)
         setText("");
     }
     setValid(true);
+}
 
-
+void BitcoinAmountField::setDisplayUnit(int newUnit)
+{
+    unit->setValue(newUnit);
 }

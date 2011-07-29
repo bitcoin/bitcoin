@@ -5,7 +5,7 @@
 
 QT_BEGIN_NAMESPACE
 class QValidatedLineEdit;
-class QComboBox;
+class QValueComboBox;
 QT_END_NAMESPACE
 
 // Coin amount entry widget with separate parts for whole
@@ -13,7 +13,6 @@ QT_END_NAMESPACE
 class BitcoinAmountField: public QWidget
 {
     Q_OBJECT
-    //Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged USER true);
     Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY textChanged USER true);
 public:
     explicit BitcoinAmountField(QWidget *parent = 0);
@@ -24,6 +23,9 @@ public:
     // Mark current valid as invalid in UI
     void setValid(bool valid);
     bool validate();
+
+    // Change current unit
+    void setDisplayUnit(int unit);
 
     // Make field empty and ready for new input
     void clear();
@@ -42,7 +44,7 @@ protected:
 private:
     QValidatedLineEdit *amount;
     QValidatedLineEdit *decimals;
-    QComboBox *unit;
+    QValueComboBox *unit;
     int currentUnit;
 
     void setText(const QString &text);

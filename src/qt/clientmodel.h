@@ -19,7 +19,7 @@ class ClientModel : public QObject
 public:
     // The only reason that this constructor takes a wallet is because
     // the global client settings are stored in the main wallet.
-    explicit ClientModel(CWallet *wallet, QObject *parent = 0);
+    explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
 
     OptionsModel *getOptionsModel();
 
@@ -38,8 +38,6 @@ public:
     QString formatFullVersion() const;
 
 private:
-    CWallet *wallet;
-
     OptionsModel *optionsModel;
 
     int cachedNumConnections;

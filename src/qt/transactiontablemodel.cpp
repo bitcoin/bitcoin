@@ -4,6 +4,7 @@
 #include "guiconstants.h"
 #include "transactiondesc.h"
 #include "walletmodel.h"
+#include "optionsmodel.h"
 #include "addresstablemodel.h"
 #include "bitcoinunits.h"
 
@@ -398,7 +399,7 @@ QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx) 
 
 QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed) const
 {
-    QString str = BitcoinUnits::format(BitcoinUnits::BTC, wtx->credit + wtx->debit);
+    QString str = BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
     if(showUnconfirmed)
     {
         if(!wtx->status.confirmed || wtx->status.maturity != TransactionStatus::Mature)

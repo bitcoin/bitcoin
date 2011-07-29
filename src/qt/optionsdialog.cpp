@@ -3,6 +3,8 @@
 #include "bitcoinamountfield.h"
 #include "monitoreddatamapper.h"
 #include "guiutil.h"
+#include "bitcoinunits.h"
+#include "qvaluecombobox.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -49,7 +51,7 @@ public:
 
     void setMapper(MonitoredDataMapper *mapper);
 private:
-    QLineEdit *unit;
+    QValueComboBox *unit;
 signals:
 
 public slots:
@@ -72,7 +74,7 @@ OptionsDialog::OptionsDialog(QWidget *parent):
     pages_widget->addWidget(main_page);
 
     QListWidgetItem *item_display = new QListWidgetItem(tr("Display"));
-    //contents_widget->addItem(item_display);
+    contents_widget->addItem(item_display);
     display_page = new DisplayOptionsPage(this);
     pages_widget->addWidget(display_page);
 
@@ -122,7 +124,6 @@ void OptionsDialog::setModel(OptionsModel *model)
 
 void OptionsDialog::changePage(int index)
 {
-    qDebug() << "page" << index;
     pages_widget->setCurrentIndex(index);
 }
 
@@ -249,9 +250,11 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
     QVBoxLayout *layout = new QVBoxLayout();
     QHBoxLayout *unit_hbox = new QHBoxLayout();
     unit_hbox->addSpacing(18);
-    QLabel *unit_label = new QLabel(tr("&Unit: "));
+    QLabel *unit_label = new QLabel(tr("&Unit to show amounts in: "));
     unit_hbox->addWidget(unit_label);
-    unit = new QLineEdit();
+    unit = new QValueComboBox(this);
+    unit->setModel(new BitcoinUnits(this));
+    unit->setToolTip(tr("Choose the default subdivision unit to show in the interface, and when sending coins"));
 
     unit_label->setBuddy(unit);
     unit_hbox->addWidget(unit);
@@ -264,4 +267,5 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
 
 void DisplayOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
+    mapper->addMapping(unit, OptionsModel::DisplayUnit);
 }

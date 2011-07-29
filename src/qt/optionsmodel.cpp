@@ -1,4 +1,5 @@
 #include "optionsmodel.h"
+#include "bitcoinunits.h"
 
 #include "headers.h"
 
@@ -6,8 +7,12 @@
 
 OptionsModel::OptionsModel(CWallet *wallet, QObject *parent) :
     QAbstractListModel(parent),
-    wallet(wallet)
+    wallet(wallet),
+    nDisplayUnit(BitcoinUnits::BTC)
 {
+    // Read our specific settings from the wallet db
+    CWalletDB walletdb(wallet->strWalletFile);
+    walletdb.ReadSetting("nDisplayUnit", nDisplayUnit);
 }
 
 int OptionsModel::rowCount(const QModelIndex & parent) const
@@ -37,6 +42,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(QString::fromStdString(addrProxy.ToStringPort()));
         case Fee:
             return QVariant(nTransactionFee);
+        case DisplayUnit:
+            return QVariant(nDisplayUnit);
         default:
             return QVariant();
         }
@@ -108,6 +115,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             walletdb.WriteSetting("nTransactionFee", nTransactionFee);
             }
             break;
+        case DisplayUnit: {
+            int unit = value.toInt();
+            nDisplayUnit = unit;
+            walletdb.WriteSetting("nDisplayUnit", nDisplayUnit);
+            emit displayUnitChanged(unit);
+            }
         default:
             break;
         }
@@ -130,4 +143,9 @@ bool OptionsModel::getMinimizeToTray()
 bool OptionsModel::getMinimizeOnClose()
 {
     return fMinimizeOnClose;
+}
+
+int OptionsModel::getDisplayUnit()
+{
+    return nDisplayUnit;
 }
