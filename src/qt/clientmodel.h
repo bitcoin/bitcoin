@@ -17,8 +17,6 @@ class ClientModel : public QObject
 {
     Q_OBJECT
 public:
-    // The only reason that this constructor takes a wallet is because
-    // the global client settings are stored in the main wallet.
     explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
 
     OptionsModel *getOptionsModel();
