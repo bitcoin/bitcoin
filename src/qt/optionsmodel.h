@@ -27,6 +27,7 @@ public:
         ProxyPort, // QString
         Fee, // qint64
         DisplayUnit, // BitcoinUnits::Unit
+        DisplayAddresses, // bool
         OptionIDRowCount
     };
 
@@ -39,10 +40,12 @@ public:
     bool getMinimizeToTray();
     bool getMinimizeOnClose();
     int getDisplayUnit();
+    bool getDisplayAddresses();
 private:
     // Wallet stores persistent options
     CWallet *wallet;
     int nDisplayUnit;
+    bool bDisplayAddresses;
 signals:
     void displayUnitChanged(int unit);
 

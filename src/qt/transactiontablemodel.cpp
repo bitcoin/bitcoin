@@ -322,21 +322,20 @@ QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     }
 }
 
-/* Look up address in address book, if found return
-     address (label)
-   otherwise just return address
+/* Look up address in address book, if found return label (address)
+   otherwise just return (address)
  */
-QString TransactionTableModel::lookupAddress(const std::string &address) const
+QString TransactionTableModel::lookupAddress(const std::string &address, bool tooltip) const
 {
     QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(address));
     QString description;
-    if(label.isEmpty())
+    if(!label.isEmpty())
     {
-        description = QString::fromStdString(address);
+        description += label + QString(" ");
     }
-    else
+    if(label.isEmpty() || walletModel->getOptionsModel()->getDisplayAddresses() || tooltip)
     {
-        description = label + QString(" (") + QString::fromStdString(address) + QString(")");
+        description += QString("(") + QString::fromStdString(address) + QString(")");
     }
     return description;
 }
@@ -369,20 +368,18 @@ QVariant TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     return QVariant(description);
 }
 
-QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx) const
+QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
 {
     QString description;
 
     switch(wtx->type)
     {
-    case TransactionRecord::RecvWithAddress:
-        description = lookupAddress(wtx->address);
-        break;
     case TransactionRecord::RecvFromIP:
         description = QString::fromStdString(wtx->address);
         break;
+    case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
-        description = lookupAddress(wtx->address);
+        description = lookupAddress(wtx->address, tooltip);
         break;
     case TransactionRecord::SendToIP:
         description = QString::fromStdString(wtx->address);
@@ -395,6 +392,24 @@ QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx) 
         break;
     }
     return QVariant(description);
+}
+
+QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
+{
+    // Show addresses without label in a less visible color
+    switch(wtx->type)
+    {
+    case TransactionRecord::RecvWithAddress:
+    case TransactionRecord::SendToAddress:
+        {
+        QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
+        if(label.isEmpty())
+            return COLOR_BAREADDRESS;
+        } break;
+    default:
+        break;
+    }
+    return QVariant();
 }
 
 QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed) const
@@ -478,7 +493,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Type:
             return formatTxType(rec);
         case ToAddress:
-            return formatTxToAddress(rec);
+            return formatTxToAddress(rec, false);
         case Amount:
             return formatTxAmount(rec);
         }
@@ -495,16 +510,19 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Type:
             return formatTxType(rec);
         case ToAddress:
-            return formatTxToAddress(rec);
+            return formatTxToAddress(rec, true);
         case Amount:
             return rec->credit + rec->debit;
         }
     }
     else if (role == Qt::ToolTipRole)
     {
-        if(index.column() == Status)
+        switch(index.column())
         {
+        case Status:
             return formatTxStatus(rec);
+        case ToAddress:
+            return formatTxToAddress(rec, true);
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -521,6 +539,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         if(index.column() == Amount && (rec->credit+rec->debit) < 0)
         {
             return COLOR_NEGATIVE;
+        }
+        if(index.column() == ToAddress)
+        {
+            return addressColor(rec);
         }
     }
     else if (role == TypeRole)

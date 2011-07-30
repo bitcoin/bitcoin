@@ -11,5 +11,7 @@ static const int MODEL_UPDATE_DELAY = 500;
 #define COLOR_UNCONFIRMED QColor(128, 128, 128)
 /* Transaction list -- negative amount */
 #define COLOR_NEGATIVE QColor(255, 0, 0)
+/* Transaction list -- bare address (without label) */
+#define COLOR_BAREADDRESS QColor(140, 140, 140)
 
 #endif // GUICONSTANTS_H

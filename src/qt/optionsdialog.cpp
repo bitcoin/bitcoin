@@ -52,6 +52,7 @@ public:
     void setMapper(MonitoredDataMapper *mapper);
 private:
     QValueComboBox *unit;
+    QCheckBox *display_addresses;
 signals:
 
 public slots:
@@ -248,6 +249,7 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
         QWidget(parent)
 {
     QVBoxLayout *layout = new QVBoxLayout();
+
     QHBoxLayout *unit_hbox = new QHBoxLayout();
     unit_hbox->addSpacing(18);
     QLabel *unit_label = new QLabel(tr("&Unit to show amounts in: "));
@@ -260,6 +262,10 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
     unit_hbox->addWidget(unit);
 
     layout->addLayout(unit_hbox);
+
+    display_addresses = new QCheckBox(tr("Display addresses in transaction list"), this);
+    layout->addWidget(display_addresses);
+
     layout->addStretch();
 
     setLayout(layout);
@@ -268,4 +274,5 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
 void DisplayOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
     mapper->addMapping(unit, OptionsModel::DisplayUnit);
+    mapper->addMapping(display_addresses, OptionsModel::DisplayAddresses);
 }

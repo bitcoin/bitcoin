@@ -8,11 +8,13 @@
 OptionsModel::OptionsModel(CWallet *wallet, QObject *parent) :
     QAbstractListModel(parent),
     wallet(wallet),
-    nDisplayUnit(BitcoinUnits::BTC)
+    nDisplayUnit(BitcoinUnits::BTC),
+    bDisplayAddresses(false)
 {
     // Read our specific settings from the wallet db
     CWalletDB walletdb(wallet->strWalletFile);
     walletdb.ReadSetting("nDisplayUnit", nDisplayUnit);
+    walletdb.ReadSetting("bDisplayAddresses", bDisplayAddresses);
 }
 
 int OptionsModel::rowCount(const QModelIndex & parent) const
@@ -44,6 +46,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(nTransactionFee);
         case DisplayUnit:
             return QVariant(nDisplayUnit);
+        case DisplayAddresses:
+            return QVariant(bDisplayAddresses);
         default:
             return QVariant();
         }
@@ -121,6 +125,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             walletdb.WriteSetting("nDisplayUnit", nDisplayUnit);
             emit displayUnitChanged(unit);
             }
+        case DisplayAddresses: {
+            bDisplayAddresses = value.toBool();
+            walletdb.WriteSetting("bDisplayAddresses", bDisplayAddresses);
+            }
         default:
             break;
         }
@@ -148,4 +156,9 @@ bool OptionsModel::getMinimizeOnClose()
 int OptionsModel::getDisplayUnit()
 {
     return nDisplayUnit;
+}
+
+bool OptionsModel::getDisplayAddresses()
+{
+    return bDisplayAddresses;
 }

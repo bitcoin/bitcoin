@@ -59,11 +59,12 @@ private:
     QStringList columns;
     TransactionTablePriv *priv;
 
-    QString lookupAddress(const std::string &address) const;
+    QString lookupAddress(const std::string &address, bool tooltip) const;
+    QVariant addressColor(const TransactionRecord *wtx) const;
     QVariant formatTxStatus(const TransactionRecord *wtx) const;
     QVariant formatTxDate(const TransactionRecord *wtx) const;
     QVariant formatTxType(const TransactionRecord *wtx) const;
-    QVariant formatTxToAddress(const TransactionRecord *wtx) const;
+    QVariant formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
     QVariant formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
     QVariant formatTxDecoration(const TransactionRecord *wtx) const;
 
