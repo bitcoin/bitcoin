@@ -46,7 +46,6 @@ struct AddressTablePriv
             {
                 const CBitcoinAddress& address = item.first;
                 const std::string& strName = item.second;
-                uint160 hash160;
                 bool fMine = wallet->HaveKey(address);
                 cachedAddressTable.append(AddressTableEntry(fMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending,
                                   QString::fromStdString(strName),
