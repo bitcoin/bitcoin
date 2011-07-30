@@ -314,6 +314,15 @@ bool CTransaction::CheckTransaction() const
             return error("CTransaction::CheckTransaction() : txout total out of range");
     }
 
+    // Check for duplicate inputs
+    set<COutPoint> vInOutPoints;
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        if (vInOutPoints.count(txin.prevout))
+            return false;
+        vInOutPoints.insert(txin.prevout);
+    }
+
     if (IsCoinBase())
     {
         if (vin[0].scriptSig.size() < 2 || vin[0].scriptSig.size() > 100)
