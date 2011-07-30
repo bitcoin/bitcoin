@@ -159,6 +159,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
                 wallet->SetAddressBookName(strAddress, rcp.label.toStdString());
         }
     }
+
+    // Update our model of the address table
     addressTableModel->updateList();
 
     return SendCoinsReturn(OK, 0, hex);
