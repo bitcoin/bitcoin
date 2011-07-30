@@ -27,7 +27,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->setSpacing(0);
     layout->addWidget(amount);
-    layout->addWidget(new QLabel(QString(".")));
+    layout->addWidget(new QLabel(QString("<b>.</b>")));
     layout->addWidget(decimals);
     unit = new QValueComboBox(this);
     unit->setModel(new BitcoinUnits(this));
