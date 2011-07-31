@@ -134,7 +134,7 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                                 strHTML += _("<b>To:</b> ");
                                 strHTML += HtmlEscape(address.ToString());
                                 if (!wallet->mapAddressBook[address].empty())
-                                    strHTML += _(" (yours, label: ") + wallet->mapAddressBook[address] + ")";
+                                    strHTML += _(" (yours, label: ") + HtmlEscape(wallet->mapAddressBook[address]) + ")";
                                 else
                                     strHTML += _(" (yours)");
                                 strHTML += "<br>";
@@ -157,7 +157,7 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
             strAddress = wtx.mapValue["to"];
             strHTML += _("<b>To:</b> ");
             if (wallet->mapAddressBook.count(strAddress) && !wallet->mapAddressBook[strAddress].empty())
-                strHTML += wallet->mapAddressBook[strAddress] + " ";
+                strHTML += HtmlEscape(wallet->mapAddressBook[strAddress]) + " ";
             strHTML += HtmlEscape(strAddress) + "<br>";
         }
 
@@ -215,8 +215,8 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                         {
                             strHTML += _("<b>To:</b> ");
                             if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
-                                strHTML += wallet->mapAddressBook[address] + " ";
-                            strHTML += address.ToString();
+                                strHTML += HtmlEscape(wallet->mapAddressBook[address]) + " ";
+                            strHTML += HtmlEscape(address.ToString());
                             strHTML += "<br>";
                         }
                     }
@@ -303,7 +303,7 @@ string TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                             if (ExtractAddress(vout.scriptPubKey, 0, address))
                             {
                                 if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
-                                    strHTML += wallet->mapAddressBook[address] + " ";
+                                    strHTML += HtmlEscape(wallet->mapAddressBook[address]) + " ";
                                 strHTML += address.ToString();
                             }
                             strHTML = strHTML + " Amount=" + FormatMoney(vout.nValue);
