@@ -7,6 +7,7 @@
 #include "uint160_tests.cpp"
 #include "uint256_tests.cpp"
 #include "script_tests.cpp"
+#include "transaction_tests.cpp"
 
 
 CWallet* pwalletMain;
