@@ -782,11 +782,11 @@ void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
     string strFile = GetDataDir() + "/debug.log";
-    FILE* file = fopen(strFile.c_str(), "r");
-    if (file && GetFilesize(strFile) > 10 * 1000000)
+    if (GetFilesize(strFile) > 10 * 1000000)
     {
         // Restart the file with some of the end
         char pch[200000];
+        FILE* file = fopen(strFile.c_str(), "r");
         fseek(file, -sizeof(pch), SEEK_END);
         int nBytes = fread(pch, 1, sizeof(pch), file);
         fclose(file);
