@@ -391,10 +391,9 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::SendToIP:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::SendToSelf:
-        return QString();
     case TransactionRecord::Generated:
     default:
-        return QString();
+        return tr("(n/a)");
     }
 }
 
@@ -410,6 +409,9 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
+    case TransactionRecord::SendToSelf:
+    case TransactionRecord::Generated:
+        return COLOR_BAREADDRESS;
     default:
         break;
     }
