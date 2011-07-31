@@ -784,19 +784,8 @@ void ShrinkDebugFile()
     string strFile = GetDataDir() + "/debug.log";
     if (GetFilesize(strFile) > 10 * 1000000)
     {
-        // Restart the file with some of the end
-        char pch[200000];
-        FILE* file = fopen(strFile.c_str(), "r");
-        fseek(file, -sizeof(pch), SEEK_END);
-        int nBytes = fread(pch, 1, sizeof(pch), file);
+        FILE*file = fopen(strFile.c_str(), "w");
         fclose(file);
-
-        file = fopen(strFile.c_str(), "w");
-        if (file)
-        {
-            fwrite(pch, 1, nBytes, file);
-            fclose(file);
-        }
     }
 }
 
