@@ -340,58 +340,62 @@ QString TransactionTableModel::lookupAddress(const std::string &address, bool to
     return description;
 }
 
-QVariant TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
+QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
 {
-    QString description;
-
     switch(wtx->type)
     {
     case TransactionRecord::RecvWithAddress:
-        description = tr("Received with");
-        break;
+        return tr("Received with");
     case TransactionRecord::RecvFromIP:
-        description = tr("Received from IP");
-        break;
+        return tr("Received from IP");
     case TransactionRecord::SendToAddress:
-        description = tr("Sent to");
-        break;
+        return tr("Sent to");
     case TransactionRecord::SendToIP:
-        description = tr("Sent to IP");
-        break;
+        return tr("Sent to IP");
     case TransactionRecord::SendToSelf:
-        description = tr("Payment to yourself");
-        break;
+        return tr("Payment to yourself");
     case TransactionRecord::Generated:
-        description = tr("Mined");
-        break;
+        return tr("Mined");
+    default:
+        return QString();
     }
-    return QVariant(description);
 }
 
-QVariant TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
+QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx) const
 {
-    QString description;
+    switch(wtx->type)
+    {
+    case TransactionRecord::Generated:
+        return QIcon(":/icons/tx_mined");
+    case TransactionRecord::RecvWithAddress:
+    case TransactionRecord::RecvFromIP:
+        return QIcon(":/icons/tx_input");
+    case TransactionRecord::SendToAddress:
+    case TransactionRecord::SendToIP:
+        return QIcon(":/icons/tx_output");
+    default:
+        return QIcon(":/icons/tx_inout");
+    }
+    return QVariant();
+}
 
+QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
+{
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromIP:
-        description = QString::fromStdString(wtx->address);
-        break;
+        return QString::fromStdString(wtx->address);
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
-        description = lookupAddress(wtx->address, tooltip);
-        break;
+        return lookupAddress(wtx->address, tooltip);
     case TransactionRecord::SendToIP:
-        description = QString::fromStdString(wtx->address);
-        break;
+        return QString::fromStdString(wtx->address);
     case TransactionRecord::SendToSelf:
-        description = QString();
-        break;
+        return QString();
     case TransactionRecord::Generated:
-        description = QString();
-        break;
+    default:
+        return QString();
     }
-    return QVariant(description);
 }
 
 QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
@@ -478,9 +482,12 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 
     if(role == Qt::DecorationRole)
     {
-        if(index.column() == Status)
+        switch(index.column())
         {
+        case Status:
             return formatTxDecoration(rec);
+        case ToAddress:
+            return txAddressDecoration(rec);
         }
     }
     else if(role == Qt::DisplayRole)
@@ -522,7 +529,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Status:
             return formatTxStatus(rec);
         case ToAddress:
-            return formatTxToAddress(rec, true);
+            return formatTxType(rec) + QString(" ") + formatTxToAddress(rec, true);
         }
     }
     else if (role == Qt::TextAlignmentRole)

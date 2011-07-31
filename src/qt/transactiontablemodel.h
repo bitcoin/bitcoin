@@ -63,10 +63,11 @@ private:
     QVariant addressColor(const TransactionRecord *wtx) const;
     QVariant formatTxStatus(const TransactionRecord *wtx) const;
     QVariant formatTxDate(const TransactionRecord *wtx) const;
-    QVariant formatTxType(const TransactionRecord *wtx) const;
-    QVariant formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
+    QString formatTxType(const TransactionRecord *wtx) const;
+    QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
     QVariant formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
     QVariant formatTxDecoration(const TransactionRecord *wtx) const;
+    QVariant txAddressDecoration(const TransactionRecord *wtx) const;
 
 private slots:
     void update();
