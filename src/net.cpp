@@ -1092,13 +1092,14 @@ void ThreadMapPort2(void* parg)
     {
         char intClient[16];
         char intPort[6];
+        string strDesc = "Bitcoin " + FormatFullVersion();
 
 #ifndef __WXMSW__
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0);
+	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0);
 #else
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0, "0");
+	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
 #endif
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
