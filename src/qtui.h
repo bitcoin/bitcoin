@@ -43,6 +43,7 @@ extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, 
 extern void CalledSetStatusBar(const std::string& strText, int nField);
 extern void UIThreadCall(boost::function0<void> fn);
 extern void MainFrameRepaint();
+extern void InitMessage(const std::string &message);
 extern std::string _(const char* psz);
 
 #endif

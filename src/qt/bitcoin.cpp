@@ -15,9 +15,12 @@
 #include <QThread>
 #include <QLocale>
 #include <QTranslator>
+#include <QSplashScreen>
+#include <QDebug>
 
 // Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;
+QSplashScreen *splashref;
 
 int MyMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
 {
@@ -90,6 +93,15 @@ void MainFrameRepaint()
 {
 }
 
+void InitMessage(const std::string &message)
+{
+    if(splashref)
+    {
+        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom, QColor(255,255,255));
+        QApplication::instance()->processEvents();
+    }
+}
+
 /*
    Translate string to current locale using Qt.
  */
@@ -109,6 +121,13 @@ int main(int argc, char *argv[])
     translator.load("bitcoin_"+locale);
     app.installTranslator(&translator);
 
+    QSplashScreen splash(QPixmap(":/images/splash"), Qt::WindowStaysOnTopHint);
+    splash.show();
+    splash.setAutoFillBackground(true);
+    splashref = &splash;
+
+    app.processEvents();
+
     app.setQuitOnLastWindowClosed(false);
 
     try
@@ -119,6 +138,7 @@ int main(int argc, char *argv[])
                 // Put this in a block, so that BitcoinGUI is cleaned up properly before
                 // calling shutdown.
                 BitcoinGUI window;
+                splash.finish(&window);
                 OptionsModel optionsModel(pwalletMain);
                 ClientModel clientModel(&optionsModel);
                 WalletModel walletModel(pwalletMain, &optionsModel);

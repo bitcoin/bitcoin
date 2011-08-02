@@ -370,18 +370,21 @@ bool AppInit2(int argc, char* argv[])
     strErrors = "";
     int64 nStart;
 
+    InitMessage("Loading addresses...");
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
     if (!LoadAddresses())
         strErrors += _("Error loading addr.dat      \n");
     printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
+    InitMessage("Loading block index...");
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
         strErrors += _("Error loading blkindex.dat      \n");
     printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
+    InitMessage("Loading wallet...");
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
     bool fFirstRun;
@@ -412,12 +415,14 @@ bool AppInit2(int argc, char* argv[])
     }
     if (pindexBest != pindexRescan)
     {
+        InitMessage("Rescanning...");
         printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
         pwalletMain->ScanForWalletTransactions(pindexRescan, true);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
 
+    InitMessage("Done loading");
     printf("Done loading\n");
 
         //// debug print
