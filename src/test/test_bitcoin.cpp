@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE uint160
+#define BOOST_TEST_MODULE Bitcoin Test Suite
 #include <boost/test/unit_test.hpp>
 
 #include "../main.h"
