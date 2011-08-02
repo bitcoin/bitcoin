@@ -14,6 +14,8 @@ This has been implemented:
 
 - All functionality of the original client, including taskbar icon/menu
 
+- Splash screen
+
 - Tabbed interface
 
 - Overview page with current balance, unconfirmed balance, and such
@@ -33,6 +35,8 @@ This has been implemented:
 - Multiple unit support, can show subdivided bitcoins (uBTC, mBTC) for users that like large numbers
 
 - Support for English, German and Dutch languages
+
+- Address books and transaction table can be sorted by any column
 
 This has to be done:
 
