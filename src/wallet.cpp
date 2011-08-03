@@ -1125,54 +1125,70 @@ void CReserveKey::ReturnKey()
 bool ExtractMultisignAddresses(const CScript& scriptPubKey, vector<uint160>& addresses, int& nVotes)
 {
     extern CBigNum CastToBigNum(const vector<unsigned char>& vch);
+    extern bool PartialSolver(const CScript& script1, CScript::const_iterator& pc1, const CScript& scriptTemplate, vector<pair<opcodetype, vector<unsigned char> > >& vSolutionRet);
 
-    opcodetype opcode;
-    vector<unsigned char> vch;
+    // Each multisign script has a preamble, a repeated segment for each signature and
+    // a postamble
+    static CScript templatePre;
+    static CScript templateEach;
+    static CScript templatePost;
+
+    if (templatePre.empty())
+    {
+        templatePre << OP_NUMBER << OP_ROLL << OP_DUP << OP_NUMBER << OP_GREATERTHANOREQUAL << OP_VERIFY;
+        templateEach << OP_NUMBER << OP_ROLL << OP_SIZE << OP_NOT << OP_OVER << OP_HASH160 << OP_PUBKEYHASH << OP_EQUAL << OP_BOOLOR << OP_VERIFY;
+        templatePost << OP_NUMBER << OP_CHECKMULTISIG;
+    }
 
     CScript::const_iterator pc1 = scriptPubKey.begin();
 
-    // size
-    if (!scriptPubKey.GetOp(pc1, opcode, vch))
-        return false;
-
-    if (!scriptPubKey.GetOp(pc1, opcode, vch) || opcode != OP_ROLL)
-        return false;
-
-    if (!scriptPubKey.GetOp(pc1, opcode, vch) || opcode != OP_DUP)
-        return false;
-
-    // nVotes
-    if (!scriptPubKey.GetOp(pc1, opcode, vch))
-        return false;
-
-    if (opcode >= OP_1 && opcode <= OP_16)
-        nVotes = (int)opcode - (int)(OP_1 - 1);
-    else
+    try
     {
-        try
-        {
-            nVotes = CastToBigNum(vch).getint();
-        }
-        catch (...)
-        {
+        vector<pair<opcodetype, vector<unsigned char> > > vSolution;
+        if (!PartialSolver(scriptPubKey, pc1, templatePre, vSolution))
             return false;
+        if (vSolution.size() != 2)
+            return false;
+        int size = CastToBigNum(vSolution[0].second).getint();
+        nVotes = CastToBigNum(vSolution[1].second).getint();
+
+        for (int i = 0 ; i < size ; i++)
+        {
+            vSolution.clear();
+            if (!PartialSolver(scriptPubKey, pc1, templateEach, vSolution))
+                return false;
+            if (vSolution.size() != 2)
+                return false;
+            if (size != CastToBigNum(vSolution[0].second).getint())
+                return false;
+            addresses.push_back(uint160(vSolution[1].second));
         }
+
+        vSolution.clear();
+        if (!PartialSolver(scriptPubKey, pc1, templatePost, vSolution))
+            return false;
+        if (vSolution.size() != 1)
+            return false;
+        if (size != CastToBigNum(vSolution[0].second).getint())
+            return false;
+    }
+    catch (std::runtime_error& e)
+    {
+        // CastToBigNum can throw
+        return false;
     }
 
-    if (!scriptPubKey.GetOp(pc1, opcode, vch) ||
-            opcode != OP_GREATERTHANOREQUAL)
-        return false;
-
-    while (scriptPubKey.GetOp(pc1, opcode, vch))
+    // Everything else must be padding
+    while (pc1 != scriptPubKey.end())
     {
-        if (opcode == OP_HASH160)
-        {
-            if (!scriptPubKey.GetOp(pc1, opcode, vch))
-                return false;
-            if (vch.size() != sizeof(uint160))
-                continue;
-            addresses.push_back(uint160(vch));
-        }
+        vector<unsigned char> vch;
+        opcodetype opcode;
+        if (!scriptPubKey.GetOp(pc1, opcode, vch))
+            return false;
+        if (vch.size() == 0) // Must be immediate operand
+            return false;
+        if (!scriptPubKey.GetOp(pc1, opcode, vch) || opcode != OP_DROP)
+            return false;
     }
 
     return true;
@@ -1273,12 +1289,13 @@ bool CWallet::CommitTransactionWithForeignInput(CWalletTx& wtxNew, uint256 hashI
 // strPartialTx - optional, a partially signed (by the counterparties) tx in hex
 // wtxNew - the tx we are constructing
 //
-pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransaction txInput, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
+pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransaction txInput, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, vector<uint160>& vSigners, bool fSubmit, bool fAskFee)
 {
     CReserveKey reservekey(this);
 
     int nVotes;
     vector<uint160> addresses;
+    vSigners.clear();
 
     CScript scriptPubKey;
     int64 nValue;
@@ -1405,7 +1422,7 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
 
         if (vvchKeys.size() != addresses.size())
         {
-            throw runtime_error("bad multisign script - 2");
+            throw runtime_error("bad multisign script - 3");
         }
     }
 
@@ -1426,8 +1443,6 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
 
         BOOST_FOREACH(const uint160& address, addresses)
         {
-            string currentAddress = Hash160ToAddress(address);
-
             map<uint160, vector<unsigned char> >::iterator mi = mapPubKeys.find(address);
             if (mi == mapPubKeys.end() || !mapKeys.count((*mi).second))
             {
@@ -1435,7 +1450,9 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
                 scriptSigNewWithPlaceholders << vvchSigs[ikey];
                 if (vvchSigs[ikey].size())
                 {
+                    // Already signed by someone else
                     scriptSigNew << vvchSigs[ikey];
+                    vSigners.push_back(address);
                     nSigs++;
                 }
             }
@@ -1454,6 +1471,7 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
                 vchSig.push_back((unsigned char)SIGHASH_ALL);
                 scriptSigNewWithPlaceholders << vchSig;
                 scriptSigNew << vchSig;
+                vSigners.push_back(address);
                 nSigs++;
             }
 
@@ -1508,7 +1526,7 @@ pair<string,string> CWallet::SendMoneyFromMultisignTx(string strAddress, CTransa
     return make_pair("partial", HexStr(ss.begin(), ss.end()));
 }
 
-pair<string,string> CWallet::SendMoneyFromMultisign(string strAddress, uint256 hashInputTx, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, bool fSubmit, bool fAskFee)
+pair<string,string> CWallet::SendMoneyFromMultisign(string strAddress, uint256 hashInputTx, int64 nAmount, string strPartialTx, CWalletTx& wtxNew, vector<uint160>& vSigners, bool fSubmit, bool fAskFee)
 {
     // Find the multisign coin
     CTxDB txdb("r");
@@ -1519,7 +1537,7 @@ pair<string,string> CWallet::SendMoneyFromMultisign(string strAddress, uint256 h
     if (!txInput.ReadFromDisk(txindex.pos))
         return make_pair("error", _("Input tx not found"));
 
-    return SendMoneyFromMultisignTx(strAddress, txInput, nAmount, strPartialTx, wtxNew, fSubmit, fAskFee);
+    return SendMoneyFromMultisignTx(strAddress, txInput, nAmount, strPartialTx, wtxNew, vSigners, fSubmit, fAskFee);
 }
 
 string MakeMultisignScript(string strAddresses, CScript& scriptPubKey)

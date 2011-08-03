@@ -960,6 +960,57 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
 
 
 
+bool PartialSolver(const CScript& script1, CScript::const_iterator& pc1, const CScript& scriptTemplate, vector<pair<opcodetype, valtype> >& vSolutionRet)
+{
+    opcodetype opcode1, opcode2;
+    vector<unsigned char> vch1, vch2;
+    CScript::const_iterator pc2 = scriptTemplate.begin();
+
+    loop
+    {
+        // Reached end of template - match
+        if (pc2 == scriptTemplate.end())
+            return true;
+
+        // Reached end of script but not of template - no match
+        if (pc1 == script1.end())
+            return false;
+
+        if (!script1.GetOp(pc1, opcode1, vch1))
+            return false;
+        if (!scriptTemplate.GetOp(pc2, opcode2, vch2))
+            return false;
+        if (opcode2 == OP_PUBKEY)
+        {
+            if (vch1.size() < 33 || vch1.size() > 120)
+                return false;
+            vSolutionRet.push_back(make_pair(opcode2, vch1));
+        }
+        else if (opcode2 == OP_PUBKEYHASH)
+        {
+            if (vch1.size() != sizeof(uint160))
+                return false;
+            vSolutionRet.push_back(make_pair(opcode2, vch1));
+        }
+        else if (opcode2 == OP_NUMBER)
+        {
+            if (opcode1 >= OP_1 && opcode1 <= OP_16)
+            {
+                CBigNum bn((int)opcode1 - (int)(OP_1 - 1));
+                vSolutionRet.push_back(make_pair(opcode2, bn.getvch()));
+            }
+            else
+            {
+                vSolutionRet.push_back(make_pair(opcode2, vch1));
+            }
+        }
+        else if (opcode1 != opcode2 || vch1 != vch2)
+        {
+            return false;
+        }
+    }
+}
+
 
 bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSolutionRet)
 {
@@ -979,40 +1030,16 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
     BOOST_FOREACH(const CScript& script2, vTemplates)
     {
         vSolutionRet.clear();
-        opcodetype opcode1, opcode2;
-        vector<unsigned char> vch1, vch2;
 
         // Compare
         CScript::const_iterator pc1 = script1.begin();
-        CScript::const_iterator pc2 = script2.begin();
-        loop
+        if (!PartialSolver(script1, pc1, script2, vSolutionRet))
+            continue;
+        if (pc1 == script1.end())
         {
-            if (pc1 == script1.end() && pc2 == script2.end())
-            {
-                // Found a match
-                reverse(vSolutionRet.begin(), vSolutionRet.end());
-                return true;
-            }
-            if (!script1.GetOp(pc1, opcode1, vch1))
-                break;
-            if (!script2.GetOp(pc2, opcode2, vch2))
-                break;
-            if (opcode2 == OP_PUBKEY)
-            {
-                if (vch1.size() < 33 || vch1.size() > 120)
-                    break;
-                vSolutionRet.push_back(make_pair(opcode2, vch1));
-            }
-            else if (opcode2 == OP_PUBKEYHASH)
-            {
-                if (vch1.size() != sizeof(uint160))
-                    break;
-                vSolutionRet.push_back(make_pair(opcode2, vch1));
-            }
-            else if (opcode1 != opcode2 || vch1 != vch2)
-            {
-                break;
-            }
+            // Found a match
+            reverse(vSolutionRet.begin(), vSolutionRet.end());
+            return true;
         }
     }
 

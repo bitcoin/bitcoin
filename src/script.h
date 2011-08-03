@@ -159,6 +159,7 @@ enum opcodetype
 
 
     // template matching params
+    OP_NUMBER = 0xfc,
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 

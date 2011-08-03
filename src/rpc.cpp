@@ -596,12 +596,20 @@ Value redeemmultisign(const Array& params, bool fHelp)
 
     CRITICAL_BLOCK(cs_main)
     {
-        pair<string,string> result = pwalletMain->SendMoneyFromMultisign(strAddress, nInputTx, nAmount, strPartialTx, wtx);
+        vector<uint160> vSigners;
+        pair<string,string> result = pwalletMain->SendMoneyFromMultisign(strAddress, nInputTx, nAmount, strPartialTx, wtx, vSigners);
         if (result.first == "error")
             throw JSONRPCError(-4, result.second);
-        Array ret;
-        ret.push_back(result.first);
-        ret.push_back(result.second);
+        Object ret;
+        ret.push_back(Pair("result", result.first));
+        ret.push_back(Pair("tx", result.second));
+        Array signers;
+        BOOST_FOREACH(uint160& signer, vSigners)
+        {
+            string address = Hash160ToAddress(signer);
+            signers.push_back(address);
+        }
+        ret.push_back(Pair("signers", signers));
         return ret;
     }
 }

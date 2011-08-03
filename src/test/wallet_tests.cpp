@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(multisign_script)
     BOOST_CHECK(address == string("multisign(") + strMultisignAddress + ")");
 }
 
-#define SENDMS(wallet, value, partial) res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, value, partial, wtxRedeem, false)
+#define SENDMS(wallet, value, partial) res = wallet->SendMoneyFromMultisignTx(strAddressOut, wtxSend, value, partial, wtxRedeem, vSigners, false)
 
 BOOST_AUTO_TEST_CASE(multisign_redeem)
 {
@@ -107,8 +107,9 @@ BOOST_AUTO_TEST_CASE(multisign_redeem)
     uint256 hashSend = wtxSend.GetHash();
 
     CWalletTx wtxRedeem;
+    vector<uint160> vSigners;
     pair<string,string> res;
-    res = wallet->SendMoneyFromMultisignTx("aaaaaaa", wtxSend, COIN, "", wtxRedeem, false);
+    res = wallet->SendMoneyFromMultisignTx("aaaaaaa", wtxSend, COIN, "", wtxRedeem, vSigners, false);
 
     BOOST_CHECK(res == make_pair(string("error"), string(_("Invalid bitcoin address"))));
 
@@ -140,6 +141,7 @@ BOOST_AUTO_TEST_CASE(multisign_redeem2)
     uint256 hashSend = wtxSend.GetHash();
 
     CWalletTx wtxRedeem;
+    vector<uint160> vSigners;
     pair<string,string> res;
 
     SENDMS(wallet, COIN, "");
@@ -171,6 +173,7 @@ BOOST_AUTO_TEST_CASE(multisign_redeem2of3)
     uint256 hashSend = wtxSend.GetHash();
 
     CWalletTx wtxRedeem;
+    vector<uint160> vSigners;
     pair<string,string> res;
 
     SENDMS(wallet, COIN, "");
@@ -208,6 +211,7 @@ BOOST_AUTO_TEST_CASE(multisign_redeem_change)
     uint256 hashSend = wtxSend.GetHash();
 
     CWalletTx wtxRedeem;
+    vector<uint160> vSigners;
     pair<string,string> res;
 
     // Insufficient funds
@@ -242,7 +246,6 @@ BOOST_AUTO_TEST_CASE(multisign_redeem_change)
     CDataStream ss(ParseHex(res.second));
     ss >> wtxRedeem;
     BOOST_CHECK(wtxRedeem.vout.size() == 2);
-    cout << wtxRedeem.vout[0].nValue << "\n";
     BOOST_CHECK(wtxRedeem.vout[0].nValue == COIN - 1);
     BOOST_CHECK(wtxRedeem.vout[0].scriptPubKey == scriptOut);
     BOOST_CHECK(wtxRedeem.vout[1].nValue == 1);
