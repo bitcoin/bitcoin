@@ -247,7 +247,8 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
-    fNoListen = GetBoolArg("-nolisten");
+    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+    fNoListen = GetBoolArg("-nolisten") || fTOR;
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
     for (int i = 1; i < argc; i++)
