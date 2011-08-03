@@ -10,17 +10,17 @@
 #include "guiconstants.h"
 
 #include <QDebug>
-#include <QItemDelegate>
+#include <QAbstractItemDelegate>
 #include <QPainter>
 
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 3
 
-class TxViewDelegate : public QItemDelegate
+class TxViewDelegate : public QAbstractItemDelegate
 {
     //Q_OBJECT
 public:
-    TxViewDelegate(): QItemDelegate(), unit(BitcoinUnits::BTC)
+    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::BTC)
     {
 
     }
@@ -28,7 +28,6 @@ public:
     inline void paint(QPainter *painter, const QStyleOptionViewItem &option,
                       const QModelIndex &index ) const
     {
-        //QItemDelegate::paint(painter, option, index);
         painter->save();
 
         QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
@@ -79,6 +78,11 @@ public:
         painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::DateTimeStr(date));
 
         painter->restore();
+    }
+
+    inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+    {
+        return QSize(DECORATION_SIZE, DECORATION_SIZE);
     }
 
     int unit;
