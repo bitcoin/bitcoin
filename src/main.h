@@ -103,6 +103,7 @@ std::string SendMoneyToBitcoinAddress(std::string strAddress, int64 nValue, CWal
 void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 CBlock* CreateNewBlock(CReserveKey& reservekey);
+extern std::map<std::string, CScript> mapAuxCoinbases;
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime);
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 bool CheckWork(CBlock* pblock, CReserveKey& reservekey);
