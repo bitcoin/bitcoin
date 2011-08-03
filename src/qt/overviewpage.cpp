@@ -14,6 +14,8 @@
 #include <QPainter>
 
 #define DECORATION_SIZE 64
+#define NUM_ITEMS 3
+
 class TxViewDelegate : public QItemDelegate
 {
     //Q_OBJECT
@@ -56,6 +58,10 @@ public:
         if(amount < 0)
         {
             foreground = COLOR_NEGATIVE;
+        }
+        else if(!confirmed)
+        {
+            foreground = COLOR_UNCONFIRMED;
         }
         else
         {
@@ -105,6 +111,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
     ui->listTransactions->setSelectionMode(QAbstractItemView::NoSelection);
+    ui->listTransactions->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
 }
 
 OverviewPage::~OverviewPage()
@@ -134,7 +141,7 @@ void OverviewPage::setModel(WalletModel *model)
 
     TransactionFilterProxy *filter = new TransactionFilterProxy();
     filter->setSourceModel(model->getTransactionTableModel());
-    filter->setLimit(3);
+    filter->setLimit(NUM_ITEMS);
     filter->setDynamicSortFilter(true);
     filter->setSortRole(Qt::EditRole);
     filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
