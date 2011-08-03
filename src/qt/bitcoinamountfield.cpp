@@ -18,7 +18,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     amount->setValidator(new QRegExpValidator(QRegExp("[0-9]*"), this));
     amount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     amount->installEventFilter(this);
-    amount->setMaximumWidth(100);
+    amount->setMaximumWidth(75);
     decimals = new QValidatedLineEdit(this);
     decimals->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
     decimals->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
