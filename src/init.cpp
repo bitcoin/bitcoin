@@ -499,12 +499,14 @@ bool AppInit2(int argc, char* argv[])
         // Put "/P2SH/" in the coinbase so everybody can tell when
         // a majority of miners support it
         const char* pszP2SH = "/P2SH/";
-        COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+        std::vector<unsigned char> vchData(pszP2SH, pszP2SH+strlen(pszP2SH));
+        mapAuxCoinbases["P2SH"] = CScript(vchData);
     }
     else
     {
         const char* pszP2SH = "NOP2SH";
-        COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+        std::vector<unsigned char> vchData(pszP2SH, pszP2SH+strlen(pszP2SH));
+        mapAuxCoinbases["P2SH"] = CScript(vchData);
     }
 
     // Command-line args override in-wallet settings:

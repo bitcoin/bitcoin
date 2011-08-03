@@ -3302,19 +3302,53 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, bool fUseCoinbaser)
 }
 
 
+std::map<std::string, CScript> mapAuxCoinbases;
+
+CScript BuildCoinbaseScriptSig(uint64 nTime, unsigned int nExtraNonce, bool *pfOverflow)
+{
+    CScript scriptSig = CScript() << nTime << CBigNum(nExtraNonce);
+
+    map<std::string, CScript>::iterator it;
+    for (it = mapAuxCoinbases.begin() ; it != mapAuxCoinbases.end(); ++it)
+        scriptSig += (*it).second;
+
+    if (scriptSig.size() > 100)
+    {
+        scriptSig.resize(100);
+        if (pfOverflow)
+            *pfOverflow = true;
+    }
+    else
+        if (pfOverflow)
+            *pfOverflow = false;
+
+    return scriptSig;
+}
+
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
-    static uint256 hashPrevBlock;
-    if (hashPrevBlock != pblock->hashPrevBlock)
+    static uint64 nPrevTime = 0;
+    static bool fBackward = false;
+    uint64 nNow = GetTime();
+    if (nNow > nPrevTime + 1)
     {
         nExtraNonce = 0;
-        hashPrevBlock = pblock->hashPrevBlock;
+        nPrevTime = nNow;
+        fBackward = false;
     }
-    ++nExtraNonce;
-    pblock->vtx[0].vin[0].scriptSig = (CScript() << pblock->nTime << CBigNum(nExtraNonce)) + COINBASE_FLAGS;
-    assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);
-
+    else
+    {
+        if (nNow < nPrevTime && !fBackward)
+        {
+            printf("IncrementExtraNonce: WARNING: nNow moved backward: %d -> %d\n", nPrevTime, nNow);
+            fBackward = true;
+        }
+        if (nExtraNonce == std::numeric_limits<unsigned int>::max())
+            printf("IncrementExtraNonce: WARNING: nExtraNonce overflowing!\n");
+        ++nExtraNonce;
+    }
+    pblock->vtx[0].vin[0].scriptSig = BuildCoinbaseScriptSig(nNow, nExtraNonce);
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
