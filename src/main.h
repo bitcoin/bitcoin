@@ -1568,5 +1568,7 @@ public:
 
 
 extern std::map<uint256, CTransaction> mapTransactions;
+extern CCriticalSection cs_mapTransactions;
+extern std::map<COutPoint, CInPoint> mapNextTx;
 
 #endif
