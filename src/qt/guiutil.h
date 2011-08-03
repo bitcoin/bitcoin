@@ -7,12 +7,14 @@ QT_BEGIN_NAMESPACE
 class QFont;
 class QLineEdit;
 class QWidget;
+class QDateTime;
 QT_END_NAMESPACE
 
 class GUIUtil
 {
 public:
     static QString DateTimeStr(qint64 nTime);
+    static QString DateTimeStr(const QDateTime &datetime);
 
     // Render bitcoin addresses in monospace font
     static QFont bitcoinAddressFont();

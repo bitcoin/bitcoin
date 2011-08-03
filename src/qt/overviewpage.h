@@ -7,6 +7,7 @@ namespace Ui {
     class OverviewPage;
 }
 class WalletModel;
+class TxViewDelegate;
 
 class OverviewPage : public QWidget
 {
@@ -27,6 +28,8 @@ private:
     WalletModel *model;
     qint64 currentBalance;
     qint64 currentUnconfirmedBalance;
+
+    TxViewDelegate *txdelegate;
 
 private slots:
     void displayUnitChanged();

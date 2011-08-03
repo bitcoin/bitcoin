@@ -4,14 +4,87 @@
 #include "walletmodel.h"
 #include "bitcoinunits.h"
 #include "optionsmodel.h"
+#include "transactiontablemodel.h"
+#include "transactionfilterproxy.h"
+#include "guiutil.h"
+#include "guiconstants.h"
 
 #include <QDebug>
+#include <QItemDelegate>
+#include <QPainter>
+
+#define DECORATION_SIZE 64
+class TxViewDelegate : public QItemDelegate
+{
+    //Q_OBJECT
+public:
+    TxViewDelegate(): QItemDelegate(), unit(BitcoinUnits::BTC)
+    {
+
+    }
+
+    inline void paint(QPainter *painter, const QStyleOptionViewItem &option,
+                      const QModelIndex &index ) const
+    {
+        //QItemDelegate::paint(painter, option, index);
+        painter->save();
+
+        QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
+        QRect mainRect = option.rect;
+        QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
+        int xspace = DECORATION_SIZE + 8;
+        int ypad = 6;
+        int halfheight = (mainRect.height() - 2*ypad)/2;
+        QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace, halfheight);
+        QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
+        icon.paint(painter, decorationRect);
+
+        QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
+        QString address = index.data(Qt::DisplayRole).toString();
+        qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
+        bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
+        QVariant value = index.data(Qt::ForegroundRole);
+        QColor foreground = option.palette.color(QPalette::Text);
+        if(qVariantCanConvert<QColor>(value))
+        {
+            foreground = qvariant_cast<QColor>(value);
+        }
+
+        painter->setPen(foreground);
+        painter->drawText(addressRect, Qt::AlignLeft|Qt::AlignVCenter, address);
+
+        if(amount < 0)
+        {
+            foreground = COLOR_NEGATIVE;
+        }
+        else
+        {
+            foreground = option.palette.color(QPalette::Text);
+        }
+        painter->setPen(foreground);
+        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true);
+        if(!confirmed)
+        {
+            amountText = QString("[") + amountText + QString("]");
+        }
+        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
+
+        painter->setPen(option.palette.color(QPalette::Text));
+        painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::DateTimeStr(date));
+
+        painter->restore();
+    }
+
+    int unit;
+
+};
 
 OverviewPage::OverviewPage(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
     currentBalance(-1),
-    currentUnconfirmedBalance(-1)
+    currentUnconfirmedBalance(-1),
+    txdelegate(new TxViewDelegate())
 {
     ui->setupUi(this);
 
@@ -27,9 +100,11 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     ui->labelNumTransactions->setToolTip(tr("Total number of transactions in wallet"));
 
-    // Overview page should show:
-    // Last received transaction(s)
-    // Last sent transaction(s)
+    // Recent transactions
+    ui->listTransactions->setStyleSheet("background:transparent");
+    ui->listTransactions->setItemDelegate(txdelegate);
+    ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
+    ui->listTransactions->setSelectionMode(QAbstractItemView::NoSelection);
 }
 
 OverviewPage::~OverviewPage()
@@ -55,6 +130,18 @@ void OverviewPage::setModel(WalletModel *model)
 {
     this->model = model;
 
+    // Set up transaction list
+
+    TransactionFilterProxy *filter = new TransactionFilterProxy();
+    filter->setSourceModel(model->getTransactionTableModel());
+    filter->setLimit(3);
+    filter->setDynamicSortFilter(true);
+    filter->setSortRole(Qt::EditRole);
+    filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+
+    ui->listTransactions->setModel(filter);
+    ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
+
     // Keep up to date with wallet
     setBalance(model->getBalance(), model->getUnconfirmedBalance());
     connect(model, SIGNAL(balanceChanged(qint64, qint64)), this, SLOT(setBalance(qint64, qint64)));
@@ -69,4 +156,7 @@ void OverviewPage::displayUnitChanged()
 {
     if(currentBalance != -1)
         setBalance(currentBalance, currentUnconfirmedBalance);
+
+    txdelegate->unit = model->getOptionsModel()->getDisplayUnit();
+    ui->listTransactions->update();
 }

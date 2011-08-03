@@ -39,6 +39,8 @@ public:
         LabelRole,
         // Absolute net amount of transaction, for filtering
         AbsoluteAmountRole,
+        // Net amount of transaction
+        AmountRole,
         // Unique identifier
         TxIDRole,
         // Is transaction confirmed?

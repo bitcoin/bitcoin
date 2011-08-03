@@ -11,7 +11,11 @@
 
 QString GUIUtil::DateTimeStr(qint64 nTime)
 {
-    QDateTime date = QDateTime::fromTime_t((qint32)nTime);
+    return DateTimeStr(QDateTime::fromTime_t((qint32)nTime));
+}
+
+QString GUIUtil::DateTimeStr(const QDateTime &date)
+{
     return date.date().toString(Qt::SystemLocaleShortDate) + QString(" ") + date.toString("hh:mm");
 }
 

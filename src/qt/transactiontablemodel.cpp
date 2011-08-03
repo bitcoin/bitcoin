@@ -578,6 +578,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     {
         return llabs(rec->credit + rec->debit);
     }
+    else if (role == AmountRole)
+    {
+        return rec->credit + rec->debit;
+    }
     else if (role == TxIDRole)
     {
         return QString::fromStdString(rec->getTxID());

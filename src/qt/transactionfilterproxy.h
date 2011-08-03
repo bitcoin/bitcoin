@@ -26,6 +26,10 @@ public:
     void setTypeFilter(quint32 modes);
     void setMinAmount(qint64 minimum);
 
+    // Set maximum number of rows returned, -1 if unlimited
+    void setLimit(int limit);
+
+    int	rowCount(const QModelIndex &parent = QModelIndex()) const;
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
@@ -35,6 +39,7 @@ private:
     QString addrPrefix;
     quint32 typeFilter;
     qint64 minAmount;
+    int limitRows;
 
 signals:
 

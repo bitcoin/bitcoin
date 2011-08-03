@@ -15,7 +15,8 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     dateTo(MAX_DATE),
     addrPrefix(),
     typeFilter(ALL_TYPES),
-    minAmount(0)
+    minAmount(0),
+    limitRows(-1)
 {
 }
 
@@ -64,4 +65,21 @@ void TransactionFilterProxy::setMinAmount(qint64 minimum)
 {
     this->minAmount = minimum;
     invalidateFilter();
+}
+
+void TransactionFilterProxy::setLimit(int limit)
+{
+    this->limitRows = limit;
+}
+
+int TransactionFilterProxy::rowCount(const QModelIndex &parent) const
+{
+    if(limitRows != -1)
+    {
+        return std::min(QSortFilterProxyModel::rowCount(parent), limitRows);
+    }
+    else
+    {
+        return QSortFilterProxyModel::rowCount(parent);
+    }
 }
