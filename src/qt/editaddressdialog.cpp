@@ -54,9 +54,8 @@ void EditAddressDialog::loadRow(int row)
     mapper->setCurrentIndex(row);
 }
 
-QString EditAddressDialog::saveCurrentRow()
+bool EditAddressDialog::saveCurrentRow()
 {
-    QString address;
     switch(mode)
     {
     case NewReceivingAddress:
@@ -74,12 +73,12 @@ QString EditAddressDialog::saveCurrentRow()
         }
         break;
     }
-    return address;
+    return !address.isEmpty();
 }
 
 void EditAddressDialog::accept()
 {
-    if(saveCurrentRow().isEmpty())
+    if(!saveCurrentRow())
     {
         switch(model->getEditStatus())
         {
@@ -100,3 +99,7 @@ void EditAddressDialog::accept()
     QDialog::accept();
 }
 
+QString EditAddressDialog::getAddress() const
+{
+    return address;
+}

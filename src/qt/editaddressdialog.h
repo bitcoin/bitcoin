@@ -32,13 +32,16 @@ public:
 
     void accept();
 
+    QString getAddress() const;
 private:
-    QString saveCurrentRow();
+    bool saveCurrentRow();
 
     Ui::EditAddressDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;
     AddressTableModel *model;
+
+    QString address;
 };
 
 #endif // EDITADDRESSDIALOG_H

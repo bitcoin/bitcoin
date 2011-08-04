@@ -116,7 +116,19 @@ void AddressBookPage::on_newAddressButton_clicked()
             EditAddressDialog::NewSendingAddress :
             EditAddressDialog::NewReceivingAddress);
     dlg.setModel(model);
-    dlg.exec();
+    if(dlg.exec())
+    {
+        // Select row for newly created address
+        QString address = dlg.getAddress();
+        QModelIndexList lst = proxyModel->match(proxyModel->index(0,
+                          AddressTableModel::Address, QModelIndex()),
+                          Qt::EditRole, address, 1, Qt::MatchExactly);
+        if(!lst.isEmpty())
+        {
+            ui->tableView->setFocus();
+            ui->tableView->selectRow(lst.at(0).row());
+        }
+    }
 }
 
 void AddressBookPage::on_deleteButton_clicked()
