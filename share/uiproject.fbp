@@ -2090,7 +2090,7 @@
                                                                 <property name="font"></property>
                                                                 <property name="hidden">0</property>
                                                                 <property name="id">wxID_ANY</property>
-                                                                <property name="label">&amp;Connect through socks4 proxy: </property>
+                                                                <property name="label">&amp;Connect through socks4 proxy (requires restart to apply): </property>
                                                                 <property name="maximum_size"></property>
                                                                 <property name="minimum_size"></property>
                                                                 <property name="name">m_checkBoxUseProxy</property>

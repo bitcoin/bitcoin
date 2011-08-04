@@ -367,7 +367,7 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	wxBoxSizer* bSizer102;
 	bSizer102 = new wxBoxSizer( wxHORIZONTAL );
 	
-	m_checkBoxUseProxy = new wxCheckBox( m_panelMain, wxID_ANY, _("&Connect through socks4 proxy: "), wxDefaultPosition, wxDefaultSize, 0 );
+	m_checkBoxUseProxy = new wxCheckBox( m_panelMain, wxID_ANY, _("&Connect through socks4 proxy (requires restart to apply): "), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer102->Add( m_checkBoxUseProxy, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 	
 	bSizer69->Add( bSizer102, 1, wxEXPAND, 5 );
