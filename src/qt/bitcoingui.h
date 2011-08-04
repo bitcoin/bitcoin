@@ -54,9 +54,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
 
-    QLabel *labelConnections;
     QLabel *labelConnectionsIcon;
-    QLabel *labelBlocks;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;

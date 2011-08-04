@@ -108,34 +108,21 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create status bar
     statusBar();
 
-    // Status bar "Connections" notification
-    QFrame *frameConnections = new QFrame();
-    frameConnections->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    frameConnections->setMinimumWidth(150);
-    frameConnections->setMaximumWidth(150);
-    QHBoxLayout *frameConnectionsLayout = new QHBoxLayout(frameConnections);
-    frameConnectionsLayout->setContentsMargins(3,0,3,0);
-    frameConnectionsLayout->setSpacing(3);
-    labelConnectionsIcon = new QLabel();
-    labelConnectionsIcon->setToolTip(tr("Number of connections to other clients"));
-    frameConnectionsLayout->addWidget(labelConnectionsIcon);
-    labelConnections = new QLabel();
-    labelConnections->setToolTip(tr("Number of connections to other clients"));
-    frameConnectionsLayout->addWidget(labelConnections);
-    frameConnectionsLayout->addStretch();
-
     // Status bar "Blocks" notification
     QFrame *frameBlocks = new QFrame();
-    frameBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    frameBlocks->setMinimumWidth(150);
-    frameBlocks->setMaximumWidth(150);
+    //frameBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    frameBlocks->setContentsMargins(0,0,0,0);
+    frameBlocks->setMinimumWidth(56);
+    frameBlocks->setMaximumWidth(56);
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
+    labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
+    frameBlocksLayout->addStretch();
+    frameBlocksLayout->addWidget(labelConnectionsIcon);
+    frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
-    labelBlocks = new QLabel();
-    frameBlocksLayout->addWidget(labelBlocks);
     frameBlocksLayout->addStretch();
 
     // Progress bar for blocks download
@@ -147,7 +134,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
-    statusBar()->addPermanentWidget(frameConnections);
     statusBar()->addPermanentWidget(frameBlocks);
 
     createTrayIcon();
@@ -312,7 +298,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(16,16));
-    labelConnections->setText(tr("%n connection(s)", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connections to Bitcoin network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
@@ -359,12 +345,15 @@ void BitcoinGUI::setNumBlocks(int count)
     }
 
     // In the label we want to be less specific
-    QString labelText = text;
     bool spinning = true;
     if(secs < 30*60)
     {
-        labelText = "Up to date";
+        tooltip = tr("Up to date") + QString("\n") + tooltip;
         spinning = false;
+    }
+    else
+    {
+        tooltip = tr("Catching up...") + QString("\n") + tooltip;
     }
 
     tooltip += QString("\n");
@@ -379,10 +368,8 @@ void BitcoinGUI::setNumBlocks(int count)
     {
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(16,16));
     }
-    labelBlocks->setText(labelText);
 
     labelBlocksIcon->setToolTip(tooltip);
-    labelBlocks->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
 }
