@@ -3,6 +3,10 @@
 
 #include <QWidget>
 
+QT_BEGIN_NAMESPACE
+class QModelIndex;
+QT_END_NAMESPACE
+
 namespace Ui {
     class OverviewPage;
 }
@@ -22,6 +26,9 @@ public:
 public slots:
     void setBalance(qint64 balance, qint64 unconfirmedBalance);
     void setNumTransactions(int count);
+
+signals:
+    void transactionClicked(const QModelIndex &index);
 
 private:
     Ui::OverviewPage *ui;

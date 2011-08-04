@@ -103,9 +103,9 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->labelBalance->setToolTip(tr("Your current balance"));
     ui->labelBalance->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
 
-    // Balance: <balance>
+    // Unconfirmed balance: <balance>
     ui->labelUnconfirmed->setFont(QFont("Monospace", -1, QFont::Bold));
-    ui->labelUnconfirmed->setToolTip(tr("Balance of transactions that have yet to be confirmed"));
+    ui->labelUnconfirmed->setToolTip(tr("Total of transactions that have yet to be confirmed, and do not yet count toward the current balance"));
     ui->labelUnconfirmed->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
 
     ui->labelNumTransactions->setToolTip(tr("Total number of transactions in wallet"));
@@ -116,6 +116,8 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
     ui->listTransactions->setSelectionMode(QAbstractItemView::NoSelection);
     ui->listTransactions->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
+
+    connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SIGNAL(transactionClicked(QModelIndex)));
 }
 
 OverviewPage::~OverviewPage()
@@ -142,7 +144,6 @@ void OverviewPage::setModel(WalletModel *model)
     this->model = model;
 
     // Set up transaction list
-
     TransactionFilterProxy *filter = new TransactionFilterProxy();
     filter->setSourceModel(model->getTransactionTableModel());
     filter->setLimit(NUM_ITEMS);

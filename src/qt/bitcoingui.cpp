@@ -154,7 +154,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
-    gotoOverviewPage();
+    // Clicking on a transaction simply sends you to transaction history page
+    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
+
+    gotoOverviewPage();    
 }
 
 void BitcoinGUI::createActions()
