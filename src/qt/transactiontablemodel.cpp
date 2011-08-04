@@ -588,7 +588,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     }
     else if (role == ConfirmedRole)
     {
-        return rec->status.status == TransactionStatus::HaveConfirmations;
+        // Return True if transaction counts for balance
+        return rec->status.confirmed && !(rec->type == TransactionRecord::Generated &&
+                                          rec->status.maturity != TransactionStatus::Mature);
     }
     else if (role == FormattedAmountRole)
     {
