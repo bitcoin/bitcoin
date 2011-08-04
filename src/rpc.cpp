@@ -342,21 +342,19 @@ Value getnewaddress(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[0]);
 
     // Generate a new key that is added to wallet
-    string strAddress = CBitcoinAddress(pwalletMain->GetOrReuseKeyFromPool()).ToString();
+    CBitcoinAddress address(pwalletMain->GetOrReuseKeyFromPool());
 
     // This could be done in the same main CS as GetKeyFromKeyPool.
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
-       pwalletMain->SetAddressBookName(strAddress, strAccount);
+       pwalletMain->SetAddressBookName(address, strAccount);
 
-    return strAddress;
+    return address.ToString();
 }
 
 
 // requires cs_main, cs_mapWallet, cs_mapAddressBook locks
 CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
-    string strAddress;
-
     CWalletDB walletdb(pwalletMain->strWalletFile);
 
     CAccount account;
@@ -393,8 +391,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
             else
             {
                 account.vchPubKey = pwalletMain->GetOrReuseKeyFromPool();
-                string strAddress = CBitcoinAddress(account.vchPubKey).ToString();
-                pwalletMain->SetAddressBookName(strAddress, strAccount);
+                pwalletMain->SetAddressBookName(CBitcoinAddress(account.vchPubKey), strAccount);
                 walletdb.WriteAccount(strAccount, account);
             }
         }
@@ -434,8 +431,7 @@ Value setaccount(const Array& params, bool fHelp)
             "setaccount <bitcoinaddress> <account>\n"
             "Sets the account associated with the given address.");
 
-    string strAddress = params[0].get_str();
-    CBitcoinAddress address(strAddress);
+    CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(-5, "Invalid bitcoin address");
 
@@ -456,7 +452,7 @@ Value setaccount(const Array& params, bool fHelp)
                 GetAccountAddress(strOldAccount, true);
         }
 
-        pwalletMain->SetAddressBookName(strAddress, strAccount);
+        pwalletMain->SetAddressBookName(address, strAccount);
     }
 
     return Value::null;
@@ -470,8 +466,9 @@ Value getaccount(const Array& params, bool fHelp)
             "getaccount <bitcoinaddress>\n"
             "Returns the account associated with the given address.");
 
-    string strAddress = params[0].get_str();
-    CBitcoinAddress address(strAddress);
+    CBitcoinAddress address(params[0].get_str());
+    if (!address.IsValid())
+        throw JSONRPCError(-5, "Invalid bitcoin address");
 
     string strAccount;
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
@@ -536,7 +533,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
             "sendtoaddress <bitcoinaddress> <amount> [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.00000001");
 
-    string strAddress = params[0].get_str();
+    CBitcoinAddress address(params[0].get_str());
+    if (!address.IsValid())
+        throw JSONRPCError(-5, "Invalid bitcoin address");
 
     // Amount
     int64 nAmount = AmountFromValue(params[1]);
@@ -554,7 +553,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
         if(pwalletMain->IsLocked())
             throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
 
-        string strError = pwalletMain->SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+        string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx);
         if (strError != "")
             throw JSONRPCError(-4, strError);
     }
@@ -807,7 +806,9 @@ Value sendfrom(const Array& params, bool fHelp)
             "<amount> is a real and is rounded to the nearest 0.00000001");
 
     string strAccount = AccountFromValue(params[0]);
-    string strAddress = params[1].get_str();
+    CBitcoinAddress address(params[1].get_str());
+    if (!address.IsValid())
+        throw JSONRPCError(-5, "Invalid bitcoin address");
     int64 nAmount = AmountFromValue(params[2]);
     int nMinDepth = 1;
     if (params.size() > 3)
@@ -833,7 +834,7 @@ Value sendfrom(const Array& params, bool fHelp)
             throw JSONRPCError(-6, "Account has insufficient funds");
 
         // Send
-        string strError = pwalletMain->SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
+        string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx);
         if (strError != "")
             throw JSONRPCError(-4, strError);
     }
@@ -1538,8 +1539,7 @@ Value validateaddress(const Array& params, bool fHelp)
             "validateaddress <bitcoinaddress>\n"
             "Return information about <bitcoinaddress>.");
 
-    string strAddress = params[0].get_str();
-    CBitcoinAddress address(strAddress);
+    CBitcoinAddress address(params[0].get_str());
     bool isValid = address.IsValid();
 
     Object ret;
