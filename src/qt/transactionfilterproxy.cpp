@@ -28,7 +28,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
-    qint64 amount = index.data(TransactionTableModel::AbsoluteAmountRole).toLongLong();
+    qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
 
     if(!(TYPE(type) & typeFilter))
         return false;

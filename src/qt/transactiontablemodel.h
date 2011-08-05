@@ -37,8 +37,6 @@ public:
         AddressRole,
         // Label of address related to transaction
         LabelRole,
-        // Absolute net amount of transaction, for filtering
-        AbsoluteAmountRole,
         // Net amount of transaction
         AmountRole,
         // Unique identifier
@@ -63,12 +61,13 @@ private:
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
     QVariant addressColor(const TransactionRecord *wtx) const;
-    QVariant formatTxStatus(const TransactionRecord *wtx) const;
-    QVariant formatTxDate(const TransactionRecord *wtx) const;
+    QString formatTxStatus(const TransactionRecord *wtx) const;
+    QString formatTxDate(const TransactionRecord *wtx) const;
     QString formatTxType(const TransactionRecord *wtx) const;
     QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
-    QVariant formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
-    QVariant formatTxDecoration(const TransactionRecord *wtx) const;
+    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
+    QString formatTooltip(const TransactionRecord *rec) const;
+    QVariant txStatusDecoration(const TransactionRecord *wtx) const;
     QVariant txAddressDecoration(const TransactionRecord *wtx) const;
 
 private slots:

@@ -265,7 +265,7 @@ int TransactionTableModel::columnCount(const QModelIndex &parent) const
     return columns.length();
 }
 
-QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) const
+QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) const
 {
     QString status;
 
@@ -289,7 +289,7 @@ QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) con
     }
     if(wtx->type == TransactionRecord::Generated)
     {
-        status += "\n\n";
+        status += "\n";
         switch(wtx->status.maturity)
         {
         case TransactionStatus::Immature:
@@ -307,18 +307,18 @@ QVariant TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) con
         }
     }
 
-    return QVariant(status);
+    return status;
 }
 
-QVariant TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
+QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
 {
     if(wtx->time)
     {
-        return QVariant(GUIUtil::DateTimeStr(wtx->time));
+        return GUIUtil::DateTimeStr(wtx->time);
     }
     else
     {
-        return QVariant();
+        return QString();
     }
 }
 
@@ -418,7 +418,7 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     return QVariant();
 }
 
-QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed) const
+QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed) const
 {
     QString str = BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
     if(showUnconfirmed)
@@ -428,10 +428,10 @@ QVariant TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, boo
             str = QString("[") + str + QString("]");
         }
     }
-    return QVariant(str);
+    return QString(str);
 }
 
-QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx) const
+QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
     if(wtx->type == TransactionRecord::Generated)
     {
@@ -476,6 +476,18 @@ QVariant TransactionTableModel::formatTxDecoration(const TransactionRecord *wtx)
     return QColor(0,0,0);
 }
 
+QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
+{
+    QString tooltip = formatTxType(rec);
+    if(rec->type==TransactionRecord::RecvFromIP || rec->type==TransactionRecord::SendToIP ||
+       rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
+    {
+        tooltip += QString(" ") + formatTxToAddress(rec, true);
+    }
+    tooltip += QString("\n") + formatTxStatus(rec);
+    return tooltip;
+}
+
 QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid())
@@ -487,7 +499,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case Status:
-            return formatTxDecoration(rec);
+            return txStatusDecoration(rec);
         case ToAddress:
             return txAddressDecoration(rec);
         }
@@ -530,8 +542,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         {
         case Status:
             return formatTxStatus(rec);
-        case ToAddress:
-            return formatTxType(rec) + QString(" ") + formatTxToAddress(rec, true);
+        default:
+            return formatTooltip(rec);
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -573,10 +585,6 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     else if (role == LabelRole)
     {
         return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
-    }
-    else if (role == AbsoluteAmountRole)
-    {
-        return llabs(rec->credit + rec->debit);
     }
     else if (role == AmountRole)
     {
