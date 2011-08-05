@@ -298,7 +298,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(16,16));
-    labelConnectionsIcon->setToolTip(tr("%n active connections to Bitcoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
