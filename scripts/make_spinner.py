@@ -15,6 +15,7 @@ NUMFRAMES=35
 FRAMERATE=10.0
 CONVERT='convert'
 CLOCKWISE=True
+DSIZE=(16,16)
 
 im_src = Image.open(SRC)
 
@@ -30,6 +31,7 @@ for frame in xrange(NUMFRAMES):
     if CLOCKWISE:
         rotation = -rotation
     im_new = im_src.rotate(rotation, Image.BICUBIC)
+    im_new.thumbnail(DSIZE, Image.ANTIALIAS)
     outfile = frame_to_filename(frame)
     im_new.save(outfile, 'png')
     frame_files.append(outfile)
