@@ -3489,6 +3489,27 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
 std::map<std::string, CScript> mapAuxCoinbases;
 
+CScript BuildCoinbaseScriptSig(unsigned int nExtraNonce, bool *pfOverflow)
+{
+    CScript scriptSig = CScript() << CBigNum(nExtraNonce);
+
+    map<std::string, CScript>::iterator it;
+    for (it = mapAuxCoinbases.begin() ; it != mapAuxCoinbases.end(); ++it)
+        scriptSig += (*it).second;
+
+    if (scriptSig.size() > 100)
+    {
+        scriptSig.resize(100);
+        if (pfOverflow)
+            *pfOverflow = true;
+    }
+    else
+        if (pfOverflow)
+            *pfOverflow = false;
+
+    return scriptSig;
+}
+
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime)
 {
     // Update nExtraNonce
@@ -3498,17 +3519,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
         nExtraNonce = 1;
         nPrevTime = nNow;
     }
-
-    CScript &scriptSig = pblock->vtx[0].vin[0].scriptSig;
-    scriptSig = CScript() << CBigNum(nExtraNonce);
-
-    map<std::string, CScript>::iterator it;
-    for (it = mapAuxCoinbases.begin() ; it != mapAuxCoinbases.end(); ++it)
-        scriptSig += (*it).second;
-
-    if (scriptSig.size() > 100)
-        scriptSig.resize(100);
-
+    pblock->vtx[0].vin[0].scriptSig = BuildCoinbaseScriptSig(nExtraNonce);
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 

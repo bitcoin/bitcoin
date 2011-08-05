@@ -1311,8 +1311,16 @@ Value setworkaux(const Array& params, bool fHelp)
     std::string strId = params[0].get_str();
     if (params.size() > 1)
     {
-        std::vector<unsigned char> vchData = ParseHex(params[1].get_str());
+        std::string strData = params[1].get_str();
+        std::vector<unsigned char> vchData = ParseHex(strData);
+        if (vchData.size() * 2 != strData.size())
+            throw JSONRPCError(-8, "Failed to parse data as hexadecimal");
+        CScript scriptBackup = mapAuxCoinbases[strId];
         mapAuxCoinbases[strId] = CScript(vchData);
+        bool fOverflow;
+        BuildCoinbaseScriptSig(UINT_MAX, &fOverflow);
+        if (fOverflow)
+            throw JSONRPCError(-7, "Change would overflow coinbase script");
     }
     else
         mapAuxCoinbases.erase(strId);

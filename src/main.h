@@ -104,6 +104,7 @@ void GenerateBitcoins(bool fGenerate);
 void ThreadBitcoinMiner(void* parg);
 CBlock* CreateNewBlock(CReserveKey& reservekey);
 extern std::map<std::string, CScript> mapAuxCoinbases;
+CScript BuildCoinbaseScriptSig(unsigned int nExtraNonce, bool *pfOverflow = NULL);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime);
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 bool CheckWork(CBlock* pblock, CReserveKey& reservekey);
