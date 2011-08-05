@@ -3500,13 +3500,14 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
     }
 
     CScript &scriptSig = pblock->vtx[0].vin[0].scriptSig;
-    scriptSig = CScript();
+    scriptSig = CScript() << CBigNum(nExtraNonce);
 
     map<std::string, CScript>::iterator it;
     for (it = mapAuxCoinbases.begin() ; it != mapAuxCoinbases.end(); ++it)
         scriptSig += (*it).second;
 
-    scriptSig << CBigNum(nExtraNonce);
+    if (scriptSig.size() > 100)
+        scriptSig.resize(100);
 
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
