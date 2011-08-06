@@ -26,7 +26,7 @@ bool fShutdown = false;
 bool fDaemon = false;
 bool fServer = false;
 bool fCommandLine = false;
-string strMiscWarning;
+string strMiscWarning, strRPCUser, strRPCPass;
 bool fTestNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
