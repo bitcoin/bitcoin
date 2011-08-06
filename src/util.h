@@ -202,6 +202,7 @@ int64 GetTime();
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
 std::string FormatFullVersion();
+std::string DecodeBase64(const std::string &s);
 
 
 
