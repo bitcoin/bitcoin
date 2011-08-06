@@ -1670,15 +1670,16 @@ Value getwork(const Array& params, bool fHelp)
         char pmidstate[32];
         char pdata[128];
         char phash1[64];
+        char hexbuf[512];
         FormatHashBuffers(pblock, pmidstate, pdata, phash1);
 
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
         Object result;
-        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate)))); // deprecated
-        result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
-        result.push_back(Pair("hash1",    HexStr(BEGIN(phash1), END(phash1)))); // deprecated
-        result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
+        result.push_back(Pair("midstate", ToHex(pmidstate, 32, hexbuf))); // deprecated
+        result.push_back(Pair("data",     ToHex(pdata, 128, hexbuf)));
+        result.push_back(Pair("hash1",    ToHex(phash1, 64, hexbuf))); // deprecated
+        result.push_back(Pair("target",   ToHex((const char *) &hashTarget, sizeof(hashTarget), hexbuf)));
         return result;
     }
     else
