@@ -1931,12 +1931,13 @@ static string HTTPReply(int nStatus, const string& strMsg)
             "</HEAD>\r\n"
             "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
             "</HTML>\r\n", rfc1123Time().c_str(), FormatFullVersion().c_str());
-    string strStatus;
-         if (nStatus == 200) strStatus = "OK";
-    else if (nStatus == 400) strStatus = "Bad Request";
-    else if (nStatus == 403) strStatus = "Forbidden";
-    else if (nStatus == 404) strStatus = "Not Found";
-    else if (nStatus == 500) strStatus = "Internal Server Error";
+    const char *cStatus;
+         if (nStatus == 200) cStatus = "OK";
+    else if (nStatus == 400) cStatus = "Bad Request";
+    else if (nStatus == 403) cStatus = "Forbidden";
+    else if (nStatus == 404) cStatus = "Not Found";
+    else if (nStatus == 500) cStatus = "Internal Server Error";
+    else cStatus = "";
     return strprintf(
             "HTTP/1.1 %d %s\r\n"
             "Date: %s\r\n"
@@ -1947,7 +1948,7 @@ static string HTTPReply(int nStatus, const string& strMsg)
             "\r\n"
             "%s",
         nStatus,
-        strStatus.c_str(),
+        cStatus,
         rfc1123Time().c_str(),
         strMsg.size(),
         FormatFullVersion().c_str(),
