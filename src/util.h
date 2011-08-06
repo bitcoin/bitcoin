@@ -621,7 +621,10 @@ inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=fa
         return (pthread_t)0;
     }
     if (!fWantHandle)
+    {
+        pthread_detach(hthread);
         return (pthread_t)-1;
+    }
     return hthread;
 }
 
