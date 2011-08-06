@@ -281,7 +281,7 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
         status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
         break;
     case TransactionStatus::Unconfirmed:
-        status = tr("Unconfirmed (%1 of %2 confirmations required)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
+        status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
         break;
     case TransactionStatus::HaveConfirmations:
         status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
@@ -478,13 +478,12 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
 
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
-    QString tooltip = formatTxType(rec);
+    QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
     if(rec->type==TransactionRecord::RecvFromIP || rec->type==TransactionRecord::SendToIP ||
        rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
     }
-    tooltip += QString("\n") + formatTxStatus(rec);
     return tooltip;
 }
 
@@ -494,8 +493,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QVariant();
     TransactionRecord *rec = static_cast<TransactionRecord*>(index.internalPointer());
 
-    if(role == Qt::DecorationRole)
+    switch(role)
     {
+    case Qt::DecorationRole:
         switch(index.column())
         {
         case Status:
@@ -503,10 +503,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return txAddressDecoration(rec);
         }
-    }
-    else if(role == Qt::DisplayRole)
-    {
-        // Delegate to specific column handlers
+        break;
+    case Qt::DisplayRole:
         switch(index.column())
         {
         case Date:
@@ -518,10 +516,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Amount:
             return formatTxAmount(rec);
         }
-    }
-    else if(role == Qt::EditRole)
-    {
-        // Edit role is used for sorting so return the real values
+        break;
+    case Qt::EditRole:
+        // Edit role is used for sorting, so return the unformatted values
         switch(index.column())
         {
         case Status:
@@ -535,24 +532,13 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Amount:
             return rec->credit + rec->debit;
         }
-    }
-    else if (role == Qt::ToolTipRole)
-    {
-        switch(index.column())
-        {
-        case Status:
-            return formatTxStatus(rec);
-        default:
-            return formatTooltip(rec);
-        }
-    }
-    else if (role == Qt::TextAlignmentRole)
-    {
+        break;
+    case Qt::ToolTipRole:
+        return formatTooltip(rec);
+    case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
-    }
-    else if (role == Qt::ForegroundRole)
-    {
-        /* Non-confirmed transactions are grey */
+    case Qt::ForegroundRole:
+        // Non-confirmed transactions are grey
         if(!rec->status.confirmed)
         {
             return COLOR_UNCONFIRMED;
@@ -565,43 +551,26 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         {
             return addressColor(rec);
         }
-    }
-    else if (role == TypeRole)
-    {
+        break;
+    case TypeRole:
         return rec->type;
-    }
-    else if (role == DateRole)
-    {
+    case DateRole:
         return QDateTime::fromTime_t(static_cast<uint>(rec->time));
-    }
-    else if (role == LongDescriptionRole)
-    {
+    case LongDescriptionRole:
         return priv->describe(rec);
-    }
-    else if (role == AddressRole)
-    {
+    case AddressRole:
         return QString::fromStdString(rec->address);
-    }
-    else if (role == LabelRole)
-    {
+    case LabelRole:
         return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
-    }
-    else if (role == AmountRole)
-    {
+    case AmountRole:
         return rec->credit + rec->debit;
-    }
-    else if (role == TxIDRole)
-    {
+    case TxIDRole:
         return QString::fromStdString(rec->getTxID());
-    }
-    else if (role == ConfirmedRole)
-    {
+    case ConfirmedRole:
         // Return True if transaction counts for balance
         return rec->status.confirmed && !(rec->type == TransactionRecord::Generated &&
                                           rec->status.maturity != TransactionStatus::Mature);
-    }
-    else if (role == FormattedAmountRole)
-    {
+    case FormattedAmountRole:
         return formatTxAmount(rec, false);
     }
     return QVariant();
