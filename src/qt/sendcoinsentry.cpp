@@ -7,10 +7,8 @@
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
 
-#include "qapplication.h"
-#include "qclipboard.h"
-
-#include <QDebug>
+#include <QApplication>
+#include <QClipboard>
 
 SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     QFrame(parent),

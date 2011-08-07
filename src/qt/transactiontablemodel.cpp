@@ -11,7 +11,6 @@
 #include "headers.h"
 
 #include <QLocale>
-#include <QDebug>
 #include <QList>
 #include <QColor>
 #include <QTimer>

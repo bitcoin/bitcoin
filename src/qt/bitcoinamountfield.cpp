@@ -9,7 +9,6 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QComboBox>
-#include <QDebug>
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent):
         QWidget(parent), amount(0), decimals(0), currentUnit(-1)

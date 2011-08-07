@@ -19,7 +19,6 @@
 #include <QDoubleValidator>
 #include <QRegExpValidator>
 #include <QDialogButtonBox>
-#include <QDebug>
 
 /* First page of options */
 class MainOptionsPage : public QWidget

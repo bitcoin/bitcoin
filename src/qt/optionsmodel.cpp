@@ -3,8 +3,6 @@
 
 #include "headers.h"
 
-#include <QDebug>
-
 OptionsModel::OptionsModel(CWallet *wallet, QObject *parent) :
     QAbstractListModel(parent),
     wallet(wallet),

@@ -9,7 +9,6 @@
 #include "guiutil.h"
 #include "guiconstants.h"
 
-#include <QDebug>
 #include <QAbstractItemDelegate>
 #include <QPainter>
 

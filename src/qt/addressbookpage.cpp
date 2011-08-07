@@ -9,7 +9,6 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QDebug>
 
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),

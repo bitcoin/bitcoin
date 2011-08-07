@@ -3,8 +3,6 @@
 #include <QWidget>
 #include <QMetaObject>
 #include <QMetaProperty>
-#include <QDebug>
-
 
 MonitoredDataMapper::MonitoredDataMapper(QObject *parent) :
     QDataWidgetMapper(parent)

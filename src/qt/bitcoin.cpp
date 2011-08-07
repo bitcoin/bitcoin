@@ -16,7 +16,6 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QSplashScreen>
-#include <QDebug>
 
 // Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;

@@ -41,8 +41,6 @@
 #include <QDragEnterEvent>
 #include <QUrl>
 
-#include <QDebug>
-
 #include <iostream>
 
 BitcoinGUI::BitcoinGUI(QWidget *parent):

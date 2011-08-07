@@ -29,8 +29,6 @@
 #include <QLabel>
 #include <QDateTimeEdit>
 
-#include <QDebug>
-
 TransactionView::TransactionView(QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
     transactionView(0)

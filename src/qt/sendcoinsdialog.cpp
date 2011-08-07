@@ -10,7 +10,6 @@
 #include <QMessageBox>
 #include <QLocale>
 #include <QTextDocument>
-#include <QDebug>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
