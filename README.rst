@@ -38,6 +38,8 @@ This has been implemented:
 
 - Address books and transaction table can be sorted by any column
 
+- Accepts "bitcoin:" URLs from browsers through drag and drop
+
 This has to be done:
 
 - Start at system start
