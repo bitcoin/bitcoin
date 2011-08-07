@@ -61,6 +61,8 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
     }
     else // Amount is non-empty
     {
+        // TODO: support <n>X<nexp> (exp = 8-nexp) (https://en.bitcoin.it/wiki/URI_Scheme)
+        // TODO: support <n>E<exp>
         if(!BitcoinUnits::parse(BitcoinUnits::BTC, amount, &rv.amount))
         {
             return false;
