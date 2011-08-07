@@ -66,7 +66,7 @@ bool StopNode();
 //  (4) size
 //  (4) checksum
 
-extern char pchMessageStart[4];
+extern unsigned char pchMessageStart[4];
 
 class CMessageHeader
 {
