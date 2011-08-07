@@ -53,9 +53,18 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
     SendCoinsRecipient rv;
     rv.address = url->path();
     rv.label = url->queryItemValue("label");
-    if(!BitcoinUnits::parse(BitcoinUnits::BTC, url->queryItemValue("amount"), &rv.amount))
+
+    QString amount = url->queryItemValue("amount");
+    if(amount.isEmpty())
     {
-        return false;
+        rv.amount = 0;
+    }
+    else // Amount is non-empty
+    {
+        if(!BitcoinUnits::parse(BitcoinUnits::BTC, amount, &rv.amount))
+        {
+            return false;
+        }
     }
     if(out)
     {
