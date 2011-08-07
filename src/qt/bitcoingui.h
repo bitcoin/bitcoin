@@ -20,6 +20,7 @@ class QAbstractItemModel;
 class QModelIndex;
 class QProgressBar;
 class QStackedWidget;
+class QUrl;
 QT_END_NAMESPACE
 
 class BitcoinGUI : public QMainWindow
@@ -41,6 +42,8 @@ public:
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event);
 
 private:
     ClientModel *clientModel;

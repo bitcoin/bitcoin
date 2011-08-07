@@ -1,5 +1,7 @@
 #include "guiutil.h"
 #include "bitcoinaddressvalidator.h"
+#include "walletmodel.h"
+#include "bitcoinunits.h"
 
 #include "headers.h"
 
@@ -8,6 +10,7 @@
 #include <QDoubleValidator>
 #include <QFont>
 #include <QLineEdit>
+#include <QUrl>
 
 QString GUIUtil::DateTimeStr(qint64 nTime)
 {
@@ -40,4 +43,23 @@ void GUIUtil::setupAmountWidget(QLineEdit *widget, QWidget *parent)
     amountValidator->setBottom(0.0);
     widget->setValidator(amountValidator);
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
+}
+
+bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
+{
+    if(url->scheme() != QString("bitcoin"))
+        return false;
+
+    SendCoinsRecipient rv;
+    rv.address = url->path();
+    rv.label = url->queryItemValue("label");
+    if(!BitcoinUnits::parse(BitcoinUnits::BTC, url->queryItemValue("amount"), &rv.amount))
+    {
+        return false;
+    }
+    if(out)
+    {
+        *out = rv;
+    }
+    return true;
 }

@@ -8,6 +8,11 @@ namespace Ui {
 }
 class WalletModel;
 class SendCoinsEntry;
+class SendCoinsRecipient;
+
+QT_BEGIN_NAMESPACE
+class QUrl;
+QT_END_NAMESPACE
 
 class SendCoinsDialog : public QDialog
 {
@@ -23,11 +28,14 @@ public:
     // Hence we have to set it up manually
     QWidget *setupTabChain(QWidget *prev);
 
+    void pasteEntry(const SendCoinsRecipient &rv);
+    void handleURL(const QUrl *url);
+
 public slots:
     void clear();
     void reject();
     void accept();
-    void addEntry();
+    SendCoinsEntry *addEntry();
     void updateRemoveEnabled();
 
 private:

@@ -5,11 +5,12 @@
 #include "addressbookpage.h"
 #include "optionsmodel.h"
 #include "sendcoinsentry.h"
-
+#include "guiutil.h"
 
 #include <QMessageBox>
 #include <QLocale>
 #include <QTextDocument>
+#include <QDebug>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -133,17 +134,11 @@ void SendCoinsDialog::on_sendButton_clicked()
 void SendCoinsDialog::clear()
 {
     // Remove entries until only one left
-    while(ui->entries->count() > 1)
+    while(ui->entries->count())
     {
         delete ui->entries->takeAt(0)->widget();
     }
-
-    // Reset the entry that is left to empty
-    SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
-    if(entry)
-    {
-        entry->clear();
-    }
+    addEntry();
 
     updateRemoveEnabled();
 
@@ -160,7 +155,7 @@ void SendCoinsDialog::accept()
     clear();
 }
 
-void SendCoinsDialog::addEntry()
+SendCoinsEntry *SendCoinsDialog::addEntry()
 {
     SendCoinsEntry *entry = new SendCoinsEntry(this);
     entry->setModel(model);
@@ -171,6 +166,7 @@ void SendCoinsDialog::addEntry()
 
     // Focus the field, so that entry can start immediately
     entry->clear();
+    return entry;
 }
 
 void SendCoinsDialog::updateRemoveEnabled()
@@ -207,4 +203,35 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
     QWidget::setTabOrder(prev, ui->addButton);
     QWidget::setTabOrder(ui->addButton, ui->sendButton);
     return ui->sendButton;
+}
+
+void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
+{
+    SendCoinsEntry *entry = 0;
+    // Replace the first entry if it is still unused
+    if(ui->entries->count() == 1)
+    {
+        SendCoinsEntry *first = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
+        if(first->isClear())
+        {
+            entry = first;
+        }
+    }
+    if(!entry)
+    {
+        entry = addEntry();
+    }
+
+    entry->setValue(rv);
+}
+
+
+void SendCoinsDialog::handleURL(const QUrl *url)
+{
+    SendCoinsRecipient rv;
+    if(!GUIUtil::parseBitcoinURL(url, &rv))
+    {
+        return;
+    }
+    pasteEntry(rv);
 }

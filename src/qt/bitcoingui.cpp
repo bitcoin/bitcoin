@@ -38,6 +38,9 @@
 #include <QDateTime>
 #include <QMovie>
 
+#include <QDragEnterEvent>
+#include <QUrl>
+
 #include <QDebug>
 
 #include <iostream>
@@ -143,7 +146,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Clicking on a transaction simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
 
-    gotoOverviewPage();    
+    setAcceptDrops(true);
+
+    gotoOverviewPage();
 }
 
 void BitcoinGUI::createActions()
@@ -502,10 +507,36 @@ void BitcoinGUI::gotoReceiveCoinsPage()
 void BitcoinGUI::gotoSendCoinsPage()
 {
     sendCoinsAction->setChecked(true);
-    sendCoinsPage->clear();
+    if(centralWidget->currentWidget() != sendCoinsPage)
+    {
+        // Clear the current contents if we arrived from another tab
+        sendCoinsPage->clear();
+    }
     centralWidget->setCurrentWidget(sendCoinsPage);
 
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+}
+
+void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
+{
+    // Accept only URLs
+    if(event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void BitcoinGUI::dropEvent(QDropEvent *event)
+{
+    if(event->mimeData()->hasUrls())
+    {
+        gotoSendCoinsPage();
+        QList<QUrl> urls = event->mimeData()->urls();
+        foreach(const QUrl &url, urls)
+        {
+            sendCoinsPage->handleURL(&url);
+        }
+    }
+
+    event->acceptProposedAction();
 }
 

@@ -20,6 +20,12 @@ public:
     void setModel(WalletModel *model);
     bool validate();
     SendCoinsRecipient getValue();
+
+    // Return true if the entry is still empty and unedited
+    bool isClear();
+
+    void setValue(const SendCoinsRecipient &value);
+
     // Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907)
     // Hence we have to set it up manually
     QWidget *setupTabChain(QWidget *prev);

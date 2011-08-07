@@ -102,7 +102,6 @@ bool SendCoinsEntry::validate()
         }
     }
 
-
     if(!ui->payTo->hasAcceptableInput() ||
        (model && !model->validateAddress(ui->payTo->text())))
     {
@@ -133,3 +132,16 @@ QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
     QWidget::setTabOrder(ui->deleteButton, ui->addAsLabel);
     return ui->payAmount->setupTabChain(ui->addAsLabel);
 }
+
+void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
+{
+    ui->payTo->setText(value.address);
+    ui->addAsLabel->setText(value.label);
+    ui->payAmount->setValue(value.amount);
+}
+
+bool SendCoinsEntry::isClear()
+{
+    return ui->payTo->text().isEmpty();
+}
+
