@@ -16,8 +16,8 @@ class GUIUtil
 {
 public:
     // Create human-readable string from date
-    static QString DateTimeStr(qint64 nTime);
-    static QString DateTimeStr(const QDateTime &datetime);
+    static QString dateTimeStr(qint64 nTime);
+    static QString dateTimeStr(const QDateTime &datetime);
 
     // Render bitcoin addresses in monospace font
     static QFont bitcoinAddressFont();

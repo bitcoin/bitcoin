@@ -24,6 +24,7 @@ public:
 
     void setModel(WalletModel *model);
 
+    // Date ranges for filter
     enum DateEnum
     {
         All,

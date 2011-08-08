@@ -44,7 +44,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     connect(decimals, SIGNAL(textChanged(QString)), this, SIGNAL(textChanged()));
     connect(unit, SIGNAL(currentIndexChanged(int)), this, SLOT(unitChanged(int)));
 
-    // TODO: set default based on configuration
+    // Set default based on configuration
     unitChanged(unit->currentIndex());
 }
 
@@ -67,7 +67,6 @@ void BitcoinAmountField::clear()
 {
     amount->clear();
     decimals->clear();
-    // TODO: set default based on configuration
     unit->setCurrentIndex(0);
 }
 

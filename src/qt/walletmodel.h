@@ -15,7 +15,7 @@ struct SendCoinsRecipient
     qint64 amount;
 };
 
-// Interface to a Bitcoin wallet
+// Interface to Bitcoin wallet from Qt view code
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -47,9 +47,7 @@ public:
     // Check address for validity
     bool validateAddress(const QString &address);
 
-    // Return status record for SendCoins
-    // fee is used in case status is "AmountWithFeeExceedsBalance"
-    // hex is filled with the transaction hash if status is "OK"
+    // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
         SendCoinsReturn(StatusCode status,
@@ -57,11 +55,11 @@ public:
                          QString hex=QString()):
             status(status), fee(fee), hex(hex) {}
         StatusCode status;
-        qint64 fee;
-        QString hex;
+        qint64 fee; // is used in case status is "AmountWithFeeExceedsBalance"
+        QString hex; // is filled with the transaction hash if status is "OK"
     };
 
-    // Send coins to list of recipients
+    // Send coins to a list of recipients
     SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients);
 private:
     CWallet *wallet;

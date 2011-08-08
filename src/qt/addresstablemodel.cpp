@@ -161,13 +161,13 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
             rec->label = value.toString();
             break;
         case Address:
-            // Refuse to set invalid address
+            // Refuse to set invalid address, set error status and return false
             if(!walletModel->validateAddress(value.toString()))
             {
                 editStatus = INVALID_ADDRESS;
                 return false;
             }
-            // Double-check that we're not overwriting receiving address
+            // Double-check that we're not overwriting a receiving address
             if(rec->type == AddressTableEntry::Sending)
             {
                 CRITICAL_BLOCK(wallet->cs_mapAddressBook)
@@ -234,7 +234,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & pa
 
 void AddressTableModel::updateList()
 {
-    // Update internal model from Bitcoin core
+    // Update address book model from Bitcoin core
     beginResetModel();
     priv->refreshAddressTable();
     endResetModel();
@@ -247,7 +247,6 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
 
     editStatus = OK;
 
-
     if(type == Send)
     {
         if(!walletModel->validateAddress(address))
@@ -255,7 +254,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             editStatus = INVALID_ADDRESS;
             return QString();
         }
-        // Check for duplicate
+        // Check for duplicate addresses
         CRITICAL_BLOCK(wallet->cs_mapAddressBook)
         {
             if(wallet->mapAddressBook.count(strAddress))

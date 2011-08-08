@@ -83,8 +83,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     // Pre-check input data for validity
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
-        uint160 hash160 = 0;
-
         if(!validateAddress(rcp.address))
         {
             return InvalidAddress;

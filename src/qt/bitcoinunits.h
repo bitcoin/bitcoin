@@ -4,7 +4,8 @@
 #include <QString>
 #include <QAbstractListModel>
 
-// Bitcoin unit definitions
+// Bitcoin unit definitions, encapsulates parsing and formatting
+// and serves as list model for dropdown selection boxes.
 class BitcoinUnits: public QAbstractListModel
 {
 public:

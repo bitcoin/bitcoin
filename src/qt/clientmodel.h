@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 class QDateTime;
 QT_END_NAMESPACE
 
-// Interface to Bitcoin network client
+// Model for Bitcoin network client
 class ClientModel : public QObject
 {
     Q_OBJECT

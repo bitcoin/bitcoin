@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         {
             {
                 // Put this in a block, so that BitcoinGUI is cleaned up properly before
-                // calling shutdown.
+                // calling Shutdown().
                 BitcoinGUI window;
                 splash.finish(&window);
                 OptionsModel optionsModel(pwalletMain);

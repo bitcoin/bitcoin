@@ -18,7 +18,7 @@
 #include <QDateTime>
 #include <QtAlgorithms>
 
-// Credit and Debit columns are right-aligned as they contain numbers
+// Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter,
         Qt::AlignLeft|Qt::AlignVCenter,
@@ -100,10 +100,10 @@ struct TransactionTablePriv
             for(int update_idx = updated_sorted.size()-1; update_idx >= 0; --update_idx)
             {
                 const uint256 &hash = updated_sorted.at(update_idx);
-                /* Find transaction in wallet */
+                // Find transaction in wallet
                 std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
                 bool inWallet = mi != wallet->mapWallet.end();
-                /* Find bounds of this transaction in model */
+                // Find bounds of this transaction in model
                 QList<TransactionRecord>::iterator lower = qLowerBound(
                     cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
                 QList<TransactionRecord>::iterator upper = qUpperBound(
@@ -196,7 +196,7 @@ struct TransactionTablePriv
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
-                return QString::fromStdString(TransactionDesc::toHTML(wallet, mi->second));
+                return TransactionDesc::toHTML(wallet, mi->second);
             }
         }
         return QString("");
@@ -274,7 +274,7 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
         status = tr("Open for %n block(s)","",wtx->status.open_for);
         break;
     case TransactionStatus::OpenUntilDate:
-        status = tr("Open until %1").arg(GUIUtil::DateTimeStr(wtx->status.open_for));
+        status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
         break;
     case TransactionStatus::Offline:
         status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
@@ -313,7 +313,7 @@ QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
 {
     if(wtx->time)
     {
-        return GUIUtil::DateTimeStr(wtx->time);
+        return GUIUtil::dateTimeStr(wtx->time);
     }
     else
     {
@@ -604,11 +604,6 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
         }
     }
     return QVariant();
-}
-
-Qt::ItemFlags TransactionTableModel::flags(const QModelIndex &index) const
-{
-    return QAbstractTableModel::flags(index);
 }
 
 QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex &parent) const

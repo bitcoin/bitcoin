@@ -52,6 +52,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     resize(850, 550);
     setWindowTitle(tr("Bitcoin Wallet"));
     setWindowIcon(QIcon(":icons/bitcoin"));
+    // Accept D&D of URIs
+    setAcceptDrops(true);
 
     createActions();
 
@@ -68,8 +70,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QMenu *help = menuBar()->addMenu("&Help");
     help->addAction(aboutAction);
     
-    // Toolbar
-    QToolBar *toolbar = addToolBar("Main toolbar");
+    // Toolbars
+    QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toolbar->addAction(overviewAction);
     toolbar->addAction(sendCoinsAction);
@@ -77,19 +79,17 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     toolbar->addAction(historyAction);
     toolbar->addAction(addressBookAction);
 
-    QToolBar *toolbar2 = addToolBar("Transactions toolbar");
+    QToolBar *toolbar2 = addToolBar(tr("Actions toolbar"));
     toolbar2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toolbar2->addAction(exportAction);
 
-    // Overview page
+    // Create tabs
     overviewPage = new OverviewPage();
-    QVBoxLayout *vbox = new QVBoxLayout();
-
-    transactionView = new TransactionView(this);
-    connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
-    vbox->addWidget(transactionView);
 
     transactionsPage = new QWidget(this);
+    QVBoxLayout *vbox = new QVBoxLayout();
+    transactionView = new TransactionView(this);
+    vbox->addWidget(transactionView);
     transactionsPage->setLayout(vbox);
 
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
@@ -109,7 +109,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create status bar
     statusBar();
 
-    // Status bar "Blocks" notification
+    // Status bar notification icons
     QFrame *frameBlocks = new QFrame();
     //frameBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     frameBlocks->setContentsMargins(0,0,0,0);
@@ -141,10 +141,11 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
-    // Clicking on a transaction simply sends you to transaction history page
+    // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
 
-    setAcceptDrops(true);
+    // Doubleclicking on a transaction on the transaction history page shows details
+    connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
     gotoOverviewPage();
 }
@@ -252,7 +253,6 @@ void BitcoinGUI::createTrayIcon()
 {
     QMenu *trayIconMenu = new QMenu(this);
     trayIconMenu->addAction(openBitcoinAction);
-    trayIconMenu->addAction(sendCoinsAction);
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
@@ -268,7 +268,7 @@ void BitcoinGUI::createTrayIcon()
 
 void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
-    if(reason == QSystemTrayIcon::DoubleClick)
+    if(reason == QSystemTrayIcon::Trigger)
     {
         // Doubleclick on system tray icon triggers "open bitcoin"
         openBitcoinAction->trigger();
@@ -347,30 +347,21 @@ void BitcoinGUI::setNumBlocks(int count)
         text = tr("%n day(s) ago","",secs/(60*60*24));
     }
 
-    // In the label we want to be less specific
-    bool spinning = true;
+    // Set icon state: spinning if catching up, tick otherwise
     if(secs < 30*60)
     {
         tooltip = tr("Up to date") + QString("\n") + tooltip;
-        spinning = false;
+        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(16,16));
     }
     else
     {
         tooltip = tr("Catching up...") + QString("\n") + tooltip;
+        labelBlocksIcon->setMovie(syncIconMovie);
+        syncIconMovie->start();
     }
 
     tooltip += QString("\n");
     tooltip += tr("Last received block was generated %1.").arg(text);
-
-    if(spinning)
-    {
-        labelBlocksIcon->setMovie(syncIconMovie);
-        syncIconMovie->start();
-    }
-    else
-    {
-        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(16,16));
-    }
 
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
@@ -439,12 +430,14 @@ void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
 
 void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int end)
 {
+    if(start == end)
+        return;
     TransactionTableModel *ttm = walletModel->getTransactionTableModel();
     qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
                     .data(Qt::EditRole).toULongLong();
     if(!clientModel->inInitialBlockDownload())
     {
-        // On incoming transaction, make an info balloon
+        // On new transaction, make an info balloon
         // Unless the initial block download is in progress, to prevent balloon-spam
         QString date = ttm->index(start, TransactionTableModel::Date, parent)
                         .data().toString();

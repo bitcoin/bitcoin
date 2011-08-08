@@ -12,12 +12,12 @@
 #include <QLineEdit>
 #include <QUrl>
 
-QString GUIUtil::DateTimeStr(qint64 nTime)
+QString GUIUtil::dateTimeStr(qint64 nTime)
 {
-    return DateTimeStr(QDateTime::fromTime_t((qint32)nTime));
+    return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
 }
 
-QString GUIUtil::DateTimeStr(const QDateTime &date)
+QString GUIUtil::dateTimeStr(const QDateTime &date)
 {
     return date.date().toString(Qt::SystemLocaleShortDate) + QString(" ") + date.toString("hh:mm");
 }
@@ -61,8 +61,6 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
     }
     else // Amount is non-empty
     {
-        // TODO: support <n>X<nexp> (exp = 8-nexp) (https://en.bitcoin.it/wiki/URI_Scheme)
-        // TODO: support <n>E<exp>
         if(!BitcoinUnits::parse(BitcoinUnits::BTC, amount, &rv.amount))
         {
             return false;
