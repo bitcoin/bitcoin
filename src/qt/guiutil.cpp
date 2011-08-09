@@ -45,6 +45,54 @@ void GUIUtil::setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
+static
+int64 parseNumber(std::string strNumber, bool fHex)
+{
+    int64 nAmount = 0;
+    std::istringstream stream(strNumber);
+    stream >> (fHex ? std::hex : std::dec) >> nAmount;
+    return nAmount;
+}
+
+int64 URIParseAmount(std::string strAmount)
+{
+    int64 nAmount = 0;
+    bool fHex = false;
+    if (strAmount[0] == 'x' || strAmount[0] == 'X')
+    {
+        fHex = true;
+        strAmount = strAmount.substr(1);
+    }
+    size_t nPosX = strAmount.find('X', 1);
+    if (nPosX == std::string::npos)
+        nPosX = strAmount.find('x', 1);
+    int nExponent = 0;
+    if (nPosX != std::string::npos)
+        nExponent = parseNumber(strAmount.substr(nPosX + 1), fHex);
+    else
+    {
+        // Non-compliant URI, assume standard units
+        nExponent = fHex ? 4 : 8;
+        nPosX = strAmount.size();
+    }
+    size_t nPosP = strAmount.find('.');
+    size_t nFractionLen = 0;
+    if (nPosP == std::string::npos)
+        nPosP = nPosX;
+    else
+        nFractionLen = (nPosX - nPosP) - 1;
+    nExponent -= nFractionLen;
+    strAmount = strAmount.substr(0, nPosP) + (nFractionLen ? strAmount.substr(nPosP + 1, nFractionLen) : "");
+    if (nExponent > 0)
+        strAmount.append(nExponent, '0');
+    else
+    if (nExponent < 0)
+        // WTF? truncate I guess
+        strAmount = strAmount.substr(0, strAmount.size() + nExponent);
+    nAmount = parseNumber(strAmount, fHex);
+    return nAmount;
+}
+
 bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
 {
     if(url->scheme() != QString("bitcoin"))
@@ -61,10 +109,7 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
     }
     else // Amount is non-empty
     {
-        if(!BitcoinUnits::parse(BitcoinUnits::BTC, amount, &rv.amount))
-        {
-            return false;
-        }
+        rv.amount = URIParseAmount(amount.toStdString());
     }
     if(out)
     {
