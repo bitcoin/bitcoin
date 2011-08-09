@@ -247,7 +247,8 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
-    fNoListen = GetBoolArg("-nolisten");
+    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+    fNoListen = GetBoolArg("-nolisten") || fTOR;
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
     for (int i = 1; i < argc; i++)
@@ -425,7 +426,6 @@ bool AppInit2(int argc, char* argv[])
         printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
         printf("nBestHeight = %d\n",            nBestHeight);
         printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
-        printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
         printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
         printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
 

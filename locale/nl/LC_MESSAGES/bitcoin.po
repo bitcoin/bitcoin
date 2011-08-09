@@ -448,7 +448,7 @@ msgstr "&Open Bitcoin"
 
 #: ../../../src/ui.cpp:2682
 msgid "&Send Bitcoins"
-msgstr "&Open Bitcoin"
+msgstr "&Verstuur Bitcoins"
 
 #: ../../../src/ui.cpp:2683
 msgid "O&ptions..."

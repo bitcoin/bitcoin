@@ -6,6 +6,7 @@
 
 #include <deque>
 #include <boost/array.hpp>
+#include <boost/foreach.hpp>
 #include <openssl/rand.h>
 
 #ifndef __WXMSW__

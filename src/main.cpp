@@ -21,9 +21,6 @@ set<CWallet*> setpwalletRegistered;
 
 CCriticalSection cs_main;
 
-CCriticalSection cs_mapPubKeys;
-map<uint160, vector<unsigned char> > mapPubKeys;
-
 map<uint256, CTransaction> mapTransactions;
 CCriticalSection cs_mapTransactions;
 unsigned int nTransactionsUpdated = 0;
@@ -315,6 +312,15 @@ bool CTransaction::CheckTransaction() const
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return error("CTransaction::CheckTransaction() : txout total out of range");
+    }
+
+    // Check for duplicate inputs
+    set<COutPoint> vInOutPoints;
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        if (vInOutPoints.count(txin.prevout))
+            return false;
+        vInOutPoints.insert(txin.prevout);
     }
 
     if (IsCoinBase())
@@ -2570,6 +2576,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     vGetData.clear();
                 }
             }
+            mapAlreadyAskedFor[inv] = nNow;
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
         if (!vGetData.empty())

@@ -528,7 +528,7 @@ bool CAddrDB::LoadAddresses()
                 char psz[1000];
                 while (fgets(psz, sizeof(psz), filein))
                 {
-                    CAddress addr(psz, NODE_NETWORK);
+                    CAddress addr(psz, false, NODE_NETWORK);
                     addr.nTime = 0; // so it won't relay unless successfully connected
                     if (addr.IsValid())
                         AddAddress(addr);
