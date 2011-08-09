@@ -768,13 +768,13 @@ void CreatePidFile(string pidFile, pid_t pid)
     }
 }
 
-int GetFilesize(FILE* file)
+int64 GetFilesize(std::string &file)
 {
-    int nSavePos = ftell(file);
-    int nFilesize = -1;
-    if (fseek(file, 0, SEEK_END) == 0)
-        nFilesize = ftell(file);
-    fseek(file, nSavePos, SEEK_SET);
+    int64 nFilesize = -1;
+    STAT_STRUCT filestatus;
+    if (stat(file.c_str(),&filestatus) == 0) {
+      nFilesize = filestatus.st_size;
+    }
     return nFilesize;
 }
 
@@ -782,21 +782,10 @@ void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
     string strFile = GetDataDir() + "/debug.log";
-    FILE* file = fopen(strFile.c_str(), "r");
-    if (file && GetFilesize(file) > 10 * 1000000)
+    if (GetFilesize(strFile) > 10 * 1000000)
     {
-        // Restart the file with some of the end
-        char pch[200000];
-        fseek(file, -sizeof(pch), SEEK_END);
-        int nBytes = fread(pch, 1, sizeof(pch), file);
+        FILE*file = fopen(strFile.c_str(), "w");
         fclose(file);
-
-        file = fopen(strFile.c_str(), "w");
-        if (file)
-        {
-            fwrite(pch, 1, nBytes, file);
-            fclose(file);
-        }
     }
 }
 

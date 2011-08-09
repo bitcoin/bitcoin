@@ -192,6 +192,8 @@ bool AppInit2(int argc, char* argv[])
 #ifndef __WXMSW__
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
+            "  -logtimestamps   \t\t  " + _("Add time stamps to the debug.log output.") +
+            "  -printtoconsole  \t\t  " + _("Print debug output to stdout instead of debug.log.") +
             "  -testnet         \t\t  " + _("Use the test network\n") +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +

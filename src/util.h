@@ -6,11 +6,18 @@
 
 #include "uint256.h"
 
-#ifndef __WXMSW__
 #include <sys/types.h>
+#include <sys/stat.h>
+
+#ifdef __WXMSW__
+#define stat(a,b) _stati64((a),(b))
+#define STAT_STRUCT struct _stat
+#else
+#define STAT_STRUCT struct stat
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
+
 #include <map>
 #include <vector>
 #include <string>
@@ -191,7 +198,7 @@ void ParseParameters(int argc, char* argv[]);
 const char* wxGetTranslation(const char* psz);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
-int GetFilesize(FILE* file);
+int64 GetFilesize(std::string &file);
 void GetDataDir(char* pszDirRet);
 std::string GetConfigFile();
 std::string GetPidFile();
