@@ -1143,6 +1143,11 @@ void MapPort(bool fMapPort)
             printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
     }
 }
+#else
+void MapPort(bool /* unused fMapPort */)
+{
+    // Intentionally left blank.
+}
 #endif
 
 
