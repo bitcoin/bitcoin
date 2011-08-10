@@ -14,6 +14,7 @@
 
 #undef printf
 #include <boost/asio.hpp>
+#include <boost/asio/ip/v6_only.hpp>
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/concepts.hpp>
@@ -2742,26 +2743,8 @@ void ThreadRPCServer2(void* parg)
     }
 
     const bool fUseSSL = GetBoolArg("-rpcssl");
-    asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
 
     asio::io_service io_service;
-    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
-    boost::shared_ptr<ip::tcp::acceptor> acceptor(new ip::tcp::acceptor(io_service));
-    try
-    {
-        acceptor->open(endpoint.protocol());
-        acceptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-        acceptor->bind(endpoint);
-        acceptor->listen(socket_base::max_connections);
-    }
-    catch(boost::system::system_error &e)
-    {
-        uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
-                             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
-        return;
-    }
-
     ssl::context context(io_service, ssl::context::sslv23);
     if (fUseSSL)
     {
@@ -2781,7 +2764,49 @@ void ThreadRPCServer2(void* parg)
         SSL_CTX_set_cipher_list(context.impl(), strCiphers.c_str());
     }
 
-    RPCListen(acceptor, context, fUseSSL);
+    // Try a dual IPv6/IPv4 socket, falling back to separate IPv4 and IPv6 sockets
+    const bool loopback = !mapArgs.count("-rpcallowip");
+    asio::ip::address bindAddress = loopback ? asio::ip::address_v6::loopback() : asio::ip::address_v6::any();
+    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
+
+    boost::shared_ptr<ip::tcp::acceptor> acceptor, acceptor4;
+    try
+    {
+        acceptor.reset(new ip::tcp::acceptor(io_service));
+        acceptor->open(endpoint.protocol());
+        acceptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+
+        // Try making the socket dual IPv6/IPv4 (if listening on the "any" address)
+        boost::system::error_code v6_only_error;
+        acceptor->set_option(boost::asio::ip::v6_only(loopback), v6_only_error);
+
+        acceptor->bind(endpoint);
+        acceptor->listen(socket_base::max_connections);
+
+        RPCListen(acceptor, context, fUseSSL);
+
+        // If dual IPv6/IPv4 failed (or we're opening loopback interfaces only), open IPv4 separately
+        if (loopback || v6_only_error)
+        {
+            bindAddress = loopback ? asio::ip::address_v4::loopback() : asio::ip::address_v4::any();
+            endpoint.address(bindAddress);
+
+            acceptor4.reset(new ip::tcp::acceptor(io_service));
+            acceptor4->open(endpoint.protocol());
+            acceptor4->set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+            acceptor4->bind(endpoint);
+            acceptor4->listen(socket_base::max_connections);
+
+            RPCListen(acceptor4, context, fUseSSL);
+        }
+    }
+    catch(boost::system::system_error &e)
+    {
+        uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
+                             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
+        uiInterface.QueueShutdown();
+        return;
+    }
 
     vnThreadsRunning[THREAD_RPCLISTENER]--;
     while (!fShutdown)
