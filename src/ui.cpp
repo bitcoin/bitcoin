@@ -2736,13 +2736,20 @@ void CAddressBookDialog::OnButtonCopy(wxCommandEvent& event)
     }
 }
 
-bool CAddressBookDialog::CheckIfMine(const string& strAddress, const string& strTitle)
+bool CAddressBookDialog::CheckSendingAddress(const string& strAddress, const string& strTitle)
 {
     CBitcoinAddress address(strAddress);
-    bool fMine = address.IsValid() && pwalletMain->HaveKey(address);
-    if (fMine)
+    if (!address.IsValid())
+    {
+        wxMessageBox(_("Invalid bitcoin address"), strTitle);
+        return false;
+    }
+    if (pwalletMain->HaveKey(address))
+    {
         wxMessageBox(_("This is one of your own addresses for receiving payments and cannot be entered in the address book.  "), strTitle);
-    return fMine;
+        return false;
+    }
+    return true;
 }
 
 void CAddressBookDialog::OnButtonEdit(wxCommandEvent& event)
@@ -2765,7 +2772,7 @@ void CAddressBookDialog::OnButtonEdit(wxCommandEvent& event)
             strName = dialog.GetValue1();
             strAddress = dialog.GetValue2();
         }
-        while (CheckIfMine(strAddress, _("Edit Address")));
+        while (!CheckSendingAddress(strAddress, _("Edit Address")));
 
     }
     else if (nPage == RECEIVING)
@@ -2805,7 +2812,7 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
             strName = dialog.GetValue1();
             strAddress = dialog.GetValue2();
         }
-        while (CheckIfMine(strAddress, _("Add Address")));
+        while (!CheckSendingAddress(strAddress, _("Add Address")));
     }
     else if (nPage == RECEIVING)
     {

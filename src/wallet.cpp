@@ -1154,6 +1154,8 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
 
 bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& strName)
 {
+    if (mapAddressBook.count(address) && mapAddressBook[address] == strName)
+        return false;
     mapAddressBook[address] = strName;
     if (!fFileBacked)
         return false;
@@ -1162,6 +1164,8 @@ bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& s
 
 bool CWallet::DelAddressBookName(const CBitcoinAddress& address)
 {
+    if (!mapAddressBook.count(address))
+        return false;
     mapAddressBook.erase(address);
     if (!fFileBacked)
         return false;
