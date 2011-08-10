@@ -497,7 +497,6 @@ bool AppInit2(int argc, char* argv[])
         printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
         printf("nBestHeight = %d\n",            nBestHeight);
         printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
-        printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
         printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
         printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
 
@@ -613,6 +612,9 @@ bool UpdateConfig(string &strError)
     }
     else
         fUseProxy = false;
+
+    fTOR = (fUseProxy && addrProxy.port == htons(9050));
+
 
     fPrintToConsole = printtoconsoleOpt();
     fPrintToDebugger = printtodebuggerOpt();

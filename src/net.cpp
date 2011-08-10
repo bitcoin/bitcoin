@@ -93,6 +93,7 @@ map<CInv, int64> mapAlreadyAskedFor;
 
 // Settings
 int fUseProxy = false;
+bool fTOR = false;
 CAddress addrProxy("127.0.0.1",9050);
 
 
@@ -474,7 +475,7 @@ void ThreadGetMyExternalIP(void* parg)
 
 
 
-bool AddAddress(CAddress addr, int64 nTimePenalty)
+bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
 {
     if (!addr.IsRoutable())
         return false;
@@ -489,7 +490,10 @@ bool AddAddress(CAddress addr, int64 nTimePenalty)
             // New address
             printf("AddAddress(%s)\n", addr.ToString().c_str());
             mapAddresses.insert(make_pair(addr.GetKey(), addr));
-            CAddrDB().WriteAddress(addr);
+            if (pAddrDB)
+                pAddrDB->WriteAddress(addr);
+            else
+                CAddrDB().WriteAddress(addr);
             return true;
         }
         else
@@ -511,7 +515,12 @@ bool AddAddress(CAddress addr, int64 nTimePenalty)
                 fUpdated = true;
             }
             if (fUpdated)
-                CAddrDB().WriteAddress(addrFound);
+            {
+                if (pAddrDB)
+                    pAddrDB->WriteAddress(addrFound);
+                else
+                    CAddrDB().WriteAddress(addrFound);
+            }
         }
     }
     return false;
@@ -1121,13 +1130,14 @@ void ThreadMapPort2(void* parg)
     {
         char intClient[16];
         char intPort[6];
+        string strDesc = "Bitcoin " + FormatFullVersion();
 
 #ifndef __WXMSW__
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0);
+	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0);
 #else
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0, "0");
+	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
 #endif
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
@@ -1195,6 +1205,8 @@ void DNSAddressSeed()
     if (!fTestNet)
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
+        CAddrDB addrDB;
+        addrDB.TxnBegin();
 
         for (int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
             vector<CAddress> vaddr;
@@ -1205,12 +1217,14 @@ void DNSAddressSeed()
                     if (addr.GetByte(3) != 127)
                     {
                         addr.nTime = 0;
-                        AddAddress(addr);
+                        AddAddress(addr, 0, &addrDB);
                         found++;
                     }
                 }
             }
         }
+
+        addrDB.TxnCommit();  // Save addresses (it's ok if this fails)
     }
 
     printf("%d addresses found from DNS seeds\n", found);
