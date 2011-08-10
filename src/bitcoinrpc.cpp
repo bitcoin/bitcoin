@@ -2548,10 +2548,19 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     stream << HTTPReply(nStatus, strReply, false) << std::flush;
 }
 
-bool ClientAllowed(const string& strAddress)
+bool ClientAllowed(const boost::asio::ip::address& address)
 {
-    if (strAddress == asio::ip::address_v4::loopback().to_string())
+    // Make sure that IPv4-compatible and IPv4-mapped IPv6 addresses are treated as IPv4 addresses
+    if (address.is_v6()
+     && (address.to_v6().is_v4_compatible()
+      || address.to_v6().is_v4_mapped()))
+        return ClientAllowed(address.to_v6().to_v4());
+
+    if (address == asio::ip::address_v4::loopback()
+     || address == asio::ip::address_v6::loopback())
         return true;
+
+    const string strAddress = address.to_string();
     const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
     BOOST_FOREACH(string strAllow, vAllow)
         if (WildcardMatch(strAddress, strAllow))
@@ -2696,7 +2705,7 @@ static void RPCAcceptHandler(boost::shared_ptr<ip::tcp::acceptor> acceptor,
     // Restrict callers by IP.  It is important to
     // do this before starting client thread, to filter out
     // certain DoS and misbehaving clients.
-    else if (!ClientAllowed(conn->peer.address().to_string()))
+    else if (!ClientAllowed(conn->peer.address()))
     {
         // Only send a 403 if we're not using SSL to prevent a DoS during the SSL handshake.
         if (!fUseSSL)
