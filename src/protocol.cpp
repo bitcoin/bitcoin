@@ -15,6 +15,12 @@ bool Lookup(const char *pszName, std::vector<CAddress>& vaddr, int nServices, in
 bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
+static const char* ppszTypeName[] =
+{
+    "ERROR",
+    "tx",
+    "block",
+};
 
 CMessageHeader::CMessageHeader()
 {
@@ -248,4 +254,59 @@ std::string CAddress::ToString() const
 void CAddress::print() const
 {
     printf("CAddress(%s)\n", ToString().c_str());
+}
+
+CInv::CInv()
+{
+    type = 0;
+    hash = 0;
+}
+
+CInv::CInv(int typeIn, const uint256& hashIn)
+{
+    type = typeIn;
+    hash = hashIn;
+}
+
+CInv::CInv(const std::string& strType, const uint256& hashIn)
+{
+    int i;
+    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
+    {
+        if (strType == ppszTypeName[i])
+        {
+            type = i;
+            break;
+        }
+    }
+    if (i == ARRAYLEN(ppszTypeName))
+        throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType.c_str()));
+    hash = hashIn;
+}
+
+bool operator<(const CInv& a, const CInv& b)
+{
+    return (a.type < b.type || (a.type == b.type && a.hash < b.hash));
+}
+
+bool CInv::IsKnownType() const
+{
+    return (type >= 1 && type < ARRAYLEN(ppszTypeName));
+}
+
+const char* CInv::GetCommand() const
+{
+    if (!IsKnownType())
+        throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
+    return ppszTypeName[type];
+}
+
+std::string CInv::ToString() const
+{
+    return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,20).c_str());
+}
+
+void CInv::print() const
+{
+    printf("CInv(%s)\n", ToString().c_str());
 }
