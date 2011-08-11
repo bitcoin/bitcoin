@@ -67,6 +67,50 @@ entering your wallet passphrase in the Bitcoin client and using the
 same passphrase only as your wallet passphrase.
 
 
+Technical details of wallet encryption
+--------------------------------------
+Wallet encryption uses AES-256-CBC to encrypt only the private keys
+that are held in a wallet.  The keys are encrypted with a master key
+which is entirely random.  This master key is then encrypted with
+AES-256-CBC with a key derived from the passphrase using SHA512 and
+OpenSSL's EVP_BytesToKey and a dynamic number of rounds determined by
+the speed of the machine which does the initial encryption (and is
+updated based on the speed of a computer which does a subsequent
+passphrase change).  Although the underlying code supports multiple
+encrypted copies of the same master key (and thus multiple passphrases)
+the client does not yet have a method to add additional passphrases.
+
+At runtime, the client loads the wallet as it normally would, however
+the keystore stores the keys in encrypted form.  When the passphrase
+is required (to top up keypool or send coins) it will either be queried
+by a GUI prompt, or must first be entered with the walletpassphrase
+RPC command.  This will change the wallet to "unlocked" state where the
+unencrypted master key is stored in memory (in the case of GUI, only for
+long enough to complete the requested operation, in RPC, for as long as
+is specified by the second parameter to walletpassphrase).  The wallet is
+then locked (or can be manually locked using the walletlock RPC command)
+and the unencrypted master key is removed from memory.
+
+Implementation details of wallet encryption
+-------------------------------------------
+When the wallet is locked, calls to sendtoaddress, sendfrom, sendmany,
+and keypoolrefill will return Error -13: "Error: Please enter the wallet 
+passphrase with walletpassphrase first."
+
+When the wallet is unlocked, calls to walletpassphrase will fail.
+
+When a wallet is encrypted, the passphrase is required to top up the
+keypool, thus, if the passphrase is rarely entered, it is possible that
+keypool might run out.  In this case, the default key will be used as the
+target for payouts for mining, and calls to getnewaddress and getaccount
+address will return an error.  In order to prevent such cases, the keypool
+is automatically refilled when walletpassphrase is called with a correct
+passphrase and when topupkeypool is called (while the wallet is unlocked).
+Note that the keypool continues to be topped up on various occasions when
+a new key from pool is used and the wallet is unlocked (or unencrypted).
+
+
+
 See the documentation at the bitcoin wiki:
   https://en.bitcoin.it/wiki/Main_Page
 
