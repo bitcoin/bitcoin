@@ -19,7 +19,7 @@ LIBS= \
    -l ssl \
    -l crypto
 
-ifdef USE_UPNP
+ifneq (USE_UPNP,0)
 	LIBS += -l miniupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif

@@ -181,12 +181,10 @@ bool AppInit2(int argc, char* argv[])
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
             "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)\n") +
             "  -bantime=<n>     \t  "   + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)\n") +
-#ifdef USE_UPNP
 #if USE_UPNP
             "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
 #else
             "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
-#endif
 #endif
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
 #ifdef GUI

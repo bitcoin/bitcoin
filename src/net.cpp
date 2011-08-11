@@ -14,7 +14,7 @@
 #include <string.h>
 #endif
 
-#ifdef USE_UPNP
+#if USE_UPNP
 #include <miniupnpc/miniwget.h>
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
@@ -29,7 +29,7 @@ static const int MAX_OUTBOUND_CONNECTIONS = 8;
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
 void ThreadOpenConnections2(void* parg);
-#ifdef USE_UPNP
+#if USE_UPNP
 void ThreadMapPort2(void* parg);
 #endif
 bool OpenNetworkConnection(const CAddress& addrConnect);
@@ -1101,7 +1101,7 @@ void ThreadSocketHandler2(void* parg)
 
 
 
-#ifdef USE_UPNP
+#if USE_UPNP
 void ThreadMapPort(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadMapPort(parg));
@@ -1786,7 +1786,7 @@ bool StopNode()
     nTransactionsUpdated++;
     int64 nStart = GetTime();
     while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0
-#ifdef USE_UPNP
+#if USE_UPNP
         || vnThreadsRunning[5] > 0
 #endif
     )
