@@ -25,8 +25,8 @@ Dependencies
 sudo apt-get install build-essential
 sudo apt-get install libgtk2.0-dev
 sudo apt-get install libssl-dev
-sudo apt-get install libdb4.7-dev
-sudo apt-get install libdb4.7++-dev
+sudo apt-get install libdb4.8-dev
+sudo apt-get install libdb4.8++-dev
 Boost 1.40+: sudo apt-get install libboost-all-dev
 or Boost 1.37: sudo apt-get install libboost1.37-dev
 
@@ -55,10 +55,10 @@ miniupnpc      New (3-clause) BSD license
 Versions used in this release:
 GCC          4.3.3
 OpenSSL      0.9.8g
-wxWidgets    2.9.0
-Berkeley DB  4.7.25.NC
+wxWidgets    2.9.2
+Berkeley DB  4.8.30.NC
 Boost        1.37
-miniupnpc    1.5
+miniupnpc    1.6
 
 
 Notes
@@ -74,8 +74,8 @@ symbols, which reduces the executable size by about 90%.
 wxWidgets
 ---------
 cd /usr/local
-tar -xzvf wxWidgets-2.9.0.tar.gz
-cd wxWidgets-2.9.0
+tar -xzvf wxWidgets-2.9.2.tar.gz
+cd wxWidgets-2.9.2
 mkdir buildgtk
 cd buildgtk
 ../configure --with-gtk --enable-debug --disable-shared --enable-monolithic --without-libpng --disable-svg
@@ -87,8 +87,8 @@ ldconfig
 
 miniupnpc
 ---------
-tar -xzvf miniupnpc-1.5.tar.gz
-cd miniupnpc-1.5
+tar -xzvf miniupnpc-1.6.tar.gz
+cd miniupnpc-1.6
 make
 sudo su
 make install
@@ -96,8 +96,7 @@ make install
 
 Berkeley DB
 -----------
-You need Berkeley DB 4.7.  Don't use 4.8, the database/log0000* files
-are incompatible.  If you have to build Berkeley DB yourself:
+You need Berkeley DB 4.8.  If you have to build Berkeley DB yourself:
 ../dist/configure --enable-cxx
 make
 

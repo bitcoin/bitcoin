@@ -6,7 +6,7 @@ architectures:
 - "i386"
 - "amd64"
 packages: 
-- "libdb4.7++-dev"
+- "libdb4.8++-dev"
 - "libxxf86vm-dev"
 - "libgtk2.0-dev"
 - "libboost-all-dev"
@@ -17,26 +17,19 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "wxWidgets-2.9.1.tar.bz2"
-- "miniupnpc-1.5.tar.gz"
-- "toplevel.h.diff"
-- "toplevel.cpp.diff"
+- "wxWidgets-2.9.2.tar.bz2"
+- "miniupnpc-1.6.tar.gz"
 script: |
   INSTDIR="$HOME/install"
   export LIBRARY_PATH="$INSTDIR/lib"
   #
-  tar xzf miniupnpc-1.5.tar.gz
-  cd miniupnpc-1.5
+  tar xzf miniupnpc-1.6.tar.gz
+  cd miniupnpc-1.6
   INSTALLPREFIX=$INSTDIR make $MAKEOPTS install
   cd ..
   #
-  tar xjf wxWidgets-2.9.1.tar.bz2
-  cd wxWidgets-2.9.1
-  cd include/wx/gtk
-  patch < ../../../../toplevel.h.diff
-  cd ../../../src/gtk
-  patch < ../../../toplevel.cpp.diff
-  cd ../..
+  tar xjf wxWidgets-2.9.2.tar.bz2
+  cd wxWidgets-2.9.2
   ./configure --prefix=$INSTDIR --enable-monolithic --disable-shared
   perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
   make $MAKEOPTS install
@@ -50,7 +43,7 @@ script: |
   cp $OUTDIR/src/doc/README $OUTDIR
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
-  sed 's/$(DEBUGFLAGS)//' < makefile.unix > makefile.unix.2 && mv makefile.unix.2 makefile.unix
+  sed 's/$(DEBUGFLAGS)//' -i makefile.unix
   PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin USE_UPNP=1
   PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
