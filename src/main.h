@@ -21,7 +21,6 @@ class CKeyItem;
 class CReserveKey;
 class CWalletDB;
 
-class CMessageHeader;
 class CAddress;
 class CInv;
 class CRequestTracker;

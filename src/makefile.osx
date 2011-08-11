@@ -45,6 +45,7 @@ HEADERS = \
     main.h \
     net.h \
     noui.h \
+    protocol.h \
     rpc.h \
     script.h \
     serialize.h \
@@ -63,6 +64,7 @@ OBJS= \
     obj/keystore.o \
     obj/main.o \
     obj/net.o \
+    obj/protocol.o \
     obj/rpc.o \
     obj/script.o \
     obj/util.o \
