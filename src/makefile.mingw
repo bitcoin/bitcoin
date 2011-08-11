@@ -32,9 +32,28 @@ LIBS= \
 DEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h \
-    init.h crypter.h
+HEADERS = \
+    base58.h \
+    bignum.h \
+    crypter.h \
+    db.h \
+    headers.h \
+    init.h \
+    irc.h \
+    key.h \
+    keystore.h \
+    main.h \
+    net.h \
+    noui.h \
+    rpc.h \
+    script.h \
+    serialize.h \
+    strlcpy.h \
+    ui.h \
+    uibase.h \
+    uint256.h \
+    util.h \
+    wallet.h
 
 ifdef USE_UPNP
  INCLUDEPATHS += -I"C:\upnpc-exe-win32-20110215"
@@ -46,17 +65,17 @@ endif
 LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
 
 OBJS= \
-    obj/util.o \
-    obj/script.o \
+    obj/crypter.o \
     obj/db.o \
-    obj/net.o \
+    obj/init.o \
     obj/irc.o \
     obj/keystore.o \
     obj/main.o \
-    obj/wallet.o \
+    obj/net.o \
     obj/rpc.o \
-    obj/init.o \
-    obj/crypter.o \
+    obj/script.o \
+    obj/util.o \
+    obj/wallet.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 
