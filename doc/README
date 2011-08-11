@@ -36,7 +36,7 @@ every time you wish to send Bitcoins.  If you lose this passphrase,
 you will lose access to spend all of the bitcoins in your wallet,
 no one, not even the Bitcoin developers can recover your Bitcoins.
 This means you are responsible for your own security, store your
-password in a secure location and do not forget it.
+passphrase in a secure location and do not forget it.
 
 Remember that the encryption built into bitcoin only encrypts the
 actual keys which are required to send your bitcoins, not the full
