@@ -476,10 +476,8 @@ extern bool fClient;
 extern bool fAllowDNS;
 extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
-extern CNode* pnodeLocalHost;
 extern uint64 nLocalHostNonce;
 extern boost::array<int, 10> vnThreadsRunning;
-extern SOCKET hListenSocket;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
