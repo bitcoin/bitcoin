@@ -86,7 +86,7 @@ bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
 obj/test/%.o: obj/test/%.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-test_bitcoin: obj/test/test_bitcoin.o
+test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:

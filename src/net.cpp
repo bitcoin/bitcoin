@@ -98,7 +98,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
     SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
-#ifdef BSD
+#ifdef SO_NOSIGPIPE
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
@@ -1143,6 +1143,11 @@ void MapPort(bool fMapPort)
             printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
     }
 }
+#else
+void MapPort(bool /* unused fMapPort */)
+{
+    // Intentionally left blank.
+}
 #endif
 
 
@@ -1579,7 +1584,7 @@ bool BindListenPort(string& strError)
         return false;
     }
 
-#ifdef BSD
+#ifdef SO_NOSIGPIPE
     // Different way of disabling SIGPIPE on BSD
     setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif
