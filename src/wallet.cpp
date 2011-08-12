@@ -268,8 +268,12 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         {
             if (txout.scriptPubKey == scriptDefaultKey)
             {
-                SetDefaultKey(GetOrReuseKeyFromPool());
-                SetAddressBookName(CBitcoinAddress(vchDefaultKey), "");
+                std::vector<unsigned char> newDefaultKey;
+                if (GetKeyFromPool(newDefaultKey, false))
+                {
+                    SetDefaultKey(newDefaultKey);
+                    SetAddressBookName(CBitcoinAddress(vchDefaultKey), "");
+                }
             }
         }
 
@@ -1126,7 +1130,10 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
         // Create new keyUser and set as default key
         RandAddSeedPerfmon();
 
-        SetDefaultKey(GetOrReuseKeyFromPool());
+        std::vector<unsigned char> newDefaultKey;
+        if (!GetKeyFromPool(newDefaultKey, false))
+            return DB_LOAD_FAIL;
+        SetDefaultKey(newDefaultKey);
         if (!SetAddressBookName(CBitcoinAddress(vchDefaultKey), ""))
             return DB_LOAD_FAIL;
     }
@@ -1269,15 +1276,25 @@ void CWallet::ReturnKey(int64 nIndex)
     printf("keypool return %"PRI64d"\n", nIndex);
 }
 
-vector<unsigned char> CWallet::GetOrReuseKeyFromPool()
+bool CWallet::GetKeyFromPool(vector<unsigned char>& result, bool fAllowReuse)
 {
     int64 nIndex = 0;
     CKeyPool keypool;
     ReserveKeyFromKeyPool(nIndex, keypool);
-    if(nIndex == -1)
-        return vchDefaultKey;
+    if (nIndex == -1)
+    {
+        if (fAllowReuse && !vchDefaultKey.empty())
+        {
+            result = vchDefaultKey;
+            return true;
+        }
+        if (IsLocked()) return false;
+        result = GenerateNewKey();
+        return true;
+    }
     KeepKey(nIndex);
-    return keypool.vchPubKey;
+    result = keypool.vchPubKey;
+    return true;
 }
 
 int64 CWallet::GetOldestKeyPoolTime()
