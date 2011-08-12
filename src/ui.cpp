@@ -1391,7 +1391,9 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
         return;
 
     // Generate new key
-    strAddress = CBitcoinAddress(pwalletMain->GetOrReuseKeyFromPool()).ToString();
+    std::vector<unsigned char> newKey;
+    pwalletMain->GetKeyFromPool(newKey, true);
+    strAddress = CBitcoinAddress(newKey).ToString();
 
     if (fWasLocked)
         pwalletMain->Lock();
@@ -2826,7 +2828,9 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
             return;
 
         // Generate new key
-        strAddress = CBitcoinAddress(pwalletMain->GetOrReuseKeyFromPool()).ToString();
+        std::vector<unsigned char> newKey;
+        pwalletMain->GetKeyFromPool(newKey, true);
+        strAddress = CBitcoinAddress(newKey).ToString();
 
         if (fWasLocked)
             pwalletMain->Lock();
