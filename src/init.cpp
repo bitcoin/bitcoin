@@ -169,8 +169,6 @@ bool AppInit2(int argc, char* argv[])
           _("Options:\n") +
             "  -conf=<file>     \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
             "  -pid=<file>      \t\t  " + _("Specify pid file (default: bitcoind.pid)\n") +
-            "  -gen             \t\t  " + _("Generate coins\n") +
-            "  -gen=0           \t\t  " + _("Don't generate coins\n") +
             "  -min             \t\t  " + _("Start minimized\n") +
             "  -datadir=<dir>   \t\t  " + _("Specify data directory\n") +
             "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)\n") +
@@ -435,8 +433,6 @@ bool AppInit2(int argc, char* argv[])
             printf("No blocks matching %s were found\n", strMatch.c_str());
         return false;
     }
-
-    fGenerateBitcoins = GetBoolArg("-gen");
 
     if (mapArgs.count("-proxy"))
     {
