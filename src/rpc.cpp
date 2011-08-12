@@ -247,7 +247,8 @@ Value getgenerate(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getgenerate\n"
-            "Internal generation is removed, this function always returns false.");
+            "Internal generation is removed, this function always returns false.\n"
+            "Deprecated, this will be removed from a future version.");
 
     return false;
 }
@@ -259,7 +260,8 @@ Value setgenerate(const Array& params, bool fHelp)
         throw runtime_error(
             "setgenerate <generate> [genproclimit]\n"
             "<generate> is true or false to turn generation on or off.\n"
-            "Generation is limited to [genproclimit] processors, -1 is unlimited.");
+            "Generation is limited to [genproclimit] processors, -1 is unlimited.\n"
+            "Deprecated, this function is a no-op and will be removed from a future version.");
 
     if (params.size() > 0)
         // unused parameter, used to be fGenerate, keep type-checking it though
