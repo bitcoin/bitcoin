@@ -1104,12 +1104,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
         m_statusBar->SetStatusText("", 0);
     strPrevWarning = strWarning;
 
-    string strGen = "";
-    if (fGenerateBitcoins)
-        strGen = _("    Generating");
-    if (fGenerateBitcoins && vNodes.empty())
-        strGen = _("(not connected)");
-    m_statusBar->SetStatusText(strGen, 1);
+    m_statusBar->SetStatusText("", 1);
 
     string strStatus = strprintf(_("     %d connections     %d blocks     %d transactions"), vNodes.size(), nBestHeight, nTransactionCount);
     m_statusBar->SetStatusText(strStatus, 2);
@@ -1148,11 +1143,6 @@ void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
 {
     // File->Exit
     Close(true);
-}
-
-void CMainFrame::OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event)
-{
-    event.Check(fGenerateBitcoins);
 }
 
 void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
@@ -2894,7 +2884,6 @@ BEGIN_EVENT_TABLE(CMyTaskBarIcon, wxTaskBarIcon)
     EVT_MENU(ID_TASKBAR_RESTORE, CMyTaskBarIcon::OnMenuRestore)
     EVT_MENU(ID_TASKBAR_SEND, CMyTaskBarIcon::OnMenuSend)
     EVT_MENU(ID_TASKBAR_OPTIONS, CMyTaskBarIcon::OnMenuOptions)
-    EVT_UPDATE_UI(ID_TASKBAR_GENERATE, CMyTaskBarIcon::OnUpdateUIGenerate)
     EVT_MENU(ID_TASKBAR_EXIT, CMyTaskBarIcon::OnMenuExit)
 END_EVENT_TABLE()
 
@@ -2904,10 +2893,6 @@ void CMyTaskBarIcon::Show(bool fShow)
     if (fShow)
     {
         string strTooltip = _("Bitcoin");
-        if (fGenerateBitcoins)
-            strTooltip = _("Bitcoin - Generating");
-        if (fGenerateBitcoins && vNodes.empty())
-            strTooltip = _("Bitcoin - (not connected)");
 
         // Optimization, only update when changed, using char array to be reentrant
         if (strncmp(pszPrevTip, strTooltip.c_str(), sizeof(pszPrevTip)-1) != 0)
@@ -2965,11 +2950,6 @@ void CMyTaskBarIcon::Restore()
     pframeMain->GetEventHandler()->AddPendingEvent(event);
     pframeMain->Iconize(false);
     pframeMain->Raise();
-}
-
-void CMyTaskBarIcon::OnUpdateUIGenerate(wxUpdateUIEvent& event)
-{
-    event.Check(fGenerateBitcoins);
 }
 
 void CMyTaskBarIcon::OnMenuExit(wxCommandEvent& event)

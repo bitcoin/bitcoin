@@ -58,7 +58,6 @@ protected:
     void OnPaint(wxPaintEvent& event);
     void OnPaintListCtrl(wxPaintEvent& event);
     void OnMenuFileExit(wxCommandEvent& event);
-    void OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event);
     void OnMenuOptionsChangeYourAddress(wxCommandEvent& event);
     void OnMenuOptionsEncryptWallet(wxCommandEvent& event);
     void OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event);
@@ -331,7 +330,6 @@ protected:
     void OnMenuRestore(wxCommandEvent& event);
     void OnMenuSend(wxCommandEvent& event);
     void OnMenuOptions(wxCommandEvent& event);
-    void OnUpdateUIGenerate(wxUpdateUIEvent& event);
     void OnMenuGenerate(wxCommandEvent& event);
     void OnMenuExit(wxCommandEvent& event);
 
