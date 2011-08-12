@@ -21,6 +21,25 @@
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
+static const signed char pnDecode58[] =
+{
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1,  0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ 46,  0,  1,  2,  3,  4,  5,  6,  7,  8, -1, -1, -1, -1, -1, -1,
+ -1,  9, 10, 11, 12, 13, 14, 15, 16,  0, 17, 18, 19, 20, 21, 46,
+ 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, -1, -1, -1, -1, -1,
+ -1, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,  0, 44, 45, 46,
+ 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, -1,  0, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+};
 
 inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 {
@@ -80,8 +99,8 @@ inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
     // Convert big endian string to bignum
     for (const char* p = psz; *p; p++)
     {
-        const char* p1 = strchr(pszBase58, *p);
-        if (p1 == NULL)
+        signed char p1 = pnDecode58[*p];
+        if (p1 == -1)
         {
             while (isspace(*p))
                 p++;
@@ -89,7 +108,7 @@ inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
                 return false;
             break;
         }
-        bnChar.setulong(p1 - pszBase58);
+        bnChar.setulong(p1);
         if (!BN_mul(&bn, &bn, &bn58, pctx))
             throw bignum_error("DecodeBase58 : BN_mul failed");
         bn += bnChar;
