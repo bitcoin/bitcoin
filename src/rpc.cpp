@@ -1149,10 +1149,11 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
 
 Value listtransactions(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 3)
+    if (fHelp || params.size() > 4)
         throw runtime_error(
-            "listtransactions [account] [count=10] [from=0]\n"
-            "Returns up to [count] most recent transactions skipping the first [from] transactions for account [account].");
+            "listtransactions [account] [count=10] [from=0] [oldesttonewest=true]\n"
+            "Returns up to [count] most recent transactions skipping the first [from] transactions for account [account].\n"
+            "[oldesttonewest] order the transactions from oldest to newest.");
 
     string strAccount = "*";
     if (params.size() > 0)
@@ -1163,6 +1164,9 @@ Value listtransactions(const Array& params, bool fHelp)
     int nFrom = 0;
     if (params.size() > 2)
         nFrom = params[2].get_int();
+    bool bOldestToNewest = true;
+    if (params.size() > 3)
+        bOldestToNewest = params[3].get_bool();
 
     Array ret;
     CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -1210,7 +1214,10 @@ Value listtransactions(const Array& params, bool fHelp)
         std::advance(last, nCount);
         ret.erase(last, ret.end());
     }
-    std::reverse(ret.begin(), ret.end()); // oldest to newest
+    
+    // oldest to newest
+    if (bOldestToNewest)
+        std::reverse(ret.begin(), ret.end());
 
     return ret;
 }
@@ -2389,6 +2396,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "listtransactions"       && n > 3) ConvertTo<bool>(params[3]);
         if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendmany"               && n > 1)
