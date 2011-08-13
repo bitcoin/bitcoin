@@ -1192,17 +1192,19 @@ Value listtransactions(const Array& params, bool fHelp)
 
         // Now: iterate backwards until we have nCount items to return:
         TxItems::reverse_iterator it = txByTime.rbegin();
-        if (txByTime.size() > nFrom) std::advance(it, nFrom);
-        for (; it != txByTime.rend(); ++it)
+        if (nFrom < txByTime.size())
         {
-            CWalletTx *const pwtx = (*it).second.first;
-            if (pwtx != 0)
-                ListTransactions(*pwtx, strAccount, 0, true, ret);
-            CAccountingEntry *const pacentry = (*it).second.second;
-            if (pacentry != 0)
-                AcentryToJSON(*pacentry, strAccount, ret);
+            for (std::advance(it, nFrom); it != txByTime.rend(); ++it)
+            {
+                CWalletTx *const pwtx = (*it).second.first;
+                if (pwtx != 0)
+                    ListTransactions(*pwtx, strAccount, 0, true, ret);
+                CAccountingEntry *const pacentry = (*it).second.second;
+                if (pacentry != 0)
+                    AcentryToJSON(*pacentry, strAccount, ret);
 
-            if (ret.size() >= nCount) break;
+                if (ret.size() >= nCount) break;
+            }
         }
         // ret is now newest to oldest
     }
