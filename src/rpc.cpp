@@ -1164,9 +1164,9 @@ Value listtransactions(const Array& params, bool fHelp)
     int nFrom = 0;
     if (params.size() > 2)
         nFrom = params[2].get_int();
-    bool bOldestToNewest = true;
+    bool fOldestToNewest = true;
     if (params.size() > 3)
-        bOldestToNewest = params[3].get_bool();
+        fOldestToNewest = params[3].get_bool();
 
     Array ret;
     CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -1218,7 +1218,7 @@ Value listtransactions(const Array& params, bool fHelp)
     }
     
     // oldest to newest
-    if (bOldestToNewest)
+    if (fOldestToNewest)
         std::reverse(ret.begin(), ret.end());
 
     return ret;
