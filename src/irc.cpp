@@ -16,8 +16,10 @@ bool fGotExternalIP = false;
 
 void ThreadIRCSeed2(void* parg);
 
-
-
+// dummy address that can be used as argument to
+// GetLocalAddress(), forcing it to return an IPv4
+// address
+static const CAddress addrIRCDummy("127.0.0.1");
 
 #pragma pack(push, 1)
 struct ircaddr
@@ -29,9 +31,13 @@ struct ircaddr
 
 string EncodeAddress(const CAddress& addr)
 {
+    if (!addr.IsIPv4())
+        return "";
+
+    struct sockaddr_in ip = addr.GetSockAddrIPv4();
     struct ircaddr tmp;
-    tmp.ip    = addr.ip;
-    tmp.port  = addr.port;
+    tmp.ip    = ip.sin_addr.s_addr;
+    tmp.port  = ip.sin_port;
 
     vector<unsigned char> vch(UBEGIN(tmp), UEND(tmp));
     return string("u") + EncodeBase58Check(vch);
@@ -48,7 +54,10 @@ bool DecodeAddress(string str, CAddress& addr)
         return false;
     memcpy(&tmp, &vch[0], sizeof(tmp));
 
-    addr = CAddress(tmp.ip, ntohs(tmp.port), NODE_NETWORK);
+    struct sockaddr_in ip;
+    ip.sin_addr.s_addr = tmp.ip;
+    ip.sin_port = tmp.port;
+    addr = CAddress(&ip, NODE_NETWORK);
     return true;
 }
 
@@ -204,7 +213,7 @@ bool RecvCodeLine(SOCKET hSocket, const char* psz1, string& strRet)
     }
 }
 
-bool GetIPFromIRC(SOCKET hSocket, string strMyName, unsigned int& ipRet)
+bool GetIPFromIRC(SOCKET hSocket, string strMyName, CAddress &addrRet)
 {
     Send(hSocket, strprintf("USERHOST %s\r", strMyName.c_str()).c_str());
 
@@ -227,10 +236,9 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, unsigned int& ipRet)
     printf("GetIPFromIRC() got userhost %s\n", strHost.c_str());
     if (fUseProxy)
         return false;
-    CAddress addr(strHost, 0, true);
-    if (!addr.IsValid())
+    addrRet = CAddress(strHost, 0, true);
+    if (!addrRet.IsValid())
         return false;
-    ipRet = addr.ip;
 
     return true;
 }
@@ -264,29 +272,31 @@ void ThreadIRCSeed2(void* parg)
     int nErrorWait = 10;
     int nRetryWait = 10;
     bool fNameInUse = false;
-    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+    bool fTOR = (fUseProxy && addrProxy.GetPort() == 9050);
+
+    vector<CAddress> vaddrIRC;
+    if (!fTOR)
+        Lookup("irc.lfnet.org", vaddrIRC, 0, -1, true, 6667);
+    vaddrIRC.push_back(CAddress("92.243.23.21", 6667)); // irc.lfnet.org
+    int nIndex = 0;
 
     while (!fShutdown)
     {
-        //CAddress addrConnect("216.155.130.130:6667"); // chat.freenode.net
-        CAddress addrConnect("92.243.23.21", 6667); // irc.lfnet.org
-        if (!fTOR)
-        {
-            //struct hostent* phostent = gethostbyname("chat.freenode.net");
-            CAddress addrIRC("irc.lfnet.org", 6667, true);
-            if (addrIRC.IsValid())
-                addrConnect = addrIRC;
-        }
-
         SOCKET hSocket;
-        if (!ConnectSocket(addrConnect, hSocket))
+        if (!vaddrIRC[nIndex].ConnectSocket(hSocket))
         {
             printf("IRC connect failed\n");
-            nErrorWait = nErrorWait * 11 / 10;
-            if (Wait(nErrorWait += 60))
-                continue;
+            nIndex++;
+            if (nIndex == vaddrIRC.size())
+            {
+                nErrorWait = nErrorWait * 11 / 10;
+                if (Wait(nErrorWait += 60))
+                    continue;
+                else
+                    return;
+            }
             else
-                return;
+                continue;
         }
 
         if (!RecvUntil(hSocket, "Found your hostname", "using your IP address instead", "Couldn't look up your hostname", "ignoring hostname"))
@@ -301,8 +311,9 @@ void ThreadIRCSeed2(void* parg)
         }
 
         string strMyName;
-        if (addrLocalHost.IsRoutable() && !fUseProxy && !fNameInUse)
-            strMyName = EncodeAddress(addrLocalHost);
+        const CAddress *paddrLocal = GetLocalAddress(addrIRCDummy);
+        if (!fUseProxy && !fNameInUse && paddrLocal)
+            strMyName = EncodeAddress(*paddrLocal);
         else
             strMyName = strprintf("x%u", GetRand(1000000000));
 
@@ -331,19 +342,23 @@ void ThreadIRCSeed2(void* parg)
 
         // Get our external IP from the IRC server and re-nick before joining the channel
         CAddress addrFromIRC;
-        if (GetIPFromIRC(hSocket, strMyName, addrFromIRC.ip))
+        if (GetIPFromIRC(hSocket, strMyName, addrFromIRC))
         {
             printf("GetIPFromIRC() returned %s\n", addrFromIRC.ToStringIP().c_str());
             if (!fUseProxy && addrFromIRC.IsRoutable())
             {
                 // IRC lets you to re-nick
                 fGotExternalIP = true;
-                addrLocalHost.ip = addrFromIRC.ip;
-                strMyName = EncodeAddress(addrLocalHost);
-                Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
+                AddLocalAddress(addrFromIRC);
+                const CAddress *paddrLocal = GetLocalAddress(addrIRCDummy);
+                if (paddrLocal)
+                {
+                    strMyName = EncodeAddress(*paddrLocal);
+                    Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
+                }
             }
         }
-        
+
         if (fTestNet) {
             Send(hSocket, "JOIN #bitcoinTEST\r");
             Send(hSocket, "WHO #bitcoinTEST\r");

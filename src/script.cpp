@@ -1142,7 +1142,6 @@ bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* ke
     return false;
 }
 
-
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
     if (keystore)

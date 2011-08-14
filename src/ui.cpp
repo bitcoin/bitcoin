@@ -1936,12 +1936,12 @@ CAddress COptionsDialog::GetProxyAddr()
 {
     // Be careful about byte order, addr.ip and addr.port are big endian
     CAddress addr(m_textCtrlProxyIP->GetValue() + ":" + m_textCtrlProxyPort->GetValue());
-    if (addr.ip == INADDR_NONE)
-        addr.ip = addrProxy.ip;
+    if (!addr.IsValid())
+        addr = addrProxy;
     int nPort = atoi(m_textCtrlProxyPort->GetValue());
-    addr.port = htons(nPort);
+    addr.SetPort(nPort);
     if (nPort <= 0 || nPort > USHRT_MAX)
-        addr.port = addrProxy.port;
+        addr.SetPort(addrProxy.GetPort());
     return addr;
 }
 

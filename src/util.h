@@ -208,7 +208,7 @@ int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
 int64 GetAdjustedTime();
-void AddTimeData(unsigned int ip, int64 nTime);
+void AddTimeData(const std::vector<unsigned char> &vchIp, int64 nTime);
 std::string FormatFullVersion();
 
 
