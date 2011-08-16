@@ -34,7 +34,7 @@ This has been implemented:
 
 - Multiple unit support, can show subdivided bitcoins (uBTC, mBTC) for users that like large numbers
 
-- Support for English, German and Dutch languages
+- Support for English, German, Russian and Dutch languages
 
 - Address books and transaction table can be sorted by any column
 
