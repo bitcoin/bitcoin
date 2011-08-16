@@ -30,7 +30,7 @@ map<COutPoint, CInPoint> mapNextTx;
 map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
-const int nTotalBlocksEstimate = 134444; // Conservative estimate of total nr of blocks on main chain
+const int nTotalBlocksEstimate = 140700; // Conservative estimate of total nr of blocks on main chain
 const int nInitialBlockThreshold = 120; // Regard blocks up until N-threshold as "initial download"
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -295,9 +295,10 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 bool CTransaction::CheckTransaction() const
 {
     // Basic checks that don't depend on any context
-    if (vin.empty() || vout.empty())
-        return error("CTransaction::CheckTransaction() : vin or vout empty");
-
+    if (vin.empty())
+        return error("CTransaction::CheckTransaction() : vin empty");
+    if (vout.empty())
+        return error("CTransaction::CheckTransaction() : vout empty");
     // Size limits
     if (::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
         return error("CTransaction::CheckTransaction() : size limits failed");
@@ -1301,7 +1302,8 @@ bool CBlock::AcceptBlock()
             (nHeight ==  74000 && hash != uint256("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")) ||
             (nHeight == 105000 && hash != uint256("0x00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97")) ||
             (nHeight == 118000 && hash != uint256("0x000000000000774a7f8a7a12dc906ddb9e17e75d684f15e00f8767f9e8f36553")) ||
-            (nHeight == 134444 && hash != uint256("0x00000000000005b12ffd4cd315cd34ffd4a594f430ac814c91184a0d42d2b0fe")))
+            (nHeight == 134444 && hash != uint256("0x00000000000005b12ffd4cd315cd34ffd4a594f430ac814c91184a0d42d2b0fe")) ||
+            (nHeight == 140700 && hash != uint256("0x000000000000033b512028abb90e1626d8b346fd0ed598ac0a3c371138dce2bd")))
             return error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight);
 
     // Write block to history file
@@ -1318,7 +1320,7 @@ bool CBlock::AcceptBlock()
     if (hashBestChain == hash)
         CRITICAL_BLOCK(cs_vNodes)
             BOOST_FOREACH(CNode* pnode, vNodes)
-                if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 134444))
+                if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 140700))
                     pnode->PushInventory(CInv(MSG_BLOCK, hash));
 
     return true;
@@ -2664,7 +2666,7 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
     }
 }
 
-
+// Some explaining would be appreciated
 class COrphan
 {
 public:
