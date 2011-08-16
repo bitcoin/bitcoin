@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     translator.load("bitcoin_"+locale);
     app.installTranslator(&translator);
 
-    QSplashScreen splash(QPixmap(":/images/splash"), Qt::WindowStaysOnTopHint);
+    QSplashScreen splash(QPixmap(":/images/splash"), 0);
     splash.show();
     splash.setAutoFillBackground(true);
     splashref = &splash;
