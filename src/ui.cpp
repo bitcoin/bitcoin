@@ -1805,7 +1805,11 @@ void SetStartOnSystemStartup(bool fAutoStart)
 {
     if (!fAutoStart)
     {
+#if defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3
+        unlink(GetAutostartFilePath().string().c_str());
+#else
         unlink(GetAutostartFilePath().native_file_string().c_str());
+#endif
     }
     else
     {
