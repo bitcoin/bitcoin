@@ -907,4 +907,122 @@ string FormatFullVersion()
 
 
 
+#ifdef DEBUG_LOCKORDER
+//
+// Early deadlock detection.
+// Problem being solved:
+//    Thread 1 locks  A, then B, then C
+//    Thread 2 locks  D, then C, then A
+//     --> may result in deadlock between the two threads, depending on when they run.
+// Solution implemented here:
+// Keep track of pairs of locks: (A before B), (A before C), etc.
+// Complain if any thread trys to lock in a different order.
+//
 
+struct CLockLocation
+{
+    std::string mutexName;
+    std::string sourceFile;
+    int sourceLine;
+
+    CLockLocation(const char* pszName, const char* pszFile, int nLine)
+    {
+        mutexName = pszName;
+        sourceFile = pszFile;
+        sourceLine = nLine;
+    }
+};
+
+typedef std::vector< std::pair<CCriticalSection*, CLockLocation> > LockStack;
+
+static boost::interprocess::interprocess_mutex dd_mutex;
+static std::map<std::pair<CCriticalSection*, CCriticalSection*>, LockStack> lockorders;
+static boost::thread_specific_ptr<LockStack> lockstack;
+
+
+static void potential_deadlock_detected(const LockStack& s1, const LockStack& s2)
+{
+    printf("POTENTIAL DEADLOCK DETECTED\n");
+    printf("Previous lock order was:\n");
+    BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s2)
+    {
+        printf(" %s  %s:%d\n", i.second.mutexName.c_str(), i.second.sourceFile.c_str(), i.second.sourceLine);
+    }
+    printf("Current lock order is:\n");
+    BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s1)
+    {
+        printf(" %s  %s:%d\n", i.second.mutexName.c_str(), i.second.sourceFile.c_str(), i.second.sourceLine);
+    }
+}
+
+static void push_lock(CCriticalSection* c, const CLockLocation& locklocation)
+{
+    bool fOrderOK = true;
+    if (lockstack.get() == NULL)
+        lockstack.reset(new LockStack);
+
+    dd_mutex.lock();
+
+    (*lockstack).push_back(std::make_pair(c, locklocation));
+
+    BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, (*lockstack))
+    {
+        if (i.first == c) break;
+
+        std::pair<CCriticalSection*, CCriticalSection*> p1 = std::make_pair(i.first, c);
+        if (lockorders.count(p1))
+            continue;
+        lockorders[p1] = (*lockstack);
+
+        std::pair<CCriticalSection*, CCriticalSection*> p2 = std::make_pair(c, i.first);
+        if (lockorders.count(p2))
+        {
+            potential_deadlock_detected(lockorders[p2], lockorders[p1]);
+            break;
+        }
+    }
+    dd_mutex.unlock();
+}
+
+static void pop_lock()
+{
+    (*lockstack).pop_back();
+}
+
+void CCriticalSection::Enter(const char* pszName, const char* pszFile, int nLine)
+{
+    push_lock(this, CLockLocation(pszName, pszFile, nLine));
+    mutex.lock();
+}
+void CCriticalSection::Leave()
+{
+    mutex.unlock();
+    pop_lock();
+}
+bool CCriticalSection::TryEnter(const char* pszName, const char* pszFile, int nLine)
+{
+    push_lock(this, CLockLocation(pszName, pszFile, nLine));
+    bool result = mutex.try_lock();
+    if (!result) pop_lock();
+    return result;
+}
+
+#else
+
+void CCriticalSection::Enter(const char*, const char*, int)
+{
+    mutex.lock();
+}
+
+void CCriticalSection::Leave()
+{
+    mutex.unlock();
+}
+
+bool CCriticalSection::TryEnter(const char*, const char*, int)
+{
+    bool result = mutex.try_lock();
+    return result;
+}
+
+#endif /* DEBUG_LOCKORDER */
