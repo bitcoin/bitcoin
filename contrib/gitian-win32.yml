@@ -9,6 +9,7 @@ packages:
 - "git-core"
 - "unzip"
 - "nsis"
+- "faketime"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
@@ -76,7 +77,10 @@ script: |
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
   cp $OUTDIR/src/COPYING $OUTDIR/license.txt
   cd src
-  sed 's/$(DEBUGFLAGS)//' -i makefile.linux-mingw
+  sed 's/$(DEBUGFLAGS)/-frandom-seed=bitcoin/' -i makefile.linux-mingw
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
   make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoin.exe USE_UPNP=1
   make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoind.exe USE_UPNP=0
   i586-mingw32msvc-strip bitcoin.exe
