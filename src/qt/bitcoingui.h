@@ -57,6 +57,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
 
+    QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
@@ -85,6 +86,8 @@ private:
 public slots:
     void setNumConnections(int count);
     void setNumBlocks(int count);
+    void setEncryptionStatus(int status);
+
     void error(const QString &title, const QString &message);
     /* It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so use an indirected pointer.

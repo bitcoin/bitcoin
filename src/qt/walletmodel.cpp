@@ -12,7 +12,8 @@
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
     transactionTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0)
+    cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0),
+    cachedEncryptionStatus(Unencrypted)
 {
     // Until signal notifications is built into the bitcoin core,
     //  simply update everything after polling using a timer.
@@ -49,12 +50,16 @@ void WalletModel::update()
     qint64 newBalance = getBalance();
     qint64 newUnconfirmedBalance = getUnconfirmedBalance();
     int newNumTransactions = getNumTransactions();
+    EncryptionStatus newEncryptionStatus = getEncryptionStatus();
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance)
         emit balanceChanged(newBalance, newUnconfirmedBalance);
 
     if(cachedNumTransactions != newNumTransactions)
         emit numTransactionsChanged(newNumTransactions);
+
+    if(cachedEncryptionStatus != newEncryptionStatus)
+        emit encryptionStatusChanged(newEncryptionStatus);
 
     cachedBalance = newBalance;
     cachedUnconfirmedBalance = newUnconfirmedBalance;
@@ -179,4 +184,18 @@ TransactionTableModel *WalletModel::getTransactionTableModel()
     return transactionTableModel;
 }
 
-
+WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
+{
+    if(!wallet->IsCrypted())
+    {
+        return Unencrypted;
+    }
+    else if(wallet->IsLocked())
+    {
+        return Locked;
+    }
+    else
+    {
+        return Unlocked;
+    }
+}

@@ -36,6 +36,13 @@ public:
         MiscError
     };
 
+    enum EncryptionStatus
+    {
+        Unencrypted,  // !wallet->IsCrypted()
+        Locked,       // wallet->IsCrypted() && wallet->IsLocked()
+        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+    };
+
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
@@ -43,6 +50,9 @@ public:
     qint64 getBalance() const;
     qint64 getUnconfirmedBalance() const;
     int getNumTransactions() const;
+    EncryptionStatus getEncryptionStatus() const;
+
+    bool isEncrypted() const;
 
     // Check address for validity
     bool validateAddress(const QString &address);
@@ -74,10 +84,12 @@ private:
     qint64 cachedBalance;
     qint64 cachedUnconfirmedBalance;
     qint64 cachedNumTransactions;
+    EncryptionStatus cachedEncryptionStatus;
 
 signals:
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance);
     void numTransactionsChanged(int count);
+    void encryptionStatusChanged(int status);
 
     // Asynchronous error notification
     void error(const QString &title, const QString &message);

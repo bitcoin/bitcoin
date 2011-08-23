@@ -15,7 +15,7 @@ Designer: FatCow Web Hosting
 License: Creative Commons Attribution (by)
 Site: http://findicons.com/icon/163938/book_open
 
-Icon: src/qt/res/icons/connect*.png, src/qt/res/icons/synced.png
+Icon: src/qt/res/icons/connect*.png, src/qt/res/icons/synced.png, src/qt/res/icons/lock_*.png
 Icon Pack: Human-O2
 Designer: schollidesign
 License: GNU/GPL

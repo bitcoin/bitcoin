@@ -18,6 +18,7 @@
 #include "transactionview.h"
 #include "overviewpage.h"
 #include "bitcoinunits.h"
+#include "guiconstants.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -118,8 +119,11 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
+    labelEncryptionIcon = new QLabel();
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
+    frameBlocksLayout->addStretch();
+    frameBlocksLayout->addWidget(labelEncryptionIcon);
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelConnectionsIcon);
     frameBlocksLayout->addStretch();
@@ -244,6 +248,9 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
     receiveCoinsPage->setModel(walletModel->getAddressTableModel());
     sendCoinsPage->setModel(walletModel);
 
+    setEncryptionStatus(walletModel->getEncryptionStatus());
+    connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
+
     // Balloon popup for new transaction
     connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
             this, SLOT(incomingTransaction(QModelIndex,int,int)));
@@ -300,7 +307,7 @@ void BitcoinGUI::setNumConnections(int count)
     case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
     default: icon = ":/icons/connect_4"; break;
     }
-    labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(16,16));
+    labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
     labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
 }
 
@@ -351,7 +358,7 @@ void BitcoinGUI::setNumBlocks(int count)
     if(secs < 30*60)
     {
         tooltip = tr("Up to date") + QString("\n") + tooltip;
-        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(16,16));
+        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
     }
     else
     {
@@ -531,3 +538,22 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
     event->acceptProposedAction();
 }
 
+void BitcoinGUI::setEncryptionStatus(int status)
+{
+    switch(status)
+    {
+    case WalletModel::Unencrypted:
+        labelEncryptionIcon->hide();
+        break;
+    case WalletModel::Unlocked:
+        labelEncryptionIcon->show();
+        labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
+        break;
+    case WalletModel::Locked:
+        labelEncryptionIcon->show();
+        labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
+        break;
+    }
+}
