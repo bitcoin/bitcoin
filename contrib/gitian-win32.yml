@@ -14,18 +14,38 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "wxWidgets-2.9.2.tar.bz2"
-- "boost_1_47_0.tar.bz2"
+- "wxwidgets-win32-2.9.2-gitian.zip"
+- "boost-win32-1.47.0-gitian.zip"
 - "openssl-1.0.0d.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
 script: |
   #
-  tar xjf wxWidgets-2.9.2.tar.bz2
+  mkdir wxWidgets-2.9.2
   cd wxWidgets-2.9.2
-  ./configure --host=i586-mingw32msvc --build=i686-linux --disable-shared --enable-monolithic --without-libpng --disable-svg
-  perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
-  make $MAKEOPTS
+  mkdir lib
+  unzip ../wxwidgets-win32-2.9.2-gitian.zip
+  cd bin/$GBUILD_BITS
+  for lib in wx_mswu; do
+    i586-mingw32msvc-ar rc ../../lib/lib${lib}-2.9-i586-mingw32msvc.a $lib/*.o
+    i586-mingw32msvc-ranlib ../../lib/lib${lib}-2.9-i586-mingw32msvc.a
+  done
+  cp -a wx ../../lib
+  cd ../..
+  mv include/wx-2.9/wx include
+  cd ..
+  #
+  mkdir boost_1_47_0
+  cd boost_1_47_0
+  mkdir -p stage/lib
+  unzip ../boost-win32-1.47.0-gitian.zip
+  cd bin/$GBUILD_BITS
+  for lib in *; do
+    i586-mingw32msvc-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
+    i586-mingw32msvc-ranlib ../../stage/lib/libboost_${lib}-mt-s.a
+  done
+  cd ../..
+  mv include/boost .
   cd ..
   #
   tar xzf openssl-1.0.0d.tar.gz
@@ -39,17 +59,6 @@ script: |
   ../dist/configure --enable-mingw --enable-cxx --host=i586-mingw32msvc CFLAGS="-I/usr/i586-mingw32msvc/include"
   make $MAKEOPTS
   cd ../..
-  #
-  tar xjf boost_1_47_0.tar.bz2
-  cd boost_1_47_0
-  echo "using gcc : 4.4 : i586-mingw32msvc-g++
-        :
-        <rc>i586-mingw32msvc-windres
-        <archiver>i586-mingw32msvc-ar
-  ;" > user-config.jam
-  ./bootstrap.sh --without-icu
-  ./bjam toolset=gcc target-os=windows threadapi=win32 threading=multi --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 -sNO_ZLIB=1 --layout=tagged --build-type=complete $MAKEOPTS stage
-  cd ..
   #
   tar xzf miniupnpc-1.6.tar.gz
   cd miniupnpc-1.6
