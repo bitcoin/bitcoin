@@ -90,7 +90,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/sendcoinsentry.h \
     src/qt/qvalidatedlineedit.h \
     src/qt/bitcoinunits.h \
-    src/qt/qvaluecombobox.h
+    src/qt/qvaluecombobox.h \
+    src/qt/askpassphrasedialog.h
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -134,7 +135,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/sendcoinsentry.cpp \
     src/qt/qvalidatedlineedit.cpp \
     src/qt/bitcoinunits.cpp \
-    src/qt/qvaluecombobox.cpp
+    src/qt/qvaluecombobox.cpp \
+    src/qt/askpassphrasedialog.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -146,7 +148,8 @@ FORMS += \
     src/qt/forms/editaddressdialog.ui \
     src/qt/forms/transactiondescdialog.ui \
     src/qt/forms/overviewpage.ui \
-    src/qt/forms/sendcoinsentry.ui
+    src/qt/forms/sendcoinsentry.ui \
+    src/qt/forms/askpassphrasedialog.ui
 
 CODECFORTR = UTF-8
 # for lrelease/lupdate

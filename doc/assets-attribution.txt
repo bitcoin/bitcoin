@@ -64,5 +64,10 @@ Designer: Crobbo (forum)
 Site: https://bitcointalk.org/index.php?topic=32273.0
 License: Public domain
 
+Icon: src/qt/res/icons/key.png
+Designer: VisualPharm (Ivan Boyko)
+Icon Pack: Must Have
+Site: http://findicons.com/icon/51009/key?id=51009
+License: Creative Commons Attribution (by)
 
 

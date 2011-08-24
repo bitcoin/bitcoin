@@ -4,6 +4,9 @@
 /* Milliseconds between model updates */
 static const int MODEL_UPDATE_DELAY = 500;
 
+/* Maximum  passphrase length */
+static const int MAX_PASSPHRASE_SIZE = 1024;
+
 /* Size of icons in status bar */
 static const int STATUSBAR_ICONSIZE = 16;
 

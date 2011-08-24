@@ -26,9 +26,10 @@ public:
 
     // Return status of last edit/insert operation
     enum EditStatus {
-        OK = 0,
-        INVALID_ADDRESS = 1,
-        DUPLICATE_ADDRESS = 2
+        OK,
+        INVALID_ADDRESS,
+        DUPLICATE_ADDRESS,
+        WALLET_UNLOCK_FAILURE
     };
 
     static const QString Send; /* Send addres */

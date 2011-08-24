@@ -6,6 +6,7 @@
 #include "optionsmodel.h"
 #include "sendcoinsentry.h"
 #include "guiutil.h"
+#include "askpassphrasedialog.h"
 
 #include <QMessageBox>
 #include <QLocale>
@@ -84,6 +85,13 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
+    WalletModel::UnlockContext ctx(model->requestUnlock());
+    if(!ctx.isValid())
+    {
+        // Unlock wallet was cancelled
+        return;
+    }
+
     WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients);
     switch(sendstatus.status)
     {
@@ -117,7 +125,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         QMessageBox::warning(this, tr("Send Coins"),
             tr("Error: Transaction creation failed  "),
             QMessageBox::Ok, QMessageBox::Ok);
-        break;
         break;
     case WalletModel::TransactionCommitFailed:
         QMessageBox::warning(this, tr("Send Coins"),

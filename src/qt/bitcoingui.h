@@ -73,6 +73,8 @@ private:
     QAction *optionsAction;
     QAction *openBitcoinAction;
     QAction *exportAction;
+    QAction *encryptWalletAction;
+    QAction *changePassphraseAction;
 
     QSystemTrayIcon *trayIcon;
     TransactionView *transactionView;
@@ -108,6 +110,9 @@ private slots:
     void aboutClicked();
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void incomingTransaction(const QModelIndex & parent, int start, int end);
+    void encryptWallet(bool status);
+    void changePassphrase();
+    void unlockWallet();
 };
 
 #endif

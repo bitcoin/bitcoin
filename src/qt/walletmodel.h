@@ -2,6 +2,7 @@
 #define WALLETMODEL_H
 
 #include <QObject>
+#include <string>
 
 class OptionsModel;
 class AddressTableModel;
@@ -52,8 +53,6 @@ public:
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
 
-    bool isEncrypted() const;
-
     // Check address for validity
     bool validateAddress(const QString &address);
 
@@ -71,6 +70,38 @@ public:
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients);
+
+    // Wallet encryption
+    bool setWalletEncrypted(bool encrypted, const std::string &passphrase);
+    // Passphrase only needed when unlocking
+    bool setWalletLocked(bool locked, const std::string &passPhrase=std::string());
+    bool changePassphrase(const std::string &oldPass, const std::string &newPass);
+
+    // RAI object for unlocking wallet, returned by requestUnlock()
+    class UnlockContext
+    {
+    public:
+        UnlockContext(WalletModel *wallet, bool valid, bool relock);
+        ~UnlockContext();
+
+        bool isValid() const { return valid; }
+
+        UnlockContext(const UnlockContext& obj)
+        { CopyFrom(obj); }
+    private:
+        UnlockContext& operator=(const UnlockContext& rhs)
+        { CopyFrom(rhs); return *this; }
+
+    private:
+        WalletModel *wallet;
+        bool valid;
+        mutable bool relock; // mutable, as it can be set to false by copying
+
+        void CopyFrom(const UnlockContext& rhs);
+    };
+
+    UnlockContext requestUnlock();
+
 private:
     CWallet *wallet;
 
@@ -90,6 +121,7 @@ signals:
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance);
     void numTransactionsChanged(int count);
     void encryptionStatusChanged(int status);
+    void requireUnlock();
 
     // Asynchronous error notification
     void error(const QString &title, const QString &message);

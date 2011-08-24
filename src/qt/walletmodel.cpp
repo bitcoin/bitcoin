@@ -199,3 +199,79 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
         return Unlocked;
     }
 }
+
+bool WalletModel::setWalletEncrypted(bool encrypted, const std::string &passphrase)
+{
+    if(encrypted)
+    {
+        // Encrypt
+        return wallet->EncryptWallet(passphrase);
+    }
+    else
+    {
+        // Decrypt -- TODO; not supported yet
+        return false;
+    }
+}
+
+bool WalletModel::setWalletLocked(bool locked, const std::string &passPhrase)
+{
+    if(locked)
+    {
+        // Lock
+        return wallet->Lock();
+    }
+    else
+    {
+        // Unlock
+        return wallet->Unlock(passPhrase);
+    }
+}
+
+bool WalletModel::changePassphrase(const std::string &oldPass, const std::string &newPass)
+{
+    bool retval;
+    CRITICAL_BLOCK(wallet->cs_vMasterKey)
+    {
+        wallet->Lock(); // Make sure wallet is locked before attempting pass change
+        retval = wallet->ChangeWalletPassphrase(oldPass, newPass);
+    }
+    return retval;
+}
+
+// WalletModel::UnlockContext implementation
+WalletModel::UnlockContext WalletModel::requestUnlock()
+{
+    bool was_locked = getEncryptionStatus() == Locked;
+    if(was_locked)
+    {
+        // Request UI to unlock wallet
+        emit requireUnlock();
+    }
+    // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
+    bool valid = getEncryptionStatus() != Locked;
+
+    return UnlockContext(this, valid, was_locked);
+}
+
+WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool relock):
+        wallet(wallet),
+        valid(valid),
+        relock(relock)
+{
+}
+
+WalletModel::UnlockContext::~UnlockContext()
+{
+    if(valid && relock)
+    {
+        wallet->setWalletLocked(true);
+    }
+}
+
+void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
+{
+    // Transfer context; old object no longer relocks wallet
+    *this = rhs;
+    rhs.relock = false;
+}

@@ -92,6 +92,11 @@ void EditAddressDialog::accept()
                 tr("The entered address \"%1\" is not a valid bitcoin address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
+        case AddressTableModel::WALLET_UNLOCK_FAILURE:
+            QMessageBox::critical(this, windowTitle(),
+                tr("Could not unlock wallet."),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
         }
 
         return;
