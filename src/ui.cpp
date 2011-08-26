@@ -862,7 +862,7 @@ void CMainFrame::OnIdle(wxIdleEvent& event)
         // Collect list of wallet transactions and sort newest first
         bool fEntered = false;
         vector<pair<unsigned int, uint256> > vSorted;
-        TRY_CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+        TRY_CRITICAL_BLOCK(pwalletMain->cs_wallet)
         {
             printf("RefreshListCtrl starting\n");
             fEntered = true;
@@ -890,7 +890,7 @@ void CMainFrame::OnIdle(wxIdleEvent& event)
             if (fShutdown)
                 return;
             bool fEntered = false;
-            TRY_CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+            TRY_CRITICAL_BLOCK(pwalletMain->cs_wallet)
             {
                 fEntered = true;
                 uint256& hash = vSorted[i++].second;
@@ -913,7 +913,7 @@ void CMainFrame::OnIdle(wxIdleEvent& event)
         static int64 nLastTime;
         if (GetTime() > nLastTime + 30)
         {
-            TRY_CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+            TRY_CRITICAL_BLOCK(pwalletMain->cs_wallet)
             {
                 nLastTime = GetTime();
                 for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
@@ -937,7 +937,7 @@ void CMainFrame::RefreshStatusColumn()
     if (nTop == nLastTop && pindexLastBest == pindexBest)
         return;
 
-    TRY_CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+    TRY_CRITICAL_BLOCK(pwalletMain->cs_wallet)
     {
         int nStart = nTop;
         int nEnd = min(nStart + 100, m_listCtrl->GetItemCount());
@@ -1057,7 +1057,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
         // Update listctrl contents
         if (!pwalletMain->vWalletUpdated.empty())
         {
-            TRY_CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+            TRY_CRITICAL_BLOCK(pwalletMain->cs_wallet)
             {
                 string strTop;
                 if (m_listCtrl->GetItemCount())
@@ -1075,7 +1075,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
         }
 
         // Balance total
-        TRY_CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+        TRY_CRITICAL_BLOCK(pwalletMain->cs_wallet)
         {
             fPaintedBalance = true;
             m_staticTextBalance->SetLabel(FormatMoney(pwalletMain->GetBalance()) + "  ");
@@ -1420,7 +1420,7 @@ void CMainFrame::OnListItemActivated(wxListEvent& event)
 {
     uint256 hash((string)GetItemText(m_listCtrl, event.GetIndex(), 1));
     CWalletTx wtx;
-    CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+    CRITICAL_BLOCK(pwalletMain->cs_wallet)
     {
         map<uint256, CWalletTx>::iterator mi = pwalletMain->mapWallet.find(hash);
         if (mi == pwalletMain->mapWallet.end())
@@ -1662,7 +1662,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
             strHTML += HtmlEscape(wtx.ToString(), true);
 
             strHTML += "<br><b>Inputs:</b><br>";
-            CRITICAL_BLOCK(pwalletMain->cs_mapWallet)
+            CRITICAL_BLOCK(pwalletMain->cs_wallet)
             {
                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 {
@@ -2621,7 +2621,6 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
     m_listCtrlReceiving->SetFocus();
 
     // Fill listctrl with address book data
-    CRITICAL_BLOCK(pwalletMain->cs_KeyStore)
     CRITICAL_BLOCK(pwalletMain->cs_mapAddressBook)
     {
         string strDefaultReceiving = (string)pframeMain->m_textCtrlAddress->GetValue();
