@@ -44,7 +44,7 @@ def parse_po(text):
 
     return messages
 
-files = ['src/base58.h', 'src/bignum.h', 'src/db.cpp', 'src/db.h', 'src/externui.h', 'src/headers.h', 'src/init.cpp', 'src/init.h', 'src/irc.cpp', 'src/irc.h', 'src/key.h', 'src/main.cpp', 'src/main.h', 'src/net.cpp', 'src/net.h', 'src/noui.h', 'src/rpc.cpp', 'src/rpc.h', 'src/script.cpp', 'src/script.h', 'src/serialize.h', 'src/strlcpy.h', 'src/uint256.h', 'src/util.cpp', 'src/util.h']
+files = ['src/base58.h', 'src/bignum.h', 'src/db.cpp', 'src/db.h', 'src/headers.h', 'src/init.cpp', 'src/init.h', 'src/irc.cpp', 'src/irc.h', 'src/key.h', 'src/main.cpp', 'src/main.h', 'src/net.cpp', 'src/net.h', 'src/noui.h', 'src/script.cpp', 'src/script.h', 'src/serialize.h', 'src/strlcpy.h', 'src/uint256.h', 'src/util.cpp', 'src/util.h']
 
 # xgettext -n --keyword=_ $FILES
 child = Popen(['xgettext','--output=-','-n','--keyword=_'] + files, stdout=PIPE)

@@ -152,4 +152,3 @@ CODECFORTR = UTF-8
 # for lrelease/lupdate
 TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts \
                src/qt/locale/bitcoin_ru.ts
-

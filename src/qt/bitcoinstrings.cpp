@@ -44,43 +44,174 @@ QT_TRANSLATE_NOOP("bitcoin-core", "This help message\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s.  Bitcoin is probably already "
 "running."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Loading addresses..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading addr.dat      \n"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Loading block index..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading blkindex.dat      \n"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Loading wallet..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet corrupted      \n"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat      \n"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Rescanning..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -proxy address"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -paytxfee=<amount>"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: -paytxfee is set very high.  This is the transaction fee you will "
 "pay if you send a transaction."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: CreateThread(StartNode) failed"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning: Disk space is low  "),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: This transaction requires a transaction fee of at least %s because of "
-"its amount, complexity, or use of recently received funds  "),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed  "),
-QT_TRANSLATE_NOOP("bitcoin-core", "Sending..."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: The transaction was rejected.  This might happen if some of the coins "
-"in your wallet were already spent, such as if you used a copy of wallet.dat "
-"and coins were spent in the copy but not marked as spent here."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Invalid bitcoin address"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Unable to bind to port %d on this computer.  Bitcoin is probably already "
 "running."),
-QT_TRANSLATE_NOOP("bitcoin-core", "To use the %s option"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Warning: %s, you must set rpcpassword=<password>\n"
-"in the configuration file: %s\n"
-"If the file does not exist, create it with owner-readable-only file "
-"permissions.\n"),
+"This transaction is over the size limit.  You can still send it for a fee of "
+"%s, which goes to the nodes that process your transaction and helps to "
+"support the network.  Do you want to pay the fee?"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Enter the current passphrase to the wallet."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Passphrase"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Please supply the current wallet decryption passphrase."),
+QT_TRANSLATE_NOOP("bitcoin-core", "The passphrase entered for the wallet decryption was incorrect."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Status"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Date"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Description"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Debit"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Credit"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Open for %d blocks"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Open until %s"),
+QT_TRANSLATE_NOOP("bitcoin-core", "%d/offline?"),
+QT_TRANSLATE_NOOP("bitcoin-core", "%d/unconfirmed"),
+QT_TRANSLATE_NOOP("bitcoin-core", "%d confirmations"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Generated"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Generated (%s matures in %d more blocks)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"You must set rpcpassword=<password> in the configuration file:\n"
-"%s\n"
-"If the file does not exist, create it with owner-readable-only file "
-"permissions."),
+"Generated - Warning: This block was not received by any other nodes and will "
+"probably not be accepted!"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Generated (not accepted)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "From: "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Received with: "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Payment to yourself"),
+QT_TRANSLATE_NOOP("bitcoin-core", "To: "),
+QT_TRANSLATE_NOOP("bitcoin-core", "    Generating"),
+QT_TRANSLATE_NOOP("bitcoin-core", "(not connected)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "     %d connections     %d blocks     %d transactions"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Wallet already encrypted."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Enter the new passphrase to the wallet.\n"
+"Please use a passphrase of 10 or more random characters, or eight or more "
+"words."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: The supplied passphrase was too short."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE "
+"ALL OF YOUR BITCOINS!\n"
+"Are you sure you wish to encrypt your wallet?"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Please re-enter your new wallet passphrase."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: the supplied passphrases didn't match."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Wallet encryption failed."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Wallet Encrypted.\n"
+"Remember that encrypting your wallet cannot fully protect your bitcoins from "
+"being stolen by malware infecting your computer."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Wallet is unencrypted, please encrypt it first."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Enter the new passphrase for the wallet."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Re-enter the new passphrase for the wallet."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Wallet Passphrase Changed."),
+QT_TRANSLATE_NOOP("bitcoin-core", "New Receiving Address"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"You should use a new address for each payment you receive.\n"
+"\n"
+"Label"),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>Status:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", ", has not been successfully broadcast yet"),
+QT_TRANSLATE_NOOP("bitcoin-core", ", broadcast through %d node"),
+QT_TRANSLATE_NOOP("bitcoin-core", ", broadcast through %d nodes"),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>Date:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>Source:</b> Generated<br>"),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>From:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", "unknown"),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>To:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", " (yours, label: "),
+QT_TRANSLATE_NOOP("bitcoin-core", " (yours)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>Credit:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", "(%s matures in %d more blocks)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "(not accepted)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>Debit:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>Transaction fee:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", "<b>Net amount:</b> "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Message:"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Comment:"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Generated coins must wait 120 blocks before they can be spent.  When you "
+"generated this block, it was broadcast to the network to be added to the "
+"block chain.  If it fails to get into the chain, it will change to \"not "
+"accepted\" and not be spendable.  This may occasionally happen if another "
+"node generates a block within a few seconds of yours."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Cannot write autostart/bitcoin.desktop file"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Main"),
+QT_TRANSLATE_NOOP("bitcoin-core", "&Start Bitcoin on window system startup"),
+QT_TRANSLATE_NOOP("bitcoin-core", "&Minimize on close"),
+QT_TRANSLATE_NOOP("bitcoin-core", "version %s"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error in amount  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Send Coins"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Amount exceeds your balance  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Total exceeds your balance when the "),
+QT_TRANSLATE_NOOP("bitcoin-core", " transaction fee is included  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Payment sent  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Sending..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Invalid address  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Sending %s to %s"),
+QT_TRANSLATE_NOOP("bitcoin-core", "CANCELLED"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Cancelled"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Transfer cancelled  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Connecting..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Unable to connect"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Requesting public key..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Received public key..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Recipient is not accepting transactions sent by IP address"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Transfer was not accepted"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Invalid response received"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Creating transaction..."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"This transaction requires a transaction fee of at least %s because of its "
+"amount, complexity, or use of recently received funds"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Transaction creation failed"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Transaction aborted"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Lost connection, transaction cancelled"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Sending payment..."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"The transaction was rejected.  This might happen if some of the coins in "
+"your wallet were already spent, such as if you used a copy of wallet.dat and "
+"coins were spent in the copy but not marked as spent here."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Waiting for confirmation..."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"The payment was sent, but the recipient was unable to verify it.\n"
+"The transaction is recorded and will credit to the recipient,\n"
+"but the comment information will be blank."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Payment was sent, but an invalid response was received"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Payment completed"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Name"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Address"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Label"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin Address"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"This is one of your own addresses for receiving payments and cannot be "
+"entered in the address book.  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Edit Address"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Edit Address Label"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Add Address"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin - Generating"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin - (not connected)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "&Open Bitcoin"),
+QT_TRANSLATE_NOOP("bitcoin-core", "&Send Bitcoins"),
+QT_TRANSLATE_NOOP("bitcoin-core", "O&ptions..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "E&xit"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Program has crashed and will terminate.  "),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Please check that your computer's date and time are correct.  If "
 "your clock is wrong Bitcoin will not work properly."),
-QT_TRANSLATE_NOOP("bitcoin-core", "-beta"),
+QT_TRANSLATE_NOOP("bitcoin-core", "beta"),
 };

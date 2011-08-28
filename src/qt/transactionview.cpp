@@ -71,13 +71,13 @@ TransactionView::TransactionView(QWidget *parent) :
 
     addressWidget = new QLineEdit(this);
 #if QT_VERSION >= 0x040700
-    addressWidget->setPlaceholderText("Enter address or label to search");
+    addressWidget->setPlaceholderText(tr("Enter address or label to search"));
 #endif
     hlayout->addWidget(addressWidget);
 
     amountWidget = new QLineEdit(this);
 #if QT_VERSION >= 0x040700
-    amountWidget->setPlaceholderText("Min amount");
+    amountWidget->setPlaceholderText(tr("Min amount"));
 #endif
     amountWidget->setMaximumWidth(100);
     amountWidget->setMinimumWidth(100);
@@ -105,10 +105,10 @@ TransactionView::TransactionView(QWidget *parent) :
     transactionView = view;
 
     // Actions
-    QAction *copyAddressAction = new QAction("Copy address", this);
-    QAction *copyLabelAction = new QAction("Copy label", this);
-    QAction *editLabelAction = new QAction("Edit label", this);
-    QAction *showDetailsAction = new QAction("Show details...", this);
+    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
+    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
+    QAction *editLabelAction = new QAction(tr("Edit label"), this);
+    QAction *showDetailsAction = new QAction(tr("Show details..."), this);
 
     contextMenu = new QMenu();
     contextMenu->addAction(copyAddressAction);
@@ -251,13 +251,13 @@ void TransactionView::exportClicked()
 
     // name, column, role
     writer.setModel(transactionProxyModel);
-    writer.addColumn("Confirmed", 0, TransactionTableModel::ConfirmedRole);
-    writer.addColumn("Date", 0, TransactionTableModel::DateRole);
-    writer.addColumn("Type", TransactionTableModel::Type, Qt::EditRole);
-    writer.addColumn("Label", 0, TransactionTableModel::LabelRole);
-    writer.addColumn("Address", 0, TransactionTableModel::AddressRole);
-    writer.addColumn("Amount", 0, TransactionTableModel::FormattedAmountRole);
-    writer.addColumn("ID", 0, TransactionTableModel::TxIDRole);
+    writer.addColumn(tr("Confirmed"), 0, TransactionTableModel::ConfirmedRole);
+    writer.addColumn(tr("Date"), 0, TransactionTableModel::DateRole);
+    writer.addColumn(tr("Type"), TransactionTableModel::Type, Qt::EditRole);
+    writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
+    writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
+    writer.addColumn(tr("Amount"), 0, TransactionTableModel::FormattedAmountRole);
+    writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
 
     if(!writer.write())
     {
@@ -349,7 +349,7 @@ QWidget *TransactionView::createDateRangeWidget()
     QHBoxLayout *layout = new QHBoxLayout(dateRangeWidget);
     layout->setContentsMargins(0,0,0,0);
     layout->addSpacing(23);
-    layout->addWidget(new QLabel("Range:"));
+    layout->addWidget(new QLabel(tr("Range:")));
 
     dateFrom = new QDateTimeEdit(this);
     dateFrom->setDisplayFormat("dd/MM/yy");
@@ -357,7 +357,7 @@ QWidget *TransactionView::createDateRangeWidget()
     dateFrom->setMinimumWidth(100);
     dateFrom->setDate(QDate::currentDate().addDays(-7));
     layout->addWidget(dateFrom);
-    layout->addWidget(new QLabel("to"));
+    layout->addWidget(new QLabel(tr("to")));
 
     dateTo = new QDateTimeEdit(this);
     dateTo->setDisplayFormat("dd/MM/yy");

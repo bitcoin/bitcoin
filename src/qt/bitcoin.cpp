@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QMessageBox>
 #include <QThread>
+#include <QTextCodec>
 #include <QLocale>
 #include <QTranslator>
 #include <QSplashScreen>
@@ -111,6 +112,9 @@ std::string _(const char* psz)
 
 int main(int argc, char *argv[])
 {
+    QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
+    QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
+
     Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
 
@@ -148,7 +152,7 @@ int main(int argc, char *argv[])
 
                 if (QtWin::isCompositionEnabled())
                 {
-#ifdef Q_WS_WIN32
+#ifdef Q_OS_WIN
                     // Windows-specific customization
                     window.setAttribute(Qt::WA_TranslucentBackground);
                     window.setAttribute(Qt::WA_NoSystemBackground, false);

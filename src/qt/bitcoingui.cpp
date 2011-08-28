@@ -59,16 +59,16 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     createActions();
 
     // Menus
-    QMenu *file = menuBar()->addMenu("&File");
+    QMenu *file = menuBar()->addMenu(tr("&File"));
     file->addAction(sendCoinsAction);
     file->addAction(receiveCoinsAction);
     file->addSeparator();
     file->addAction(quitAction);
     
-    QMenu *settings = menuBar()->addMenu("&Settings");
+    QMenu *settings = menuBar()->addMenu(tr("&Settings"));
     settings->addAction(optionsAction);
 
-    QMenu *help = menuBar()->addMenu("&Help");
+    QMenu *help = menuBar()->addMenu(tr("&Help"));
     help->addAction(aboutAction);
     
     // Toolbars
@@ -106,7 +106,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(sendCoinsPage);
     setCentralWidget(centralWidget);
-    
+
     // Create status bar
     statusBar();
 
