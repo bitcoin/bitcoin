@@ -12,11 +12,6 @@
 
 #ifdef __WXMSW__
 #include <string.h>
-// This file can be downloaded as a part of the Windows Platform SDK
-// and is required for Bitcoin binaries to work properly on versions
-// of Windows before XP.  If you are doing builds of Bitcoin for
-// public release, you should uncomment this line.
-//#include <WSPiApi.h>
 #endif
 
 #ifdef USE_UPNP
@@ -1079,10 +1074,11 @@ void ThreadMapPort2(void* parg)
     const char * rootdescurl = 0;
     const char * multicastif = 0;
     const char * minissdpdpath = 0;
+    int error = 0;
     struct UPNPDev * devlist = 0;
     char lanaddr[64];
 
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
 
     struct UPNPUrls urls;
     struct IGDdatas data;
@@ -1094,14 +1090,9 @@ void ThreadMapPort2(void* parg)
         char intClient[16];
         char intPort[6];
         string strDesc = "Bitcoin " + FormatFullVersion();
-
-#ifndef __WXMSW__
-        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0);
-#else
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
 	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
-#endif
+
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
                 port, port, lanaddr, r, strupnperror(r));
