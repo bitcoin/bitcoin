@@ -602,7 +602,7 @@ void BitcoinGUI::changePassphrase()
 
 void BitcoinGUI::unlockWallet()
 {
-    // Unlock wallet if needed
+    // Unlock wallet when requested by wallet model
     if(walletModel->getEncryptionStatus() == WalletModel::Locked)
     {
         AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);

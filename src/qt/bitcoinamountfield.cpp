@@ -161,6 +161,7 @@ void BitcoinAmountField::unitChanged(int idx)
 
     if(valid)
     {
+        // If value was valid, re-place it in the widget with the new unit
         setValue(currentValue);
     }
     else

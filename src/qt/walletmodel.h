@@ -23,7 +23,7 @@ class WalletModel : public QObject
 public:
     explicit WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
 
-    enum StatusCode
+    enum StatusCode // Returned by sendCoins
     {
         OK,
         InvalidAmount,
@@ -31,7 +31,7 @@ public:
         AmountExceedsBalance,
         AmountWithFeeExceedsBalance,
         DuplicateAddress,
-        TransactionCreationFailed,
+        TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
         Aborted,
         MiscError
@@ -86,12 +86,9 @@ public:
 
         bool isValid() const { return valid; }
 
-        UnlockContext(const UnlockContext& obj)
-        { CopyFrom(obj); }
-    private:
-        UnlockContext& operator=(const UnlockContext& rhs)
-        { CopyFrom(rhs); return *this; }
-
+        // Copy operator and constructor transfer the context
+        UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
+        UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
     private:
         WalletModel *wallet;
         bool valid;
@@ -112,15 +109,25 @@ private:
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
 
+    // Cache some values to be able to detect changes
     qint64 cachedBalance;
     qint64 cachedUnconfirmedBalance;
     qint64 cachedNumTransactions;
     EncryptionStatus cachedEncryptionStatus;
 
 signals:
+    // Signal that balance in wallet changed
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance);
+
+    // Number of transactions in wallet changed
     void numTransactionsChanged(int count);
+
+    // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
+
+    // Signal emitted when wallet needs to be unlocked
+    // It is valid behaviour for listeners to keep the wallet locked after this signal;
+    // this means that the unlocking failed or was cancelled.
     void requireUnlock();
 
     // Asynchronous error notification

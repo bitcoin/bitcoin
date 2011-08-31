@@ -12,7 +12,7 @@ This has been implemented:
 
 - Compatibility with Linux (both GNOME and KDE), MacOSX and Windows
 
-- All functionality of the original client, including taskbar icon/menu
+- All functionality of the original client, including taskbar icon/menu and wallet encryption
 
 - Splash screen
 
@@ -44,7 +44,7 @@ This has to be done:
 
 - Start at system start
 
-- Support more languages
+- Support more languages (please send translations)
 
 Build instructions 
 ===================
