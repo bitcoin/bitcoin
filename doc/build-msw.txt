@@ -27,11 +27,11 @@ Dependencies
 Libraries you need to download separately and build:
 
                 default path               download
-wxWidgets       \wxwidgets-2.9.1-mgw       http://www.wxwidgets.org/downloads/
+wxWidgets       \wxwidgets-2.9.2-mgw       http://www.wxwidgets.org/downloads/
 OpenSSL         \openssl-1.0.0d-mgw        http://www.openssl.org/source/
-Berkeley DB     \db-4.7.25.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
-Boost           \boost-1.43.0-mgw          http://www.boost.org/users/download/
-miniupnpc       \upnpc-exe-win32-20110215  http://miniupnp.tuxfamily.org/files/
+Berkeley DB     \db-4.8.30.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
+Boost           \boost-1.47.0-mgw          http://www.boost.org/users/download/
+miniupnpc       \miniupnpc-1.6-mgw         http://miniupnp.tuxfamily.org/files/
 
 Their licenses:
 wxWidgets      LGPL 2.1 with very liberal exceptions
@@ -41,11 +41,11 @@ Boost          MIT-like license
 miniupnpc      New (3-clause) BSD license
 
 Versions used in this release:
-wxWidgets    2.9.1
+wxWidgets    2.9.2
 OpenSSL      1.0.0d
-Berkeley DB  4.7.25.NC
-Boost        1.43.0
-miniupnpc    1.5-20110215
+Berkeley DB  4.8.30.NC
+Boost        1.47.0
+miniupnpc    1.6
 
 
 Notes
@@ -57,7 +57,7 @@ classes that do the rote work of constructing all the UI elements.
 wxWidgets
 ---------
 DOS shell:
-cd \wxWidgets-2.9.1-mgw\build\msw
+cd \wxWidgets-2.9.2-mgw\build\msw
 mingw32-make -f makefile.gcc
 
 OpenSSL
@@ -73,30 +73,26 @@ make
 Berkeley DB
 -----------
 MSYS shell:
-cd /c/db-4.7.25.NC-mgw/build_unix
+cd /c/db-4.8.30.NC-mgw/build_unix
 sh ../dist/configure --enable-mingw --enable-cxx
 make
-
 
 Boost
 -----
 DOS prompt:
 downloaded boost jam 3.1.18
-cd \boost-1.43.0-mgw
+cd \boost-1.47.0-mgw
 bjam toolset=gcc --build-type=complete stage
-
-Note:
-building with boost 1.45.0 failed because of boost ticket 4614, 4258
-builds fine with boost 1.43.0
 
 MiniUPnPc
 ---------
-Building miniupnpc failed on Windows Server 2003, thus it is expected that a binary copy will be used.
-See http://miniupnp.tuxfamily.org/forum/viewtopic.php?t=642
 UPnP support is optional, make with USE_UPNP= to disable it.
 
-Get upnpc-exe-win32-20110215.zip and unzip it to \upnpc-exe-win32-20110215
-Get miniupnpc-1.5.20110215.tar.gz and copy *.h to \upnpc-exe-win32-20110215\miniupnpc
+MSYS shell:
+cd /c/miniupnpc-1.6-mgw
+make -f Makefile.mingw
+mkdir miniupnpc
+cp *.h miniupnpc/
 
 Bitcoin
 -------

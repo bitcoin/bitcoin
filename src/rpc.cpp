@@ -1,4 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -562,7 +563,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
     {
         if(pwalletMain->IsLocked())
-            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+            throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
         string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx);
         if (strError != "")
@@ -837,7 +838,7 @@ Value sendfrom(const Array& params, bool fHelp)
     CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
     {
         if(pwalletMain->IsLocked())
-            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+            throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
         // Check funds
         int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
@@ -904,7 +905,7 @@ Value sendmany(const Array& params, bool fHelp)
     CRITICAL_BLOCK(pwalletMain->cs_vMasterKey)
     {
         if(pwalletMain->IsLocked())
-            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+            throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
         // Check funds
         int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
@@ -1198,7 +1199,8 @@ Value listtransactions(const Array& params, bool fHelp)
 
         // Now: iterate backwards until we have nCount items to return:
         TxItems::reverse_iterator it = txByTime.rbegin();
-        for (std::advance(it, nFrom); it != txByTime.rend(); ++it)
+        if (txByTime.size() > nFrom) std::advance(it, nFrom);
+        for (; it != txByTime.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second.first;
             if (pwtx != 0)

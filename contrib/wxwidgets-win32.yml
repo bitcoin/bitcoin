@@ -1,0 +1,40 @@
+---
+name: "wxwidgets"
+suites:
+- "lucid"
+architectures:
+- "i386"
+packages: 
+- "mingw32"
+- "faketime"
+- "zip"
+reference_datetime: "2011-01-30 00:00:00"
+remotes: []
+files:
+- "wxWidgets-2.9.2.tar.bz2"
+script: |
+  INSTDIR="$HOME/install"
+  TMPDIR="$HOME/tmpdir"
+  export LIBRARY_PATH="$INSTDIR/lib"
+  #
+  tar xjf wxWidgets-2.9.2.tar.bz2
+  cd wxWidgets-2.9.2
+  CXXFLAGS=-frandom-seed=wx1 ./configure --host=i586-mingw32msvc --build=i686-linux --prefix=$INSTDIR --disable-shared --enable-monolithic --without-libpng --disable-svg
+  perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
+  make $MAKEOPTS install
+  mkdir $TMPDIR
+  cd $TMPDIR
+  cp -af $INSTDIR/include .
+  mkdir -p $TMPDIR/bin/$GBUILD_BITS
+  cd $TMPDIR/bin/$GBUILD_BITS
+  cp -af $INSTDIR/lib/wx .
+  for lib in wx_mswu; do
+      mkdir $lib
+      (cd $lib ; ar xf $INSTDIR/lib/lib${lib}-2.9-i586-mingw32msvc.a)
+  done
+  chmod -R +w $TMPDIR
+  cd $TMPDIR
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  zip -r wxwidgets-win32-2.9.2-gitian.zip *
+  cp wxwidgets-win32-2.9.2-gitian.zip $OUTDIR

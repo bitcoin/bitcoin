@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
@@ -1384,47 +1385,6 @@ bool static ProcessBlock(CNode* pfrom, CBlock* pblock)
 
 
 
-template<typename Stream>
-bool static ScanMessageStart(Stream& s)
-{
-    // Scan ahead to the next pchMessageStart, which should normally be immediately
-    // at the file pointer.  Leaves file pointer at end of pchMessageStart.
-    s.clear(0);
-    short prevmask = s.exceptions(0);
-    const char* p = BEGIN(pchMessageStart);
-    try
-    {
-        loop
-        {
-            char c;
-            s.read(&c, 1);
-            if (s.fail())
-            {
-                s.clear(0);
-                s.exceptions(prevmask);
-                return false;
-            }
-            if (*p != c)
-                p = BEGIN(pchMessageStart);
-            if (*p == c)
-            {
-                if (++p == END(pchMessageStart))
-                {
-                    s.clear(0);
-                    s.exceptions(prevmask);
-                    return true;
-                }
-            }
-        }
-    }
-    catch (...)
-    {
-        s.clear(0);
-        s.exceptions(prevmask);
-        return false;
-    }
-}
-
 bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
     uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
@@ -1775,7 +1735,7 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ascii, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
+unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)

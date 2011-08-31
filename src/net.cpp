@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,11 +12,6 @@
 
 #ifdef __WXMSW__
 #include <string.h>
-// This file can be downloaded as a part of the Windows Platform SDK
-// and is required for Bitcoin binaries to work properly on versions
-// of Windows before XP.  If you are doing builds of Bitcoin for
-// public release, you should uncomment this line.
-//#include <WSPiApi.h>
 #endif
 
 #ifdef USE_UPNP
@@ -98,7 +94,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
     SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
-#ifdef BSD
+#ifdef SO_NOSIGPIPE
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
@@ -1078,10 +1074,11 @@ void ThreadMapPort2(void* parg)
     const char * rootdescurl = 0;
     const char * multicastif = 0;
     const char * minissdpdpath = 0;
+    int error = 0;
     struct UPNPDev * devlist = 0;
     char lanaddr[64];
 
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
 
     struct UPNPUrls urls;
     struct IGDdatas data;
@@ -1093,14 +1090,9 @@ void ThreadMapPort2(void* parg)
         char intClient[16];
         char intPort[6];
         string strDesc = "Bitcoin " + FormatFullVersion();
-
-#ifndef __WXMSW__
-        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0);
-#else
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
 	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
-#endif
+
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
                 port, port, lanaddr, r, strupnperror(r));
@@ -1142,6 +1134,11 @@ void MapPort(bool fMapPort)
         if (!CreateThread(ThreadMapPort, NULL))
             printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
     }
+}
+#else
+void MapPort(bool /* unused fMapPort */)
+{
+    // Intentionally left blank.
 }
 #endif
 
@@ -1579,7 +1576,7 @@ bool BindListenPort(string& strError)
         return false;
     }
 
-#ifdef BSD
+#ifdef SO_NOSIGPIPE
     // Different way of disabling SIGPIPE on BSD
     setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif

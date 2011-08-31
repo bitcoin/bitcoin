@@ -76,8 +76,8 @@ obj/nogui/%.o: %.cpp $(HEADERS)
 bitcoind: $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
-obj/test/%.o: test/%.cpp $(HEADERS)
-	$(CXX) -c $(CFLAGS) -o $@ $<
+obj/test/test_bitcoin.o: $(wildcard test/*.cpp) $(HEADERS)
+	$(CXX) -c $(CFLAGS) -o $@ test/test_bitcoin.cpp
 
 test_bitcoin: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework

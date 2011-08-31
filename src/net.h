@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_NET_H
@@ -67,7 +68,7 @@ bool StopNode();
 //  (4) size
 //  (4) checksum
 
-extern char pchMessageStart[4];
+extern unsigned char pchMessageStart[4];
 
 class CMessageHeader
 {
@@ -676,7 +677,7 @@ public:
 
     void BeginMessage(const char* pszCommand)
     {
-        cs_vSend.Enter();
+        cs_vSend.Enter("cs_vSend", __FILE__, __LINE__);
         if (nHeaderStart != -1)
             AbortMessage();
         nHeaderStart = vSend.size();

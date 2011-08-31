@@ -135,18 +135,18 @@ The process for miniupnpc (optional) is similar to that of OpenSSL.
 Download from http://miniupnp.tuxfamily.org/files/.
 
 cd ~/bitcoin/deps
-tar xvf ~/Downloads/miniupnpc-1.5.tar
-mv miniupnpc-1.5 miniupnpc-1.5-x86_64
-tar xvf ~/Downloads/miniupnpc-1.5.tar
-mv miniupnpc-1.5 miniupnpc-1.5-i386
+tar xvf ~/Downloads/miniupnpc-1.6.tar
+mv miniupnpc-1.6 miniupnpc-1.6-x86_64
+tar xvf ~/Downloads/miniupnpc-1.6.tar
+mv miniupnpc-1.6 miniupnpc-1.6-i386
 # build x86_64 (64 bit intel) binary
-cd miniupnpc-1.5-x86_64
+cd miniupnpc-1.6-x86_64
 export CFLAGS="-arch x86_64"
 export LDFLAGS="-arch x86_64"
 export PREFIX="/Users/macuser/bitcoin/deps"
 make && make install
 # build i386 (32 bit intel) binary
-cd miniupnpc-1.5-i386
+cd miniupnpc-1.6-i386
 export CFLAGS="-arch i386"
 export LDFLAGS="-arch i386"
 export PREFIX="/Users/macuser/bitcoin/deps"
@@ -154,7 +154,7 @@ make
 
 # combine the libs
 cd ~/bitcoin/deps
-lipo -arch i386 miniupnpc-1.5-i386/libminiupnpc.a -arch x86_64 miniupnpc-1.5-x86_64/libminiupnpc.a -o lib/libminiupnpc.a -create
+lipo -arch i386 miniupnpc-1.6-i386/libminiupnpc.a -arch x86_64 miniupnpc-1.6-x86_64/libminiupnpc.a -o lib/libminiupnpc.a -create
 
 Verify your binaries
 
@@ -175,8 +175,8 @@ Berkeley DB
 Download from http://freshmeat.net/projects/berkeleydb/
 
 cd ~/bitcoin/deps
-tar xvf ~/Downloads/db-4.8.26.tar
-cd db-4.8.26/build_unix
+tar xvf ~/Downloads/db-4.8.30.tar
+cd db-4.8.30/build_unix
 ../dist/configure --prefix=/Users/macosuser/bitcoin/deps --enable-cxx && make && make install
 
 
