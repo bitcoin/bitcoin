@@ -9,9 +9,10 @@
 
 class CKeyStore
 {
-public:
+protected:
     mutable CCriticalSection cs_KeyStore;
 
+public:
     virtual bool AddKey(const CKey& key) =0;
     virtual bool HaveKey(const CBitcoinAddress &address) const =0;
     virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
@@ -30,15 +31,21 @@ public:
     bool AddKey(const CKey& key);
     bool HaveKey(const CBitcoinAddress &address) const
     {
-        return (mapKeys.count(address) > 0);
+        bool result;
+        CRITICAL_BLOCK(cs_KeyStore)
+            result = (mapKeys.count(address) > 0);
+        return result;
     }
     bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const
     {
-        KeyMap::const_iterator mi = mapKeys.find(address);
-        if (mi != mapKeys.end())
+        CRITICAL_BLOCK(cs_KeyStore)
         {
-            keyOut.SetSecret((*mi).second);
-            return true;
+            KeyMap::const_iterator mi = mapKeys.find(address);
+            if (mi != mapKeys.end())
+            {
+                keyOut.SetSecret((*mi).second);
+                return true;
+            }
         }
         return false;
     }
@@ -74,8 +81,6 @@ protected:
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
-    mutable CCriticalSection cs_vMasterKey; //No guarantees master key wont get locked before you can use it, so lock this first
-
     CCryptoKeyStore() : fUseCrypto(false)
     {
     }
@@ -89,18 +94,20 @@ public:
     {
         if (!IsCrypted())
             return false;
-        return vMasterKey.empty();
+        bool result;
+        CRITICAL_BLOCK(cs_KeyStore)
+            result = vMasterKey.empty();
+        return result;
     }
 
     bool Lock()
     {
-        CRITICAL_BLOCK(cs_vMasterKey)
-        {
-            if (!SetCrypted())
-                return false;
+        if (!SetCrypted())
+            return false;
 
+        CRITICAL_BLOCK(cs_KeyStore)
             vMasterKey.clear();
-        }
+
         return true;
     }
 
@@ -109,9 +116,12 @@ public:
     bool AddKey(const CKey& key);
     bool HaveKey(const CBitcoinAddress &address) const
     {
-        if (!IsCrypted())
-            return CBasicKeyStore::HaveKey(address);
-        return mapCryptedKeys.count(address) > 0;
+        CRITICAL_BLOCK(cs_KeyStore)
+        {
+            if (!IsCrypted())
+                return CBasicKeyStore::HaveKey(address);
+            return mapCryptedKeys.count(address) > 0;
+        }
     }
     bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const;
     bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;

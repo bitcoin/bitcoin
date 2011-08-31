@@ -2879,7 +2879,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         reservekey.KeepKey();
 
         // Track how many getdata requests this block gets
-        CRITICAL_BLOCK(wallet.cs_mapRequestCount)
+        CRITICAL_BLOCK(wallet.cs_wallet)
             wallet.mapRequestCount[pblock->GetHash()] = 0;
 
         // Process this block the same as if we had received it from another node
