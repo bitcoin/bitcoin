@@ -65,15 +65,7 @@ private:
     bool fUseCrypto;
 
 protected:
-    bool SetCrypted()
-    {
-        if (fUseCrypto)
-            return true;
-        if (!mapKeys.empty())
-            return false;
-        fUseCrypto = true;
-        return true;
-    }
+    bool SetCrypted();
 
     // will encrypt previously unencrypted keys
     bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);

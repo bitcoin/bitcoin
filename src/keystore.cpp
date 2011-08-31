@@ -33,6 +33,19 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     return true;
 }
 
+bool CCryptoKeyStore::SetCrypted()
+{
+    CRITICAL_BLOCK(cs_KeyStore)
+    {
+        if (fUseCrypto)
+            return true;
+        if (!mapKeys.empty())
+            return false;
+        fUseCrypto = true;
+    }
+    return true;
+}
+
 std::vector<unsigned char> CCryptoKeyStore::GenerateNewKey()
 {
     RandAddSeedPerfmon();
