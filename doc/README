@@ -57,7 +57,7 @@ If everything goes fine, delete the backup and enjoy your encrypted
 wallet.  Note that once you encrypt your wallet, you will never be
 able to go back to a version of the Bitcoin client older than 0.4.
 
-Keep in mind that you are always responsible for you own security.
+Keep in mind that you are always responsible for your own security.
 All it takes is a slightly more advanced wallet-stealing trojan which
 installs a keylogger to steal your wallet passphrase as you enter it
 in addition to your wallet file and you have lost all your Bitcoins.
