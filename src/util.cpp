@@ -942,17 +942,21 @@ static std::map<std::pair<CCriticalSection*, CCriticalSection*>, LockStack> lock
 static boost::thread_specific_ptr<LockStack> lockstack;
 
 
-static void potential_deadlock_detected(const LockStack& s1, const LockStack& s2)
+static void potential_deadlock_detected(const std::pair<CCriticalSection*, CCriticalSection*>& mismatch, const LockStack& s1, const LockStack& s2)
 {
     printf("POTENTIAL DEADLOCK DETECTED\n");
     printf("Previous lock order was:\n");
     BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s2)
     {
+        if (i.first == mismatch.first) printf(" (1)");
+        if (i.first == mismatch.second) printf(" (2)");
         printf(" %s  %s:%d\n", i.second.mutexName.c_str(), i.second.sourceFile.c_str(), i.second.sourceLine);
     }
     printf("Current lock order is:\n");
     BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s1)
     {
+        if (i.first == mismatch.first) printf(" (1)");
+        if (i.first == mismatch.second) printf(" (2)");
         printf(" %s  %s:%d\n", i.second.mutexName.c_str(), i.second.sourceFile.c_str(), i.second.sourceLine);
     }
 }
@@ -979,7 +983,7 @@ static void push_lock(CCriticalSection* c, const CLockLocation& locklocation)
         std::pair<CCriticalSection*, CCriticalSection*> p2 = std::make_pair(c, i.first);
         if (lockorders.count(p2))
         {
-            potential_deadlock_detected(lockorders[p2], lockorders[p1]);
+            potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
             break;
         }
     }

@@ -45,7 +45,7 @@ std::vector<unsigned char> CCryptoKeyStore::GenerateNewKey()
 
 bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
 {
-    CRITICAL_BLOCK(cs_vMasterKey)
+    CRITICAL_BLOCK(cs_KeyStore)
     {
         if (!SetCrypted())
             return false;
@@ -72,7 +72,6 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
 bool CCryptoKeyStore::AddKey(const CKey& key)
 {
     CRITICAL_BLOCK(cs_KeyStore)
-    CRITICAL_BLOCK(cs_vMasterKey)
     {
         if (!IsCrypted())
             return CBasicKeyStore::AddKey(key);
@@ -106,7 +105,7 @@ bool CCryptoKeyStore::AddCryptedKey(const std::vector<unsigned char> &vchPubKey,
 
 bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
 {
-    CRITICAL_BLOCK(cs_vMasterKey)
+    CRITICAL_BLOCK(cs_KeyStore)
     {
         if (!IsCrypted())
             return CBasicKeyStore::GetKey(address, keyOut);
@@ -128,7 +127,7 @@ bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
 
 bool CCryptoKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const
 {
-    CRITICAL_BLOCK(cs_vMasterKey)
+    CRITICAL_BLOCK(cs_KeyStore)
     {
         if (!IsCrypted())
             return CKeyStore::GetPubKey(address, vchPubKeyOut);
@@ -146,7 +145,6 @@ bool CCryptoKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsi
 bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
 {
     CRITICAL_BLOCK(cs_KeyStore)
-    CRITICAL_BLOCK(cs_vMasterKey)
     {
         if (!mapCryptedKeys.empty() || IsCrypted())
             return false;
