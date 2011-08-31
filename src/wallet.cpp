@@ -353,22 +353,6 @@ int64 CWallet::GetDebit(const CTxIn &txin) const
 
 int64 CWalletTx::GetTxTime() const
 {
-    CRITICAL_BLOCK(cs_main)
-    {
-        if (!fTimeReceivedIsTxTime && hashBlock != 0)
-        {
-            // If we did not receive the transaction directly, we rely on the block's
-            // time to figure out when it happened.  We use the median over a range
-            // of blocks to try to filter out inaccurate block times.
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
-            if (mi != mapBlockIndex.end())
-            {
-                CBlockIndex* pindex = (*mi).second;
-                if (pindex)
-                    return pindex->GetMedianTime();
-            }
-        }
-    }
     return nTimeReceived;
 }
 
