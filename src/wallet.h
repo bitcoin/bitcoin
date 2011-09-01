@@ -85,7 +85,7 @@ public:
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
     void ReturnKey(int64 nIndex);
-    std::vector<unsigned char> GetOrReuseKeyFromPool();
+    bool GetKeyFromPool(std::vector<unsigned char> &key, bool fAllowReuse=true);
     int64 GetOldestKeyPoolTime();
 
     bool IsMine(const CTxIn& txin) const;
