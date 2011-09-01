@@ -1280,20 +1280,23 @@ bool CWallet::GetKeyFromPool(vector<unsigned char>& result, bool fAllowReuse)
 {
     int64 nIndex = 0;
     CKeyPool keypool;
-    ReserveKeyFromKeyPool(nIndex, keypool);
-    if (nIndex == -1)
+    CRITICAL_BLOCK(cs_wallet)
     {
-        if (fAllowReuse && !vchDefaultKey.empty())
+        ReserveKeyFromKeyPool(nIndex, keypool);
+        if (nIndex == -1)
         {
-            result = vchDefaultKey;
+            if (fAllowReuse && !vchDefaultKey.empty())
+            {
+                result = vchDefaultKey;
+                return true;
+            }
+            if (IsLocked()) return false;
+            result = GenerateNewKey();
             return true;
         }
-        if (IsLocked()) return false;
-        result = GenerateNewKey();
-        return true;
+        KeepKey(nIndex);
+        result = keypool.vchPubKey;
     }
-    KeepKey(nIndex);
-    result = keypool.vchPubKey;
     return true;
 }
 
