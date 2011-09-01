@@ -1032,7 +1032,6 @@ void MainFrameRepaint()
         printf("MainFrameRepaint\n");
         wxPaintEvent event;
         pframeMain->fRefresh = true;
-        pframeMain->fRefreshListCtrl = true;
         pframeMain->GetEventHandler()->AddPendingEvent(event);
     }
 }
@@ -2173,7 +2172,10 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
                 strError = pwalletMain->SendMoney(scriptPubKey, nValue, wtx, true);
             }
             if (strError == "")
+            {
+                pframeMain->RefreshListCtrl();
                 wxMessageBox(_("Payment sent  "), _("Sending..."));
+            }
             else if (strError == "ABORTED")
             {
                 if (fWasLocked)
