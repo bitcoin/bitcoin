@@ -331,21 +331,20 @@ Value getnewaddress(const Array& params, bool fHelp)
             "If [account] is specified (recommended), it is added to the address book "
             "so payments received with the address will be credited to [account].");
 
-    if (!pwalletMain->IsLocked())
-        pwalletMain->TopUpKeyPool();
-
-    if (pwalletMain->GetKeyPoolSize() < 1)
-        throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
-
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
     if (params.size() > 0)
         strAccount = AccountFromValue(params[0]);
 
-    // Generate a new key that is added to wallet
-    CBitcoinAddress address(pwalletMain->GetOrReuseKeyFromPool());
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool();
 
-    // This could be done in the same main CS as GetKeyFromKeyPool.
+    // Generate a new key that is added to wallet
+    std::vector<unsigned char> newKey;
+    if (!pwalletMain->GetKeyFromPool(newKey, false))
+        throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
+    CBitcoinAddress address(newKey);
+
     pwalletMain->SetAddressBookName(address, strAccount);
 
     return address.ToString();
@@ -382,12 +381,9 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     {
         if (pwalletMain->GetKeyPoolSize() < 1)
         {
-            if (bKeyUsed || bForceNew)
-                throw JSONRPCError(-12, "Error: Keypool ran out, please call topupkeypool first");
-        }
-        else
-        {
-            account.vchPubKey = pwalletMain->GetOrReuseKeyFromPool();
+            if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
+                throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
+
             pwalletMain->SetAddressBookName(CBitcoinAddress(account.vchPubKey), strAccount);
             walletdb.WriteAccount(strAccount, account);
         }
