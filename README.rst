@@ -1,18 +1,12 @@
 Bitcoin-qt: Qt4 based GUI replacement for Bitcoin
 =================================================
 
-**Warning** **Warning** **Warning**
+Features
+========
 
-Alpha version! I'm using this client myself on the production network, and I haven't noticed any glitches, but remember: always backup your wallet.
-Testing on the testnet is recommended.
-
-This has been implemented:
-
-- qmake / QtCreator project (.pro)
+- All functionality of the original client, including wallet encryption
 
 - Compatibility with Linux (both GNOME and KDE), MacOSX and Windows
-
-- All functionality of the original client, including taskbar icon/menu and wallet encryption
 
 - Splash screen
 
@@ -39,12 +33,6 @@ This has been implemented:
 - Address books and transaction table can be sorted by any column
 
 - Accepts "bitcoin:" URLs from browsers through drag and drop
-
-This has to be done:
-
-- Start at system start
-
-- Support more languages (please send translations)
 
 Build instructions 
 ===================
@@ -90,6 +78,30 @@ Windows build instructions:
 .. _`dependencies archive`: http://download.visucore.com/bitcoin/qtgui_deps_1.zip
 .. [#] PGP signature: http://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
 .. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
+
+UPNnP port forwarding
+=====================
+
+To use UPnP for port forwarding behind a NAT router (recommended, as more connections overall allow for a faster and more stable bitcoin experience), pass the following argument to qmake:
+
+::
+
+    qmake "USE_UPNP=1"
+
+(in **Qt Creator**, you can find the setting for additional qmake arguments under "Projects" -> "Build Settings" -> "Build Steps", then click "Details" next to **qmake**)
+
+This requires miniupnpc for UPnP port mapping.  It can be downloaded from
+http://miniupnp.tuxfamily.org/files/.  UPnP support is not compiled in by default.  
+
+Set USE_UPNP to a different value to control this:
+
++------------+--------------------------------------------------------------+
+| USE_UPNP=  | (the default) no UPnP support, miniupnp not required;        |
++------------+--------------------------------------------------------------+
+| USE_UPNP=0 | UPnP support turned off by default at runtime;               |
++------------+--------------------------------------------------------------+
+| USE_UPNP=1 | UPnP support turned on by default at runtime.                |
++------------+--------------------------------------------------------------+
 
 Berkely DB version warning
 ==========================
