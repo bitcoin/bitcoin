@@ -14,6 +14,14 @@ windows:LIBS += -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -l
 windows:DEFINES += __WXMSW__
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
+# use: qmake "USE_UPNP=1"
+# miniupnpc (http://miniupnp.free.fr/files/) must be installed
+count(USE_UPNP, 1) {
+    message(Building with UPNP support)
+    DEFINES += USE_UPNP=$$USE_UPNP
+    LIBS += -lminiupnpc
+}
+
 # for extra security against potential buffer overflows
 QMAKE_CXXFLAGS += -fstack-protector 
 QMAKE_LFLAGS += -fstack-protector
