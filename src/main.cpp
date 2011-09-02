@@ -1823,7 +1823,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // Ask the first connected node for block updates
         static int nAskedForBlocks;
-        if (!pfrom->fClient && (nAskedForBlocks < 1 || vNodes.size() <= 1))
+        if (!pfrom->fClient && pfrom->nVersion != 32300 && (nAskedForBlocks < 1 || vNodes.size() <= 1))
         {
             nAskedForBlocks++;
             pfrom->PushGetBlocks(pindexBest, uint256(0));
