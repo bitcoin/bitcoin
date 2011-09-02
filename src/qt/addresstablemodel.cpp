@@ -39,8 +39,7 @@ struct AddressTablePriv
     {
         cachedAddressTable.clear();
 
-        CRITICAL_BLOCK(wallet->cs_KeyStore)
-        CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+        CRITICAL_BLOCK(wallet->cs_wallet)
         {
             BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, std::string)& item, wallet->mapAddressBook)
             {
@@ -170,7 +169,7 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
             // Double-check that we're not overwriting a receiving address
             if(rec->type == AddressTableEntry::Sending)
             {
-                CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+                CRITICAL_BLOCK(wallet->cs_wallet)
                 {
                     // Remove old entry
                     wallet->DelAddressBookName(rec->address.toStdString());
@@ -255,7 +254,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             return QString();
         }
         // Check for duplicate addresses
-        CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+        CRITICAL_BLOCK(wallet->cs_wallet)
         {
             if(wallet->mapAddressBook.count(strAddress))
             {
@@ -274,15 +273,20 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             editStatus = WALLET_UNLOCK_FAILURE;
             return QString();
         }
-
-        strAddress = CBitcoinAddress(wallet->GetOrReuseKeyFromPool()).ToString();
+        std::vector<unsigned char> newKey;
+        if(!wallet->GetKeyFromPool(newKey, true))
+        {
+            editStatus = KEY_GENERATION_FAILURE;
+            return QString();
+        }
+        strAddress = CBitcoinAddress(newKey).ToString();
     }
     else
     {
         return QString();
     }
     // Add entry and update list
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    CRITICAL_BLOCK(wallet->cs_wallet)
         wallet->SetAddressBookName(strAddress, strLabel);
     updateList();
     return QString::fromStdString(strAddress);
@@ -298,7 +302,7 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex & paren
         // Also refuse to remove receiving addresses.
         return false;
     }
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    CRITICAL_BLOCK(wallet->cs_wallet)
     {
         wallet->DelAddressBookName(rec->address.toStdString());
     }
@@ -315,7 +319,7 @@ void AddressTableModel::update()
  */
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    CRITICAL_BLOCK(wallet->cs_wallet)
     {
         CBitcoinAddress address_parsed(address.toStdString());
         std::map<CBitcoinAddress, std::string>::iterator mi = wallet->mapAddressBook.find(address_parsed);

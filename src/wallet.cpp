@@ -731,7 +731,7 @@ int64 CWallet::GetBalance() const
 int64 CWallet::GetUnconfirmedBalance() const
 {
     int64 nTotal = 0;
-    CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(cs_wallet)
     {
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
