@@ -67,14 +67,6 @@ typedef unsigned long long  uint64;
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
 
-// Used to bypass the rule against non-const reference to temporary
-// where it makes sense with wrappers such as CFlatData or CTxDB
-template<typename T>
-inline T& REF(const T& val)
-{
-    return (T&)val;
-}
-
 // Align by increasing pointer, must have extra space at end of buffer
 template <size_t nBytes, typename T>
 T* alignup(T* p)
