@@ -251,6 +251,7 @@ bool AppInit2(int argc, char* argv[])
     fNoListen = GetBoolArg("-nolisten") || fTOR;
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
+#ifndef QT_GUI
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))
             fCommandLine = true;
@@ -260,6 +261,7 @@ bool AppInit2(int argc, char* argv[])
         int ret = CommandLineRPC(argc, argv);
         exit(ret);
     }
+#endif
 
 #ifndef __WXMSW__
     if (fDaemon)
