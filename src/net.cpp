@@ -1357,9 +1357,12 @@ void ThreadOpenConnections2(void* parg)
                 {
                     // It'll only connect to one or two seed nodes because once it connects,
                     // it'll get a pile of addresses with newer timestamps.
+                    // Seed nodes are given a random 'last seen time' of between one and two
+                    // weeks ago.
+                    const int64 nOneWeek = 7*24*60*60;
                     CAddress addr;
                     addr.ip = pnSeed[i];
-                    addr.nTime = 0;
+                    addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
                     AddAddress(addr);
                 }
                 fSeedUsed = true;
