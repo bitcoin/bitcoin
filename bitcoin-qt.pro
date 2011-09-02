@@ -91,7 +91,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/qvalidatedlineedit.h \
     src/qt/bitcoinunits.h \
     src/qt/qvaluecombobox.h \
-    src/qt/askpassphrasedialog.h
+    src/qt/askpassphrasedialog.h \
+    src/protocol.h
+
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
     src/qt/addresstablemodel.cpp \
@@ -136,7 +138,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/qvalidatedlineedit.cpp \
     src/qt/bitcoinunits.cpp \
     src/qt/qvaluecombobox.cpp \
-    src/qt/askpassphrasedialog.cpp
+    src/qt/askpassphrasedialog.cpp \
+    src/protocol.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

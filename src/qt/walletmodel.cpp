@@ -38,7 +38,7 @@ qint64 WalletModel::getUnconfirmedBalance() const
 int WalletModel::getNumTransactions() const
 {
     int numTransactions = 0;
-    CRITICAL_BLOCK(wallet->cs_mapWallet)
+    CRITICAL_BLOCK(wallet->cs_wallet)
     {
         numTransactions = wallet->mapWallet.size();
     }
@@ -117,7 +117,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     }
 
     CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(wallet->cs_mapWallet)
+    CRITICAL_BLOCK(wallet->cs_wallet)
     {
         // Sendmany
         std::vector<std::pair<CScript, int64> > vecSend;
@@ -156,7 +156,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         std::string strAddress = rcp.address.toStdString();
-        CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+        CRITICAL_BLOCK(wallet->cs_wallet)
         {
             if (!wallet->mapAddressBook.count(strAddress))
                 wallet->SetAddressBookName(strAddress, rcp.label.toStdString());
@@ -231,7 +231,7 @@ bool WalletModel::setWalletLocked(bool locked, const std::string &passPhrase)
 bool WalletModel::changePassphrase(const std::string &oldPass, const std::string &newPass)
 {
     bool retval;
-    CRITICAL_BLOCK(wallet->cs_vMasterKey)
+    CRITICAL_BLOCK(wallet->cs_wallet)
     {
         wallet->Lock(); // Make sure wallet is locked before attempting pass change
         retval = wallet->ChangeWalletPassphrase(oldPass, newPass);

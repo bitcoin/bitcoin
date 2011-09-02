@@ -29,7 +29,8 @@ public:
         OK,
         INVALID_ADDRESS,
         DUPLICATE_ADDRESS,
-        WALLET_UNLOCK_FAILURE
+        WALLET_UNLOCK_FAILURE,
+        KEY_GENERATION_FAILURE
     };
 
     static const QString Send; /* Send addres */

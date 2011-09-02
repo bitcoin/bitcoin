@@ -61,7 +61,7 @@ bool ClientModel::inInitialBlockDownload() const
 
 int ClientModel::getTotalBlocksEstimate() const
 {
-    return GetTotalBlocksEstimate();
+    return GetMaxBlocksOfOtherNodes();
 }
 
 OptionsModel *ClientModel::getOptionsModel()

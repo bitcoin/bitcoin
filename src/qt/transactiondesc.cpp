@@ -50,7 +50,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
 {
     QString strHTML;
-    CRITICAL_BLOCK(wallet->cs_mapAddressBook)
+    CRITICAL_BLOCK(wallet->cs_wallet)
     {
         strHTML.reserve(4000);
         strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
@@ -257,7 +257,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
 
             strHTML += "<br><b>Inputs:</b>";
             strHTML += "<ul>";
-            CRITICAL_BLOCK(wallet->cs_mapWallet)
+            CRITICAL_BLOCK(wallet->cs_wallet)
             {
                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 {
