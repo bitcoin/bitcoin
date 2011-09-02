@@ -20,14 +20,14 @@ private:
     bool SelectCoins(int64 nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     CWalletDB *pwalletdbEncryption;
-    CCriticalSection cs_pwalletdbEncryption;
 
 public:
+    mutable CCriticalSection cs_wallet;
+
     bool fFileBacked;
     std::string strWalletFile;
 
     std::set<int64> setKeyPool;
-    CCriticalSection cs_setKeyPool;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -47,15 +47,12 @@ public:
         pwalletdbEncryption = NULL;
     }
 
-    mutable CCriticalSection cs_mapWallet;
     std::map<uint256, CWalletTx> mapWallet;
     std::vector<uint256> vWalletUpdated;
 
     std::map<uint256, int> mapRequestCount;
-    mutable CCriticalSection cs_mapRequestCount;
 
     std::map<CBitcoinAddress, std::string> mapAddressBook;
-    mutable CCriticalSection cs_mapAddressBook;
 
     std::vector<unsigned char> vchDefaultKey;
 
@@ -89,7 +86,7 @@ public:
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
     void ReturnKey(int64 nIndex);
-    std::vector<unsigned char> GetOrReuseKeyFromPool();
+    bool GetKeyFromPool(std::vector<unsigned char> &key, bool fAllowReuse=true);
     int64 GetOldestKeyPoolTime();
 
     bool IsMine(const CTxIn& txin) const;
@@ -108,7 +105,7 @@ public:
     {
         CBitcoinAddress address;
         if (ExtractAddress(txout.scriptPubKey, this, address))
-            CRITICAL_BLOCK(cs_mapAddressBook)
+            CRITICAL_BLOCK(cs_wallet)
                 if (!mapAddressBook.count(address))
                     return true;
         return false;
@@ -172,15 +169,13 @@ public:
     int LoadWallet(bool& fFirstRunRet);
 //    bool BackupWallet(const std::string& strDest);
 
-    // requires cs_mapAddressBook lock
     bool SetAddressBookName(const CBitcoinAddress& address, const std::string& strName);
 
-    // requires cs_mapAddressBook lock
     bool DelAddressBookName(const CBitcoinAddress& address);
 
     void UpdatedTransaction(const uint256 &hashTx)
     {
-        CRITICAL_BLOCK(cs_mapWallet)
+        CRITICAL_BLOCK(cs_wallet)
             vWalletUpdated.push_back(hashTx);
     }
 
@@ -188,7 +183,7 @@ public:
 
     void Inventory(const uint256 &hash)
     {
-        CRITICAL_BLOCK(cs_mapRequestCount)
+        CRITICAL_BLOCK(cs_wallet)
         {
             std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
             if (mi != mapRequestCount.end())

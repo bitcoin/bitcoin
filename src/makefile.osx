@@ -32,22 +32,43 @@ DEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -D__WXMAC_OSX__ -DNOPCH -DMSG_
 DEBUGFLAGS=-g -DwxDEBUG_LEVEL=0
 # ppc doesn't work because we don't support big-endian
 CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h \
-    init.h crypter.h
+HEADERS = \
+    base58.h \
+    bignum.h \
+    crypter.h \
+    db.h \
+    headers.h \
+    init.h \
+    irc.h \
+    key.h \
+    keystore.h \
+    main.h \
+    net.h \
+    noui.h \
+    protocol.h \
+    rpc.h \
+    script.h \
+    serialize.h \
+    strlcpy.h \
+    ui.h \
+    uibase.h \
+    uint256.h \
+    util.h \
+    wallet.h
 
 OBJS= \
-    obj/util.o \
-    obj/script.o \
+    obj/crypter.o \
     obj/db.o \
-    obj/net.o \
+    obj/init.o \
     obj/irc.o \
     obj/keystore.o \
     obj/main.o \
-    obj/wallet.o \
+    obj/net.o \
+    obj/protocol.o \
     obj/rpc.o \
-    obj/init.o \
-    obj/crypter.o \
+    obj/script.o \
+    obj/util.o \
+    obj/wallet.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 

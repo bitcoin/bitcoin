@@ -1033,47 +1033,44 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         return false;
 
     // Compile solution
-    CRITICAL_BLOCK(keystore.cs_KeyStore)
+    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
     {
-        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        if (item.first == OP_PUBKEY)
         {
-            if (item.first == OP_PUBKEY)
-            {
-                // Sign
-                const valtype& vchPubKey = item.second;
-                CKey key;
-                if (!keystore.GetKey(Hash160(vchPubKey), key))
-                    return false;
-                if (key.GetPubKey() != vchPubKey)
-                    return false;
-                if (hash != 0)
-                {
-                    vector<unsigned char> vchSig;
-                    if (!key.Sign(hash, vchSig))
-                        return false;
-                    vchSig.push_back((unsigned char)nHashType);
-                    scriptSigRet << vchSig;
-                }
-            }
-            else if (item.first == OP_PUBKEYHASH)
-            {
-                // Sign and give pubkey
-                CKey key;
-                if (!keystore.GetKey(uint160(item.second), key))
-                    return false;
-                if (hash != 0)
-                {
-                    vector<unsigned char> vchSig;
-                    if (!key.Sign(hash, vchSig))
-                        return false;
-                    vchSig.push_back((unsigned char)nHashType);
-                    scriptSigRet << vchSig << key.GetPubKey();
-                }
-            }
-            else
-            {
+            // Sign
+            const valtype& vchPubKey = item.second;
+            CKey key;
+            if (!keystore.GetKey(Hash160(vchPubKey), key))
                 return false;
+            if (key.GetPubKey() != vchPubKey)
+                return false;
+            if (hash != 0)
+            {
+                vector<unsigned char> vchSig;
+                if (!key.Sign(hash, vchSig))
+                    return false;
+                vchSig.push_back((unsigned char)nHashType);
+                scriptSigRet << vchSig;
             }
+        }
+        else if (item.first == OP_PUBKEYHASH)
+        {
+            // Sign and give pubkey
+            CKey key;
+            if (!keystore.GetKey(uint160(item.second), key))
+                return false;
+            if (hash != 0)
+            {
+                vector<unsigned char> vchSig;
+                if (!key.Sign(hash, vchSig))
+                    return false;
+                vchSig.push_back((unsigned char)nHashType);
+                scriptSigRet << vchSig << key.GetPubKey();
+            }
+        }
+        else
+        {
+            return false;
         }
     }
 
@@ -1095,35 +1092,31 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         return false;
 
     // Compile solution
-    CRITICAL_BLOCK(keystore.cs_KeyStore)
+    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
     {
-        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        if (item.first == OP_PUBKEY)
         {
-            if (item.first == OP_PUBKEY)
-            {
-                const valtype& vchPubKey = item.second;
-                vector<unsigned char> vchPubKeyFound;
-                if (!keystore.GetPubKey(Hash160(vchPubKey), vchPubKeyFound))
-                    return false;
-                if (vchPubKeyFound != vchPubKey)
-                    return false;
-            }
-            else if (item.first == OP_PUBKEYHASH)
-            {
-                if (!keystore.HaveKey(uint160(item.second)))
-                    return false;
-            }
-            else
-            {
+            const valtype& vchPubKey = item.second;
+            vector<unsigned char> vchPubKeyFound;
+            if (!keystore.GetPubKey(Hash160(vchPubKey), vchPubKeyFound))
                 return false;
-            }
+            if (vchPubKeyFound != vchPubKey)
+                return false;
+        }
+        else if (item.first == OP_PUBKEYHASH)
+        {
+            if (!keystore.HaveKey(uint160(item.second)))
+                return false;
+        }
+        else
+        {
+            return false;
         }
     }
 
     return true;
 }
 
-// requires either keystore==0, or a lock on keystore->cs_KeyStore
 bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
     vector<pair<opcodetype, valtype> > vSolution;
@@ -1147,8 +1140,7 @@ bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* ke
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
     if (keystore)
-        CRITICAL_BLOCK(keystore->cs_KeyStore)
-            return ExtractAddressInner(scriptPubKey, keystore, addressRet);
+        return ExtractAddressInner(scriptPubKey, keystore, addressRet);
     else
         return ExtractAddressInner(scriptPubKey, NULL, addressRet);
     return false;

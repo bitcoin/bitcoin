@@ -45,21 +45,45 @@ LIBS=$(LIBS) \
 
 DEBUGFLAGS=/Os
 CFLAGS=/MD /c /nologo /EHsc /GR /Zm300 $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h main.h rpc.h uibase.h ui.h noui.h init.h wallet.h keystore.h crypter.h
+HEADERS = \
+    base58.h \
+    bignum.h \
+    crypter.h \
+    db.h \
+    headers.h \
+    init.h \
+    irc.h \
+    key.h \
+    keystore.h \
+    main.h \
+    net.h \
+    noui.h \
+    protocol.h \
+    rpc.h \
+    script.h \
+    serialize.h \
+    strlcpy.h \
+    ui.h \
+    uibase.h \
+    uint256.h \
+    util.h \
+    wallet.h
 
 OBJS= \
-    obj\util.obj \
-    obj\script.obj \
-    obj\db.obj \
-    obj\net.obj \
-    obj\irc.obj \
-	obj\keystore.obj \
-    obj\main.obj \
-	obj\wallet.obj \
-    obj\rpc.obj \
-    obj\init.obj \
-	obj\crypter.obj
+    obj\crypter.o \
+    obj\db.o \
+    obj\init.o \
+    obj\irc.o \
+    obj\keystore.o \
+    obj\main.o \
+    obj\net.o \
+    obj\rpc.o \
+    obj\protocol.o \
+    obj\script.o \
+    obj\util.o \
+    obj\wallet.o \
+    cryptopp\obj\sha.o \
+    cryptopp\obj\cpu.o
 
 CRYPTOPP_OBJS= \
     cryptopp\obj\sha.obj \
