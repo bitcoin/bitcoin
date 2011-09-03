@@ -10,6 +10,6 @@ If it is a simple/trivial/non-controversial change, then one of the bitcoin deve
 If it is a more complicated or potentially controversial change, then the patch submitter will be asked to start a discussion (if they haven't already) on the mailing list:  http://sourceforge.net/mailarchive/forum.php?forum_name=bitcoin-development
 The patch will be accepted if there is broad consensus that it is a good thing.  Developers should expect to rework and resubmit patches if they don't match the project's coding conventions (see coding.txt) or are controversial.
 
-The master branch is regularly built and tested, and periodically pushed to the git repo to become the official, stable, released bitcoin. If you would like to help test the Bitcoin core, please contact BitcoinQA@Gmail.com
+The binaries are regularly built and tested, and periodically pushed to the Git repo to become the official, stable, released bitcoin. If you would like to help test the Bitcoin core, please contact BitcoinQA@Gmail.com
 
 Feature branches are created when there are major new features being worked on by several people.
