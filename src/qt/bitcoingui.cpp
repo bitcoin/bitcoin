@@ -21,6 +21,7 @@
 #include "guiconstants.h"
 #include "askpassphrasedialog.h"
 #include "notificator.h"
+#include "qtwin.h"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -159,6 +160,16 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Doubleclicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
+#ifdef Q_OS_WIN
+    // Windows-specific customization
+    if (QtWin::isCompositionEnabled())
+    {
+        QtWin::extendFrameIntoClientArea(&window);
+        window.setContentsMargins(0, 0, 0, 0);
+    }
+#endif
+    setWindowComposition();
+
     gotoOverviewPage();
 }
 
@@ -216,7 +227,7 @@ void BitcoinGUI::createActions()
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
-    connect(openBitcoinAction, SIGNAL(triggered()), this, SLOT(show()));
+    connect(openBitcoinAction, SIGNAL(triggered()), this, SLOT(showNormal()));
     connect(encryptWalletAction, SIGNAL(triggered(bool)), this, SLOT(encryptWallet(bool)));
     connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
 }
@@ -297,9 +308,10 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     if(reason == QSystemTrayIcon::Trigger)
     {
-        // Doubleclick on system tray icon triggers "open bitcoin"
+        // Click on system tray icon triggers "open bitcoin"
         openBitcoinAction->trigger();
     }
+
 }
 
 void BitcoinGUI::optionsClicked()
@@ -414,10 +426,12 @@ void BitcoinGUI::changeEvent(QEvent *e)
             }
             else
             {
+                show();
                 e->accept();
             }
         }
     }
+    setWindowComposition();
     QMainWindow::changeEvent(e);
 }
 
@@ -429,6 +443,41 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
         qApp->quit();
     }
     QMainWindow::closeEvent(event);
+}
+
+void BitcoinGUI::setWindowComposition()
+{
+#ifdef Q_OS_WIN
+    // Make the background transparent on Windows Vista or 7, except when maximized
+    // Otherwise text becomes hard to read
+    if (QtWin::isCompositionEnabled())
+    {
+        QPalette pal = palette();
+        QColor bg = pal.window().color();
+        if(isMaximized())
+        {
+            setAttribute(Qt::WA_TranslucentBackground, false);
+            setAttribute(Qt::WA_StyledBackground, true);
+            QBrush wb = pal.window();
+            bg = wb.color();
+            bg.setAlpha(255);
+            pal.setColor(QPalette::Window, bg);
+            setPalette(pal);
+
+        }
+        else
+        {
+            setAttribute(Qt::WA_TranslucentBackground);
+            setAttribute(Qt::WA_StyledBackground, false);
+            bg.setAlpha(0);
+            pal.setColor(QPalette::Window, bg);
+            setPalette(pal);
+            setAttribute(Qt::WA_NoSystemBackground, false);
+            ensurePolished();
+            setAttribute(Qt::WA_StyledBackground, false);
+        }
+    }
+#endif
 }
 
 void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
