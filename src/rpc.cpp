@@ -111,6 +111,17 @@ string AccountFromValue(const Value& value)
 /// Note: This interface may still be subject to change.
 ///
 
+Value resendtxs(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "resendtxs\n"
+            "Forces all unsent transactions to be resent.");
+    
+    ResendWalletTransactions(true);
+    
+    return 0;
+}
 
 Value help(const Array& params, bool fHelp)
 {
@@ -1644,6 +1655,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
+    make_pair("resendtxs",              &resendtxs),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 

@@ -142,10 +142,10 @@ void static Inventory(const uint256& hash)
         pwallet->Inventory(hash);
 }
 
-void static ResendWalletTransactions()
+void ResendWalletTransactions(bool forceResend=false)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->ResendWalletTransactions();
+        pwallet->ResendWalletTransactions(forceResend);
 }
 
 
@@ -2382,7 +2382,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             pto->PushMessage("ping");
 
         // Resend wallet transactions that haven't gotten in a block yet
-        ResendWalletTransactions();
+        ResendWalletTransactions(GetBoolArg("-forceresendtx"));
 
         // Address refresh broadcast
         static int64 nLastRebroadcast;
