@@ -1349,7 +1349,6 @@ void ThreadOpenConnections2(void* parg)
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             // Add seed nodes if IRC isn't working
-            static bool fSeedUsed;
             bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
             if (mapAddresses.empty() && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
             {
@@ -1364,35 +1363,6 @@ void ThreadOpenConnections2(void* parg)
                     addr.ip = pnSeed[i];
                     addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
                     AddAddress(addr);
-                }
-                fSeedUsed = true;
-            }
-
-            if (fSeedUsed && mapAddresses.size() > ARRAYLEN(pnSeed) + 100)
-            {
-                // Disconnect seed nodes
-                set<unsigned int> setSeed(pnSeed, pnSeed + ARRAYLEN(pnSeed));
-                static int64 nSeedDisconnected;
-                if (nSeedDisconnected == 0)
-                {
-                    nSeedDisconnected = GetTime();
-                    CRITICAL_BLOCK(cs_vNodes)
-                        BOOST_FOREACH(CNode* pnode, vNodes)
-                            if (setSeed.count(pnode->addr.ip))
-                                pnode->fDisconnect = true;
-                }
-
-                // Keep setting timestamps to 0 so they won't reconnect
-                if (GetTime() - nSeedDisconnected < 60 * 60)
-                {
-                    BOOST_FOREACH(PAIRTYPE(const vector<unsigned char>, CAddress)& item, mapAddresses)
-                    {
-                        if (setSeed.count(item.second.ip) && item.second.nTime != 0)
-                        {
-                            item.second.nTime = 0;
-                            CAddrDB().WriteAddress(item.second);
-                        }
-                    }
                 }
             }
         }
