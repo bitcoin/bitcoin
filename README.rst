@@ -8,9 +8,9 @@ Features
 
 - Compatibility with Linux (both GNOME and KDE), MacOSX and Windows
 
-- Splash screen
+- Notification on incoming / outgoing transactions (compatible with FreeDesktop and other desktop notification schemes)
 
-- Tabbed interface
+- General interface improvements: Splash screen, tabbed interface
 
 - Overview page with current balance, unconfirmed balance, and such
 
@@ -32,7 +32,7 @@ Features
 
 - Address books and transaction table can be sorted by any column
 
-- Accepts "bitcoin:" URLs from browsers through drag and drop
+- Accepts "bitcoin:" URLs from browsers and other sources through drag and drop
 
 Build instructions 
 ===================
@@ -79,8 +79,11 @@ Windows build instructions:
 .. [#] PGP signature: http://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
 .. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
 
+Build configuration options
+============================
+
 UPNnP port forwarding
-=====================
+---------------------
 
 To use UPnP for port forwarding behind a NAT router (recommended, as more connections overall allow for a faster and more stable bitcoin experience), pass the following argument to qmake:
 
@@ -102,6 +105,16 @@ Set USE_UPNP to a different value to control this:
 +------------+--------------------------------------------------------------+
 | USE_UPNP=1 | UPnP support turned on by default at runtime.                |
 +------------+--------------------------------------------------------------+
+
+Notification support for recent (k)ubuntu versions
+---------------------------------------------------
+
+To see desktop notifications on (k)ubuntu versions starting from 10.04, enable usage of the 
+FreeDesktop notification interface through DBUS using the following qmake option:
+
+::
+
+    qmake "USE_DBUS=1"
 
 Berkely DB version warning
 ==========================

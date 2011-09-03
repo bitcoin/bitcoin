@@ -22,6 +22,12 @@ count(USE_UPNP, 1) {
     LIBS += -lminiupnpc
 }
 
+count(USE_DBUS, 1) {
+    message(Building with DBUS (Freedesktop notifications) support)
+    DEFINES += QT_DBUS
+    QT += dbus
+}
+
 # for extra security against potential buffer overflows
 QMAKE_CXXFLAGS += -fstack-protector 
 QMAKE_LFLAGS += -fstack-protector
@@ -100,7 +106,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/bitcoinunits.h \
     src/qt/qvaluecombobox.h \
     src/qt/askpassphrasedialog.h \
-    src/protocol.h
+    src/protocol.h \
+    src/qt/notificator.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -147,7 +154,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/bitcoinunits.cpp \
     src/qt/qvaluecombobox.cpp \
     src/qt/askpassphrasedialog.cpp \
-    src/protocol.cpp
+    src/protocol.cpp \
+    src/qt/notificator.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
