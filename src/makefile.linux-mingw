@@ -7,19 +7,19 @@ DEPSDIR:=/usr/i586-mingw32msvc
 USE_UPNP:=0
 
 INCLUDEPATHS= \
- -I"$(DEPSDIR)/boost_1_43_0" \
- -I"$(DEPSDIR)/db-4.7.25.NC/build_unix" \
+ -I"$(DEPSDIR)/boost_1_47_0" \
+ -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
  -I"$(DEPSDIR)/openssl-1.0.0d/include" \
- -I"$(DEPSDIR)/wxWidgets-2.9.1/lib/gcc_lib/mswud" \
- -I"$(DEPSDIR)/wxWidgets-2.9.1/include" \
- -I"$(DEPSDIR)/wxWidgets-2.9.1/lib/wx/include/i586-mingw32msvc-msw-unicode-static-2.9/" \
+ -I"$(DEPSDIR)/wxWidgets-2.9.2/lib/gcc_lib/mswud" \
+ -I"$(DEPSDIR)/wxWidgets-2.9.2/include" \
+ -I"$(DEPSDIR)/wxWidgets-2.9.2/lib/wx/include/i586-mingw32msvc-msw-unicode-static-2.9/" \
  -I"$(DEPSDIR)"
 
 LIBPATHS= \
- -L"$(DEPSDIR)/boost_1_43_0/stage/lib" \
- -L"$(DEPSDIR)/db-4.7.25.NC/build_unix" \
+ -L"$(DEPSDIR)/boost_1_47_0/stage/lib" \
+ -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
  -L"$(DEPSDIR)/openssl-1.0.0d" \
- -L"$(DEPSDIR)/wxWidgets-2.9.1/lib"
+ -L"$(DEPSDIR)/wxWidgets-2.9.2/lib"
 
 WXLIBS= -l wx_mswu-2.9-i586-mingw32msvc
 
@@ -32,16 +32,35 @@ LIBS= \
  -l ssl \
  -l crypto
 
-DEFS=-D_MT -DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL
+DEFS=-D_MT -DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL -DBOOST_THREAD_USE_LIB
 DEBUGFLAGS=-g -D__WXDEBUG__
 CFLAGS=-O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS=headers.h strlcpy.h serialize.h uint256.h util.h key.h bignum.h base58.h \
-    script.h db.h net.h irc.h keystore.h main.h wallet.h rpc.h uibase.h ui.h noui.h \
-    crypter.h init.h
+HEADERS = \
+    base58.h \
+    bignum.h \
+    crypter.h \
+    db.h \
+    headers.h \
+    init.h \
+    irc.h \
+    key.h \
+    keystore.h \
+    main.h \
+    net.h \
+    noui.h \
+    protocol.h \
+    rpc.h \
+    script.h \
+    serialize.h \
+    strlcpy.h \
+    ui.h \
+    uibase.h \
+    uint256.h \
+    util.h \
+    wallet.h
 
 ifdef USE_UPNP
-	INCLUDEPATHS += -I"$(DEPSDIR)/upnpc-exe-win32-20110215"
-	LIBPATHS += -L"$(DEPSDIR)/upnpc-exe-win32-20110215"
+	LIBPATHS += -L"$(DEPSDIR)/miniupnpc"
 	LIBS += -l miniupnpc -l iphlpapi
 	DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
 endif
@@ -49,17 +68,18 @@ endif
 LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
 
 OBJS= \
-    obj/util.o \
-    obj/script.o \
+    obj/crypter.o \
     obj/db.o \
-    obj/net.o \
+    obj/init.o \
     obj/irc.o \
     obj/keystore.o \
     obj/main.o \
-    obj/wallet.o \
+    obj/net.o \
+    obj/protocol.o \
     obj/rpc.o \
-    obj/init.o \
-    obj/crypter.o \
+    obj/script.o \
+    obj/util.o \
+    obj/wallet.o \
     cryptopp/obj/sha.o \
     cryptopp/obj/cpu.o
 

@@ -923,16 +923,22 @@ string FormatFullVersion()
 
 struct CLockLocation
 {
-    std::string mutexName;
-    std::string sourceFile;
-    int sourceLine;
-
     CLockLocation(const char* pszName, const char* pszFile, int nLine)
     {
         mutexName = pszName;
         sourceFile = pszFile;
         sourceLine = nLine;
     }
+
+    std::string ToString() const
+    {
+        return mutexName+"  "+sourceFile+":"+itostr(sourceLine);
+    }
+
+private:
+    std::string mutexName;
+    std::string sourceFile;
+    int sourceLine;
 };
 
 typedef std::vector< std::pair<CCriticalSection*, CLockLocation> > LockStack;
@@ -942,18 +948,22 @@ static std::map<std::pair<CCriticalSection*, CCriticalSection*>, LockStack> lock
 static boost::thread_specific_ptr<LockStack> lockstack;
 
 
-static void potential_deadlock_detected(const LockStack& s1, const LockStack& s2)
+static void potential_deadlock_detected(const std::pair<CCriticalSection*, CCriticalSection*>& mismatch, const LockStack& s1, const LockStack& s2)
 {
     printf("POTENTIAL DEADLOCK DETECTED\n");
     printf("Previous lock order was:\n");
     BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s2)
     {
-        printf(" %s  %s:%d\n", i.second.mutexName.c_str(), i.second.sourceFile.c_str(), i.second.sourceLine);
+        if (i.first == mismatch.first) printf(" (1)");
+        if (i.first == mismatch.second) printf(" (2)");
+        printf(" %s\n", i.second.ToString().c_str());
     }
     printf("Current lock order is:\n");
     BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s1)
     {
-        printf(" %s  %s:%d\n", i.second.mutexName.c_str(), i.second.sourceFile.c_str(), i.second.sourceLine);
+        if (i.first == mismatch.first) printf(" (1)");
+        if (i.first == mismatch.second) printf(" (2)");
+        printf(" %s\n", i.second.ToString().c_str());
     }
 }
 
@@ -963,6 +973,7 @@ static void push_lock(CCriticalSection* c, const CLockLocation& locklocation)
     if (lockstack.get() == NULL)
         lockstack.reset(new LockStack);
 
+    if (fDebug) printf("Locking: %s\n", locklocation.ToString().c_str());
     dd_mutex.lock();
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
@@ -979,7 +990,7 @@ static void push_lock(CCriticalSection* c, const CLockLocation& locklocation)
         std::pair<CCriticalSection*, CCriticalSection*> p2 = std::make_pair(c, i.first);
         if (lockorders.count(p2))
         {
-            potential_deadlock_detected(lockorders[p2], lockorders[p1]);
+            potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
             break;
         }
     }
@@ -988,7 +999,14 @@ static void push_lock(CCriticalSection* c, const CLockLocation& locklocation)
 
 static void pop_lock()
 {
+    if (fDebug) 
+    {
+        const CLockLocation& locklocation = (*lockstack).rbegin()->second;
+        printf("Unlocked: %s\n", locklocation.ToString().c_str());
+    }
+    dd_mutex.lock();
     (*lockstack).pop_back();
+    dd_mutex.unlock();
 }
 
 void CCriticalSection::Enter(const char* pszName, const char* pszFile, int nLine)

@@ -683,8 +683,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
 #endif
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
-    CRITICAL_BLOCK(pwallet->cs_mapWallet)
-    CRITICAL_BLOCK(pwallet->cs_KeyStore)
+    CRITICAL_BLOCK(pwallet->cs_wallet)
     {
         // Get cursor
         Dbc* pcursor = GetCursor();

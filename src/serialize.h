@@ -59,14 +59,17 @@ class CDataStream;
 class CAutoFile;
 static const unsigned int MAX_SIZE = 0x02000000;
 
-static const int VERSION = 32500;
+static const int VERSION = 40000;
 static const char* pszSubVer = "";
 static const bool VERSION_IS_BETA = true;
 
-
-
-
-
+// Used to bypass the rule against non-const reference to temporary
+// where it makes sense with wrappers such as CFlatData or CTxDB
+template<typename T>
+inline T& REF(const T& val)
+{
+    return const_cast<T&>(val);
+}
 
 /////////////////////////////////////////////////////////////////
 //
