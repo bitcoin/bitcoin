@@ -1805,7 +1805,7 @@ void SetStartOnSystemStartup(bool fAutoStart)
 {
     if (!fAutoStart)
     {
-        unlink(GetAutostartFilePath().native_file_string().c_str());
+        unlink(GetAutostartFilePath().c_str());
     }
     else
     {
