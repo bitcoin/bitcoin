@@ -38,5 +38,5 @@ script: |
   cd $TMPDIR
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r wxWidgets-2.9.2-gitian.zip *
-  cp wxWidgets-2.9.2-gitian.zip $OUTDIR
+  zip -r wxWidgets-2.9.2-x$GBUILD_BITS-gitian.zip *
+  cp wxWidgets-2.9.2-x$GBUILD_BITS-gitian.zip $OUTDIR
