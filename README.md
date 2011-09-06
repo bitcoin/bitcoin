@@ -1,30 +1,29 @@
+ Latinum coins
+(known as asspenny)
 
-Bitcoin integration/staging tree
+~841.000 max coins
 
-Development process
-===================
+5 min block timeframe
+1 coin subsidy/block
+diff = btc protocol
 
-Developers work in their own trees, then submit pull requests when
-they think their feature or bug fix is ready.
-
-If it is a simple/trivial/non-controversial change, then one of the
-bitcoin development team members simply pulls it.
-
-If it is a more complicated or potentially controversial
-change, then the patch submitter will be asked to start a
-discussion (if they haven't already) on the mailing list:
-http://sourceforge.net/mailarchive/forum.php?forum_name=bitcoin-development
-
-The patch will be accepted if there is broad consensus that it is a
-good thing.  Developers should expect to rework and resubmit patches
-if they don't match the project's coding conventions (see coding.txt)
-or are controversial.
-
-The master branch is regularly built and tested, but is not guaranteed
-to be completely stable. Tags are regularly created to indicate new
-official, stable release versions of Bitcoin. If you would like to
-help test the Bitcoin core, please contact QA@Bitcoin.org.
-
-Feature branches are created when there are major new features being
-worked on by several people.
-
+420.480 first 4 years
+210.240 5-8 years
+105.120 9-12
+52560 13-16
+26280 17-20
+13140 21-24
+6570 25-28
+3285 29-32
+1642,5 33-36
+821,25 37-40
+410,625 41-44
+205,3125 45-48
+102,65625 49-52
+51,328125 53-56
+25,6640625 57-60
+12,83203125 61-64
+6,416015625 65-68
+3,2080078125 69-72
+1,60400390625 73-76
+0,802001953125 77-80
