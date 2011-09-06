@@ -81,8 +81,10 @@ T* alignup(T* p)
     return u.ptr;
 }
 
-#ifdef __WXMSW__
+#ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL        0
+#endif
+#ifdef __WXMSW__
 #define MSG_DONTWAIT        0
 #ifndef UINT64_MAX
 #define UINT64_MAX          _UI64_MAX
