@@ -1764,7 +1764,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         // Each connection can only send one version message
         if (pfrom->nVersion != 0)
+        {
+            pfrom->Misbehaving(1);
             return false;
+        }
 
         int64 nTime;
         CAddress addrMe;
@@ -1848,6 +1851,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     else if (pfrom->nVersion == 0)
     {
         // Must have a version message before anything else
+        pfrom->Misbehaving(1);
         return false;
     }
 
@@ -1869,7 +1873,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (pfrom->nVersion < 31402 && mapAddresses.size() > 1000)
             return true;
         if (vAddr.size() > 1000)
+        {
+            pfrom->Misbehaving(20);
             return error("message addr size() = %d", vAddr.size());
+        }
 
         // Store the new addresses
         CAddrDB addrDB;
@@ -1927,7 +1934,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vector<CInv> vInv;
         vRecv >> vInv;
         if (vInv.size() > 50000)
+        {
+            pfrom->Misbehaving(20);
             return error("message inv size() = %d", vInv.size());
+        }
 
         CTxDB txdb("r");
         BOOST_FOREACH(const CInv& inv, vInv)
@@ -1956,7 +1966,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vector<CInv> vInv;
         vRecv >> vInv;
         if (vInv.size() > 50000)
+        {
+            pfrom->Misbehaving(20);
             return error("message getdata size() = %d", vInv.size());
+        }
 
         BOOST_FOREACH(const CInv& inv, vInv)
         {
