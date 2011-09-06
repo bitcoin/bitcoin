@@ -1614,14 +1614,14 @@ Value getwork(const Array& params, bool fHelp)
             vNewBlock.push_back(pblock);
         }
 
-        // Update nTime
-        pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-        pblock->nNonce = 0;
-
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
         static int64 nPrevTime = 0;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, nPrevTime);
+
+        // Update nTime
+        pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+        pblock->nNonce = 0;
 
         // Save
         mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, nExtraNonce);
