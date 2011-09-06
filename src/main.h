@@ -399,6 +399,9 @@ public:
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
 
+    // Denial-of-service detection:
+    mutable int nDoS;
+    bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
 
     CTransaction()
     {
@@ -420,6 +423,7 @@ public:
         vin.clear();
         vout.clear();
         nLockTime = 0;
+        nDoS = 0;  // Denial-of-service prevention
     }
 
     bool IsNull() const
@@ -786,6 +790,9 @@ public:
     // memory only
     mutable std::vector<uint256> vMerkleTree;
 
+    // Denial-of-service detection:
+    mutable int nDoS;
+    bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
 
     CBlock()
     {
@@ -819,6 +826,7 @@ public:
         nNonce = 0;
         vtx.clear();
         vMerkleTree.clear();
+        nDoS = 0;
     }
 
     bool IsNull() const
