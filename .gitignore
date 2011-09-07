@@ -3,6 +3,12 @@ src/bitcoin
 src/bitcoind
 .*.swp
 *.*~*
+*.bak
+*.rej
+*.orig
+*.o
+*.patch
+.bitcoin
 #compilation and Qt preprocessor part
 *.o
 ui_*.h
