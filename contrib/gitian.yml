@@ -18,7 +18,8 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "wxWidgets-2.9.2-gitian.zip"
+- "wxWidgets-2.9.2-x64-gitian.zip"
+- "wxWidgets-2.9.2-x32-gitian.zip"
 - "miniupnpc-1.6.tar.gz"
 script: |
   INSTDIR="$HOME/install"
@@ -32,7 +33,8 @@ script: |
   mkdir -p $INSTDIR/bin $INSTDIR/lib/wx $INSTDIR/include
   mkdir wxWidgets-2.9.2
   cd wxWidgets-2.9.2
-  unzip ../wxWidgets-2.9.2-gitian.zip
+  unzip ../wxWidgets-2.9.2-x32-gitian.zip
+  unzip -f ../wxWidgets-2.9.2-x64-gitian.zip
   cp -a bin/$GBUILD_BITS/wx/config/gtk2-unicode-static-2.9 $INSTDIR/bin/wx-config
   for lib in wx_gtk2u wxregexu wxtiff; do
     ar rc $INSTDIR/lib/lib${lib}-2.9.a bin/$GBUILD_BITS/$lib/*.o

@@ -820,7 +820,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             // Read txindex
             CTxIndex txindex;
             bool fFound = true;
-            if (fMiner && mapTestPool.count(prevout.hash))
+            if ((fBlock || fMiner) && mapTestPool.count(prevout.hash))
             {
                 // Get txindex from current proposed changes
                 txindex = mapTestPool[prevout.hash];
@@ -880,12 +880,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             txindex.vSpent[prevout.n] = posThisTx;
 
             // Write back
-            if (fBlock)
-            {
-                if (!txdb.UpdateTxIndex(prevout.hash, txindex))
-                    return error("ConnectInputs() : UpdateTxIndex failed");
-            }
-            else if (fMiner)
+            if (fBlock || fMiner)
             {
                 mapTestPool[prevout.hash] = txindex;
             }
@@ -907,9 +902,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
 
     if (fBlock)
     {
-        // Add transaction to disk index
-        if (!txdb.AddTxIndex(*this, posThisTx, pindexBlock->nHeight))
-            return error("ConnectInputs() : AddTxPos failed");
+        // Add transaction to changes
+        mapTestPool[GetHash()] = CTxIndex(posThisTx, vout.size());
     }
     else if (fMiner)
     {
@@ -998,15 +992,21 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     //// issue here: it doesn't know the version
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - 1 + GetSizeOfCompactSize(vtx.size());
 
-    map<uint256, CTxIndex> mapUnused;
+    map<uint256, CTxIndex> mapQueuedChanges;
     int64 nFees = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
         nTxPos += ::GetSerializeSize(tx, SER_DISK);
 
-        if (!tx.ConnectInputs(txdb, mapUnused, posThisTx, pindex, nFees, true, false))
+        if (!tx.ConnectInputs(txdb, mapQueuedChanges, posThisTx, pindex, nFees, true, false))
             return false;
+    }
+    // Write queued txindex changes
+    for (map<uint256, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
+    {
+        if (!txdb.UpdateTxIndex((*mi).first, (*mi).second))
+            return error("ConnectBlock() : UpdateTxIndex failed");
     }
 
     if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
