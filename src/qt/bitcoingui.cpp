@@ -164,8 +164,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Windows-specific customization
     if (QtWin::isCompositionEnabled())
     {
-        QtWin::extendFrameIntoClientArea(&window);
-        window.setContentsMargins(0, 0, 0, 0);
+        QtWin::extendFrameIntoClientArea(this);
+        setContentsMargins(0, 0, 0, 0);
     }
 #endif
     setWindowComposition();
