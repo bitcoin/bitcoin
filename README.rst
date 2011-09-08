@@ -4,7 +4,7 @@ Bitcoin-qt: Qt4 based GUI replacement for Bitcoin
 Features
 ========
 
-- All functionality of the original client, including wallet encryption
+- All functionality of the Wx GUI, including wallet encryption
 
 - Compatibility with Linux (both GNOME and KDE), MacOSX and Windows
 
@@ -75,8 +75,8 @@ Windows build instructions:
 - Open the .pro file in QT creator and build as normal (ctrl-B)
 
 .. _`QT Windows SDK`: http://qt.nokia.com/downloads/sdk-windows-cpp
-.. _`dependencies archive`: http://download.visucore.com/bitcoin/qtgui_deps_1.zip
-.. [#] PGP signature: http://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
+.. _`dependencies archive`: https://download.visucore.com/bitcoin/qtgui_deps_1.zip
+.. [#] PGP signature: https://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
 .. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
 
 Build configuration options
