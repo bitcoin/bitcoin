@@ -4,7 +4,11 @@
 #ifndef BITCOIN_CHECKPOINT_H
 #define  BITCOIN_CHECKPOINT_H
 
+#include <map>
+#include "util.h"
+
 class uint256;
+class CBlockIndex;
 
 //
 // Block-chain checkpoints are compiled-in sanity checks.
@@ -17,6 +21,9 @@ namespace Checkpoints
 
     // Return conservative estimate of total number of blocks, 0 if unknown
     int GetTotalBlocksEstimate();
+
+    // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
+    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
 }
 
 #endif

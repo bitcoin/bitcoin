@@ -98,6 +98,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
 
