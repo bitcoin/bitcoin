@@ -2219,22 +2219,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "alert")
-    {
-        CAlert alert;
-        vRecv >> alert;
-
-        if (alert.ProcessAlert())
-        {
-            // Relay
-            pfrom->setKnown.insert(alert.GetHash());
-            CRITICAL_BLOCK(cs_vNodes)
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    alert.RelayTo(pnode);
-        }
-    }
-
-
     else
     {
         // Ignore unknown commands for extensibility
