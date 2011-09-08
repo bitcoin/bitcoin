@@ -64,5 +64,4 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     BOOST_CHECK(!CNode::IsBanned(addr.ip));
 }    
 
-
 BOOST_AUTO_TEST_SUITE_END()
