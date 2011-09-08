@@ -48,6 +48,7 @@ CFLAGS=/MD /c /nologo /EHsc /GR /Zm300 $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS = \
     base58.h \
     bignum.h \
+    checkpoints.h \
     crypter.h \
     db.h \
     headers.h \
@@ -70,6 +71,7 @@ HEADERS = \
     wallet.h
 
 OBJS= \
+    obj\checkpoints.o \
     obj\crypter.o \
     obj\db.o \
     obj\init.o \
@@ -97,6 +99,8 @@ all: bitcoin.exe
 
 .cpp{obj}.obj:
     cl $(CFLAGS) /DGUI /Fo$@ %s
+
+obj\checkpoints.obj: $(HEADERS)
 
 obj\util.obj: $(HEADERS)
 
@@ -139,6 +143,8 @@ bitcoin.exe: $(OBJS) $(CRYPTOPP_OBJS) obj\ui.obj obj\uibase.obj obj\ui.res
 	
 .cpp{obj\nogui}.obj:
     cl $(CFLAGS) /Fo$@ %s
+
+obj\nogui\checkpoints.obj: $(HEADERS)
 
 obj\nogui\util.obj: $(HEADERS)
 

@@ -8,6 +8,7 @@
 #include "uint256_tests.cpp"
 #include "script_tests.cpp"
 #include "transaction_tests.cpp"
+#include "Checkpoints_tests.cpp"
 
 
 CWallet* pwalletMain;
