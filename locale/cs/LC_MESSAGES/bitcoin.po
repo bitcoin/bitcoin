@@ -1,4 +1,4 @@
-# This file is distributed under the same license as the Bitcoin package.
+# This file is distributed under the same license as the cosbycoin package.
 # xHire <xhire@mujmalysvet.cz>, 2011.
 #
 msgid ""
@@ -28,7 +28,7 @@ msgstr "&Soubor"
 
 #: ../../../src/uibase.cpp:32
 msgid "&Your Receiving Addresses..."
-msgstr "Tvá Bitcoinová &adresa..."
+msgstr "Tvá cosbycoinová &adresa..."
 
 #: ../../../src/uibase.cpp:35
 msgid "&Encrypt Wallet..."
@@ -67,8 +67,8 @@ msgid "Address Book"
 msgstr "Adresář"
 
 #: ../../../src/uibase.cpp:75
-msgid "Your Bitcoin Address:"
-msgstr "Tvá Bitcoinová adresa:"
+msgid "Your cosbycoin Address:"
+msgstr "Tvá cosbycoinová adresa:"
 
 #: ../../../src/uibase.cpp:82
 msgid " &New... "
@@ -127,8 +127,8 @@ msgid "OK"
 msgstr "&Budiž"
 
 #: ../../../src/uibase.cpp:355
-msgid "&Start Bitcoin on system startup"
-msgstr "&Spustit Bitcoin při startu systému"
+msgid "&Start cosbycoin on system startup"
+msgstr "&Spustit cosbycoin při startu systému"
 
 #: ../../../src/uibase.cpp:358
 msgid "&Minimize to the tray instead of the taskbar"
@@ -184,8 +184,8 @@ msgid "&Apply"
 msgstr "&Použít"
 
 #: ../../../src/uibase.cpp:518
-msgid "Bitcoin "
-msgstr "Bitcoin"
+msgid "cosbycoin "
+msgstr "cosbycoin"
 
 #: ../../../src/uibase.cpp:524
 msgid "version"
@@ -193,7 +193,7 @@ msgstr "verze"
 
 #: ../../../src/uibase.cpp:535
 msgid ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -204,7 +204,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
 msgstr ""
-"Copyright (c) 2009-2011 Vývojáři Bitcoinu\n"
+"Copyright (c) 2009-2011 Vývojáři cosbycoinu\n"
 "\n"
 "Tohle je experimentální program.\n"
 "\n"
@@ -216,8 +216,8 @@ msgstr ""
 "Erika Younga (eay@cryptsoft.com) a program UPnP od Thomase Bernarda."
 
 #: ../../../src/uibase.cpp:591
-msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Vlož Bitcoinovou adresu (např. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgid "Enter a cosbycoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Vlož cosbycoinovou adresu (např. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:605
 msgid "Pay &To:"
@@ -258,8 +258,8 @@ msgstr ""
 "Připojuji..."
 
 #: ../../../src/uibase.cpp:771
-msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
-msgstr "Tohle jsou tvé Bitcoinové adresy na příjem plateb.  Asi budeš chtít dát jinou adresu každému odesílateli, abys věděl, kdo ti kolik platil.  Označená adresa bude zobrazena v hlavním okně."
+msgid "These are your cosbycoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Tohle jsou tvé cosbycoinové adresy na příjem plateb.  Asi budeš chtít dát jinou adresu každému odesílateli, abys věděl, kdo ti kolik platil.  Označená adresa bude zobrazena v hlavním okně."
 
 #: ../../../src/uibase.cpp:784
 #: ../../../src/uibase.cpp:896
@@ -273,16 +273,16 @@ msgstr " &Nová adresa..."
 
 #: ../../../src/uibase.cpp:847
 #: ../../../src/ui.cpp:2620
-msgid "Bitcoin Address"
-msgstr "Bitcoinová adresa"
+msgid "cosbycoin Address"
+msgstr "cosbycoinová adresa"
 
 #: ../../../src/uibase.cpp:859
 msgid "Sending"
 msgstr "Cizí adresy (pro odesílání)"
 
 #: ../../../src/uibase.cpp:867
-msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
-msgstr "Tohle jsou tvé Bitcoinové adresy na příjem plateb.  Můžeš dát jinou adresu každému odesílateli, abys věděl, kdo ti kolik platil.  Označená adresa bude zobrazena v hlavním okně."
+msgid "These are your cosbycoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Tohle jsou tvé cosbycoinové adresy na příjem plateb.  Můžeš dát jinou adresu každému odesílateli, abys věděl, kdo ti kolik platil.  Označená adresa bude zobrazena v hlavním okně."
 
 #: ../../../src/uibase.cpp:880
 msgid "Receiving"
@@ -321,8 +321,8 @@ msgstr ""
 "Pokud tenhle soubor neexistuje, vytvoř ho s oprávněním pro čtení pouze pro vlastníka."
 
 #: ../../../src/util.cpp:870
-msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
-msgstr "Varování: Prosím zkontroluj, že datum a čas jsou na tvém počítači správně nastaveny. Pokud jsou nastaveny špatně, Bitcoin nebude fungovat správně."
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong cosbycoin will not work properly."
+msgstr "Varování: Prosím zkontroluj, že datum a čas jsou na tvém počítači správně nastaveny. Pokud jsou nastaveny špatně, cosbycoin nebude fungovat správně."
 
 #: ../../../src/util.cpp:904
 msgid "beta"
@@ -502,10 +502,10 @@ msgstr "Chyba: Zadané heslo je příliš krátké."
 
 #: ../../../src/ui.cpp:1193
 msgid ""
-"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\n"
+"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR cosbycoinS!\n"
 "Are you sure you wish to encrypt your wallet?"
 msgstr ""
-"VAROVÁNÍ: Pokud zašifruješ peněženku a ztratíš či zapomeneš heslo, PŘIJDEŠ O VŠECHNY BITCOINY!\n"
+"VAROVÁNÍ: Pokud zašifruješ peněženku a ztratíš či zapomeneš heslo, PŘIJDEŠ O VŠECHNY cosbycoinY!\n"
 "Jsi si jistý, že chceš peněženku zašifrovat?"
 
 #: ../../../src/ui.cpp:1199
@@ -524,10 +524,10 @@ msgstr "Zašifrování peněženky selhalo."
 #: ../../../src/ui.cpp:1225
 msgid ""
 "Wallet Encrypted.\n"
-"Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."
+"Remember that encrypting your wallet cannot fully protect your cosbycoins from being stolen by malware infecting your computer."
 msgstr ""
 "Peněženka je zašifrována.\n"
-"Pamatuj, že pouhé šifrování peněženky nemůže plně ochránit tvé bitcoiny před krádeží malwarem, kterým se může počítač nakazit."
+"Pamatuj, že pouhé šifrování peněženky nemůže plně ochránit tvé cosbycoiny před krádeží malwarem, kterým se může počítač nakazit."
 
 #: ../../../src/ui.cpp:1236
 msgid "Wallet is unencrypted, please encrypt it first."
@@ -548,7 +548,7 @@ msgstr "Heslo peněženky bylo změněno."
 #: ../../../src/ui.cpp:1382
 #: ../../../src/ui.cpp:2815
 msgid "New Receiving Address"
-msgstr "Nová Bitcoinová adresa"
+msgstr "Nová cosbycoinová adresa"
 
 #: ../../../src/ui.cpp:1383
 #: ../../../src/ui.cpp:2816
@@ -653,16 +653,16 @@ msgid "Generated coins must wait 120 blocks before they can be spent.  When you 
 msgstr "Vygenerované mince musí čekat 120 bloků, než mohou být utraceny.  Když jsi vygeneroval tenhle blok, tak byl rozposlán do sítě, aby byl přidán do řetězce bloků.  Pokud se mu nepodaří dostat se do řetězce, změní se na \"neakceptovaný\" a nebude utratitelný.  To se občas může přihodit, pokud jiný uzel vygeneruje blok zhruba ve stejném okamžiku jako ty."
 
 #: ../../../src/ui.cpp:1825
-msgid "Cannot write autostart/bitcoin.desktop file"
-msgstr "Nemohu zapisovat do souboru autostart/bitcoin.desktop"
+msgid "Cannot write autostart/cosbycoin.desktop file"
+msgstr "Nemohu zapisovat do souboru autostart/cosbycoin.desktop"
 
 #: ../../../src/ui.cpp:1861
 msgid "Main"
 msgstr "Hlavní"
 
 #: ../../../src/ui.cpp:1871
-msgid "&Start Bitcoin on window system startup"
-msgstr "&Spustit Bitcoin při startu okenního systému"
+msgid "&Start cosbycoin on window system startup"
+msgstr "&Spustit cosbycoin při startu okenního systému"
 
 #: ../../../src/ui.cpp:1878
 msgid "&Minimize on close"
@@ -834,24 +834,24 @@ msgid "Add Address"
 msgstr "Přidat adresu"
 
 #: ../../../src/ui.cpp:2897
-msgid "Bitcoin"
-msgstr "Bitcoin"
+msgid "cosbycoin"
+msgstr "cosbycoin"
 
 #: ../../../src/ui.cpp:2899
-msgid "Bitcoin - Generating"
-msgstr "Bitcoin - Generování"
+msgid "cosbycoin - Generating"
+msgstr "cosbycoin - Generování"
 
 #: ../../../src/ui.cpp:2901
-msgid "Bitcoin - (not connected)"
-msgstr "Bitcoin - (nepřipojen)"
+msgid "cosbycoin - (not connected)"
+msgstr "cosbycoin - (nepřipojen)"
 
 #: ../../../src/ui.cpp:2980
-msgid "&Open Bitcoin"
-msgstr "&Otevřít Bitcoin"
+msgid "&Open cosbycoin"
+msgstr "&Otevřít cosbycoin"
 
 #: ../../../src/ui.cpp:2981
-msgid "&Send Bitcoins"
-msgstr "&Poslat Bitcoiny"
+msgid "&Send cosbycoins"
+msgstr "&Poslat cosbycoiny"
 
 #: ../../../src/ui.cpp:2982
 msgid "O&ptions..."
@@ -862,16 +862,16 @@ msgid "Program has crashed and will terminate.  "
 msgstr "Program havaroval a bude ukončen."
 
 #: ../../../src/init.cpp:163
-msgid "Bitcoin version"
-msgstr "Bitcoin verze"
+msgid "cosbycoin version"
+msgstr "cosbycoin verze"
 
 #: ../../../src/init.cpp:164
 msgid "Usage:"
 msgstr "Užití:"
 
 #: ../../../src/init.cpp:166
-msgid "Send command to -server or bitcoind\n"
-msgstr "Poslat příkaz pro -server nebo bitcoind\n"
+msgid "Send command to -server or cosbycoind\n"
+msgstr "Poslat příkaz pro -server nebo cosbycoind\n"
 
 #: ../../../src/init.cpp:167
 msgid "List commands\n"
@@ -886,12 +886,12 @@ msgid "Options:\n"
 msgstr "Možnosti:\n"
 
 #: ../../../src/init.cpp:170
-msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "Konfigurační soubor (výchozí: bitcoin.conf)\n"
+msgid "Specify configuration file (default: cosbycoin.conf)\n"
+msgstr "Konfigurační soubor (výchozí: cosbycoin.conf)\n"
 
 #: ../../../src/init.cpp:171
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "PID soubor (výchozí: bitcoind.pid)\n"
+msgid "Specify pid file (default: cosbycoind.pid)\n"
+msgstr "PID soubor (výchozí: cosbycoind.pid)\n"
 
 #: ../../../src/init.cpp:172
 msgid "Generate coins\n"
@@ -988,10 +988,10 @@ msgstr "Přeskenovat řetězec bloků na chybějící transakce peněženky\n"
 #: ../../../src/init.cpp:207
 msgid ""
 "\n"
-"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+"SSL options: (see the cosbycoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
-"Možnosti SSL: (viz instrukce nastavení SSL v Bitcoin Wiki)\n"
+"Možnosti SSL: (viz instrukce nastavení SSL v cosbycoin Wiki)\n"
 
 #: ../../../src/init.cpp:208
 msgid "Use OpenSSL (https) for JSON-RPC connections\n"
@@ -1015,8 +1015,8 @@ msgstr "Tato nápověda\n"
 
 #: ../../../src/init.cpp:353
 #, c-format
-msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
-msgstr "Nedaří se mi získat zámek na datový adresář %s. Bitcoin pravděpodobně už jednou běží."
+msgid "Cannot obtain a lock on data directory %s.  cosbycoin is probably already running."
+msgstr "Nedaří se mi získat zámek na datový adresář %s. cosbycoin pravděpodobně už jednou běží."
 
 #: ../../../src/init.cpp:379
 msgid "Error loading addr.dat      \n"
@@ -1031,8 +1031,8 @@ msgid "Error loading wallet.dat: Wallet corrupted      \n"
 msgstr "Chyba při načítání wallet.dat: peněženka je poškozená      \n"
 
 #: ../../../src/init.cpp:398
-msgid "Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n"
-msgstr "Chyba při načítání wallet.dat: peněženka vyžaduje novější verzi Bitcoinu      \n"
+msgid "Error loading wallet.dat: Wallet requires newer version of cosbycoin      \n"
+msgstr "Chyba při načítání wallet.dat: peněženka vyžaduje novější verzi cosbycoinu      \n"
 
 #: ../../../src/init.cpp:400
 msgid "Error loading wallet.dat      \n"
@@ -1052,8 +1052,8 @@ msgstr "Varování: -paytxfee je nastaveno velmi vysoko. Toto je transakční po
 
 #: ../../../src/net.cpp:1622
 #, c-format
-msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
-msgstr "Nedaří se mi připojit na port %d na tomhle počítači.  Bitcoin už pravděpodobně jednou běží."
+msgid "Unable to bind to port %d on this computer.  cosbycoin is probably already running."
+msgstr "Nedaří se mi připojit na port %d na tomhle počítači.  cosbycoin už pravděpodobně jednou běží."
 
 #: ../../../src/main.cpp:1437
 msgid "Warning: Disk space is low  "
@@ -1068,12 +1068,12 @@ msgid "Options"
 msgstr "Možnosti"
 
 #: ../../../src/uibase.h:232
-msgid "About Bitcoin"
-msgstr "O Bitcoinu"
+msgid "About cosbycoin"
+msgstr "O cosbycoinu"
 
 #: ../../../src/uibase.h:341
-msgid "Your Bitcoin Addresses"
-msgstr "Tvá Bitcoinová adresa"
+msgid "Your cosbycoin Addresses"
+msgstr "Tvá cosbycoinová adresa"
 
-#~ msgid "Invalid bitcoin address"
-#~ msgstr "Neplatná Bitcoinová adresa"
+#~ msgid "Invalid cosbycoin address"
+#~ msgstr "Neplatná cosbycoinová adresa"

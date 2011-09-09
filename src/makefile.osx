@@ -2,11 +2,11 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-# Mac OS X makefile for bitcoin
+# Mac OS X makefile for cosbycoin
 # Laszlo Hanyecz (solar@heliacal.net)
 
 CXX=llvm-g++
-DEPSDIR=/Users/macosuser/bitcoin/deps
+DEPSDIR=/Users/macosuser/cosbycoin/deps
 
 INCLUDEPATHS= \
  -I"$(DEPSDIR)/include"
@@ -78,7 +78,7 @@ ifdef USE_UPNP
 endif
 	
 
-all: bitcoin
+all: cosbycoin
 
 
 obj/%.o: %.cpp $(HEADERS)
@@ -87,24 +87,24 @@ obj/%.o: %.cpp $(HEADERS)
 cryptopp/obj/%.o: cryptopp/%.cpp
 	$(CXX) -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
 
-bitcoin: $(OBJS) obj/ui.o obj/uibase.o
+cosbycoin: $(OBJS) obj/ui.o obj/uibase.o
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
 
-bitcoind: $(OBJS:obj/%=obj/nogui/%)
+cosbycoind: $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
-obj/test/test_bitcoin.o: $(wildcard test/*.cpp) $(HEADERS)
-	$(CXX) -c $(CFLAGS) -o $@ test/test_bitcoin.cpp
+obj/test/test_cosbycoin.o: $(wildcard test/*.cpp) $(HEADERS)
+	$(CXX) -c $(CFLAGS) -o $@ test/test_cosbycoin.cpp
 
-test_bitcoin: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
+test_cosbycoin: obj/test/test_cosbycoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
 
 clean:
-	-rm -f bitcoin bitcoind test_bitcoin
+	-rm -f cosbycoin cosbycoind test_cosbycoin
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o

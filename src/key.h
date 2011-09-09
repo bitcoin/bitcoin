@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_KEY_H
-#define BITCOIN_KEY_H
+#ifndef cosbycoin_KEY_H
+#define cosbycoin_KEY_H
 
 #include <stdexcept>
 #include <vector>
@@ -229,9 +229,9 @@ public:
         return true;
     }
 
-    CBitcoinAddress GetAddress() const
+    CcosbycoinAddress GetAddress() const
     {
-        return CBitcoinAddress(GetPubKey());
+        return CcosbycoinAddress(GetPubKey());
     }
 };
 

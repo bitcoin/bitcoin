@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -236,7 +236,7 @@ void SetDefaultReceivingAddress(const string& strAddress)
         return;
     if (strAddress != pframeMain->m_textCtrlAddress->GetValue())
     {
-        CBitcoinAddress address(strAddress);
+        CcosbycoinAddress address(strAddress);
         if (!address.IsValid())
             return;
         vector<unsigned char> vchPubKey;
@@ -257,7 +257,7 @@ bool GetWalletPassphrase()
 
         // obtain current wallet encrypt/decrypt key, from passphrase
         // Note that the passphrase is not mlock()d during this entry and could potentially
-        // be obtained from disk long after bitcoin has run.
+        // be obtained from disk long after cosbycoin has run.
         strWalletPass = wxGetPasswordFromUser(_("Enter the current passphrase to the wallet."),
                                               _("Passphrase")).ToStdString();
 
@@ -265,7 +265,7 @@ bool GetWalletPassphrase()
         {
             fill(strWalletPass.begin(), strWalletPass.end(), '\0');
             munlock(&strWalletPass[0], strWalletPass.capacity());
-            wxMessageBox(_("Please supply the current wallet decryption passphrase."), "Bitcoin");
+            wxMessageBox(_("Please supply the current wallet decryption passphrase."), "cosbycoin");
             return false;
         }
 
@@ -273,7 +273,7 @@ bool GetWalletPassphrase()
         {
             fill(strWalletPass.begin(), strWalletPass.end(), '\0');
             munlock(&strWalletPass[0], strWalletPass.capacity());
-            wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "Bitcoin");
+            wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "cosbycoin");
             return false;
         }
         fill(strWalletPass.begin(), strWalletPass.end(), '\0');
@@ -314,10 +314,10 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     m_choiceFilter->SetSelection(0);
     double dResize = nScaleX;
 #ifdef __WXMSW__
-    SetIcon(wxICON(bitcoin));
+    SetIcon(wxICON(cosbycoin));
     SetSize(dResize * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
 #else
-    SetIcon(bitcoin80_xpm);
+    SetIcon(cosbycoin80_xpm);
     SetBackgroundColour(m_toolBar->GetBackgroundColour());
     wxFont fontTmp = m_staticText41->GetFont();
     fontTmp.SetFamily(wxFONTFAMILY_TELETYPE);
@@ -368,7 +368,7 @@ CMainFrame::CMainFrame(wxWindow* parent) : CMainFrameBase(parent)
     // Fill your address text box
     vector<unsigned char> vchPubKey;
     if (CWalletDB(pwalletMain->strWalletFile,"r").ReadDefaultKey(vchPubKey))
-        m_textCtrlAddress->SetValue(CBitcoinAddress(vchPubKey).ToString());
+        m_textCtrlAddress->SetValue(CcosbycoinAddress(vchPubKey).ToString());
 
     if (pwalletMain->IsCrypted())
         m_menuOptions->Remove(m_menuOptionsEncryptWallet);
@@ -698,14 +698,14 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
         }
         else
         {
-            // Received by Bitcoin Address
+            // Received by cosbycoin Address
             if (!fShowReceived)
                 return false;
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             {
                 if (pwalletMain->IsMine(txout))
                 {
-                    CBitcoinAddress address;
+                    CcosbycoinAddress address;
                     if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
                     {
                         CRITICAL_BLOCK(pwalletMain->cs_wallet)
@@ -713,7 +713,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                             //strDescription += _("Received payment to ");
                             //strDescription += _("Received with address ");
                             strDescription += _("Received with: ");
-                            map<CBitcoinAddress, string>::iterator mi = pwalletMain->mapAddressBook.find(address);
+                            map<CcosbycoinAddress, string>::iterator mi = pwalletMain->mapAddressBook.find(address);
                             if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
                             {
                                 string strLabel = (*mi).second;
@@ -777,7 +777,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 if (pwalletMain->IsMine(txout))
                     continue;
 
-                CBitcoinAddress address;
+                CcosbycoinAddress address;
                 string strAddress;
                 if (!mapValue["to"].empty())
                 {
@@ -786,7 +786,7 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                 }
                 else
                 {
-                    // Sent to Bitcoin Address
+                    // Sent to cosbycoin Address
                     if (ExtractAddress(txout.scriptPubKey, NULL, address))
                         strAddress = address.ToString();
                 }
@@ -1105,9 +1105,9 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     strPrevWarning = strWarning;
 
     string strGen = "";
-    if (fGenerateBitcoins)
+    if (fGeneratecosbycoins)
         strGen = _("    Generating");
-    if (fGenerateBitcoins && vNodes.empty())
+    if (fGeneratecosbycoins && vNodes.empty())
         strGen = _("(not connected)");
     m_statusBar->SetStatusText(strGen, 1);
 
@@ -1115,7 +1115,7 @@ void CMainFrame::OnPaintListCtrl(wxPaintEvent& event)
     m_statusBar->SetStatusText(strStatus, 2);
 
     // Update receiving address
-    string strDefaultAddress = CBitcoinAddress(pwalletMain->vchDefaultKey).ToString();
+    string strDefaultAddress = CcosbycoinAddress(pwalletMain->vchDefaultKey).ToString();
     if (m_textCtrlAddress->GetValue() != strDefaultAddress)
         m_textCtrlAddress->SetValue(strDefaultAddress);
 }
@@ -1152,7 +1152,7 @@ void CMainFrame::OnMenuFileExit(wxCommandEvent& event)
 
 void CMainFrame::OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event)
 {
-    event.Check(fGenerateBitcoins);
+    event.Check(fGeneratecosbycoins);
 }
 
 void CMainFrame::OnMenuOptionsChangeYourAddress(wxCommandEvent& event)
@@ -1168,7 +1168,7 @@ void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
     // Options->Encrypt Wallet
     if (pwalletMain->IsCrypted())
     {
-        wxMessageBox(_("Wallet already encrypted."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("Wallet already encrypted."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -1178,7 +1178,7 @@ void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
 
     // obtain current wallet encrypt/decrypt key, from passphrase
     // Note that the passphrase is not mlock()d during this entry and could potentially
-    // be obtained from disk long after bitcoin has run.
+    // be obtained from disk long after cosbycoin has run.
     strWalletPass = wxGetPasswordFromUser(_("Enter the new passphrase to the wallet.\nPlease use a passphrase of 10 or more random characters, or eight or more words."),
                                           _("Passphrase")).ToStdString();
 
@@ -1186,11 +1186,11 @@ void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
     {
         fill(strWalletPass.begin(), strWalletPass.end(), '\0');
         munlock(&strWalletPass[0], strWalletPass.capacity());
-        wxMessageBox(_("Error: The supplied passphrase was too short."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("Error: The supplied passphrase was too short."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
 
-    if(wxMessageBox(_("WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\nAre you sure you wish to encrypt your wallet?"), "Bitcoin", wxYES_NO) != wxYES)
+    if(wxMessageBox(_("WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR cosbycoinS!\nAre you sure you wish to encrypt your wallet?"), "cosbycoin", wxYES_NO) != wxYES)
         return;
 
     string strWalletPassTest;
@@ -1205,7 +1205,7 @@ void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
         fill(strWalletPassTest.begin(), strWalletPassTest.end(), '\0');
         munlock(&strWalletPass[0], strWalletPass.capacity());
         munlock(&strWalletPassTest[0], strWalletPassTest.capacity());
-        wxMessageBox(_("Error: the supplied passphrases didn't match."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("Error: the supplied passphrases didn't match."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -1215,14 +1215,14 @@ void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
         fill(strWalletPassTest.begin(), strWalletPassTest.end(), '\0');
         munlock(&strWalletPass[0], strWalletPass.capacity());
         munlock(&strWalletPassTest[0], strWalletPassTest.capacity());
-        wxMessageBox(_("Wallet encryption failed."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("Wallet encryption failed."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
     fill(strWalletPass.begin(), strWalletPass.end(), '\0');
     fill(strWalletPassTest.begin(), strWalletPassTest.end(), '\0');
     munlock(&strWalletPass[0], strWalletPass.capacity());
     munlock(&strWalletPassTest[0], strWalletPassTest.capacity());
-    wxMessageBox(_("Wallet Encrypted.\nRemember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."), "Bitcoin");
+    wxMessageBox(_("Wallet Encrypted.\nRemember that encrypting your wallet cannot fully protect your cosbycoins from being stolen by malware infecting your computer."), "cosbycoin");
 
     m_menuOptions->Remove(m_menuOptionsEncryptWallet);
     m_menuOptions->Insert(m_menuOptions->GetMenuItemCount() - 1, m_menuOptionsChangeWalletPassphrase);
@@ -1233,7 +1233,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
     // Options->Change Wallet Encryption Passphrase
     if (!pwalletMain->IsCrypted())
     {
-        wxMessageBox(_("Wallet is unencrypted, please encrypt it first."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("Wallet is unencrypted, please encrypt it first."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -1243,7 +1243,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
 
     // obtain current wallet encrypt/decrypt key, from passphrase
     // Note that the passphrase is not mlock()d during this entry and could potentially
-    // be obtained from disk long after bitcoin has run.
+    // be obtained from disk long after cosbycoin has run.
     strOldWalletPass = wxGetPasswordFromUser(_("Enter the current passphrase to the wallet."),
                                              _("Passphrase")).ToStdString();
 
@@ -1254,7 +1254,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
     {
         fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
         munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
-        wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -1267,7 +1267,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
 
     // obtain new wallet encrypt/decrypt key, from passphrase
     // Note that the passphrase is not mlock()d during this entry and could potentially
-    // be obtained from disk long after bitcoin has run.
+    // be obtained from disk long after cosbycoin has run.
     strNewWalletPass = wxGetPasswordFromUser(_("Enter the new passphrase for the wallet."),
                                              _("Passphrase")).ToStdString();
 
@@ -1277,7 +1277,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
         fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
         munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
         munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
-        wxMessageBox(_("Error: The supplied passphrase was too short."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("Error: The supplied passphrase was too short."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -1287,7 +1287,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
 
     // obtain new wallet encrypt/decrypt key, from passphrase
     // Note that the passphrase is not mlock()d during this entry and could potentially
-    // be obtained from disk long after bitcoin has run.
+    // be obtained from disk long after cosbycoin has run.
     strNewWalletPassTest = wxGetPasswordFromUser(_("Re-enter the new passphrase for the wallet."),
                                                  _("Passphrase")).ToStdString();
 
@@ -1299,7 +1299,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
         munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
         munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
         munlock(&strNewWalletPassTest[0], strNewWalletPassTest.capacity());
-        wxMessageBox(_("Error: the supplied passphrases didn't match."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("Error: the supplied passphrases didn't match."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -1311,7 +1311,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
         munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
         munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
         munlock(&strNewWalletPassTest[0], strNewWalletPassTest.capacity());
-        wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(_("The passphrase entered for the wallet decryption was incorrect."), "cosbycoin", wxOK | wxICON_ERROR);
         return;
     }
     fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
@@ -1320,7 +1320,7 @@ void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
     munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
     munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
     munlock(&strNewWalletPassTest[0], strNewWalletPassTest.capacity());
-    wxMessageBox(_("Wallet Passphrase Changed."), "Bitcoin");
+    wxMessageBox(_("Wallet Passphrase Changed."), "cosbycoin");
 }
 
 void CMainFrame::OnMenuOptionsOptions(wxCommandEvent& event)
@@ -1392,7 +1392,7 @@ void CMainFrame::OnButtonNew(wxCommandEvent& event)
     // Generate new key
     std::vector<unsigned char> newKey;
     pwalletMain->GetKeyFromPool(newKey, true);
-    strAddress = CBitcoinAddress(newKey).ToString();
+    strAddress = CcosbycoinAddress(newKey).ToString();
 
     if (fWasLocked)
         pwalletMain->Lock();
@@ -1500,7 +1500,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                 {
                     if (pwalletMain->IsMine(txout))
                     {
-                        CBitcoinAddress address;
+                        CcosbycoinAddress address;
                         if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
                         {
                             if (pwalletMain->mapAddressBook.count(address))
@@ -1585,7 +1585,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
                     if (wtx.mapValue["to"].empty())
                     {
                         // Offline transaction
-                        CBitcoinAddress address;
+                        CcosbycoinAddress address;
                         if (ExtractAddress(txout.scriptPubKey, pwalletMain, address))
                         {
                             string strAddress = address.ToString();
@@ -1706,7 +1706,7 @@ void CTxDetailsDialog::OnButtonOK(wxCommandEvent& event)
 #ifdef __WXMSW__
 string StartupShortcutPath()
 {
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) + "\\Bitcoin.lnk";
+    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) + "\\cosbycoin.lnk";
 }
 
 bool GetStartOnSystemStartup()
@@ -1779,7 +1779,7 @@ boost::filesystem::path GetAutostartDir()
 
 boost::filesystem::path GetAutostartFilePath()
 {
-    return GetAutostartDir() / boost::filesystem::path("bitcoin.desktop");
+    return GetAutostartDir() / boost::filesystem::path("cosbycoin.desktop");
 }
 
 bool GetStartOnSystemStartup()
@@ -1823,13 +1823,13 @@ void SetStartOnSystemStartup(bool fAutoStart)
         boost::filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
         if (!optionFile.good())
         {
-            wxMessageBox(_("Cannot write autostart/bitcoin.desktop file"), "Bitcoin");
+            wxMessageBox(_("Cannot write autostart/cosbycoin.desktop file"), "cosbycoin");
             return;
         }
-        // Write a bitcoin.desktop file to the autostart directory:
+        // Write a cosbycoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
-        optionFile << "Name=Bitcoin\n";
+        optionFile << "Name=cosbycoin\n";
         optionFile << "Exec=" << pszExePath << "\n";
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
@@ -1869,7 +1869,7 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     SetSize(nScaleX * GetSize().GetWidth(), nScaleY * GetSize().GetHeight());
 #endif
 #if defined(__WXGTK__) || defined(__WXMAC_OSX__)
-    m_checkBoxStartOnSystemStartup->SetLabel(_("&Start Bitcoin on window system startup"));
+    m_checkBoxStartOnSystemStartup->SetLabel(_("&Start cosbycoin on window system startup"));
     if (!GetBoolArg("-minimizetotray"))
     {
         // Minimize to tray is just too buggy on Linux
@@ -2086,7 +2086,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     }
 #ifdef __WXMSW__
     else
-        SetIcon(wxICON(bitcoin));
+        SetIcon(wxICON(cosbycoin));
 #endif
 
     // Fixup the tab order
@@ -2155,11 +2155,11 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
             return;
         }
 
-        // Parse bitcoin address
-        CBitcoinAddress address(strAddress);
-        bool fBitcoinAddress = address.IsValid();
+        // Parse cosbycoin address
+        CcosbycoinAddress address(strAddress);
+        bool fcosbycoinAddress = address.IsValid();
 
-        if (fBitcoinAddress)
+        if (fcosbycoinAddress)
         {
             bool fWasLocked = pwalletMain->IsLocked();
             if (!GetWalletPassphrase())
@@ -2169,9 +2169,9 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
 	    CRITICAL_BLOCK(cs_main)
             CRITICAL_BLOCK(pwalletMain->cs_wallet)
 	    {
-                // Send to bitcoin address
+                // Send to cosbycoin address
                 CScript scriptPubKey;
-                scriptPubKey.SetBitcoinAddress(address);
+                scriptPubKey.SetcosbycoinAddress(address);
 
                 strError = pwalletMain->SendMoney(scriptPubKey, nValue, wtx, true);
             }
@@ -2620,7 +2620,7 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
     }
 #ifdef __WXMSW__
     else
-        SetIcon(wxICON(bitcoin));
+        SetIcon(wxICON(cosbycoin));
 #endif
 
     // Init column headers
@@ -2628,16 +2628,16 @@ CAddressBookDialog::CAddressBookDialog(wxWindow* parent, const wxString& strInit
     m_listCtrlSending->InsertColumn(1, _("Address"), wxLIST_FORMAT_LEFT, 350);
     m_listCtrlSending->SetFocus();
     m_listCtrlReceiving->InsertColumn(0, _("Label"), wxLIST_FORMAT_LEFT, 200);
-    m_listCtrlReceiving->InsertColumn(1, _("Bitcoin Address"), wxLIST_FORMAT_LEFT, 350);
+    m_listCtrlReceiving->InsertColumn(1, _("cosbycoin Address"), wxLIST_FORMAT_LEFT, 350);
     m_listCtrlReceiving->SetFocus();
 
     // Fill listctrl with address book data
     CRITICAL_BLOCK(pwalletMain->cs_wallet)
     {
         string strDefaultReceiving = (string)pframeMain->m_textCtrlAddress->GetValue();
-        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
+        BOOST_FOREACH(const PAIRTYPE(CcosbycoinAddress, string)& item, pwalletMain->mapAddressBook)
         {
-            const CBitcoinAddress& address = item.first;
+            const CcosbycoinAddress& address = item.first;
             string strName = item.second;
             bool fMine = pwalletMain->HaveKey(address);
             wxListCtrl* plistCtrl = fMine ? m_listCtrlReceiving : m_listCtrlSending;
@@ -2749,7 +2749,7 @@ void CAddressBookDialog::OnButtonCopy(wxCommandEvent& event)
 
 bool CAddressBookDialog::CheckIfMine(const string& strAddress, const string& strTitle)
 {
-    CBitcoinAddress address(strAddress);
+    CcosbycoinAddress address(strAddress);
     bool fMine = address.IsValid() && pwalletMain->HaveKey(address);
     if (fMine)
         wxMessageBox(_("This is one of your own addresses for receiving payments and cannot be entered in the address book.  "), strTitle);
@@ -2836,7 +2836,7 @@ void CAddressBookDialog::OnButtonNew(wxCommandEvent& event)
         // Generate new key
         std::vector<unsigned char> newKey;
         pwalletMain->GetKeyFromPool(newKey, true);
-        strAddress = CBitcoinAddress(newKey).ToString();
+        strAddress = CcosbycoinAddress(newKey).ToString();
 
         if (fWasLocked)
             pwalletMain->Lock();
@@ -2903,11 +2903,11 @@ void CMyTaskBarIcon::Show(bool fShow)
     static char pszPrevTip[200];
     if (fShow)
     {
-        string strTooltip = _("Bitcoin");
-        if (fGenerateBitcoins)
-            strTooltip = _("Bitcoin - Generating");
-        if (fGenerateBitcoins && vNodes.empty())
-            strTooltip = _("Bitcoin - (not connected)");
+        string strTooltip = _("cosbycoin");
+        if (fGeneratecosbycoins)
+            strTooltip = _("cosbycoin - Generating");
+        if (fGeneratecosbycoins && vNodes.empty())
+            strTooltip = _("cosbycoin - (not connected)");
 
         // Optimization, only update when changed, using char array to be reentrant
         if (strncmp(pszPrevTip, strTooltip.c_str(), sizeof(pszPrevTip)-1) != 0)
@@ -2918,7 +2918,7 @@ void CMyTaskBarIcon::Show(bool fShow)
             // we use the main icon, so we hand it one with only 16x16
             SetIcon(wxICON(favicon), strTooltip);
 #else
-            SetIcon(bitcoin80_xpm, strTooltip);
+            SetIcon(cosbycoin80_xpm, strTooltip);
 #endif
         }
     }
@@ -2969,7 +2969,7 @@ void CMyTaskBarIcon::Restore()
 
 void CMyTaskBarIcon::OnUpdateUIGenerate(wxUpdateUIEvent& event)
 {
-    event.Check(fGenerateBitcoins);
+    event.Check(fGeneratecosbycoins);
 }
 
 void CMyTaskBarIcon::OnMenuExit(wxCommandEvent& event)
@@ -2986,8 +2986,8 @@ void CMyTaskBarIcon::UpdateTooltip()
 wxMenu* CMyTaskBarIcon::CreatePopupMenu()
 {
     wxMenu* pmenu = new wxMenu;
-    pmenu->Append(ID_TASKBAR_RESTORE, _("&Open Bitcoin"));
-    pmenu->Append(ID_TASKBAR_SEND, _("&Send Bitcoins"));
+    pmenu->Append(ID_TASKBAR_RESTORE, _("&Open cosbycoin"));
+    pmenu->Append(ID_TASKBAR_SEND, _("&Send cosbycoins"));
     pmenu->Append(ID_TASKBAR_OPTIONS, _("O&ptions..."));
 #ifndef __WXMAC_OSX__ // Mac has built-in quit menu
     pmenu->AppendSeparator();
@@ -3121,9 +3121,9 @@ bool CMyApp::OnInit()
     g_isPainting = 10000;
 #endif
 #if defined(__WXMSW__ ) || defined(__WXMAC_OSX__)
-    SetAppName("Bitcoin");
+    SetAppName("cosbycoin");
 #else
-    SetAppName("bitcoin");
+    SetAppName("cosbycoin");
 #endif
 #ifdef __WXMSW__
 #if wxUSE_UNICODE
@@ -3140,7 +3140,7 @@ bool CMyApp::OnInit()
 #endif
 #endif
 
-    // Load locale/<lang>/LC_MESSAGES/bitcoin.mo language file
+    // Load locale/<lang>/LC_MESSAGES/cosbycoin.mo language file
     g_locale.Init(wxLANGUAGE_DEFAULT, 0);
     g_locale.AddCatalogLookupPathPrefix("locale");
 #ifndef __WXMSW__
@@ -3148,7 +3148,7 @@ bool CMyApp::OnInit()
     g_locale.AddCatalogLookupPathPrefix("/usr/local/share/locale");
 #endif
     g_locale.AddCatalog("wxstd"); // wxWidgets standard translations, if any
-    g_locale.AddCatalog("bitcoin");
+    g_locale.AddCatalog("cosbycoin");
 
 #ifdef __WXMSW__
     HDC hdc = GetDC(NULL);
@@ -3217,5 +3217,5 @@ void CMyApp::OnUnhandledException()
 
 void CMyApp::OnFatalException()
 {
-    wxMessageBox(_("Program has crashed and will terminate.  "), "Bitcoin", wxOK | wxICON_ERROR);
+    wxMessageBox(_("Program has crashed and will terminate.  "), "cosbycoin", wxOK | wxICON_ERROR);
 }

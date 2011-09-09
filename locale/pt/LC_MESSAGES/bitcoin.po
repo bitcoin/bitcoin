@@ -14,8 +14,8 @@ msgstr ""
 "X-Poedit-SearchPath-0: ../../..\n"
 
 #: ../../../init.cpp:342
-msgid "Usage: bitcoin [options]"
-msgstr "Utilização Bitcoin [opções]"
+msgid "Usage: cosbycoin [options]"
+msgstr "Utilização cosbycoin [opções]"
 
 #: ../../../init.cpp:343
 msgid "Options:\n"
@@ -109,8 +109,8 @@ msgid "Insufficient funds"
 msgstr "Fundos insuficientes"
 
 #: ../../../main.cpp:3024
-msgid "Invalid bitcoin address"
-msgstr "Endereço Bitcoin inválido"
+msgid "Invalid cosbycoin address"
+msgstr "Endereço cosbycoin inválido"
 
 #: ../../../ui.cpp:189
 #, c-format
@@ -335,8 +335,8 @@ msgid "Unknown"
 msgstr "Desconhecido"
 
 #: ../../../ui.cpp:1682
-msgid "Can't include a message when sending to a Bitcoin address"
-msgstr "Não é possível incluir uma mensagem ao enviar para um endereço Bitcoin"
+msgid "Can't include a message when sending to a cosbycoin address"
+msgstr "Não é possível incluir uma mensagem ao enviar para um endereço cosbycoin"
 
 #: ../../../ui.cpp:1735
 msgid "Error in amount  "
@@ -486,8 +486,8 @@ msgstr "Nota"
 
 #: ../../../ui.cpp:2160
 #: ../../../uibase.cpp:908
-msgid "Bitcoin Address"
-msgstr "Endereço Bitcoin"
+msgid "cosbycoin Address"
+msgstr "Endereço cosbycoin"
 
 #: ../../../ui.cpp:2284
 msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
@@ -508,20 +508,20 @@ msgid "Add Address"
 msgstr "Adicionar endereço"
 
 #: ../../../ui.cpp:2421
-msgid "Bitcoin"
-msgstr "Bitcoin"
+msgid "cosbycoin"
+msgstr "cosbycoin"
 
 #: ../../../ui.cpp:2423
-msgid "Bitcoin - Generating"
-msgstr "Bitcoin - A gerar"
+msgid "cosbycoin - Generating"
+msgstr "cosbycoin - A gerar"
 
 #: ../../../ui.cpp:2425
-msgid "Bitcoin - (not connected)"
-msgstr "Bitcoin - (sem ligação)"
+msgid "cosbycoin - (not connected)"
+msgstr "cosbycoin - (sem ligação)"
 
 #: ../../../ui.cpp:2500
-msgid "&Open Bitcoin"
-msgstr "&Abrir Bitcoin"
+msgid "&Open cosbycoin"
+msgstr "&Abrir cosbycoin"
 
 #: ../../../ui.cpp:2501
 msgid "O&ptions..."
@@ -561,8 +561,8 @@ msgid "Address Book"
 msgstr "Livro de Endereços"
 
 #: ../../../uibase.cpp:77
-msgid "Your Bitcoin Address:"
-msgstr "O seu endereço Bitcoin:"
+msgid "Your cosbycoin Address:"
+msgstr "O seu endereço cosbycoin:"
 
 #: ../../../uibase.cpp:84
 msgid " &New... "
@@ -637,8 +637,8 @@ msgid "processors"
 msgstr "processadores"
 
 #: ../../../uibase.cpp:399
-msgid "&Start Bitcoin on system startup"
-msgstr "&Iniciar o Bitcoin no arranque do sistema"
+msgid "&Start cosbycoin on system startup"
+msgstr "&Iniciar o cosbycoin no arranque do sistema"
 
 #: ../../../uibase.cpp:403
 msgid "&Minimize to the tray instead of the taskbar"
@@ -682,8 +682,8 @@ msgid "&Apply"
 msgstr "&Aplicar"
 
 #: ../../../uibase.cpp:546
-msgid "Bitcoin "
-msgstr "Bitcoin "
+msgid "cosbycoin "
+msgstr "cosbycoin "
 
 #: ../../../uibase.cpp:552
 msgid "version"
@@ -691,7 +691,7 @@ msgstr "versão"
 
 #: ../../../uibase.cpp:563
 msgid ""
-"Copyright (c) 2009-2010 Bitcoin Developers\n"
+"Copyright (c) 2009-2010 cosbycoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -702,7 +702,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
 msgstr ""
-"Copyright (c) 2009-2010 Bitcoin Developers\n"
+"Copyright (c) 2009-2010 cosbycoin Developers\n"
 "\n"
 "Este software é experimental.\n"
 "\n"
@@ -715,8 +715,8 @@ msgstr ""
 "e UPnP software escrito por Thomas Bernard."
 
 #: ../../../uibase.cpp:619
-msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) or IP address (e.g. 123.45.6.7)"
-msgstr "Introduza um endereço Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) ou um endereço de IP (exemplo: 123.45.6.7)"
+msgid "Enter a cosbycoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) or IP address (e.g. 123.45.6.7)"
+msgstr "Introduza um endereço cosbycoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) ou um endereço de IP (exemplo: 123.45.6.7)"
 
 #: ../../../uibase.cpp:633
 msgid "Pay &To:"
@@ -765,8 +765,8 @@ msgstr ""
 "A estabelecer ligação ..."
 
 #: ../../../uibase.cpp:832
-msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
-msgstr "Estes são os seus endereços de Bitcoin onde poderá receber os seus pagamentos. Pode dar um endereço diferente a cada pessoa ou identidade para ter uma melhor ideia sobre quem o está a pagar. O endereço seleccionado será o que aparecerá na janela principal."
+msgid "These are your cosbycoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Estes são os seus endereços de cosbycoin onde poderá receber os seus pagamentos. Pode dar um endereço diferente a cada pessoa ou identidade para ter uma melhor ideia sobre quem o está a pagar. O endereço seleccionado será o que aparecerá na janela principal."
 
 #: ../../../uibase.cpp:845
 #: ../../../uibase.cpp:957
@@ -783,8 +783,8 @@ msgid "Sending"
 msgstr "A enviar"
 
 #: ../../../uibase.cpp:928
-msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
-msgstr "Estes são os seus endereços de Bitcoin onde poderá receber os seus pagamentos. Pode dar um endereço diferente a cada pessoa ou identidade para ter uma melhor ideia sobre quem o está a pagar. O endereço seleccionado será o que aparecerá na janela principal."
+msgid "These are your cosbycoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Estes são os seus endereços de cosbycoin onde poderá receber os seus pagamentos. Pode dar um endereço diferente a cada pessoa ou identidade para ter uma melhor ideia sobre quem o está a pagar. O endereço seleccionado será o que aparecerá na janela principal."
 
 #: ../../../uibase.cpp:941
 msgid "Receiving"
@@ -803,9 +803,9 @@ msgid "Options"
 msgstr "Opções"
 
 #: ../../../uibase.h:231
-msgid "About Bitcoin"
-msgstr "Sobre o Bitcoin"
+msgid "About cosbycoin"
+msgstr "Sobre o cosbycoin"
 
 #: ../../../uibase.h:341
-msgid "Your Bitcoin Addresses"
-msgstr "O seu endereço de Bitcoin"
+msgid "Your cosbycoin Addresses"
+msgstr "O seu endereço de cosbycoin"

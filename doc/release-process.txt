@@ -3,7 +3,7 @@
   share/setup.nsi
 
 * update (commit) version in OSX app bundle
- contrib/Bitcoin.app/Contents/Info.plist
+ contrib/cosbycoin.app/Contents/Info.plist
 
   * CFBundleShortVersionString should have value like 0.3.23
   * CFBundleVersion should have value like 323
@@ -18,15 +18,15 @@
 
 * create source-only archive
 
-  $ git archive --format=tar --prefix=bitcoin-0.3.23/ HEAD | \
-  	gzip -9c > ~/tmp/bitcoin-0.3.23-src.tar.gz 
+  $ git archive --format=tar --prefix=cosbycoin-0.3.23/ HEAD | \
+  	gzip -9c > ~/tmp/cosbycoin-0.3.23-src.tar.gz 
 
 * perform gitian builds
 
-  * From the bitcoin source dir
+  * From the cosbycoin source dir
   $ cd ../gitian-builder
-  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian.yml
-  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian-win32.yml
+  $ ./bin/gbuild --commit cosbycoin=v0.3.23 ../cosbycoin/contrib/gitian.yml
+  $ ./bin/gbuild --commit cosbycoin=v0.3.23 ../cosbycoin/contrib/gitian-win32.yml
  
   Build output expected:
   1. linux 32-bit and 64-bit binaries + source
@@ -37,7 +37,7 @@
 
 * create SHA1SUMS for builds, and PGP-sign it
 
-* update bitcoin.org version
+* update cosbycoin.org version
 
 * update forum version
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -823,7 +823,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
 
                 // Options
 #ifndef GUI
-                if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
+                if (strKey == "fGeneratecosbycoins")  ssValue >> fGeneratecosbycoins;
 #endif
                 if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;
                 if (strKey == "fLimitProcessors")   ssValue >> fLimitProcessors;
@@ -849,7 +849,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
         WriteTx(hash, pwallet->mapWallet[hash]);
 
     printf("nFileVersion = %d\n", nFileVersion);
-    printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
+    printf("fGeneratecosbycoins = %d\n", fGeneratecosbycoins);
     printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
     printf("fMinimizeToTray = %d\n", fMinimizeToTray);
     printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);

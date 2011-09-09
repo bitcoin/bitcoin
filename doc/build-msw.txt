@@ -1,4 +1,4 @@
-Copyright (c) 2009-2011 Bitcoin Developers
+Copyright (c) 2009-2011 cosbycoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -19,7 +19,7 @@ MSYS 1.0.11 was also used (sh needed to compile some dependencies)
 
 Candidate releases were built with MSVC 10.0 (2010), but
 compiling with Visual C++ caused rendering artifacts when
-bitcoin was run.
+cosbycoin was run.
 
 
 Dependencies
@@ -94,10 +94,10 @@ make -f Makefile.mingw
 mkdir miniupnpc
 cp *.h miniupnpc/
 
-Bitcoin
+cosbycoin
 -------
 DOS prompt:
-cd \bitcoin\src
-mingw32-make bitcoin.exe bitcoind.exe -f makefile.mingw
-strip bitcoin.exe
-strip bitcoind.exe
+cd \cosbycoin\src
+mingw32-make cosbycoin.exe cosbycoind.exe -f makefile.mingw
+strip cosbycoin.exe
+strip cosbycoind.exe

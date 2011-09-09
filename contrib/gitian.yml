@@ -1,5 +1,5 @@
 ---
-name: "bitcoin"
+name: "cosbycoin"
 suites:
 - "lucid"
 architectures:
@@ -15,8 +15,8 @@ packages:
 - "unzip"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/cosbycoin/cosbycoin.git"
+  "dir": "cosbycoin"
 files:
 - "wxWidgets-2.9.2-x64-gitian.zip"
 - "wxWidgets-2.9.2-x32-gitian.zip"
@@ -44,7 +44,7 @@ script: |
   cp -a bin/$GBUILD_BITS/wx/include $INSTDIR/lib/wx
   cd ..
   #
-  cd bitcoin
+  cd cosbycoin
   mkdir -p $OUTDIR/src
   cp -a . $OUTDIR/src
   rm -rf $OUTDIR/src/.git
@@ -53,7 +53,7 @@ script: |
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
   sed 's/$(DEBUGFLAGS)//' -i makefile.unix
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin USE_UPNP=1
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS cosbycoin USE_UPNP=1
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS cosbycoind USE_UPNP=0
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
-  install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
+  install -s cosbycoin cosbycoind $OUTDIR/bin/$GBUILD_BITS

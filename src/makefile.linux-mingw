@@ -84,7 +84,7 @@ OBJS= \
     cryptopp/obj/cpu.o
 
 
-all: bitcoin.exe
+all: cosbycoin.exe
 
 
 obj/%.o: %.cpp $(HEADERS)
@@ -93,24 +93,24 @@ obj/%.o: %.cpp $(HEADERS)
 cryptopp/obj/%.o: cryptopp/%.cpp
 	i586-mingw32msvc-g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
 
-obj/ui_res.o: ../share/ui.rc  ../share/pixmaps/bitcoin.ico ../share/pixmaps/check.ico ../share/pixmaps/send16.bmp ../share/pixmaps/send16mask.bmp ../share/pixmaps/send16masknoshadow.bmp ../share/pixmaps/send20.bmp ../share/pixmaps/send20mask.bmp ../share/pixmaps/addressbook16.bmp ../share/pixmaps/addressbook16mask.bmp ../share/pixmaps/addressbook20.bmp ../share/pixmaps/addressbook20mask.bmp
+obj/ui_res.o: ../share/ui.rc  ../share/pixmaps/cosbycoin.ico ../share/pixmaps/check.ico ../share/pixmaps/send16.bmp ../share/pixmaps/send16mask.bmp ../share/pixmaps/send16masknoshadow.bmp ../share/pixmaps/send20.bmp ../share/pixmaps/send20mask.bmp ../share/pixmaps/addressbook16.bmp ../share/pixmaps/addressbook16mask.bmp ../share/pixmaps/addressbook20.bmp ../share/pixmaps/addressbook20mask.bmp
 	i586-mingw32msvc-windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
 
-bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o
+cosbycoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o
 	i586-mingw32msvc-g++ $(CFLAGS) -mwindows -Wl,--subsystem,windows -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
+cosbycoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 obj/test/%.o: obj/test/%.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
-test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
+test_cosbycoin.exe: obj/test/test_cosbycoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework-mt-s
 
 
@@ -121,6 +121,6 @@ clean:
 	-rm -f cryptopp/obj/*.o
 	-rm -f test/*.o
 	-rm -f headers.h.gch
-	-rm -f bitcoin.exe
-	-rm -f bitcoind.exe
-	-rm -f test_bitcoin.exe
+	-rm -f cosbycoin.exe
+	-rm -f cosbycoind.exe
+	-rm -f test_cosbycoin.exe

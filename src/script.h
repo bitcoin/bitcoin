@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#ifndef H_BITCOIN_SCRIPT
-#define H_BITCOIN_SCRIPT
+#ifndef H_cosbycoin_SCRIPT
+#define H_cosbycoin_SCRIPT
 
 #include "base58.h"
 #include "keystore.h"
@@ -625,7 +625,7 @@ public:
     }
 
 
-    CBitcoinAddress GetBitcoinAddress() const
+    CcosbycoinAddress GetcosbycoinAddress() const
     {
         opcodetype opcode;
         std::vector<unsigned char> vch;
@@ -637,18 +637,18 @@ public:
         if (!GetOp(pc, opcode, vch) || opcode != OP_EQUALVERIFY) return 0;
         if (!GetOp(pc, opcode, vch) || opcode != OP_CHECKSIG) return 0;
         if (pc != end()) return 0;
-        return CBitcoinAddress(hash160);
+        return CcosbycoinAddress(hash160);
     }
 
-    void SetBitcoinAddress(const CBitcoinAddress& address)
+    void SetcosbycoinAddress(const CcosbycoinAddress& address)
     {
         this->clear();
         *this << OP_DUP << OP_HASH160 << address.GetHash160() << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
-    void SetBitcoinAddress(const std::vector<unsigned char>& vchPubKey)
+    void SetcosbycoinAddress(const std::vector<unsigned char>& vchPubKey)
     {
-        SetBitcoinAddress(CBitcoinAddress(vchPubKey));
+        SetcosbycoinAddress(CcosbycoinAddress(vchPubKey));
     }
 
 
@@ -696,7 +696,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
 bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
-bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* pkeystore, CBitcoinAddress& addressRet);
+bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* pkeystore, CcosbycoinAddress& addressRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript());
 bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType=0);
 

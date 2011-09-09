@@ -18,16 +18,16 @@ msgstr ""
 "X-Poedit-SearchPath-0: ../../..\n"
 
 #: ../../../src/init.cpp:162
-msgid "Bitcoin version"
-msgstr "Bitcoin Version"
+msgid "cosbycoin version"
+msgstr "cosbycoin Version"
 
 #: ../../../src/init.cpp:163
 msgid "Usage:"
 msgstr "Verwendung:"
 
 #: ../../../src/init.cpp:165
-msgid "Send command to -server or bitcoind\n"
-msgstr "Sende Befehl zu -server oder bitcoind\n"
+msgid "Send command to -server or cosbycoind\n"
+msgstr "Sende Befehl zu -server oder cosbycoind\n"
 
 #: ../../../src/init.cpp:166
 msgid "List commands\n"
@@ -42,12 +42,12 @@ msgid "Options:\n"
 msgstr "Optionen:\n"
 
 #: ../../../src/init.cpp:169
-msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "Konfigurationsdatei bestimmen (Standard: bitcoin.conf)\n"
+msgid "Specify configuration file (default: cosbycoin.conf)\n"
+msgstr "Konfigurationsdatei bestimmen (Standard: cosbycoin.conf)\n"
 
 #: ../../../src/init.cpp:170
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "pid-Datei bestimmen (Standard: bitcoind.pid)\n"
+msgid "Specify pid file (default: cosbycoind.pid)\n"
+msgstr "pid-Datei bestimmen (Standard: cosbycoind.pid)\n"
 
 #: ../../../src/init.cpp:171
 msgid "Generate coins\n"
@@ -144,10 +144,10 @@ msgstr "Frage die Block-Kette nach fehlenden Brieftaschen-Überweisungen ab\n"
 #: ../../../src/init.cpp:206
 msgid ""
 "\n"
-"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+"SSL options: (see the cosbycoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
-"SSL-Optionen: (siehe das Bitcoin-Wiki für SSL-Installationsanleitungen)\n"
+"SSL-Optionen: (siehe das cosbycoin-Wiki für SSL-Installationsanleitungen)\n"
 
 #: ../../../src/init.cpp:207
 msgid "Use OpenSSL (https) for JSON-RPC connections\n"
@@ -171,8 +171,8 @@ msgstr "Diese Anleitung\n"
 
 #: ../../../src/init.cpp:351
 #, c-format
-msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
-msgstr "Erhalte keine Datensperre für das Datenverzeichnis %s. Bitcoin läuft wahrscheinlich bereits."
+msgid "Cannot obtain a lock on data directory %s.  cosbycoin is probably already running."
+msgstr "Erhalte keine Datensperre für das Datenverzeichnis %s. cosbycoin läuft wahrscheinlich bereits."
 
 #: ../../../src/init.cpp:377
 msgid "Error loading addr.dat      \n"
@@ -187,8 +187,8 @@ msgid "Error loading wallet.dat: Wallet corrupted      \n"
 msgstr "Fehler beim Laden von wallet.dat: Brieftasche beschädigt      \n"
 
 #: ../../../src/init.cpp:396
-msgid "Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n"
-msgstr "Fehler beim Laden von wallet.dat: Die Brieftasche benötigt eine neuere Version von Bitcoin      \n"
+msgid "Error loading wallet.dat: Wallet requires newer version of cosbycoin      \n"
+msgstr "Fehler beim Laden von wallet.dat: Die Brieftasche benötigt eine neuere Version von cosbycoin      \n"
 
 #: ../../../src/init.cpp:398
 msgid "Error loading wallet.dat      \n"
@@ -212,8 +212,8 @@ msgstr "Warnung: Festplatte fast voll  "
 
 #: ../../../src/net.cpp:1615
 #, c-format
-msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
-msgstr "Kann nicht zu Port %d auf diesem Computer verbinden. Bitcoin läuft wahrscheinlich bereits."
+msgid "Unable to bind to port %d on this computer.  cosbycoin is probably already running."
+msgstr "Kann nicht zu Port %d auf diesem Computer verbinden. cosbycoin läuft wahrscheinlich bereits."
 
 #: ../../../src/rpc.cpp:2100
 #: ../../../src/rpc.cpp:2102
@@ -383,10 +383,10 @@ msgstr "Fehler: Die angegebene Passphrase war zu kurz. "
 
 #: ../../../src/ui.cpp:1192
 msgid ""
-"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\n"
+"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR cosbycoinS!\n"
 "Are you sure you wish to encrypt your wallet?"
 msgstr ""
-"WARNUNG: Wenn Sie Ihre Brieftasche verschlüsseln und die Passphrase verlieren, werden Sie ALLE IHRE BITCOINS VERLIEREN!\n"
+"WARNUNG: Wenn Sie Ihre Brieftasche verschlüsseln und die Passphrase verlieren, werden Sie ALLE IHRE cosbycoinS VERLIEREN!\n"
 "Sind Sie sicher, dass Sie Ihre Brieftasche verschlüsseln wollen?"
 
 #: ../../../src/ui.cpp:1198
@@ -405,10 +405,10 @@ msgstr "Verschlüsselung der Brieftasche fehlgeschlagen."
 #: ../../../src/ui.cpp:1224
 msgid ""
 "Wallet Encrypted.\n"
-"Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."
+"Remember that encrypting your wallet cannot fully protect your cosbycoins from being stolen by malware infecting your computer."
 msgstr ""
 "Brieftasche verschlüsselt.\n"
-"Beachten Sie, dass das Verschlüsseln der Brieftasche Ihre Bitcoins nicht völlig vor Diebstahl durch Schadprogramme auf Ihrem Computer schützt."
+"Beachten Sie, dass das Verschlüsseln der Brieftasche Ihre cosbycoins nicht völlig vor Diebstahl durch Schadprogramme auf Ihrem Computer schützt."
 
 #: ../../../src/ui.cpp:1235
 msgid "Wallet is unencrypted, please encrypt it first."
@@ -534,16 +534,16 @@ msgid "Generated coins must wait 120 blocks before they can be spent.  When you 
 msgstr "Erzeugte Münzen müssen 120 Blöcke lang reifen. Als Sie diesen Block erzeugt haben, wurde er an alle Teilnehmer übertragen, damit er zur Block-Kette hinzugefügt werden kann. Falls der Block es nicht in die Block-Kette schafft, wird die Beschreibung zu \"nicht akzeptiert\" geändert, und Sie können die Münzen nicht ausgeben. Dies kann manchmal passieren, wenn Sie und ein anderer Teilnehmer annähernd zeitgleich einen Block erzeugen."
 
 #: ../../../src/ui.cpp:1825
-msgid "Cannot write autostart/bitcoin.desktop file"
-msgstr "Kann Datei autostart/bitcoin.desktop nicht schreiben"
+msgid "Cannot write autostart/cosbycoin.desktop file"
+msgstr "Kann Datei autostart/cosbycoin.desktop nicht schreiben"
 
 #: ../../../src/ui.cpp:1861
 msgid "Main"
 msgstr "Haupt"
 
 #: ../../../src/ui.cpp:1871
-msgid "&Start Bitcoin on window system startup"
-msgstr "Bitcoin beim &Systemstart ausführen"
+msgid "&Start cosbycoin on window system startup"
+msgstr "cosbycoin beim &Systemstart ausführen"
 
 #: ../../../src/ui.cpp:1878
 msgid "&Minimize on close"
@@ -677,7 +677,7 @@ msgstr "Überweise Zahlung ..."
 
 #: ../../../src/ui.cpp:2532
 msgid "The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
-msgstr "Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. Bitcoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
+msgstr "Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. cosbycoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
 
 #: ../../../src/ui.cpp:2541
 msgid "Waiting for confirmation..."
@@ -720,8 +720,8 @@ msgstr "Beschreibung"
 
 #: ../../../src/ui.cpp:2620
 #: ../../../src/uibase.cpp:847
-msgid "Bitcoin Address"
-msgstr "Bitcoin-Adresse"
+msgid "cosbycoin Address"
+msgstr "cosbycoin-Adresse"
 
 #: ../../../src/ui.cpp:2746
 msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
@@ -742,24 +742,24 @@ msgid "Add Address"
 msgstr "Adresse hinzufügen"
 
 #: ../../../src/ui.cpp:2898
-msgid "Bitcoin"
-msgstr "Bitcoin"
+msgid "cosbycoin"
+msgstr "cosbycoin"
 
 #: ../../../src/ui.cpp:2900
-msgid "Bitcoin - Generating"
-msgstr "Bitcoin - Erzeuge"
+msgid "cosbycoin - Generating"
+msgstr "cosbycoin - Erzeuge"
 
 #: ../../../src/ui.cpp:2902
-msgid "Bitcoin - (not connected)"
-msgstr "Bitcoin - (nicht verbunden)"
+msgid "cosbycoin - (not connected)"
+msgstr "cosbycoin - (nicht verbunden)"
 
 #: ../../../src/ui.cpp:2981
-msgid "&Open Bitcoin"
-msgstr "Bitcoin ö&ffnen"
+msgid "&Open cosbycoin"
+msgstr "cosbycoin ö&ffnen"
 
 #: ../../../src/ui.cpp:2982
-msgid "&Send Bitcoins"
-msgstr "Bitcoins &senden"
+msgid "&Send cosbycoins"
+msgstr "cosbycoins &senden"
 
 #: ../../../src/ui.cpp:2983
 msgid "O&ptions..."
@@ -811,8 +811,8 @@ msgid "Address Book"
 msgstr "Adressbuch"
 
 #: ../../../src/uibase.cpp:75
-msgid "Your Bitcoin Address:"
-msgstr "Ihre Bitcoin-Adresse:"
+msgid "Your cosbycoin Address:"
+msgstr "Ihre cosbycoin-Adresse:"
 
 #: ../../../src/uibase.cpp:82
 msgid " &New... "
@@ -871,8 +871,8 @@ msgid "OK"
 msgstr "OK"
 
 #: ../../../src/uibase.cpp:355
-msgid "&Start Bitcoin on system startup"
-msgstr "Bitcoin beim &Systemstart ausführen"
+msgid "&Start cosbycoin on system startup"
+msgstr "cosbycoin beim &Systemstart ausführen"
 
 #: ../../../src/uibase.cpp:358
 msgid "&Minimize to the tray instead of the taskbar"
@@ -928,8 +928,8 @@ msgid "&Apply"
 msgstr "&Anwenden"
 
 #: ../../../src/uibase.cpp:518
-msgid "Bitcoin "
-msgstr "Bitcoin "
+msgid "cosbycoin "
+msgstr "cosbycoin "
 
 #: ../../../src/uibase.cpp:524
 msgid "version"
@@ -937,7 +937,7 @@ msgstr "Version"
 
 #: ../../../src/uibase.cpp:535
 msgid ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -948,7 +948,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
 msgstr ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "Dies ist experimentelle Software.\n"
 "\n"
@@ -961,8 +961,8 @@ msgstr ""
 "und UPnP-Software, entwickelt von Thomas Bernard."
 
 #: ../../../src/uibase.cpp:591
-msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Geben Sie eine Bitcoin-Adresse ein (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgid "Enter a cosbycoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Geben Sie eine cosbycoin-Adresse ein (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:605
 msgid "Pay &To:"
@@ -1003,8 +1003,8 @@ msgstr ""
 "Verbinde ..."
 
 #: ../../../src/uibase.cpp:771
-msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
-msgstr "Dies sind Ihre Bitcoin-Adressen zum Empfang von Zahlungen. Sie sollten vielleicht jedem Überweisenden eine andere Adresse geben um nachvollziehen zu können von wem eine Zahlung stammt. Die markierte Adresse wird im Hauptfenster angezeigt."
+msgid "These are your cosbycoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Dies sind Ihre cosbycoin-Adressen zum Empfang von Zahlungen. Sie sollten vielleicht jedem Überweisenden eine andere Adresse geben um nachvollziehen zu können von wem eine Zahlung stammt. Die markierte Adresse wird im Hauptfenster angezeigt."
 
 #: ../../../src/uibase.cpp:784
 #: ../../../src/uibase.cpp:896
@@ -1021,8 +1021,8 @@ msgid "Sending"
 msgstr "Überweise"
 
 #: ../../../src/uibase.cpp:867
-msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
-msgstr "Dies sind Ihre Bitcoin-Adressen zum Empfang von Zahlungen. Sie können jedem Überweisenden eine andere Adresse geben um nachvollziehen zu können von wem eine Zahlung stammt. Die markierte Adresse wird im Hauptfenster angezeigt."
+msgid "These are your cosbycoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Dies sind Ihre cosbycoin-Adressen zum Empfang von Zahlungen. Sie können jedem Überweisenden eine andere Adresse geben um nachvollziehen zu können von wem eine Zahlung stammt. Die markierte Adresse wird im Hauptfenster angezeigt."
 
 #: ../../../src/uibase.cpp:880
 msgid "Receiving"
@@ -1033,8 +1033,8 @@ msgid "&Delete"
 msgstr "&Löschen"
 
 #: ../../../src/util.cpp:869
-msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
-msgstr "Warnung: Bitte überprüfen Sie die Richtigkeit des Datums und der Uhrzeit Ihres Computers. Falls Ihre Uhr falsch läuft, wird Bitcoin nicht richtig funktionieren."
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong cosbycoin will not work properly."
+msgstr "Warnung: Bitte überprüfen Sie die Richtigkeit des Datums und der Uhrzeit Ihres Computers. Falls Ihre Uhr falsch läuft, wird cosbycoin nicht richtig funktionieren."
 
 #: ../../../src/util.cpp:903
 msgid "beta"
@@ -1055,15 +1055,15 @@ msgstr "Fehler: Überweisung konnte nicht erzeugt werden.  "
 
 #: ../../../src/wallet.cpp:1101
 msgid "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
-msgstr "Fehler: Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. Bitcoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
+msgstr "Fehler: Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. cosbycoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
 
 #: ../../../src/wallet.cpp:1114
 msgid "Invalid amount"
 msgstr "Ungültiger Betrag"
 
 #: ../../../src/wallet.cpp:1121
-msgid "Invalid bitcoin address"
-msgstr "Ungültige Bitcoin-Adresse"
+msgid "Invalid cosbycoin address"
+msgstr "Ungültige cosbycoin-Adresse"
 
 #: ../../../src/uibase.h:151
 msgid "Transaction Details"
@@ -1074,10 +1074,10 @@ msgid "Options"
 msgstr "Optionen"
 
 #: ../../../src/uibase.h:232
-msgid "About Bitcoin"
-msgstr "Über Bitcoin"
+msgid "About cosbycoin"
+msgstr "Über cosbycoin"
 
 #: ../../../src/uibase.h:341
-msgid "Your Bitcoin Addresses"
-msgstr "Ihre Bitcoin-Adressen"
+msgid "Your cosbycoin Addresses"
+msgstr "Ihre cosbycoin-Adressen"
 

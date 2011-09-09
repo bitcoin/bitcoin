@@ -3,7 +3,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Bitcoin 0.3.22\n"
+"Project-Id-Version: cosbycoin 0.3.22\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-05-15 18:18+0100\n"
 "PO-Revision-Date: 2011-05-23 19:47+0200\n"
@@ -22,7 +22,7 @@ msgstr ""
 #: ../../../src/net.cpp:1499
 #, c-format
 msgid ""
-"Unable to bind to port %d on this computer.  Bitcoin is probably already "
+"Unable to bind to port %d on this computer.  cosbycoin is probably already "
 "running."
 msgstr ""
 "Ne povis alligi al la porton %d ĉe ĉi tiu komputilo. Verŝajne la Bitmonero "
@@ -244,15 +244,15 @@ msgstr ""
 "okazi se alia nodo kreas blokon samtempe (dum kelkaj sekundoj)."
 
 #: ../../../src/ui.cpp:1592
-msgid "Cannot write autostart/bitcoin.desktop file"
-msgstr "Ne povas skribi la dosieron autostart/bitcoin.desktop"
+msgid "Cannot write autostart/cosbycoin.desktop file"
+msgstr "Ne povas skribi la dosieron autostart/cosbycoin.desktop"
 
 #: ../../../src/ui.cpp:1628
 msgid "Main"
 msgstr "Ĉefa"
 
 #: ../../../src/ui.cpp:1636
-msgid "&Start Bitcoin on window system startup"
+msgid "&Start cosbycoin on window system startup"
 msgstr "&Lanĉu Bitmoneron kiam vindozo ekas"
 
 #: ../../../src/ui.cpp:1643
@@ -428,7 +428,7 @@ msgid "Label"
 msgstr "Etikedo"
 
 #: ../../../src/ui.cpp:2336 ../../../src/uibase.cpp:837
-msgid "Bitcoin Address"
+msgid "cosbycoin Address"
 msgstr "Bitmonera adreso"
 
 #: ../../../src/ui.cpp:2460
@@ -452,23 +452,23 @@ msgid "Add Address"
 msgstr "Aldonu adreson"
 
 #: ../../../src/ui.cpp:2598
-msgid "Bitcoin"
+msgid "cosbycoin"
 msgstr "Bitmonero"
 
 #: ../../../src/ui.cpp:2600
-msgid "Bitcoin - Generating"
+msgid "cosbycoin - Generating"
 msgstr "Bitmonero - Kreanta"
 
 #: ../../../src/ui.cpp:2602
-msgid "Bitcoin - (not connected)"
-msgstr "Bitcoin - (ne konektita)"
+msgid "cosbycoin - (not connected)"
+msgstr "cosbycoin - (ne konektita)"
 
 #: ../../../src/ui.cpp:2681
-msgid "&Open Bitcoin"
+msgid "&Open cosbycoin"
 msgstr "&Malfermu Bitmoneron"
 
 #: ../../../src/ui.cpp:2682
-msgid "&Send Bitcoins"
+msgid "&Send cosbycoins"
 msgstr "&Sendu bitmonerojn"
 
 #: ../../../src/ui.cpp:2683
@@ -516,7 +516,7 @@ msgid "Invalid amount"
 msgstr "Malvalida kvanto"
 
 #: ../../../src/main.cpp:4023
-msgid "Invalid bitcoin address"
+msgid "Invalid cosbycoin address"
 msgstr "Malvalida bitmonera adreso"
 
 #: ../../../src/rpc.cpp:1800 ../../../src/rpc.cpp:1802
@@ -551,7 +551,7 @@ msgstr ""
 #: ../../../src/util.cpp:865
 msgid ""
 "Warning: Please check that your computer's date and time are correct.  If "
-"your clock is wrong Bitcoin will not work properly."
+"your clock is wrong cosbycoin will not work properly."
 msgstr ""
 "Averto: Bonvole kontrolu ke la dato kaj la tempo de via komputilo estas "
 "ĝusta. Se viaj horloĝo malĝustas, Bitmonero ne funkcios korekte."
@@ -589,7 +589,7 @@ msgid "Address Book"
 msgstr "Adresaro"
 
 #: ../../../src/uibase.cpp:69
-msgid "Your Bitcoin Address:"
+msgid "Your cosbycoin Address:"
 msgstr "Via bitmonera adreso:"
 
 #: ../../../src/uibase.cpp:76
@@ -645,7 +645,7 @@ msgid "OK"
 msgstr "Bone"
 
 #: ../../../src/uibase.cpp:345
-msgid "&Start Bitcoin on system startup"
+msgid "&Start cosbycoin on system startup"
 msgstr "&Lanĉigu Bitmoneron kiam la sistemo ekas"
 
 #: ../../../src/uibase.cpp:348
@@ -706,7 +706,7 @@ msgid "&Apply"
 msgstr "&Apliku"
 
 #: ../../../src/uibase.cpp:508
-msgid "Bitcoin "
+msgid "cosbycoin "
 msgstr "Bitmonero "
 
 #: ../../../src/uibase.cpp:514
@@ -715,7 +715,7 @@ msgstr "versio"
 
 #: ../../../src/uibase.cpp:525
 msgid ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -742,7 +742,7 @@ msgstr ""
 "Eric Young (eay@cryptsoft.com) kaj UPnP softvaro verkita de Thomas Bernard."
 
 #: ../../../src/uibase.cpp:581
-msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgid "Enter a cosbycoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 msgstr "Entajpu bitmoneran adreson (ekz. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:595
@@ -785,7 +785,7 @@ msgstr ""
 
 #: ../../../src/uibase.cpp:761
 msgid ""
-"These are your Bitcoin addresses for receiving payments.  You may want to "
+"These are your cosbycoin addresses for receiving payments.  You may want to "
 "give a different one to each sender so you can keep track of who is paying "
 "you.  The highlighted address is displayed in the main window."
 msgstr ""
@@ -807,7 +807,7 @@ msgstr "Sendanta"
 
 #: ../../../src/uibase.cpp:857
 msgid ""
-"These are your Bitcoin addresses for receiving payments.  You can give a "
+"These are your cosbycoin addresses for receiving payments.  You can give a "
 "different one to each sender to keep track of who is paying you.  The "
 "highlighted address will be displayed in the main window."
 msgstr ""
@@ -824,7 +824,7 @@ msgid "&Delete"
 msgstr "&Viŝu"
 
 #: ../../../src/init.cpp:147
-msgid "Bitcoin version"
+msgid "cosbycoin version"
 msgstr "Versio de Bitmonero"
 
 #: ../../../src/init.cpp:148
@@ -832,8 +832,8 @@ msgid "Usage:"
 msgstr "Uzado:"
 
 #: ../../../src/init.cpp:150
-msgid "Send command to -server or bitcoind\n"
-msgstr "Sendu komandon al aŭ -server aŭ bitcoind\n"
+msgid "Send command to -server or cosbycoind\n"
+msgstr "Sendu komandon al aŭ -server aŭ cosbycoind\n"
 
 #: ../../../src/init.cpp:151
 msgid "List commands\n"
@@ -848,12 +848,12 @@ msgid "Options:\n"
 msgstr "Opcioj:\n"
 
 #: ../../../src/init.cpp:154
-msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "Elektu agordan dosieron (defaŭlto: bitcoin.conf)\n"
+msgid "Specify configuration file (default: cosbycoin.conf)\n"
+msgstr "Elektu agordan dosieron (defaŭlto: cosbycoin.conf)\n"
 
 #: ../../../src/init.cpp:155
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "Elektu pid dosieron (defaŭlto: bitcoind.pid)\n"
+msgid "Specify pid file (default: cosbycoind.pid)\n"
+msgstr "Elektu pid dosieron (defaŭlto: cosbycoind.pid)\n"
 
 #: ../../../src/init.cpp:156
 msgid "Generate coins\n"
@@ -946,7 +946,7 @@ msgstr "Reskandu la blokĉenon por mankantaj transakcioj en la monujo\n"
 #: ../../../src/init.cpp:190
 msgid ""
 "\n"
-"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+"SSL options: (see the cosbycoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
 "SSL-aj opcioj: (Legu la Vikipedion de Bitmonero pri la agordaĵaj instruoj)\n"
@@ -978,7 +978,7 @@ msgstr "Ĉi tiu helpa mesaĝo\n"
 #: ../../../src/init.cpp:335
 #, c-format
 msgid ""
-"Cannot obtain a lock on data directory %s.  Bitcoin is probably already "
+"Cannot obtain a lock on data directory %s.  cosbycoin is probably already "
 "running."
 msgstr ""
 "Ne povas ŝlosi la datenan dosierujon %s. Verŝajne alia instanco de la "
@@ -1021,9 +1021,9 @@ msgid "Options"
 msgstr "Detaloj pri transakcio"
 
 #: ../../../src/uibase.h:228
-msgid "About Bitcoin"
+msgid "About cosbycoin"
 msgstr "Pri Bitmonero"
 
 #: ../../../src/uibase.h:337
-msgid "Your Bitcoin Addresses"
+msgid "Your cosbycoin Addresses"
 msgstr "Viaj Bitmoneraj adresoj"

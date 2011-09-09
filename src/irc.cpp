@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -345,13 +345,13 @@ void ThreadIRCSeed2(void* parg)
         }
         
         if (fTestNet) {
-            Send(hSocket, "JOIN #bitcoinTEST\r");
-            Send(hSocket, "WHO #bitcoinTEST\r");
+            Send(hSocket, "JOIN #cosbycoinTEST\r");
+            Send(hSocket, "WHO #cosbycoinTEST\r");
         } else {
-            // randomly join #bitcoin00-#bitcoin99
+            // randomly join #cosbycoin00-#cosbycoin99
             int channel_number = GetRandInt(100);
-            Send(hSocket, strprintf("JOIN #bitcoin%02d\r", channel_number).c_str());
-            Send(hSocket, strprintf("WHO #bitcoin%02d\r", channel_number).c_str());
+            Send(hSocket, strprintf("JOIN #cosbycoin%02d\r", channel_number).c_str());
+            Send(hSocket, strprintf("WHO #cosbycoin%02d\r", channel_number).c_str());
         }
 
         int64 nStart = GetTime();

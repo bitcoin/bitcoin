@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin Developers
+// Copyright (c) 2011 The cosbycoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,8 +12,8 @@
 // - E-mail usually won't line-break if there's no punctuation to break at.
 // - Doubleclicking selects the whole number as one word if it's all alphanumeric.
 //
-#ifndef BITCOIN_BASE58_H
-#define BITCOIN_BASE58_H
+#ifndef cosbycoin_BASE58_H
+#define cosbycoin_BASE58_H
 
 #include <string>
 #include <vector>
@@ -239,7 +239,7 @@ public:
 };
 
 
-class CBitcoinAddress : public CBase58Data
+class CcosbycoinAddress : public CBase58Data
 {
 public:
     bool SetHash160(const uint160& hash160)
@@ -272,26 +272,26 @@ public:
         return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
     }
 
-    CBitcoinAddress()
+    CcosbycoinAddress()
     {
     }
 
-    CBitcoinAddress(uint160 hash160In)
+    CcosbycoinAddress(uint160 hash160In)
     {
         SetHash160(hash160In);
     }
 
-    CBitcoinAddress(const std::vector<unsigned char>& vchPubKey)
+    CcosbycoinAddress(const std::vector<unsigned char>& vchPubKey)
     {
         SetPubKey(vchPubKey);
     }
 
-    CBitcoinAddress(const std::string& strAddress)
+    CcosbycoinAddress(const std::string& strAddress)
     {
         SetString(strAddress);
     }
 
-    CBitcoinAddress(const char* pszAddress)
+    CcosbycoinAddress(const char* pszAddress)
     {
         SetString(pszAddress);
     }

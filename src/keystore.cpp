@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@ std::vector<unsigned char> CKeyStore::GenerateNewKey()
     return key.GetPubKey();
 }
 
-bool CKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const
+bool CKeyStore::GetPubKey(const CcosbycoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const
 {
     CKey key;
     if (!GetKey(address, key))
@@ -111,12 +111,12 @@ bool CCryptoKeyStore::AddCryptedKey(const std::vector<unsigned char> &vchPubKey,
         if (!SetCrypted())
             return false;
 
-        mapCryptedKeys[CBitcoinAddress(vchPubKey)] = make_pair(vchPubKey, vchCryptedSecret);
+        mapCryptedKeys[CcosbycoinAddress(vchPubKey)] = make_pair(vchPubKey, vchCryptedSecret);
     }
     return true;
 }
 
-bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
+bool CCryptoKeyStore::GetKey(const CcosbycoinAddress &address, CKey& keyOut) const
 {
     CRITICAL_BLOCK(cs_KeyStore)
     {
@@ -138,7 +138,7 @@ bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
     return false;
 }
 
-bool CCryptoKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const
+bool CCryptoKeyStore::GetPubKey(const CcosbycoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const
 {
     CRITICAL_BLOCK(cs_KeyStore)
     {

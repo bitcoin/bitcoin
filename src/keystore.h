@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_KEYSTORE_H
-#define BITCOIN_KEYSTORE_H
+#ifndef cosbycoin_KEYSTORE_H
+#define cosbycoin_KEYSTORE_H
 
 #include "crypter.h"
 
@@ -14,13 +14,13 @@ protected:
 
 public:
     virtual bool AddKey(const CKey& key) =0;
-    virtual bool HaveKey(const CBitcoinAddress &address) const =0;
-    virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
-    virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
+    virtual bool HaveKey(const CcosbycoinAddress &address) const =0;
+    virtual bool GetKey(const CcosbycoinAddress &address, CKey& keyOut) const =0;
+    virtual bool GetPubKey(const CcosbycoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
     virtual std::vector<unsigned char> GenerateNewKey();
 };
 
-typedef std::map<CBitcoinAddress, CSecret> KeyMap;
+typedef std::map<CcosbycoinAddress, CSecret> KeyMap;
 
 class CBasicKeyStore : public CKeyStore
 {
@@ -29,14 +29,14 @@ protected:
 
 public:
     bool AddKey(const CKey& key);
-    bool HaveKey(const CBitcoinAddress &address) const
+    bool HaveKey(const CcosbycoinAddress &address) const
     {
         bool result;
         CRITICAL_BLOCK(cs_KeyStore)
             result = (mapKeys.count(address) > 0);
         return result;
     }
-    bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const
+    bool GetKey(const CcosbycoinAddress &address, CKey& keyOut) const
     {
         CRITICAL_BLOCK(cs_KeyStore)
         {
@@ -51,7 +51,7 @@ public:
     }
 };
 
-typedef std::map<CBitcoinAddress, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;
+typedef std::map<CcosbycoinAddress, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;
 
 class CCryptoKeyStore : public CBasicKeyStore
 {
@@ -106,7 +106,7 @@ public:
     virtual bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     std::vector<unsigned char> GenerateNewKey();
     bool AddKey(const CKey& key);
-    bool HaveKey(const CBitcoinAddress &address) const
+    bool HaveKey(const CcosbycoinAddress &address) const
     {
         CRITICAL_BLOCK(cs_KeyStore)
         {
@@ -115,8 +115,8 @@ public:
             return mapCryptedKeys.count(address) > 0;
         }
     }
-    bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const;
-    bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
+    bool GetKey(const CcosbycoinAddress &address, CKey& keyOut) const;
+    bool GetPubKey(const CcosbycoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
 };
 
 #endif

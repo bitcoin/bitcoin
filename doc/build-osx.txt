@@ -23,33 +23,33 @@ everything is available in /usr not just /Developer I think it comes on the DVD
 but you can get the current version from http://developer.apple.com
 
 
-1.  Pick a directory to work inside.. something like ~/bitcoin works.  The
+1.  Pick a directory to work inside.. something like ~/cosbycoin works.  The
 structure I use looks like this:
 
 (~ is your home directory)
 
-~/bitcoin
-~/bitcoin/bitcoin       # Upstream source tree
-~/bitcoin/src           # source code (symlink to ~/bitcoin/bitcoin/src)
-~/bitcoin/deps          # dependencies.. like libraries and headers needed to compile
-~/bitcoin/Bitcoin.app   # the application bundle where you can run the app
+~/cosbycoin
+~/cosbycoin/cosbycoin       # Upstream source tree
+~/cosbycoin/src           # source code (symlink to ~/cosbycoin/cosbycoin/src)
+~/cosbycoin/deps          # dependencies.. like libraries and headers needed to compile
+~/cosbycoin/cosbycoin.app   # the application bundle where you can run the app
 
-Just execute: mkdir ~/bitcoin
+Just execute: mkdir ~/cosbycoin
 This will create the top dir for you..
 
 WARNING: do not use the ~ notation with the configure scripts.. use the full
-name of the directory, for example /Users/james/bitcoin/deps for a user named
+name of the directory, for example /Users/james/cosbycoin/deps for a user named
 'james'.  In my examples I am using 'macosuser' so make sure you change that.
 
-2.  Check out the bitcoin code from github:
+2.  Check out the cosbycoin code from github:
 
-cd ~/bitcoin
-git clone https://github.com/bitcoin/bitcoin.git
-ln -s bitcoin/src src
+cd ~/cosbycoin
+git clone https://github.com/cosbycoin/cosbycoin.git
+ln -s cosbycoin/src src
 
-This will make ~/bitcoin/bitcoin for you with all the files from git. This puts
-the actual sources in ~/bitcoin/bitcoin/src and create a symlink src in
-~/bitcoin to this location.
+This will make ~/cosbycoin/cosbycoin for you with all the files from git. This puts
+the actual sources in ~/cosbycoin/cosbycoin/src and create a symlink src in
+~/cosbycoin to this location.
 
 3.  Get and build the dependencies
 
@@ -60,12 +60,12 @@ Boost
 Download from http://www.boost.org/users/download/
 I'm assuming it ended up in ~/Downloads..
 
-mkdir ~/bitcoin/deps
-cd ~/bitcoin/deps
+mkdir ~/cosbycoin/deps
+cd ~/cosbycoin/deps
 tar xvjf ~/Downloads/boost_1_42_0.tar.bz2
 cd boost_1_42_0
 ./bootstrap.sh
-./bjam architecture=combined address-model=32_64 macosx-version=10.5 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/bitcoin/deps install
+./bjam architecture=combined address-model=32_64 macosx-version=10.5 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/cosbycoin/deps install
 
 If you're using Snow Leopard, you will need to specify 10.6 as your Mac OS X
 version instead of 10.5.
@@ -94,23 +94,23 @@ We would like to build this as a 32 bit/64 bit library so we actually build it
 2 times and join it together here..  If you downloaded with safari it already
 uncompressed it so it will just be a tar not a tar.gz
 
-cd ~/bitcoin/deps
+cd ~/cosbycoin/deps
 tar xvf ~/Downloads/openssl-1.0.0.tar
 mv openssl-1.0.0 openssl-1.0.0-i386
 tar xvf ~/Downloads/openssl-1.0.0.tar
 mv openssl-1.0.0 openssl-1.0.0-x86_64
 # build i386 (32 bit intel) binary
 cd openssl-1.0.0-i386
-./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin-i386-cc && make
+./Configure --prefix=/Users/macosuser/cosbycoin/deps --openssldir=/Users/macosuser/cosbycoin/deps/openssl darwin-i386-cc && make
 make install # only do this on one of the architectures, to install the headers
 cd ..
 # build x86_64 (64 bit intel) binary
 cd openssl-1.0.0-x86_64
-./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin64-x86_64-cc && make
+./Configure --prefix=/Users/macosuser/cosbycoin/deps --openssldir=/Users/macosuser/cosbycoin/deps/openssl darwin64-x86_64-cc && make
 cd ..
 
 # combine the libs
-cd ~/bitcoin/deps
+cd ~/cosbycoin/deps
 lipo -arch i386 openssl-1.0.0-i386/libcrypto.a -arch x86_64 openssl-1.0.0-x86_64/libcrypto.a -o lib/libcrypto.a -create
 lipo -arch i386 openssl-1.0.0-i386/libssl.a -arch x86_64 openssl-1.0.0-x86_64/libssl.a -o lib/libssl.a -create
 
@@ -134,7 +134,7 @@ The process for miniupnpc (optional) is similar to that of OpenSSL.
 
 Download from http://miniupnp.tuxfamily.org/files/.
 
-cd ~/bitcoin/deps
+cd ~/cosbycoin/deps
 tar xvf ~/Downloads/miniupnpc-1.6.tar
 mv miniupnpc-1.6 miniupnpc-1.6-x86_64
 tar xvf ~/Downloads/miniupnpc-1.6.tar
@@ -143,17 +143,17 @@ mv miniupnpc-1.6 miniupnpc-1.6-i386
 cd miniupnpc-1.6-x86_64
 export CFLAGS="-arch x86_64"
 export LDFLAGS="-arch x86_64"
-export PREFIX="/Users/macuser/bitcoin/deps"
+export PREFIX="/Users/macuser/cosbycoin/deps"
 make && make install
 # build i386 (32 bit intel) binary
 cd miniupnpc-1.6-i386
 export CFLAGS="-arch i386"
 export LDFLAGS="-arch i386"
-export PREFIX="/Users/macuser/bitcoin/deps"
+export PREFIX="/Users/macuser/cosbycoin/deps"
 make
 
 # combine the libs
-cd ~/bitcoin/deps
+cd ~/cosbycoin/deps
 lipo -arch i386 miniupnpc-1.6-i386/libminiupnpc.a -arch x86_64 miniupnpc-1.6-x86_64/libminiupnpc.a -o lib/libminiupnpc.a -create
 
 Verify your binaries
@@ -174,10 +174,10 @@ Berkeley DB
 
 Download from http://freshmeat.net/projects/berkeleydb/
 
-cd ~/bitcoin/deps
+cd ~/cosbycoin/deps
 tar xvf ~/Downloads/db-4.8.30.tar
 cd db-4.8.30/build_unix
-../dist/configure --prefix=/Users/macosuser/bitcoin/deps --enable-cxx && make && make install
+../dist/configure --prefix=/Users/macosuser/cosbycoin/deps --enable-cxx && make && make install
 
 
 wxWidgets
@@ -189,14 +189,14 @@ This is the big one..
 
 Check it out from svn
 
-cd ~/bitcoin/deps
+cd ~/cosbycoin/deps
 svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk
 
 This will make a wxWidgets-trunk directory in deps.
 
 Use this script snippet, change your prefix to whatever your dir is:
 
-PREFIX=~/bitcoin/deps
+PREFIX=~/cosbycoin/deps
 SRCDIR="$PREFIX/wxWidgets-trunk"
 BUILDDIR="$SRCDIR/macbuild"
 
@@ -248,31 +248,31 @@ make install
 
 
 
-Now you should be able to build bitcoin
+Now you should be able to build cosbycoin
 
-cd ~/bitcoin/src
-make -f makefile.osx bitcoin
+cd ~/cosbycoin/src
+make -f makefile.osx cosbycoin
 
 Before you can run it, you need to create an application bundle for Mac OS.
 
-A bundle is provided in contrib/Bitcoin.app.
+A bundle is provided in contrib/cosbycoin.app.
 
-Copy the bitcoin binary in to it like this:
-  cp -pR ~/bitcoin/bitcoin/contrib/Bitcoin.app ~/bitcoin/
-  cp ~/bitcoin/src/bitcoin ~/bitcoin/Bitcoin.app/Contents/MacOS/
+Copy the cosbycoin binary in to it like this:
+  cp -pR ~/cosbycoin/cosbycoin/contrib/cosbycoin.app ~/cosbycoin/
+  cp ~/cosbycoin/src/cosbycoin ~/cosbycoin/cosbycoin.app/Contents/MacOS/
 
-To run it you can just click the Bitcoin.app in Finder, or just do:
-open ~/bitcoin/Bitcoin.app
+To run it you can just click the cosbycoin.app in Finder, or just do:
+open ~/cosbycoin/cosbycoin.app
 
 If you want to run it with arguments you can just run it without backgrounding
 by specifying the full name in terminal:
 
-~/bitcoin/Bitcoin.app/Contents/MacOS/bitcoin -addnode=192.75.207.66
+~/cosbycoin/cosbycoin.app/Contents/MacOS/cosbycoin -addnode=192.75.207.66
 
 You can also run it with arguments in the background with output going to the
 normal places for apps (Console) like this:
 
-open ~/bitcoin/Bitcoin.app --args -connect=192.75.207.66
+open ~/cosbycoin/cosbycoin.app --args -connect=192.75.207.66
 
-It is advisable to relocate Bitcoin.app to /Applications or $HOME/Applications.
+It is advisable to relocate cosbycoin.app to /Applications or $HOME/Applications.
 
