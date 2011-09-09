@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Bitcoin</string>
+	<string>cosbycoin</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>bitcoin</string>
+	<string>cosbycoin</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.bitcoin.bitcoin</string>
+	<string>org.cosbycoin.cosbycoin</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Bitcoin</string>
+	<string>cosbycoin</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -25,7 +25,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>10.5</string>
 	<key>CFBundleIconFile</key>
-	<string>BitcoinAppIcon.icns</string>
+	<string>cosbycoinAppIcon.icns</string>
 	<key>LSMultipleInstancesProhibited</key>
 	<true/>
 </dict>

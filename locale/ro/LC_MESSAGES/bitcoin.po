@@ -17,16 +17,16 @@ msgstr ""
 "X-Poedit-SearchPath-0: ../../..\n"
 
 #: ../../../src/init.cpp:163
-msgid "Bitcoin version"
-msgstr "versiune Bitcoin"
+msgid "cosbycoin version"
+msgstr "versiune cosbycoin"
 
 #: ../../../src/init.cpp:164
 msgid "Usage:"
 msgstr "Uz:"
 
 #: ../../../src/init.cpp:166
-msgid "Send command to -server or bitcoind\n"
-msgstr "Trimite comanda la bitcoin lansat cu -server sau bitcoind\n"
+msgid "Send command to -server or cosbycoind\n"
+msgstr "Trimite comanda la cosbycoin lansat cu -server sau cosbycoind\n"
 
 #: ../../../src/init.cpp:167
 msgid "List commands\n"
@@ -41,12 +41,12 @@ msgid "Options:\n"
 msgstr "Optiuni:\n"
 
 #: ../../../src/init.cpp:170
-msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "Specifica fisier de configuratie (predeterminat: bitcoin.conf)\n"
+msgid "Specify configuration file (default: cosbycoin.conf)\n"
+msgstr "Specifica fisier de configuratie (predeterminat: cosbycoin.conf)\n"
 
 #: ../../../src/init.cpp:171
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "Specifica fisier pid (predeterminat: bitcoin.pid)\n"
+msgid "Specify pid file (default: cosbycoind.pid)\n"
+msgstr "Specifica fisier pid (predeterminat: cosbycoin.pid)\n"
 
 #: ../../../src/init.cpp:172
 msgid "Generate coins\n"
@@ -143,10 +143,10 @@ msgstr "Rescaneza lantul de blocuri in cautare de tranzacti lipsa din portofel\n
 #: ../../../src/init.cpp:207
 msgid ""
 "\n"
-"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+"SSL options: (see the cosbycoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
-"Optiuni SSL: (vezi la Wiki Bitcoin pentru instructiuni detaliate)\n"
+"Optiuni SSL: (vezi la Wiki cosbycoin pentru instructiuni detaliate)\n"
 
 #: ../../../src/init.cpp:208
 msgid "Use OpenSSL (https) for JSON-RPC connections\n"
@@ -170,8 +170,8 @@ msgstr "Acest mesaj de ajutor\n"
 
 #: ../../../src/init.cpp:353
 #, c-format
-msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
-msgstr "Nu se poate obtine permis de lucru in directorul de date %s. E posibil ca Bitcoin sa fie deja in executie."
+msgid "Cannot obtain a lock on data directory %s.  cosbycoin is probably already running."
+msgstr "Nu se poate obtine permis de lucru in directorul de date %s. E posibil ca cosbycoin sa fie deja in executie."
 
 #: ../../../src/init.cpp:379
 msgid "Error loading addr.dat      \n"
@@ -186,8 +186,8 @@ msgid "Error loading wallet.dat: Wallet corrupted      \n"
 msgstr "Eroare la incarcare wallet.dat      \n"
 
 #: ../../../src/init.cpp:398
-msgid "Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n"
-msgstr "Eroare la incarcare wallet.dat: E necesare o versiune mai noua de Bitcoin      \n"
+msgid "Error loading wallet.dat: Wallet requires newer version of cosbycoin      \n"
+msgstr "Eroare la incarcare wallet.dat: E necesare o versiune mai noua de cosbycoin      \n"
 
 #: ../../../src/init.cpp:400
 msgid "Error loading wallet.dat      \n"
@@ -211,8 +211,8 @@ msgstr "Atentie: Spatiul pe hard disk este redus"
 
 #: ../../../src/net.cpp:1610
 #, c-format
-msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
-msgstr "Nu e posibila ascultarea pe portul %d in acest calculator. Probabil clientul Bitcoin este deja in executie."
+msgid "Unable to bind to port %d on this computer.  cosbycoin is probably already running."
+msgstr "Nu e posibila ascultarea pe portul %d in acest calculator. Probabil clientul cosbycoin este deja in executie."
 
 #: ../../../src/rpc.cpp:2005
 #: ../../../src/rpc.cpp:2007
@@ -381,7 +381,7 @@ msgstr "Eroare: Parola introdusa este prea scurta."
 
 #: ../../../src/ui.cpp:1193
 msgid ""
-"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\n"
+"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR cosbycoinS!\n"
 "Are you sure you wish to encrypt your wallet?"
 msgstr ""
 "ATENTIE: Daca encriptezi portofelul si uiti parola vei pierde TOATE MONEDELE!\n"
@@ -403,7 +403,7 @@ msgstr "Encriptare portofel esuata."
 #: ../../../src/ui.cpp:1225
 msgid ""
 "Wallet Encrypted.\n"
-"Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."
+"Remember that encrypting your wallet cannot fully protect your cosbycoins from being stolen by malware infecting your computer."
 msgstr ""
 "Portofel encriptat.\n"
 "Retine ca encriptarea portofelului nu iti poate proteja complet monedele daca pc-ul este infectat de malware."
@@ -532,16 +532,16 @@ msgid "Generated coins must wait 120 blocks before they can be spent.  When you 
 msgstr "Monedele generate trebuie sa astepte 120 de blocuri inainte sa poata fi cheltuite. Cand ai generat acest block, s-a transmis in retea pentru a fi incul in lantul de blocuri. Daca nu este acceptat in lant, se va schimba in \"neaceptat\" si nu se va putea cheltui. Acest lucru se poate intampla rareori cand alt nod genereaza un bloc in acelasi moment cu al tau ."
 
 #: ../../../src/ui.cpp:1822
-msgid "Cannot write autostart/bitcoin.desktop file"
-msgstr "Nu se poate scrie in fisierul autostart/bitcoin.desktop"
+msgid "Cannot write autostart/cosbycoin.desktop file"
+msgstr "Nu se poate scrie in fisierul autostart/cosbycoin.desktop"
 
 #: ../../../src/ui.cpp:1858
 msgid "Main"
 msgstr "Principal"
 
 #: ../../../src/ui.cpp:1868
-msgid "&Start Bitcoin on window system startup"
-msgstr "&Porneste Bitcoin odata cu sistemul"
+msgid "&Start cosbycoin on window system startup"
+msgstr "&Porneste cosbycoin odata cu sistemul"
 
 #: ../../../src/ui.cpp:1875
 msgid "&Minimize on close"
@@ -718,8 +718,8 @@ msgstr "Eticheta"
 
 #: ../../../src/ui.cpp:2627
 #: ../../../src/uibase.cpp:847
-msgid "Bitcoin Address"
-msgstr "Adresa Bitcoin"
+msgid "cosbycoin Address"
+msgstr "Adresa cosbycoin"
 
 #: ../../../src/ui.cpp:2751
 msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
@@ -740,24 +740,24 @@ msgid "Add Address"
 msgstr "Adauga adresa"
 
 #: ../../../src/ui.cpp:2902
-msgid "Bitcoin"
-msgstr "Bitcoin"
+msgid "cosbycoin"
+msgstr "cosbycoin"
 
 #: ../../../src/ui.cpp:2904
-msgid "Bitcoin - Generating"
-msgstr "Bitcoin - Se genereaza"
+msgid "cosbycoin - Generating"
+msgstr "cosbycoin - Se genereaza"
 
 #: ../../../src/ui.cpp:2906
-msgid "Bitcoin - (not connected)"
-msgstr "Bitcoin - (neconectat)"
+msgid "cosbycoin - (not connected)"
+msgstr "cosbycoin - (neconectat)"
 
 #: ../../../src/ui.cpp:2985
-msgid "&Open Bitcoin"
-msgstr "&Deschide Bitcoin"
+msgid "&Open cosbycoin"
+msgstr "&Deschide cosbycoin"
 
 #: ../../../src/ui.cpp:2986
-msgid "&Send Bitcoins"
-msgstr "&Trimite Bitcoin"
+msgid "&Send cosbycoins"
+msgstr "&Trimite cosbycoin"
 
 #: ../../../src/ui.cpp:2987
 msgid "O&ptions..."
@@ -809,8 +809,8 @@ msgid "Address Book"
 msgstr "Agenda cu adrese"
 
 #: ../../../src/uibase.cpp:75
-msgid "Your Bitcoin Address:"
-msgstr "Adresa Ta Bitcoin:"
+msgid "Your cosbycoin Address:"
+msgstr "Adresa Ta cosbycoin:"
 
 #: ../../../src/uibase.cpp:82
 msgid " &New... "
@@ -869,8 +869,8 @@ msgid "OK"
 msgstr "OK"
 
 #: ../../../src/uibase.cpp:355
-msgid "&Start Bitcoin on system startup"
-msgstr "&Porneste Bitcoin odata cu sistemul"
+msgid "&Start cosbycoin on system startup"
+msgstr "&Porneste cosbycoin odata cu sistemul"
 
 #: ../../../src/uibase.cpp:358
 msgid "&Minimize to the tray instead of the taskbar"
@@ -926,8 +926,8 @@ msgid "&Apply"
 msgstr "&Aplica"
 
 #: ../../../src/uibase.cpp:518
-msgid "Bitcoin "
-msgstr "Bitcoin "
+msgid "cosbycoin "
+msgstr "cosbycoin "
 
 #: ../../../src/uibase.cpp:524
 msgid "version"
@@ -935,7 +935,7 @@ msgstr "versiune"
 
 #: ../../../src/uibase.cpp:535
 msgid ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -946,7 +946,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
 msgstr ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "Acesta este un program experimental.\n"
 "\n"
@@ -958,8 +958,8 @@ msgstr ""
 "Eric Young (eay@cryptsoft.com) si software UPnP scris de Thomas Bernard."
 
 #: ../../../src/uibase.cpp:591
-msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Introduce o a adresa Bitcoin (exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgid "Enter a cosbycoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Introduce o a adresa cosbycoin (exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:605
 msgid "Pay &To:"
@@ -1000,7 +1000,7 @@ msgstr ""
 "Se conecteaza..."
 
 #: ../../../src/uibase.cpp:771
-msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgid "These are your cosbycoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
 msgstr "Acestea sunt adresele tale pentru primit plati. Poti sa folosesti o adresa diferita pentru fiecare persoana care iti trimite pentru a putea tine cont de unde vin platile. Adresa selectionata este afisata in fereastra principala."
 
 #: ../../../src/uibase.cpp:784
@@ -1018,7 +1018,7 @@ msgid "Sending"
 msgstr "Se trimite"
 
 #: ../../../src/uibase.cpp:867
-msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgid "These are your cosbycoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
 msgstr "Acestea sunt adresele tale pentru primit plati. Poti sa folosesti o adresa diferita pentru fiecare persoana care iti trimite pentru a putea tine cont de unde vin platile. Adresa selectionata este afisata in fereastra principala."
 
 #: ../../../src/uibase.cpp:880
@@ -1030,8 +1030,8 @@ msgid "&Delete"
 msgstr "&Sterge"
 
 #: ../../../src/util.cpp:870
-msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
-msgstr "Atentie: Regleaza corect hora si data calculatorului pentru ca Bitcoin sa functioneze corect."
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong cosbycoin will not work properly."
+msgstr "Atentie: Regleaza corect hora si data calculatorului pentru ca cosbycoin sa functioneze corect."
 
 #: ../../../src/util.cpp:904
 msgid "beta"
@@ -1067,12 +1067,12 @@ msgid "Options"
 msgstr "Optiuni"
 
 #: ../../../src/uibase.h:232
-msgid "About Bitcoin"
-msgstr "Despre Bitcoin"
+msgid "About cosbycoin"
+msgstr "Despre cosbycoin"
 
 #: ../../../src/uibase.h:341
-msgid "Your Bitcoin Addresses"
-msgstr "Adresele Tale Bitcoin"
+msgid "Your cosbycoin Addresses"
+msgstr "Adresele Tale cosbycoin"
 
-#~ msgid "Invalid bitcoin address"
-#~ msgstr "Dirección Bitcoin inválida"
+#~ msgid "Invalid cosbycoin address"
+#~ msgstr "Dirección cosbycoin inválida"

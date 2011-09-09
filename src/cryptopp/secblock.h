@@ -184,7 +184,7 @@ public:
 
 	void deallocate(void *p, size_type n)
 	{
-		//// Bitcoin: don't know why this trips, probably a false alarm, depends on the compiler used. 
+		//// cosbycoin: don't know why this trips, probably a false alarm, depends on the compiler used. 
 		//assert(false);
 	}
 

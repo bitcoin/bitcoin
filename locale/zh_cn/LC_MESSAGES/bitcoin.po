@@ -18,16 +18,16 @@ msgstr ""
 "X-Poedit-SearchPath-0: ../../..\n"
 
 #: ../../../src/init.cpp:142
-msgid "Bitcoin version"
-msgstr "Bitcoin 版本"
+msgid "cosbycoin version"
+msgstr "cosbycoin 版本"
 
 #: ../../../src/init.cpp:143
 msgid "Usage:"
 msgstr "用法:"
 
 #: ../../../src/init.cpp:145
-msgid "Send command to -server or bitcoind\n"
-msgstr "发送命令给 -server 或 bitcoin\n"
+msgid "Send command to -server or cosbycoind\n"
+msgstr "发送命令给 -server 或 cosbycoin\n"
 
 #: ../../../src/init.cpp:146
 msgid "List commands\n"
@@ -42,12 +42,12 @@ msgid "Options:\n"
 msgstr "选项:\n"
 
 #: ../../../src/init.cpp:149
-msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "指定配置文件 (默认: bitcoin.conf)\n"
+msgid "Specify configuration file (default: cosbycoin.conf)\n"
+msgstr "指定配置文件 (默认: cosbycoin.conf)\n"
 
 #: ../../../src/init.cpp:150
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "指定 pid 文件 (默认: bitcoin.pid)\n"
+msgid "Specify pid file (default: cosbycoind.pid)\n"
+msgstr "指定 pid 文件 (默认: cosbycoin.pid)\n"
 
 #: ../../../src/init.cpp:151
 msgid "Generate coins\n"
@@ -140,10 +140,10 @@ msgstr "重新扫描货币包链来检测丢失的货币交易\n"
 #: ../../../src/init.cpp:185
 msgid ""
 "\n"
-"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+"SSL options: (see the cosbycoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
-"SSL 选项: (SSL 设置步骤请参见 Bitcoin Wiki)\n"
+"SSL 选项: (SSL 设置步骤请参见 cosbycoin Wiki)\n"
 
 #: ../../../src/init.cpp:186
 msgid "Use OpenSSL (https) for JSON-RPC connections\n"
@@ -167,8 +167,8 @@ msgstr "本帮助信息\n"
 
 #: ../../../src/init.cpp:330
 #, c-format
-msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
-msgstr "无法获取数据目录 %s 的锁。 Bitcoin 可能已经启动。"
+msgid "Cannot obtain a lock on data directory %s.  cosbycoin is probably already running."
+msgstr "无法获取数据目录 %s 的锁。 cosbycoin 可能已经启动。"
 
 #: ../../../src/init.cpp:356
 msgid "Error loading addr.dat      \n"
@@ -230,13 +230,13 @@ msgid "Insufficient funds"
 msgstr "余额不足"
 
 #: ../../../src/main.cpp:4021
-msgid "Invalid bitcoin address"
-msgstr "无效 bitcoin 地址"
+msgid "Invalid cosbycoin address"
+msgstr "无效 cosbycoin 地址"
 
 #: ../../../src/net.cpp:1503
 #, c-format
-msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
-msgstr "无法在这台电脑上绑定 %d 端口。 Bitcoin 可能已经在运行。"
+msgid "Unable to bind to port %d on this computer.  cosbycoin is probably already running."
+msgstr "无法在这台电脑上绑定 %d 端口。 cosbycoin 可能已经在运行。"
 
 #: ../../../src/rpc.cpp:1802
 #: ../../../src/rpc.cpp:1804
@@ -470,16 +470,16 @@ msgid "Generated coins must wait 120 blocks before they can be spent.  When you 
 msgstr "生成的货币必须等待 120 个货币包之后才能够使用。 当您生成了一个货币包后，它被广播给网络来加入货币包链中。 如果它无法加入货币包链中，他将会标记为\"不被接受\"且不能被支付。 这种情况可能因为在您生成这个货币包之后的几秒钟内有别人也生成了货币包而发生。"
 
 #: ../../../src/ui.cpp:1594
-msgid "Cannot write autostart/bitcoin.desktop file"
-msgstr "无法写入 autostart/bitcoin.desktop 文件"
+msgid "Cannot write autostart/cosbycoin.desktop file"
+msgstr "无法写入 autostart/cosbycoin.desktop 文件"
 
 #: ../../../src/ui.cpp:1630
 msgid "Main"
 msgstr "主要"
 
 #: ../../../src/ui.cpp:1638
-msgid "&Start Bitcoin on window system startup"
-msgstr "开机自动启动 Bitcoin(&S)"
+msgid "&Start cosbycoin on window system startup"
+msgstr "开机自动启动 cosbycoin(&S)"
 
 #: ../../../src/ui.cpp:1645
 msgid "&Minimize on close"
@@ -642,8 +642,8 @@ msgstr "标签"
 
 #: ../../../src/ui.cpp:2338
 #: ../../../src/uibase.cpp:837
-msgid "Bitcoin Address"
-msgstr "Bitcoin 地址"
+msgid "cosbycoin Address"
+msgstr "cosbycoin 地址"
 
 #: ../../../src/ui.cpp:2462
 msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
@@ -664,24 +664,24 @@ msgid "Add Address"
 msgstr "添加地址"
 
 #: ../../../src/ui.cpp:2600
-msgid "Bitcoin"
-msgstr "Bitcoin"
+msgid "cosbycoin"
+msgstr "cosbycoin"
 
 #: ../../../src/ui.cpp:2602
-msgid "Bitcoin - Generating"
-msgstr "Bitcoin - 生成中"
+msgid "cosbycoin - Generating"
+msgstr "cosbycoin - 生成中"
 
 #: ../../../src/ui.cpp:2604
-msgid "Bitcoin - (not connected)"
-msgstr "Bitcoin - (未连接)"
+msgid "cosbycoin - (not connected)"
+msgstr "cosbycoin - (未连接)"
 
 #: ../../../src/ui.cpp:2683
-msgid "&Open Bitcoin"
-msgstr "打开 Bitcoin(&O)"
+msgid "&Open cosbycoin"
+msgstr "打开 cosbycoin(&O)"
 
 #: ../../../src/ui.cpp:2684
-msgid "&Send Bitcoins"
-msgstr "发送 Bitcoins(&S)"
+msgid "&Send cosbycoins"
+msgstr "发送 cosbycoins(&S)"
 
 #: ../../../src/ui.cpp:2685
 msgid "O&ptions..."
@@ -725,8 +725,8 @@ msgid "Address Book"
 msgstr "地址簿"
 
 #: ../../../src/uibase.cpp:69
-msgid "Your Bitcoin Address:"
-msgstr "您的 Bitcoin 地址:"
+msgid "Your cosbycoin Address:"
+msgstr "您的 cosbycoin 地址:"
 
 #: ../../../src/uibase.cpp:76
 msgid " &New... "
@@ -785,7 +785,7 @@ msgid "OK"
 msgstr "确定"
 
 #: ../../../src/uibase.cpp:345
-msgid "&Start Bitcoin on system startup"
+msgid "&Start cosbycoin on system startup"
 msgstr "开机自动启动(&S)"
 
 #: ../../../src/uibase.cpp:348
@@ -842,8 +842,8 @@ msgid "&Apply"
 msgstr "应用(&A)"
 
 #: ../../../src/uibase.cpp:508
-msgid "Bitcoin "
-msgstr "Bitcoin "
+msgid "cosbycoin "
+msgstr "cosbycoin "
 
 #: ../../../src/uibase.cpp:514
 msgid "version"
@@ -851,7 +851,7 @@ msgstr "版本"
 
 #: ../../../src/uibase.cpp:525
 msgid ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -862,7 +862,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
 msgstr ""
-"版权所有 (c) 2009-2010 Bitcoin 开发人员\n"
+"版权所有 (c) 2009-2010 cosbycoin 开发人员\n"
 "这是一个实验软件。\n"
 "分发遵循 MIT/X11 软件许可协议，请参见附带的 license.txt 文件或访问\n"
 "http://www.opensource.org/licenses/mit-license.php。\n"
@@ -871,8 +871,8 @@ msgstr ""
 "编写的加密软件和 Thomas Bernard 编写的 UPnP 软件。"
 
 #: ../../../src/uibase.cpp:581
-msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "输入 Bitcoin 地址 (比如 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgid "Enter a cosbycoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "输入 cosbycoin 地址 (比如 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:595
 msgid "Pay &To:"
@@ -913,8 +913,8 @@ msgstr ""
 "正在连接..."
 
 #: ../../../src/uibase.cpp:761
-msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
-msgstr "这些是您用来接收付款的 Bitcoin 地址。 您可能需要给每一个付款人一个不同的地址从而可以最终每一笔交易是谁支付的。 下面高亮的地址是您的主窗口正在使用的地址。"
+msgid "These are your cosbycoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "这些是您用来接收付款的 cosbycoin 地址。 您可能需要给每一个付款人一个不同的地址从而可以最终每一笔交易是谁支付的。 下面高亮的地址是您的主窗口正在使用的地址。"
 
 #: ../../../src/uibase.cpp:774
 #: ../../../src/uibase.cpp:886
@@ -931,8 +931,8 @@ msgid "Sending"
 msgstr "发送人地址"
 
 #: ../../../src/uibase.cpp:857
-msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
-msgstr "这些是您用来接收付款的 Bitcoin 地址。 您可以给每一个付款人一个不同的地址从而可以最终每一笔交易是谁支付的。 下面高亮的地址是您的主窗口正在使用的地址。"
+msgid "These are your cosbycoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "这些是您用来接收付款的 cosbycoin 地址。 您可以给每一个付款人一个不同的地址从而可以最终每一笔交易是谁支付的。 下面高亮的地址是您的主窗口正在使用的地址。"
 
 #: ../../../src/uibase.cpp:870
 msgid "Receiving"
@@ -943,8 +943,8 @@ msgid "&Delete"
 msgstr "删除(&D)"
 
 #: ../../../src/util.cpp:866
-msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
-msgstr "警告: 请检查您的电脑日期和时间是否正确。 如果您的时钟不正确 Bitcoin 将无法正常工作。"
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong cosbycoin will not work properly."
+msgstr "警告: 请检查您的电脑日期和时间是否正确。 如果您的时钟不正确 cosbycoin 将无法正常工作。"
 
 #: ../../../src/util.cpp:899
 msgid "beta"
@@ -959,9 +959,9 @@ msgid "Options"
 msgstr "选项"
 
 #: ../../../src/uibase.h:228
-msgid "About Bitcoin"
-msgstr "关于 Bitcoin"
+msgid "About cosbycoin"
+msgstr "关于 cosbycoin"
 
 #: ../../../src/uibase.h:337
-msgid "Your Bitcoin Addresses"
-msgstr "您的 Bitcoin 地址"
+msgid "Your cosbycoin Addresses"
+msgstr "您的 cosbycoin 地址"

@@ -16,8 +16,8 @@ msgstr ""
 
 #: ../../../src/net.cpp:1499
 #, c-format
-msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
-msgstr "Kan niet binden met poort %d op deze computer. Bitcoin draait vermoedelijk reeds."
+msgid "Unable to bind to port %d on this computer.  cosbycoin is probably already running."
+msgstr "Kan niet binden met poort %d op deze computer. cosbycoin draait vermoedelijk reeds."
 
 #: ../../../src/ui.cpp:202
 #, c-format
@@ -223,16 +223,16 @@ msgid "Generated coins must wait 120 blocks before they can be spent.  When you 
 msgstr "Gegenereerde coins mogen pas na een wachttijd van 120 blokken uitgegeven worden. Op het moment dat dit blok gegenereerd werd, is het naar het netwerk verzonden om aan de blokkenreeks toegevoegd te worden. Als het niet succesvol in de blokkenreeks opgenomen kan worden verandert de status in \"niet geaccepteerd\" en kan het niet uitegegeven worden. Dit kan soms gebeuren als een andere node op ongeveer hetzelfde moment een blok genereert."
 
 #: ../../../src/ui.cpp:1592
-msgid "Cannot write autostart/bitcoin.desktop file"
-msgstr "Kan niet schrijven naar het bestand autostart/bitcoin.desktop"
+msgid "Cannot write autostart/cosbycoin.desktop file"
+msgstr "Kan niet schrijven naar het bestand autostart/cosbycoin.desktop"
 
 #: ../../../src/ui.cpp:1628
 msgid "Main"
 msgstr "Algemeen"
 
 #: ../../../src/ui.cpp:1636
-msgid "&Start Bitcoin on window system startup"
-msgstr "&Start Bitcoin wanneer het systeem opstart"
+msgid "&Start cosbycoin on window system startup"
+msgstr "&Start cosbycoin wanneer het systeem opstart"
 
 #: ../../../src/ui.cpp:1643
 msgid "&Minimize on close"
@@ -409,8 +409,8 @@ msgstr "Label"
 
 #: ../../../src/ui.cpp:2336
 #: ../../../src/uibase.cpp:837
-msgid "Bitcoin Address"
-msgstr "Bitcoin-adres"
+msgid "cosbycoin Address"
+msgstr "cosbycoin-adres"
 
 #: ../../../src/ui.cpp:2460
 msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
@@ -431,24 +431,24 @@ msgid "Add Address"
 msgstr "Adres toevoegen"
 
 #: ../../../src/ui.cpp:2598
-msgid "Bitcoin"
-msgstr "Bitcoin"
+msgid "cosbycoin"
+msgstr "cosbycoin"
 
 #: ../../../src/ui.cpp:2600
-msgid "Bitcoin - Generating"
-msgstr "Bitcoin - Genereren..."
+msgid "cosbycoin - Generating"
+msgstr "cosbycoin - Genereren..."
 
 #: ../../../src/ui.cpp:2602
-msgid "Bitcoin - (not connected)"
-msgstr "Bitcoin - (niet verbonden)"
+msgid "cosbycoin - (not connected)"
+msgstr "cosbycoin - (niet verbonden)"
 
 #: ../../../src/ui.cpp:2681
-msgid "&Open Bitcoin"
-msgstr "&Open Bitcoin"
+msgid "&Open cosbycoin"
+msgstr "&Open cosbycoin"
 
 #: ../../../src/ui.cpp:2682
-msgid "&Send Bitcoins"
-msgstr "&Verstuur Bitcoins"
+msgid "&Send cosbycoins"
+msgstr "&Verstuur cosbycoins"
 
 #: ../../../src/ui.cpp:2683
 msgid "O&ptions..."
@@ -485,8 +485,8 @@ msgid "Invalid amount"
 msgstr "Foutieve hoeveelheid"
 
 #: ../../../src/main.cpp:4023
-msgid "Invalid bitcoin address"
-msgstr "Foutief bitcoin-adres"
+msgid "Invalid cosbycoin address"
+msgstr "Foutief cosbycoin-adres"
 
 #: ../../../src/rpc.cpp:1800
 #: ../../../src/rpc.cpp:1802
@@ -518,8 +518,8 @@ msgstr ""
 "Als het bestand nog niet bestaat, maak het dan aan met enkel-leesbaar-door-eigenaar rechten."
 
 #: ../../../src/util.cpp:865
-msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
-msgstr "Waarschuwing: Controleer of uw computers datum en tijd correct ingesteld zijn. Als uw klok fout staat zal Bitcoin niet correct werken."
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong cosbycoin will not work properly."
+msgstr "Waarschuwing: Controleer of uw computers datum en tijd correct ingesteld zijn. Als uw klok fout staat zal cosbycoin niet correct werken."
 
 #: ../../../src/util.cpp:898
 msgid "beta"
@@ -554,8 +554,8 @@ msgid "Address Book"
 msgstr "Adresboek"
 
 #: ../../../src/uibase.cpp:69
-msgid "Your Bitcoin Address:"
-msgstr "Uw bitcoin-adres:"
+msgid "Your cosbycoin Address:"
+msgstr "Uw cosbycoin-adres:"
 
 #: ../../../src/uibase.cpp:76
 msgid " &New... "
@@ -614,8 +614,8 @@ msgid "OK"
 msgstr "OK"
 
 #: ../../../src/uibase.cpp:345
-msgid "&Start Bitcoin on system startup"
-msgstr "&Start Bitcoin wanneer het systeem opstart"
+msgid "&Start cosbycoin on system startup"
+msgstr "&Start cosbycoin wanneer het systeem opstart"
 
 #: ../../../src/uibase.cpp:348
 msgid "&Minimize to the tray instead of the taskbar"
@@ -671,8 +671,8 @@ msgid "&Apply"
 msgstr "&Toepassen"
 
 #: ../../../src/uibase.cpp:508
-msgid "Bitcoin "
-msgstr "Bitcoin "
+msgid "cosbycoin "
+msgstr "cosbycoin "
 
 #: ../../../src/uibase.cpp:514
 msgid "version"
@@ -680,7 +680,7 @@ msgstr "versie"
 
 #: ../../../src/uibase.cpp:525
 msgid ""
-"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"Copyright (c) 2009-2011 cosbycoin Developers\n"
 "\n"
 "This is experimental software.\n"
 "\n"
@@ -691,7 +691,7 @@ msgid ""
 "OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
 "Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
 msgstr ""
-"Copyright (c) 2009-2011 Bitcoin-ontwikkelaars\n"
+"Copyright (c) 2009-2011 cosbycoin-ontwikkelaars\n"
 "\n"
 "Dit is experimentele software.\n"
 "\n"
@@ -704,8 +704,8 @@ msgstr ""
 "door Thomas Bernard."
 
 #: ../../../src/uibase.cpp:581
-msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Voer een bitcoin-adres (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgid "Enter a cosbycoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Voer een cosbycoin-adres (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:595
 msgid "Pay &To:"
@@ -746,8 +746,8 @@ msgstr ""
 "Verbinden..."
 
 #: ../../../src/uibase.cpp:761
-msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
-msgstr "Dit zijn je bitcoin-adressen voor het ontvangen van betalingen.  Het is een goed idee iedere afzender een ander adres te geven zodat je bij kunt houden wie je een betaling stuurt. Het geselecteerde adres is zichtbaar in het hoofdscherm."
+msgid "These are your cosbycoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Dit zijn je cosbycoin-adressen voor het ontvangen van betalingen.  Het is een goed idee iedere afzender een ander adres te geven zodat je bij kunt houden wie je een betaling stuurt. Het geselecteerde adres is zichtbaar in het hoofdscherm."
 
 #: ../../../src/uibase.cpp:774
 #: ../../../src/uibase.cpp:886
@@ -764,8 +764,8 @@ msgid "Sending"
 msgstr "Versturen..."
 
 #: ../../../src/uibase.cpp:857
-msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
-msgstr "Dit zijn je bitcoin-adressen voor het ontvangen van betalingen.  Het is een goed idee iedere afzender een ander adres te geven zodat je bij kunt houden wie je een betaling stuurt. Het geselecteerde adres is zichtbaar in het hoofdscherm."
+msgid "These are your cosbycoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Dit zijn je cosbycoin-adressen voor het ontvangen van betalingen.  Het is een goed idee iedere afzender een ander adres te geven zodat je bij kunt houden wie je een betaling stuurt. Het geselecteerde adres is zichtbaar in het hoofdscherm."
 
 #: ../../../src/uibase.cpp:870
 msgid "Receiving"
@@ -776,16 +776,16 @@ msgid "&Delete"
 msgstr "&Verwijderen"
 
 #: ../../../src/init.cpp:147
-msgid "Bitcoin version"
-msgstr "Bitcoin "
+msgid "cosbycoin version"
+msgstr "cosbycoin "
 
 #: ../../../src/init.cpp:148
 msgid "Usage:"
 msgstr "Mededeling:"
 
 #: ../../../src/init.cpp:150
-msgid "Send command to -server or bitcoind\n"
-msgstr "Zend commando naar -server of bitcoind\n"
+msgid "Send command to -server or cosbycoind\n"
+msgstr "Zend commando naar -server of cosbycoind\n"
 
 #: ../../../src/init.cpp:151
 msgid "List commands\n"
@@ -800,12 +800,12 @@ msgid "Options:\n"
 msgstr "Opties:\n"
 
 #: ../../../src/init.cpp:154
-msgid "Specify configuration file (default: bitcoin.conf)\n"
-msgstr "Specifieer configuratiebestand (standaard: bitcoin.conf)\n"
+msgid "Specify configuration file (default: cosbycoin.conf)\n"
+msgstr "Specifieer configuratiebestand (standaard: cosbycoin.conf)\n"
 
 #: ../../../src/init.cpp:155
-msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "Specifieer pid-bestand (standaard: bitcoind.pid)\n"
+msgid "Specify pid file (default: cosbycoind.pid)\n"
+msgstr "Specifieer pid-bestand (standaard: cosbycoind.pid)\n"
 
 #: ../../../src/init.cpp:156
 msgid "Generate coins\n"
@@ -902,10 +902,10 @@ msgstr "Doorzoek de blokken database voor ontbrekende portefeuille-transacties\n
 #: ../../../src/init.cpp:190
 msgid ""
 "\n"
-"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+"SSL options: (see the cosbycoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
-"SSL opties: (zie de Bitcoin wiki voor SSL instructies)\n"
+"SSL opties: (zie de cosbycoin wiki voor SSL instructies)\n"
 
 #: ../../../src/init.cpp:191
 msgid "Use OpenSSL (https) for JSON-RPC connections\n"
@@ -929,8 +929,8 @@ msgstr "Dit helpbericht\n"
 
 #: ../../../src/init.cpp:335
 #, c-format
-msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
-msgstr "Kan geen lock op de gegevensdirectory %s verkrijgen. Bitcoin draait vermoedelijk reeds."
+msgid "Cannot obtain a lock on data directory %s.  cosbycoin is probably already running."
+msgstr "Kan geen lock op de gegevensdirectory %s verkrijgen. cosbycoin draait vermoedelijk reeds."
 
 #: ../../../src/init.cpp:361
 msgid "Error loading addr.dat      \n"
@@ -965,9 +965,9 @@ msgid "Options"
 msgstr "Opties"
 
 #: ../../../src/uibase.h:228
-msgid "About Bitcoin"
-msgstr "Over Bitcoin"
+msgid "About cosbycoin"
+msgstr "Over cosbycoin"
 
 #: ../../../src/uibase.h:337
-msgid "Your Bitcoin Addresses"
-msgstr "Uw bitcoin-adressen"
+msgid "Your cosbycoin Addresses"
+msgstr "Uw cosbycoin-adressen"

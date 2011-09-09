@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -105,11 +105,11 @@
 #ifdef GUI
 #include "xpm/addressbook16.xpm"
 #include "xpm/addressbook20.xpm"
-#include "xpm/bitcoin16.xpm"
-#include "xpm/bitcoin20.xpm"
-#include "xpm/bitcoin32.xpm"
-#include "xpm/bitcoin48.xpm"
-#include "xpm/bitcoin80.xpm"
+#include "xpm/cosbycoin16.xpm"
+#include "xpm/cosbycoin20.xpm"
+#include "xpm/cosbycoin32.xpm"
+#include "xpm/cosbycoin48.xpm"
+#include "xpm/cosbycoin80.xpm"
 #include "xpm/check.xpm"
 #include "xpm/send16.xpm"
 #include "xpm/send16noshadow.xpm"

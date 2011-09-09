@@ -92,7 +92,7 @@ CRYPTOPP_OBJS= \
 RC=../share
 
 
-all: bitcoin.exe
+all: cosbycoin.exe
 
 
 .cpp{obj}.obj:
@@ -130,10 +130,10 @@ cryptopp\obj\sha.obj: cryptopp\sha.cpp
 cryptopp\obj\cpu.obj: cryptopp\cpu.cpp
     cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
 
-obj\ui.res: $(RC)/ui.rc $(RC)/pixmaps/bitcoin.ico $(RC)/pixmaps/check.ico $(RC)/pixmaps/send16.bmp $(RC)/pixmaps/send16mask.bmp $(RC)/pixmaps/send16masknoshadow.bmp $(RC)/pixmaps/send20.bmp $(RC)/pixmaps/send20mask.bmp $(RC)/pixmaps/addressbook16.bmp $(RC)/pixmaps/addressbook16mask.bmp $(RC)/pixmaps/addressbook20.bmp $(RC)/pixmaps/addressbook20mask.bmp
+obj\ui.res: $(RC)/ui.rc $(RC)/pixmaps/cosbycoin.ico $(RC)/pixmaps/check.ico $(RC)/pixmaps/send16.bmp $(RC)/pixmaps/send16mask.bmp $(RC)/pixmaps/send16masknoshadow.bmp $(RC)/pixmaps/send20.bmp $(RC)/pixmaps/send20mask.bmp $(RC)/pixmaps/addressbook16.bmp $(RC)/pixmaps/addressbook16mask.bmp $(RC)/pixmaps/addressbook20.bmp $(RC)/pixmaps/addressbook20mask.bmp
     rc $(INCLUDEPATHS) $(DEFS) /Fo$@ %s
 
-bitcoin.exe: $(OBJS) $(CRYPTOPP_OBJS) obj\ui.obj obj\uibase.obj obj\ui.res
+cosbycoin.exe: $(OBJS) $(CRYPTOPP_OBJS) obj\ui.obj obj\uibase.obj obj\ui.res
     link /nologo /SUBSYSTEM:WINDOWS /OUT:$@ $(LIBPATHS) $** $(WXLIBS) $(LIBS)
 
 	
@@ -160,7 +160,7 @@ obj\nogui\rpc.obj: $(HEADERS)
 
 obj\nogui\init.obj: $(HEADERS)
 
-bitcoind.exe: $(OBJS:obj\=obj\nogui\) $(CRYPTOPP_OBJS) obj\ui.res
+cosbycoind.exe: $(OBJS:obj\=obj\nogui\) $(CRYPTOPP_OBJS) obj\ui.res
     link /nologo /OUT:$@ $(LIBPATHS) $** $(LIBS)
 
 

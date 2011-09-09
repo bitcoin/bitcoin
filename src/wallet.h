@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_WALLET_H
-#define BITCOIN_WALLET_H
+#ifndef cosbycoin_WALLET_H
+#define cosbycoin_WALLET_H
 
 #include "bignum.h"
 #include "key.h"
@@ -52,7 +52,7 @@ public:
 
     std::map<uint256, int> mapRequestCount;
 
-    std::map<CBitcoinAddress, std::string> mapAddressBook;
+    std::map<CcosbycoinAddress, std::string> mapAddressBook;
 
     std::vector<unsigned char> vchDefaultKey;
 
@@ -79,7 +79,7 @@ public:
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     bool BroadcastTransaction(CWalletTx& wtxNew);
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
-    std::string SendMoneyToBitcoinAddress(const CBitcoinAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
+    std::string SendMoneyTocosbycoinAddress(const CcosbycoinAddress& address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
     bool TopUpKeyPool();
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
@@ -102,7 +102,7 @@ public:
     }
     bool IsChange(const CTxOut& txout) const
     {
-        CBitcoinAddress address;
+        CcosbycoinAddress address;
         if (ExtractAddress(txout.scriptPubKey, this, address))
             CRITICAL_BLOCK(cs_wallet)
                 if (!mapAddressBook.count(address))
@@ -168,9 +168,9 @@ public:
     int LoadWallet(bool& fFirstRunRet);
 //    bool BackupWallet(const std::string& strDest);
 
-    bool SetAddressBookName(const CBitcoinAddress& address, const std::string& strName);
+    bool SetAddressBookName(const CcosbycoinAddress& address, const std::string& strName);
 
-    bool DelAddressBookName(const CBitcoinAddress& address);
+    bool DelAddressBookName(const CcosbycoinAddress& address);
 
     void UpdatedTransaction(const uint256 &hashTx)
     {
@@ -460,8 +460,8 @@ public:
         return nChangeCached;
     }
 
-    void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<CBitcoinAddress, int64> >& listReceived,
-                    std::list<std::pair<CBitcoinAddress, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
+    void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<CcosbycoinAddress, int64> >& listReceived,
+                    std::list<std::pair<CcosbycoinAddress, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
 
     void GetAccountAmounts(const std::string& strAccount, int64& nGenerated, int64& nReceived, 
                            int64& nSent, int64& nFee) const;

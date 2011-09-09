@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
@@ -51,7 +51,7 @@ double dHashesPerSec;
 int64 nHPSTimerStart;
 
 // Settings
-int fGenerateBitcoins = false;
+int fGeneratecosbycoins = false;
 int64 nTransactionFee = 0;
 int fLimitProcessors = false;
 int nLimitProcessors = 1;
@@ -361,7 +361,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     // Checking ECDSA signatures is a CPU bottleneck, so to avoid denial-of-service
     // attacks disallow transactions with more than one SigOp per 34 bytes.
     // 34 bytes because a TxOut is:
-    //   20-byte address + 8 byte bitcoin amount + 5 bytes of ops + 1 byte script length
+    //   20-byte address + 8 byte cosbycoin amount + 5 bytes of ops + 1 byte script length
     if (GetSigOpCount() > nSize / 34 || nSize < 100)
         return error("AcceptToMemoryPool() : nonstandard transaction");
 
@@ -1398,7 +1398,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low  ");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
+        ThreadSafeMessageBox(strMessage, "cosbycoin", wxOK | wxICON_EXCLAMATION);
         CreateThread(Shutdown, NULL);
         return false;
     }
@@ -2565,7 +2565,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// BitcoinMiner
+// cosbycoinMiner
 //
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len)
@@ -2868,7 +2868,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         return false;
 
     //// debug print
-    printf("BitcoinMiner:\n");
+    printf("cosbycoinMiner:\n");
     printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
     printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
@@ -2878,7 +2878,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     CRITICAL_BLOCK(cs_main)
     {
         if (pblock->hashPrevBlock != hashBestChain)
-            return error("BitcoinMiner : generated block is stale");
+            return error("cosbycoinMiner : generated block is stale");
 
         // Remove key from key pool
         reservekey.KeepKey();
@@ -2889,27 +2889,27 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
         // Process this block the same as if we had received it from another node
         if (!ProcessBlock(NULL, pblock))
-            return error("BitcoinMiner : ProcessBlock, block not accepted");
+            return error("cosbycoinMiner : ProcessBlock, block not accepted");
     }
 
     Sleep(2000);
     return true;
 }
 
-void static ThreadBitcoinMiner(void* parg);
+void static ThreadcosbycoinMiner(void* parg);
 
-void static BitcoinMiner(CWallet *pwallet)
+void static cosbycoinMiner(CWallet *pwallet)
 {
-    printf("BitcoinMiner started\n");
+    printf("cosbycoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-    while (fGenerateBitcoins)
+    while (fGeneratecosbycoins)
     {
-        if (AffinityBugWorkaround(ThreadBitcoinMiner))
+        if (AffinityBugWorkaround(ThreadcosbycoinMiner))
             return;
         if (fShutdown)
             return;
@@ -2918,7 +2918,7 @@ void static BitcoinMiner(CWallet *pwallet)
             Sleep(1000);
             if (fShutdown)
                 return;
-            if (!fGenerateBitcoins)
+            if (!fGeneratecosbycoins)
                 return;
         }
 
@@ -2934,7 +2934,7 @@ void static BitcoinMiner(CWallet *pwallet)
             return;
         IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
 
-        printf("Running BitcoinMiner with %d transactions in block\n", pblock->vtx.size());
+        printf("Running cosbycoinMiner with %d transactions in block\n", pblock->vtx.size());
 
 
         //
@@ -3020,7 +3020,7 @@ void static BitcoinMiner(CWallet *pwallet)
             // Check for stop or if block needs to be rebuilt
             if (fShutdown)
                 return;
-            if (!fGenerateBitcoins)
+            if (!fGeneratecosbycoins)
                 return;
             if (fLimitProcessors && vnThreadsRunning[3] > nLimitProcessors)
                 return;
@@ -3040,39 +3040,39 @@ void static BitcoinMiner(CWallet *pwallet)
     }
 }
 
-void static ThreadBitcoinMiner(void* parg)
+void static ThreadcosbycoinMiner(void* parg)
 {
     CWallet* pwallet = (CWallet*)parg;
     try
     {
         vnThreadsRunning[3]++;
-        BitcoinMiner(pwallet);
+        cosbycoinMiner(pwallet);
         vnThreadsRunning[3]--;
     }
     catch (std::exception& e) {
         vnThreadsRunning[3]--;
-        PrintException(&e, "ThreadBitcoinMiner()");
+        PrintException(&e, "ThreadcosbycoinMiner()");
     } catch (...) {
         vnThreadsRunning[3]--;
-        PrintException(NULL, "ThreadBitcoinMiner()");
+        PrintException(NULL, "ThreadcosbycoinMiner()");
     }
     UIThreadCall(boost::bind(CalledSetStatusBar, "", 0));
     nHPSTimerStart = 0;
     if (vnThreadsRunning[3] == 0)
         dHashesPerSec = 0;
-    printf("ThreadBitcoinMiner exiting, %d threads remaining\n", vnThreadsRunning[3]);
+    printf("ThreadcosbycoinMiner exiting, %d threads remaining\n", vnThreadsRunning[3]);
 }
 
 
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet)
+void Generatecosbycoins(bool fGenerate, CWallet* pwallet)
 {
-    if (fGenerateBitcoins != fGenerate)
+    if (fGeneratecosbycoins != fGenerate)
     {
-        fGenerateBitcoins = fGenerate;
-        WriteSetting("fGenerateBitcoins", fGenerateBitcoins);
+        fGeneratecosbycoins = fGenerate;
+        WriteSetting("fGeneratecosbycoins", fGeneratecosbycoins);
         MainFrameRepaint();
     }
-    if (fGenerateBitcoins)
+    if (fGeneratecosbycoins)
     {
         int nProcessors = boost::thread::hardware_concurrency();
         printf("%d processors\n", nProcessors);
@@ -3081,11 +3081,11 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet)
         if (fLimitProcessors && nProcessors > nLimitProcessors)
             nProcessors = nLimitProcessors;
         int nAddThreads = nProcessors - vnThreadsRunning[3];
-        printf("Starting %d BitcoinMiner threads\n", nAddThreads);
+        printf("Starting %d cosbycoinMiner threads\n", nAddThreads);
         for (int i = 0; i < nAddThreads; i++)
         {
-            if (!CreateThread(ThreadBitcoinMiner, pwallet))
-                printf("Error: CreateThread(ThreadBitcoinMiner) failed\n");
+            if (!CreateThread(ThreadcosbycoinMiner, pwallet))
+                printf("Error: CreateThread(ThreadcosbycoinMiner) failed\n");
             Sleep(10);
         }
     }

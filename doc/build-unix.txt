@@ -15,9 +15,9 @@ To Build
 
 cd src/
 
-make -f makefile.unix            # Bitcoin with wxWidgets GUI
+make -f makefile.unix            # cosbycoin with wxWidgets GUI
   or
-make -f makefile.unix bitcoind   # Headless bitcoin
+make -f makefile.unix cosbycoind   # Headless cosbycoin
 
 
 Dependencies
@@ -66,7 +66,7 @@ The UI layout is edited with wxFormBuilder.  The project file is
 uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
 classes that do the rote work of constructing all the UI elements.
 
-The release is built with GCC and then "strip bitcoin" to strip the debug
+The release is built with GCC and then "strip cosbycoin" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 

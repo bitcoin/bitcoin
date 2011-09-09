@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The cosbycoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_UI_H
-#define BITCOIN_UI_H
+#ifndef cosbycoin_UI_H
+#define cosbycoin_UI_H
 
 #include <boost/function.hpp>
 #include "wallet.h"
