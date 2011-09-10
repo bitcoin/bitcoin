@@ -18,6 +18,8 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(MODEL_UPDATE_DELAY);
+
+    numBlocksAtStartup = -1;
 }
 
 int ClientModel::getNumConnections() const
@@ -28,6 +30,12 @@ int ClientModel::getNumConnections() const
 int ClientModel::getNumBlocks() const
 {
     return nBestHeight;
+}
+
+int ClientModel::getNumBlocksAtStartup()
+{
+    if (numBlocksAtStartup == -1) numBlocksAtStartup = getNumBlocks();
+    return numBlocksAtStartup;
 }
 
 QDateTime ClientModel::getLastBlockDate() const

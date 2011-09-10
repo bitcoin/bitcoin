@@ -345,6 +345,7 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count)
 {
+    int initTotal = clientModel->getNumBlocksAtStartup();
     int total = clientModel->getTotalBlocksEstimate();
     QString tooltip;
 
@@ -352,8 +353,8 @@ void BitcoinGUI::setNumBlocks(int count)
     {
         progressBarLabel->setVisible(true);
         progressBar->setVisible(true);
-        progressBar->setMaximum(total);
-        progressBar->setValue(count);
+        progressBar->setMaximum(total - initTotal);
+        progressBar->setValue(count - initTotal);
         tooltip = tr("Downloaded %1 of %2 blocks of transaction history.").arg(count).arg(total);
     }
     else

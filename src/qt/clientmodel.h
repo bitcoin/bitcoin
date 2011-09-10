@@ -23,6 +23,7 @@ public:
 
     int getNumConnections() const;
     int getNumBlocks() const;
+    int getNumBlocksAtStartup();
 
     QDateTime getLastBlockDate() const;
 
@@ -40,6 +41,8 @@ private:
 
     int cachedNumConnections;
     int cachedNumBlocks;
+
+    int numBlocksAtStartup;
 
 signals:
     void numConnectionsChanged(int count);
