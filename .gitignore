@@ -18,3 +18,7 @@ Makefile
 bitcoin-qt
 #resources cpp
 qrc_*.cpp
+#qt creator
+*.pro.user
+#mac specific
+.DS_Store
