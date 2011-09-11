@@ -174,3 +174,14 @@ CODECFORTR = UTF-8
 # for lrelease/lupdate
 TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts \
                src/qt/locale/bitcoin_ru.ts
+
+OTHER_FILES += \
+    README.rst
+
+# For use with MacPorts
+macx:INCLUDEPATH += /opt/local/include /opt/local/include/db48
+macx:LIBS += -L/opt/local/lib -L/opt/local/lib/db48
+
+# Additional Mac options
+macx:ICON = src/qt/res/icons/bitcoin.icns
+macx:TARGET = "Bitcoin Qt"
