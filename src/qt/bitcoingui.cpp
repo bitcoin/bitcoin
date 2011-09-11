@@ -346,7 +346,7 @@ void BitcoinGUI::setNumConnections(int count)
 void BitcoinGUI::setNumBlocks(int count)
 {
     int initTotal = clientModel->getNumBlocksAtStartup();
-    int total = clientModel->getTotalBlocksEstimate();
+    int total = clientModel->getNumBlocksOfPeers();
     QString tooltip;
 
     if(count < total)
