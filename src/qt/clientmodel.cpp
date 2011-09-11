@@ -67,9 +67,9 @@ bool ClientModel::inInitialBlockDownload() const
     return IsInitialBlockDownload();
 }
 
-int ClientModel::getTotalBlocksEstimate() const
+int ClientModel::getNumBlocksOfPeers() const
 {
-    return GetMaxBlocksOfOtherNodes();
+    return GetNumBlocksOfPeers();
 }
 
 OptionsModel *ClientModel::getOptionsModel()
