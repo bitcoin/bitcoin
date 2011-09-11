@@ -99,7 +99,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/bitcoinrpc.h \
     src/qt/overviewpage.h \
     src/qt/csvmodelwriter.h \
-    src/qt/qtwin.h \
     src/crypter.h \
     src/qt/sendcoinsentry.h \
     src/qt/qvalidatedlineedit.h \
@@ -147,7 +146,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/bitcoinrpc.cpp \
     src/qt/overviewpage.cpp \
     src/qt/csvmodelwriter.cpp \
-    src/qt/qtwin.cpp \
     src/crypter.cpp \
     src/qt/sendcoinsentry.cpp \
     src/qt/qvalidatedlineedit.cpp \
