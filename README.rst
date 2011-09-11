@@ -79,6 +79,27 @@ Windows build instructions:
 .. [#] PGP signature: https://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
 .. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
 
+
+Mac OS X
+--------
+
+- Download and install the `Qt Mac OS X SDK`_. It is recommended to also install Apple's Xcode with UNIX tools.
+
+- Download and install `MacPorts`_.
+
+- Execute the following commands in a terminal to get the dependencies:
+
+::
+
+	sudo port selfupdate
+	sudo port install boost db48
+
+- Open the .pro file in Qt Creator and build as normal (cmd-B)
+
+.. _`Qt Mac OS X SDK`: http://qt.nokia.com/downloads/sdk-mac-os-cpp
+.. _`MacPorts`: http://www.macports.org/install.php
+
+
 Build configuration options
 ============================
 
@@ -94,17 +115,25 @@ To use UPnP for port forwarding behind a NAT router (recommended, as more connec
 (in **Qt Creator**, you can find the setting for additional qmake arguments under "Projects" -> "Build Settings" -> "Build Steps", then click "Details" next to **qmake**)
 
 This requires miniupnpc for UPnP port mapping.  It can be downloaded from
-http://miniupnp.tuxfamily.org/files/.  UPnP support is not compiled in by default.  
+http://miniupnp.tuxfamily.org/files/.  UPnP support is not compiled in by default.
 
 Set USE_UPNP to a different value to control this:
 
 +------------+--------------------------------------------------------------+
-| USE_UPNP=  | (the default) no UPnP support, miniupnp not required;        |
+| USE_UPNP=  | (the default) no UPnP support, miniupnpc not required;       |
 +------------+--------------------------------------------------------------+
 | USE_UPNP=0 | UPnP support turned off by default at runtime;               |
 +------------+--------------------------------------------------------------+
 | USE_UPNP=1 | UPnP support turned on by default at runtime.                |
 +------------+--------------------------------------------------------------+
+
+Mac OS X users: miniupnpc is currently outdated on MacPorts. An updated Portfile is provided in contrib/miniupnpc within this project.
+You can execute the following commands in a terminal to install it:
+
+::
+
+	cd <location of bitcoin-qt>/contrib/miniupnpc
+	sudo port install
 
 Notification support for recent (k)ubuntu versions
 ---------------------------------------------------
