@@ -1755,7 +1755,18 @@ static string HTTPReply(int nStatus, const string& strMsg)
         strMsg.c_str());
 }
 
-int ReadHTTPStatus(std::basic_istream<char>& stream)
+string ReadHTTPRequestLine(std::basic_istream<char>& stream)
+{
+    string str;
+    getline(stream, str);
+    vector<string> vWords;
+    boost::split(vWords, str, boost::is_any_of(" "));
+    if (vWords.size() < 2)
+        return "";
+    return vWords[1];
+}
+
+int ReadHTTPResponseStatus(std::basic_istream<char>& stream)
 {
     string str;
     getline(stream, str);
@@ -1791,13 +1802,38 @@ int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHea
     return nLen;
 }
 
-int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet)
+bool ReadHTTPRequest(std::basic_istream<char>& stream, string& strUrl, map<string, string>& mapHeadersRet, string& strMessageRet)
+{
+    mapHeadersRet.clear();
+    strMessageRet = "";
+
+    // Read request URL
+    strUrl = ReadHTTPRequestLine(stream);
+    if (strUrl == "")
+        return false;
+
+    // Read headers
+    int nLen = ReadHTTPHeader(stream, mapHeadersRet);
+    if (nLen < 0 || nLen > MAX_SIZE)
+        return false;
+
+    if (nLen > 0)
+    {
+        vector<char> vch(nLen);
+        stream.read(&vch[0], nLen);
+        strMessageRet = string(vch.begin(), vch.end());
+    }
+
+    return true;
+}
+
+int ReadHTTPResponse(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet)
 {
     mapHeadersRet.clear();
     strMessageRet = "";
 
     // Read status
-    int nStatus = ReadHTTPStatus(stream);
+    int nStatus = ReadHTTPResponseStatus(stream);
 
     // Read header
     int nLen = ReadHTTPHeader(stream, mapHeadersRet);
@@ -2076,15 +2112,27 @@ void ThreadRPCServer2(void* parg)
             continue;
         }
 
+        string strUrl;
         map<string, string> mapHeaders;
         string strRequest;
 
-        boost::thread api_caller(ReadHTTP, boost::ref(stream), boost::ref(mapHeaders), boost::ref(strRequest));
+        int api_version = 1;
+
+        boost::thread api_caller(ReadHTTPRequest, boost::ref(stream), boost::ref(strUrl), boost::ref(mapHeaders), boost::ref(strRequest));
         if (!api_caller.timed_join(boost::posix_time::seconds(GetArg("-rpctimeout", 30))))
         {   // Timed out:
             acceptor.cancel();
-            printf("ThreadRPCServer ReadHTTP timeout\n");
+            printf("ThreadRPCServer ReadHTTPRequest timeout\n");
             continue;
+        }
+
+        static const char *chUrlPrefix = "/api/v";
+        if (boost::starts_with(strUrl, chUrlPrefix)) {
+            api_version = atoi(&(strUrl.c_str())[strlen(chUrlPrefix)]);
+            if (api_version != 1) {
+                stream << HTTPReply(404, "") << std::flush;
+                continue;
+            }
         }
 
         // Check authorization
@@ -2219,7 +2267,7 @@ Object CallRPC(const string& strMethod, const Array& params)
     // Receive reply
     map<string, string> mapHeaders;
     string strReply;
-    int nStatus = ReadHTTP(stream, mapHeaders, strReply);
+    int nStatus = ReadHTTPResponse(stream, mapHeaders, strReply);
     if (nStatus == 401)
         throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
     else if (nStatus >= 400 && nStatus != 400 && nStatus != 404 && nStatus != 500)
