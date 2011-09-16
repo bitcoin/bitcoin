@@ -34,7 +34,7 @@ script: |
   mkdir wxWidgets-2.9.2
   cd wxWidgets-2.9.2
   unzip ../wxWidgets-2.9.2-x32-gitian.zip
-  unzip -f ../wxWidgets-2.9.2-x64-gitian.zip
+  unzip -o ../wxWidgets-2.9.2-x64-gitian.zip
   cp -a bin/$GBUILD_BITS/wx/config/gtk2-unicode-static-2.9 $INSTDIR/bin/wx-config
   for lib in wx_gtk2u wxregexu wxtiff; do
     ar rc $INSTDIR/lib/lib${lib}-2.9.a bin/$GBUILD_BITS/$lib/*.o
