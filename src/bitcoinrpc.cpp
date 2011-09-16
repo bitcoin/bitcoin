@@ -1498,7 +1498,8 @@ Value getwork(const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(-10, "Bitcoin is downloading blocks...");
 
-    static map<uint256, pair<CBlock*, unsigned int> > mapNewBlock;
+    typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
+    static mapNewBlock_t mapNewBlock;
     static vector<CBlock*> vNewBlock;
     static CReserveKey reservekey(pwalletMain);
 
@@ -1537,11 +1538,10 @@ Value getwork(const Array& params, bool fHelp)
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
-        static int64 nPrevTime = 0;
-        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, nPrevTime);
+        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
         // Save
-        mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, nExtraNonce);
+        mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
 
         // Prebuild hash buffers
         char pmidstate[32];
@@ -1574,11 +1574,10 @@ Value getwork(const Array& params, bool fHelp)
         if (!mapNewBlock.count(pdata->hashMerkleRoot))
             return false;
         CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
-        unsigned int nExtraNonce = mapNewBlock[pdata->hashMerkleRoot].second;
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
-        pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nBits << CBigNum(nExtraNonce);
+        pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         return CheckWork(pblock, *pwalletMain, reservekey);
