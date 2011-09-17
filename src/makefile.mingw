@@ -56,7 +56,7 @@ HEADERS = \
     util.h \
     wallet.h
 
-ifdef USE_UPNP
+ifneq (USE_UPNP,0)
  INCLUDEPATHS += -I"C:\miniupnpc-1.6-mgw"
  LIBPATHS += -L"C:\miniupnpc-1.6-mgw"
  LIBS += -l miniupnpc -l iphlpapi

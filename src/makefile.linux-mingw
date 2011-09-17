@@ -59,7 +59,7 @@ HEADERS = \
     util.h \
     wallet.h
 
-ifdef USE_UPNP
+ifneq (USE_UPNP,0)
 	LIBPATHS += -L"$(DEPSDIR)/miniupnpc"
 	LIBS += -l miniupnpc -l iphlpapi
 	DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
