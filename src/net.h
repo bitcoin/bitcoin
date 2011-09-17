@@ -296,7 +296,9 @@ public:
         nHeaderStart = -1;
         nMessageStart = -1;
         cs_vSend.Leave();
-        printf("(aborted)\n");
+
+        if (fDebug)
+            printf("(aborted)\n");
     }
 
     void EndMessage()
@@ -326,8 +328,7 @@ public:
         }
 
         if (fDebug) {
-            printf("(%d bytes) ", nSize);
-            printf("\n");
+            printf("(%d bytes)\n", nSize);
         }
 
         nHeaderStart = -1;
