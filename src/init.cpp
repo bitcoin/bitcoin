@@ -44,6 +44,7 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
+        ipcShutdown();
         nTransactionsUpdated++;
         DBFlush(false);
         StopNode();
@@ -253,7 +254,7 @@ bool AppInit2(int argc, char* argv[])
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
     for (int i = 1; i < argc; i++)
-        if (!IsSwitchChar(argv[i][0]))
+        if (!IsSwitchChar(argv[i][0]) && !(strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0))
             fCommandLine = true;
 
     if (fCommandLine)
@@ -261,6 +262,24 @@ bool AppInit2(int argc, char* argv[])
         int ret = CommandLineRPC(argc, argv);
         exit(ret);
     }
+
+#ifdef GUI
+    // Check for URI in argv
+    for (int i = 1; i < argc; i++)
+    {
+        if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
+        {
+            const char *strURI = argv[i];
+            try {
+                boost::interprocess::message_queue mqIPC(boost::interprocess::open_only, "Bitcoin");
+                if(mqIPC.try_send(strURI, strlen(strURI), 0))
+                    exit(0);
+            }
+            catch (boost::interprocess::interprocess_exception &ex) {
+            }
+        }
+    }
+#endif
 
 #ifndef __WXMSW__
     if (fDaemon)
@@ -556,6 +575,24 @@ bool AppInit2(int argc, char* argv[])
 #ifndef GUI
     while (1)
         Sleep(5000);
+#endif
+
+#ifdef GUI
+    ipcInit();
+    // Check for URI in argv
+    for (int i = 1; i < argc; i++)
+    {
+        if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
+        {
+            const char *strURI = argv[i];
+            try {
+                boost::interprocess::message_queue mqIPC(boost::interprocess::open_only, "Bitcoin");
+                mqIPC.try_send(strURI, strlen(strURI), 0);
+            }
+            catch (boost::interprocess::interprocess_exception &ex) {
+            }
+        }
+    }
 #endif
 
     return true;
