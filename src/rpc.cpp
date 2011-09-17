@@ -247,9 +247,10 @@ Value getgenerate(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getgenerate\n"
-            "Returns true or false.");
+            "Internal generation is removed, this function always returns false.\n"
+            "Deprecated, this will be removed from a future version.");
 
-    return (bool)fGenerateBitcoins;
+    return false;
 }
 
 
@@ -259,24 +260,17 @@ Value setgenerate(const Array& params, bool fHelp)
         throw runtime_error(
             "setgenerate <generate> [genproclimit]\n"
             "<generate> is true or false to turn generation on or off.\n"
-            "Generation is limited to [genproclimit] processors, -1 is unlimited.");
+            "Generation is limited to [genproclimit] processors, -1 is unlimited.\n"
+            "Deprecated, this function is a no-op and will be removed from a future version.");
 
-    bool fGenerate = true;
     if (params.size() > 0)
-        fGenerate = params[0].get_bool();
+        // unused parameter, used to be fGenerate, keep type-checking it though
+        (void)params[0].get_bool();
 
     if (params.size() > 1)
-    {
-        int nGenProcLimit = params[1].get_int();
-        fLimitProcessors = (nGenProcLimit != -1);
-        WriteSetting("fLimitProcessors", fLimitProcessors);
-        if (nGenProcLimit != -1)
-            WriteSetting("nLimitProcessors", nLimitProcessors = nGenProcLimit);
-        if (nGenProcLimit == 0)
-            fGenerate = false;
-    }
+        // unused parameter, used to be fGenerate, keep type-checking it though
+        (void)params[1].get_int();
 
-    GenerateBitcoins(fGenerate, pwalletMain);
     return Value::null;
 }
 
@@ -307,8 +301,6 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
-    obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
-    obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("testnet",       fTestNet));
