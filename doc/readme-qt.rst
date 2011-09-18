@@ -19,7 +19,7 @@ Features
 - Asks for confirmation before sending coins, for your own safety
 
 - CSV export of transactions and address book (for Excel bookkeeping)
- 
+
 - Shows alternative icon when connected to testnet, so you never accidentally send real coins during testing
 
 - Shows a progress bar on initial block download, so that you don't have to wonder how many blocks it needs to download to be up to date
@@ -34,7 +34,7 @@ Features
 
 - Accepts "bitcoin:" URLs from browsers and other sources through drag and drop
 
-Build instructions 
+Build instructions
 ===================
 
 Debian
@@ -138,7 +138,7 @@ You can execute the following commands in a terminal to install it:
 Notification support for recent (k)ubuntu versions
 ---------------------------------------------------
 
-To see desktop notifications on (k)ubuntu versions starting from 10.04, enable usage of the 
+To see desktop notifications on (k)ubuntu versions starting from 10.04, enable usage of the
 FreeDesktop notification interface through DBUS using the following qmake option:
 
 ::
@@ -152,10 +152,10 @@ A warning for people using the *static binary* version of Bitcoin on a Linux/UNI
 
 The static binary version of Bitcoin is linked against libdb4.7 or libdb4.8 (see also `this Debian issue`_).
 
-Now the nasty thing is that databases from 5.X are not compatible with 4.X. 
+Now the nasty thing is that databases from 5.X are not compatible with 4.X.
 
 If the globally installed development package of Berkely DB installed on your system is 5.X, any source you
-build yourself will be linked against that. The first time you run with a 5.X version the database will be upgraded, 
+build yourself will be linked against that. The first time you run with a 5.X version the database will be upgraded,
 and 4.X cannot open the new format. This means that you cannot go back to the old statically linked version without
 significant hassle!
 
