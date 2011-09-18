@@ -8,7 +8,7 @@ from PIL import Image
 from subprocess import Popen
 
 SRC='img/reload_scaled.png'
-DST='../src/qt/res/movies/update_spinner.mng'
+DST='../../src/qt/res/movies/update_spinner.mng'
 TMPDIR='/tmp'
 TMPNAME='tmp-%03i.png'
 NUMFRAMES=35
