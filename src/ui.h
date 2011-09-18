@@ -24,7 +24,9 @@ void CalledSetStatusBar(const std::string& strText, int nField);
 void MainFrameRepaint();
 void CreateMainWindow();
 void SetStartOnSystemStartup(bool fAutoStart);
-
+inline void InitMessage(const std::string &message)
+{
+}
 
 
 
