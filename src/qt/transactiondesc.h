@@ -10,6 +10,7 @@ class CWalletTx;
 
 class TransactionDesc: public QObject
 {
+    Q_OBJECT
 public:
     // Provide human-readable extended HTML description of a transaction
     static QString toHTML(CWallet *wallet, CWalletTx &wtx);

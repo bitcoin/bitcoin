@@ -5,14 +5,7 @@ DEFINES += QT_GUI
 # DEFINES += SSL
 CONFIG += no_include_pwd
 
-# for boost 1.37, add -mt to the boost libraries
 LIBS += -lssl -lcrypto -ldb_cxx
-unix:!macx:LIBS += -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-macx:LIBS += -lboost_system-mt -lboost_filesystem-mt -lboost_program_options-mt -lboost_thread-mt
-macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
-windows:LIBS += -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -lboost_program_options-mgw44-mt-1_43 -lboost_thread-mgw44-mt-1_43 -lws2_32 -lgdi32
-windows:DEFINES += __WXMSW__
-windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 # use: qmake "USE_UPNP=1"
 # miniupnpc (http://miniupnp.free.fr/files/) must be installed
@@ -22,6 +15,7 @@ count(USE_UPNP, 1) {
     LIBS += -lminiupnpc
 }
 
+# use: qmake "USE_DBUS=1"
 count(USE_DBUS, 1) {
     message(Building with DBUS (Freedesktop notifications) support)
     DEFINES += QT_DBUS
@@ -175,6 +169,15 @@ TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts \
 
 OTHER_FILES += \
     README.rst
+
+# Platform-specific libraries/includes
+# for boost 1.37, add -mt to the boost libraries
+unix:!macx:LIBS += -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+macx:LIBS += -lboost_system-mt -lboost_filesystem-mt -lboost_program_options-mt -lboost_thread-mt
+macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
+windows:LIBS += -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -lboost_program_options-mgw44-mt-1_43 -lboost_thread-mgw44-mt-1_43 -lws2_32 -lgdi32
+windows:DEFINES += __WXMSW__
+windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 # For use with MacPorts
 macx:INCLUDEPATH += /opt/local/include /opt/local/include/db48
