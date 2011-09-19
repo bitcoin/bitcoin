@@ -526,6 +526,8 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+static const string strMessageMagic = "Bitcoin Signed Message:\n";
+
 Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
@@ -533,61 +535,71 @@ Value signmessage(const Array& params, bool fHelp)
             "signmessage <bitcoinaddress> <message>\n"
             "Sign a message with the private key of an address");
 
+    if (pwalletMain->IsLocked())
+        throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
-    strMessage.insert(0, "Padding text - ");
-    
-    uint160 hash160;
-    if(!AddressToHash160(strAddress, hash160))
+
+    CBitcoinAddress addr(strAddress);
+    if (!addr.IsValid())
         throw JSONRPCError(-3, "Invalid address");
-    
-    vector<unsigned char>& vchPubKey = mapPubKeys[hash160];
+
     CKey key;
-    if(!key.SetPubKey(vchPubKey))
-        throw JSONRPCError(-3, "Public key not found");
-    strMessage.insert(0, HexStr(vchPubKey.begin(), vchPubKey.end()).c_str());
+    if (!pwalletMain->GetKey(addr, key))
+        throw JSONRPCError(-4, "Private key not available");
 
-    vector<unsigned char> vchMsg(strMessage.begin(), strMessage.end());
+    CDataStream ss(SER_GETHASH);
+    ss << strMessageMagic;
+    ss << strMessage;
+
     vector<unsigned char> vchSig;
-    if (!CKey::Sign(mapKeys[vchPubKey], Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-        throw JSONRPCError(-3, "Sign failed");
+    if (!key.Sign(Hash(ss.begin(), ss.end()), vchSig))
+        throw JSONRPCError(-5, "Sign failed");
 
-    Object obj;
-    obj.push_back(Pair("address",       strAddress));
-    obj.push_back(Pair("pubkey",        HexStr(vchPubKey.begin(), vchPubKey.end()).c_str()));
-    obj.push_back(Pair("sign",          HexStr(vchSig.begin(), vchSig.end()).c_str()));
+    CDataStream sres(SER_NETWORK);
+    sres << key.GetPubKey(); // public key
+    sres << vchSig; // signature;
 
-    return obj;
+    return HexStr(sres.begin(), sres.end());
 }
 
 Value verifymessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-            "verifymessage <pubkey> <sign> <message>\n"
-            "Verify a signed message with the public key");
+            "verifymessage <bitcoinaddress> <signature> <message>\n"
+            "Verify a signed message");
 
-    string strPubKey  = params[0].get_str();
-    string strSign    = params[1].get_str();
-    string strMessage = params[2].get_str();
-    strMessage.insert(0, "Padding text - ");
-    strMessage.insert(0, strPubKey.c_str());
+    string strAddress  = params[0].get_str();
+    string strSign     = params[1].get_str();
+    string strMessage  = params[2].get_str();
 
-    vector<unsigned char> vchPubKey = ParseHex(strPubKey);
-    vector<unsigned char> vchSig = ParseHex(strSign);
-    vector<unsigned char> vchMsg(strMessage.begin(), strMessage.end());
+    CBitcoinAddress addr(strAddress);
+    if (!addr.IsValid())
+        throw JSONRPCError(-3, "Invalid address");
+
+    vector<unsigned char> vchResult = ParseHex(strSign);
+    CDataStream sres(vchResult);
+
+    std::vector<unsigned char> vchPubKey;
+    sres >> vchPubKey;
+    std::vector<unsigned char> vchSig;
+    sres >> vchSig;
 
     CKey key;
-    if(!key.SetPubKey(vchPubKey))
-        throw JSONRPCError(-3, "Invalid pubkey");
-    
-    if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-        throw JSONRPCError(-3, "Verify failed");
-    
-    Object obj;
-    obj.push_back(Pair("address",       PubKeyToAddress(vchPubKey)));
-    obj.push_back(Pair("pubkey",        strPubKey.c_str()));
-    return obj;
+    if (!key.SetPubKey(vchPubKey))
+        throw JSONRPCError(-5, "Invalid public key in signature");
+
+    if (key.GetAddress() == addr)
+    {
+        CDataStream ss(SER_GETHASH);
+        ss << strMessageMagic;
+        ss << strMessage;
+        return key.Verify(Hash(ss.begin(), ss.end()), vchSig);
+    }
+    else
+        return false;
 }
 
 
