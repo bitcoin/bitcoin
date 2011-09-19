@@ -17,7 +17,7 @@
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
-    //Q_OBJECT
+    Q_OBJECT
 public:
     TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::BTC)
     {
@@ -87,6 +87,7 @@ public:
     int unit;
 
 };
+#include "overviewpage.moc"
 
 OverviewPage::OverviewPage(QWidget *parent) :
     QWidget(parent),
