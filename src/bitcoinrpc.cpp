@@ -561,7 +561,8 @@ Value signmessage(const Array& params, bool fHelp)
     sres << key.GetPubKey(); // public key
     sres << vchSig; // signature;
 
-    return HexStr(sres.begin(), sres.end());
+    vector<unsigned char> vchRet(sres.begin(), sres.end());
+    return EncodeBase64(&vchRet[0], vchRet.size());
 }
 
 Value verifymessage(const Array& params, bool fHelp)
@@ -579,7 +580,12 @@ Value verifymessage(const Array& params, bool fHelp)
     if (!addr.IsValid())
         throw JSONRPCError(-3, "Invalid address");
 
-    vector<unsigned char> vchResult = ParseHex(strSign);
+    bool fInvalid = false;
+    vector<unsigned char> vchResult = DecodeBase64(strSign.c_str(), &fInvalid);
+
+    if (fInvalid)
+        throw JSONRPCError(-5, "Malformed base64 encoding");
+
     CDataStream sres(vchResult);
 
     std::vector<unsigned char> vchPubKey;
