@@ -554,15 +554,10 @@ Value signmessage(const Array& params, bool fHelp)
     ss << strMessage;
 
     vector<unsigned char> vchSig;
-    if (!key.Sign(Hash(ss.begin(), ss.end()), vchSig))
+    if (!key.SignCompact(Hash(ss.begin(), ss.end()), vchSig))
         throw JSONRPCError(-5, "Sign failed");
 
-    CDataStream sres(SER_NETWORK);
-    sres << key.GetPubKey(); // public key
-    sres << vchSig; // signature;
-
-    vector<unsigned char> vchRet(sres.begin(), sres.end());
-    return EncodeBase64(&vchRet[0], vchRet.size());
+    return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
 Value verifymessage(const Array& params, bool fHelp)
@@ -581,31 +576,20 @@ Value verifymessage(const Array& params, bool fHelp)
         throw JSONRPCError(-3, "Invalid address");
 
     bool fInvalid = false;
-    vector<unsigned char> vchResult = DecodeBase64(strSign.c_str(), &fInvalid);
+    vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
 
     if (fInvalid)
         throw JSONRPCError(-5, "Malformed base64 encoding");
 
-    CDataStream sres(vchResult);
-
-    std::vector<unsigned char> vchPubKey;
-    sres >> vchPubKey;
-    std::vector<unsigned char> vchSig;
-    sres >> vchSig;
+    CDataStream ss(SER_GETHASH);
+    ss << strMessageMagic;
+    ss << strMessage;
 
     CKey key;
-    if (!key.SetPubKey(vchPubKey))
-        throw JSONRPCError(-5, "Invalid public key in signature");
-
-    if (key.GetAddress() == addr)
-    {
-        CDataStream ss(SER_GETHASH);
-        ss << strMessageMagic;
-        ss << strMessage;
-        return key.Verify(Hash(ss.begin(), ss.end()), vchSig);
-    }
-    else
+    if (!key.SetCompactSignature(Hash(ss.begin(), ss.end()), vchSig))
         return false;
+
+    return (key.GetAddress() == addr);
 }
 
 
