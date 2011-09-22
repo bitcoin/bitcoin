@@ -1,0 +1,30 @@
+--- 
+name: bitcoin
+urls:
+- http://bitcoin.org/bitcoin-latest-linux-gitian.zip
+rss:
+- url: http://sourceforge.net/api/file/index/project-id/244765/mtime/desc/limit/100/rss
+  xpath: //item/link/text()
+  pattern: bitcoin-\d+.\d+.\d+-linux-gitian.zip
+signers:
+  0A82509767C7D4A5D14DA2301AE1D35043E08E54:
+    weight: 40
+    name: BlueMatt
+    key: bluematt
+  BF6273FAEF7CC0BA1F562E50989F6B3048A116B5:
+    weight: 40
+    name: Devrandom
+    key: devrandom
+  D762373D24904A3E42F33B08B9A408E71DAAC974:
+    weight: 40
+    name: Sipa
+    key: sipa
+  77E72E69DA7EE0A148C06B21B34821D4944DE5F7:
+    weight: 40
+    name: tcatm
+    key: tcatm
+  01CDF4627A3B88AAE4A571C87588242FBE38D3A8:
+    weight: 40
+    name: "Gavin Andresen"
+    key: gavinandresen
+minimum_weight: 120
