@@ -23,8 +23,18 @@ or are controversial.
 The master branch is regularly built and tested, but is not guaranteed
 to be completely stable. Tags are regularly created to indicate new
 official, stable release versions of Bitcoin. If you would like to
-help test the Bitcoin core, please contact QA@Bitcoin.org.
+help test the Bitcoin core, please contact QA@BitcoinTesting.org.
 
 Feature branches are created when there are major new features being
 worked on by several people.
 
+From time to time a pull request will become outdated. If this occurs, and
+the pull is no longer automatically mergeable; it will be closed after 15
+days. This can be avoided by rebasing the commit. Pull requests closed in this
+manner will have their corresponding issue labeled stagnant.
+
+Non-bug issues with no commits will be closed after 15 days from their last activity.
+Issues closed in this manner will be labeled stale. 
+
+Requests to reopen closed pull requests and/or issues can be submitted to 
+QA@BitcoinTesting.org. 
