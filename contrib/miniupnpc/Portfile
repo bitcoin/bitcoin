@@ -1,0 +1,43 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:filetype=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem          1.0
+
+name                miniupnpc
+epoch               2
+version             1.6
+revision            2
+categories          net
+platforms           darwin
+license             BSD
+maintainers         singingwolfboy openmaintainer
+description         Lightweight client for UPnP protocol
+long_description    \
+    ${description}
+    
+homepage            http://miniupnp.free.fr/
+master_sites        http://miniupnp.free.fr/files/download.php?file=${distname}${extract.suffix}&dummy=
+checksums           md5     88055f2d4a061cfd4cfe25a9eae22f67 \
+                    sha1    ef8f2edb17f2e7c5b8dc67ee80a65c199d823e0a \
+                    rmd160  d86b75b331a3fb5525c71708548f311977c0598f
+
+use_configure       no
+
+variant universal {}
+if {[variant_isset universal]} {
+    set archflags ${configure.universal_cflags}
+} else {
+    set archflags ${configure.cc_archflags}
+}
+
+build.args-append   CC="${configure.cc} ${archflags}"
+
+post-patch {
+    reinplace "s|-Wl,-install_name,|-Wl,-install_name,${prefix}/lib/|" ${worksrcpath}/Makefile
+}
+
+destroot.destdir    PREFIX=${prefix} INSTALLPREFIX=${destroot}${prefix}
+
+livecheck.type      regex
+livecheck.url       http://miniupnp.free.fr/files/
+livecheck.regex     ${name}-(\\d+(\\.\\d{1,4})+)${extract.suffix}

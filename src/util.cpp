@@ -264,8 +264,7 @@ int my_snprintf(char* buffer, size_t limit, const char* format, ...)
     return ret;
 }
 
-
-string strprintf(const char* format, ...)
+string strprintf(const std::string &format, ...)
 {
     char buffer[50000];
     char* p = buffer;
@@ -275,7 +274,7 @@ string strprintf(const char* format, ...)
     {
         va_list arg_ptr;
         va_start(arg_ptr, format);
-        ret = _vsnprintf(p, limit, format, arg_ptr);
+        ret = _vsnprintf(p, limit, format.c_str(), arg_ptr);
         va_end(arg_ptr);
         if (ret >= 0 && ret < limit)
             break;
@@ -292,14 +291,13 @@ string strprintf(const char* format, ...)
     return str;
 }
 
-
-bool error(const char* format, ...)
+bool error(const std::string &format, ...)
 {
     char buffer[50000];
     int limit = sizeof(buffer);
     va_list arg_ptr;
     va_start(arg_ptr, format);
-    int ret = _vsnprintf(buffer, limit, format, arg_ptr);
+    int ret = _vsnprintf(buffer, limit, format.c_str(), arg_ptr);
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
     {

@@ -27,4 +27,3 @@ help test the Bitcoin core, please contact QA@BitcoinTesting.org.
 
 Feature branches are created when there are major new features being
 worked on by several people.
-
