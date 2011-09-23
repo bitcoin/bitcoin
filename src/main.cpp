@@ -1751,9 +1751,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     static map<unsigned int, vector<unsigned char> > mapReuseKey;
     RandAddSeedPerfmon();
-    if (fDebug)
+    if (fDebug) {
         printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
-    printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
+        printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
+    }
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {
         printf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -1945,7 +1946,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->AddInventoryKnown(inv);
 
             bool fAlreadyHave = AlreadyHave(txdb, inv);
-            printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
+            if (fDebug)
+                printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
             if (!fAlreadyHave)
                 pfrom->AskFor(inv);
