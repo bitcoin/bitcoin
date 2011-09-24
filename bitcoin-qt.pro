@@ -23,7 +23,7 @@ count(USE_UPNP, 1) {
 # use: qmake "USE_DBUS=1"
 count(USE_DBUS, 1) {
     message(Building with DBUS (Freedesktop notifications) support)
-    DEFINES += QT_DBUS
+    DEFINES += USE_DBUS
     QT += dbus
 }
 

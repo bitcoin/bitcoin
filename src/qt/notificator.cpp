@@ -9,7 +9,7 @@
 #include <QSystemTrayIcon>
 #include <QMessageBox>
 
-#ifdef QT_DBUS
+#ifdef USE_DBUS
 #include <QtDBus/QtDBus>
 #include <stdint.h>
 #endif
@@ -23,7 +23,7 @@ Notificator::Notificator(const QString &programName, QSystemTrayIcon *trayicon, 
     programName(programName),
     mode(None),
     trayIcon(trayicon)
-#ifdef QT_DBUS
+#ifdef USE_DBUS
     ,interface(0)
 #endif
 {
@@ -31,7 +31,7 @@ Notificator::Notificator(const QString &programName, QSystemTrayIcon *trayicon, 
     {
         mode = QSystemTray;
     }
-#ifdef QT_DBUS
+#ifdef USE_DBUS
     interface = new QDBusInterface("org.freedesktop.Notifications",
           "/org/freedesktop/Notifications", "org.freedesktop.Notifications");
     if(interface->isValid())
@@ -43,12 +43,12 @@ Notificator::Notificator(const QString &programName, QSystemTrayIcon *trayicon, 
 
 Notificator::~Notificator()
 {
-#ifdef QT_DBUS
+#ifdef USE_DBUS
     delete interface;
 #endif
 }
 
-#ifdef QT_DBUS
+#ifdef USE_DBUS
 
 // Loosely based on http://www.qtcentre.org/archive/index.php/t-25879.html
 class FreedesktopImage
@@ -205,7 +205,7 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
 {
     switch(mode)
     {
-#ifdef QT_DBUS
+#ifdef USE_DBUS
     case Freedesktop:
         notifyDBus(cls, title, text, icon, millisTimeout);
         break;
