@@ -1,6 +1,9 @@
 * update (commit) version in sources
+  src/serialize.h
+  share/setup.nsi
 
 * update (commit) version in OSX app bundle
+ contrib/Bitcoin.app/Contents/Info.plist
 
   * CFBundleShortVersionString should have value like 0.3.23
   * CFBundleVersion should have value like 323
@@ -29,6 +32,27 @@
   1. linux 32-bit and 64-bit binaries + source
   2. windows 32-bit binary + source
   3. windows installer
+
+* repackage gitian builds:
+
+  * Windows .zip and setup.exe:
+  $ mkdir bitcoin-$VERSION-win32
+  $ cd bitcoin-$VERSION-win32
+  $ unzip bitcoin-$VERSION-win32-gitian.zip
+  $ mv bitcoin-$VERSION-win32-setup.exe ..
+  $ cd ..; zip bitcoin-$VERSION-win32.zip bitcoin-$VERSION-win32
+
+  * Linux .tar.gz:
+  $ mkdir bitcoin-$VERSION-linux
+  $ cd bitcoin-$VERSION-linux
+  $ unzip bitcoin-$VERSION-linux-gitian.zip
+  $ cd ..; tar czvf bitcoin-$VERSION-linux.tar.gz bitcoin-$VERSION-linux
+
+* perform Mac build
+  * From the bitcoin source dir
+  $ cd contrib
+  $ ./create_osx_dmg.sh
+  $ mv Bitcoin.dmg bitcoin-$VERSION-macosx.dmg
 
 * upload source and builds to SF
 
