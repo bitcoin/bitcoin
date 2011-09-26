@@ -7,18 +7,12 @@ USE_UPNP:=0
 INCLUDEPATHS= \
  -I"C:\boost-1.47.0-mgw" \
  -I"C:\db-4.8.30.NC-mgw\build_unix" \
- -I"C:\openssl-1.0.0d-mgw\include" \
- -I"C:\wxWidgets-2.9.2-mgw\lib\gcc_lib\mswud" \
- -I"C:\wxWidgets-2.9.2-mgw\include"
+ -I"C:\openssl-1.0.0d-mgw\include"
 
 LIBPATHS= \
  -L"C:\boost-1.47.0-mgw\stage\lib" \
  -L"C:\db-4.8.30.NC-mgw\build_unix" \
- -L"C:\openssl-1.0.0d-mgw" \
- -L"C:\wxWidgets-2.9.2-mgw\lib\gcc_lib"
-
-WXLIBS= \
- -l wxmsw29ud_html -l wxmsw29ud_core -l wxmsw29ud_adv -l wxbase29ud -l wxtiffd -l wxjpegd -l wxpngd -l wxzlibd
+ -L"C:\openssl-1.0.0d-mgw"
 
 LIBS= \
  -l boost_system-mgw45-mt-s-1_47 \
@@ -29,8 +23,8 @@ LIBS= \
  -l ssl \
  -l crypto
 
-DEFS=-DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL -DBOOST_THREAD_USE_LIB
-DEBUGFLAGS=-g -D__WXDEBUG__
+DEFS=-DWIN32 -D_WINDOWS -DNOPCH -DUSE_SSL -DBOOST_THREAD_USE_LIB
+DEBUGFLAGS=-g
 CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS = \
     base58.h \
@@ -50,8 +44,6 @@ HEADERS = \
     script.h \
     serialize.h \
     strlcpy.h \
-    ui.h \
-    uibase.h \
     uint256.h \
     util.h \
     wallet.h
@@ -82,20 +74,7 @@ OBJS= \
     cryptopp/obj/cpu.o
 
 
-all: bitcoin.exe
-
-
-obj/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -DGUI -o $@ $<
-
-cryptopp/obj/%.o: cryptopp/%.cpp
-	g++ -c $(CFLAGS) -O3 -DCRYPTOPP_X86_ASM_AVAILABLE -o $@ $<
-
-obj/ui_res.o: ../share/ui.rc  ../share/pixmaps/bitcoin.ico ../share/pixmaps/check.ico ../share/pixmaps/send16.bmp ../share/pixmaps/send16mask.bmp ../share/pixmaps/send16masknoshadow.bmp ../share/pixmaps/send20.bmp ../share/pixmaps/send20mask.bmp ../share/pixmaps/addressbook16.bmp ../share/pixmaps/addressbook16mask.bmp ../share/pixmaps/addressbook20.bmp ../share/pixmaps/addressbook20mask.bmp
-	windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
-
-bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o
-	g++ $(CFLAGS) -mwindows -Wl,--subsystem,windows -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
+all: bitcoind.exe
 
 
 obj/nogui/%.o: %.cpp $(HEADERS)
@@ -111,7 +90,7 @@ test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:o
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
-	-del /Q bitcoin bitcoind test_bitcoin
+	-del /Q bitcoind test_bitcoin
 	-del /Q obj\*
 	-del /Q obj\nogui\*
 	-del /Q obj\test\*

@@ -132,7 +132,7 @@ inline int myclosesocket(SOCKET& hSocket)
     return ret;
 }
 #define closesocket(s)      myclosesocket(s)
-#if !defined(QT_GUI) && !defined(GUI)
+#if !defined(QT_GUI)
 inline const char* _(const char* psz)
 {
     return psz;

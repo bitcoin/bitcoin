@@ -822,7 +822,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 ssKey >> strKey;
 
                 // Options
-#ifndef GUI
+#ifndef QT_GUI
                 if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
 #endif
                 if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;

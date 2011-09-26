@@ -7,25 +7,20 @@ INCLUDEPATHS= \
   /I"/boost" \
   /I"/db/build_windows" \
   /I"/openssl/include" \
-  /I"/wxwidgets/lib/vc_lib/mswu" \
-  /I"/wxwidgets/include" /
   /I"/miniupnpc"
 
 LIBPATHS= \
   /LIBPATH:"/boost/stage/lib" \
   /LIBPATH:"/db/build_windows/Release" \
   /LIBPATH:"/openssl/lib" \
-  /LIBPATH:"/wxwidgets/lib/vc_lib" \
   /LIBPATH:"/miniupnpc/msvc/Release" \
   /NODEFAULTLIB:libc.lib /NODEFAULTLIB:libcmt.lib \
   /NODEFAULTLIB:libcd.lib /NODEFAULTLIB:libcmtd.lib \
   /NODEFAULTLIB:msvcrtd.lib
 
-WXLIBS=wxmsw29u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib
-
 USE_UPNP=0
 
-DEFS=/DWIN32 /D__WXMSW__ /D_WINDOWS /DNOPCH /DNOMINMAX
+DEFS=/DWIN32 /D_WINDOWS /DNOPCH /DNOMINMAX
 
 LIBS= \
   libboost_system-vc100-mt.lib \
@@ -92,7 +87,7 @@ CRYPTOPP_OBJS= \
 RC=../share
 
 
-all: bitcoin.exe
+all: bitcoind.exe
 
 
 .cpp{obj}.obj:
@@ -130,13 +125,6 @@ cryptopp\obj\sha.obj: cryptopp\sha.cpp
 cryptopp\obj\cpu.obj: cryptopp\cpu.cpp
     cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
 
-obj\ui.res: $(RC)/ui.rc $(RC)/pixmaps/bitcoin.ico $(RC)/pixmaps/check.ico $(RC)/pixmaps/send16.bmp $(RC)/pixmaps/send16mask.bmp $(RC)/pixmaps/send16masknoshadow.bmp $(RC)/pixmaps/send20.bmp $(RC)/pixmaps/send20mask.bmp $(RC)/pixmaps/addressbook16.bmp $(RC)/pixmaps/addressbook16mask.bmp $(RC)/pixmaps/addressbook20.bmp $(RC)/pixmaps/addressbook20mask.bmp
-    rc $(INCLUDEPATHS) $(DEFS) /Fo$@ %s
-
-bitcoin.exe: $(OBJS) $(CRYPTOPP_OBJS) obj\ui.obj obj\uibase.obj obj\ui.res
-    link /nologo /SUBSYSTEM:WINDOWS /OUT:$@ $(LIBPATHS) $** $(WXLIBS) $(LIBS)
-
-	
 .cpp{obj\nogui}.obj:
     cl $(CFLAGS) /Fo$@ %s
 
@@ -163,10 +151,10 @@ obj\nogui\init.obj: $(HEADERS)
 bitcoind.exe: $(OBJS:obj\=obj\nogui\) $(CRYPTOPP_OBJS) obj\ui.res
     link /nologo /OUT:$@ $(LIBPATHS) $** $(LIBS)
 
-
 clean:
     -del /Q obj\*
     -del /Q obj\nogui\*
     -del /Q cryptopp\obj\*
     -del /Q *.ilk
     -del /Q *.pdb
+    -del /Q bitcoind.exe
