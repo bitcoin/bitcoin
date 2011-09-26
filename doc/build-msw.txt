@@ -7,6 +7,9 @@ cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
 software written by Thomas Bernard.
 
 
+See readme-qt.rst for instructions on building Bitcoin QT, the
+graphical user interface.
+
 WINDOWS BUILD NOTES
 ===================
 
@@ -27,38 +30,23 @@ Dependencies
 Libraries you need to download separately and build:
 
                 default path               download
-wxWidgets       \wxwidgets-2.9.2-mgw       http://www.wxwidgets.org/downloads/
 OpenSSL         \openssl-1.0.0d-mgw        http://www.openssl.org/source/
 Berkeley DB     \db-4.8.30.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
 Boost           \boost-1.47.0-mgw          http://www.boost.org/users/download/
 miniupnpc       \miniupnpc-1.6-mgw         http://miniupnp.tuxfamily.org/files/
 
 Their licenses:
-wxWidgets      LGPL 2.1 with very liberal exceptions
 OpenSSL        Old BSD license with the problematic advertising requirement
 Berkeley DB    New BSD license with additional requirement that linked software must be free open source
 Boost          MIT-like license
 miniupnpc      New (3-clause) BSD license
 
 Versions used in this release:
-wxWidgets    2.9.2
 OpenSSL      1.0.0d
 Berkeley DB  4.8.30.NC
 Boost        1.47.0
 miniupnpc    1.6
 
-
-Notes
------
-The UI layout is edited with wxFormBuilder.  The project file is
-uiproject.fbp.  It generates uibase.cpp and uibase.h, which define base
-classes that do the rote work of constructing all the UI elements.
-
-wxWidgets
----------
-DOS shell:
-cd \wxWidgets-2.9.2-mgw\build\msw
-mingw32-make -f makefile.gcc
 
 OpenSSL
 -------
@@ -98,6 +86,5 @@ Bitcoin
 -------
 DOS prompt:
 cd \bitcoin\src
-mingw32-make bitcoin.exe bitcoind.exe -f makefile.mingw
-strip bitcoin.exe
+mingw32-make bitcoind.exe -f makefile.mingw
 strip bitcoind.exe
