@@ -76,6 +76,8 @@ endif
 
 all: bitcoind
 
+cryptopp/obj/%.o: cryptopp/%.cpp
+	$(CXX) -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
