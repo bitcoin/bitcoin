@@ -52,7 +52,7 @@ HEADERS = \
     net.h \
     noui.h \
     protocol.h \
-    rpc.h \
+    bitcoinrpc.h \
     script.h \
     serialize.h \
     strlcpy.h \
@@ -71,7 +71,7 @@ OBJS= \
     obj/main.o \
     obj/net.o \
     obj/protocol.o \
-    obj/rpc.o \
+    obj/bitcoinrpc.o \
     obj/script.o \
     obj/util.o \
     obj/wallet.o \
