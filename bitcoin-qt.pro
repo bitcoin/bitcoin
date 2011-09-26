@@ -5,6 +5,10 @@ DEFINES += QT_GUI
 # DEFINES += SSL
 CONFIG += no_include_pwd
 
+OBJECTS_DIR = build
+MOC_DIR = build
+UI_DIR = build
+
 # for boost 1.37, add -mt to the boost libraries
 LIBS += -lssl -lcrypto -ldb_cxx
 unix:!macx:LIBS += -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
