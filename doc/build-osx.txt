@@ -8,10 +8,13 @@ software written by Eric Young (eay@cryptsoft.com) and UPnP software written by
 Thomas Bernard.
 
 
-Mac OS X build instructions
+Mac OS X bitcoind build instructions
 Laszlo Hanyecz <solar@heliacal.net>
 Douglas Huff <dhuff@jrbobdobbs.org>
 
+
+See readme-qt.rst for instructions on building Bitcoin QT, the
+graphical user interface.
 
 Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
 
@@ -32,7 +35,6 @@ structure I use looks like this:
 ~/bitcoin/bitcoin       # Upstream source tree
 ~/bitcoin/src           # source code (symlink to ~/bitcoin/bitcoin/src)
 ~/bitcoin/deps          # dependencies.. like libraries and headers needed to compile
-~/bitcoin/Bitcoin.app   # the application bundle where you can run the app
 
 Just execute: mkdir ~/bitcoin
 This will create the top dir for you..
@@ -180,99 +182,7 @@ cd db-4.8.30/build_unix
 ../dist/configure --prefix=/Users/macosuser/bitcoin/deps --enable-cxx && make && make install
 
 
-wxWidgets
----------
-
-(The wxWidgets-devel MacPorts package will work but will throw annoying assertion dialogs.)
-
-This is the big one..
-
-Check it out from svn
-
-cd ~/bitcoin/deps
-svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk
-
-This will make a wxWidgets-trunk directory in deps.
-
-Use this script snippet, change your prefix to whatever your dir is:
-
-PREFIX=~/bitcoin/deps
-SRCDIR="$PREFIX/wxWidgets-trunk"
-BUILDDIR="$SRCDIR/macbuild"
-
-cd "$PREFIX" &&
-#svn checkout http://svn.wxwidgets.org/svn/wx/wxWidgets/trunk wxWidgets-trunk &&
-cd "$SRCDIR" &&
-
-[ -f include/wx/hashmap.h.orig ] || cp include/wx/hashmap.h include/wx/hashmap.h.orig &&
-sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashmap.h.orig > include/wx/hashmap.h &&
-
-[ -f include/wx/hashset.h.orig ] || cp include/wx/hashset.h include/wx/hashset.h.orig &&
-sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashset.h.orig > include/wx/hashset.h &&
-
-
-
-rm -vrf "$BUILDDIR" &&
-mkdir "$BUILDDIR" &&
-cd "$BUILDDIR" &&
-
-../configure --prefix="$PREFIX" \
---with-osx_cocoa \
---disable-shared \
---disable-debug_flag \
---with-macosx-version-min=10.5 \
---enable-stl \
---enable-utf8 \
---enable-universal_binary \
---with-libjpeg=builtin \
---with-libpng=builtin \
---with-regex=builtin \
---with-libtiff=builtin \
---with-zlib=builtin \
---with-expat=builtin \
---with-macosx-sdk=/Developer/SDKs/MacOSX10.5.sdk &&
-
-
-find . -name Makefile | 
-while read i; do 
-  echo $i; 
-  sed 's/-arch i386/-arch i386 -arch x86_64/g' < "$i" > "$i".new && 
-  mv "$i" "$i".old && 
-  mv "$i".new "$i"; 
-done
-
-
-
-make && 
-make install
-
-
-
-Now you should be able to build bitcoin
+Now you should be able to build bitcoind:
 
 cd ~/bitcoin/src
-make -f makefile.osx bitcoin
-
-Before you can run it, you need to create an application bundle for Mac OS.
-
-A bundle is provided in contrib/Bitcoin.app.
-
-Copy the bitcoin binary in to it like this:
-  cp -pR ~/bitcoin/bitcoin/contrib/Bitcoin.app ~/bitcoin/
-  cp ~/bitcoin/src/bitcoin ~/bitcoin/Bitcoin.app/Contents/MacOS/
-
-To run it you can just click the Bitcoin.app in Finder, or just do:
-open ~/bitcoin/Bitcoin.app
-
-If you want to run it with arguments you can just run it without backgrounding
-by specifying the full name in terminal:
-
-~/bitcoin/Bitcoin.app/Contents/MacOS/bitcoin -addnode=192.75.207.66
-
-You can also run it with arguments in the background with output going to the
-normal places for apps (Console) like this:
-
-open ~/bitcoin/Bitcoin.app --args -connect=192.75.207.66
-
-It is advisable to relocate Bitcoin.app to /Applications or $HOME/Applications.
-
+make -f makefile.osx bitcoind
