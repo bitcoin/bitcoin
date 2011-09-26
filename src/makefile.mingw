@@ -76,6 +76,8 @@ OBJS= \
 
 all: bitcoind.exe
 
+cryptopp/obj/%.o: cryptopp/%.cpp
+	g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<

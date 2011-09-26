@@ -104,6 +104,9 @@ OBJS= \
 all: bitcoind
 
 
+cryptopp/obj/%.o: cryptopp/%.cpp
+	$(CXX) -c $(CFLAGS) -O3 -o $@ $<
+
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
