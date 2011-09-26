@@ -726,6 +726,52 @@ void CNode::Cleanup()
 }
 
 
+std::map<unsigned int, int64> CNode::setBanned;
+CCriticalSection CNode::cs_setBanned;
+
+void CNode::ClearBanned()
+{
+    setBanned.clear();
+}
+
+bool CNode::IsBanned(unsigned int ip)
+{
+    bool fResult = false;
+    CRITICAL_BLOCK(cs_setBanned)
+    {
+        std::map<unsigned int, int64>::iterator i = setBanned.find(ip);
+        if (i != setBanned.end())
+        {
+            int64 t = (*i).second;
+            if (GetTime() < t)
+                fResult = true;
+        }
+    }
+    return fResult;
+}
+
+bool CNode::Misbehaving(int howmuch)
+{
+    if (addr.IsLocal())
+    {
+        printf("Warning: local node %s misbehaving\n", addr.ToString().c_str());
+        return false;
+    }
+
+    nMisbehavior += howmuch;
+    if (nMisbehavior >= GetArg("-banscore", 100))
+    {
+        int64 banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
+        CRITICAL_BLOCK(cs_setBanned)
+            if (setBanned[addr.ip] < banTime)
+                setBanned[addr.ip] = banTime;
+        CloseSocketDisconnect();
+        printf("Disconnected %s for misbehavior (score=%d)\n", addr.ToString().c_str(), nMisbehavior);
+        return true;
+    }
+    return false;
+}
+
 
 
 
@@ -894,6 +940,11 @@ void ThreadSocketHandler2(void* parg)
             }
             else if (nInbound >= GetArg("-maxconnections", 125) - MAX_OUTBOUND_CONNECTIONS)
             {
+                closesocket(hSocket);
+            }
+            else if (CNode::IsBanned(addr.ip))
+            {
+                printf("connetion from %s dropped (banned)\n", addr.ToString().c_str());
                 closesocket(hSocket);
             }
             else
@@ -1454,7 +1505,8 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
     //
     if (fShutdown)
         return false;
-    if (addrConnect.ip == addrLocalHost.ip || !addrConnect.IsIPv4() || FindNode(addrConnect.ip))
+    if (addrConnect.ip == addrLocalHost.ip || !addrConnect.IsIPv4() ||
+        FindNode(addrConnect.ip) || CNode::IsBanned(addrConnect.ip))
         return false;
 
     vnThreadsRunning[1]--;

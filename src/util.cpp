@@ -813,9 +813,18 @@ void ShrinkDebugFile()
 //  - Median of other nodes's clocks
 //  - The user (asking the user to fix the system clock if the first two disagree)
 //
+static int64 nMockTime = 0;  // For unit testing
+
 int64 GetTime()
 {
+    if (nMockTime) return nMockTime;
+
     return time(NULL);
+}
+
+void SetMockTime(int64 nMockTimeIn)
+{
+    nMockTime = nMockTimeIn;
 }
 
 static int64 nTimeOffset = 0;
