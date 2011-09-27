@@ -168,9 +168,24 @@ FORMS += \
     src/qt/forms/askpassphrasedialog.ui
 
 CODECFORTR = UTF-8
+
 # for lrelease/lupdate
 TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts \
                src/qt/locale/bitcoin_ru.ts
+
+isEmpty(QMAKE_LRELEASE) {
+    win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\lrelease.exe
+    else:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
+}
+isEmpty(TS_DIR):TS_DIR = src/qt/locale
+# automatically build translations, so they can be included in resource file
+TSQM.name = lrelease ${QMAKE_FILE_IN}
+TSQM.input = TRANSLATIONS
+TSQM.output = $$TS_DIR/${QMAKE_FILE_BASE}.qm
+TSQM.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN}
+TSQM.CONFIG = no_link
+QMAKE_EXTRA_COMPILERS += TSQM
+bPRE_TARGETDEPS += compiler_TSQM_make_all
 
 OTHER_FILES += \
     README.rst
