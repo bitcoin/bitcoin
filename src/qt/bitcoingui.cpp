@@ -522,11 +522,6 @@ void BitcoinGUI::gotoReceiveCoinsPage()
 void BitcoinGUI::gotoSendCoinsPage()
 {
     sendCoinsAction->setChecked(true);
-    if(centralWidget->currentWidget() != sendCoinsPage)
-    {
-        // Clear the current contents if we arrived from another tab
-        sendCoinsPage->clear();
-    }
     centralWidget->setCurrentWidget(sendCoinsPage);
 
     exportAction->setEnabled(false);

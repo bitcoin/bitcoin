@@ -22,6 +22,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     addEntry();
 
     connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addEntry()));
+    connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 }
 
 void SendCoinsDialog::setModel(WalletModel *model)
