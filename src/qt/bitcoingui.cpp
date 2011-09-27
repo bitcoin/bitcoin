@@ -525,7 +525,9 @@ void BitcoinGUI::gotoSendCoinsPage()
     if(centralWidget->currentWidget() != sendCoinsPage)
     {
         // Clear the current contents if we arrived from another tab
-        sendCoinsPage->clear();
+        // Not necessary especially if the user is jumping between Transactions
+        // and Send Coins pages. - Matoking
+        //sendCoinsPage->clear();
     }
     centralWidget->setCurrentWidget(sendCoinsPage);
 
