@@ -364,7 +364,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     // 34 bytes because a TxOut is:
     //   20-byte address + 8 byte bitcoin amount + 5 bytes of ops + 1 byte script length
     if (GetSigOpCount() > nSize / 34 || nSize < 100)
-        return DoS(10, error("AcceptToMemoryPool() : transaction with out-of-bounds SigOpCount"));
+        return error("AcceptToMemoryPool() : transaction with out-of-bounds SigOpCount");
 
     // Rather not work on nonstandard transactions (unless -testnet)
     if (!fTestNet && !IsStandard())
@@ -864,7 +864,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             if (txPrev.IsCoinBase())
                 for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
-                        return DoS(10, error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight));
+                        return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
 
             // Skip ECDSA signature verification when connecting blocks (fBlock=true) during initial download
             // (before the last blockchain checkpoint). This is safe because block merkle hashes are
