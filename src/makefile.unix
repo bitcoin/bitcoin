@@ -96,16 +96,11 @@ OBJS= \
     obj/bitcoinrpc.o \
     obj/script.o \
     obj/util.o \
-    obj/wallet.o \
-    cryptopp/obj/sha.o \
-    cryptopp/obj/cpu.o
+    obj/wallet.o
 
 
 all: bitcoind
 
-
-cryptopp/obj/%.o: cryptopp/%.cpp
-	$(CXX) -c $(CFLAGS) -O3 -o $@ $<
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
@@ -124,5 +119,4 @@ clean:
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o
-	-rm -f cryptopp/obj/*.o
 	-rm -f headers.h.gch
