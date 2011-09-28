@@ -574,6 +574,13 @@ public:
         return true;
     }
 
+    static int DecodeOP_N(opcodetype opcode)
+    {
+        if (opcode == OP_0)
+            return 0;
+        assert(opcode >= OP_1 && opcode <= OP_16);
+        return (int)opcode - (int)(OP_1 - 1);
+    }
 
     void FindAndDelete(const CScript& b)
     {
@@ -625,21 +632,6 @@ public:
     }
 
 
-    CBitcoinAddress GetBitcoinAddress() const
-    {
-        opcodetype opcode;
-        std::vector<unsigned char> vch;
-        CScript::const_iterator pc = begin();
-        if (!GetOp(pc, opcode, vch) || opcode != OP_DUP) return 0;
-        if (!GetOp(pc, opcode, vch) || opcode != OP_HASH160) return 0;
-        if (!GetOp(pc, opcode, vch) || vch.size() != sizeof(uint160)) return 0;
-        uint160 hash160 = uint160(vch);
-        if (!GetOp(pc, opcode, vch) || opcode != OP_EQUALVERIFY) return 0;
-        if (!GetOp(pc, opcode, vch) || opcode != OP_CHECKSIG) return 0;
-        if (pc != end()) return 0;
-        return CBitcoinAddress(hash160);
-    }
-
     void SetBitcoinAddress(const CBitcoinAddress& address)
     {
         this->clear();
@@ -650,6 +642,9 @@ public:
     {
         SetBitcoinAddress(CBitcoinAddress(vchPubKey));
     }
+    void SetMultisigAnd(const std::vector<CKey>& keys);
+    void SetMultisigOr(const std::vector<CKey>& keys);
+    void SetMultisigEscrow(const std::vector<CKey>& keys);
 
 
     void PrintHex() const

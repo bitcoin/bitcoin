@@ -963,8 +963,11 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
 
 
 
-
-bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSolutionRet)
+//
+// Returns lists of public keys (or public key hashes), any one of which can
+// satisfy scriptPubKey
+//
+bool Solver(const CScript& scriptPubKey, vector<vector<pair<opcodetype, valtype> > >& vSolutionsRet)
 {
     // Templates
     static vector<CScript> vTemplates;
@@ -975,13 +978,24 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
 
         // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         vTemplates.push_back(CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG);
+
+        // Sender provides two pubkeys, receivers provides two signatures
+        vTemplates.push_back(CScript() << OP_2 << OP_PUBKEY << OP_PUBKEY << OP_2 << OP_CHECKMULTISIG);
+
+        // Sender provides two pubkeys, receivers provides one of two signatures
+        vTemplates.push_back(CScript() << OP_1 << OP_PUBKEY << OP_PUBKEY << OP_2 << OP_CHECKMULTISIG);
+
+        // Sender provides three pubkeys, receiver provides 2 of 3 signatures.
+        vTemplates.push_back(CScript() << OP_2 << OP_PUBKEY << OP_PUBKEY << OP_PUBKEY << OP_3 << OP_CHECKMULTISIG);
     }
 
     // Scan templates
     const CScript& script1 = scriptPubKey;
     BOOST_FOREACH(const CScript& script2, vTemplates)
     {
-        vSolutionRet.clear();
+        vSolutionsRet.clear();
+
+        vector<pair<opcodetype, valtype> > currentSolution;
         opcodetype opcode1, opcode2;
         vector<unsigned char> vch1, vch2;
 
@@ -992,9 +1006,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
         {
             if (pc1 == script1.end() && pc2 == script2.end())
             {
-                // Found a match
-                reverse(vSolutionRet.begin(), vSolutionRet.end());
-                return true;
+                return !vSolutionsRet.empty();
             }
             if (!script1.GetOp(pc1, opcode1, vch1))
                 break;
@@ -1004,13 +1016,54 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
             {
                 if (vch1.size() < 33 || vch1.size() > 120)
                     break;
-                vSolutionRet.push_back(make_pair(opcode2, vch1));
+                currentSolution.push_back(make_pair(opcode2, vch1));
             }
             else if (opcode2 == OP_PUBKEYHASH)
             {
                 if (vch1.size() != sizeof(uint160))
                     break;
-                vSolutionRet.push_back(make_pair(opcode2, vch1));
+                currentSolution.push_back(make_pair(opcode2, vch1));
+            }
+            else if (opcode2 == OP_CHECKSIG)
+            {
+                vSolutionsRet.push_back(currentSolution);
+                currentSolution.clear();
+            }
+            else if (opcode2 == OP_CHECKMULTISIG)
+            {   // Dig out the "m" from before the pubkeys:
+                CScript::const_iterator it = script2.begin();
+                opcodetype op_m;
+                script2.GetOp(it, op_m, vch1);
+                int m = CScript::DecodeOP_N(op_m);
+                int n = currentSolution.size();
+
+                if (m == 2 && n == 2)
+                {
+                    vSolutionsRet.push_back(currentSolution);
+                    currentSolution.clear();
+                }
+                else if (m == 1 && n == 2)
+                { // 2 solutions: either first key or second
+                    for (int i = 0; i < 2; i++)
+                    {
+                        vector<pair<opcodetype, valtype> > s;
+                        s.push_back(currentSolution[i]);
+                        vSolutionsRet.push_back(s);
+                    }
+                    currentSolution.clear();
+                }
+                else if (m == 2 && n == 3)
+                { // 3 solutions: any pair
+                    for (int i = 0; i < 2; i++)
+                        for (int j = i+1; j < 3; j++)
+                        {
+                            vector<pair<opcodetype, valtype> > s;
+                            s.push_back(currentSolution[i]);
+                            s.push_back(currentSolution[j]);
+                            vSolutionsRet.push_back(s);
+                        }
+                    currentSolution.clear();
+                }
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
@@ -1019,7 +1072,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
         }
     }
 
-    vSolutionRet.clear();
+    vSolutionsRet.clear();
     return false;
 }
 
@@ -1028,50 +1081,60 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
 {
     scriptSigRet.clear();
 
-    vector<pair<opcodetype, valtype> > vSolution;
-    if (!Solver(scriptPubKey, vSolution))
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    if (!Solver(scriptPubKey, vSolutions))
         return false;
 
-    // Compile solution
-    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+    // See if we have all the keys for any of the solutions:
+    int whichSolution = -1;
+    for (int i = 0; i < vSolutions.size(); i++)
     {
-        if (item.first == OP_PUBKEY)
+        int keysFound = 0;
+        CScript scriptSig;
+
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolutions[i])
         {
-            // Sign
-            const valtype& vchPubKey = item.second;
-            CKey key;
-            if (!keystore.GetKey(Hash160(vchPubKey), key))
-                return false;
-            if (key.GetPubKey() != vchPubKey)
-                return false;
-            if (hash != 0)
+            if (item.first == OP_PUBKEY)
             {
+                const valtype& vchPubKey = item.second;
+                CKey key;
                 vector<unsigned char> vchSig;
-                if (!key.Sign(hash, vchSig))
-                    return false;
-                vchSig.push_back((unsigned char)nHashType);
-                scriptSigRet << vchSig;
+                if (keystore.GetKey(Hash160(vchPubKey), key) && key.GetPubKey() == vchPubKey
+                    && hash != 0 && key.Sign(hash, vchSig))
+                {
+                    vchSig.push_back((unsigned char)nHashType);
+                    scriptSig << vchSig;
+                    ++keysFound;
+                }
+            }
+            else if (item.first == OP_PUBKEYHASH)
+            {
+                CKey key;
+                vector<unsigned char> vchSig;
+                if (keystore.GetKey(uint160(item.second), key) 
+                    && hash != 0 && key.Sign(hash, vchSig))
+                {
+                    vchSig.push_back((unsigned char)nHashType);
+                    scriptSig << vchSig << key.GetPubKey();
+                    ++keysFound;
+                }
             }
         }
-        else if (item.first == OP_PUBKEYHASH)
+        if (keysFound == vSolutions[i].size())
         {
-            // Sign and give pubkey
-            CKey key;
-            if (!keystore.GetKey(uint160(item.second), key))
-                return false;
-            if (hash != 0)
-            {
-                vector<unsigned char> vchSig;
-                if (!key.Sign(hash, vchSig))
-                    return false;
-                vchSig.push_back((unsigned char)nHashType);
-                scriptSigRet << vchSig << key.GetPubKey();
-            }
+            whichSolution = i;
+            scriptSigRet = scriptSig;
+            break;
         }
-        else
-        {
-            return false;
-        }
+    }
+    if (whichSolution == -1)
+        return false;
+
+    // CHECKMULTISIG bug workaround:
+    if (vSolutions.size() != 1 ||
+        vSolutions[0].size() != 1)
+    {
+        scriptSigRet.insert(scriptSigRet.begin(), OP_0);
     }
 
     return true;
@@ -1080,51 +1143,59 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
 
 bool IsStandard(const CScript& scriptPubKey)
 {
-    vector<pair<opcodetype, valtype> > vSolution;
-    return Solver(scriptPubKey, vSolution);
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    return Solver(scriptPubKey, vSolutions);
 }
 
 
 bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
-    vector<pair<opcodetype, valtype> > vSolution;
-    if (!Solver(scriptPubKey, vSolution))
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    if (!Solver(scriptPubKey, vSolutions))
         return false;
 
-    // Compile solution
-    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+    int keysFound = 0;
+    int keysRequired = 0;
+    for (int i = 0; i < vSolutions.size(); i++)
     {
-        if (item.first == OP_PUBKEY)
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolutions[i])
         {
-            const valtype& vchPubKey = item.second;
-            vector<unsigned char> vchPubKeyFound;
-            if (!keystore.GetPubKey(Hash160(vchPubKey), vchPubKeyFound))
-                return false;
-            if (vchPubKeyFound != vchPubKey)
-                return false;
-        }
-        else if (item.first == OP_PUBKEYHASH)
-        {
-            if (!keystore.HaveKey(uint160(item.second)))
-                return false;
-        }
-        else
-        {
-            return false;
+            ++keysRequired;
+            if (item.first == OP_PUBKEY)
+            {
+                const valtype& vchPubKey = item.second;
+                vector<unsigned char> vchPubKeyFound;
+                if (keystore.GetPubKey(Hash160(vchPubKey), vchPubKeyFound) && vchPubKeyFound == vchPubKey)
+                    ++keysFound;
+            }
+            else if (item.first == OP_PUBKEYHASH)
+            {
+                if (keystore.HaveKey(uint160(item.second)))
+                    ++keysFound;
+            }
         }
     }
 
-    return true;
+    // Only consider transactions "mine" if we own ALL the
+    // keys involved. multi-signature transactions that are
+    // partially owned (somebody else has a key that can spend
+    // them) enable spend-out-from-under-you attacks, especially
+    // for shared-wallet situations.
+    return (keysFound == keysRequired);
 }
 
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
-    vector<pair<opcodetype, valtype> > vSolution;
-    if (!Solver(scriptPubKey, vSolution))
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    if (!Solver(scriptPubKey, vSolutions))
         return false;
 
-    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+    for (int i = 0; i < vSolutions.size(); i++)
     {
+        if (vSolutions[i].size() != 1)
+            continue; // Can't return more than one address...
+
+        PAIRTYPE(opcodetype, valtype)& item = vSolutions[i][0];
         if (item.first == OP_PUBKEY)
             addressRet.SetPubKey(item.second);
         else if (item.first == OP_PUBKEYHASH)
@@ -1132,7 +1203,6 @@ bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBit
         if (keystore == NULL || keystore->HaveKey(addressRet))
             return true;
     }
-
     return false;
 }
 
@@ -1191,4 +1261,23 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
         return false;
 
     return true;
+}
+
+void CScript::SetMultisigAnd(const std::vector<CKey>& keys)
+{
+    assert(keys.size() >= 2);
+    this->clear();
+    *this << OP_2 << keys[0].GetPubKey() << keys[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+}
+void CScript::SetMultisigOr(const std::vector<CKey>& keys)
+{
+    assert(keys.size() >= 2);
+    this->clear();
+    *this << OP_1 << keys[0].GetPubKey() << keys[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+}
+void CScript::SetMultisigEscrow(const std::vector<CKey>& keys)
+{
+    assert(keys.size() >= 3);
+    this->clear();
+    *this << OP_2 << keys[0].GetPubKey() << keys[1].GetPubKey() << keys[1].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 }

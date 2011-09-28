@@ -936,6 +936,101 @@ Value sendmany(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+Value sendmultisig(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 4 || params.size() > 7)
+    {
+        string msg = "sendmultisig <fromaccount> <type> <[\"key\",\"key\"]> <amount> [minconf=1] [comment] [comment-to]\n"
+            "<type> is one of: \"and\", \"or\", \"escrow\"\n"
+            "<keys> is an array of strings (in JSON array format); each key is a bitcoin address, hex or base58 public key\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001";
+        if (pwalletMain->IsCrypted())
+            msg += "\nrequires wallet passphrase to be set with walletpassphrase first";
+        throw runtime_error(msg);
+    }
+
+    string strAccount = AccountFromValue(params[0]);
+    string strType = params[1].get_str();
+    const Array& keys = params[2].get_array();
+    int64 nAmount = AmountFromValue(params[3]);
+    int nMinDepth = 1;
+    if (params.size() > 4)
+        nMinDepth = params[4].get_int();
+
+    CWalletTx wtx;
+    wtx.strFromAccount = strAccount;
+    if (params.size() > 5 && params[5].type() != null_type && !params[5].get_str().empty())
+        wtx.mapValue["comment"] = params[5].get_str();
+    if (params.size() > 6 && params[6].type() != null_type && !params[6].get_str().empty())
+        wtx.mapValue["to"]      = params[6].get_str();
+
+    if (pwalletMain->IsLocked())
+        throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+
+    // Check funds
+    int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
+    if (nAmount > nBalance)
+        throw JSONRPCError(-6, "Account has insufficient funds");
+
+    // Gather public keys
+    int nKeysNeeded = 0;
+    if (strType == "and" || strType == "or")
+        nKeysNeeded = 2;
+    else if (strType == "escrow")
+        nKeysNeeded = 3;
+    else
+        throw runtime_error("sendmultisig: <type> must be one of: and or and_or");
+    if (keys.size() != nKeysNeeded)
+        throw runtime_error(
+            strprintf("sendmultisig: wrong number of keys (got %d, need %d)", keys.size(), nKeysNeeded));
+    std::vector<CKey> pubkeys;
+    pubkeys.resize(nKeysNeeded);
+    for (int i = 0; i < nKeysNeeded; i++)
+    {
+        const std::string& ks = keys[i].get_str();
+        if (ks.size() == 130) // hex public key
+            pubkeys[i].SetPubKey(ParseHex(ks));
+        else if (ks.size() > 34) // base58-encoded
+        {
+            std::vector<unsigned char> vchPubKey;
+            if (DecodeBase58(ks, vchPubKey))
+                pubkeys[i].SetPubKey(vchPubKey);
+            else
+                throw runtime_error("Error base58 decoding key: "+ks);
+        }
+        else // bitcoin address for key in this wallet
+        {
+            CBitcoinAddress address(ks);
+            if (!pwalletMain->GetKey(address, pubkeys[i]))
+                throw runtime_error(
+                    strprintf("sendmultisig: unknown address: %s",ks.c_str()));
+        }
+    }
+
+    // Send
+    CScript scriptPubKey;
+    if (strType == "and")
+        scriptPubKey.SetMultisigAnd(pubkeys);
+    else if (strType == "or")
+        scriptPubKey.SetMultisigOr(pubkeys);
+    else
+        scriptPubKey.SetMultisigEscrow(pubkeys);
+
+    CReserveKey keyChange(pwalletMain);
+    int64 nFeeRequired = 0;
+    bool fCreated = pwalletMain->CreateTransaction(scriptPubKey, nAmount, wtx, keyChange, nFeeRequired);
+    if (!fCreated)
+    {
+        if (nAmount + nFeeRequired > pwalletMain->GetBalance())
+            throw JSONRPCError(-6, "Insufficient funds");
+        throw JSONRPCError(-4, "Transaction creation failed");
+    }
+    if (!pwalletMain->CommitTransaction(wtx, keyChange))
+        throw JSONRPCError(-4, "Transaction commit failed");
+
+    return wtx.GetHash().GetHex();
+}
+
 
 struct tallyitem
 {
@@ -1596,7 +1691,17 @@ Value validateaddress(const Array& params, bool fHelp)
         // version of the address:
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
-        ret.push_back(Pair("ismine", (pwalletMain->HaveKey(address) > 0)));
+        if (pwalletMain->HaveKey(address))
+        {
+            ret.push_back(Pair("ismine", true));
+            std::vector<unsigned char> vchPubKey;
+            pwalletMain->GetPubKey(address, vchPubKey);
+            ret.push_back(Pair("pubkey", HexStr(vchPubKey)));
+            std::string strPubKey(vchPubKey.begin(), vchPubKey.end());
+            ret.push_back(Pair("pubkey58", EncodeBase58(vchPubKey)));
+        }
+        else
+            ret.push_back(Pair("ismine", false));
         if (pwalletMain->mapAddressBook.count(address))
             ret.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
     }
@@ -1841,6 +1946,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("move",                   &movecmd),
     make_pair("sendfrom",               &sendfrom),
     make_pair("sendmany",               &sendmany),
+    make_pair("sendmultisig",           &sendmultisig),
     make_pair("gettransaction",         &gettransaction),
     make_pair("listtransactions",       &listtransactions),
     make_pair("signmessage",            &signmessage),
@@ -2484,6 +2590,16 @@ int CommandLineRPC(int argc, char *argv[])
             params[1] = v.get_obj();
         }
         if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "sendmultisig"            && n > 2)
+        {
+            string s = params[2].get_str();
+            Value v;
+            if (!read_string(s, v) || v.type() != array_type)
+                throw runtime_error("sendmultisig: type mismatch "+s);
+            params[2] = v.get_array();
+        }
+        if (strMethod == "sendmultisig"            && n > 3) ConvertTo<double>(params[3]);
+        if (strMethod == "sendmultisig"            && n > 4) ConvertTo<boost::int64_t>(params[4]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);
