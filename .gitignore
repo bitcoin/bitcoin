@@ -10,11 +10,7 @@ src/bitcoind
 *.patch
 .bitcoin
 #compilation and Qt preprocessor part
-*.o
-ui_*.h
 *.qm
-moc_*
-*.moc
 Makefile
 bitcoin-qt
 #resources cpp

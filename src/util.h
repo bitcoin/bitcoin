@@ -132,7 +132,7 @@ inline int myclosesocket(SOCKET& hSocket)
     return ret;
 }
 #define closesocket(s)      myclosesocket(s)
-#if !defined(QT_GUI) && !defined(GUI)
+#if !defined(QT_GUI)
 inline const char* _(const char* psz)
 {
     return psz;
@@ -197,6 +197,7 @@ void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
+void SetMockTime(int64 nMockTimeIn);
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
 std::string FormatFullVersion();

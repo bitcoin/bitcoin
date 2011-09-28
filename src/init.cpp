@@ -80,7 +80,7 @@ void HandleSIGTERM(int)
 //
 // Start
 //
-#if !defined(QT_GUI) && !defined(GUI)
+#if !defined(QT_GUI)
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -179,6 +179,8 @@ bool AppInit2(int argc, char* argv[])
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
+            "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)\n") +
+            "  -bantime=<n>     \t  "   + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)\n") +
 #ifdef USE_UPNP
 #if USE_UPNP
             "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
@@ -214,14 +216,9 @@ bool AppInit2(int argc, char* argv[])
         strUsage += string() +
             "  -?               \t\t  " + _("This help message\n");
 
-#if defined(__WXMSW__) && defined(GUI)
-        // Tabs make the columns line up in the message box
-        wxMessageBox(strUsage, "Bitcoin", wxOK);
-#else
         // Remove tabs
         strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
         fprintf(stderr, "%s", strUsage.c_str());
-#endif
         return false;
     }
 
@@ -240,7 +237,7 @@ bool AppInit2(int argc, char* argv[])
         fServer = GetBoolArg("-server");
 
     /* force fServer when running without GUI */
-#if !defined(QT_GUI) && !defined(GUI)
+#if !defined(QT_GUI)
     fServer = true;
 #endif
     fPrintToConsole = GetBoolArg("-printtoconsole");
@@ -289,11 +286,6 @@ bool AppInit2(int argc, char* argv[])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %s\n", FormatFullVersion().c_str());
-#ifdef GUI
-    printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
-    printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
-    printf("Language file %s (%s)\n", (string("locale/") + (string)g_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)g_locale.GetLocale()).c_str());
-#endif
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
     if (GetBoolArg("-loadblockindextest"))
@@ -303,46 +295,6 @@ bool AppInit2(int argc, char* argv[])
         PrintBlockTree();
         return false;
     }
-
-    //
-    // Limit to single instance per user
-    // Required to protect the database files if we're going to keep deleting log.*
-    //
-#if defined(__WXMSW__) && defined(GUI)
-    // wxSingleInstanceChecker doesn't work on Linux
-    wxString strMutexName = wxString("bitcoin_running.") + getenv("HOMEPATH");
-    for (int i = 0; i < strMutexName.size(); i++)
-        if (!isalnum(strMutexName[i]))
-            strMutexName[i] = '.';
-    wxSingleInstanceChecker* psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
-    if (psingleinstancechecker->IsAnotherRunning())
-    {
-        printf("Existing instance found\n");
-        unsigned int nStart = GetTime();
-        loop
-        {
-            // Show the previous instance and exit
-            HWND hwndPrev = FindWindowA("wxWindowClassNR", "Bitcoin");
-            if (hwndPrev)
-            {
-                if (IsIconic(hwndPrev))
-                    ShowWindow(hwndPrev, SW_RESTORE);
-                SetForegroundWindow(hwndPrev);
-                return false;
-            }
-
-            if (GetTime() > nStart + 60)
-                return false;
-
-            // Resume this instance if the other exits
-            delete psingleinstancechecker;
-            Sleep(1000);
-            psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
-            if (!psingleinstancechecker->IsAnotherRunning())
-                break;
-        }
-    }
-#endif
 
     // Make sure only a single bitcoin process is using the data directory.
     string strLockFile = GetDataDir() + "/.lock";
@@ -536,13 +488,8 @@ bool AppInit2(int argc, char* argv[])
     }
 
     //
-    // Create the main window and start the node
+    // Start the node
     //
-#ifdef GUI
-    if (!fDaemon)
-        CreateMainWindow();
-#endif
-
     if (!CheckDiskSpace())
         return false;
 
@@ -554,12 +501,7 @@ bool AppInit2(int argc, char* argv[])
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
 
-#if defined(__WXMSW__) && defined(GUI)
-    if (fFirstRun)
-        SetStartOnSystemStartup(true);
-#endif
-
-#if !defined(QT_GUI) && !defined(GUI)
+#if !defined(QT_GUI)
     while (1)
         Sleep(5000);
 #endif

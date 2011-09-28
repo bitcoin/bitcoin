@@ -10,18 +10,12 @@ INCLUDEPATHS= \
  -I"$(DEPSDIR)/boost_1_47_0" \
  -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
  -I"$(DEPSDIR)/openssl-1.0.0d/include" \
- -I"$(DEPSDIR)/wxWidgets-2.9.2/lib/gcc_lib/mswud" \
- -I"$(DEPSDIR)/wxWidgets-2.9.2/include" \
- -I"$(DEPSDIR)/wxWidgets-2.9.2/lib/wx/include/i586-mingw32msvc-msw-unicode-static-2.9/" \
  -I"$(DEPSDIR)"
 
 LIBPATHS= \
  -L"$(DEPSDIR)/boost_1_47_0/stage/lib" \
  -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -L"$(DEPSDIR)/openssl-1.0.0d" \
- -L"$(DEPSDIR)/wxWidgets-2.9.2/lib"
-
-WXLIBS= -l wx_mswu-2.9-i586-mingw32msvc
+ -L"$(DEPSDIR)/openssl-1.0.0d"
 
 LIBS= \
  -l boost_system-mt-s \
@@ -32,8 +26,8 @@ LIBS= \
  -l ssl \
  -l crypto
 
-DEFS=-D_MT -DWIN32 -D__WXMSW__ -D_WINDOWS -DNOPCH -DUSE_SSL -DBOOST_THREAD_USE_LIB
-DEBUGFLAGS=-g -D__WXDEBUG__
+DEFS=-D_MT -DWIN32 -D_WINDOWS -DNOPCH -DUSE_SSL -DBOOST_THREAD_USE_LIB
+DEBUGFLAGS=-g
 CFLAGS=-O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS = \
     base58.h \
@@ -53,8 +47,6 @@ HEADERS = \
     script.h \
     serialize.h \
     strlcpy.h \
-    ui.h \
-    uibase.h \
     uint256.h \
     util.h \
     wallet.h
@@ -84,21 +76,10 @@ OBJS= \
     cryptopp/obj/cpu.o
 
 
-all: bitcoin.exe
-
-
-obj/%.o: %.cpp $(HEADERS)
-	i586-mingw32msvc-g++ -c $(CFLAGS) -DGUI -o $@ $<
+all: bitcoind.exe
 
 cryptopp/obj/%.o: cryptopp/%.cpp
 	i586-mingw32msvc-g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
-
-obj/ui_res.o: ../share/ui.rc  ../share/pixmaps/bitcoin.ico ../share/pixmaps/check.ico ../share/pixmaps/send16.bmp ../share/pixmaps/send16mask.bmp ../share/pixmaps/send16masknoshadow.bmp ../share/pixmaps/send20.bmp ../share/pixmaps/send20mask.bmp ../share/pixmaps/addressbook16.bmp ../share/pixmaps/addressbook16mask.bmp ../share/pixmaps/addressbook20.bmp ../share/pixmaps/addressbook20mask.bmp
-	i586-mingw32msvc-windres $(DEFS) $(INCLUDEPATHS) -o $@ -i $<
-
-bitcoin.exe: $(OBJS) obj/ui.o obj/uibase.o obj/ui_res.o
-	i586-mingw32msvc-g++ $(CFLAGS) -mwindows -Wl,--subsystem,windows -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
-
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
@@ -121,6 +102,5 @@ clean:
 	-rm -f cryptopp/obj/*.o
 	-rm -f test/*.o
 	-rm -f headers.h.gch
-	-rm -f bitcoin.exe
 	-rm -f bitcoind.exe
 	-rm -f test_bitcoin.exe
