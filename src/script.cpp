@@ -963,8 +963,11 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
 
 
 
-
-bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSolutionRet)
+//
+// Returns lists of public keys (or public key hashes), any one of which can
+// satisfy scriptPubKey
+//
+bool Solver(const CScript& scriptPubKey, vector<vector<pair<opcodetype, valtype> > >& vSolutionsRet)
 {
     // Templates
     static vector<CScript> vTemplates;
@@ -975,13 +978,34 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
 
         // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         vTemplates.push_back(CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG);
+
+        // Sender provides two pubkeys, receivers provides two signatures
+        vTemplates.push_back(CScript() << OP_PUBKEY << OP_CHECKSIGVERIFY << OP_PUBKEY << OP_CHECKSIG);
+
+        // Sender provides two pubkeys, receivers provides one of two signatures
+        vTemplates.push_back(
+            CScript() << OP_IF
+                << OP_PUBKEY << OP_CHECKSIG
+            << OP_ELSE
+                << OP_PUBKEY << OP_CHECKSIG
+            << OP_ENDIF);
+
+        // Sender provides three pubkeys, receiver provides 1 or 2 signatures.
+        vTemplates.push_back(
+            CScript() << OP_IF
+                << OP_PUBKEY << OP_CHECKSIG
+            << OP_ELSE
+                << OP_PUBKEY << OP_CHECKSIGVERIFY << OP_PUBKEY << OP_CHECKSIG
+            << OP_ENDIF);
     }
 
     // Scan templates
     const CScript& script1 = scriptPubKey;
     BOOST_FOREACH(const CScript& script2, vTemplates)
     {
-        vSolutionRet.clear();
+        vSolutionsRet.clear();
+
+        vector<pair<opcodetype, valtype> > currentSolution;
         opcodetype opcode1, opcode2;
         vector<unsigned char> vch1, vch2;
 
@@ -993,7 +1017,8 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
             if (pc1 == script1.end() && pc2 == script2.end())
             {
                 // Found a match
-                reverse(vSolutionRet.begin(), vSolutionRet.end());
+                reverse(currentSolution.begin(), currentSolution.end());
+                vSolutionsRet.push_back(currentSolution);
                 return true;
             }
             if (!script1.GetOp(pc1, opcode1, vch1))
@@ -1004,13 +1029,19 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
             {
                 if (vch1.size() < 33 || vch1.size() > 120)
                     break;
-                vSolutionRet.push_back(make_pair(opcode2, vch1));
+                currentSolution.push_back(make_pair(opcode2, vch1));
             }
             else if (opcode2 == OP_PUBKEYHASH)
             {
                 if (vch1.size() != sizeof(uint160))
                     break;
-                vSolutionRet.push_back(make_pair(opcode2, vch1));
+                currentSolution.push_back(make_pair(opcode2, vch1));
+            }
+            else if (opcode2 == OP_ELSE)
+            {   // ELSE means move to other solution
+                reverse(currentSolution.begin(), currentSolution.end());
+                vSolutionsRet.push_back(currentSolution);
+                currentSolution.clear();
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
@@ -1019,7 +1050,7 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
         }
     }
 
-    vSolutionRet.clear();
+    vSolutionsRet.clear();
     return false;
 }
 
@@ -1028,51 +1059,57 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
 {
     scriptSigRet.clear();
 
-    vector<pair<opcodetype, valtype> > vSolution;
-    if (!Solver(scriptPubKey, vSolution))
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    if (!Solver(scriptPubKey, vSolutions))
         return false;
 
-    // Compile solution
-    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+    // See if we have all the keys for any of the solutions:
+    int whichSolution = -1;
+    for (int i = 0; i < vSolutions.size(); i++)
     {
-        if (item.first == OP_PUBKEY)
+        int keysFound = 0;
+        CScript scriptSig;
+
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolutions[i])
         {
-            // Sign
-            const valtype& vchPubKey = item.second;
-            CKey key;
-            if (!keystore.GetKey(Hash160(vchPubKey), key))
-                return false;
-            if (key.GetPubKey() != vchPubKey)
-                return false;
-            if (hash != 0)
+            if (item.first == OP_PUBKEY)
             {
+                const valtype& vchPubKey = item.second;
+                CKey key;
                 vector<unsigned char> vchSig;
-                if (!key.Sign(hash, vchSig))
-                    return false;
-                vchSig.push_back((unsigned char)nHashType);
-                scriptSigRet << vchSig;
+                if (keystore.GetKey(Hash160(vchPubKey), key) && key.GetPubKey() == vchPubKey
+                    && hash != 0 && key.Sign(hash, vchSig))
+                {
+                    vchSig.push_back((unsigned char)nHashType);
+                    scriptSig << vchSig;
+                    ++keysFound;
+                }
+            }
+            else if (item.first == OP_PUBKEYHASH)
+            {
+                CKey key;
+                vector<unsigned char> vchSig;
+                if (keystore.GetKey(uint160(item.second), key) 
+                    && hash != 0 && key.Sign(hash, vchSig))
+                {
+                    vchSig.push_back((unsigned char)nHashType);
+                    scriptSig << vchSig << key.GetPubKey();
+                    ++keysFound;
+                }
             }
         }
-        else if (item.first == OP_PUBKEYHASH)
+        if (keysFound == vSolutions[i].size())
         {
-            // Sign and give pubkey
-            CKey key;
-            if (!keystore.GetKey(uint160(item.second), key))
-                return false;
-            if (hash != 0)
-            {
-                vector<unsigned char> vchSig;
-                if (!key.Sign(hash, vchSig))
-                    return false;
-                vchSig.push_back((unsigned char)nHashType);
-                scriptSigRet << vchSig << key.GetPubKey();
-            }
-        }
-        else
-        {
-            return false;
+            whichSolution = i;
+            scriptSigRet = scriptSig;
+            break;
         }
     }
+    if (whichSolution == -1)
+        return false;
+
+    if (vSolutions.size() == 2)
+        scriptSigRet << (whichSolution == 0 ? OP_1 : OP_0);
 
     return true;
 }
@@ -1080,51 +1117,63 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
 
 bool IsStandard(const CScript& scriptPubKey)
 {
-    vector<pair<opcodetype, valtype> > vSolution;
-    return Solver(scriptPubKey, vSolution);
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    return Solver(scriptPubKey, vSolutions);
 }
 
 
 bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
-    vector<pair<opcodetype, valtype> > vSolution;
-    if (!Solver(scriptPubKey, vSolution))
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    if (!Solver(scriptPubKey, vSolutions))
         return false;
 
-    // Compile solution
-    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+    // For this release, multisignature transactions are relayed but
+    // never considered "mine"
+    if (vSolutions.size() != 1 || vSolutions[0].size() != 1)
+        return false;
+
+    int keysFound = 0;
+    int keysRequired = 0;
+    for (int i = 0; i < vSolutions.size(); i++)
     {
-        if (item.first == OP_PUBKEY)
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolutions[i])
         {
-            const valtype& vchPubKey = item.second;
-            vector<unsigned char> vchPubKeyFound;
-            if (!keystore.GetPubKey(Hash160(vchPubKey), vchPubKeyFound))
-                return false;
-            if (vchPubKeyFound != vchPubKey)
-                return false;
-        }
-        else if (item.first == OP_PUBKEYHASH)
-        {
-            if (!keystore.HaveKey(uint160(item.second)))
-                return false;
-        }
-        else
-        {
-            return false;
+            ++keysRequired;
+            if (item.first == OP_PUBKEY)
+            {
+                const valtype& vchPubKey = item.second;
+                vector<unsigned char> vchPubKeyFound;
+                if (keystore.GetPubKey(Hash160(vchPubKey), vchPubKeyFound) && vchPubKeyFound == vchPubKey)
+                    ++keysFound;
+            }
+            else if (item.first == OP_PUBKEYHASH)
+            {
+                if (keystore.HaveKey(uint160(item.second)))
+                    ++keysFound;
+            }
         }
     }
 
-    return true;
+    return (keysFound == keysRequired);
 }
 
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
-    vector<pair<opcodetype, valtype> > vSolution;
-    if (!Solver(scriptPubKey, vSolution))
+    vector<vector<pair<opcodetype, valtype> > > vSolutions;
+    if (!Solver(scriptPubKey, vSolutions))
         return false;
 
-    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+    // Ignore multisignature transactions for now:
+    if (vSolutions.size() != 1 || vSolutions[0].size() != 1)
+        return false;
+
+    for (int i = 0; i < vSolutions.size(); i++)
     {
+        if (vSolutions[i].size() != 1)
+            continue; // Can't return more than one address...
+
+        PAIRTYPE(opcodetype, valtype)& item = vSolutions[i][0];
         if (item.first == OP_PUBKEY)
             addressRet.SetPubKey(item.second);
         else if (item.first == OP_PUBKEYHASH)
@@ -1132,7 +1181,6 @@ bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBit
         if (keystore == NULL || keystore->HaveKey(addressRet))
             return true;
     }
-
     return false;
 }
 
