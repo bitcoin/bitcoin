@@ -23,17 +23,26 @@
 
 * perform gitian builds
 
-  * From the bitcoin source dir
-  $ cd ../gitian-builder
-  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian.yml
-  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian-win32.yml
+  * From a directory containing the bitcoin source, gitian-builder and bitcoin-gitian-sigs
+  $ export VERSION=0.3.23
+  $ cd ./gitian-builder
+  $ ./bin/gbuild --commit bitcoin=v$VERSION ../bitcoin/contrib/gitian-descriptors/gitian.yml
+  $ ./bin/gsign --signer (your gitian key, ie bluematt, sipa, etc) --release $VERSION --destination ../bitcoin-gitian-sigs/ ../bitcoin/contrib/gitian-descriptors/gitian.yml
+  $ cd build/out
+  $ zip bitcoin-$VERSION-linux-gitian.zip *
+  $ mv bitcoin-$VERSION-linux-gitian.zip ../../
+  $ ./bin/gbuild --commit bitcoin=v$VERSION ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
+  $ ./bin/gsign --signer (your gitian key, ie bluematt, sipa, etc) --release $VERSION-win32 --destination ../bitcoin-gitian-sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
+  $ cd build/out
+  $ zip bitcoin-$VERSION-win32-gitian.zip *
+  $ mv bitcoin-$VERSION-win32-gitian.zip ../../
  
   Build output expected:
-  1. linux 32-bit and 64-bit binaries + source
-  2. windows 32-bit binary + source
-  3. windows installer
+  1. linux 32-bit and 64-bit binaries + source (bitcoin-$VERSION-linux-gitian.zip)
+  2. windows 32-bit binary, installer + source (bitcoin-$VERSION-win32-gitian.zip)
+  3. Gitian signatures (in bitcoin-gitian-sigs/$VERSION[-win32]/(your gitian key)/
 
-* repackage gitian builds:
+* repackage gitian builds for release as stand-alone zip/tar/installer exe
 
   * Windows .zip and setup.exe:
   $ mkdir bitcoin-$VERSION-win32
@@ -65,5 +74,35 @@
 * update wiki
 
 * update wiki download links
+
+* release gitian-signed gitian archives
+
+  * Collect enough gitian signatures to meet minimum_weight (see contrib/gitian-downloader/*-download-config)
+
+  * From a directory containing bitcoin source, bitcoin-gitian-sigs and gitian zips
+  $ export VERSION=0.3.23
+  $ mkdir bitcoin-$VERSION-win32-gitian; cd bitcoin-$VERSION-win32-gitian
+  $ unzip ../bitcoin-$VERSION-win32-gitian.zip
+  $ mkdir gitian
+  $ cp ../bitcoin/contrib/gitian-downloader/*.pgp ./gitian/
+  $ for file in `ls ../bitcoin-gitian-sigs/$VERSION-win32/`; do
+  $   cp ../bitcoin-gitian-sigs/$VERSION-win32/$file/bitcoin-build.assert ./gitian/$file-build.assert
+  $   cp ../bitcoin-gitian-sigs/$VERSION-win32/$file/bitcoin-build.assert.sig ./gitian/$file-build.assert.sig
+  $ done
+  $ zip bitcoin-$VERSION-win32-gitian.zip *
+  $ cp bitcoin-$VERSION-win32-gitian.zip ../
+  $ cd ..
+  $ mkdir bitcoin-$VERSION-linux-gitian; cd bitcoin-$VERSION-linux-gitian
+  $ unzip ../bitcoin-$VERSION-linux-gitian.zip
+  $ mkdir gitian
+  $ cp ../bitcoin/contrib/gitian-downloader/*.pgp ./gitian/
+  $ for file in `ls ../bitcoin-gitian-sigs/$VERSION/`; do
+  $   cp ../bitcoin-gitian-sigs/$VERSION/$file/bitcoin-build.assert ./gitian/$file-build.assert
+  $   cp ../bitcoin-gitian-sigs/$VERSION/$file/bitcoin-build.assert.sig ./gitian/$file-build.assert.sig
+  $ done
+  $ zip bitcoin-$VERSION-linux-gitian.zip *
+  $ cp bitcoin-$VERSION-linux-gitian.zip ../
+
+  * Upload gitian zips to SF
 
 
