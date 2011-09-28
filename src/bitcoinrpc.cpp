@@ -1482,9 +1482,9 @@ Value getwork(const Array& params, bool fHelp)
         throw runtime_error(
             "getwork [data]\n"
             "If [data] is not specified, returns formatted hash data to work on:\n"
-            "  \"midstate\" : precomputed hash state after hashing the first half of the data\n"
+            "  \"midstate\" : precomputed hash state after hashing the first half of the data (DEPRECATED)\n" // deprecated
             "  \"data\" : block data\n"
-            "  \"hash1\" : formatted hash buffer for second hash\n"
+            "  \"hash1\" : formatted hash buffer for second hash (DEPRECATED)\n" // deprecated
             "  \"target\" : little endian hash target\n"
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
@@ -1548,9 +1548,9 @@ Value getwork(const Array& params, bool fHelp)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
         Object result;
-        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate))));
+        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate)))); // deprecated
         result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
-        result.push_back(Pair("hash1",    HexStr(BEGIN(phash1), END(phash1))));
+        result.push_back(Pair("hash1",    HexStr(BEGIN(phash1), END(phash1)))); // deprecated
         result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
         return result;
     }
