@@ -14,8 +14,6 @@ INCLUDEPATHS= \
 LIBPATHS= \
  -L"$(DEPSDIR)/lib"
 
-WXLIBS=$(shell $(DEPSDIR)/bin/wx-config --libs --static)
-
 USE_UPNP:=0
 
 LIBS= -dead_strip \
@@ -27,9 +25,9 @@ LIBS= -dead_strip \
  $(DEPSDIR)/lib/libssl.a \
  $(DEPSDIR)/lib/libcrypto.a 
 
-DEFS=$(shell $(DEPSDIR)/bin/wx-config --cxxflags) -D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0 -DUSE_SSL
+DEFS=-D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0 -DUSE_SSL
 
-DEBUGFLAGS=-g -DwxDEBUG_LEVEL=0
+DEBUGFLAGS=-g
 # ppc doesn't work because we don't support big-endian
 CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS = \
@@ -50,8 +48,6 @@ HEADERS = \
     script.h \
     serialize.h \
     strlcpy.h \
-    ui.h \
-    uibase.h \
     uint256.h \
     util.h \
     wallet.h
@@ -78,18 +74,10 @@ ifdef USE_UPNP
 endif
 	
 
-all: bitcoin
-
-
-obj/%.o: %.cpp $(HEADERS)
-	$(CXX) -c $(CFLAGS) -DGUI -o $@ $<
+all: bitcoind
 
 cryptopp/obj/%.o: cryptopp/%.cpp
 	$(CXX) -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
-
-bitcoin: $(OBJS) obj/ui.o obj/uibase.o
-	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(WXLIBS) $(LIBS)
-
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
@@ -104,7 +92,7 @@ test_bitcoin: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
 
 clean:
-	-rm -f bitcoin bitcoind test_bitcoin
+	-rm -f bitcoind test_bitcoin
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o

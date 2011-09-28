@@ -4,10 +4,6 @@
 
 CXX=g++
 
-WXINCLUDEPATHS=$(shell wx-config --cxxflags)
-
-WXLIBS=$(shell wx-config --libs)
-
 USE_UPNP:=0
 
 DEFS=-DNOPCH -DUSE_SSL
@@ -36,8 +32,36 @@ LIBS+= \
    -l pthread
 
 
-DEBUGFLAGS=-g -D__WXDEBUG__
-CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS)
+# Hardening
+# Make some classes of vulnerabilities unexploitable in case one is discovered.
+#
+    # Stack Canaries
+    # Put numbers at the beginning of each stack frame and check that they are the same.
+    # If a stack buffer if overflowed, it writes over the canary number and then on return
+    # when that number is checked, it won't be the same and the program will exit with
+    # a "Stack smashing detected" error instead of being exploited.
+    HARDENING=-fstack-protector-all -Wstack-protector
+
+    # Make some important things such as the global offset table read only as soon as
+    # the dynamic linker is finished building it. This will prevent overwriting of addresses
+    # which would later be jumped to.
+    HARDENING+=-Wl,-z,relro -Wl,-z,now
+
+    # Build position independent code to take advantage of Address Space Layout Randomization
+    # offered by some kernels.
+    # see doc/build-unix.txt for more information.
+    ifdef PIE
+        HARDENING+=-fPIE -pie
+    endif
+
+    # -D_FORTIFY_SOURCE=2 does some checking for potentially exploitable code patterns in
+    # the source such overflowing a statically defined buffer.
+    HARDENING+=-D_FORTIFY_SOURCE=2
+#
+
+
+DEBUGFLAGS=-g
+CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(HARDENING)
 HEADERS = \
     base58.h \
     bignum.h \
@@ -56,8 +80,6 @@ HEADERS = \
     script.h \
     serialize.h \
     strlcpy.h \
-    ui.h \
-    uibase.h \
     uint256.h \
     util.h \
     wallet.h
@@ -79,18 +101,11 @@ OBJS= \
     cryptopp/obj/cpu.o
 
 
-all: bitcoin
+all: bitcoind
 
-
-obj/%.o: %.cpp $(HEADERS)
-	$(CXX) -c $(CXXFLAGS) $(WXINCLUDEPATHS) -DGUI -o $@ $<
 
 cryptopp/obj/%.o: cryptopp/%.cpp
-	$(CXX) -c $(CXXFLAGS) -O3 -o $@ $<
-
-bitcoin: $(OBJS) obj/ui.o obj/uibase.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(WXLIBS) $(LIBS)
-
+	$(CXX) -c $(CFLAGS) -O3 -o $@ $<
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
@@ -105,7 +120,7 @@ test_bitcoin: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%
 	$(CXX) $(CXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-Bstatic -lboost_unit_test_framework $(LIBS)
 
 clean:
-	-rm -f bitcoin bitcoind test_bitcoin
+	-rm -f bitcoind test_bitcoin
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o

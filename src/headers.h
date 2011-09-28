@@ -27,14 +27,6 @@
 #define BSD 1
 #endif
 #endif
-#ifdef GUI
-#include <wx/wx.h>
-#include <wx/stdpaths.h>
-#include <wx/snglinst.h>
-#include <wx/utils.h>
-#include <wx/clipbrd.h>
-#include <wx/taskbar.h>
-#endif
 #include <openssl/buffer.h>
 #include <openssl/ecdsa.h>
 #include <openssl/evp.h>
@@ -95,28 +87,8 @@
 #include "bignum.h"
 #include "base58.h"
 #include "main.h"
-#ifdef GUI
-#include "uibase.h"
-#include "ui.h"
-#else
 #ifdef QT_GUI
 #include "qtui.h"
 #else
 #include "noui.h"
-#endif
-#endif
-
-#ifdef GUI
-#include "xpm/addressbook16.xpm"
-#include "xpm/addressbook20.xpm"
-#include "xpm/bitcoin16.xpm"
-#include "xpm/bitcoin20.xpm"
-#include "xpm/bitcoin32.xpm"
-#include "xpm/bitcoin48.xpm"
-#include "xpm/bitcoin80.xpm"
-#include "xpm/check.xpm"
-#include "xpm/send16.xpm"
-#include "xpm/send16noshadow.xpm"
-#include "xpm/send20.xpm"
-#include "xpm/about.xpm"
 #endif

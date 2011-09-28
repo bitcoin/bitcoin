@@ -64,11 +64,7 @@ void PrintConsole(const std::string &format, ...)
         buffer[limit-1] = 0;
     }
     printf("%s", buffer);
-#if defined(__WXMSW__) && defined(GUI)
-    MyMessageBox(buffer, "Bitcoin", wxOK | wxICON_EXCLAMATION);
-#else
     fprintf(stdout, "%s", buffer);
-#endif
 }
 
 
@@ -2357,13 +2353,7 @@ int CommandLineRPC(int argc, char *argv[])
 
     if (strPrint != "")
     {
-#if defined(__WXMSW__) && defined(GUI)
-        // Windows GUI apps can't print to command line,
-        // so settle for a message box yuck
-        MyMessageBox(strPrint, "Bitcoin", wxOK);
-#else
         fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
-#endif
     }
     return nRet;
 }

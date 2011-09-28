@@ -12,6 +12,10 @@ CONFIG += no_include_pwd
 #    BOOST_LIB_PATH, BDB_INCLUDE_PATH, BDB_LIB_PATH
 #    OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
 
+OBJECTS_DIR = build
+MOC_DIR = build
+UI_DIR = build
+
 # use: qmake "USE_UPNP=1"
 # miniupnpc (http://miniupnp.free.fr/files/) must be installed
 count(USE_UPNP, 1) {
