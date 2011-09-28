@@ -191,8 +191,9 @@ TSQM.CONFIG = no_link
 QMAKE_EXTRA_COMPILERS += TSQM
 bPRE_TARGETDEPS += compiler_TSQM_make_all
 
+# "Other files" to show in Qt Creator
 OTHER_FILES += \
-    README.rst
+    doc/*.rst doc/*.txt doc/README README.md
 
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
