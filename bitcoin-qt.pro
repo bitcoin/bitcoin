@@ -2,11 +2,11 @@ TEMPLATE = app
 TARGET =
 INCLUDEPATH += src src/json src/cryptopp src/qt
 DEFINES += QT_GUI
-# DEFINES += SSL
 CONFIG += no_include_pwd
 
 # for boost 1.37, add -mt to the boost libraries 
 # use: qmake BOOST_LIB_SUFFIX=-mt
+# or when linking against a specific BerkelyDB version: BDB_LIB_SUFFIX=-4.8
 
 # Dependency library locations can be customized with BOOST_INCLUDE_PATH, 
 #    BOOST_LIB_PATH, BDB_INCLUDE_PATH, BDB_LIB_PATH
@@ -16,7 +16,7 @@ OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
 
-# use: qmake "USE_UPNP=1"
+# use: qmake "USE_UPNP=0" (disable by default) or "USE_UPNP=1" (enable by default)
 # miniupnpc (http://miniupnp.free.fr/files/) must be installed
 count(USE_UPNP, 1) {
     message(Building with UPNP support)
@@ -25,10 +25,16 @@ count(USE_UPNP, 1) {
 }
 
 # use: qmake "USE_DBUS=1"
-count(USE_DBUS, 1) {
+contains(USE_DBUS, 1) {
     message(Building with DBUS (Freedesktop notifications) support)
     DEFINES += USE_DBUS
     QT += dbus
+}
+
+# use: qmake "USE_SSL=1"
+contains(USE_DBUS, 1) {
+    message(Building with SSL support for RPC)
+    DEFINES += USE_SSL
 }
 
 # for extra security against potential buffer overflows
@@ -189,7 +195,7 @@ TSQM.output = $$TS_DIR/${QMAKE_FILE_BASE}.qm
 TSQM.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN}
 TSQM.CONFIG = no_link
 QMAKE_EXTRA_COMPILERS += TSQM
-bPRE_TARGETDEPS += compiler_TSQM_make_all
+PRE_TARGETDEPS += compiler_TSQM_make_all
 
 # "Other files" to show in Qt Creator
 OTHER_FILES += \
@@ -228,5 +234,7 @@ macx:TARGET = "Bitcoin Qt"
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,)
-LIBS += -lssl -lcrypto -ldb_cxx
+LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_LIB_SUFFIX
+
+system($$QMAKE_LRELEASE -silent $$_PRO_FILE_)
