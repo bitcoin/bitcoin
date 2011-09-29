@@ -937,7 +937,6 @@ Value ListReceived(const Array& params, bool fByAccounts)
             Object obj;
             obj.push_back(Pair("address",       address.ToString()));
             obj.push_back(Pair("account",       strAccount));
-            obj.push_back(Pair("label",         strAccount)); // deprecated
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
             ret.push_back(obj);
@@ -952,7 +951,6 @@ Value ListReceived(const Array& params, bool fByAccounts)
             int nConf = (*it).second.nConf;
             Object obj;
             obj.push_back(Pair("account",       (*it).first));
-            obj.push_back(Pair("label",         (*it).first)); // deprecated
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
             ret.push_back(obj);
@@ -1609,20 +1607,13 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getnewaddress",          &getnewaddress),
     make_pair("getaccountaddress",      &getaccountaddress),
     make_pair("setaccount",             &setaccount),
-    make_pair("setlabel",               &setaccount), // deprecated
     make_pair("getaccount",             &getaccount),
-    make_pair("getlabel",               &getaccount), // deprecated
     make_pair("getaddressesbyaccount",  &getaddressesbyaccount),
-    make_pair("getaddressesbylabel",    &getaddressesbyaccount), // deprecated
     make_pair("sendtoaddress",          &sendtoaddress),
-    make_pair("getamountreceived",      &getreceivedbyaddress), // deprecated, renamed to getreceivedbyaddress
-    make_pair("getallreceived",         &listreceivedbyaddress), // deprecated, renamed to listreceivedbyaddress
     make_pair("getreceivedbyaddress",   &getreceivedbyaddress),
     make_pair("getreceivedbyaccount",   &getreceivedbyaccount),
-    make_pair("getreceivedbylabel",     &getreceivedbyaccount), // deprecated
     make_pair("listreceivedbyaddress",  &listreceivedbyaddress),
     make_pair("listreceivedbyaccount",  &listreceivedbyaccount),
-    make_pair("listreceivedbylabel",    &listreceivedbyaccount), // deprecated
     make_pair("backupwallet",           &backupwallet),
     make_pair("keypoolrefill",          &keypoolrefill),
     make_pair("walletpassphrase",       &walletpassphrase),
@@ -1656,11 +1647,8 @@ string pAllowInSafeMode[] =
     "getinfo",
     "getnewaddress",
     "getaccountaddress",
-    "setlabel", // deprecated
     "getaccount",
-    "getlabel", // deprecated
     "getaddressesbyaccount",
-    "getaddressesbylabel", // deprecated
     "backupwallet",
     "keypoolrefill",
     "walletpassphrase",
@@ -2285,18 +2273,12 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
         if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
-        if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "getreceivedbylabel"     && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
-        if (strMethod == "getallreceived"         && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
-        if (strMethod == "getallreceived"         && n > 1) ConvertTo<bool>(params[1]); // deprecated
         if (strMethod == "listreceivedbyaddress"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "listreceivedbyaddress"  && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "listreceivedbyaccount"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "listreceivedbyaccount"  && n > 1) ConvertTo<bool>(params[1]);
-        if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
-        if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]); // deprecated
         if (strMethod == "getbalance"             && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "move"                   && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "move"                   && n > 3) ConvertTo<boost::int64_t>(params[3]);
