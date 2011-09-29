@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     // Load language file for system locale
     QString locale = QLocale::system().name();
     QTranslator translator;
-    translator.load("bitcoin_"+locale);
+    translator.load(":/translations/"+locale);
     app.installTranslator(&translator);
 
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
