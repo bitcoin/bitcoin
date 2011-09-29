@@ -1117,7 +1117,7 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     return true;
 }
 
-bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
+bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
     vector<pair<opcodetype, valtype> > vSolution;
     if (!Solver(scriptPubKey, vSolution))
@@ -1136,15 +1136,6 @@ bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* ke
     return false;
 }
 
-
-bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
-{
-    if (keystore)
-        return ExtractAddressInner(scriptPubKey, keystore, addressRet);
-    else
-        return ExtractAddressInner(scriptPubKey, NULL, addressRet);
-    return false;
-}
 
 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int nHashType)
