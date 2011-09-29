@@ -5,18 +5,16 @@ DEFINES += QT_GUI
 # DEFINES += SSL
 CONFIG += no_include_pwd
 
+# for boost 1.37, add -mt to the boost libraries 
+# use: qmake BOOST_LIB_SUFFIX=-mt
+
+# Dependency library locations can be customized with BOOST_INCLUDE_PATH, 
+#    BOOST_LIB_PATH, BDB_INCLUDE_PATH, BDB_LIB_PATH
+#    OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
+
 OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
-
-# for boost 1.37, add -mt to the boost libraries
-LIBS += -lssl -lcrypto -ldb_cxx
-unix:!macx:LIBS += -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-macx:LIBS += -lboost_system-mt -lboost_filesystem-mt -lboost_program_options-mt -lboost_thread-mt
-macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
-windows:LIBS += -lboost_system-mgw44-mt-1_43 -lboost_filesystem-mgw44-mt-1_43 -lboost_program_options-mgw44-mt-1_43 -lboost_thread-mgw44-mt-1_43 -lws2_32 -lgdi32
-windows:DEFINES += __WXMSW__
-windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 # use: qmake "USE_UPNP=1"
 # miniupnpc (http://miniupnp.free.fr/files/) must be installed
@@ -26,9 +24,10 @@ count(USE_UPNP, 1) {
     LIBS += -lminiupnpc
 }
 
+# use: qmake "USE_DBUS=1"
 count(USE_DBUS, 1) {
     message(Building with DBUS (Freedesktop notifications) support)
-    DEFINES += QT_DBUS
+    DEFINES += USE_DBUS
     QT += dbus
 }
 
@@ -173,17 +172,61 @@ FORMS += \
     src/qt/forms/askpassphrasedialog.ui
 
 CODECFORTR = UTF-8
+
 # for lrelease/lupdate
 TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts \
                src/qt/locale/bitcoin_ru.ts
 
+isEmpty(QMAKE_LRELEASE) {
+    win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\lrelease.exe
+    else:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
+}
+isEmpty(TS_DIR):TS_DIR = src/qt/locale
+# automatically build translations, so they can be included in resource file
+TSQM.name = lrelease ${QMAKE_FILE_IN}
+TSQM.input = TRANSLATIONS
+TSQM.output = $$TS_DIR/${QMAKE_FILE_BASE}.qm
+TSQM.commands = $$QMAKE_LRELEASE ${QMAKE_FILE_IN}
+TSQM.CONFIG = no_link
+QMAKE_EXTRA_COMPILERS += TSQM
+bPRE_TARGETDEPS += compiler_TSQM_make_all
+
+# "Other files" to show in Qt Creator
 OTHER_FILES += \
-    README.rst
+    doc/*.rst doc/*.txt doc/README README.md
 
-# For use with MacPorts
-macx:INCLUDEPATH += /opt/local/include /opt/local/include/db48
-macx:LIBS += -L/opt/local/lib -L/opt/local/lib/db48
+# platform specific defaults, if not overridden on command line
+isEmpty(BOOST_LIB_SUFFIX) {
+    macx:BOOST_LIB_SUFFIX = -mt
+    windows:BOOST_LIB_SUFFIX = -mgw44-mt-1_43
+}
 
-# Additional Mac options
+isEmpty(BDB_LIB_PATH) {
+    macx:BDB_LIB_PATH = /opt/local/lib/db48
+}
+
+isEmpty(BDB_INCLUDE_PATH) {
+    macx:BDB_INCLUDE_PATH = /opt/local/include/db48
+}
+
+isEmpty(BOOST_LIB_PATH) {
+    macx:BOOST_LIB_PATH = /opt/local/lib
+}
+
+isEmpty(BOOST_INCLUDE_PATH) {
+    macx:BOOST_INCLUDE_PATH = /opt/local/include
+}
+
+windows:LIBS += -lws2_32 -lgdi32
+windows:DEFINES += __WXMSW__
+windows:RC_FILE = src/qt/res/bitcoin-qt.rc
+
+macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
 macx:ICON = src/qt/res/icons/bitcoin.icns
 macx:TARGET = "Bitcoin Qt"
+
+# Set libraries and includes at end, to use platform-defined defaults if not overridden
+INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH
+LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,)
+LIBS += -lssl -lcrypto -ldb_cxx
+LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_LIB_SUFFIX

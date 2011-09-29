@@ -6,7 +6,7 @@
 
 QT_BEGIN_NAMESPACE
 class QSystemTrayIcon;
-#ifdef QT_DBUS
+#ifdef USE_DBUS
 class QDBusInterface;
 #endif
 QT_END_NAMESPACE
@@ -52,7 +52,7 @@ private:
     QString programName;
     Mode mode;
     QSystemTrayIcon *trayIcon;
-#ifdef QT_DBUS
+#ifdef USE_DBUS
     QDBusInterface *interface;
 
     void notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout);
