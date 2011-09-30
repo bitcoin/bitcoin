@@ -10,6 +10,7 @@
 #include "transaction_tests.cpp"
 #include "DoS_tests.cpp"
 #include "base64_tests.cpp"
+#include "multisig_tests.cpp"
 
 CWallet* pwalletMain;
 
