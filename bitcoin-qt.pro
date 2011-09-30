@@ -32,7 +32,7 @@ contains(USE_DBUS, 1) {
 }
 
 # use: qmake "USE_SSL=1"
-contains(USE_DBUS, 1) {
+contains(USE_SSL, 1) {
     message(Building with SSL support for RPC)
     DEFINES += USE_SSL
 }
