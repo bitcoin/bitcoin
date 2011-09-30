@@ -726,29 +726,10 @@ inline bool AffinityBugWorkaround(void(*pfn)(void*))
     return false;
 }
 
-template <class T> inline T rotlFixed(T x, unsigned int y)
-{
-	assert(y < sizeof(T)*8);
-	return T((x<<y) | (x>>(sizeof(T)*8-y)));
-}
-
-template <class T> inline T rotrFixed(T x, unsigned int y)
-{
-	assert(y < sizeof(T)*8);
-	return T((x>>y) | (x<<(sizeof(T)*8-y)));
-}
-
 inline uint32_t ByteReverse(uint32_t value)
 {
-#if defined(__MWERKS__) && TARGET_CPU_PPC
-	return (uint32_t)__lwbrx(&value,0);
-#elif _MSC_VER >= 1400 || (_MSC_VER >= 1300 && !defined(_DLL))
-	return _byteswap_ulong(value);
-#else
-	// 6 instructions with rotate instruction, 8 without
 	value = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
-	return rotlFixed(value, 16U);
-#endif
+	return (value<<16) | (value>>16);
 }
 
 #endif
