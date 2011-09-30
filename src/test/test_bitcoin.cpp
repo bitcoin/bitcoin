@@ -10,10 +10,11 @@
 #include "transaction_tests.cpp"
 #include "DoS_tests.cpp"
 #include "base64_tests.cpp"
+#include "miner_tests.cpp"
 
 CWallet* pwalletMain;
 
 void Shutdown(void* parg)
 {
-	exit(0);
+  exit(0);
 }
