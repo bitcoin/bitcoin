@@ -526,6 +526,72 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+static const string strMessageMagic = "Bitcoin Signed Message:\n";
+
+Value signmessage(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "signmessage <bitcoinaddress> <message>\n"
+            "Sign a message with the private key of an address");
+
+    if (pwalletMain->IsLocked())
+        throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+
+    string strAddress = params[0].get_str();
+    string strMessage = params[1].get_str();
+
+    CBitcoinAddress addr(strAddress);
+    if (!addr.IsValid())
+        throw JSONRPCError(-3, "Invalid address");
+
+    CKey key;
+    if (!pwalletMain->GetKey(addr, key))
+        throw JSONRPCError(-4, "Private key not available");
+
+    CDataStream ss(SER_GETHASH);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    vector<unsigned char> vchSig;
+    if (!key.SignCompact(Hash(ss.begin(), ss.end()), vchSig))
+        throw JSONRPCError(-5, "Sign failed");
+
+    return EncodeBase64(&vchSig[0], vchSig.size());
+}
+
+Value verifymessage(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "verifymessage <bitcoinaddress> <signature> <message>\n"
+            "Verify a signed message");
+
+    string strAddress  = params[0].get_str();
+    string strSign     = params[1].get_str();
+    string strMessage  = params[2].get_str();
+
+    CBitcoinAddress addr(strAddress);
+    if (!addr.IsValid())
+        throw JSONRPCError(-3, "Invalid address");
+
+    bool fInvalid = false;
+    vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
+
+    if (fInvalid)
+        throw JSONRPCError(-5, "Malformed base64 encoding");
+
+    CDataStream ss(SER_GETHASH);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    CKey key;
+    if (!key.SetCompactSignature(Hash(ss.begin(), ss.end()), vchSig))
+        return false;
+
+    return (key.GetAddress() == addr);
+}
+
 
 Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
@@ -1627,6 +1693,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("sendmany",               &sendmany),
     make_pair("gettransaction",         &gettransaction),
     make_pair("listtransactions",       &listtransactions),
+    make_pair("signmessage",           &signmessage),
+    make_pair("verifymessage",         &verifymessage),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
@@ -1797,43 +1865,6 @@ int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRe
     }
 
     return nStatus;
-}
-
-string EncodeBase64(string s)
-{
-    BIO *b64, *bmem;
-    BUF_MEM *bptr;
-
-    b64 = BIO_new(BIO_f_base64());
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bmem = BIO_new(BIO_s_mem());
-    b64 = BIO_push(b64, bmem);
-    BIO_write(b64, s.c_str(), s.size());
-    BIO_flush(b64);
-    BIO_get_mem_ptr(b64, &bptr);
-
-    string result(bptr->data, bptr->length);
-    BIO_free_all(b64);
-
-    return result;
-}
-
-string DecodeBase64(string s)
-{
-    BIO *b64, *bmem;
-
-    char* buffer = static_cast<char*>(calloc(s.size(), sizeof(char)));
-
-    b64 = BIO_new(BIO_f_base64());
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bmem = BIO_new_mem_buf(const_cast<char*>(s.c_str()), s.size());
-    bmem = BIO_push(b64, bmem);
-    BIO_read(bmem, buffer, s.size());
-    BIO_free_all(bmem);
-
-    string result(buffer);
-    free(buffer);
-    return result;
 }
 
 bool HTTPAuthorized(map<string, string>& mapHeaders)
