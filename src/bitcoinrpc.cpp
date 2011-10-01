@@ -1645,6 +1645,86 @@ Value getwork(const Array& params, bool fHelp)
 }
 
 
+Value getmemorypool(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "getmemorypool [data]\n"
+            "If [data] is not specified, returns data needed to construct a block to work on:\n"
+            "  \"version\" : block version\n"
+            "  \"previousblockhash\" : hash of current highest block\n"
+            "  \"transactions\" : contents of non-coinbase transactions that should be included in the next block\n"
+            "  \"coinbasevalue\" : maximum allowable input to coinbase transaction, including the generation award and transaction fees\n"
+            "  \"time\" : timestamp appropriate for next block\n"
+            "  \"bits\" : compressed target of next block\n"
+            "If [data] is specified, tries to solve the block and returns true if it was successful.");
+
+    if (params.size() == 0)
+    {
+        if (vNodes.empty())
+            throw JSONRPCError(-9, "Bitcoin is not connected!");
+
+        if (IsInitialBlockDownload())
+            throw JSONRPCError(-10, "Bitcoin is downloading blocks...");
+
+        static CReserveKey reservekey(pwalletMain);
+
+        // Update block
+        static unsigned int nTransactionsUpdatedLast;
+        static CBlockIndex* pindexPrev;
+        static int64 nStart;
+        static CBlock* pblock;
+        if (pindexPrev != pindexBest ||
+            (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 5))
+        {
+            nTransactionsUpdatedLast = nTransactionsUpdated;
+            pindexPrev = pindexBest;
+            nStart = GetTime();
+
+            // Create new block
+            if(pblock)
+                delete pblock;
+            pblock = CreateNewBlock(reservekey);
+            if (!pblock)
+                throw JSONRPCError(-7, "Out of memory");
+        }
+
+        // Update nTime
+        pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+        pblock->nNonce = 0;
+
+        Array transactions;
+        BOOST_FOREACH(CTransaction tx, pblock->vtx) {
+            if(tx.IsCoinBase())
+                continue;
+
+            CDataStream ssTx;
+            ssTx << tx;
+
+            transactions.push_back(HexStr(ssTx.begin(), ssTx.end()));
+        }
+
+        Object result;
+        result.push_back(Pair("version", pblock->nVersion));
+        result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
+        result.push_back(Pair("transactions", transactions));
+        result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
+        result.push_back(Pair("time", (int64_t)pblock->nTime));
+        result.push_back(Pair("bits", (int64_t)pblock->nBits));
+        return result;
+    }
+    else
+    {
+        // Parse parameters
+        CDataStream ssBlock(ParseHex(params[0].get_str()));
+        CBlock pblock;
+        ssBlock >> pblock;
+
+        return ProcessBlock(NULL, &pblock);
+    }
+}
+
+
 
 
 
@@ -1698,6 +1778,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
+    make_pair("getmemorypool",          &getmemorypool),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -1723,6 +1804,7 @@ string pAllowInSafeMode[] =
     "walletlock",
     "validateaddress",
     "getwork",
+    "getmemorypool",
 };
 set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
 
@@ -2138,7 +2220,7 @@ void ThreadRPCServer2(void* parg)
             if (valMethod.type() != str_type)
                 throw JSONRPCError(-32600, "Method must be a string");
             string strMethod = valMethod.get_str();
-            if (strMethod != "getwork")
+            if (strMethod != "getwork" && strMethod != "getmemorypool")
                 printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
             // Parse params
