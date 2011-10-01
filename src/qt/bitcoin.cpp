@@ -121,7 +121,8 @@ int main(int argc, char *argv[])
     QString locale = QLocale::system().name();
     QTranslator translator;
     translator.load(":/translations/"+locale);
-    app.installTranslator(&translator);
+    if (!translator.isEmpty())
+        app.installTranslator(&translator);
 
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
     splash.show();
