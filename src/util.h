@@ -67,20 +67,6 @@ typedef unsigned long long  uint64;
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
 #define PAIRTYPE(t1, t2)    std::pair<t1, t2>
 
-// Align by increasing pointer, must have extra space at end of buffer
-template <size_t nBytes, typename T>
-T* alignup(T* p)
-{
-    union
-    {
-        T* ptr;
-        size_t n;
-    } u;
-    u.ptr = p;
-    u.n = (u.n + (nBytes-1)) & ~(nBytes-1);
-    return u.ptr;
-}
-
 #ifdef __WXMSW__
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
@@ -701,29 +687,5 @@ inline void ExitThread(size_t nExitCode)
     pthread_exit((void*)nExitCode);
 }
 #endif
-
-
-
-
-
-inline bool AffinityBugWorkaround(void(*pfn)(void*))
-{
-#ifdef __WXMSW__
-    // Sometimes after a few hours affinity gets stuck on one processor
-    DWORD dwProcessAffinityMask = -1;
-    DWORD dwSystemAffinityMask = -1;
-    GetProcessAffinityMask(GetCurrentProcess(), &dwProcessAffinityMask, &dwSystemAffinityMask);
-    DWORD dwPrev1 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
-    DWORD dwPrev2 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
-    if (dwPrev2 != dwProcessAffinityMask)
-    {
-        printf("AffinityBugWorkaround() : SetThreadAffinityMask=%d, ProcessAffinityMask=%d, restarting thread\n", dwPrev2, dwProcessAffinityMask);
-        if (!CreateThread(pfn, NULL))
-            printf("Error: CreateThread() failed\n");
-        return true;
-    }
-#endif
-    return false;
-}
 
 #endif
