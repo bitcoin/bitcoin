@@ -1757,6 +1757,18 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+
+Value accepttxn(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "accepttxn <txid>\n"
+            "Accepts the transaction into mined blocks without a fee");
+
+    return AcceptTransaction(params[0].get_str());
+}
+
+
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -2047,6 +2059,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listtransactions",       &listtransactions),
     make_pair("signmessage",            &signmessage),
     make_pair("verifymessage",          &verifymessage),
+    make_pair("accepttxn",              &accepttxn),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
@@ -2079,6 +2092,7 @@ string pAllowInSafeMode[] =
     "walletpassphrase",
     "walletlock",
     "validateaddress",
+    "accepttxn",
     "getwork",
     "getmemorypool",
 };

@@ -2977,6 +2977,39 @@ public:
 };
 
 
+bool AcceptTransaction(const uint256 hash, const string strHash)
+{
+    if (!mapTransactions.count(hash))
+    {
+        printf("AcceptTransaction: cannot find %s\n", strHash.c_str());
+        return false;
+    }
+
+    CTransaction &txn = mapTransactions[hash];
+    if (txn.fNoFee)
+        printf("AcceptTransaction: %s already accepted!\n", strHash.c_str());
+    else
+    {
+        printf("AcceptTransaction: will accept %s\n", strHash.c_str());
+        txn.fNoFee = true;
+    }
+
+    return true;
+}
+
+bool AcceptTransaction(const uint256 hash)
+{
+    return AcceptTransaction(hash, hash.GetHex());
+}
+
+bool AcceptTransaction(const string strHash)
+{
+    uint256 hash;
+    hash.SetHex(strHash);
+    return AcceptTransaction(hash, strHash);
+}
+
+
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
 
