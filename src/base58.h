@@ -268,6 +268,12 @@ public:
         SetHash160(Hash160(vchPubKey));
     }
 
+    bool SetScriptHash160(const uint160& hash160)
+    {
+        SetData(fTestNet ? 112 : 1, &hash160, 20);
+        return true;
+    }
+
     bool IsValid() const
     {
         int nExpectedSize = 20;
@@ -275,9 +281,20 @@ public:
         switch(nVersion)
         {
             case 0:
+                nExpectedSize = 20; // Hash of public key
+                fExpectTestNet = false;
+                break;
+            case 1:
+                nExpectedSize = 20; // OP_EVAL, hash of CScript
+                fExpectTestNet = false;
                 break;
 
             case 111:
+                nExpectedSize = 20;
+                fExpectTestNet = true;
+                break;
+            case 112:
+                nExpectedSize = 20;
                 fExpectTestNet = true;
                 break;
 
@@ -285,6 +302,14 @@ public:
                 return false;
         }
         return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
+    }
+    bool IsScript() const
+    {
+        if (!IsValid())
+            return false;
+        if (fTestNet)
+            return nVersion == 112;
+        return nVersion == 1;
     }
 
     CBitcoinAddress()

@@ -420,6 +420,18 @@ public:
         return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
     }
 
+    bool ReadCScript(const uint160 &hash, std::vector<unsigned char>& data)
+    {
+        data.clear();
+        return Read(std::make_pair(std::string("cscript"), hash), data);
+    }
+
+    bool WriteCScript(const uint160& hash, const std::vector<unsigned char>& data)
+    {
+        nWalletDBUpdated++;
+        return Write(std::make_pair(std::string("cscript"), hash), data, false);
+    }
+
     bool WriteBestBlock(const CBlockLocator& locator)
     {
         nWalletDBUpdated++;

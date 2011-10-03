@@ -42,6 +42,15 @@ bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector
     return false;
 }
 
+bool CWallet::AddCScript(const uint160 &hash, const std::vector<unsigned char>& data)
+{
+    if (!CCryptoKeyStore::AddCScript(hash, data))
+        return false;
+    if (!fFileBacked)
+        return true;
+    return CWalletDB(strWalletFile).WriteCScript(hash, data);
+}
+
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)
 {
     if (!IsLocked())
@@ -374,6 +383,16 @@ int64 CWallet::GetDebit(const CTxIn &txin) const
     return 0;
 }
 
+bool CWallet::IsChange(const CTxOut& txout) const
+{
+    CBitcoinAddress address;
+    if (ExtractAddress(txout.scriptPubKey, this, address) && !address.IsScript())
+        CRITICAL_BLOCK(cs_wallet)
+            if (!mapAddressBook.count(address))
+                return true;
+    return false;
+}
+
 int64 CWalletTx::GetTxTime() const
 {
     return nTimeReceived;
@@ -443,8 +462,7 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
         nFee = nDebit - nValueOut;
     }
 
-    // Sent/received.  Standard client will never generate a send-to-multiple-recipients,
-    // but non-standard clients might (so return a list of address/amount pairs)
+    // Sent/received.
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         CBitcoinAddress address;
