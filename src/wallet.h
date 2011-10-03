@@ -69,6 +69,8 @@ public:
     bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     // Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
     bool LoadCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
+    bool AddCScript(const uint160& hash, const std::vector<unsigned char>& data);
+    bool LoadCScript(const uint160& hash, const std::vector<unsigned char>& data) { return CCryptoKeyStore::AddCScript(hash, data); }
 
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
@@ -114,15 +116,7 @@ public:
             throw std::runtime_error("CWallet::GetCredit() : value out of range");
         return (IsMine(txout) ? txout.nValue : 0);
     }
-    bool IsChange(const CTxOut& txout) const
-    {
-        CBitcoinAddress address;
-        if (ExtractAddress(txout.scriptPubKey, this, address))
-            CRITICAL_BLOCK(cs_wallet)
-                if (!mapAddressBook.count(address))
-                    return true;
-        return false;
-    }
+    bool IsChange(const CTxOut& txout) const;
     int64 GetChange(const CTxOut& txout) const
     {
         if (!MoneyRange(txout.nValue))

@@ -33,6 +33,36 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     return true;
 }
 
+bool CBasicKeyStore::AddCScript(const uint160 &hash, const std::vector<unsigned char>& data)
+{
+    CRITICAL_BLOCK(cs_KeyStore)
+        mapData[hash] = data;
+    return true;
+}
+
+bool CBasicKeyStore::HaveCScript(const uint160& hash) const
+{
+    bool result;
+    CRITICAL_BLOCK(cs_KeyStore)
+        result = (mapData.count(hash) > 0);
+    return result;
+}
+
+
+bool CBasicKeyStore::GetCScript(const uint160 &hash, std::vector<unsigned char>& dataOut) const
+{
+    CRITICAL_BLOCK(cs_KeyStore)
+    {
+        DataMap::const_iterator mi = mapData.find(hash);
+        if (mi != mapData.end())
+        {
+            dataOut = (*mi).second;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CCryptoKeyStore::SetCrypted()
 {
     CRITICAL_BLOCK(cs_KeyStore)
