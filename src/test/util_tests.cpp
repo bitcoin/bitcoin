@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(GetArg("strtest1", "default"), "string...");
     BOOST_CHECK_EQUAL(GetArg("strtest2", "default"), "default");
     BOOST_CHECK_EQUAL(GetArg("inttest1", -1), 12345);
-    BOOST_CHECK_EQUAL(GetArg("inttest2", -1), 81985529216486895);
+    BOOST_CHECK_EQUAL(GetArg("inttest2", -1), 81985529216486895LL);
     BOOST_CHECK_EQUAL(GetArg("inttest3", -1), -1);
     BOOST_CHECK_EQUAL(GetBoolArg("booltest1"), true);
     BOOST_CHECK_EQUAL(GetBoolArg("booltest2"), false);
