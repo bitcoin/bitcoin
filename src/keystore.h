@@ -28,17 +28,23 @@ public:
     // This may succeed even if GetKey fails (e.g., encrypted wallets)
     virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
 
+    virtual bool AddCScript(const uint160 &hash, const std::vector<unsigned char>& data) =0;
+    virtual bool HaveCScript(const uint160 &hash) const =0;
+    virtual bool GetCScript(const uint160 &hash, std::vector<unsigned char>& dataOut) const =0;
+
     // Generate a new key, and add it to the store
     virtual std::vector<unsigned char> GenerateNewKey();
 };
 
 typedef std::map<CBitcoinAddress, CSecret> KeyMap;
+typedef std::map<uint160, std::vector<unsigned char> > DataMap;
 
 // Basic key store, that keeps keys in an address->secret map
 class CBasicKeyStore : public CKeyStore
 {
 protected:
     KeyMap mapKeys;
+    DataMap mapData;
 
 public:
     bool AddKey(const CKey& key);
@@ -62,6 +68,9 @@ public:
         }
         return false;
     }
+    virtual bool AddCScript(const uint160 &hash, const std::vector<unsigned char>& data);
+    virtual bool HaveCScript(const uint160 &hash) const;
+    virtual bool GetCScript(const uint160 &hash, std::vector<unsigned char>& dataOut) const;
 };
 
 typedef std::map<CBitcoinAddress, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;
