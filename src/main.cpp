@@ -560,7 +560,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         int64 nFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
-        if (!fFromMe)
+        if (!fFromMe || pwalletMain->IsMine(tx))
         {
 
         // Don't accept it if it can't get into a block
