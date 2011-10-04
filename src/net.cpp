@@ -1387,6 +1387,8 @@ void ThreadOpenConnections2(void* parg)
             BOOST_FOREACH(CNode* pnode, vNodes)
                 setConnected.insert(pnode->addr.ip & 0x0000ffff);
 
+        int64 nANow = GetAdjustedTime();
+
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
@@ -1394,8 +1396,8 @@ void ThreadOpenConnections2(void* parg)
                 const CAddress& addr = item.second;
                 if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip & 0x0000ffff))
                     continue;
-                int64 nSinceLastSeen = GetAdjustedTime() - addr.nTime;
-                int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;
+                int64 nSinceLastSeen = nANow - addr.nTime;
+                int64 nSinceLastTry = nANow - addr.nLastTry;
 
                 // Randomize the order in a deterministic way, putting the standard port first
                 int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
