@@ -543,7 +543,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         int64 nFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
-        if (!fFromMe)
+        if (!fFromMe || pwalletMain->IsMine(tx))
         {
 
         // Don't accept it if it can't get into a block
@@ -3353,6 +3353,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // Transaction fee required depends on block size
             bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
             int64 nMinFee = pwalletMain->IsFromMe(tx) ? 0 : tx.GetMinFee(nBlockSize, fAllowFree, GMF_BLOCK);
+            int64 nMyCredit = pwalletMain->GetCredit(tx);
+            nMinFee = (nMyCredit >= nMinFee) ? 0 : (nMinFee - nMyCredit);
 
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
