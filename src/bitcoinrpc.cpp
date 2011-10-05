@@ -1257,6 +1257,70 @@ Value listaccounts(const Array& params, bool fHelp)
     return ret;
 }
 
+Value listsinceblock(const Array& params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error(
+            "listsinceblock [blockid] [target-confirmations]\n"
+            "Get all transactions in blocks since block [blockid], or all transactions if omitted");
+
+    CBlockIndex *pindex = NULL;
+    int target_confirms = 1;
+
+    if (params.size() > 0)
+    {
+        uint256 blockId = 0;
+
+        blockId.SetHex(params[0].get_str());
+        pindex = CBlockLocator(blockId).GetBlockIndex();
+    }
+
+    if (params.size() > 1)
+    {
+        target_confirms = params[1].get_int();
+
+        if (target_confirms < 1)
+            throw JSONRPCError(-8, "Invalid parameter");
+    }
+
+    int depth = pindex ? (1 + nBestHeight - pindex->nHeight) : -1;
+
+    Array transactions;
+
+    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
+    {
+        CWalletTx tx = (*it).second;
+
+        if (depth == -1 || tx.GetDepthInMainChain() < depth)
+            ListTransactions(tx, "*", 0, true, transactions);
+    }
+
+    uint256 lastblock;
+
+    if (target_confirms == 1)
+    {
+        printf("oops!\n");
+        lastblock = hashBestChain;
+    }
+    else
+    {
+        int target_height = pindexBest->nHeight + 1 - target_confirms;
+
+        CBlockIndex *block;
+        for (block = pindexBest;
+             block && block->nHeight > target_height;
+             block = block->pprev);
+
+        lastblock = block ? block->GetBlockHash() : 0;
+    }
+
+    Object ret;
+    ret.push_back(Pair("transactions", transactions));
+    ret.push_back(Pair("lastblock", lastblock.GetHex()));
+
+    return ret;
+}
+
 Value gettransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1778,6 +1842,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
     make_pair("getmemorypool",          &getmemorypool),
+    make_pair("listsinceblock",        &listsinceblock),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2401,6 +2466,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
         if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
         if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "sendmany"               && n > 1)
         {
             string s = params[1].get_str();
