@@ -7,6 +7,11 @@
 #include "db.h"
 #include "net.h"
 #include "init.h"
+
+#ifdef WIN32
+#include <fcntl.h>
+#endif
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -3002,7 +3007,6 @@ public:
 };
 
 
-#ifndef WIN32
 int DoCoinbaser_I(CBlock* pblock, uint64 nTotal, FILE* file)
 {
     int nCount;
@@ -3053,16 +3057,27 @@ int DoCoinbaser(CBlock* pblock, uint64 nTotal)
     string strCmd = mapArgs["-coinbaser"];
     FILE* file = NULL;
     bool fIsProcess = false;
+    SOCKET hSocket;
     if (!strCmd.compare(0, 4, "tcp:"))
     {
         CService addrCoinbaser(strCmd.substr(4), true);
-        SOCKET hSocket;
         if (!ConnectSocket(addrCoinbaser, hSocket))
         {
             perror("DoCoinbaser(): failed to connect");
             return -3;
         }
-        file = fdopen(hSocket, "r+");
+#ifdef WIN32
+        int nSocket = _open_osfhandle((intptr_t)hSocket, _O_RDONLY | _O_TEXT);
+        if (-1 == nSocket)
+        {
+            closesocket(hSocket);
+            printf("DoCoinbaser(): failed to _open_osfhandle\n");
+            return -4;
+        }
+        file = fdopen(nSocket, "r");
+#else
+        file = fdopen(hSocket, "r");
+#endif
         if (file)
             fprintf(file, "total: %" PRI64u "\n\n", nTotal);
     }
@@ -3097,13 +3112,16 @@ int DoCoinbaser(CBlock* pblock, uint64 nTotal)
     }
     if (fIsProcess)
         pclose(file);
-    else
+    else {
         fclose(file);
+#ifdef WIN32
+        closesocket(hSocket);
+#endif
+    }
     if (rv)
         pblock->vtx[0].vout.resize(1);
     return rv;
 }
-#endif
 
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
@@ -3269,10 +3287,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, bool fUseCoinbaser)
     }
     int64 nBlkValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
     pblock->vtx[0].vout[0].nValue = nBlkValue;
-#ifndef WIN32
     if (fUseCoinbaser && mapArgs.count("-coinbaser"))
         DoCoinbaser(&*pblock, nBlkValue);
-#endif
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
