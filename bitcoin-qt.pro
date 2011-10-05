@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET =
-INCLUDEPATH += src src/json src/cryptopp src/qt
+INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI
 CONFIG += no_include_pwd
 
@@ -45,7 +45,7 @@ QMAKE_LFLAGS += -fstack-protector
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts  -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch
 
 # Input
-DEPENDPATH += src/qt src src/cryptopp src json/include
+DEPENDPATH += src/qt src src json/include
 HEADERS += src/qt/bitcoingui.h \
     src/qt/transactiontablemodel.h \
     src/qt/addresstablemodel.h \
@@ -60,17 +60,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/util.h \
     src/uint256.h \
     src/serialize.h \
-    src/cryptopp/stdcpp.h \
-    src/cryptopp/smartptr.h \
-    src/cryptopp/simple.h \
-    src/cryptopp/sha.h \
-    src/cryptopp/secblock.h \
-    src/cryptopp/pch.h \
-    src/cryptopp/misc.h \
-    src/cryptopp/iterhash.h \
-    src/cryptopp/cryptlib.h \
-    src/cryptopp/cpu.h \
-    src/cryptopp/config.h \
     src/strlcpy.h \
     src/main.h \
     src/net.h \
@@ -126,8 +115,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/aboutdialog.cpp \
     src/qt/editaddressdialog.cpp \
     src/qt/bitcoinaddressvalidator.cpp \
-    src/cryptopp/sha.cpp \
-    src/cryptopp/cpu.cpp \
     src/util.cpp \
     src/script.cpp \
     src/main.cpp \
