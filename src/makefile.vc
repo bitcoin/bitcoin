@@ -76,13 +76,7 @@ OBJS= \
     obj\protocol.o \
     obj\script.o \
     obj\util.o \
-    obj\wallet.o \
-    cryptopp\obj\sha.o \
-    cryptopp\obj\cpu.o
-
-CRYPTOPP_OBJS= \
-    cryptopp\obj\sha.obj \
-    cryptopp\obj\cpu.obj
+    obj\wallet.o
 
 RC=../share
 
@@ -119,12 +113,6 @@ obj\ui.obj: $(HEADERS)
 
 obj\uibase.obj: $(HEADERS)
 
-cryptopp\obj\sha.obj: cryptopp\sha.cpp
-    cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
-
-cryptopp\obj\cpu.obj: cryptopp\cpu.cpp
-    cl $(CFLAGS) /O2 /DCRYPTOPP_DISABLE_ASM /Fo$@ %s
-
 .cpp{obj\nogui}.obj:
     cl $(CFLAGS) /Fo$@ %s
 
@@ -148,13 +136,12 @@ obj\nogui\rpc.obj: $(HEADERS)
 
 obj\nogui\init.obj: $(HEADERS)
 
-bitcoind.exe: $(OBJS:obj\=obj\nogui\) $(CRYPTOPP_OBJS) obj\ui.res
+bitcoind.exe: $(OBJS:obj\=obj\nogui\) obj\ui.res
     link /nologo /OUT:$@ $(LIBPATHS) $** $(LIBS)
 
 clean:
     -del /Q obj\*
     -del /Q obj\nogui\*
-    -del /Q cryptopp\obj\*
     -del /Q *.ilk
     -del /Q *.pdb
     -del /Q bitcoind.exe
