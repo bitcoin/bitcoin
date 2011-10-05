@@ -1,35 +1,38 @@
-# Copyright (c) 2010 Laszlo Hanyecz
+# -*- mode: Makefile; -*-
+# Copyright (c) 2011 Bitcoin Developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 # Mac OS X makefile for bitcoin
-# Laszlo Hanyecz (solar@heliacal.net)
+# Originally by Laszlo Hanyecz (solar@heliacal.net)
 
 CXX=llvm-g++
-DEPSDIR=/Users/macosuser/bitcoin/deps
+DEPSDIR=/opt/local
 
 INCLUDEPATHS= \
- -I"$(DEPSDIR)/include"
+ -I"$(DEPSDIR)/include" \
+ -I"$(DEPSDIR)/include/db48"
 
 LIBPATHS= \
- -L"$(DEPSDIR)/lib"
+ -L"$(DEPSDIR)/lib" \
+ -L"$(DEPSDIR)/lib/db48"
 
-USE_UPNP:=0
+USE_UPNP:=1
 
 LIBS= -dead_strip \
- $(DEPSDIR)/lib/libdb_cxx-4.8.a \
- $(DEPSDIR)/lib/libboost_system.a \
- $(DEPSDIR)/lib/libboost_filesystem.a \
- $(DEPSDIR)/lib/libboost_program_options.a \
- $(DEPSDIR)/lib/libboost_thread.a \
- $(DEPSDIR)/lib/libssl.a \
- $(DEPSDIR)/lib/libcrypto.a 
+ -ldb_cxx-4.8 \
+ -lboost_system-mt \
+ -lboost_filesystem-mt \
+ -lboost_program_options-mt \
+ -lboost_thread-mt \
+ -lssl \
+ -lcrypto
 
-DEFS=-D__WXMAC_OSX__ -DNOPCH -DMSG_NOSIGNAL=0 -DUSE_SSL
+DEFS=-DMSG_NOSIGNAL=0 -DUSE_SSL
 
 DEBUGFLAGS=-g
 # ppc doesn't work because we don't support big-endian
-CFLAGS=-mmacosx-version-min=10.5 -arch i386 -arch x86_64 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-mmacosx-version-min=10.5 -arch i386 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 HEADERS = \
     base58.h \
     bignum.h \
@@ -67,27 +70,42 @@ OBJS= \
     obj/wallet.o
 
 ifdef USE_UPNP
-	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
+	LIBS += -lminiupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
 	
 
 all: bitcoind
 
-obj/nogui/%.o: %.cpp $(HEADERS)
-	$(CXX) -c $(CFLAGS) -o $@ $<
+# auto-generated dependencies:
+-include obj/nogui/*.P
+-include obj/test/*.P
+
+obj/nogui/%.o: %.cpp
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
 bitcoind: $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
-obj/test/test_bitcoin.o: $(wildcard test/*.cpp) $(HEADERS)
-	$(CXX) -c $(CFLAGS) -o $@ test/test_bitcoin.cpp
+obj/test/%.o: test/%.cpp
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
 test_bitcoin: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
-	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
+	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) $(DEPSDIR)/lib/libboost_unit_test_framework-mt.a
 
 clean:
 	-rm -f bitcoind test_bitcoin
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o
+	-rm -f obj/*.P
+	-rm -f obj/nogui/*.P
+	-rm -f obj/test/*.P
