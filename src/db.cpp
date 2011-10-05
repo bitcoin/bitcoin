@@ -520,24 +520,6 @@ bool CAddrDB::LoadAddresses()
 {
     CRITICAL_BLOCK(cs_mapAddresses)
     {
-        // Load user provided addresses
-        CAutoFile filein = fopen((GetDataDir() + "/addr.txt").c_str(), "rt");
-        if (filein)
-        {
-            try
-            {
-                char psz[1000];
-                while (fgets(psz, sizeof(psz), filein))
-                {
-                    CAddress addr(psz, false, NODE_NETWORK);
-                    addr.nTime = 0; // so it won't relay unless successfully connected
-                    if (addr.IsValid())
-                        AddAddress(addr);
-                }
-            }
-            catch (...) { }
-        }
-
         // Get cursor
         Dbc* pcursor = GetCursor();
         if (!pcursor)
