@@ -1767,7 +1767,8 @@ void StartNode(void* parg)
         printf("Error: CreateThread(ThreadIRCSeed) failed\n");
 
     // Send and receive from sockets, accept connections
-    CreateThread(ThreadSocketHandler, NULL);
+    if (!CreateThread(ThreadSocketHandler, NULL))
+        printf("Error: CreateThread(ThreadSocketHandler) failed\n");
 
     // Initiate outbound connections
     if (!CreateThread(ThreadOpenConnections, NULL))
