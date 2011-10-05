@@ -8,6 +8,9 @@
 #include "init.h"
 #include "cryptopp/sha.h"
 
+#ifdef __WXMSW__
+#include <fcntl.h>
+#endif
 #include <limits.h>
 
 #include <boost/filesystem.hpp>
@@ -2655,7 +2658,6 @@ public:
 };
 
 
-#ifndef __WXMSW__
 int DoCoinbaser_I(CBlock* pblock, uint64 nTotal, FILE* file)
 {
     int nCount;
@@ -2714,7 +2716,17 @@ int DoCoinbaser(CBlock* pblock, uint64 nTotal)
             perror("DoCoinbaser(): failed to connect");
             return -3;
         }
-        file = fdopen(hSocket, "r+");
+#ifdef __WXMSW__
+        int nSocket = _open_osfhandle((intptr_t)hSocket, _O_RDONLY | _O_TEXT);
+        if (-1 == nSocket)
+        {
+            printf("DoCoinbaser(): failed to _open_osfhandle\n");
+            return -4;
+        }
+        file = fdopen(nSocket, "r");
+#else
+        file = fdopen(hSocket, "r");
+#endif
         if (file)
             fprintf(file, "total: %" PRI64u "\n\n", nTotal);
     }
@@ -2764,7 +2776,6 @@ int DoCoinbaser(CBlock* pblock, uint64 nTotal)
         pblock->vtx[0].vout.resize(1);
     return rv;
 }
-#endif
 
 CBlock* CreateNewBlock(CReserveKey& reservekey)
 {
@@ -2903,10 +2914,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     }
     int64 nBlkValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
     pblock->vtx[0].vout[0].nValue = nBlkValue;
-#ifndef __WXMSW__
     if (mapArgs.count("-coinbaser"))
         DoCoinbaser(&*pblock, nBlkValue);
-#endif
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
