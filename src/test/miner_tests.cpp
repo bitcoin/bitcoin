@@ -12,20 +12,20 @@ BOOST_AUTO_TEST_CASE(sha256transform_equality)
 
 
     unsigned char pstate[32];
-    unsigned char pinput[32];
+    unsigned char pinput[64];
 
     int i;
 
     for (i = 0; i < 32; i++) {
         pinput[i] = i;
-        pstate[i] = 0;
+        pinput[i+32] = 0;
     }
 
     uint256 hash;
 
     SHA256Transform(&hash, pinput, pSHA256InitState);
 
-		BOOST_TEST_MESSAGE(hash.GetHex());
+    BOOST_TEST_MESSAGE(hash.GetHex());
 
     uint256 hash_reference("0x2df5e1c65ef9f8cde240d23cae2ec036d31a15ec64bc68f64be242b1da6631f3");
 
