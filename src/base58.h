@@ -272,7 +272,7 @@ class CBitcoinAddress : public CBase58Data
 public:
     enum
     {
-        PUBKEY_ADDRESS = 0,
+        PUBKEY_ADDRESS = 48, // Litecoin addresses start with L
         SCRIPT_ADDRESS = 5,
         PUBKEY_ADDRESS_TEST = 111,
         SCRIPT_ADDRESS_TEST = 196,
@@ -398,10 +398,16 @@ bool inline CBitcoinAddressVisitor::operator()(const CNoDestination &id) const {
 class CBitcoinSecret : public CBase58Data
 {
 public:
+    enum
+    {
+        PRIVKEY_ADDRESS = CBitcoinAddress::PUBKEY_ADDRESS + 128,
+        PRIVKEY_ADDRESS_TEST = CBitcoinAddress::PUBKEY_ADDRESS_TEST + 128,
+    };
+
     void SetSecret(const CSecret& vchSecret, bool fCompressed)
     {
         assert(vchSecret.size() == 32);
-        SetData(fTestNet ? 239 : 128, &vchSecret[0], vchSecret.size());
+        SetData(fTestNet ? PRIVKEY_ADDRESS_TEST : PRIVKEY_ADDRESS, &vchSecret[0], vchSecret.size());
         if (fCompressed)
             vchData.push_back(1);
     }
@@ -420,10 +426,10 @@ public:
         bool fExpectTestNet = false;
         switch(nVersion)
         {
-            case 128:
+            case PRIVKEY_ADDRESS:
                 break;
 
-            case 239:
+            case PRIVKEY_ADDRESS_TEST:
                 fExpectTestNet = true;
                 break;
 
