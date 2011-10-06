@@ -662,8 +662,8 @@ inline bool AffinityBugWorkaround(void(*pfn)(void*))
 {
 #ifdef __WXMSW__
     // Sometimes after a few hours affinity gets stuck on one processor
-    DWORD dwProcessAffinityMask = -1;
-    DWORD dwSystemAffinityMask = -1;
+    DWORD_PTR dwProcessAffinityMask = -1;
+    DWORD_PTR dwSystemAffinityMask = -1;
     GetProcessAffinityMask(GetCurrentProcess(), &dwProcessAffinityMask, &dwSystemAffinityMask);
     DWORD dwPrev1 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
     DWORD dwPrev2 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
