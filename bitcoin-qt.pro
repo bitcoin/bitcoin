@@ -47,6 +47,11 @@ contains(USE_SSL, 1) {
     DEFINES += USE_SSL
 }
 
+contains(BITCOIN_NEED_QT_PLUGINS, 1) {
+    DEFINES += BITCOIN_NEED_QT_PLUGINS
+    QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs
+}
+
 # for extra security against potential buffer overflows
 QMAKE_CXXFLAGS += -fstack-protector 
 QMAKE_LFLAGS += -fstack-protector
