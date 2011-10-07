@@ -28,7 +28,7 @@ LIBS= -dead_strip \
  -lssl \
  -lcrypto
 
-DEFS=-DMSG_NOSIGNAL=0 -DUSE_SSL
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_SSL
 
 DEBUGFLAGS=-g
 # ppc doesn't work because we don't support big-endian
@@ -73,7 +73,7 @@ ifdef USE_UPNP
 	LIBS += -lminiupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
-	
+
 
 all: bitcoind
 

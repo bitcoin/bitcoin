@@ -10,7 +10,7 @@
 #include <boost/foreach.hpp>
 #include <openssl/rand.h>
 
-#ifndef __WXMSW__
+#ifndef WIN32
 #include <arpa/inet.h>
 #endif
 

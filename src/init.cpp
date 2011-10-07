@@ -24,7 +24,7 @@ CWallet* pwalletMain;
 
 void ExitTimeout(void* parg)
 {
-#ifdef __WXMSW__
+#ifdef WIN32
     Sleep(5000);
     ExitProcess(0);
 #endif
@@ -121,10 +121,10 @@ bool AppInit2(int argc, char* argv[])
     // Disable confusing "helpful" text message on abort, ctrl-c
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
-#ifndef __WXMSW__
+#ifndef WIN32
     umask(077);
 #endif
-#ifndef __WXMSW__
+#ifndef WIN32
     // Clean shutdown on SIGTERM
     struct sigaction sa;
     sa.sa_handler = HandleSIGTERM;
@@ -192,7 +192,7 @@ bool AppInit2(int argc, char* argv[])
 #ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif
-#ifndef __WXMSW__
+#ifndef WIN32
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
@@ -225,7 +225,7 @@ bool AppInit2(int argc, char* argv[])
     fDebug = GetBoolArg("-debug");
     fAllowDNS = GetBoolArg("-dns");
 
-#ifndef __WXMSW__
+#ifndef WIN32
     fDaemon = GetBoolArg("-daemon");
 #else
     fDaemon = false;
@@ -260,7 +260,7 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
-#ifndef __WXMSW__
+#ifndef WIN32
     if (fDaemon)
     {
         // Daemonize

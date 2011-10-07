@@ -22,7 +22,7 @@
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>  // to get BSD define
 #endif
-#ifdef __WXMAC_OSX__
+#ifdef MAC_OSX
 #ifndef BSD
 #define BSD 1
 #endif
@@ -51,7 +51,7 @@
 
 #include <boost/foreach.hpp>
 
-#ifdef __WXMSW__
+#ifdef WIN32
 #include <windows.h>
 #include <winsock2.h>
 #include <mswsock.h>
