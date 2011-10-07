@@ -17,6 +17,10 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
 {
     ui->setupUi(this);
 
+#ifdef Q_WS_MAC
+    ui->payToLayout->setSpacing(4);
+#endif
+
 #if QT_VERSION >= 0x040700
     ui->payTo->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));

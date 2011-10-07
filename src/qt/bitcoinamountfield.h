@@ -4,7 +4,7 @@
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
-class QValidatedLineEdit;
+class QDoubleSpinBox;
 class QValueComboBox;
 QT_END_NAMESPACE
 
@@ -13,7 +13,7 @@ QT_END_NAMESPACE
 class BitcoinAmountField: public QWidget
 {
     Q_OBJECT
-    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY textChanged USER true);
+    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY textChanged USER true)
 public:
     explicit BitcoinAmountField(QWidget *parent = 0);
 
@@ -38,12 +38,11 @@ signals:
     void textChanged();
 
 protected:
-    // Intercept '.' and ',' keys, if pressed focus a specified widget
+    // Intercept focus-in event and ',' keypresses
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    QValidatedLineEdit *amount;
-    QValidatedLineEdit *decimals;
+    QDoubleSpinBox *amount;
     QValueComboBox *unit;
     int currentUnit;
 
