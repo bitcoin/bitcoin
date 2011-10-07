@@ -211,10 +211,10 @@ isEmpty(BOOST_INCLUDE_PATH) {
 }
 
 windows:LIBS += -lws2_32 -lgdi32
-windows:DEFINES += __WXMSW__
+windows:DEFINES += WIN32
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
-macx:DEFINES += __WXMAC_OSX__ MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
+macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
 macx:ICON = src/qt/res/icons/bitcoin.icns
 macx:TARGET = "Bitcoin Qt"
 
