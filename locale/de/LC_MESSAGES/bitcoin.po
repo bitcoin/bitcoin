@@ -47,7 +47,7 @@ msgstr "Konfigurationsdatei bestimmen (Standard: bitcoin.conf)\n"
 
 #: ../../../src/init.cpp:170
 msgid "Specify pid file (default: bitcoind.pid)\n"
-msgstr "pid-Datei bestimmen (Standard: bitcoind.pid)\n"
+msgstr "Pid-Datei bestimmen (Standard: bitcoind.pid)\n"
 
 #: ../../../src/init.cpp:171
 msgid "Generate coins\n"
@@ -107,7 +107,7 @@ msgstr "Akzeptiere Kommandozeile und JSON-RPC-Befehle\n"
 
 #: ../../../src/init.cpp:193
 msgid "Run in the background as a daemon and accept commands\n"
-msgstr "Laufe im Hintergrund als Daemon und akzeptiere Befehle\n"
+msgstr "Laufe als Hintergrundprozess (daemon) und akzeptiere Befehle\n"
 
 #: ../../../src/init.cpp:195
 msgid "Use the test network\n"
@@ -147,7 +147,7 @@ msgid ""
 "SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
 msgstr ""
 "\n"
-"SSL-Optionen: (siehe das Bitcoin-Wiki für SSL-Installationsanleitungen)\n"
+"SSL-Optionen: (siehe im Bitcoin-Wiki für eine SSL-Installationsanleitungen)\n"
 
 #: ../../../src/init.cpp:207
 msgid "Use OpenSSL (https) for JSON-RPC connections\n"
@@ -163,7 +163,7 @@ msgstr "Server-Geheimschlüssel (Standard: server.pem)\n"
 
 #: ../../../src/init.cpp:210
 msgid "Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
-msgstr "Anzunehmende Verschlüsselungen (Standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+msgstr "Zu akzeptierende Verschlüsselungen (Standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
 
 #: ../../../src/init.cpp:214
 msgid "This help message\n"
@@ -196,7 +196,7 @@ msgstr "Fehler beim Laden von wallet.dat      \n"
 
 #: ../../../src/init.cpp:488
 msgid "Invalid -proxy address"
-msgstr "Ungültige -Proxy Adresse"
+msgstr "Ungültige -proxy Adresse"
 
 #: ../../../src/init.cpp:513
 msgid "Invalid amount for -paytxfee=<amount>"
@@ -230,7 +230,7 @@ msgid ""
 msgstr ""
 "Warnung: %s, müssen Sie rpcpassword=<password>\n"
 "in der Konfigurationsdatei %s einstellen.\n"
-"Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten.\n"
+"Wenn die Datei nicht existiert, erstellen Sie sie mit Leserechten ausschließlich für den Besitzer.\n"
 
 #: ../../../src/rpc.cpp:2263
 #, c-format
@@ -240,18 +240,18 @@ msgid ""
 "If the file does not exist, create it with owner-readable-only file permissions."
 msgstr ""
 "Sie müssen rpcpassword=<password> in der Konfigurationsdatei\n"
-"\"%s\" einstellen.\n"
-"Wenn die Datei nicht existiert, erstellen Sie sie mit ausschließlich Besitzer-Leserechten."
+"\"%s\" eingeben.\n"
+"Wenn die Datei nicht existiert, erstellen Sie sie mit Leserechten ausschließlich für den Besitzer."
 
 #: ../../../src/ui.cpp:216
 #, c-format
 msgid "This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?"
-msgstr "Diese Überweisung übersteigt das Betragslimit. Sie können sie trotzdem tätigen, aber es wird eine Gebühr von %s erhoben, die an den Teilnehmer ausgeschüttet wird, der Ihre Überweisung bearbeitet und dadurch hilft, das Netzwerk am laufen zu halten. Möchten Sie die Gebühr entrichten?"
+msgstr "Diese Überweisung übersteigt das Betragslimit. Sie können sie trotzdem tätigen, aber es wird eine Gebühr von %s erhoben, die an den Teilnehmer ausgeschüttet wird, der Ihre Überweisung bearbeitet und dadurch hilft, das Netzwerk am laufen zu halten. Möchten Sie diese Gebühr entrichten?"
 
 #: ../../../src/ui.cpp:260
 #: ../../../src/ui.cpp:1246
 msgid "Enter the current passphrase to the wallet."
-msgstr "Geben Sie die derzeitige Passphrase der Brieftasche ein."
+msgstr "Geben Sie das derzeitige Verschlüsselungs-Kennwort der Brieftasche ein."
 
 # See http://dict.leo.org/forum/viewUnsolvedquery.php?idThread=465865&idForum=2&lp=ende&lang=de
 #: ../../../src/ui.cpp:261
@@ -265,13 +265,13 @@ msgstr "Passphrase"
 
 #: ../../../src/ui.cpp:267
 msgid "Please supply the current wallet decryption passphrase."
-msgstr "Bitte geben Sie die derzeitige Passphrase zur Entschlüsselung der Brieftasche an."
+msgstr "Bitte geben Sie das derzeitige Verschlüsselungs-Kennwort zur Dekodierung der Brieftasche an."
 
 #: ../../../src/ui.cpp:275
 #: ../../../src/ui.cpp:1258
 #: ../../../src/ui.cpp:1315
 msgid "The passphrase entered for the wallet decryption was incorrect."
-msgstr "Die eingegebene Passphrase zur Entschlüsselung der Brieftasche war inkorrekt."
+msgstr "Das eingegebene Verschlüsselungs-Kennwort zur Dekodierung der Brieftasche war inkorrekt."
 
 #: ../../../src/ui.cpp:352
 msgid "Status"
@@ -373,30 +373,30 @@ msgid ""
 "Enter the new passphrase to the wallet.\n"
 "Please use a passphrase of 10 or more random characters, or eight or more words."
 msgstr ""
-"Geben Sie die neue Passphrase der Brieftasche ein.\n"
-"Bitte benutzen Sie eine Passphrase mit zehn oder mehr zufällig gewählten Zeichen, oder acht oder mehr Wörter."
+"Geben Sie das neue Verschlüsselungs-Kennwort der Brieftasche ein.\n"
+"Bitte benutzen Sie ein Verschlüsselungs-Kennwort mit zehn oder mehr zufällig gewählten Zeichen, oder acht oder mehr Wörter."
 
 #: ../../../src/ui.cpp:1188
 #: ../../../src/ui.cpp:1281
 msgid "Error: The supplied passphrase was too short."
-msgstr "Fehler: Die angegebene Passphrase war zu kurz. "
+msgstr "Fehler: Das angegebene Verschlüsselungs-Kennwort ist zu kurz. "
 
 #: ../../../src/ui.cpp:1192
 msgid ""
 "WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\n"
 "Are you sure you wish to encrypt your wallet?"
 msgstr ""
-"WARNUNG: Wenn Sie Ihre Brieftasche verschlüsseln und die Passphrase verlieren, werden Sie ALLE IHRE BITCOINS VERLIEREN!\n"
-"Sind Sie sicher, dass Sie Ihre Brieftasche verschlüsseln wollen?"
+"WARNUNG: Wenn Sie Ihre Brieftasche enkodieren und das Verschlüsselungs-Kennwort verlieren, VERLIEREN SIE ALLE IHRE BITCOINS!\n"
+"Sind Sie sicher, dass Sie Ihre Brieftasche enkodieren wollen?"
 
 #: ../../../src/ui.cpp:1198
 msgid "Please re-enter your new wallet passphrase."
-msgstr "Bitte geben Sie erneut Ihre neue Passphrase der Brieftasche ein."
+msgstr "Bitte geben Sie erneut Ihr neues Verschlüsselungs-Kennwort der Brieftasche ein."
 
 #: ../../../src/ui.cpp:1207
 #: ../../../src/ui.cpp:1303
 msgid "Error: the supplied passphrases didn't match."
-msgstr "Fehler: Die angegebenen Passphrasen stimmten nicht überein."
+msgstr "Fehler: Die angegebenen Verschlüsselungs-Kennworter stimmten nicht überein."
 
 #: ../../../src/ui.cpp:1217
 msgid "Wallet encryption failed."
@@ -416,15 +416,15 @@ msgstr "Die Brieftasche ist nicht verschlüsselt, bitte verschlüsselen Sie sie 
 
 #: ../../../src/ui.cpp:1272
 msgid "Enter the new passphrase for the wallet."
-msgstr "Geben Sie die neue Passphrase der Brieftasche ein."
+msgstr "Geben Sie das neue Verschlüsselungs-Kennwort der Brieftasche ein."
 
 #: ../../../src/ui.cpp:1292
 msgid "Re-enter the new passphrase for the wallet."
-msgstr "Geben Sie erneut die neue Passphrase der Brieftasche ein."
+msgstr "Geben Sie erneut das neue Verschlüsselungs-Kennwort der Brieftasche ein."
 
 #: ../../../src/ui.cpp:1324
 msgid "Wallet Passphrase Changed."
-msgstr "Die Passphrase der Brieftasche wurde geändert."
+msgstr "Das Verschlüsselungs-Kennwort der Brieftasche wurde geändert."
 
 #: ../../../src/ui.cpp:1381
 #: ../../../src/ui.cpp:2814
@@ -535,7 +535,7 @@ msgstr "Erzeugte Münzen müssen 120 Blöcke lang reifen. Als Sie diesen Block e
 
 #: ../../../src/ui.cpp:1824
 msgid "Cannot write autostart/bitcoin.desktop file"
-msgstr "Kann Datei autostart/bitcoin.desktop nicht schreiben"
+msgstr "Kein Schreibzugriff auf die Datei autostart/bitcoin.desktop"
 
 #: ../../../src/ui.cpp:1860
 msgid "Main"
@@ -677,7 +677,7 @@ msgstr "Überweise Zahlung ..."
 
 #: ../../../src/ui.cpp:2531
 msgid "The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
-msgstr "Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. Bitcoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert worden."
+msgstr "Die Überweisung wurde abgelehnt. Das kann passieren, wenn einige der Münzen in Ihrer Brieftasche bereits ausgegeben wurden, z.B. weil Sie eine Kopie der Brieftasche (wallet.dat) gemacht haben. Bitcoins, die mithilfe der Kopie ausgegeben wurden, sind in dieser Brieftasche noch nicht als ausgegeben markiert."
 
 #: ../../../src/ui.cpp:2540
 msgid "Waiting for confirmation..."
@@ -691,11 +691,11 @@ msgid ""
 msgstr ""
 "Die Zahlung wurde überwiesen, aber der Empfänger konnte sie nicht bestätigen.\n"
 "Die Überweisung wurde gespeichert und wird dem Empfänger gutgeschrieben,\n"
-"aber die begleitende Nachricht wird leer sein."
+"jedoch die begleitende Nachricht wird leer sein."
 
 #: ../../../src/ui.cpp:2567
 msgid "Payment was sent, but an invalid response was received"
-msgstr "Die Zahlung wurde überwiesen, aber die Antwort war fehlerhaft"
+msgstr "Die Zahlung wurde eingereicht, aber die Antwort war fehlerhaft"
 
 #: ../../../src/ui.cpp:2573
 msgid "Payment completed"
@@ -784,11 +784,11 @@ msgstr "&Ihre Empfangs-Adressen..."
 
 #: ../../../src/uibase.cpp:35
 msgid "&Encrypt Wallet..."
-msgstr "Bri&eftasche verschlüsseln..."
+msgstr "Brieftasche &verschlüsseln..."
 
 #: ../../../src/uibase.cpp:38
 msgid "&Change Wallet Encryption Passphrase..."
-msgstr "Passphrase der Vers&chlüsselung der Brieftasche ändern..."
+msgstr "Verschlüsselungs-Kennwort der Brieftasche &ändern..."
 
 #: ../../../src/uibase.cpp:42
 msgid "&Options..."
@@ -800,7 +800,7 @@ msgstr "&Einstellungen"
 
 #: ../../../src/uibase.cpp:49
 msgid "&About..."
-msgstr "Ü&ber..."
+msgstr "&Über..."
 
 #: ../../../src/uibase.cpp:52
 msgid "&Help"
