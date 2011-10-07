@@ -77,7 +77,7 @@ all: bitcoind.exe
 obj/nogui/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
+bitcoind.exe: $(OBJS:obj/%=obj/nogui/%)
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 obj/test/test_bitcoin.o: $(wildcard test/*.cpp) $(HEADERS)
