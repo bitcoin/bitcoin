@@ -1,5 +1,6 @@
 TEMPLATE = app
 TARGET =
+VERSION = 0.5.0
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI
 CONFIG += no_include_pwd
