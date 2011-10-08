@@ -1603,6 +1603,35 @@ Value validateaddress(const Array& params, bool fHelp)
 }
 
 
+Value setworkaux(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setworkaux <id> [data]\n"
+            "If [data] is not specified, deletes aux.\n"
+        );
+
+    std::string strId = params[0].get_str();
+    if (params.size() > 1)
+    {
+        std::string strData = params[1].get_str();
+        std::vector<unsigned char> vchData = ParseHex(strData);
+        if (vchData.size() * 2 != strData.size())
+            throw JSONRPCError(-8, "Failed to parse data as hexadecimal");
+        CScript scriptBackup = mapAuxCoinbases[strId];
+        mapAuxCoinbases[strId] = CScript(vchData);
+        bool fOverflow;
+        BuildCoinbaseScriptSig(0, UINT_MAX, &fOverflow);
+        if (fOverflow)
+            throw JSONRPCError(-7, "Change would overflow coinbase script");
+    }
+    else
+        mapAuxCoinbases.erase(strId);
+
+    return true;
+}
+
+
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -1747,7 +1776,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             // Create new block
             if(pblock)
                 delete pblock;
-            pblock = CreateNewBlock(reservekey);
+            pblock = CreateNewBlock(reservekey, false);
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
         }
@@ -1838,6 +1867,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listtransactions",       &listtransactions),
     make_pair("signmessage",           &signmessage),
     make_pair("verifymessage",         &verifymessage),
+    make_pair("setworkaux",             &setworkaux),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
