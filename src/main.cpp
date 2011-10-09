@@ -6,7 +6,6 @@
 #include "db.h"
 #include "net.h"
 #include "init.h"
-#include "cryptopp/sha.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -1338,7 +1337,7 @@ bool CBlock::AcceptBlock()
     return true;
 }
 
-bool static ProcessBlock(CNode* pfrom, CBlock* pblock)
+bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 {
     // Check for duplicate
     uint256 hash = pblock->GetHash();
@@ -2614,15 +2613,25 @@ int static FormatHashBlocks(void* pbuffer, unsigned int len)
     return blocks;
 }
 
-using CryptoPP::ByteReverse;
-
 static const unsigned int pSHA256InitState[8] =
 {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
-inline void SHA256Transform(void* pstate, void* pinput, const void* pinit)
+void SHA256Transform(void* pstate, void* pinput, const void* pinit)
 {
-    memcpy(pstate, pinit, 32);
-    CryptoPP::SHA256::Transform((CryptoPP::word32*)pstate, (CryptoPP::word32*)pinput);
+    SHA256_CTX ctx;
+    unsigned char data[64];
+
+    SHA256_Init(&ctx);
+
+    for (int i = 0; i < 16; i++)
+        ((uint32_t*)data)[i] = ByteReverse(((uint32_t*)pinput)[i]);
+
+    for (int i = 0; i < 8; i++)
+        ctx.h[i] = ((uint32_t*)pinit)[i];
+
+    SHA256_Update(&ctx, data, sizeof(data));
+    for (int i = 0; i < 8; i++) 
+        ((uint32_t*)pstate)[i] = ctx.h[i];
 }
 
 //
@@ -2923,7 +2932,6 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
             return error("BitcoinMiner : ProcessBlock, block not accepted");
     }
 
-    Sleep(2000);
     return true;
 }
 

@@ -30,7 +30,7 @@ typedef unsigned long long  uint64;
 #define for  if (false) ; else for
 #endif
 
-#ifdef __WXMSW__
+#ifdef WIN32
 #include <windows.h>
 // This is used to attempt to keep keying material out of swap
 // Note that VirtualLock does not provide this as a guarantee on Windows,

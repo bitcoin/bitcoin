@@ -5,7 +5,6 @@
 
 #include "headers.h"
 #include "db.h"
-#include "cryptopp/sha.h"
 #include "crypter.h"
 
 using namespace std;

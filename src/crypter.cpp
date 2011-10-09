@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 #include "headers.h"
-#ifdef __WXMSW__
+#ifdef WIN32
 #include <windows.h>
 #endif
 
