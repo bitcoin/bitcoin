@@ -1773,7 +1773,14 @@ Value getmemorypool(const Array& params, bool fHelp)
         result.push_back(Pair("transactions", transactions));
         result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
         result.push_back(Pair("time", (int64_t)pblock->nTime));
-        result.push_back(Pair("bits", (int64_t)pblock->nBits));
+
+        union {
+            int32_t nBits;
+            char cBits[4];
+        } uBits;
+        uBits.nBits = htonl((int32_t)pblock->nBits);
+        result.push_back(Pair("bits", HexStr(BEGIN(uBits.cBits), END(uBits.cBits))));
+
         return result;
     }
     else
