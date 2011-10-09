@@ -22,38 +22,63 @@ the graphical bitcoin.
 
 Dependencies
 ------------
+
+ Library    Purpose       Description
+ -------    -------       -----------
+ libssl     SSL Support   Secure communications
+ libdb4.8   Berkeley DB   Blockchain & wallet storage
+ libboost   Boost         C++ Library
+ miniupnpc  UPnP Support  Optional firewall-jumping support
+
+miniupnpc may be used for UPnP port mapping.  It can be downloaded from
+http://miniupnp.tuxfamily.org/files/.  UPnP support is compiled in and
+turned off by default.  Set USE_UPNP to a different value to control this:
+ USE_UPNP=     No UPnP support - miniupnp not required
+ USE_UPNP=0    (the default) UPnP support turned off by default at runtime
+ USE_UPNP=1    UPnP support turned on by default at runtime
+
+Licenses of statically linked libraries:
+ Berkeley DB   New BSD license with additional requirement that linked
+               software must be free open source
+ Boost         MIT-like license
+ miniupnpc     New (3-clause) BSD license
+
+Versions used in this release:
+ GCC           4.3.3
+ OpenSSL       0.9.8g
+ Berkeley DB   4.8.30.NC
+ Boost         1.37
+ miniupnpc     1.6
+
+
+Dependency Build Instructions: Ubuntu & Debian
+----------------------------------------------
 sudo apt-get install build-essential
 sudo apt-get install libssl-dev
 sudo apt-get install libdb4.8-dev
 sudo apt-get install libdb4.8++-dev
-Boost 1.40+: sudo apt-get install libboost-all-dev
-or Boost 1.37: sudo apt-get install libboost1.37-dev
+ Boost 1.40+: sudo apt-get install libboost-all-dev
+ or Boost 1.37: sudo apt-get install libboost1.37-dev
 
 If using Boost 1.37, append -mt to the boost libraries in the makefile.
 
-Requires miniupnpc for UPnP port mapping.  It can be downloaded from
-http://miniupnp.tuxfamily.org/files/.  UPnP support is compiled in and
-turned off by default.  Set USE_UPNP to a different value to control this:
-USE_UPNP=   no UPnP support, miniupnp not required;
-USE_UPNP=0  (the default) UPnP support turned off by default at runtime;
-USE_UPNP=1  UPnP support turned on by default at runtime.
 
-Licenses of statically linked libraries:
-Berkeley DB    New BSD license with additional requirement that linked software must be free open source
-Boost          MIT-like license
-miniupnpc      New (3-clause) BSD license
+Dependency Build Instructions: Gentoo
+-------------------------------------
+emerge -av boost openssl sys-libs/db
 
-Versions used in this release:
-GCC          4.3.3
-OpenSSL      0.9.8g
-Berkeley DB  4.8.30.NC
-Boost        1.37
-miniupnpc    1.6
+Take the following steps to build (no UPnP support):
+ cd ${BITCOIN_DIR}/src
+ sed -i 's/<db_cxx.h>/<db4.8\/db_cxx.h>/' *.h        # path fix
+ sed -i 's/-Bstatic/-Bdynamic/' makefile.unix        # dynamic linking
+ sed -i 's/^USE_UPNP:=0$/USE_UPNP:=/' makefile.unix  # disable UPnP
+ make -f makefile.unix
+ strip bitcoind
 
 
 Notes
 -----
-The release is built with GCC and then "strip bitcoin" to strip the debug
+The release is built with GCC and then "strip bitcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 
