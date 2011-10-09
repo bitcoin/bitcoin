@@ -65,9 +65,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Menus
     QMenu *file = menuBar()->addMenu(tr("&File"));
-    file->addAction(sendCoinsAction);
-    file->addAction(receiveCoinsAction);
-    file->addSeparator();
     file->addAction(quitAction);
     
     QMenu *settings = menuBar()->addMenu(tr("&Settings"));
@@ -197,8 +194,9 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
 
-    quitAction = new QAction(QIcon(":/icons/quit"), tr("&Exit"), this);
+    quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setToolTip(tr("Quit application"));
+    quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About"), this);
     aboutAction->setToolTip(tr("Show information about Bitcoin"));
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
