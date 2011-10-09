@@ -28,7 +28,7 @@ Dependencies
  libssl     SSL Support   Secure communications
  libdb4.8   Berkeley DB   Blockchain & wallet storage
  libboost   Boost         C++ Library
- miinupnpc  UPnP Support  Optional firewall-jumping support
+ miniupnpc  UPnP Support  Optional firewall-jumping support
 
 miniupnpc may be used for UPnP port mapping.  It can be downloaded from
 http://miniupnp.tuxfamily.org/files/.  UPnP support is compiled in and
@@ -65,9 +65,9 @@ If using Boost 1.37, append -mt to the boost libraries in the makefile.
 
 Dependency Build Instructions: Gentoo
 -------------------------------------
-emerge -av net-libs/miniupnpc boost openssl sys-libs/db
+emerge -av boost openssl sys-libs/db
 
-Then take the following steps to build:
+Take the following steps to build (no UPnP support):
  cd ${BITCOIN_DIR}/src
  sed -i 's/<db_cxx.h>/<db4.8\/db_cxx.h>/' *.h        # path fix
  sed -i 's/-Bstatic/-Bdynamic/' makefile.unix        # dynamic linking
