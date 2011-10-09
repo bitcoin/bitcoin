@@ -68,8 +68,8 @@ Dependency Build Instructions: Gentoo
 emerge -av net-libs/miniupnpc boost openssl sys-libs/db
 
 Then take the following steps to build:
- cd $BITCOIN_DIR/src
- sed -i 's/<db_cxx.h>/<db4.8\/db_cxx.h>/' src/*
+ cd ${BITCOIN_DIR}/src
+ sed -i 's/<db_cxx.h>/<db4.8\/db_cxx.h>/' *
  sed -i 's/-Bstatic/-Bdynamic/' makefile.unix
  make -f makefile.unix
  strip bitcoind
