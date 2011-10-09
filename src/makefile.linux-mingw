@@ -51,6 +51,7 @@ HEADERS = \
     util.h \
     wallet.h
 
+
 ifdef USE_UPNP
 	LIBPATHS += -L"$(DEPSDIR)/miniupnpc"
 	LIBS += -l miniupnpc -l iphlpapi
@@ -71,20 +72,14 @@ OBJS= \
     obj/bitcoinrpc.o \
     obj/script.o \
     obj/util.o \
-    obj/wallet.o \
-    cryptopp/obj/sha.o \
-    cryptopp/obj/cpu.o
-
+    obj/wallet.o
 
 all: bitcoind.exe
-
-cryptopp/obj/%.o: cryptopp/%.cpp
-	i586-mingw32msvc-g++ -c $(CFLAGS) -O3 -DCRYPTOPP_DISABLE_ASM -o $@ $<
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/nogui/%) obj/ui_res.o
+bitcoind.exe: $(OBJS:obj/%=obj/nogui/%)
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
@@ -99,7 +94,6 @@ clean:
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o
-	-rm -f cryptopp/obj/*.o
 	-rm -f test/*.o
 	-rm -f headers.h.gch
 	-rm -f bitcoind.exe
