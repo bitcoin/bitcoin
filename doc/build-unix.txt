@@ -69,8 +69,9 @@ emerge -av net-libs/miniupnpc boost openssl sys-libs/db
 
 Then take the following steps to build:
  cd ${BITCOIN_DIR}/src
- sed -i 's/<db_cxx.h>/<db4.8\/db_cxx.h>/' *
- sed -i 's/-Bstatic/-Bdynamic/' makefile.unix
+ sed -i 's/<db_cxx.h>/<db4.8\/db_cxx.h>/' *.h        # path fix
+ sed -i 's/-Bstatic/-Bdynamic/' makefile.unix        # dynamic linking
+ sed -i 's/^USE_UPNP:=0$/USE_UPNP:=/' makefile.unix  # disable UPnP
  make -f makefile.unix
  strip bitcoind
 
