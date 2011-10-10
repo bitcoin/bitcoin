@@ -168,8 +168,10 @@ FORMS += \
 CODECFORTR = UTF-8
 
 # for lrelease/lupdate
-TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts \
-               src/qt/locale/bitcoin_ru.ts
+TRANSLATIONS = src/qt/locale/bitcoin_de.ts \
+    src/qt/locale/bitcoin_es.ts \
+    src/qt/locale/bitcoin_nl.ts \
+    src/qt/locale/bitcoin_ru.ts
 
 isEmpty(QMAKE_LRELEASE) {
     win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\lrelease.exe
