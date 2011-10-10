@@ -16,26 +16,18 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "wxwidgets-win32-2.9.2-gitian.zip"
+- "qt-win32-4.7.4-gitian.zip"
 - "boost-win32-1.47.0-gitian.zip"
 - "openssl-1.0.0e.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
 script: |
   #
-  mkdir wxWidgets-2.9.2
-  cd wxWidgets-2.9.2
-  mkdir lib
-  unzip ../wxwidgets-win32-2.9.2-gitian.zip
-  cd bin/$GBUILD_BITS
-  for lib in wx_mswu; do
-    i586-mingw32msvc-ar rc ../../lib/lib${lib}-2.9-i586-mingw32msvc.a $lib/*.o
-    i586-mingw32msvc-ranlib ../../lib/lib${lib}-2.9-i586-mingw32msvc.a
-  done
-  cp -a wx ../../lib
-  cd ../..
-  mv include/wx-2.9/wx include
-  cd ..
+  mkdir $HOME/qt
+  cd $HOME/qt
+  unzip ../build/qt-win32-4.7.4-gitian.zip
+  cd $HOME/build/
+  export PATH=$PATH:$HOME/qt/bin/
   #
   mkdir boost_1_47_0
   cd boost_1_47_0
@@ -74,7 +66,6 @@ script: |
   mkdir -p $OUTDIR/src
   cp -a . $OUTDIR/src
   rm -rf $OUTDIR/src/.git
-  cp -a $OUTDIR/src/locale $OUTDIR
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
   cp $OUTDIR/src/COPYING $OUTDIR/license.txt
   $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.0e OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.0e/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease
@@ -86,11 +77,9 @@ script: |
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoin.exe USE_UPNP=1
   make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoind.exe USE_UPNP=0
-  i586-mingw32msvc-strip bitcoin.exe
   i586-mingw32msvc-strip bitcoind.exe
   makensis ../share/setup.nsi
-  cp bitcoin.exe ../share/bitcoin-*-win32-setup.exe $OUTDIR/
+  cp ../share/bitcoin-*-win32-setup.exe $OUTDIR/
   mkdir $OUTDIR/daemon
   cp bitcoind.exe $OUTDIR/daemon
