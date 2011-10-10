@@ -18,7 +18,13 @@
 #endif
 #define _WIN32_IE 0x0400
 #define WIN32_LEAN_AND_MEAN 1
+
+// Include boost/foreach here as it defines __STDC_LIMIT_MACROS on some systems.
+#include <boost/foreach.hpp>
+#ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS // to enable UINT64_MAX from stdint.h
+#endif
+
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>  // to get BSD define
 #endif
@@ -48,8 +54,6 @@
 #include <list>
 #include <deque>
 #include <map>
-
-#include <boost/foreach.hpp>
 
 #ifdef WIN32
 #include <windows.h>
