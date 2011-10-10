@@ -199,6 +199,10 @@ isEmpty(BDB_LIB_PATH) {
     macx:BDB_LIB_PATH = /opt/local/lib/db48
 }
 
+isEmpty(BDB_LIB_SUFFIX) {
+    macx:BDB_LIB_SUFFIX = -4.8
+}
+
 isEmpty(BDB_INCLUDE_PATH) {
     macx:BDB_INCLUDE_PATH = /opt/local/include/db48
 }
@@ -217,7 +221,7 @@ windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
 macx:ICON = src/qt/res/icons/bitcoin.icns
-macx:TARGET = "Bitcoin Qt"
+macx:TARGET = "Bitcoin-Qt"
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH

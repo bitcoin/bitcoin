@@ -19,7 +19,19 @@ LIBPATHS= \
 
 USE_UPNP:=1
 
-LIBS= -dead_strip \
+LIBS= -dead_strip
+ifdef STATIC
+# Build STATIC if you are redistributing the bitcoind binary
+LIBS += \
+ $(DEPSDIR)/lib/db48/libdb_cxx-4.8.a \
+ $(DEPSDIR)/lib/libboost_system-mt.a \
+ $(DEPSDIR)/lib/libboost_filesystem-mt.a \
+ $(DEPSDIR)/lib/libboost_program_options-mt.a \
+ $(DEPSDIR)/lib/libboost_thread-mt.a \
+ $(DEPSDIR)/lib/libssl.a \
+ $(DEPSDIR)/lib/libcrypto.a
+else
+LIBS += \
  -ldb_cxx-4.8 \
  -lboost_system-mt \
  -lboost_filesystem-mt \
@@ -27,6 +39,7 @@ LIBS= -dead_strip \
  -lboost_thread-mt \
  -lssl \
  -lcrypto
+endif
 
 DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_SSL
 
@@ -70,8 +83,12 @@ OBJS= \
     obj/wallet.o
 
 ifdef USE_UPNP
-	LIBS += -lminiupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
+ifdef STATIC
+	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
+else
+	LIBS += -lminiupnpc
+endif
 endif
 
 
