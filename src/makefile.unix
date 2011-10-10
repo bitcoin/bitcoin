@@ -45,7 +45,6 @@ endif
 
 LIBS+= \
  -Wl,-B$(LMODE2) \
-   -l gthread-2.0 \
    -l z \
    -l dl \
    -l pthread
