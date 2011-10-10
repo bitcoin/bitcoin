@@ -40,6 +40,7 @@ bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector
         else
             return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey, vchCryptedSecret);
     }
+    return false;
 }
 
 bool CWallet::Unlock(const string& strWalletPassphrase)
