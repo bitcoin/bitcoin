@@ -2,6 +2,7 @@
 #include "ui_addressbookpage.h"
 
 #include "addresstablemodel.h"
+#include "bitcoingui.h"
 #include "editaddressdialog.h"
 #include "csvmodelwriter.h"
 
@@ -114,6 +115,24 @@ void AddressBookPage::on_copyToClipboard_clicked()
     }
 }
 
+void AddressBookPage::on_signMessage_clicked()
+{
+    QTableView *table = ui->tableView;
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+    QString addr;
+
+    foreach (QModelIndex index, indexes)
+    {
+        QVariant address = index.data();
+        addr = address.toString();
+    }
+
+    QObject *qoGUI = parent()->parent();
+    BitcoinGUI *gui = qobject_cast<BitcoinGUI *>(qoGUI);
+    if (gui)
+        gui->gotoMessagePage(addr);
+}
+
 void AddressBookPage::on_newAddressButton_clicked()
 {
     if(!model)
@@ -163,9 +182,11 @@ void AddressBookPage::selectionChanged()
         {
         case SendingTab:
             ui->deleteButton->setEnabled(true);
+            ui->signMessage->setEnabled(false);
             break;
         case ReceivingTab:
             ui->deleteButton->setEnabled(false);
+            ui->signMessage->setEnabled(true);
             break;
         }
         ui->copyToClipboard->setEnabled(true);
@@ -174,6 +195,7 @@ void AddressBookPage::selectionChanged()
     {
         ui->deleteButton->setEnabled(false);
         ui->copyToClipboard->setEnabled(false);
+        ui->signMessage->setEnabled(false);
     }
 }
 
