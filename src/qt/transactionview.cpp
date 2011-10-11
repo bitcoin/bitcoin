@@ -38,13 +38,20 @@ TransactionView::TransactionView(QWidget *parent) :
 
     QHBoxLayout *hlayout = new QHBoxLayout();
     hlayout->setContentsMargins(0,0,0,0);
+#ifdef Q_WS_MAC
+    hlayout->setSpacing(5);
+    hlayout->addSpacing(26);
+#else
     hlayout->setSpacing(0);
-
     hlayout->addSpacing(23);
+#endif
 
     dateWidget = new QComboBox(this);
-    dateWidget->setMaximumWidth(120);
-    dateWidget->setMinimumWidth(120);
+#ifdef Q_WS_MAC
+    dateWidget->setFixedWidth(121);
+#else
+    dateWidget->setFixedWidth(120);
+#endif
     dateWidget->addItem(tr("All"), All);
     dateWidget->addItem(tr("Today"), Today);
     dateWidget->addItem(tr("This week"), ThisWeek);
@@ -55,8 +62,11 @@ TransactionView::TransactionView(QWidget *parent) :
     hlayout->addWidget(dateWidget);
 
     typeWidget = new QComboBox(this);
-    typeWidget->setMaximumWidth(120);
-    typeWidget->setMinimumWidth(120);
+#ifdef Q_WS_MAC
+    typeWidget->setFixedWidth(121);
+#else
+    typeWidget->setFixedWidth(120);
+#endif
 
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
     typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(TransactionRecord::RecvWithAddress) |
@@ -79,8 +89,11 @@ TransactionView::TransactionView(QWidget *parent) :
 #if QT_VERSION >= 0x040700
     amountWidget->setPlaceholderText(tr("Min amount"));
 #endif
-    amountWidget->setMaximumWidth(100);
-    amountWidget->setMinimumWidth(100);
+#ifdef Q_WS_MAC
+    amountWidget->setFixedWidth(97);
+#else
+    amountWidget->setFixedWidth(100);
+#endif
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
     hlayout->addWidget(amountWidget);
 
@@ -96,7 +109,11 @@ TransactionView::TransactionView(QWidget *parent) :
     vlayout->setSpacing(0);
     int width = view->verticalScrollBar()->sizeHint().width();
     // Cover scroll bar width with spacing
+#ifdef Q_WS_MAC
+    hlayout->addSpacing(width+2);
+#else
     hlayout->addSpacing(width);
+#endif
     // Always show scroll bar
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     view->setTabKeyNavigation(false);

@@ -119,13 +119,13 @@ http://miniupnp.tuxfamily.org/files/.  UPnP support is not compiled in by defaul
 
 Set USE_UPNP to a different value to control this:
 
-+------------+--------------------------------------------------------------+
-| USE_UPNP=  | (the default) no UPnP support, miniupnpc not required;       |
-+------------+--------------------------------------------------------------+
-| USE_UPNP=0 | UPnP support turned off by default at runtime;               |
-+------------+--------------------------------------------------------------+
-| USE_UPNP=1 | UPnP support turned on by default at runtime.                |
-+------------+--------------------------------------------------------------+
++------------+--------------------------------------------------------------------------+
+| USE_UPNP=- | no UPnP support, miniupnpc not required;                                 |
++------------+--------------------------------------------------------------------------+
+| USE_UPNP=0 | (the default) built with UPnP, support turned off by default at runtime; |
++------------+--------------------------------------------------------------------------+
+| USE_UPNP=1 | build with UPnP support turned on by default at runtime.                 |
++------------+--------------------------------------------------------------------------+
 
 Mac OS X users: miniupnpc is currently outdated on MacPorts. An updated Portfile is provided in contrib/miniupnpc within this project.
 You can execute the following commands in a terminal to install it:

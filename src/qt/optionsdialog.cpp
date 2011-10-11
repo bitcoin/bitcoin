@@ -30,9 +30,13 @@ public:
     void setMapper(MonitoredDataMapper *mapper);
 private:
     QCheckBox *bitcoin_at_startup;
+#ifndef Q_WS_MAC
     QCheckBox *minimize_to_tray;
+#endif
     QCheckBox *map_port_upnp;
+#ifndef Q_WS_MAC
     QCheckBox *minimize_on_close;
+#endif
     QCheckBox *connect_socks4;
     QLineEdit *proxy_ip;
     QLineEdit *proxy_port;
@@ -167,17 +171,21 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     bitcoin_at_startup->setToolTip(tr("Automatically start Bitcoin after the computer is turned on"));
     layout->addWidget(bitcoin_at_startup);
 
+#ifndef Q_WS_MAC
     minimize_to_tray = new QCheckBox(tr("&Minimize to the tray instead of the taskbar"));
     minimize_to_tray->setToolTip(tr("Show only a tray icon after minimizing the window"));
     layout->addWidget(minimize_to_tray);
+#endif
 
     map_port_upnp = new QCheckBox(tr("Map port using &UPnP"));
     map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled."));
     layout->addWidget(map_port_upnp);
 
+#ifndef Q_WS_MAC
     minimize_on_close = new QCheckBox(tr("M&inimize on close"));
     minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu."));
     layout->addWidget(minimize_on_close);
+#endif
 
     connect_socks4 = new QCheckBox(tr("&Connect through SOCKS4 proxy:"));
     connect_socks4->setToolTip(tr("Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)"));
@@ -239,9 +247,13 @@ void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
     // Map model to widgets
     mapper->addMapping(bitcoin_at_startup, OptionsModel::StartAtStartup);
+#ifndef Q_WS_MAC
     mapper->addMapping(minimize_to_tray, OptionsModel::MinimizeToTray);
+#endif
     mapper->addMapping(map_port_upnp, OptionsModel::MapPortUPnP);
+#ifndef Q_WS_MAC
     mapper->addMapping(minimize_on_close, OptionsModel::MinimizeOnClose);
+#endif
     mapper->addMapping(connect_socks4, OptionsModel::ConnectSOCKS4);
     mapper->addMapping(proxy_ip, OptionsModel::ProxyIP);
     mapper->addMapping(proxy_port, OptionsModel::ProxyPort);

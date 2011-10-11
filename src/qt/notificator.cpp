@@ -8,10 +8,17 @@
 #include <QByteArray>
 #include <QSystemTrayIcon>
 #include <QMessageBox>
+#include <QTemporaryFile>
+#include <QImageWriter>
 
 #ifdef USE_DBUS
 #include <QtDBus/QtDBus>
 #include <stdint.h>
+#endif
+
+#ifdef Q_WS_MAC
+#include <ApplicationServices/ApplicationServices.h>
+extern bool qt_mac_execute_apple_script(const QString &script, AEDesc *ret);
 #endif
 
 // https://wiki.ubuntu.com/NotificationDevelopmentGuidelines recommends at least 128
@@ -37,6 +44,19 @@ Notificator::Notificator(const QString &programName, QSystemTrayIcon *trayicon, 
     if(interface->isValid())
     {
         mode = Freedesktop;
+    }
+#endif
+#ifdef Q_WS_MAC
+    // Check if Growl is installed (based on Qt's tray icon implementation)
+    CFURLRef cfurl;
+    OSStatus status = LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFSTR("growlTicket"), kLSRolesAll, 0, &cfurl);
+    if (status != kLSApplicationNotFoundErr) {
+        CFBundleRef bundle = CFBundleCreate(0, cfurl);
+        CFRelease(cfurl);
+        if (CFStringCompare(CFBundleGetIdentifier(bundle), CFSTR("com.Growl.GrowlHelperApp"), kCFCompareCaseInsensitive | kCFCompareBackwards) == kCFCompareEqualTo) {
+            mode = Growl;
+        }
+        CFRelease(bundle);
     }
 #endif
 }
@@ -201,6 +221,54 @@ void Notificator::notifySystray(Class cls, const QString &title, const QString &
     trayIcon->showMessage(title, text, sicon, millisTimeout);
 }
 
+// Based on Qt's tray icon implementation
+#ifdef Q_WS_MAC
+void Notificator::notifyGrowl(Class cls, const QString &title, const QString &text, const QIcon &icon)
+{
+    const QString script(
+        "tell application \"GrowlHelperApp\"\n"
+        "  set the allNotificationsList to {\"Notification\"}\n" // -- Make a list of all the notification types (all)
+        "  set the enabledNotificationsList to {\"Notification\"}\n" // -- Make a list of the notifications (enabled)
+        "  register as application \"%1\" all notifications allNotificationsList default notifications enabledNotificationsList\n" // -- Register our script with Growl
+        "  notify with name \"Notification\" title \"%2\" description \"%3\" application name \"%1\"%4\n" // -- Send a Notification
+        "end tell"
+    );
+
+    QString notificationApp(QApplication::applicationName());
+    if (notificationApp.isEmpty())
+        notificationApp = "Application";
+
+    QPixmap notificationIconPixmap;
+    if (icon.isNull()) { // If no icon specified, set icon based on class
+        QStyle::StandardPixmap sicon = QStyle::SP_MessageBoxQuestion;
+        switch (cls)
+        {
+        case Information: sicon = QStyle::SP_MessageBoxInformation; break;
+        case Warning: sicon = QStyle::SP_MessageBoxWarning; break;
+        case Critical: sicon = QStyle::SP_MessageBoxCritical; break;
+        }
+        notificationIconPixmap = QApplication::style()->standardPixmap(sicon);
+    }
+    else {
+        QSize size = icon.actualSize(QSize(48, 48));
+        notificationIconPixmap = icon.pixmap(size);
+    }
+
+    QString notificationIcon;
+    QTemporaryFile notificationIconFile;
+    if (!notificationIconPixmap.isNull() && notificationIconFile.open()) {
+        QImageWriter writer(&notificationIconFile, "PNG");
+        if (writer.write(notificationIconPixmap.toImage()))
+            notificationIcon = QString(" image from location \"file://%1\"").arg(notificationIconFile.fileName());
+    }
+
+    QString quotedTitle(title), quotedText(text);
+    quotedTitle.replace("\\", "\\\\").replace("\"", "\\");
+    quotedText.replace("\\", "\\\\").replace("\"", "\\");
+    qt_mac_execute_apple_script(script.arg(notificationApp, quotedTitle, quotedText, notificationIcon), 0);
+}
+#endif
+
 void Notificator::notify(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
 {
     switch(mode)
@@ -213,6 +281,11 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
     case QSystemTray:
         notifySystray(cls, title, text, icon, millisTimeout);
         break;
+#ifdef Q_WS_MAC
+    case Growl:
+        notifyGrowl(cls, title, text, icon);
+        break;
+#endif
     default:
         if(cls == Critical)
         {

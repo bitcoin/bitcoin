@@ -17,10 +17,17 @@ OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
 
-# use: qmake "USE_UPNP=0" (disable by default) or "USE_UPNP=1" (enable by default)
-# miniupnpc (http://miniupnp.free.fr/files/) must be installed
-count(USE_UPNP, 1) {
+# use: qmake "USE_UPNP=1" ( enabled by default; default)
+#  or: qmake "USE_UPNP=0" (disabled by default)
+#  or: qmake "USE_UPNP=-" (not supported)
+# miniupnpc (http://miniupnp.free.fr/files/) must be installed for support
+contains(USE_UPNP, -) {
+    message(Building without UPNP support)
+} else {
     message(Building with UPNP support)
+    count(USE_UPNP, 0) {
+        USE_UPNP=1
+    }
     DEFINES += USE_UPNP=$$USE_UPNP
     LIBS += -lminiupnpc
 }
@@ -33,7 +40,7 @@ contains(USE_DBUS, 1) {
 }
 
 # use: qmake "USE_SSL=1"
-contains(USE_DBUS, 1) {
+contains(USE_SSL, 1) {
     message(Building with SSL support for RPC)
     DEFINES += USE_SSL
 }
@@ -221,6 +228,9 @@ windows:LIBS += -lws2_32 -lgdi32
 windows:DEFINES += WIN32
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
+macx:HEADERS += src/qt/macdockiconhandler.h
+macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
+macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
 macx:ICON = src/qt/res/icons/bitcoin.icns
 macx:TARGET = "Bitcoin-Qt"
