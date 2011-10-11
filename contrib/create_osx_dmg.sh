@@ -24,37 +24,24 @@ else
     TOP=$1
 fi
 
-CONTRIB=$TOP/contrib
-BUILD_DIR=/tmp/bitcoin_osx_build
-
-# First, compile bitcoin and bitcoind
-cd "$TOP/src"
-if [ ! -e bitcoin ]; then make -f makefile.osx bitcoin; fi
-if [ ! -e bitcoind ]; then make -f makefile.osx bitcoind; fi
-strip bitcoin bitcoind
-
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
-
-rm -f Bitcoin.sparseimage
-hdiutil convert "$CONTRIB/BitcoinTemplate.dmg" -format UDSP -o Bitcoin
-hdiutil mount Bitcoin.sparseimage
-
-# Copy over placeholders in /Volumes/Bitcoin
-cp "$TOP/src/bitcoind" /Volumes/Bitcoin/
-cp "$TOP/src/bitcoin" /Volumes/Bitcoin/Bitcoin.app/Contents/MacOS/
-
-# Create source code .zip
+# Create Bitcoin-Qt.app
 cd "$TOP"
-git archive -o /Volumes/Bitcoin/bitcoin.zip $(git branch 2>/dev/null|grep -e ^* | cut -d ' ' -f 2)
+if [ ! -e Makefile ]; then qmake bitcoin-qt.pro; fi
+make
+macdeployqt Bitcoin-Qt.app
+# Workaround a bug in macdeployqt: https://bugreports.qt.nokia.com/browse/QTBUG-21913
+# (when fixed, this won't be necessary)
+cp /opt/local/lib/db48/libdb_cxx-4.8.dylib Bitcoin-Qt.app/Contents/Frameworks/
+install_name_tool -id @executable_path/../Frameworks/libdb_cxx-4.8.dylib \
+    Bitcoin-Qt.app/Contents/Frameworks/libdb_cxx-4.8.dylib
+install_name_tool -change libqt.3.dylib \
+        @executable_path/../Frameworks/libqt.3.dylib \
+        Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt
 
-# Fix permissions
-chmod -Rf go-w /Volumes/Bitcoin
+# Create a .dmg
+macdeployqt Bitcoin-Qt.app -dmg
 
-cd "$BUILD_DIR"
-hdiutil eject /Volumes/Bitcoin
-rm -f "$CWD/Bitcoin.dmg"
-hdiutil convert Bitcoin.sparseimage -format UDBZ -o "$CWD/Bitcoin.dmg"
+# Compile bitcoind
+cd "$TOP/src"
+STATIC=1 make -f makefile.osx
 
-cd "$CWD"
-rm -rf "$BUILD_DIR"

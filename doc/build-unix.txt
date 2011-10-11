@@ -65,14 +65,16 @@ If using Boost 1.37, append -mt to the boost libraries in the makefile.
 
 Dependency Build Instructions: Gentoo
 -------------------------------------
-emerge -av boost openssl sys-libs/db
+
+Note: If you just want to install bitcoind on Gentoo, you can add the Bitcoin
+      overlay and use your package manager:
+          layman -a bitcoin && emerge bitcoind
+
+emerge -av1 --noreplace boost glib openssl sys-libs/db:4.8
 
 Take the following steps to build (no UPnP support):
  cd ${BITCOIN_DIR}/src
- sed -i 's/<db_cxx.h>/<db4.8\/db_cxx.h>/' *.h        # path fix
- sed -i 's/-Bstatic/-Bdynamic/' makefile.unix        # dynamic linking
- sed -i 's/^USE_UPNP:=0$/USE_UPNP:=/' makefile.unix  # disable UPnP
- make -f makefile.unix
+ make -f makefile.unix USE_UPNP= BDB_INCLUDE_PATH='/usr/include/db4.8'
  strip bitcoind
 
 
