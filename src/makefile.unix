@@ -2,31 +2,47 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-CXX=g++
-
 USE_UPNP:=0
 
-DEFS=-DNOPCH -DUSE_SSL
+DEFS=-DNOPCH
+
+DEFS += $(addprefix -I,$(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
+LIBS += $(addprefix -l,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
+
+LMODE = dynamic
+LMODE2 = dynamic
+ifdef STATIC
+	LMODE = static
+	ifeq (${STATIC}, all)
+		LMODE2 = static
+	endif
+endif
 
 # for boost 1.37, add -mt to the boost libraries
 LIBS= \
- -Wl,-Bstatic \
-   -l boost_system \
-   -l boost_filesystem \
-   -l boost_program_options \
-   -l boost_thread \
-   -l db_cxx \
+ -Wl,-B$(LMODE) \
+   -l boost_system$(BOOST_LIB_SUFFIX) \
+   -l boost_filesystem$(BOOST_LIB_SUFFIX) \
+   -l boost_program_options$(BOOST_LIB_SUFFIX) \
+   -l boost_thread$(BOOST_LIB_SUFFIX) \
+   -l db_cxx$(BDB_LIB_SUFFIX) \
    -l ssl \
    -l crypto
 
-ifdef USE_UPNP
+ifndef USE_UPNP
+	override USE_UPNP = -
+endif
+ifneq (${USE_UPNP}, -)
 	LIBS += -l miniupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
 
+ifneq (${USE_SSL}, 0)
+	DEFS += -DUSE_SSL
+endif
+
 LIBS+= \
- -Wl,-Bdynamic \
-   -l gthread-2.0 \
+ -Wl,-B$(LMODE2) \
    -l z \
    -l dl \
    -l pthread
@@ -61,7 +77,8 @@ LIBS+= \
 
 
 DEBUGFLAGS=-g
-CXXFLAGS=-O2 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(HARDENING)
+CXXFLAGS=-O2
+xCXXFLAGS=-pthread -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 HEADERS = \
     base58.h \
     bignum.h \
@@ -106,24 +123,24 @@ all: bitcoind
 -include obj/test/*.P
 
 obj/nogui/%.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
 bitcoind: $(OBJS:obj/%=obj/nogui/%)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(xCXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 obj/test/%.o: test/%.cpp
-	$(CXX) -c $(CXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
 test_bitcoin: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
-	$(CXX) $(CXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-Bstatic -lboost_unit_test_framework $(LIBS)
+	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-Bstatic -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
 
 clean:
 	-rm -f bitcoind test_bitcoin

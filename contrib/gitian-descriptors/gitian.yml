@@ -53,7 +53,7 @@ script: |
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
   sed 's/$(DEBUGFLAGS)//' -i makefile.unix
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin USE_UPNP=1
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix STATIC=1 CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin USE_UPNP=1
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix STATIC=1 CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS

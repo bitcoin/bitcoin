@@ -1,5 +1,6 @@
 TEMPLATE = app
 TARGET =
+VERSION = 0.5.0
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI
 CONFIG += no_include_pwd
@@ -174,8 +175,10 @@ FORMS += \
 CODECFORTR = UTF-8
 
 # for lrelease/lupdate
-TRANSLATIONS = src/qt/locale/bitcoin_nl.ts src/qt/locale/bitcoin_de.ts \
-               src/qt/locale/bitcoin_ru.ts
+TRANSLATIONS = src/qt/locale/bitcoin_de.ts \
+    src/qt/locale/bitcoin_es.ts \
+    src/qt/locale/bitcoin_nl.ts \
+    src/qt/locale/bitcoin_ru.ts
 
 isEmpty(QMAKE_LRELEASE) {
     win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\lrelease.exe
@@ -205,6 +208,10 @@ isEmpty(BDB_LIB_PATH) {
     macx:BDB_LIB_PATH = /opt/local/lib/db48
 }
 
+isEmpty(BDB_LIB_SUFFIX) {
+    macx:BDB_LIB_SUFFIX = -4.8
+}
+
 isEmpty(BDB_INCLUDE_PATH) {
     macx:BDB_INCLUDE_PATH = /opt/local/include/db48
 }
@@ -226,7 +233,7 @@ macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0 BOOST_FILESYSTEM_VERSION=3
 macx:ICON = src/qt/res/icons/bitcoin.icns
-macx:TARGET = "Bitcoin Qt"
+macx:TARGET = "Bitcoin-Qt"
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH
