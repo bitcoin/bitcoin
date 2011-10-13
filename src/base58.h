@@ -270,7 +270,7 @@ public:
 
     bool SetScriptHash160(const uint160& hash160)
     {
-        SetData(fTestNet ? 112 : 1, &hash160, 20);
+        SetData(fTestNet ? 111^2 : 2, &hash160, 20);
         return true;
     }
 
@@ -284,7 +284,7 @@ public:
                 nExpectedSize = 20; // Hash of public key
                 fExpectTestNet = false;
                 break;
-            case 1:
+            case 2:
                 nExpectedSize = 20; // OP_EVAL, hash of CScript
                 fExpectTestNet = false;
                 break;
@@ -293,7 +293,7 @@ public:
                 nExpectedSize = 20;
                 fExpectTestNet = true;
                 break;
-            case 112:
+            case 111^2:
                 nExpectedSize = 20;
                 fExpectTestNet = true;
                 break;
@@ -308,8 +308,8 @@ public:
         if (!IsValid())
             return false;
         if (fTestNet)
-            return nVersion == 112;
-        return nVersion == 1;
+            return nVersion == 111^2;
+        return nVersion == 2;
     }
 
     CBitcoinAddress()
