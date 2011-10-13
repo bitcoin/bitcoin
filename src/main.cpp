@@ -2999,6 +2999,13 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
     }
     ++nExtraNonce;
     pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nTime << CBigNum(nExtraNonce);
+
+    // Put "OP_EVAL" in the coinbase so everybody can tell when
+    // a majority of miners support it
+    const char* pOpEvalName = GetOpName(OP_EVAL);
+    pblock->vtx[0].vin[0].scriptSig += CScript() << std::vector<unsigned char>(pOpEvalName, pOpEvalName+strlen(pOpEvalName));
+    assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);
+
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
