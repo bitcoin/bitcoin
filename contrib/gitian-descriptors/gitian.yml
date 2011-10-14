@@ -7,8 +7,8 @@ architectures:
 - "amd64"
 packages: 
 - "libdb4.8++-dev"
-- "libxxf86vm-dev"
-- "libgtk2.0-dev"
+- "qt4-qmake"
+- "libqt4-dev"
 - "libboost-all-dev"
 - "libssl-dev"
 - "git-core"
@@ -18,8 +18,6 @@ remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "wxWidgets-2.9.2-x64-gitian.zip"
-- "wxWidgets-2.9.2-x32-gitian.zip"
 - "miniupnpc-1.6.tar.gz"
 script: |
   INSTDIR="$HOME/install"
@@ -30,30 +28,18 @@ script: |
   INSTALLPREFIX=$INSTDIR make $MAKEOPTS install
   cd ..
   #
-  mkdir -p $INSTDIR/bin $INSTDIR/lib/wx $INSTDIR/include
-  mkdir wxWidgets-2.9.2
-  cd wxWidgets-2.9.2
-  unzip ../wxWidgets-2.9.2-x32-gitian.zip
-  unzip -o ../wxWidgets-2.9.2-x64-gitian.zip
-  cp -a bin/$GBUILD_BITS/wx/config/gtk2-unicode-static-2.9 $INSTDIR/bin/wx-config
-  for lib in wx_gtk2u wxregexu wxtiff; do
-    ar rc $INSTDIR/lib/lib${lib}-2.9.a bin/$GBUILD_BITS/$lib/*.o
-    ranlib $INSTDIR/lib/lib${lib}-2.9.a
-  done
-  cp -a include/wx-2.9/* $INSTDIR/include
-  cp -a bin/$GBUILD_BITS/wx/include $INSTDIR/lib/wx
-  cd ..
-  #
   cd bitcoin
   mkdir -p $OUTDIR/src
   cp -a . $OUTDIR/src
   rm -rf $OUTDIR/src/.git
-  mv $OUTDIR/src/locale $OUTDIR
   cp $OUTDIR/src/doc/README $OUTDIR
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
   sed 's/$(DEBUGFLAGS)//' -i makefile.unix
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix STATIC=1 CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin USE_UPNP=1
-  PATH=$INSTDIR/bin:$PATH make -f makefile.unix STATIC=1 CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
+  make -f makefile.unix STATIC=1 DEFS="-I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
-  install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
+  install -s bitcoind $OUTDIR/bin/$GBUILD_BITS
+  cd ..
+  qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib"
+  make $MAKEOPTS
+  install bitcoin-qt $OUTDIR/bin/$GBUILD_BITS
