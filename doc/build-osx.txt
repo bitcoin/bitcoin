@@ -31,6 +31,9 @@ git clone git@github.com:bitcoin/bitcoin.git bitcoin
 
 2.  Download and install MacPorts from http://www.macports.org/
 
+2a. (for 10.7 Lion)
+    Edit /opt/local/etc/macports/macports.conf and uncomment "build_arch i386"
+
 3.  Install dependencies from MacPorts
 
 sudo port install boost db48 openssl
