@@ -343,7 +343,7 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
-        <source>&amp;Exit</source>
+        <source>E&amp;xit</source>
         <translation>Вы&amp;ход</translation>
     </message>
     <message>

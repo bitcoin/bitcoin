@@ -83,7 +83,7 @@
     </widget>
    </item>
    <item row="3" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="payToLayout">
      <property name="spacing">
       <number>0</number>
      </property>
@@ -98,7 +98,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="addressBookButton">
+      <widget class="QToolButton" name="addressBookButton">
        <property name="toolTip">
         <string>Choose adress from address book</string>
        </property>
@@ -112,16 +112,10 @@
        <property name="shortcut">
         <string>Alt+A</string>
        </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pasteButton">
+      <widget class="QToolButton" name="pasteButton">
        <property name="toolTip">
         <string>Paste address from clipboard</string>
        </property>
@@ -135,13 +129,10 @@
        <property name="shortcut">
         <string>Alt+P</string>
        </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="deleteButton">
+      <widget class="QToolButton" name="deleteButton">
        <property name="toolTip">
         <string>Remove this recipient</string>
        </property>

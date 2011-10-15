@@ -48,6 +48,7 @@ private:
         None,
         Freedesktop, // Use DBus org.freedesktop.Notifications
         QSystemTray, // Use QSystemTray::showMessage
+        Growl // Use the Growl notification system (Mac only)
     };
     QString programName;
     Mode mode;
@@ -58,6 +59,9 @@ private:
     void notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout);
 #endif
     void notifySystray(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout);
+#ifdef Q_WS_MAC
+    void notifyGrowl(Class cls, const QString &title, const QString &text, const QIcon &icon);
+#endif
 };
 
 #endif // NOTIFICATOR_H
