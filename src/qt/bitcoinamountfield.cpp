@@ -1,33 +1,30 @@
 #include "bitcoinamountfield.h"
-#include "qvalidatedlineedit.h"
 #include "qvaluecombobox.h"
 #include "bitcoinunits.h"
+
+#include "guiconstants.h"
 
 #include <QLabel>
 #include <QLineEdit>
 #include <QRegExpValidator>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QApplication>
+#include <qmath.h>
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent):
-        QWidget(parent), amount(0), decimals(0), currentUnit(-1)
+        QWidget(parent), amount(0), currentUnit(-1)
 {
-    amount = new QValidatedLineEdit(this);
-    amount->setValidator(new QRegExpValidator(QRegExp("[0-9]*"), this));
-    amount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
+    amount = new QDoubleSpinBox(this);
+    amount->setLocale(QLocale::c());
+    amount->setDecimals(8);
     amount->installEventFilter(this);
-    amount->setMaximumWidth(75);
-    decimals = new QValidatedLineEdit(this);
-    decimals->setValidator(new QRegExpValidator(QRegExp("[0-9]+"), this));
-    decimals->setAlignment(Qt::AlignLeft|Qt::AlignVCenter);
-    decimals->setMaximumWidth(75);
+    amount->setMaximumWidth(170);
 
     QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setSpacing(0);
     layout->addWidget(amount);
-    layout->addWidget(new QLabel(QString("<b>.</b>")));
-    layout->addWidget(decimals);
     unit = new QValueComboBox(this);
     unit->setModel(new BitcoinUnits(this));
     layout->addWidget(unit);
@@ -40,8 +37,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
     setFocusProxy(amount);
 
     // If one if the widgets changes, the combined content changes as well
-    connect(amount, SIGNAL(textChanged(QString)), this, SIGNAL(textChanged()));
-    connect(decimals, SIGNAL(textChanged(QString)), this, SIGNAL(textChanged()));
+    connect(amount, SIGNAL(valueChanged(QString)), this, SIGNAL(textChanged()));
     connect(unit, SIGNAL(currentIndexChanged(int)), this, SLOT(unitChanged(int)));
 
     // Set default based on configuration
@@ -50,79 +46,72 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent):
 
 void BitcoinAmountField::setText(const QString &text)
 {
-    const QStringList parts = text.split(QString("."));
-    if(parts.size() == 2)
-    {
-        amount->setText(parts[0]);
-        decimals->setText(parts[1]);
-    }
+    if (text.isEmpty())
+        amount->clear();
     else
-    {
-        amount->setText(QString());
-        decimals->setText(QString());
-    }
+        amount->setValue(text.toDouble());
 }
 
 void BitcoinAmountField::clear()
 {
     amount->clear();
-    decimals->clear();
     unit->setCurrentIndex(0);
 }
 
 bool BitcoinAmountField::validate()
 {
     bool valid = true;
-    if(decimals->text().isEmpty())
-    {
-        decimals->setValid(false);
+    if (amount->value() == 0.0)
         valid = false;
-    }
-    if(!BitcoinUnits::parse(currentUnit, text(), 0))
-    {
-        setValid(false);
+    if (valid && !BitcoinUnits::parse(currentUnit, text(), 0))
         valid = false;
-    }
+
+    setValid(valid);
 
     return valid;
 }
 
 void BitcoinAmountField::setValid(bool valid)
 {
-    amount->setValid(valid);
-    decimals->setValid(valid);
+    if (valid)
+        amount->setStyleSheet("");
+    else
+        amount->setStyleSheet(STYLE_INVALID);
 }
 
 QString BitcoinAmountField::text() const
 {
-    if(decimals->text().isEmpty() && amount->text().isEmpty())
-    {
+    if (amount->text().isEmpty())
         return QString();
-    }
-    return amount->text() + QString(".") + decimals->text();
+    else
+        return amount->text();
 }
 
-// Intercept '.' and ',' keys, if pressed focus a specified widget
 bool BitcoinAmountField::eventFilter(QObject *object, QEvent *event)
 {
-    Q_UNUSED(object);
-    if(event->type() == QEvent::KeyPress)
+    if (event->type() == QEvent::FocusIn)
+    {
+        // Clear invalid flag on focus
+        setValid(true);
+    }
+    else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
     {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-        if(keyEvent->key() == Qt::Key_Period || keyEvent->key() == Qt::Key_Comma)
+        if (keyEvent->key() == Qt::Key_Comma)
         {
-            decimals->setFocus();
-            decimals->selectAll();
+            // Translate a comma into a period
+            QKeyEvent periodKeyEvent(event->type(), Qt::Key_Period, keyEvent->modifiers(), ".", keyEvent->isAutoRepeat(), keyEvent->count());
+            qApp->sendEvent(object, &periodKeyEvent);
+            return true;
         }
     }
-    return false;
+    return QWidget::eventFilter(object, event);
 }
 
 QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
 {
     QWidget::setTabOrder(prev, amount);
-    QWidget::setTabOrder(amount, decimals);
-    return decimals;
+    return amount;
 }
 
 qint64 BitcoinAmountField::value(bool *valid_out) const
@@ -156,8 +145,8 @@ void BitcoinAmountField::unitChanged(int idx)
     currentUnit = newUnit;
 
     // Set max length after retrieving the value, to prevent truncation
-    amount->setMaxLength(BitcoinUnits::amountDigits(currentUnit));
-    decimals->setMaxLength(BitcoinUnits::decimals(currentUnit));
+    amount->setDecimals(BitcoinUnits::decimals(currentUnit));
+    amount->setMaximum(qPow(10, BitcoinUnits::amountDigits(currentUnit)) - qPow(10, -amount->decimals()));
 
     if(valid)
     {

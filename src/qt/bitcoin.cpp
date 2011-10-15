@@ -16,6 +16,7 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QSplashScreen>
+#include <QLibraryInfo>
 
 // Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;
@@ -119,9 +120,16 @@ int main(int argc, char *argv[])
 
     // Load language file for system locale
     QString locale = QLocale::system().name();
+    QTranslator qtTranslator;
+    qtTranslator.load(QLibraryInfo::location(QLibraryInfo::TranslationsPath) + "/qt_" + locale);
+    if (!qtTranslator.isEmpty())
+        app.installTranslator(&qtTranslator);
     QTranslator translator;
     translator.load(":/translations/"+locale);
-    app.installTranslator(&translator);
+    if (!translator.isEmpty())
+        app.installTranslator(&translator);
+
+    app.setApplicationName(QApplication::translate("main", "Bitcoin Qt"));
 
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
     splash.show();

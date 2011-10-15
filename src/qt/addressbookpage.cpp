@@ -18,6 +18,13 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     tab(tab)
 {
     ui->setupUi(this);
+
+#ifdef Q_WS_MAC // Icons on push buttons are very uncommon on Mac
+    ui->newAddressButton->setIcon(QIcon());
+    ui->copyToClipboard->setIcon(QIcon());
+    ui->deleteButton->setIcon(QIcon());
+#endif
+
     switch(mode)
     {
     case ForSending:
