@@ -656,7 +656,7 @@ Möchten Sie die zusätzliche Gebühr zahlen?</translation>
     <message>
         <location filename="../editaddressdialog.cpp" line="97"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Brieftasche konnte nicht entsperrt werden.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="102"/>
@@ -780,6 +780,7 @@ Möchten Sie die zusätzliche Gebühr zahlen?</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
+        <translatorcomment>Wird im Code mit verschiedenen Strings gefüllt und kann deswegen leer bleiben (windowTitle).</translatorcomment>
         <translation></translation>
     </message>
     <message>
@@ -790,6 +791,7 @@ Möchten Sie die zusätzliche Gebühr zahlen?</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="47"/>
         <source>123.456 BTC</source>
+        <translatorcomment>Wird im Code mit verschiedenen Strings gefüllt und kann deswegen leer bleiben (labelBalance).</translatorcomment>
         <translation></translation>
     </message>
     <message>
@@ -800,17 +802,19 @@ Möchten Sie die zusätzliche Gebühr zahlen?</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="61"/>
         <source>0</source>
+        <translatorcomment>Wird im Code mit verschiedenen Strings gefüllt und kann deswegen leer bleiben (labelNumTransactions).</translatorcomment>
         <translation></translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="68"/>
         <source>Unconfirmed:</source>
-        <translation type="unfinished">Unbestätigt:</translation>
+        <translation>Unbestätigt:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="75"/>
         <source>0 BTC</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Wird im Code mit verschiedenen Strings gefüllt und kann deswegen leer bleiben (labelUnconfirmed).</translatorcomment>
+        <translation></translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="82"/>
@@ -819,12 +823,16 @@ Möchten Sie die zusätzliche Gebühr zahlen?</translation>
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Brieftasche&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="122"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Letzte Transaktionen&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="103"/>
@@ -834,12 +842,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../overviewpage.cpp" line="108"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation type="unfinished"></translation>
+        <translation>Anzahl der Transaktionen, die noch bestätigt werden müssen und noch nicht zum aktuellen Kontostand zählen</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="111"/>
         <source>Total number of transactions in wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Anzahl aller Transaktionen in der Brieftasche</translation>
     </message>
 </context>
 <context>
