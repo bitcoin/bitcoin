@@ -1234,7 +1234,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="213"/>
         <source>Type</source>
-        <translation>Beschreibung</translation>
+        <translation>Typ</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="213"/>
@@ -1250,8 +1250,8 @@ p, li { white-space: pre-wrap; }
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
         <translation>
+            <numerusform>Offen für %n Block</numerusform>
             <numerusform>Offen für %n Blöcke</numerusform>
-            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -1271,7 +1271,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="283"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation type="unfinished"></translation>
+        <translation>Unbestätigt (%1 von %2 Bestätigungen)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="286"/>
@@ -1282,14 +1282,14 @@ p, li { white-space: pre-wrap; }
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
         <translation>
-            <numerusform>Der Betrag wird in %n Blöcken verfügbar sein</numerusform>
-            <numerusform></numerusform>
+            <numerusform>Der erarbeitete Betrag wird in %n Block verfügbar sein</numerusform>
+            <numerusform>Der erarbeitete Betrag wird in %n Blöcken verfügbar sein</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Dieser Block wurde vom Netzwerk nicht angenommen und wird wahrscheinlich nicht bestätigt werden!</translation>
+        <translation>Dieser Block wurde von keinem anderen Knoten empfangen und wird wahrscheinlich nicht angenommen werden!</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="304"/>
@@ -1309,12 +1309,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="351"/>
         <source>Sent to</source>
-        <translation>An</translation>
+        <translation>Gesendet an</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="353"/>
         <source>Sent to IP</source>
-        <translation>An IP</translation>
+        <translation>Gesendet an IP</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="355"/>
@@ -1329,7 +1329,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="395"/>
         <source>(n/a)</source>
-        <translation type="unfinished"></translation>
+        <translation>(k.A.)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="594"/>
@@ -1349,7 +1349,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="600"/>
         <source>Destination address of transaction.</source>
-        <translation>Empfangsadresse der Transaktion</translation>
+        <translation>Empfangsadresse der Transaktion.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="602"/>
@@ -1521,7 +1521,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../walletmodel.cpp" line="144"/>
         <source>Sending...</source>
-        <translation>Senden...</translation>
+        <translation>Sende...</translation>
     </message>
 </context>
 <context>
