@@ -160,12 +160,13 @@ Dieses Produkt enthält Software, welche vom OpenSSL Projekt zur Verwendung im O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="30"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Das erste &quot;wallet&quot; wurde bewusst weggelassen.</translatorcomment>
+        <translation>Dieser Vorgang benötigt Ihre Passphrase um die Brieftasche zu entsperren.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="35"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Brieftasche entsperren</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="38"/>
@@ -233,7 +234,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../askpassphrasedialog.cpp" line="125"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Entsperrung der Brieftasche fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="126"/>
