@@ -907,27 +907,28 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="67"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"></translation>
+        <translation>An mehrere Empfänger auf einmal überweisen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="70"/>
         <source>&amp;Add recipient...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Empfänger hinzufügen...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
         <source>Clear all</source>
-        <translation type="unfinished"></translation>
+        <translation>Zurücksetzen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="106"/>
         <source>Balance:</source>
-        <translation type="unfinished">Kontostand:</translation>
+        <translation>Kontostand:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="113"/>
         <source>123.456 BTC</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Wird im Code mit verschiedenen Strings gefüllt und kann deswegen leer bleiben (labelBalance).</translatorcomment>
+        <translation></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="144"/>
@@ -937,7 +938,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="147"/>
         <source>&amp;Send</source>
-        <translation>Überweisen</translation>
+        <translation>Überwei&amp;sen</translation>
     </message>
     <message>
         <source>Abort the send action</source>
@@ -959,52 +960,52 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="79"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; an %2 (%3)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="83"/>
         <source>Are you sure you want to send %1?</source>
-        <translation type="unfinished"></translation>
+        <translation>Sind Sie sich sicher, dass Sie folgendes überweisen möchten: %1?</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="83"/>
         <source> and </source>
-        <translation type="unfinished"></translation>
+        <translation> und </translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="104"/>
         <source>The recepient address is not valid, please recheck.</source>
-        <translation>Die Empfangsadresse ist ungültig.</translation>
+        <translation>Die Empfangsadresse ist ungültig, bitte nochmals überprüfen.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="109"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Der Betrag muss mehr als 0 betragen.</translation>
+        <translation>Der zu zahlende Betrag muss mehr als 0 betragen.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="114"/>
         <source>Amount exceeds your balance</source>
-        <translation>Der Betrag übersteigt ihren Kontostand</translation>
+        <translation>Der Betrag übersteigt Ihren Kontostand</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="119"/>
         <source>Total exceeds your balance when the %1 transaction fee is included</source>
-        <translation>Betrag übersteigt ihren Kontostand aufgrund der Transaktionsgebühren in Höhe von %1</translation>
+        <translation>Summe übersteigt aufgrund der Transaktionsgebühr in Höhe von %1 Ihren Kontostand</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="125"/>
         <source>Duplicate address found, can only send to each address once in one send operation</source>
-        <translation type="unfinished"></translation>
+        <translation>Doppelte Adresse gefunden. Pro Vorgang kann an eine Adresse nur einmalig etwas überwiesen werden</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="130"/>
         <source>Error: Transaction creation failed  </source>
-        <translation type="unfinished">Fehler: Die Transaktion konnte nicht erstellt werden.</translation>
+        <translation>Fehler: Transaktionserstellung fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="135"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished">Fehler: Die Transaktion wurde zurückgewiesen. Dies kann passieren wenn einige Ihrer BitCoins bereits ausgegeben wurde (zB aus einer Sicherungskopie Ihrer wallet.dat)</translation>
+        <translation>Fehler: Die Transaktion wurde abgelehnt. Dies kann passieren, wenn einige Ihrer Bitcoins aus Ihrer Brieftasche bereits ausgegeben wurden (z.B. aus einer Sicherungskopie Ihrer wallet.dat).</translation>
     </message>
 </context>
 <context>
