@@ -946,6 +946,8 @@ Value addmultisigaddress(const Array& params, bool fHelp)
             "If [account] is specified, assign address to [account].";
         throw runtime_error(msg);
     }
+    if (!fTestNet)
+        throw runtime_error("addmultisigaddress available only when running -testnet\n");
 
     int nRequired = params[0].get_int();
     const Array& keys = params[1].get_array();
