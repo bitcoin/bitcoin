@@ -1422,7 +1422,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="74"/>
         <source>Enter address or label to search</source>
-        <translation>Zu suchende Adresse oder Beschreibung eingeben</translation>
+        <translation>Zu suchende Adresse oder Bezeichnung eingeben</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="80"/>
@@ -1437,12 +1437,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="109"/>
         <source>Copy label</source>
-        <translation>Beschreibung kopieren</translation>
+        <translation>Bezeichnung kopieren</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="110"/>
         <source>Edit label</source>
-        <translation>Beschreibung bearbeiten</translation>
+        <translation>Bezeichnung bearbeiten</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="111"/>
@@ -1477,7 +1477,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="257"/>
         <source>Label</source>
-        <translation>Beschreibung</translation>
+        <translation>Bezeichnung</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="258"/>
