@@ -259,7 +259,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="59"/>
         <source>Bitcoin Wallet</source>
-        <translation>Bitcoin Wallet</translation>
+        <translation>Bitcoin-Brieftasche</translation>
     </message>
     <message>
         <source>Number of connections to other clients</source>
@@ -287,12 +287,12 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="83"/>
         <source>Tabs toolbar</source>
-        <translation type="unfinished"></translation>
+        <translation>Registrierkarten-Symbolleiste</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="91"/>
         <source>Actions toolbar</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktionen-Symbolleiste</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="142"/>
@@ -302,7 +302,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="145"/>
         <source>Block chain synchronization in progress</source>
-        <translation>Synchronisierung der Block-Chain...</translation>
+        <translation>Synchronisierung der Blockkette</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="169"/>
@@ -322,7 +322,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="175"/>
         <source>Browse transaction history</source>
-        <translation>Transaktionsverlauf durchsuchen</translation>
+        <translation>Transaktionsverlauf durchsehen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="179"/>
@@ -332,32 +332,32 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="180"/>
         <source>Edit the list of stored addresses and labels</source>
-        <translation>Adressen bearbeiten</translation>
+        <translation>Gespeicherte Adressen und Beschreibungen bearbeiten</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="184"/>
         <source>&amp;Receive coins</source>
-        <translation>Bitcoins &amp;empfangen</translation>
+        <translation>Bitcoins em&amp;pfangen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="185"/>
         <source>Show the list of addresses for receiving payments</source>
-        <translation>Empfangsadressen anzeigen</translation>
+        <translation>Liste der Adressen zum Empfangen von Zahlungen anzeigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="189"/>
         <source>&amp;Send coins</source>
-        <translation>Bitcoins &amp;senden</translation>
+        <translation>Bitcoins überwei&amp;sen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="190"/>
         <source>Send coins to a bitcoin address</source>
-        <translation>Bitcoins an eine Bitcoin-Adresse senden</translation>
+        <translation>Bitcoins an eine Bitcoin-Adresse überweisen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>E&amp;xit</source>
-        <translation>Beende&amp;n</translation>
+        <translation>Been&amp;den</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
@@ -367,27 +367,27 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="202"/>
         <source>&amp;About</source>
-        <translation>Über</translation>
+        <translation>Ü&amp;ber</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="203"/>
         <source>Show information about Bitcoin</source>
-        <translation>Informationen über Bitcoin</translation>
+        <translation>Informationen über Bitcoin anzeigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>&amp;Options...</source>
-        <translation>Einstellungen</translation>
+        <translation>Einste&amp;llungen...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="205"/>
         <source>Modify configuration options for bitcoin</source>
-        <translation>Einstellungen ändern</translation>
+        <translation>Einstellungen für Bitcoin ändern</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="206"/>
         <source>Open &amp;Bitcoin</source>
-        <translation>Bitcoin öffnen</translation>
+        <translation>Bitcoin &amp;öffnen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="207"/>
@@ -397,17 +397,17 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="208"/>
         <source>&amp;Export...</source>
-        <translation>&amp;Exportieren...</translation>
+        <translation>E&amp;xportieren...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="209"/>
         <source>Export the current view to a file</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktuelle Ansicht in eine Datei exportieren</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="210"/>
         <source>&amp;Encrypt Wallet</source>
-        <translation>Bri&amp;eftasche verschlüsseln</translation>
+        <translation>Brieftasche &amp;verschlüsseln</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="211"/>
@@ -492,12 +492,12 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="387"/>
         <source>Catching up...</source>
-        <translation type="unfinished"></translation>
+        <translation>Hole auf...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="393"/>
         <source>Last received block was generated %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der letzte empfangene Block wurde generiert %1.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="472"/>
@@ -514,12 +514,12 @@ Adresse: %4</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="566"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und momentan &lt;b&gt;entsperrt&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="574"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und momentan &lt;b&gt;gesperrt&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Export data in current view to a file</source>
@@ -546,10 +546,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="440"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Die Größe dieser Transaktion übersteigt das Limit.
- Sie können die Coins jedoch senden, wenn sie einen zusätzlichen Betrag von 1% zahlen, 
-welcher an die Teilnehmer des Bitcoin-Netzwerkes ausgeschüttet wird und dieses unterstützt.
-Möchten Sie die zusätzliche Gebühr zahlen?</translation>
+        <translation>Die Transaktion übersteigt das Größenlimit. Sie können sie jedoch senden, wenn Sie einen zusätzlichen Betrag von %1 zahlen. Dieser geht an die Knoten, die Ihre Transaktion bearbeiten und unterstützt das Bitcoin-Netzwerk. Möchten Sie die Gebühr bezahlen?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="445"/>
@@ -559,12 +556,12 @@ Möchten Sie die zusätzliche Gebühr zahlen?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="470"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Gesendete Transaktion</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="471"/>
         <source>Incoming transaction</source>
-        <translation>Eingehende Transaktion</translation>
+        <translation>Empfangene Transaktion</translation>
     </message>
     <message>
         <source>Date: </source>
@@ -1311,17 +1308,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="351"/>
         <source>Sent to</source>
-        <translation>Gesendet an</translation>
+        <translation>Überwiesen an</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="353"/>
         <source>Sent to IP</source>
-        <translation>Gesendet an IP</translation>
+        <translation>Überwiesen an IP</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="355"/>
         <source>Payment to yourself</source>
-        <translation>Überweisung an Sie selbst</translation>
+        <translation>Zahlung an Sie selbst</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="357"/>
@@ -1523,7 +1520,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../walletmodel.cpp" line="144"/>
         <source>Sending...</source>
-        <translation>Sende...</translation>
+        <translation>Überweise...</translation>
     </message>
 </context>
 <context>
