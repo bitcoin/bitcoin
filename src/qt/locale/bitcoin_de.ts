@@ -1075,85 +1075,85 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="34"/>
         <source>Open for %1 blocks</source>
-        <translation type="unfinished"></translation>
+        <translation>Offen für %1 Blöcke</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
         <source>Open until %1</source>
-        <translation type="unfinished">Offen bis %1</translation>
+        <translation>Offen bis %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
         <source>%1/offline?</source>
-        <translation type="unfinished"></translation>
+        <translation>%1/offline?</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="44"/>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"></translation>
+        <translation>%1/unbestätigt</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="46"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 Bestätigungen</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="63"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Status:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="68"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"></translation>
+        <translation>; wurde noch nicht erfolgreich gesendet</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
         <source>, broadcast through %1 node</source>
-        <translation type="unfinished"></translation>
+        <translation>; über %1 Knoten gesendet</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="72"/>
         <source>, broadcast through %1 nodes</source>
-        <translation type="unfinished"></translation>
+        <translation>; über %1 Knoten gesendet</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Datum:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="83"/>
         <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Quelle:&lt;/b&gt; Generiert&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="89"/>
         <location filename="../transactiondesc.cpp" line="106"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Von:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="106"/>
         <source>unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>unbekannt</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="107"/>
         <location filename="../transactiondesc.cpp" line="130"/>
         <location filename="../transactiondesc.cpp" line="189"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;An:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="110"/>
         <source> (yours, label: </source>
-        <translation type="unfinished"></translation>
+        <translation> (Ihre, Bezeichnung: </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="112"/>
         <source> (yours)</source>
-        <translation type="unfinished"></translation>
+        <translation> (Ihre)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="147"/>
@@ -1161,49 +1161,49 @@ p, li { white-space: pre-wrap; }
         <location filename="../transactiondesc.cpp" line="206"/>
         <location filename="../transactiondesc.cpp" line="223"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Gutschrift:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="149"/>
         <source>(%1 matures in %2 more blocks)</source>
-        <translation type="unfinished"></translation>
+        <translation>(%1 reift in weiteren %2 Blöcken)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="153"/>
         <source>(not accepted)</source>
-        <translation type="unfinished"></translation>
+        <translation>(nicht angenommen)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="197"/>
         <location filename="../transactiondesc.cpp" line="205"/>
         <location filename="../transactiondesc.cpp" line="220"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Belastung:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="211"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Transaktionsgebühr:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="227"/>
         <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Nettobetrag:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="233"/>
         <source>Message:</source>
-        <translation type="unfinished"></translation>
+        <translation>Nachricht:</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="235"/>
         <source>Comment:</source>
-        <translation type="unfinished"></translation>
+        <translation>Kommentar:</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="238"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"></translation>
+        <translation>Generierte Bitcoins müssen 120 Blöcke lang reifen, bevor sie ausgegeben werden können. Als Sie diesen Block generierten, wurde er an das Netzwerk gesendet, um ihn der Blockkette hinzuzufügen. Falls dies fehlschlägt wird der Status in &quot;nicht angenommen&quot; geändert und der Betrag wird nicht verfügbar werden. Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block zur selben Zeit wie Sie generierte.</translation>
     </message>
 </context>
 <context>
