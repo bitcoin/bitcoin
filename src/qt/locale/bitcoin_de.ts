@@ -1405,7 +1405,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Sent to</source>
-        <translation>An</translation>
+        <translation>Überwiesen an</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
@@ -1425,32 +1425,32 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="74"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"></translation>
+        <translation>Zu suchende Adresse oder Beschreibung eingeben</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="80"/>
         <source>Min amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Kleinster Betrag</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="108"/>
         <source>Copy address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse kopieren</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="109"/>
         <source>Copy label</source>
-        <translation type="unfinished"></translation>
+        <translation>Beschreibung kopieren</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="110"/>
         <source>Edit label</source>
-        <translation type="unfinished"></translation>
+        <translation>Beschreibung bearbeiten</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="111"/>
         <source>Show details...</source>
-        <translation type="unfinished"></translation>
+        <translation>Details anzeigen...</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="244"/>
@@ -1460,62 +1460,62 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="246"/>
         <source>Comma separated file (*.csv)</source>
-        <translation></translation>
+        <translation>CSV-Dateiformat (*.csv)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="254"/>
         <source>Confirmed</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestätigt</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="255"/>
         <source>Date</source>
-        <translation type="unfinished">Datum</translation>
+        <translation>Datum</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="256"/>
         <source>Type</source>
-        <translation type="unfinished">Beschreibung</translation>
+        <translation>Typ</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="257"/>
         <source>Label</source>
-        <translation type="unfinished">Bezeichnung</translation>
+        <translation>Beschreibung</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="258"/>
         <source>Address</source>
-        <translation type="unfinished">Adresse</translation>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="259"/>
         <source>Amount</source>
-        <translation type="unfinished">Betrag</translation>
+        <translation>Betrag</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="260"/>
         <source>ID</source>
-        <translation type="unfinished"></translation>
+        <translation>ID</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="264"/>
         <source>Error exporting</source>
-        <translation>Fehler beim exportieren</translation>
+        <translation>Fehler beim Exportieren</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="264"/>
         <source>Could not write to file %1.</source>
-        <translation>Konnte Datei %1 nicht zum beschreiben öffnen</translation>
+        <translation>Konnte nicht in Datei %1 schreiben.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="352"/>
         <source>Range:</source>
-        <translation type="unfinished"></translation>
+        <translation>Bereich:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="360"/>
         <source>to</source>
-        <translation type="unfinished"></translation>
+        <translation>bis</translation>
     </message>
 </context>
 <context>
