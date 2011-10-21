@@ -1014,6 +1014,18 @@ bool EvalScriptInner(vector<vector<unsigned char> >& stack, const CScript& scrip
 
                 case OP_EVAL:
                 {
+                    // This code should be removed when OP_EVAL has
+                    // a majority of hashing power on the network.
+                    // OP_EVAL behaves just like OP_NOP until
+                    // opevaltime :
+                    if (!fTestNet || fDebug)
+                    {
+                        // 1328054400 is Feb 1, 2012
+                        int64 nEvalSwitchTime = GetArg("opevaltime", 1328054400);
+                        if (GetTime() < nEvalSwitchTime)
+                            break;
+                    }
+
                     // Evaluate the top item on the stack as a Script
                     // [serialized script ] -- [result(s) of executing script]
                     if (stack.size() < 1)
