@@ -15,7 +15,22 @@ using namespace std;
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int& nSigOps, int nHashType);
 
-BOOST_AUTO_TEST_SUITE(script_op_eval_tests)
+static const int64 nEvalSwitchover = 1328054400;
+
+struct CEvalFixture {
+    CEvalFixture()
+    {
+        // Set mock time to AFTER OP_EVAL deployed
+        SetMockTime(nEvalSwitchover+1);
+    }
+    ~CEvalFixture()
+    {
+        // Reset back to use-real-time
+        SetMockTime(0);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(script_op_eval_tests, CEvalFixture)
 
 BOOST_AUTO_TEST_CASE(script_op_eval1)
 {
@@ -171,14 +186,16 @@ BOOST_AUTO_TEST_CASE(script_op_eval3)
     }
 }
 
-BOOST_AUTO_TEST_CASE(script_op_eval_backcompat)
+BOOST_AUTO_TEST_CASE(script_op_eval_backcompat1)
 {
     // Check backwards-incompatibility-testing code
     CScript returnsEleven;
     returnsEleven << OP_11;
 
-    // This will validate on new clients, but will
+    // This should validate on new clients, but will
     // be invalid on old clients (that interpret OP_EVAL as a no-op)
+    //  ... except there's a special rule that makes new clients reject
+    // it.
     CScript fund;
     fund << OP_EVAL << OP_11 << OP_EQUAL;
 
@@ -199,5 +216,36 @@ BOOST_AUTO_TEST_CASE(script_op_eval_backcompat)
     BOOST_CHECK(!VerifySignature(txFrom, txTo, 0, nUnused));
 }
 
+BOOST_AUTO_TEST_CASE(script_op_eval_switchover)
+{
+    // Use SetMockTime to test OP_EVAL switchover code
+    CScript notValid;
+    notValid << OP_11 << OP_12 << OP_EQUALVERIFY;
+
+    // This will be valid under old rules, invalid under new:
+    CScript fund;
+    fund << OP_EVAL;
+
+    CTransaction txFrom;  // Funding transaction:
+    txFrom.vout.resize(1);
+    txFrom.vout[0].scriptPubKey = fund;
+
+    CTransaction txTo;
+    txTo.vin.resize(1);
+    txTo.vout.resize(1);
+    txTo.vin[0].prevout.n = 0;
+    txTo.vin[0].prevout.hash = txFrom.GetHash();
+    txTo.vin[0].scriptSig = CScript() << static_cast<std::vector<unsigned char> >(notValid);
+    txTo.vout[0].nValue = 1;
+
+    SetMockTime(nEvalSwitchover-1);
+
+    int nUnused = 0;
+    BOOST_CHECK(VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0));
+
+    // After eval switchover time, it should validate:
+    SetMockTime(nEvalSwitchover);
+    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
