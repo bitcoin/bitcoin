@@ -178,7 +178,8 @@ CODECFORTR = UTF-8
 TRANSLATIONS = src/qt/locale/bitcoin_de.ts \
     src/qt/locale/bitcoin_es.ts \
     src/qt/locale/bitcoin_nl.ts \
-    src/qt/locale/bitcoin_ru.ts
+    src/qt/locale/bitcoin_ru.ts \
+    src/qt/locale/bitcoin_sv.ts
 
 isEmpty(QMAKE_LRELEASE) {
     win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\lrelease.exe
