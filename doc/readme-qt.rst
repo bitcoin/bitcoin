@@ -160,3 +160,19 @@ and 4.X cannot open the new format. This means that you cannot go back to the ol
 significant hassle!
 
 .. _`this Debian issue`: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=621425
+
+Ubuntu 11.10 warning
+====================
+
+Ubuntu 11.10 has a package called 'qt-at-spi' installed by default.  At the time of writing, having that package
+installed causes bitcoin-qt to crash intermittently.  The issue has been reported as `launchpad bug 857790`_, but
+isn't yet fixed.
+
+Until the bug is fixed, you can remove the qt-at-spi package to work around the problem, though this will presumably
+disable screen reader functionality for Qt apps:
+
+::
+
+    sudo apt-get remove qt-at-spi
+
+.. _`launchpad bug 857790`: https://bugs.launchpad.net/ubuntu/+source/qt-at-spi/+bug/857790
