@@ -118,14 +118,27 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
 
-    // Load language file for system locale
-    QString locale = QLocale::system().name();
-    QTranslator qtTranslator;
-    qtTranslator.load(QLibraryInfo::location(QLibraryInfo::TranslationsPath) + "/qt_" + locale);
+    // Load language files for system locale:
+    // - First load the translator for the base language, without territory
+    // - Then load the more specific locale translator
+    QString lang_territory = QLocale::system().name(); // "en_US"
+    QString lang = lang_territory;
+    lang.truncate(lang_territory.lastIndexOf('_')); // "en"
+    QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
+
+    qtTranslatorBase.load(QLibraryInfo::location(QLibraryInfo::TranslationsPath) + "/qt_" + lang);
+    if (!qtTranslatorBase.isEmpty())
+        app.installTranslator(&qtTranslatorBase);
+
+    qtTranslator.load(QLibraryInfo::location(QLibraryInfo::TranslationsPath) + "/qt_" + lang_territory);
     if (!qtTranslator.isEmpty())
         app.installTranslator(&qtTranslator);
-    QTranslator translator;
-    translator.load(":/translations/"+locale);
+
+    translatorBase.load(":/translations/"+lang);
+    if (!translatorBase.isEmpty())
+        app.installTranslator(&translatorBase);
+
+    translator.load(":/translations/"+lang_territory);
     if (!translator.isEmpty())
         app.installTranslator(&translator);
 
