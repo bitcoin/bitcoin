@@ -18,7 +18,7 @@ remotes:
 files:
 - "wxwidgets-win32-2.9.2-gitian.zip"
 - "boost-win32-1.47.0-gitian.zip"
-- "openssl-1.0.0d.tar.gz"
+- "openssl-1.0.0e.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
 script: |
@@ -50,8 +50,8 @@ script: |
   mv include/boost .
   cd ..
   #
-  tar xzf openssl-1.0.0d.tar.gz
-  cd openssl-1.0.0d
+  tar xzf openssl-1.0.0e.tar.gz
+  cd openssl-1.0.0e
   ./Configure --cross-compile-prefix=i586-mingw32msvc- mingw
   make
   cd ..
@@ -77,6 +77,10 @@ script: |
   cp -a $OUTDIR/src/locale $OUTDIR
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
   cp $OUTDIR/src/COPYING $OUTDIR/license.txt
+  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.0e OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.0e/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease
+  make $MAKEOPTS
+  cp release/bitcoin-qt.exe $OUTDIR/
+  #
   cd src
   sed 's/$(DEBUGFLAGS)/-frandom-seed=bitcoin/' -i makefile.linux-mingw
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
