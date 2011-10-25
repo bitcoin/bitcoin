@@ -1,4 +1,4 @@
-Bitcoin 0.4.1 BETA
+Bitcoin 0.5.0 BETA
 
 Copyright (c) 2009-2011 Bitcoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
@@ -18,7 +18,7 @@ with each other, with the help of a P2P network to check for double-spending.
 
 Setup
 -----
-Unpack the files into a directory and run bitcoin.exe.
+Unpack the files into a directory and run bitcoin-qt.exe.
 
 If you have Microsoft Security Essentials, you need to add bitcoin.exe to its
 "Excluded processes" list.  Microsoft Security Essentials->Settings tab,
@@ -27,8 +27,9 @@ select Excluded processes, press Add, select bitcoin.exe, OK, Save changes.
 The software automatically finds other nodes to connect to.  You can
 enable Universal Plug and Play using a menu entry or set your firewall
 to forward port 8333 (TCP) to your computer so you can receive
-incoming connections.  Bitcoin work without incoming connections,
+incoming connections.  Bitcoin works without incoming connections,
 but allowing incoming connections helps the Bitcoin network.
 
-See the bitcoin wiki at:  https://en.bitcoin.it/wiki/Main_Page
+See the bitcoin wiki at:
+  https://en.bitcoin.it/wiki/Main_Page
 for more help and information.
