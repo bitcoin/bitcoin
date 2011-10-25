@@ -1,0 +1,26 @@
+Description: Use system JSON Spirit library
+Author: Jonas Smedegaard <dr@jones.dk>
+Last-Update: 2011-05-17
+--- a/src/rpc.cpp
++++ b/src/rpc.cpp
+@@ -12,9 +12,7 @@
+ #include <boost/asio/ssl.hpp> 
+ typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
+ #endif
+-#include "json/json_spirit_reader_template.h"
+-#include "json/json_spirit_writer_template.h"
+-#include "json/json_spirit_utils.h"
++#include <json_spirit.h>
+ #define printf OutputDebugStringF
+ // MinGW 3.4.5 gets "fatal error: had to relocate PCH" if the json headers are
+ // precompiled in headers.h.  The problem might be when the pch file goes over
+--- a/src/makefile.unix
++++ b/src/makefile.unix
+@@ -23,6 +23,7 @@
+    -l boost_thread \
+    -l db_cxx \
+    -l ssl \
++   -l json_spirit \
+    -l crypto
+ 
+ ifdef USE_UPNP

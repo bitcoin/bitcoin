@@ -1,0 +1,205 @@
+Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
+Upstream-Name: Bitcoin
+Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
+ irc://#bitcoin@freenode.net
+Source: http://sourceforge.net/projects/bitcoin/files/
+ https://github.com/bitcoin/bitcoin
+
+Files: *
+Copyright: 2009-2011, Bitcoin Developers
+License: Expat
+Comment: The Bitcoin Developers encompasses the current developers listed on bitcoin.org,
+         as well as the numerous contributors to the project.
+
+Files: src/json/*
+Copyright: 2007-2009, John W. Wilkinson
+License: Expat
+
+Files: src/strlcpy.h
+Copyright: 1998, Todd C. Miller <Todd.Miller@courtesan.com>
+License: ISC
+
+Files: debian/*
+Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
+           2011, Matt Corallo <matt@bluematt.me>
+License: GPL-2+
+
+Files: debian/manpages/*
+Copyright: Micah Anderson <micah@debian.org>
+License: GPL-3+
+
+Files: src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
+       src/qt/res/src/*.svg
+Copyright: Wladimir van der Laan
+License: CC-BY-3
+
+Files: src/qt/res/icons/send.png
+Copyright: Icons Land
+License: Freeware Non-commercial
+Comment: Icon Pack: Vista Style Arrow
+         Site: http://findicons.com/icon/231371/right3green
+
+Files: src/qt/res/icons/address-book.png
+Copyright: FatCow Web Hosting
+License: CC-BY-3
+Comment: Icon Pack: Farm-Fresh Web
+         Site: http://findicons.com/icon/163938/book_open
+
+Files: src/qt/res/icons/connect*.png, src/qt/res/icons/synced.png, src/qt/res/icons/lock_*.png
+Copyright: schollidesign
+License: GPL-3+
+Comment: Icon Pack: Human-O2
+         Site: http://findicons.com/icon/93743/blocks_gnome_netstatus_0
+
+Files: src/qt/res/icons/transaction*.png
+Copyright: md2k7
+License: You are free to do with these icons as you wish, including selling,
+ copying, modifying etc.
+Comment: Site: https://forum.bitcoin.org/index.php?topic=15276.0
+
+Files: src/qt/res/icons/configure.png, src/qt/res/icons/quit.png,
+      src/qt/res/icons/editcopy.png, src/qt/res/icons/editpaste.png,
+      src/qt/res/icons/add.png, src/qt/res/icons/edit.png,
+      src/qt/res/icons/remove.png
+Copyright: http://www.everaldo.com
+License: LGPL
+Comment: Icon Pack: Crystal SVG
+
+Files: src/qt/res/icons/receive.png, src/qt/res/icons/history.png,
+      src/qt/res/icons/export.png
+Copyright: Oxygen team
+License: CC-BY-SA-3
+Comment: Icon Pack: Oxygen
+         Site: http://www.oxygen-icons.org/
+
+Files: src/qt/res/icons/bitcoin.png, src/qt/res/icons/toolbar.png
+Copyright: Bitboy (optimized for 16x16 by Wladimir van der Laan)
+License: PUB-DOM
+Comment: Site: http://forum.bitcoin.org/?topic=1756.0
+
+Files: src/qt/res/icons/overview.png
+Copyright: Jack Cai
+License: CC-BY-ND-3
+Comment: Icon Pack: Primo
+         Site: http://findicons.com/icon/175944/home?id=176221#
+
+Files:  scripts/img/reload.xcf, src/qt/res/movies/update_spinner.mng
+Copyright: Everaldo (Everaldo Coelho)
+License: GPL-3+
+Comment: Icon Pack: Kids
+         Site: http://findicons.com/icon/17102/reload?id=17102
+
+Files: src/qt/res/images/splash2.jpg
+License: PUB-DOM
+Copyright: Crobbo (forum)
+Comment: Site: https://bitcointalk.org/index.php?topic=32273.0
+
+Files: src/qt/res/icons/key.png
+Copyright: VisualPharm (Ivan Boyko)
+License: CC-BY-3
+Comment: Icon Pack: Must Have
+         Site: http://findicons.com/icon/51009/key?id=51009
+
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so, subject to
+ the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: ISC
+ Permission to use, copy, modify, and distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR
+ BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES
+ OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ SOFTWARE.
+
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 2, or (at your option) any
+ later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+Comment:
+ On Debian systems the GNU General Public License (GPL) version 2 is
+ located in '/usr/share/common-licenses/GPL-2'.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+License: GPL-3+
+ Permission is granted to copy, distribute and/or modify this document
+ under the terms of the GNU General Public License, Version 3 or any
+ later version published by the Free Software Foundation.
+Comment:
+ On Debian systems the GNU General Public License (GPL) version 3 is
+ located in '/usr/share/common-licenses/GPL-3'.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+License: CC-BY-3
+ This work is licensed under a Creative Commons Attribution 3.0 Unported
+ License.
+Comment:
+ You can get a full copy of the license at
+ <http://creativecommons.org/licenses/by/3.0/>.
+
+License: CC-BY-ND-3
+ This work is licensed under a Creative Commons Attribution-NoDerivs 3.0
+ Unported License.
+Comment:
+ You can get a full copy of the license at
+ <http://creativecommons.org/licenses/by-nd/3.0/>.
+
+License: CC-BY-ND-3
+ This work is licensed under a Creative Commons Attribution-ShareAlike
+ 3.0 Unported License.
+Comment:
+ You can get a full copy of the license at
+ <http://creativecommons.org/licenses/by-sa/3.0/>.
+
+License: LGPL
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+Comment:
+ On Debian systems the GNU Lesser General Public License (LGPL) is
+ located in '/usr/share/common-licenses/LGPL'.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+License: PUB-DOM
+ This work is in the public domain.
