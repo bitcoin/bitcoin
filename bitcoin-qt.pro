@@ -54,9 +54,12 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs
 }
 
-# for extra security against potential buffer overflows
-QMAKE_CXXFLAGS += -fstack-protector 
-QMAKE_LFLAGS += -fstack-protector
+!windows {
+    # for extra security against potential buffer overflows
+    QMAKE_CXXFLAGS += -fstack-protector
+    QMAKE_LFLAGS += -fstack-protector
+    # do not enable this on windows, as it will result in a non-working executable!
+}
 
 # disable quite some warnings because bitcoin core "sins" a lot
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-strict-aliasing -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts  -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch
