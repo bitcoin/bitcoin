@@ -15,14 +15,8 @@ WINDOWS BUILD NOTES
 
 Compilers Supported
 -------------------
-MinGW GCC  http://tdm-gcc.tdragon.net/
-   TDM-GCC with gcc 4.5.1 was used to build this release.
-MSYS 1.0.11 was also used (sh needed to compile some dependencies)
-
-
-Candidate releases were built with MSVC 10.0 (2010), but
-compiling with Visual C++ caused rendering artifacts when
-bitcoin was run.
+TODO: What works?
+Note: releases are cross-compiled using mingw running on Linux.
 
 
 Dependencies
@@ -42,7 +36,7 @@ Boost          MIT-like license
 miniupnpc      New (3-clause) BSD license
 
 Versions used in this release:
-OpenSSL      1.0.0d
+OpenSSL      1.0.0e
 Berkeley DB  4.8.30.NC
 Boost        1.47.0
 miniupnpc    1.6
@@ -54,7 +48,7 @@ MSYS shell:
 un-tar sources with MSYS 'tar xfz' to avoid issue with symlinks (OpenSSL ticket 2377)
 change 'MAKE' env. variable from 'C:\MinGW32\bin\mingw32-make.exe' to '/c/MinGW32/bin/mingw32-make.exe'
 
-cd /c/openssl-1.0.0d-mgw
+cd /c/openssl-1.0.0e-mgw
 ./config
 make
 
@@ -86,5 +80,5 @@ Bitcoin
 -------
 DOS prompt:
 cd \bitcoin\src
-mingw32-make bitcoind.exe -f makefile.mingw
+mingw32-make -f makefile.mingw
 strip bitcoind.exe
