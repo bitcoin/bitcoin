@@ -243,19 +243,20 @@ public:
         pcs = &csIn;
         pcs->Enter(pszName, pszFile, nLine);
     }
+
+    operator bool() const
+    {
+        return true;
+    }
+
     ~CCriticalBlock()
     {
         pcs->Leave();
     }
 };
 
-// WARNING: This will catch continue and break!
-// break is caught with an assertion, but there's no way to detect continue.
-// I'd rather be careful than suffer the other more error prone syntax.
-// The compiler will optimise away all this loop junk.
 #define CRITICAL_BLOCK(cs)     \
-    for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by CRITICAL_BLOCK!" && !fcriticalblockonce)), fcriticalblockonce=false) \
-        for (CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__); fcriticalblockonce; fcriticalblockonce=false)
+    if (CCriticalBlock criticalblock = CCriticalBlock(cs, #cs, __FILE__, __LINE__))
 
 class CTryCriticalBlock
 {
@@ -267,6 +268,12 @@ public:
     {
         pcs = (csIn.TryEnter(pszName, pszFile, nLine) ? &csIn : NULL);
     }
+
+    operator bool() const
+    {
+        return Entered();
+    }
+
     ~CTryCriticalBlock()
     {
         if (pcs)
@@ -274,12 +281,11 @@ public:
             pcs->Leave();
         }
     }
-    bool Entered() { return pcs != NULL; }
+    bool Entered() const { return pcs != NULL; }
 };
 
 #define TRY_CRITICAL_BLOCK(cs)     \
-    for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by TRY_CRITICAL_BLOCK!" && !fcriticalblockonce)), fcriticalblockonce=false) \
-        for (CTryCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__); fcriticalblockonce && (fcriticalblockonce = criticalblock.Entered()); fcriticalblockonce=false)
+    if (CTryCriticalBlock criticalblock = CTryCriticalBlock(cs, #cs, __FILE__, __LINE__))
 
 
 
