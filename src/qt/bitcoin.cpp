@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
     if (!translator.isEmpty())
         app.installTranslator(&translator);
 
-    app.setApplicationName(QApplication::translate("main", "Bitcoin Qt"));
+    app.setApplicationName(QApplication::translate("main", "Bitcoin-Qt"));
 
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
     splash.show();
