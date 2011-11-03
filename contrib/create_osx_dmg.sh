@@ -34,8 +34,8 @@ macdeployqt Bitcoin-Qt.app
 cp /opt/local/lib/db48/libdb_cxx-4.8.dylib Bitcoin-Qt.app/Contents/Frameworks/
 install_name_tool -id @executable_path/../Frameworks/libdb_cxx-4.8.dylib \
     Bitcoin-Qt.app/Contents/Frameworks/libdb_cxx-4.8.dylib
-install_name_tool -change libqt.3.dylib \
-        @executable_path/../Frameworks/libqt.3.dylib \
+install_name_tool -change /opt/local/lib/db48/libdb_cxx-4.8.dylib \
+        @executable_path/../Frameworks/libdb_cxx-4.8.dylib \
         Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt
 
 # Create a .dmg
