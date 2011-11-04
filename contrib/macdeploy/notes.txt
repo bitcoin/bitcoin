@@ -6,7 +6,7 @@ You will need the appscript package for the fancy disk image creation to work.
 Install it by invoking "sudo easy_install appscript".
 
 Ths script should be invoked in the target directory like this:
-$source_dir/contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr de,ru -dmg -fancy $source_dir/contrib/macdeploy/fancy.plist
+$source_dir/contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr de,es,ru -dmg -fancy $source_dir/contrib/macdeploy/fancy.plist
 
 During the process, the disk image window will pop up briefly where the fancy
 settings are applied. This is normal, please do not interfere.
