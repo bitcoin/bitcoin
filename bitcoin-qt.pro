@@ -19,6 +19,22 @@ OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
 
+LMODE = dynamic
+LMODE2 = dynamic
+contains(STATIC, 1) {
+	LMODE = static
+}
+contains(STATIC, all) {
+	LMODE = static
+	LMODE2 = static
+}
+
+!windows {
+	!macx {
+		LIBS += -Wl,-B$$LMODE
+	}
+}
+
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
 #  or: qmake "USE_UPNP=0" (disabled by default)
 #  or: qmake "USE_UPNP=-" (not supported)
@@ -254,5 +270,7 @@ INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,)
 LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
+
+LIBS += -Wl,-B$$LMODE2
 
 system($$QMAKE_LRELEASE -silent $$_PRO_FILE_)
