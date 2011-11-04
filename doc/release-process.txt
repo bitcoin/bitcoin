@@ -74,7 +74,13 @@
 
 
 * perform Mac build
-  TODO: document process
+  qmake USE_SSL=1 USE_UPNP=1 bitcoin-qt.pro
+  make
+  export QTDIR=/opt/local/share/qt4
+  contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr de,ru -dmg -fancy contrib/macdeploy/fancy.plist  
+
+ Build output expected:
+  Bitcoin-Qt.dmg
 
 * upload source and builds to SourceForge
 
