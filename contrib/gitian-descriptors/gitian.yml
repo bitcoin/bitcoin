@@ -18,7 +18,7 @@ packages:
 - "unzip"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
+- "url": "https://github.com/TheBlueMatt/bitcoin.git"
   "dir": "bitcoin"
 files:
 - "miniupnpc-1.6.tar.gz"
@@ -43,6 +43,6 @@ script: |
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoind $OUTDIR/bin/$GBUILD_BITS
   cd ..
-  qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib"
+  qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib" STATIC=1
   make $MAKEOPTS
   install bitcoin-qt $OUTDIR/bin/$GBUILD_BITS
