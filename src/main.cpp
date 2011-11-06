@@ -70,6 +70,9 @@ int fUseUPnP = false;
 // dispatching functions
 //
 
+// These functions dispatch to one or all registered wallets
+
+
 void RegisterWallet(CWallet* pwalletIn)
 {
     CRITICAL_BLOCK(cs_setpwalletRegistered)
@@ -86,6 +89,7 @@ void UnregisterWallet(CWallet* pwalletIn)
     }
 }
 
+// check whether the passed transaction is from us
 bool static IsFromMe(CTransaction& tx)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
@@ -94,6 +98,7 @@ bool static IsFromMe(CTransaction& tx)
     return false;
 }
 
+// get the wallet transaction with the given hash (if it exists)
 bool static GetTransaction(const uint256& hashTx, CWalletTx& wtx)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
@@ -102,42 +107,49 @@ bool static GetTransaction(const uint256& hashTx, CWalletTx& wtx)
     return false;
 }
 
+// erases transaction with the given hash from all wallets
 void static EraseFromWallets(uint256 hash)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->EraseFromWallet(hash);
 }
 
+// make sure all wallets know about the given transaction, in the given block
 void static SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->AddToWalletIfInvolvingMe(tx, pblock, fUpdate);
 }
 
+// notify wallets about a new best chain
 void static SetBestChain(const CBlockLocator& loc)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->SetBestChain(loc);
 }
 
+// notify wallets about an updated transaction
 void static UpdatedTransaction(const uint256& hashTx)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->UpdatedTransaction(hashTx);
 }
 
+// dump all wallets
 void static PrintWallets(const CBlock& block)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->PrintWallet(block);
 }
 
+// notify wallets about an incoming inventory (for request counts)
 void static Inventory(const uint256& hash)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->Inventory(hash);
 }
 
+// ask wallets to resend their transactions
 void static ResendWalletTransactions()
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
