@@ -53,5 +53,6 @@
         <file alias="nb">locale/bitcoin_nb.qm</file>
         <file alias="nl">locale/bitcoin_nl.qm</file>
         <file alias="ru">locale/bitcoin_ru.qm</file>
+        <file alias="zh_TW">locale/bitcoin_zh_TW.qm</file>
     </qresource>
 </RCC>
