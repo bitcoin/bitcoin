@@ -44,14 +44,16 @@
   * Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
    ./bin/gbuild --commit bitcoin=v$VERSION ../bitcoin/contrib/gitian-descriptors/gitian.yml
    ./bin/gsign --signer $SIGNER --release $VERSION --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian.yml
-   cd build/out
-   zip bitcoin-$VERSION-linux-gitian.zip *
+   pushd build/out
+   zip -r bitcoin-$VERSION-linux-gitian.zip *
    mv bitcoin-$VERSION-linux-gitian.zip ../../
+   popd
    ./bin/gbuild --commit bitcoin=v$VERSION ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
    ./bin/gsign --signer $SIGNER --release $VERSION-win32 --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
-   cd build/out
-   zip bitcoin-$VERSION-win32-gitian.zip *
+   pushd build/out
+   zip -r bitcoin-$VERSION-win32-gitian.zip *
    mv bitcoin-$VERSION-win32-gitian.zip ../../
+   popd
 
   Build output expected:
   1. linux 32-bit and 64-bit binaries + source (bitcoin-$VERSION-linux-gitian.zip)
@@ -61,18 +63,15 @@
 * repackage gitian builds for release as stand-alone zip/tar/installer exe
 
   * Linux .tar.gz:
-   mkdir bitcoin-$VERSION-linux
-   cd bitcoin-$VERSION-linux
-   unzip bitcoin-$VERSION-linux-gitian.zip
-   cd ..; tar czvf bitcoin-$VERSION-linux.tar.gz bitcoin-$VERSION-linux
+   unzip bitcoin-$VERSION-linux-gitian.zip -d bitcoin-$VERSION-linux
+   tar czvf bitcoin-$VERSION-linux.tar.gz bitcoin-$VERSION-linux
+   rm -rf bitcoin-$VERSION-linux
 
   * Windows .zip and setup.exe:
-   mkdir bitcoin-$VERSION-win32
-   cd bitcoin-$VERSION-win32
-   unzip bitcoin-$VERSION-win32-gitian.zip
-   mv bitcoin-$VERSION-win32-setup.exe ..
-   cd ..; zip bitcoin-$VERSION-win32.zip bitcoin-$VERSION-win32
-
+   unzip bitcoin-$VERSION-win32-gitian.zip -d bitcoin-$VERSION-win32
+   mv bitcoin-$VERSION-win32/bitcoin-*-setup.exe .
+   zip -r bitcoin-$VERSION-win32.zip bitcoin-$VERSION-win32
+   rm -rf bitcoin-$VERSION-win32
 
 * perform Mac build
   See this blog post for how Gavin set up his build environment and
@@ -112,7 +111,7 @@
      cp ../gitian.sigs/$VERSION/$file/bitcoin-build.assert ./gitian/$file-build.assert
      cp ../gitian.sigs/$VERSION/$file/bitcoin-build.assert.sig ./gitian/$file-build.assert.sig
    done
-   zip bitcoin-$VERSION-linux-gitian.zip *
+   zip -r bitcoin-$VERSION-linux-gitian.zip *
    cp bitcoin-$VERSION-linux-gitian.zip ../
    cd ..
    mkdir bitcoin-$VERSION-linux-gitian; cd bitcoin-$VERSION-linux-gitian
@@ -123,9 +122,7 @@
      cp ../gitian.sigs/$VERSION/$file/bitcoin-build.assert ./gitian/$file-build.assert
      cp ../gitian.sigs/$VERSION/$file/bitcoin-build.assert.sig ./gitian/$file-build.assert.sig
    done
-   zip bitcoin-$VERSION-linux-gitian.zip *
+   zip -r bitcoin-$VERSION-linux-gitian.zip *
    cp bitcoin-$VERSION-linux-gitian.zip ../
 
   * Upload gitian zips to SourceForge
-
-
