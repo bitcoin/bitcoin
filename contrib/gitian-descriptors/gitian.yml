@@ -43,6 +43,6 @@ script: |
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoind $OUTDIR/bin/$GBUILD_BITS
   cd ..
-  qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib"
+  qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib" RELEASE=1
   make $MAKEOPTS
   install bitcoin-qt $OUTDIR/bin/$GBUILD_BITS
