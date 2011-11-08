@@ -13,24 +13,10 @@ using namespace std;
 
 // Test routines internal to script.cpp:
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int& nSigOps, int nHashType);
+extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int& nSigOps,
+                         int nHashType, bool fStrictOpEval);
 
-static const int64 nEvalSwitchover = 1328054400;
-
-struct CEvalFixture {
-    CEvalFixture()
-    {
-        // Set mock time to AFTER OP_EVAL deployed
-        SetMockTime(nEvalSwitchover+1);
-    }
-    ~CEvalFixture()
-    {
-        // Reset back to use-real-time
-        SetMockTime(0);
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(script_op_eval_tests, CEvalFixture)
+BOOST_AUTO_TEST_SUITE(script_op_eval_tests)
 
 BOOST_AUTO_TEST_CASE(script_op_eval1)
 {
@@ -130,8 +116,8 @@ BOOST_AUTO_TEST_CASE(script_op_eval2)
     txTo.vout[0].nValue = 1;
 
     int nUnused = 0;
-    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0));
-    BOOST_CHECK(!VerifySignature(txFrom, txTo, 0, nUnused));
+    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0, true));
+    BOOST_CHECK(!VerifySignature(txFrom, txTo, 0, nUnused, true));
 }
 
 BOOST_AUTO_TEST_CASE(script_op_eval3)
@@ -212,13 +198,13 @@ BOOST_AUTO_TEST_CASE(script_op_eval_backcompat1)
     txTo.vout[0].nValue = 1;
 
     int nUnused = 0;
-    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0));
-    BOOST_CHECK(!VerifySignature(txFrom, txTo, 0, nUnused));
+    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0, true));
+    BOOST_CHECK(!VerifySignature(txFrom, txTo, 0, nUnused, true));
 }
 
 BOOST_AUTO_TEST_CASE(script_op_eval_switchover)
 {
-    // Use SetMockTime to test OP_EVAL switchover code
+    // Test OP_EVAL switchover code
     CScript notValid;
     notValid << OP_11 << OP_12 << OP_EQUALVERIFY;
 
@@ -238,14 +224,11 @@ BOOST_AUTO_TEST_CASE(script_op_eval_switchover)
     txTo.vin[0].scriptSig = CScript() << static_cast<std::vector<unsigned char> >(notValid);
     txTo.vout[0].nValue = 1;
 
-    SetMockTime(nEvalSwitchover-1);
-
     int nUnused = 0;
-    BOOST_CHECK(VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0));
+    BOOST_CHECK(VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0, false));
 
-    // After eval switchover time, it should validate:
-    SetMockTime(nEvalSwitchover);
-    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0));
+    // Under strict op_eval switchover, it should be considered invalid:
+    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0, true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

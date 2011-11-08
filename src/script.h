@@ -6,7 +6,6 @@
 #define H_BITCOIN_SCRIPT
 
 #include "base58.h"
-#include "keystore.h"
 
 #include <string>
 #include <vector>
@@ -14,6 +13,7 @@
 #include <boost/foreach.hpp>
 
 class CTransaction;
+class CKeyStore;
 
 enum
 {
@@ -24,7 +24,7 @@ enum
 };
 
 
-enum txntype
+enum txnouttype
 {
     TX_NONSTANDARD,
     // 'standard' transaction types:
@@ -34,7 +34,7 @@ enum txntype
     TX_MULTISIG,
 };
 
-const char* GetTxnTypeName(txntype t);
+const char* GetTxnOutputType(txnouttype t);
 
 enum opcodetype
 {
@@ -567,14 +567,14 @@ public:
 
 
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType, int& nSigOpCountRet);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType, bool fStrictOpEval, int& nSigOpCountRet);
 
-bool Solver(const CScript& scriptPubKey, txntype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* pkeystore, CBitcoinAddress& addressRet);
-bool ExtractAddresses(const CScript& scriptPubKey, const CKeyStore* pkeystore, txntype& typeRet, std::vector<CBitcoinAddress>& addressRet, int& nRequiredRet);
+bool ExtractAddresses(const CScript& scriptPubKey, const CKeyStore* pkeystore, txnouttype& typeRet, std::vector<CBitcoinAddress>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript());
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int& nSigOpCountRet, int nHashType=0);
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int& nSigOpCountRet, int nHashType=0, bool fStrictOpEval=true);
 
 #endif

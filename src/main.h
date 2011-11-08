@@ -494,7 +494,7 @@ public:
     }
 
     bool IsStandard() const;
-    bool IsStandardInputs(std::map<uint256, std::pair<CTxIndex, CTransaction> > mapInputs) const;
+    bool AreInputsStandard(std::map<uint256, std::pair<CTxIndex, CTransaction> > mapInputs) const;
 
     int64 GetValueOut() const
     {
@@ -622,6 +622,8 @@ public:
     bool ReadFromDisk(CTxDB& txdb, COutPoint prevout);
     bool ReadFromDisk(COutPoint prevout);
     bool DisconnectInputs(CTxDB& txdb);
+
+    // Fetch from memory and/or disk. inputsRet keys are transaction hashes.
     bool FetchInputs(CTxDB& txdb, const std::map<uint256, CTxIndex>& mapTestPool,
                      bool fBlock, bool fMiner, std::map<uint256, std::pair<CTxIndex, CTransaction> >& inputsRet);
     bool ConnectInputs(std::map<uint256, std::pair<CTxIndex, CTransaction> > inputs,

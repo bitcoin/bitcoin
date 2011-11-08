@@ -1674,10 +1674,10 @@ Value validateaddress(const Array& params, bool fHelp)
             pwalletMain->GetCScript(address.GetHash160(), subscript);
             ret.push_back(Pair("ismine", ::IsMine(*pwalletMain, subscript)));
             std::vector<CBitcoinAddress> addresses;
-            txntype whichType;
+            txnouttype whichType;
             int nRequired;
             ExtractAddresses(subscript, pwalletMain, whichType, addresses, nRequired);
-            ret.push_back(Pair("script", GetTxnTypeName(whichType)));
+            ret.push_back(Pair("script", GetTxnOutputType(whichType)));
             Array a;
             BOOST_FOREACH(const CBitcoinAddress& addr, addresses)
                 a.push_back(addr.ToString());
