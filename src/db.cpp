@@ -938,7 +938,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 uint160 hash;
                 ssKey >> hash;
-                std::vector<unsigned char> script;
+                CScript script;
                 ssValue >> script;
                 if (!pwallet->LoadCScript(hash, script))
                     return DB_CORRUPT;

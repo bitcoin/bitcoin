@@ -70,7 +70,7 @@ static inline void popstack(vector<valtype>& stack)
 }
 
 
-const char* GetTxnTypeName(txntype t)
+const char* GetTxnOutputType(txnouttype t)
 {
     switch (t)
     {
@@ -230,12 +230,12 @@ const char* GetOpName(opcodetype opcode)
     }
 }
 
-
 //
 // Returns true if script is valid.
 //
 bool EvalScriptInner(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType,
-                     CScript::const_iterator pbegincodehash, CScript::const_iterator pendcodehash, int& nOpCount, int& nSigOpCount, int nRecurseDepth)
+                     CScript::const_iterator pbegincodehash, CScript::const_iterator pendcodehash, int& nOpCount, int& nSigOpCount,
+                     bool fStrictOpEval, int nRecurseDepth)
 {
     CAutoBN_CTX pctx;
     CScript::const_iterator pc = script.begin();
@@ -1014,17 +1014,9 @@ bool EvalScriptInner(vector<vector<unsigned char> >& stack, const CScript& scrip
 
                 case OP_EVAL:
                 {
-                    // This code should be removed when OP_EVAL has
-                    // a majority of hashing power on the network.
-                    // OP_EVAL behaves just like OP_NOP until
-                    // opevaltime :
-                    if (!fTestNet || fDebug)
-                    {
-                        // 1328054400 is Feb 1, 2012
-                        int64 nEvalSwitchTime = GetArg("opevaltime", 1328054400);
-                        if (GetTime() < nEvalSwitchTime)
-                            break;
-                    }
+                    if (!fStrictOpEval)
+                        break; // Act as a NO_OP
+
 
                     // Evaluate the top item on the stack as a Script
                     // [serialized script ] -- [result(s) of executing script]
@@ -1034,12 +1026,14 @@ bool EvalScriptInner(vector<vector<unsigned char> >& stack, const CScript& scrip
                     CScript subscript(vchScript.begin(), vchScript.end());
                     popstack(stack);
                     
-                    // Codeseparators not allowed
+                    // Codeseparators not allowed; they don't make sense 'inside' an OP_EVAL, because
+                    // their purpose is to change which parts of the scriptPubKey script is copied
+                    // and signed by OP_CHECKSIG, but OP_EVAl'ed code is in the scriptSig, not the scriptPubKey.
                     if (subscript.Find(OP_CODESEPARATOR))
                         return false;
 
                     if (!EvalScriptInner(stack, subscript, txTo, nIn, nHashType,
-                                         pbegincodehash, pendcodehash, nOpCount, nSigOpCount, nRecurseDepth++))
+                                         pbegincodehash, pendcodehash, nOpCount, nSigOpCount, fStrictOpEval, nRecurseDepth++))
                         return false;
                 }
                 break;
@@ -1066,14 +1060,15 @@ bool EvalScriptInner(vector<vector<unsigned char> >& stack, const CScript& scrip
 }
 
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script,
-                const CTransaction& txTo, unsigned int nIn, int nHashType, int& nSigOpCountRet)
+                const CTransaction& txTo, unsigned int nIn, int nHashType,
+                bool fStrictOpEval, int& nSigOpCountRet)
 {
     CScript::const_iterator pbegincodehash = script.begin();
     CScript::const_iterator pendcodehash = script.end();
 
     int nOpCount = 0;
     return EvalScriptInner(stack, script, txTo, nIn, nHashType, pbegincodehash, pendcodehash,
-                           nOpCount, nSigOpCountRet, 0);
+                           nOpCount, nSigOpCountRet, fStrictOpEval, 0);
 }
 
 
@@ -1177,10 +1172,10 @@ bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CSc
 //
 // Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
 //
-bool Solver(const CScript& scriptPubKey, txntype& typeRet, vector<vector<unsigned char> >& vSolutionsRet)
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsigned char> >& vSolutionsRet)
 {
     // Templates
-    static map<txntype, CScript> mTemplates;
+    static map<txnouttype, CScript> mTemplates;
     if (mTemplates.empty())
     {
         // Standard tx, sender provides pubkey, receiver adds signature
@@ -1199,7 +1194,7 @@ bool Solver(const CScript& scriptPubKey, txntype& typeRet, vector<vector<unsigne
 
     // Scan templates
     const CScript& script1 = scriptPubKey;
-    BOOST_FOREACH(const PAIRTYPE(txntype, CScript)& tplate, mTemplates)
+    BOOST_FOREACH(const PAIRTYPE(txnouttype, CScript)& tplate, mTemplates)
     {
         const CScript& script2 = tplate.second;
         vSolutionsRet.clear();
@@ -1331,13 +1326,13 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
 {
     scriptSigRet.clear();
 
-    txntype whichType;
+    txnouttype whichType;
     vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
     CBitcoinAddress address;
-    valtype subscript;
+    CScript subscript;
     switch (whichType)
     {
     case TX_NONSTANDARD:
@@ -1359,10 +1354,11 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
     case TX_SCRIPTHASH:
         if (!keystore.GetCScript(uint160(vSolutions[0]), subscript))
             return false;
-        if (!Solver(keystore, CScript(subscript.begin(), subscript.end()), hash, nHashType, scriptSigRet))
+        if (!Solver(keystore, subscript, hash, nHashType, scriptSigRet))
             return false;
         if (hash != 0)
-            scriptSigRet << subscript; // signatures AND serialized script
+            // static_cast to get vector.operator<< instead of CScript.operator<<
+            scriptSigRet << static_cast<valtype>(subscript); // signatures AND serialized script
         break;
     case TX_MULTISIG:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
@@ -1375,7 +1371,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
 bool IsStandard(const CScript& scriptPubKey)
 {
     vector<valtype> vSolutions;
-    txntype whichType;
+    txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
@@ -1410,7 +1406,7 @@ int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
 bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
     vector<valtype> vSolutions;
-    txntype whichType;
+    txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
@@ -1427,10 +1423,10 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         return keystore.HaveKey(address);
     case TX_SCRIPTHASH:
     {
-        valtype subscript;
+        CScript subscript;
         if (!keystore.GetCScript(uint160(vSolutions[0]), subscript))
             return false;
-        return IsMine(keystore, CScript(subscript.begin(), subscript.end()));
+        return IsMine(keystore, subscript);
     }
     case TX_MULTISIG:
     {
@@ -1449,7 +1445,7 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
     vector<valtype> vSolutions;
-    txntype whichType;
+    txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
@@ -1472,7 +1468,7 @@ bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBit
     return false;
 }
 
-bool ExtractAddresses(const CScript& scriptPubKey, const CKeyStore* keystore, txntype& typeRet, vector<CBitcoinAddress>& addressRet, int& nRequiredRet)
+bool ExtractAddresses(const CScript& scriptPubKey, const CKeyStore* keystore, txnouttype& typeRet, vector<CBitcoinAddress>& addressRet, int& nRequiredRet)
 {
     addressRet.clear();
     typeRet = TX_NONSTANDARD;
@@ -1484,10 +1480,10 @@ bool ExtractAddresses(const CScript& scriptPubKey, const CKeyStore* keystore, tx
     {
         nRequiredRet = vSolutions.front()[0];
         int n = vSolutions.back()[0];
-        for (vector<valtype>::const_iterator it = vSolutions.begin()+1; it != vSolutions.begin()+vSolutions.size()-1; it++)
+        for (int i = 1; i < vSolutions.size()-1; i++)
         {
             CBitcoinAddress address;
-            address.SetPubKey(*it);
+            address.SetPubKey(vSolutions[i]);
             addressRet.push_back(address);
         }
     }
@@ -1507,12 +1503,13 @@ bool ExtractAddresses(const CScript& scriptPubKey, const CKeyStore* keystore, tx
     return true;
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int& nSigOpCountRet, int nHashType)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int& nSigOpCountRet,
+                  int nHashType, bool fStrictOpEval)
 {
     vector<vector<unsigned char> > stack;
-    if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType, nSigOpCountRet))
+    if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType, fStrictOpEval, nSigOpCountRet))
         return false;
-    if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType, nSigOpCountRet))
+    if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType, fStrictOpEval, nSigOpCountRet))
         return false;
     if (stack.empty())
         return false;
@@ -1521,24 +1518,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     // This code should be removed when a compatibility-breaking block chain split has passed.
     // Special check for OP_EVAL backwards-compatibility: if scriptPubKey or scriptSig contains
     // OP_EVAL, then result must be identical if OP_EVAL is treated as a no-op:
-    if (scriptSig.Find(OP_EVAL)+scriptPubKey.Find(OP_EVAL) > 0)
-    {
-        int nUnused = 0;
-        stack.clear();
-        CScript sigCopy = scriptSig;
-        sigCopy.FindAndDelete(CScript(OP_EVAL));
-        CScript pubKeyCopy = scriptPubKey;
-        pubKeyCopy.FindAndDelete(CScript(OP_EVAL));
-
-        if (!EvalScript(stack, sigCopy, txTo, nIn, nHashType, nUnused))
-            return false;
-        if (!EvalScript(stack, pubKeyCopy, txTo, nIn, nHashType, nUnused))
-            return false;
-        if (stack.empty())
-            return false;
-        if (fResult != CastToBool(stack.back()))
-            return false;
-    }
+    if (fResult && fStrictOpEval && (scriptPubKey.Find(OP_EVAL) || scriptSig.Find(OP_EVAL)))
+        return VerifyScript(scriptSig, scriptPubKey, txTo, nIn, nSigOpCountRet, nHashType, false);
 
     return fResult;
 }
@@ -1563,14 +1544,14 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTrans
     // Test solution
     int nUnused = 0;
     if (scriptPrereq.empty())
-        if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nUnused, 0))
+        if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nUnused, 0, true))
             return false;
 
     return true;
 }
 
 
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int& nSigOpCountRet, int nHashType)
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int& nSigOpCountRet, int nHashType, bool fStrictOpEval)
 {
     assert(nIn < txTo.vin.size());
     const CTxIn& txin = txTo.vin[nIn];
@@ -1581,7 +1562,7 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
 
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nSigOpCountRet, nHashType))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nSigOpCountRet, nHashType, fStrictOpEval))
         return false;
 
     return true;

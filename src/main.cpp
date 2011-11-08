@@ -250,13 +250,13 @@ bool CTransaction::IsStandard() const
 {
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
-        // Biggest 'standard' txin is a 2-signature 2-of-3 escrow
-        // in an OP_EVAL, which is 2 ~80-byte signatures, 3
+        // Biggest 'standard' txin is a 3-signature 3-of-3 CHECKMULTISIG
+        // in an OP_EVAL, which is 3 ~80-byte signatures, 3
         // ~65-byte public keys, plus a few script ops.
-        if (txin.scriptSig.size() > 400)
-            return error("nonstandard txin, size %d\n", txin.scriptSig.size());
+        if (txin.scriptSig.size() > 500)
+            return error("nonstandard txin, size %d is too large\n", txin.scriptSig.size());
         if (!txin.scriptSig.IsPushOnly())
-            return error("nonstandard txin: %s", txin.scriptSig.ToString().c_str());
+            return error("nonstandard txin (opcodes other than PUSH): %s", txin.scriptSig.ToString().c_str());
     }
     BOOST_FOREACH(const CTxOut& txout, vout)
         if (!::IsStandard(txout.scriptPubKey))
@@ -275,7 +275,7 @@ bool CTransaction::IsStandard() const
 // expensive-to-check-upon-redemption script like:
 //   DUP CHECKSIG DROP ... repeated 100 times... OP_1
 //
-bool CTransaction::IsStandardInputs(std::map<uint256, std::pair<CTxIndex, CTransaction> > mapInputs) const
+bool CTransaction::AreInputsStandard(std::map<uint256, std::pair<CTxIndex, CTransaction> > mapInputs) const
 {
     if (fTestNet)
         return true; // Allow non-standard on testnet
@@ -287,18 +287,20 @@ bool CTransaction::IsStandardInputs(std::map<uint256, std::pair<CTxIndex, CTrans
         CTransaction& txPrev = mapInputs[prevout.hash].second;
 
         vector<vector<unsigned char> > vSolutions;
-        txntype whichType;
-        if (!Solver(txPrev.vout[vin[i].prevout.n].scriptPubKey, whichType, vSolutions))
-            return false;
+        txnouttype whichType;
+        // get the scriptPubKey corresponding to this input:
+        CScript& prevScript = txPrev.vout[prevout.n].scriptPubKey;
+        if (!Solver(prevScript, whichType, vSolutions))
+            return error("nonstandard txin (spending nonstandard txout %s)", prevScript.ToString().c_str());
         if (whichType == TX_SCRIPTHASH)
         {
             vector<vector<unsigned char> > stack;
             int nUnused;
-            if (!EvalScript(stack, vin[i].scriptSig, *this, i, 0, nUnused))
+            if (!EvalScript(stack, vin[i].scriptSig, *this, i, 0, true, nUnused))
                 return false;
-            const vector<unsigned char>& subscript = stack.back();
-            if (!::IsStandard(CScript(subscript.begin(), subscript.end())))
-                return false;
+            CScript subscript(stack.back().begin(), stack.back().end());
+            if (!::IsStandard(subscript))
+                return error("nonstandard txin (nonstandard OP_EVAL subscript %s)", subscript.ToString().c_str());
         }
     }
 
@@ -481,7 +483,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         }
 
         // Check for non-standard OP_EVALs in inputs
-        if (!IsStandardInputs(mapInputs))
+        if (!AreInputsStandard(mapInputs))
             return error("AcceptToMemoryPool() : nonstandard transaction input");
 
         // Check against previous transactions
@@ -978,9 +980,27 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
             // (before the last blockchain checkpoint). This is safe because block merkle hashes are
             // still computed and checked, and any change will be caught at the next checkpoint.
             if (!(fBlock && IsInitialBlockDownload()))
+            {
+                bool fStrictOpEval = true;
+                // This code should be removed when OP_EVAL has
+                // a majority of hashing power on the network.
+                if (fBlock)
+                {
+                    // To avoid being on the short end of a block-chain split,
+                    // interpret OP_EVAL as a NO_OP until blocks with timestamps
+                    // after opevaltime:
+                    int64 nEvalSwitchTime = GetArg("opevaltime", 1328054400); // Feb 1, 2012
+                    fStrictOpEval = (pindexBlock->nTime >= nEvalSwitchTime);
+                }
+                // if !fBlock, then always be strict-- don't accept
+                // invalid-under-new-rules OP_EVAL transactions into
+                // our memory pool (don't relay them, don't include them
+                // in blocks we mine).
+
                 // Verify signature
-                if (!VerifySignature(txPrev, *this, i, nSigOpsRet))
+                if (!VerifySignature(txPrev, *this, i, nSigOpsRet, fStrictOpEval))
                     return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
+            }
 
             // Check for conflicts (double-spend)
             // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
@@ -1054,7 +1074,7 @@ bool CTransaction::ClientConnectInputs()
 
             // Verify signature
             int nUnused = 0;
-            if (!VerifySignature(txPrev, *this, i, nUnused))
+            if (!VerifySignature(txPrev, *this, i, nUnused, false))
                 return error("ConnectInputs() : VerifySignature failed");
 
             ///// this is redundant with the mapNextTx stuff, not sure which I want to get rid of

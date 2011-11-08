@@ -13,17 +13,17 @@
 
 #include <db_cxx.h>
 
-class CTxIndex;
-class CDiskBlockIndex;
-class CDiskTxPos;
-class COutPoint;
-class CAddress;
-class CWalletTx;
-class CWallet;
 class CAccount;
 class CAccountingEntry;
+class CAddress;
 class CBlockLocator;
-
+class CDiskBlockIndex;
+class CDiskTxPos;
+class CMasterKey;
+class COutPoint;
+class CTxIndex;
+class CWallet;
+class CWalletTx;
 
 extern unsigned int nWalletDBUpdated;
 extern DbEnv dbenv;
@@ -420,16 +420,17 @@ public:
         return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
     }
 
-    bool ReadCScript(const uint160 &hash, std::vector<unsigned char>& data)
+    // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
+    bool ReadCScript(const uint160 &hash, CScript& redeemScript)
     {
-        data.clear();
-        return Read(std::make_pair(std::string("cscript"), hash), data);
+        redeemScript.clear();
+        return Read(std::make_pair(std::string("cscript"), hash), redeemScript);
     }
 
-    bool WriteCScript(const uint160& hash, const std::vector<unsigned char>& data)
+    bool WriteCScript(const uint160& hash, const CScript& redeemScript)
     {
         nWalletDBUpdated++;
-        return Write(std::make_pair(std::string("cscript"), hash), data, false);
+        return Write(std::make_pair(std::string("cscript"), hash), redeemScript, false);
     }
 
     bool WriteBestBlock(const CBlockLocator& locator)

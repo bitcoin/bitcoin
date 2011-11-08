@@ -42,13 +42,13 @@ bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector
     return false;
 }
 
-bool CWallet::AddCScript(const uint160 &hash, const std::vector<unsigned char>& data)
+bool CWallet::AddCScript(const uint160 &hash, const CScript& redeemScript)
 {
-    if (!CCryptoKeyStore::AddCScript(hash, data))
+    if (!CCryptoKeyStore::AddCScript(hash, redeemScript))
         return false;
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).WriteCScript(hash, data);
+    return CWalletDB(strWalletFile).WriteCScript(hash, redeemScript);
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)
@@ -386,6 +386,14 @@ int64 CWallet::GetDebit(const CTxIn &txin) const
 bool CWallet::IsChange(const CTxOut& txout) const
 {
     CBitcoinAddress address;
+
+    // TODO: fix handling of 'change' outputs. The assumption is that any
+    // payment to a TX_PUBKEYHASH that is mine but isn't in the address book
+    // is change. That assumption is likely to break when we implement multisignature
+    // wallets that return change back into a multi-signature-protected address;
+    // a better way of identifying which outputs are 'the send' and which are
+    // 'the change' will need to be implemented (maybe extend CWalletTx to remember
+    // which output, if any, was change).
     if (ExtractAddress(txout.scriptPubKey, this, address) && !address.IsScript())
         CRITICAL_BLOCK(cs_wallet)
             if (!mapAddressBook.count(address))
