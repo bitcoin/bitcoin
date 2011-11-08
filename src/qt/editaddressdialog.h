@@ -33,6 +33,7 @@ public:
     void accept();
 
     QString getAddress() const;
+    void setAddress(const QString &address);
 private:
     bool saveCurrentRow();
 
