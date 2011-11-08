@@ -44,6 +44,8 @@ void SendCoinsEntry::on_pasteButton_clicked()
 
 void SendCoinsEntry::on_addressBookButton_clicked()
 {
+    if(!model)
+        return;
     AddressBookPage dlg(AddressBookPage::ForSending, AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
     if(dlg.exec())
@@ -55,6 +57,8 @@ void SendCoinsEntry::on_addressBookButton_clicked()
 
 void SendCoinsEntry::on_payTo_textChanged(const QString &address)
 {
+    if(!model)
+        return;
     ui->addAsLabel->setText(model->getAddressTableModel()->labelForAddress(address));
 }
 
@@ -74,7 +78,7 @@ void SendCoinsEntry::clear()
     ui->addAsLabel->clear();
     ui->payAmount->clear();
     ui->payTo->setFocus();
-    if(model)
+    if(model && model->getOptionsModel())
     {
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
