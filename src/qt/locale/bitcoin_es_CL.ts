@@ -1,4 +1,5 @@
 <?xml version="1.0" ?><!DOCTYPE TS><TS language="es_CL" version="2.0">
+<defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
     <message>
@@ -11,7 +12,7 @@
         <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
         <translation>&lt;b&gt;Bitcoin&lt;/b&gt; - versión </translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../forms/aboutdialog.ui" line="85"/>
         <source>Copyright © 2009-2011 Bitcoin Developers
 
@@ -80,22 +81,22 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
         <translation>&amp;Borrar</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="197"/>
+        <location filename="../addressbookpage.cpp" line="204"/>
         <source>Export Address Book Data</source>
         <translation>Exporta datos de la guia de direcciones</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="199"/>
+        <location filename="../addressbookpage.cpp" line="206"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Archivos separados por coma (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="212"/>
+        <location filename="../addressbookpage.cpp" line="219"/>
         <source>Error exporting</source>
         <translation>Exportar errores</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="212"/>
+        <location filename="../addressbookpage.cpp" line="219"/>
         <source>Could not write to file %1.</source>
         <translation>No se pudo escribir al archivo %1.</translation>
     </message>
@@ -253,99 +254,74 @@ Are you sure you wish to encrypt your wallet?</source>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="59"/>
+        <location filename="../bitcoingui.cpp" line="63"/>
         <source>Bitcoin Wallet</source>
         <translation>Billetera Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="67"/>
-        <source>&amp;File</source>
-        <translation>&amp;Archivo</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="73"/>
-        <source>&amp;Settings</source>
-        <translation>&amp;Configuración</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="79"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Ayuda</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="83"/>
-        <source>Tabs toolbar</source>
-        <translation>Barra de pestañas</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="91"/>
-        <source>Actions toolbar</source>
-        <translation>Barra de acciónes</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="142"/>
+        <location filename="../bitcoingui.cpp" line="132"/>
         <source>Synchronizing with network...</source>
         <translation>Sincronizando con la red...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="145"/>
+        <location filename="../bitcoingui.cpp" line="135"/>
         <source>Block chain synchronization in progress</source>
         <translation>Sincronización de la cadena de bloques en progreso</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="169"/>
+        <location filename="../bitcoingui.cpp" line="164"/>
         <source>&amp;Overview</source>
         <translation>&amp;Vista general</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="170"/>
+        <location filename="../bitcoingui.cpp" line="165"/>
         <source>Show general overview of wallet</source>
         <translation>Muestra una vista general de la billetera</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="174"/>
+        <location filename="../bitcoingui.cpp" line="170"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Transacciónes</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="175"/>
+        <location filename="../bitcoingui.cpp" line="171"/>
         <source>Browse transaction history</source>
         <translation>Explora el historial de transacciónes</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="179"/>
+        <location filename="../bitcoingui.cpp" line="176"/>
         <source>&amp;Address Book</source>
         <translation>&amp;Guia de direcciónes</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="180"/>
+        <location filename="../bitcoingui.cpp" line="177"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Edita la lista de direcciones y etiquetas almacenadas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="184"/>
+        <location filename="../bitcoingui.cpp" line="182"/>
         <source>&amp;Receive coins</source>
         <translation>&amp;Recibir monedas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="185"/>
+        <location filename="../bitcoingui.cpp" line="183"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Muestra la lista de direcciónes utilizadas para recibir pagos</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="189"/>
+        <location filename="../bitcoingui.cpp" line="188"/>
         <source>&amp;Send coins</source>
         <translation>&amp;Envíar monedas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="190"/>
+        <location filename="../bitcoingui.cpp" line="189"/>
         <source>Send coins to a bitcoin address</source>
         <translation>Enviar monedas a una dirección bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
-        <source>&amp;Exit</source>
-        <translation>&amp;Salir</translation>
+        <source>E&amp;xit</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
@@ -353,147 +329,172 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Salir del programa</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="202"/>
-        <source>&amp;About</source>
-        <translation>&amp;Acerca de</translation>
+        <location filename="../bitcoingui.cpp" line="204"/>
+        <source>&amp;About %1</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="203"/>
+        <location filename="../bitcoingui.cpp" line="205"/>
         <source>Show information about Bitcoin</source>
         <translation>Muestra información acerca de Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="204"/>
+        <location filename="../bitcoingui.cpp" line="207"/>
         <source>&amp;Options...</source>
         <translation>&amp;Opciones</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="205"/>
+        <location filename="../bitcoingui.cpp" line="208"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Modifica las opciones de configuración de bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="206"/>
+        <location filename="../bitcoingui.cpp" line="210"/>
         <source>Open &amp;Bitcoin</source>
         <translation>Abre &amp;Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="207"/>
+        <location filename="../bitcoingui.cpp" line="211"/>
         <source>Show the Bitcoin window</source>
         <translation>Muestra la ventana de Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="208"/>
+        <location filename="../bitcoingui.cpp" line="212"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportar...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="209"/>
+        <location filename="../bitcoingui.cpp" line="213"/>
         <source>Export the current view to a file</source>
         <translation>Exportar la vista actual a un archivo</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="210"/>
+        <location filename="../bitcoingui.cpp" line="214"/>
         <source>&amp;Encrypt Wallet</source>
         <translation>&amp;Codificar la billetera</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="211"/>
+        <location filename="../bitcoingui.cpp" line="215"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Codificar o decodificar la billetera</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="213"/>
+        <location filename="../bitcoingui.cpp" line="217"/>
         <source>&amp;Change Passphrase</source>
         <translation>&amp;Cambiar la contraseña</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="214"/>
+        <location filename="../bitcoingui.cpp" line="218"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Cambiar la contraseña utilizada para la codificación de la billetera</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="230"/>
+        <location filename="../bitcoingui.cpp" line="239"/>
+        <source>&amp;File</source>
+        <translation>&amp;Archivo</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>&amp;Settings</source>
+        <translation>&amp;Configuración</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="248"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Ayuda</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="254"/>
+        <source>Tabs toolbar</source>
+        <translation>Barra de pestañas</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="262"/>
+        <source>Actions toolbar</source>
+        <translation>Barra de acciónes</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="273"/>
         <source>[testnet]</source>
         <translation>[red-de-pruebas]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="293"/>
+        <location filename="../bitcoingui.cpp" line="355"/>
         <source>bitcoin-qt</source>
         <translation>bitcoin-qt</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="332"/>
+        <location filename="../bitcoingui.cpp" line="396"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n conexión activa hacia la red Bitcoin</numerusform><numerusform>%n conexiones activas hacia la red Bitcoin</numerusform></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="347"/>
+        <location filename="../bitcoingui.cpp" line="411"/>
         <source>Downloaded %1 of %2 blocks of transaction history.</source>
         <translation>Descargados %1 de %2 bloques del historial de transacciones.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="353"/>
+        <location filename="../bitcoingui.cpp" line="417"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Descargado %1 bloques del historial de transacciones.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="364"/>
+        <location filename="../bitcoingui.cpp" line="428"/>
         <source>%n second(s) ago</source>
         <translation><numerusform>Hace %n segundo</numerusform><numerusform>Hace %n segundos</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="368"/>
+        <location filename="../bitcoingui.cpp" line="432"/>
         <source>%n minute(s) ago</source>
         <translation><numerusform>Hace %n minuto</numerusform><numerusform>Hace %n minutos</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="372"/>
+        <location filename="../bitcoingui.cpp" line="436"/>
         <source>%n hour(s) ago</source>
         <translation><numerusform>Hace %n hora</numerusform><numerusform>Hace %n horas</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="376"/>
+        <location filename="../bitcoingui.cpp" line="440"/>
         <source>%n day(s) ago</source>
         <translation><numerusform>Hace %n día</numerusform><numerusform>Hace %n días</numerusform></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="382"/>
+        <location filename="../bitcoingui.cpp" line="446"/>
         <source>Up to date</source>
         <translation>Actualizado</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="387"/>
+        <location filename="../bitcoingui.cpp" line="451"/>
         <source>Catching up...</source>
         <translation>Recuperando...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="393"/>
+        <location filename="../bitcoingui.cpp" line="457"/>
         <source>Last received block was generated %1.</source>
         <translation>El ultimo bloque recibido fue generado %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="440"/>
+        <location filename="../bitcoingui.cpp" line="508"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Esta transacción supera el límite. Puedes seguir enviandola incluyendo una comisión de %s que se va a repartir entre los nodos que procesan su transacción y ayudan a mantener la red. ¿Quieres seguir con la transacción?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="445"/>
+        <location filename="../bitcoingui.cpp" line="513"/>
         <source>Sending...</source>
         <translation>Enviando...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="470"/>
+        <location filename="../bitcoingui.cpp" line="538"/>
         <source>Sent transaction</source>
         <translation>Transacción enviada</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="471"/>
+        <location filename="../bitcoingui.cpp" line="539"/>
         <source>Incoming transaction</source>
         <translation>Transacción entrante</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="472"/>
+        <location filename="../bitcoingui.cpp" line="540"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -505,12 +506,12 @@ Tipo: %3
 Dirección: %4</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="566"/>
+        <location filename="../bitcoingui.cpp" line="639"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>La billetera esta &lt;b&gt;codificada&lt;/b&gt; y actualmente &lt;b&gt;desbloqueda&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="574"/>
+        <location filename="../bitcoingui.cpp" line="647"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>La billetera esta &lt;b&gt;codificada&lt;/b&gt; y actualmente &lt;b&gt;bloqueda&lt;/b&gt;</translation>
     </message>
@@ -518,17 +519,17 @@ Dirección: %4</translation>
 <context>
     <name>DisplayOptionsPage</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="258"/>
+        <location filename="../optionsdialog.cpp" line="270"/>
         <source>&amp;Unit to show amounts in: </source>
         <translation>&amp;Unidad en la que mostrar cantitades: </translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="262"/>
+        <location filename="../optionsdialog.cpp" line="274"/>
         <source>Choose the default subdivision unit to show in the interface, and when sending coins</source>
         <translation>Elige la subdivisión por defecto para mostrar cantidaded en la interfaz cuando se envien monedas</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="269"/>
+        <location filename="../optionsdialog.cpp" line="281"/>
         <source>Display addresses in transaction list</source>
         <translation>Muestra direcciones en el listado de transaccioines</translation>
     </message>
@@ -604,87 +605,87 @@ Dirección: %4</translation>
 <context>
     <name>MainOptionsPage</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="166"/>
+        <location filename="../optionsdialog.cpp" line="170"/>
         <source>&amp;Start Bitcoin on window system startup</source>
         <translation>&amp;Inicia Bitcoin al iniciar el sistema</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="167"/>
+        <location filename="../optionsdialog.cpp" line="171"/>
         <source>Automatically start Bitcoin after the computer is turned on</source>
         <translation>Inicia Bitcoin automáticamente despues de encender el computador</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="170"/>
+        <location filename="../optionsdialog.cpp" line="175"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimiza a la bandeja en vez de la barra de tareas</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="171"/>
+        <location filename="../optionsdialog.cpp" line="176"/>
         <source>Show only a tray icon after minimizing the window</source>
         <translation>Muestra solo un ícono en la bandeja después de minimizar la ventana</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="174"/>
+        <location filename="../optionsdialog.cpp" line="180"/>
         <source>Map port using &amp;UPnP</source>
         <translation>Direcciona el puerto usando &amp;UPnP</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="175"/>
+        <location filename="../optionsdialog.cpp" line="181"/>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Abre automáticamente el puerto del cliente Bitcoin en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="178"/>
+        <location filename="../optionsdialog.cpp" line="185"/>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimiza a la bandeja al cerrar</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="179"/>
+        <location filename="../optionsdialog.cpp" line="186"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
         <translation>Minimiza la ventana en lugar de salir del programa cuando la ventana se cierra. Cuando esta opción esta activa el programa solo se puede cerrar seleccionando Salir desde el menu.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="182"/>
+        <location filename="../optionsdialog.cpp" line="190"/>
         <source>&amp;Connect through SOCKS4 proxy:</source>
         <translation>&amp;Conecta a traves de un proxy SOCKS4:</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="183"/>
+        <location filename="../optionsdialog.cpp" line="191"/>
         <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
         <translation>Conecta a la red Bitcoin a través de un proxy SOCKS4 (ej. cuando te conectas por la red Tor)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="188"/>
+        <location filename="../optionsdialog.cpp" line="196"/>
         <source>Proxy &amp;IP: </source>
         <translation>&amp;IP Proxy:</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="194"/>
+        <location filename="../optionsdialog.cpp" line="202"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
         <translation>Dirección IP del servidor proxy (ej. 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="197"/>
+        <location filename="../optionsdialog.cpp" line="205"/>
         <source>&amp;Port: </source>
         <translation>&amp;Puerto:</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="203"/>
+        <location filename="../optionsdialog.cpp" line="211"/>
         <source>Port of the proxy (e.g. 1234)</source>
         <translation>Puerto del servidor proxy (ej. 1234)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="209"/>
+        <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended.</source>
         <translation>Comisión de operación opcional por KB que ayuda a asegurar que tus transacciones sean procesadas rápidamente. La mayoría de las transacciones son de 1KB. Se recomienda una comisión de 0.01.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="215"/>
+        <location filename="../optionsdialog.cpp" line="223"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Comision de &amp;transacciónes</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="218"/>
+        <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended.</source>
         <translation>Comisión de operación opcional por KB que ayuda a asegurar que tus transacciones sean procesadas rápidamente. La mayoría de las transacciones son de 1KB. Se recomienda una comisión de 0.01.</translation>
     </message>
@@ -692,17 +693,17 @@ Dirección: %4</translation>
 <context>
     <name>OptionsDialog</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="75"/>
+        <location filename="../optionsdialog.cpp" line="79"/>
         <source>Main</source>
         <translation>Principal</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="80"/>
+        <location filename="../optionsdialog.cpp" line="84"/>
         <source>Display</source>
         <translation>Mostrado</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="100"/>
+        <location filename="../optionsdialog.cpp" line="104"/>
         <source>Options</source>
         <translation>Opciones</translation>
     </message>
@@ -782,103 +783,103 @@ p, li { white-space: pre-wrap; }
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="103"/>
-        <location filename="../sendcoinsdialog.cpp" line="108"/>
-        <location filename="../sendcoinsdialog.cpp" line="113"/>
-        <location filename="../sendcoinsdialog.cpp" line="118"/>
+        <location filename="../sendcoinsdialog.cpp" line="109"/>
+        <location filename="../sendcoinsdialog.cpp" line="114"/>
+        <location filename="../sendcoinsdialog.cpp" line="119"/>
         <location filename="../sendcoinsdialog.cpp" line="124"/>
-        <location filename="../sendcoinsdialog.cpp" line="129"/>
-        <location filename="../sendcoinsdialog.cpp" line="134"/>
+        <location filename="../sendcoinsdialog.cpp" line="130"/>
+        <location filename="../sendcoinsdialog.cpp" line="135"/>
+        <location filename="../sendcoinsdialog.cpp" line="140"/>
         <source>Send Coins</source>
         <translation>Enviar monedas</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="67"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="64"/>
         <source>Send to multiple recipients at once</source>
         <translation>Enviar a múltiples destinatarios</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="70"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="67"/>
         <source>&amp;Add recipient...</source>
         <translation>&amp;Agrega destinatario...</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="87"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Clear all</source>
         <translation>&amp;Borra todos</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="106"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="103"/>
         <source>Balance:</source>
         <translation>Balance:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="113"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="110"/>
         <source>123.456 BTC</source>
         <translation>123.456 BTC</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="144"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="141"/>
         <source>Confirm the send action</source>
         <translation>Confirma el envio</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="147"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="144"/>
         <source>&amp;Send</source>
         <translation>&amp;Envía</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="79"/>
+        <location filename="../sendcoinsdialog.cpp" line="85"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="82"/>
+        <location filename="../sendcoinsdialog.cpp" line="88"/>
         <source>Confirm send coins</source>
         <translation>Confirmar el envio de monedas</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="83"/>
+        <location filename="../sendcoinsdialog.cpp" line="89"/>
         <source>Are you sure you want to send %1?</source>
         <translation>Estas seguro que quieres enviar %1?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="83"/>
+        <location filename="../sendcoinsdialog.cpp" line="89"/>
         <source> and </source>
         <translation>y</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="104"/>
+        <location filename="../sendcoinsdialog.cpp" line="110"/>
         <source>The recepient address is not valid, please recheck.</source>
         <translation>La dirección de destinatarion no es valida, comprueba otra vez.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="109"/>
+        <location filename="../sendcoinsdialog.cpp" line="115"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>La cantidad por pagar tiene que ser mayor 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="114"/>
+        <location filename="../sendcoinsdialog.cpp" line="120"/>
         <source>Amount exceeds your balance</source>
         <translation>La cantidad sobrepasa tu saldo</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="119"/>
+        <location filename="../sendcoinsdialog.cpp" line="125"/>
         <source>Total exceeds your balance when the %1 transaction fee is included</source>
         <translation>El total sobrepasa tu saldo cuando se incluyen %1 como tasa de envio</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="125"/>
+        <location filename="../sendcoinsdialog.cpp" line="131"/>
         <source>Duplicate address found, can only send to each address once in one send operation</source>
         <translation>Tienes una dirección duplicada, solo puedes enviar a direcciónes individuales de una sola vez</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="130"/>
+        <location filename="../sendcoinsdialog.cpp" line="136"/>
         <source>Error: Transaction creation failed  </source>
         <translation>Error: La transacción no se pudo crear  </translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="135"/>
+        <location filename="../sendcoinsdialog.cpp" line="141"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Error: La transacción fue rechazada. Esto puede haber ocurrido si alguna de las monedas ya estaba gastada o si ha usado una copia de wallet.dat y las monedas se gastaron en la copia pero no se han marcado como gastadas aqui.</translation>
     </message>
@@ -902,7 +903,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
-        <location filename="../sendcoinsentry.cpp" line="22"/>
+        <location filename="../sendcoinsentry.cpp" line="26"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Introduce una etiqueta a esta dirección para añadirla a tu guia</translation>
     </message>
@@ -927,22 +928,22 @@ p, li { white-space: pre-wrap; }
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="126"/>
+        <location filename="../forms/sendcoinsentry.ui" line="120"/>
         <source>Paste address from clipboard</source>
         <translation>Pega dirección desde portapapeles</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="136"/>
+        <location filename="../forms/sendcoinsentry.ui" line="130"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="146"/>
+        <location filename="../forms/sendcoinsentry.ui" line="137"/>
         <source>Remove this recipient</source>
         <translation>Elimina destinatario</translation>
     </message>
     <message>
-        <location filename="../sendcoinsentry.cpp" line="21"/>
+        <location filename="../sendcoinsentry.cpp" line="25"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Introduce una dirección Bitcoin (ej. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -1222,158 +1223,158 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="48"/>
-        <location filename="../transactionview.cpp" line="61"/>
+        <location filename="../transactionview.cpp" line="55"/>
+        <location filename="../transactionview.cpp" line="71"/>
         <source>All</source>
         <translation>Todo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="49"/>
+        <location filename="../transactionview.cpp" line="56"/>
         <source>Today</source>
         <translation>Hoy</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="50"/>
+        <location filename="../transactionview.cpp" line="57"/>
         <source>This week</source>
         <translation>Esta semana</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="51"/>
+        <location filename="../transactionview.cpp" line="58"/>
         <source>This month</source>
         <translation>Esta mes</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="52"/>
+        <location filename="../transactionview.cpp" line="59"/>
         <source>Last month</source>
         <translation>Mes pasado</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="53"/>
+        <location filename="../transactionview.cpp" line="60"/>
         <source>This year</source>
         <translation>Este año</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="54"/>
+        <location filename="../transactionview.cpp" line="61"/>
         <source>Range...</source>
         <translation>Rango...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="62"/>
+        <location filename="../transactionview.cpp" line="72"/>
         <source>Received with</source>
         <translation>Recibido con</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="64"/>
+        <location filename="../transactionview.cpp" line="74"/>
         <source>Sent to</source>
         <translation>Enviado a</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="66"/>
+        <location filename="../transactionview.cpp" line="76"/>
         <source>To yourself</source>
         <translation>A ti mismo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="67"/>
+        <location filename="../transactionview.cpp" line="77"/>
         <source>Mined</source>
         <translation>Minado</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="68"/>
+        <location filename="../transactionview.cpp" line="78"/>
         <source>Other</source>
         <translation>Otra</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="74"/>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Enter address or label to search</source>
         <translation>Introduce una dirección o etiqueta para  buscar</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="80"/>
+        <location filename="../transactionview.cpp" line="90"/>
         <source>Min amount</source>
         <translation>Cantidad minima</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="108"/>
+        <location filename="../transactionview.cpp" line="125"/>
         <source>Copy address</source>
         <translation>Copia dirección</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="109"/>
+        <location filename="../transactionview.cpp" line="126"/>
         <source>Copy label</source>
         <translation>Copia etiqueta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="110"/>
+        <location filename="../transactionview.cpp" line="127"/>
         <source>Edit label</source>
         <translation>Edita etiqueta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="111"/>
+        <location filename="../transactionview.cpp" line="128"/>
         <source>Show details...</source>
         <translation>Muestra detalles...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="244"/>
+        <location filename="../transactionview.cpp" line="261"/>
         <source>Export Transaction Data</source>
         <translation>Exportar datos de transacción</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="246"/>
+        <location filename="../transactionview.cpp" line="263"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Archivos separados por coma (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="254"/>
+        <location filename="../transactionview.cpp" line="271"/>
         <source>Confirmed</source>
         <translation>Confirmado</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="255"/>
+        <location filename="../transactionview.cpp" line="272"/>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="256"/>
+        <location filename="../transactionview.cpp" line="273"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="257"/>
+        <location filename="../transactionview.cpp" line="274"/>
         <source>Label</source>
         <translation>Etiqueta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="258"/>
+        <location filename="../transactionview.cpp" line="275"/>
         <source>Address</source>
         <translation>Dirección</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="259"/>
+        <location filename="../transactionview.cpp" line="276"/>
         <source>Amount</source>
         <translation>Cantidad</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="260"/>
+        <location filename="../transactionview.cpp" line="277"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="264"/>
+        <location filename="../transactionview.cpp" line="281"/>
         <source>Error exporting</source>
         <translation>Error exportando</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="264"/>
+        <location filename="../transactionview.cpp" line="281"/>
         <source>Could not write to file %1.</source>
         <translation>No se pudo escribir en el archivo %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="352"/>
+        <location filename="../transactionview.cpp" line="369"/>
         <source>Range:</source>
         <translation>Rango:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="360"/>
+        <location filename="../transactionview.cpp" line="377"/>
         <source>to</source>
         <translation>para</translation>
     </message>
@@ -2328,6 +2329,14 @@ pero la información de los comentarios quedará en blanco.</translation>
         <location filename="../bitcoinstrings.cpp" line="216"/>
         <source>beta</source>
         <translation>beta</translation>
+    </message>
+</context>
+<context>
+    <name>main</name>
+    <message>
+        <location filename="../bitcoin.cpp" line="145"/>
+        <source>Bitcoin Qt</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 </TS>
