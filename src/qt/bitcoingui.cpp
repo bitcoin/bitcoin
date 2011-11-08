@@ -267,58 +267,62 @@ void BitcoinGUI::createToolBars()
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
 {
     this->clientModel = clientModel;
-
-    if(clientModel->isTestNet())
+    if(clientModel)
     {
-        QString title_testnet = windowTitle() + QString(" ") + tr("[testnet]");
-        setWindowTitle(title_testnet);
-#ifndef Q_WS_MAC
-        setWindowIcon(QIcon(":icons/bitcoin_testnet"));
-#else
-        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
-#endif
-        if(trayIcon)
+        if(clientModel->isTestNet())
         {
-            trayIcon->setToolTip(title_testnet);
-            trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+            QString title_testnet = windowTitle() + QString(" ") + tr("[testnet]");
+            setWindowTitle(title_testnet);
+#ifndef Q_WS_MAC
+            setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+#else
+            MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
+#endif
+            if(trayIcon)
+            {
+                trayIcon->setToolTip(title_testnet);
+                trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+            }
         }
+
+        // Keep up to date with client
+        setNumConnections(clientModel->getNumConnections());
+        connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
+
+        setNumBlocks(clientModel->getNumBlocks());
+        connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
+
+        // Report errors from network/worker thread
+        connect(clientModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
     }
-
-    // Keep up to date with client
-    setNumConnections(clientModel->getNumConnections());
-    connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
-
-    setNumBlocks(clientModel->getNumBlocks());
-    connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
-
-    // Report errors from network/worker thread
-    connect(clientModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
 }
 
 void BitcoinGUI::setWalletModel(WalletModel *walletModel)
 {
     this->walletModel = walletModel;
+    if(walletModel)
+    {
+        // Report errors from wallet thread
+        connect(walletModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
 
-    // Report errors from wallet thread
-    connect(walletModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
+        // Put transaction list in tabs
+        transactionView->setModel(walletModel);
 
-    // Put transaction list in tabs
-    transactionView->setModel(walletModel);
+        overviewPage->setModel(walletModel);
+        addressBookPage->setModel(walletModel->getAddressTableModel());
+        receiveCoinsPage->setModel(walletModel->getAddressTableModel());
+        sendCoinsPage->setModel(walletModel);
 
-    overviewPage->setModel(walletModel);
-    addressBookPage->setModel(walletModel->getAddressTableModel());
-    receiveCoinsPage->setModel(walletModel->getAddressTableModel());
-    sendCoinsPage->setModel(walletModel);
+        setEncryptionStatus(walletModel->getEncryptionStatus());
+        connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
 
-    setEncryptionStatus(walletModel->getEncryptionStatus());
-    connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
+        // Balloon popup for new transaction
+        connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
+                this, SLOT(incomingTransaction(QModelIndex,int,int)));
 
-    // Balloon popup for new transaction
-    connect(walletModel->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
-            this, SLOT(incomingTransaction(QModelIndex,int,int)));
-
-    // Ask for passphrase if needed
-    connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+        // Ask for passphrase if needed
+        connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+    }
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -369,6 +373,8 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 
 void BitcoinGUI::optionsClicked()
 {
+    if(!clientModel || !clientModel->getOptionsModel())
+        return;
     OptionsDialog dlg;
     dlg.setModel(clientModel->getOptionsModel());
     dlg.exec();
@@ -398,6 +404,8 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count)
 {
+    if(!clientModel)
+        return;
     int initTotal = clientModel->getNumBlocksAtStartup();
     int total = clientModel->getNumBlocksOfPeers();
     QString tooltip;
@@ -492,13 +500,16 @@ void BitcoinGUI::changeEvent(QEvent *e)
 
 void BitcoinGUI::closeEvent(QCloseEvent *event)
 {
-#ifndef Q_WS_MAC // Ignored on Mac
-    if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
-       !clientModel->getOptionsModel()->getMinimizeOnClose())
+    if(clientModel)
     {
-        qApp->quit();
-    }
+#ifndef Q_WS_MAC // Ignored on Mac
+        if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
+           !clientModel->getOptionsModel()->getMinimizeOnClose())
+        {
+            qApp->quit();
+        }
 #endif
+    }
     QMainWindow::closeEvent(event);
 }
 
@@ -517,6 +528,8 @@ void BitcoinGUI::askFee(qint64 nFeeRequired, bool *payFee)
 
 void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int end)
 {
+    if(!walletModel || !clientModel)
+        return;
     TransactionTableModel *ttm = walletModel->getTransactionTableModel();
     qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
                     .data(Qt::EditRole).toULongLong();
@@ -654,6 +667,8 @@ void BitcoinGUI::setEncryptionStatus(int status)
 
 void BitcoinGUI::encryptWallet(bool status)
 {
+    if(!walletModel)
+        return;
     AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt:
                                      AskPassphraseDialog::Decrypt, this);
     dlg.setModel(walletModel);
@@ -671,6 +686,8 @@ void BitcoinGUI::changePassphrase()
 
 void BitcoinGUI::unlockWallet()
 {
+    if(!walletModel)
+        return;
     // Unlock wallet when requested by wallet model
     if(walletModel->getEncryptionStatus() == WalletModel::Locked)
     {

@@ -56,6 +56,8 @@ void EditAddressDialog::loadRow(int row)
 
 bool EditAddressDialog::saveCurrentRow()
 {
+    if(!model)
+        return false;
     switch(mode)
     {
     case NewReceivingAddress:
@@ -78,6 +80,8 @@ bool EditAddressDialog::saveCurrentRow()
 
 void EditAddressDialog::accept()
 {
+    if(!model)
+        return;
     if(!saveCurrentRow())
     {
         switch(model->getEditStatus())
