@@ -4,8 +4,9 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "headers.h"
-#include "db.h"
 #include "crypter.h"
+#include "db.h"
+#include "script.h"
 
 std::vector<unsigned char> CKeyStore::GenerateNewKey()
 {
@@ -33,10 +34,10 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     return true;
 }
 
-bool CBasicKeyStore::AddCScript(const uint160 &hash, const std::vector<unsigned char>& data)
+bool CBasicKeyStore::AddCScript(const uint160 &hash, const CScript& redeemScript)
 {
     CRITICAL_BLOCK(cs_KeyStore)
-        mapData[hash] = data;
+        mapScripts[hash] = redeemScript;
     return true;
 }
 
@@ -44,19 +45,19 @@ bool CBasicKeyStore::HaveCScript(const uint160& hash) const
 {
     bool result;
     CRITICAL_BLOCK(cs_KeyStore)
-        result = (mapData.count(hash) > 0);
+        result = (mapScripts.count(hash) > 0);
     return result;
 }
 
 
-bool CBasicKeyStore::GetCScript(const uint160 &hash, std::vector<unsigned char>& dataOut) const
+bool CBasicKeyStore::GetCScript(const uint160 &hash, CScript& redeemScriptOut) const
 {
     CRITICAL_BLOCK(cs_KeyStore)
     {
-        DataMap::const_iterator mi = mapData.find(hash);
-        if (mi != mapData.end())
+        ScriptMap::const_iterator mi = mapScripts.find(hash);
+        if (mi != mapScripts.end())
         {
-            dataOut = (*mi).second;
+            redeemScriptOut = (*mi).second;
             return true;
         }
     }
