@@ -46,6 +46,7 @@
         <file alias="update_spinner">res/movies/update_spinner.mng</file>
     </qresource>
     <qresource prefix="/translations">
+        <file alias="da">locale/bitcoin_da.qm</file>
         <file alias="de">locale/bitcoin_de.qm</file>
         <file alias="en">locale/bitcoin_en.qm</file>
         <file alias="es">locale/bitcoin_es.qm</file>
