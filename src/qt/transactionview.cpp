@@ -322,6 +322,8 @@ void TransactionView::editLabel()
             // If this transaction has no associated address, exit
             return;
         }
+        // Is address in address book? Address book can miss address when a transaction is
+        // sent from outside the UI.
         int idx = addressBook->lookupAddress(address);
         if(idx != -1)
         {
@@ -343,6 +345,8 @@ void TransactionView::editLabel()
             // Add sending address
             EditAddressDialog dlg(EditAddressDialog::NewSendingAddress,
                                   this);
+            dlg.setModel(addressBook);
+            dlg.setAddress(address);
             dlg.exec();
         }
     }
