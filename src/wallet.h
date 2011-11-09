@@ -13,6 +13,9 @@ class CWalletTx;
 class CReserveKey;
 class CWalletDB;
 
+// A CWallet is an extension of a keystore, which also maintains a set of
+// transactions and balances, and provides the ability to create new
+// transactions
 class CWallet : public CCryptoKeyStore
 {
 private:
@@ -57,9 +60,14 @@ public:
     std::vector<unsigned char> vchDefaultKey;
 
     // keystore implementation
+    // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& key);
+    // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
+
+    // Adds an encrypted key to the store, and saves it to disk.
     bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    // Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
     bool LoadCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
 
     bool Unlock(const std::string& strWalletPassphrase);
@@ -244,7 +252,7 @@ public:
     unsigned int nTimeReceived;  // time received by this node
     char fFromMe;
     std::string strFromAccount;
-    std::vector<char> vfSpent;
+    std::vector<char> vfSpent; // which outputs are already spent
 
     // memory only
     mutable char fDebitCached;
@@ -371,6 +379,7 @@ public:
         return fReturn;
     }
 
+    // make sure balances are recalculated
     void MarkDirty()
     {
         fCreditCached = false;
