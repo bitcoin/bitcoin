@@ -1,0 +1,1029 @@
+#
+# Danube <none>, 2011.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Bitcoin 0.3.22\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-05-15 18:18+0100\n"
+"PO-Revision-Date: 2011-05-23 19:47+0200\n"
+"Last-Translator: Danube <none>\n"
+"Language-Team: Esperanto <none>\n"
+"Language: Esperanto\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"Plural-Forms: j\n"
+"X-Poedit-Language: Esperanto\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../src/net.cpp:1499
+#, c-format
+msgid ""
+"Unable to bind to port %d on this computer.  Bitcoin is probably already "
+"running."
+msgstr ""
+"Ne povis alligi al la porton %d ĉe ĉi tiu komputilo. Verŝajne la Bitmonero "
+"jam estas rulanta."
+
+#: ../../../src/ui.cpp:202
+#, c-format
+msgid ""
+"This transaction is over the size limit.  You can still send it for a fee of "
+"%s, which goes to the nodes that process your transaction and helps to "
+"support the network.  Do you want to pay the fee?"
+msgstr ""
+"Tiu ĉi transakcio transpasas la grandeclimiton.  Tamen vi povas sendi ĝin "
+"pagante transakcian koston de %s. Tiun koston ricevas la nodoj, kiuj "
+"realigas vian transakcion kaj kiuj helpas subteni la reton. Ĉu vi volas pagi "
+"la transakcian koston?"
+
+#: ../../../src/ui.cpp:301
+msgid "Status"
+msgstr "Stato"
+
+#: ../../../src/ui.cpp:302
+msgid "Date"
+msgstr "Dato"
+
+#: ../../../src/ui.cpp:303
+msgid "Description"
+msgstr "Priskribo"
+
+#: ../../../src/ui.cpp:304
+msgid "Debit"
+msgstr "Debeto"
+
+#: ../../../src/ui.cpp:305
+msgid "Credit"
+msgstr "Kredito"
+
+#: ../../../src/ui.cpp:511
+#, c-format
+msgid "Open for %d blocks"
+msgstr "Malfermita por %d blokoj"
+
+#: ../../../src/ui.cpp:513
+#, c-format
+msgid "Open until %s"
+msgstr "Malfermita ĝis %s"
+
+#: ../../../src/ui.cpp:519
+#, c-format
+msgid "%d/offline?"
+msgstr "%d/senkonekta?"
+
+#: ../../../src/ui.cpp:521
+#, c-format
+msgid "%d/unconfirmed"
+msgstr "%d/ne konfirmita"
+
+#: ../../../src/ui.cpp:523
+#, c-format
+msgid "%d confirmations"
+msgstr "%d konfirmoj"
+
+#: ../../../src/ui.cpp:608
+msgid "Generated"
+msgstr "Kreita"
+
+#: ../../../src/ui.cpp:616
+#, c-format
+msgid "Generated (%s matures in %d more blocks)"
+msgstr "Kreita (%s maturiĝos post %d blokoj)"
+
+#: ../../../src/ui.cpp:620
+msgid ""
+"Generated - Warning: This block was not received by any other nodes and will "
+"probably not be accepted!"
+msgstr ""
+"Kreita - Averto: Tiu bloko ne estas ricevita de iuj ajn aliaj nodoj! "
+"Verŝajne ĝi ne estos akceptita!"
+
+#: ../../../src/ui.cpp:624
+msgid "Generated (not accepted)"
+msgstr "Kreita (ne akceptita)"
+
+#: ../../../src/ui.cpp:634
+msgid "From: "
+msgstr "De: "
+
+#: ../../../src/ui.cpp:658
+msgid "Received with: "
+msgstr "Ricevita per: "
+
+#: ../../../src/ui.cpp:704
+msgid "Payment to yourself"
+msgstr "Pago al vi mem"
+
+#: ../../../src/ui.cpp:738
+msgid "To: "
+msgstr "Al: "
+
+#: ../../../src/ui.cpp:1053
+msgid "    Generating"
+msgstr "    Kreanta"
+
+#: ../../../src/ui.cpp:1055
+msgid "(not connected)"
+msgstr "(ne konektita)"
+
+#: ../../../src/ui.cpp:1058
+#, c-format
+msgid "     %d connections     %d blocks     %d transactions"
+msgstr "     %d konektoj     %d blokoj     %d transakcioj"
+
+#: ../../../src/ui.cpp:1163 ../../../src/ui.cpp:2527
+msgid "New Receiving Address"
+msgstr "Nova Ricevadreso"
+
+#: ../../../src/ui.cpp:1164 ../../../src/ui.cpp:2528
+msgid ""
+"You should use a new address for each payment you receive.\n"
+"\n"
+"Label"
+msgstr ""
+"Uzu novan adreson por ĉiu ajn pago kiu vi ricevos.\n"
+"\n"
+"Etikedo"
+
+#: ../../../src/ui.cpp:1233
+msgid "<b>Status:</b> "
+msgstr "<b>Stato:</b> "
+
+#: ../../../src/ui.cpp:1238
+msgid ", has not been successfully broadcast yet"
+msgstr ", ankoraŭ ne estas dissendita sukcese"
+
+#: ../../../src/ui.cpp:1240
+#, c-format
+msgid ", broadcast through %d node"
+msgstr ", estas dissendita per %d nodo"
+
+#: ../../../src/ui.cpp:1242
+#, c-format
+msgid ", broadcast through %d nodes"
+msgstr ", estas dissendita per %d nodoj"
+
+#: ../../../src/ui.cpp:1246
+msgid "<b>Date:</b> "
+msgstr "<b>Dato:</b> "
+
+#: ../../../src/ui.cpp:1254
+msgid "<b>Source:</b> Generated<br>"
+msgstr "<b>Fonto:</b> Kreita<br>"
+
+#: ../../../src/ui.cpp:1260 ../../../src/ui.cpp:1278
+msgid "<b>From:</b> "
+msgstr "<b>De:</b> "
+
+#: ../../../src/ui.cpp:1278
+msgid "unknown"
+msgstr "nekonata"
+
+#: ../../../src/ui.cpp:1279 ../../../src/ui.cpp:1303 ../../../src/ui.cpp:1362
+msgid "<b>To:</b> "
+msgstr "<b>Al:</b> "
+
+#: ../../../src/ui.cpp:1282
+msgid " (yours, label: "
+msgstr " (via, etikedo: "
+
+#: ../../../src/ui.cpp:1284
+msgid " (yours)"
+msgstr " (via)"
+
+#: ../../../src/ui.cpp:1321 ../../../src/ui.cpp:1333 ../../../src/ui.cpp:1379
+#: ../../../src/ui.cpp:1396
+msgid "<b>Credit:</b> "
+msgstr "<b>Кredito:</b> "
+
+#: ../../../src/ui.cpp:1323
+#, c-format
+msgid "(%s matures in %d more blocks)"
+msgstr "(%s maturiĝos post %d blokoj)"
+
+#: ../../../src/ui.cpp:1325
+msgid "(not accepted)"
+msgstr "(ne akceptita)"
+
+#: ../../../src/ui.cpp:1370 ../../../src/ui.cpp:1378 ../../../src/ui.cpp:1393
+msgid "<b>Debit:</b> "
+msgstr "<b>Debeto:</b> "
+
+#: ../../../src/ui.cpp:1384
+msgid "<b>Transaction fee:</b> "
+msgstr "<b>Transakcia kosto:</b> "
+
+#: ../../../src/ui.cpp:1400
+msgid "<b>Net amount:</b> "
+msgstr "<b>Neta kvanto:</b> "
+
+#: ../../../src/ui.cpp:1407
+msgid "Message:"
+msgstr "Mesaĝo:"
+
+#: ../../../src/ui.cpp:1409
+msgid "Comment:"
+msgstr "Komento:"
+
+#: ../../../src/ui.cpp:1412
+msgid ""
+"Generated coins must wait 120 blocks before they can be spent.  When you "
+"generated this block, it was broadcast to the network to be added to the "
+"block chain.  If it fails to get into the chain, it will change to \"not "
+"accepted\" and not be spendable.  This may occasionally happen if another "
+"node generates a block within a few seconds of yours."
+msgstr ""
+"Kreitaj moneroj devas atendi dum 120 blokoj ĝis ili povas esti elspezita. "
+"Kiam vi kreis tiun blokon, ĝi estis dissendita al la reton por esti "
+"inkludita en la blokĉeno. Se ĝi malsukcesos esti inkludita en la ĉeno, ĝi "
+"ŝanĝiĝos al \\\"ne akceptita\\\" kaj estos neelspezebla. Kelkfoje tio povas "
+"okazi se alia nodo kreas blokon samtempe (dum kelkaj sekundoj)."
+
+#: ../../../src/ui.cpp:1592
+msgid "Cannot write autostart/bitcoin.desktop file"
+msgstr "Ne povas skribi la dosieron autostart/bitcoin.desktop"
+
+#: ../../../src/ui.cpp:1628
+msgid "Main"
+msgstr "Ĉefa"
+
+#: ../../../src/ui.cpp:1636
+msgid "&Start Bitcoin on window system startup"
+msgstr "&Lanĉu Bitmoneron kiam vindozo ekas"
+
+#: ../../../src/ui.cpp:1643
+msgid "&Minimize on close"
+msgstr "Nur &kaŝiĝi anstataŭ malfermiĝi"
+
+#: ../../../src/ui.cpp:1785
+#, c-format
+msgid "version %s"
+msgstr "versio %s"
+
+#: ../../../src/ui.cpp:1897
+msgid "Error in amount  "
+msgstr "Eraro en kvanto  "
+
+#: ../../../src/ui.cpp:1897 ../../../src/ui.cpp:1902 ../../../src/ui.cpp:1907
+#: ../../../src/ui.cpp:1942 ../../../src/uibase.cpp:55
+msgid "Send Coins"
+msgstr "Sendu monerojn"
+
+#: ../../../src/ui.cpp:1902
+msgid "Amount exceeds your balance  "
+msgstr "Kvanto transpasas vian bonhavon  "
+
+#: ../../../src/ui.cpp:1907
+msgid "Total exceeds your balance when the "
+msgstr "Entuta sumo transpasas vian bonhavon, se la "
+
+#: ../../../src/ui.cpp:1907
+msgid " transaction fee is included  "
+msgstr " transakcia kosto estas inkludita  "
+
+#: ../../../src/ui.cpp:1925
+msgid "Payment sent  "
+msgstr "Pago sendita  "
+
+#: ../../../src/ui.cpp:1925 ../../../src/ui.cpp:1930 ../../../src/ui.cpp:2074
+#: ../../../src/ui.cpp:2227 ../../../src/main.cpp:3999
+msgid "Sending..."
+msgstr "Sendanta..."
+
+#: ../../../src/ui.cpp:1942
+msgid "Invalid address  "
+msgstr "Malvalida adreso  "
+
+#: ../../../src/ui.cpp:1995
+#, c-format
+msgid "Sending %s to %s"
+msgstr "Sendanta %s al %s"
+
+#: ../../../src/ui.cpp:2068 ../../../src/ui.cpp:2101
+msgid "CANCELLED"
+msgstr "MALVALIDIGITA"
+
+#: ../../../src/ui.cpp:2072
+msgid "Cancelled"
+msgstr "Malvalidigita"
+
+#: ../../../src/ui.cpp:2074
+msgid "Transfer cancelled  "
+msgstr "Transfero malvalidigita  "
+
+#: ../../../src/ui.cpp:2127
+msgid "Error: "
+msgstr "Eraro: "
+
+#: ../../../src/ui.cpp:2141 ../../../src/ui.cpp:2212
+#: ../../../src/main.cpp:4018
+msgid "Insufficient funds"
+msgstr "Malsufiĉa mono"
+
+#: ../../../src/ui.cpp:2146
+msgid "Connecting..."
+msgstr "Konektanta..."
+
+#: ../../../src/ui.cpp:2151
+msgid "Unable to connect"
+msgstr "Ne povas konekti"
+
+#: ../../../src/ui.cpp:2156
+msgid "Requesting public key..."
+msgstr "Postulanta publikan ĉifroŝlosilon..."
+
+#: ../../../src/ui.cpp:2168
+msgid "Received public key..."
+msgstr "Ricevinta publikan ĉifroŝlosilon..."
+
+#: ../../../src/ui.cpp:2182
+msgid "Recipient is not accepting transactions sent by IP address"
+msgstr "Adresato ne akceptas transakciojn senditajn per IP adreso"
+
+#: ../../../src/ui.cpp:2184
+msgid "Transfer was not accepted"
+msgstr "Transfero ne estis akceptita"
+
+#: ../../../src/ui.cpp:2193
+msgid "Invalid response received"
+msgstr "Malvalida respondo ricevita"
+
+#: ../../../src/ui.cpp:2208
+msgid "Creating transaction..."
+msgstr "Kreanta la transakcion..."
+
+#: ../../../src/ui.cpp:2220
+#, c-format
+msgid ""
+"This transaction requires a transaction fee of at least %s because of its "
+"amount, complexity, or use of recently received funds"
+msgstr ""
+"Tiu ĉi transakcio necesas transakcian koston de minimume %s, ĉar ĝia kvanto "
+"aŭ ĝia komplekseco aŭ la uzo de mono lastatempe ricevita."
+
+#: ../../../src/ui.cpp:2222
+msgid "Transaction creation failed"
+msgstr "La transakcio ne funkciis"
+
+#: ../../../src/ui.cpp:2229
+msgid "Transaction aborted"
+msgstr "Transakcio malvalidigita"
+
+#: ../../../src/ui.cpp:2237
+msgid "Lost connection, transaction cancelled"
+msgstr "Perdis la konekton, transakcio malvalidigita"
+
+#: ../../../src/ui.cpp:2253
+msgid "Sending payment..."
+msgstr "Sendanta pagon..."
+
+#: ../../../src/ui.cpp:2259
+msgid ""
+"The transaction was rejected.  This might happen if some of the coins in "
+"your wallet were already spent, such as if you used a copy of wallet.dat and "
+"coins were spent in the copy but not marked as spent here."
+msgstr ""
+"La transakcio estas malakceptita. Tio povas okazi se iom da moneroj en via "
+"monujo jam estis elspezata, ekzemple se vi uzis kopion de la monujo wallet."
+"dat kaj moneroj estis elspezita en la kopio, sed ne estas markata kiel "
+"elspezata ĉi tie."
+
+#: ../../../src/ui.cpp:2268
+msgid "Waiting for confirmation..."
+msgstr "Atendanta la konfirmon..."
+
+#: ../../../src/ui.cpp:2286
+msgid ""
+"The payment was sent, but the recipient was unable to verify it.\n"
+"The transaction is recorded and will credit to the recipient,\n"
+"but the comment information will be blank."
+msgstr ""
+"La pago estis sendita, sed la ricevanto ne povis atesti ĝin.\n"
+"La transakcio estas registrita kaj estos skribita en la krediton de la "
+"ricevanto,\n"
+"sed la komenta informo estas malplena."
+
+#: ../../../src/ui.cpp:2295
+msgid "Payment was sent, but an invalid response was received"
+msgstr "Pago estis sendita, sed malvalida respondo estas ricivita"
+
+#: ../../../src/ui.cpp:2301
+msgid "Payment completed"
+msgstr "Pago kompletigita"
+
+#: ../../../src/ui.cpp:2332 ../../../src/ui.cpp:2478 ../../../src/ui.cpp:2515
+msgid "Name"
+msgstr "Nomo"
+
+#: ../../../src/ui.cpp:2333 ../../../src/ui.cpp:2478 ../../../src/ui.cpp:2515
+msgid "Address"
+msgstr "Adreso"
+
+#: ../../../src/ui.cpp:2335 ../../../src/ui.cpp:2490
+msgid "Label"
+msgstr "Etikedo"
+
+#: ../../../src/ui.cpp:2336 ../../../src/uibase.cpp:837
+msgid "Bitcoin Address"
+msgstr "Bitmonera adreso"
+
+#: ../../../src/ui.cpp:2460
+msgid ""
+"This is one of your own addresses for receiving payments and cannot be "
+"entered in the address book.  "
+msgstr ""
+"Tiu ĉi estas unu el viaj adresoj mem pro ricevi pagojn. Ĝi ne povas esti "
+"enskribita en la adresaro.  "
+
+#: ../../../src/ui.cpp:2478 ../../../src/ui.cpp:2484
+msgid "Edit Address"
+msgstr "Editu adreson"
+
+#: ../../../src/ui.cpp:2490
+msgid "Edit Address Label"
+msgstr "Editu adresan etikedon"
+
+#: ../../../src/ui.cpp:2515 ../../../src/ui.cpp:2521
+msgid "Add Address"
+msgstr "Aldonu adreson"
+
+#: ../../../src/ui.cpp:2598
+msgid "Bitcoin"
+msgstr "Bitmonero"
+
+#: ../../../src/ui.cpp:2600
+msgid "Bitcoin - Generating"
+msgstr "Bitmonero - Kreanta"
+
+#: ../../../src/ui.cpp:2602
+msgid "Bitcoin - (not connected)"
+msgstr "Bitcoin - (ne konektita)"
+
+#: ../../../src/ui.cpp:2681
+msgid "&Open Bitcoin"
+msgstr "&Malfermu Bitmoneron"
+
+#: ../../../src/ui.cpp:2682
+msgid "&Send Bitcoins"
+msgstr "&Sendu bitmonerojn"
+
+#: ../../../src/ui.cpp:2683
+msgid "O&ptions..."
+msgstr "&Opcioj..."
+
+#: ../../../src/ui.cpp:2686 ../../../src/uibase.cpp:25
+msgid "E&xit"
+msgstr "&Fermu"
+
+#: ../../../src/ui.cpp:2902
+msgid "Program has crashed and will terminate.  "
+msgstr "La programo kraŝis kaj haltiĝos.  "
+
+#: ../../../src/main.cpp:1868
+msgid "Warning: Disk space is low  "
+msgstr "Averto: Malmulte da storloko  "
+
+#: ../../../src/main.cpp:3992
+#, c-format
+msgid ""
+"Error: This transaction requires a transaction fee of at least %s because of "
+"its amount, complexity, or use of recently received funds  "
+msgstr ""
+"Eraro: Tiu ĉi transakcio necesas transakcian koston de minimume %s, ĉar ĝia "
+"kvanto aŭ ĝia komplekseco aŭ la uzo de mono lastatempe ricevitaŭ  "
+
+#: ../../../src/main.cpp:3994
+msgid "Error: Transaction creation failed  "
+msgstr "Eraro: La kreado de la transakcio ne funkciis  "
+
+#: ../../../src/main.cpp:4003
+msgid ""
+"Error: The transaction was rejected.  This might happen if some of the coins "
+"in your wallet were already spent, such as if you used a copy of wallet.dat "
+"and coins were spent in the copy but not marked as spent here."
+msgstr ""
+"Eraro: La transakcio estas malakceptita. Tio povas okazi se iom da moneroj "
+"en via monujo jam estas elspezita, ekzemple se vi uzis kopion de la monujo "
+"wallet.dat kaj moneroj estis elspezita en la kopio, sed ne estas markata "
+"kiel elspezata ĉi tie."
+
+#: ../../../src/main.cpp:4016
+msgid "Invalid amount"
+msgstr "Malvalida kvanto"
+
+#: ../../../src/main.cpp:4023
+msgid "Invalid bitcoin address"
+msgstr "Malvalida bitmonera adreso"
+
+#: ../../../src/rpc.cpp:1800 ../../../src/rpc.cpp:1802
+#, c-format
+msgid "To use the %s option"
+msgstr "Por uzi la %s optcion"
+
+#: ../../../src/rpc.cpp:1804
+#, c-format
+msgid ""
+"Warning: %s, you must set rpcpassword=<password>\n"
+"in the configuration file: %s\n"
+"If the file does not exist, create it with owner-readable-only file "
+"permissions.\n"
+msgstr ""
+"Averto: %s, vi devas meti rpcpassword=<pasvorto>\n"
+"en la agorda dosiero: %s\n"
+"Se la doriero ne ekzistas, kreu ĝin nurposedantlegeble.\n"
+
+#: ../../../src/rpc.cpp:1972
+#, c-format
+msgid ""
+"You must set rpcpassword=<password> in the configuration file:\n"
+"%s\n"
+"If the file does not exist, create it with owner-readable-only file "
+"permissions."
+msgstr ""
+"Vi devas meti rpcpassword=<pasvorto> en la agorda dosiero:\n"
+"%s\n"
+"Se la dosiero ne ekzistas, kreu ĝin nurposedantlegeble."
+
+#: ../../../src/util.cpp:865
+msgid ""
+"Warning: Please check that your computer's date and time are correct.  If "
+"your clock is wrong Bitcoin will not work properly."
+msgstr ""
+"Averto: Bonvole kontrolu ke la dato kaj la tempo de via komputilo estas "
+"ĝusta. Se viaj horloĝo malĝustas, Bitmonero ne funkcios korekte."
+
+#: ../../../src/util.cpp:898
+msgid "beta"
+msgstr "beta"
+
+#: ../../../src/uibase.cpp:28
+msgid "&File"
+msgstr "&Dosiero"
+
+#: ../../../src/uibase.cpp:32
+msgid "&Your Receiving Addresses..."
+msgstr "&Viaj ricevadresoj..."
+
+#: ../../../src/uibase.cpp:36
+msgid "&Options..."
+msgstr "&Opcioj..."
+
+#: ../../../src/uibase.cpp:39
+msgid "&Settings"
+msgstr "&Agordoj"
+
+#: ../../../src/uibase.cpp:43
+msgid "&About..."
+msgstr "&Pri..."
+
+#: ../../../src/uibase.cpp:46
+msgid "&Help"
+msgstr "&Helpo"
+
+#: ../../../src/uibase.cpp:56
+msgid "Address Book"
+msgstr "Adresaro"
+
+#: ../../../src/uibase.cpp:69
+msgid "Your Bitcoin Address:"
+msgstr "Via bitmonera adreso:"
+
+#: ../../../src/uibase.cpp:76
+msgid " &New... "
+msgstr " &Nova... "
+
+#: ../../../src/uibase.cpp:79 ../../../src/uibase.cpp:780
+#: ../../../src/uibase.cpp:883
+msgid " &Copy to Clipboard "
+msgstr " &Kopiu al la poŝon "
+
+#: ../../../src/uibase.cpp:93
+msgid "Balance:"
+msgstr "Bonhavo:"
+
+#: ../../../src/uibase.cpp:109
+msgid " All"
+msgstr " Ĉiom"
+
+#: ../../../src/uibase.cpp:109
+msgid " Sent"
+msgstr " Sendita"
+
+#: ../../../src/uibase.cpp:109
+msgid " Received"
+msgstr " Ricevita"
+
+#: ../../../src/uibase.cpp:109
+msgid " In Progress"
+msgstr " Progresanta"
+
+#: ../../../src/uibase.cpp:130
+msgid "All Transactions"
+msgstr "Ĉiuj transakcioj"
+
+#: ../../../src/uibase.cpp:141
+msgid "Sent/Received"
+msgstr "Sendita/Ricevita"
+
+#: ../../../src/uibase.cpp:152
+msgid "Sent"
+msgstr "Sendita"
+
+#: ../../../src/uibase.cpp:163
+msgid "Received"
+msgstr "Ricevita"
+
+#: ../../../src/uibase.cpp:302 ../../../src/uibase.cpp:443
+#: ../../../src/uibase.cpp:542 ../../../src/uibase.cpp:722
+#: ../../../src/uibase.cpp:783 ../../../src/uibase.cpp:892
+#: ../../../src/uibase.cpp:981
+msgid "OK"
+msgstr "Bone"
+
+#: ../../../src/uibase.cpp:345
+msgid "&Start Bitcoin on system startup"
+msgstr "&Lanĉigu Bitmoneron kiam la sistemo ekas"
+
+#: ../../../src/uibase.cpp:348
+msgid "&Minimize to the tray instead of the taskbar"
+msgstr "&Kaŝu al la programan pleton anstataŭ al la programan linion"
+
+#: ../../../src/uibase.cpp:351
+msgid "Map port using &UPnP"
+msgstr "Pordplusendo per &UPnP"
+
+#: ../../../src/uibase.cpp:354
+msgid "M&inimize to the tray on close"
+msgstr "K&aŝu al la programan pleton anstataŭ malfermu ĝin"
+
+#: ../../../src/uibase.cpp:360
+msgid "&Connect through socks4 proxy: "
+msgstr "&Konekti per socks4 prokuro: "
+
+#: ../../../src/uibase.cpp:371
+msgid "Proxy &IP:"
+msgstr "Prokura &IP:"
+
+#: ../../../src/uibase.cpp:379
+msgid " &Port:"
+msgstr " &Pordo:"
+
+#: ../../../src/uibase.cpp:392
+msgid ""
+"Optional transaction fee per KB that helps make sure your transactions are "
+"processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."
+msgstr ""
+"Volonta transakcia kosto po kilobajto, kiu helpas certigi ke viaj "
+"transakcioj estas plenumita rapide.  La plej transacioj estas 1 kilobajto.  "
+"Rekomendita transakcia kosto: 0.01"
+
+#: ../../../src/uibase.cpp:399
+msgid "Pay transaction fee:"
+msgstr "Pagu transakcian koston:"
+
+#: ../../../src/uibase.cpp:420
+msgid "// [don't translate] Test panel 2 for future expansion"
+msgstr ""
+
+#: ../../../src/uibase.cpp:424
+msgid ""
+"// [don't translate] Let's not start multiple pages until the first page is "
+"filled up"
+msgstr ""
+
+#: ../../../src/uibase.cpp:446 ../../../src/uibase.cpp:668
+#: ../../../src/uibase.cpp:727 ../../../src/uibase.cpp:786
+#: ../../../src/uibase.cpp:895 ../../../src/uibase.cpp:984
+msgid "Cancel"
+msgstr "Malvalidigu"
+
+#: ../../../src/uibase.cpp:449
+msgid "&Apply"
+msgstr "&Apliku"
+
+#: ../../../src/uibase.cpp:508
+msgid "Bitcoin "
+msgstr "Bitmonero "
+
+#: ../../../src/uibase.cpp:514
+msgid "version"
+msgstr "versio"
+
+#: ../../../src/uibase.cpp:525
+msgid ""
+"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"\n"
+"This is experimental software.\n"
+"\n"
+"Distributed under the MIT/X11 software license, see the accompanying file \n"
+"license.txt or http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"This product includes software developed by the OpenSSL Project for use in "
+"the \n"
+"OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written "
+"by \n"
+"Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
+msgstr ""
+"Kopirajto (c) 2009-2011 Disvolviĝuloj de Bitmonero\n"
+"\n"
+"Tio ĉi estas eksperimenta softvaro.\n"
+"\n"
+"Distribita laŭ la MIT/X11 softvara licenco. Vidu la kundonitan dosieron \n"
+"license.txt aŭ http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"Tio ĉi produkto inkludas softvaron, kiu estas disvolviĝita de la OpenSSL "
+"projekto por uzo en la \n"
+"OpenSSL Toolkit (http://www.openssl.org/), kaj kriptografia softvaro verkita "
+"de \n"
+"Eric Young (eay@cryptsoft.com) kaj UPnP softvaro verkita de Thomas Bernard."
+
+#: ../../../src/uibase.cpp:581
+msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Entajpu bitmoneran adreson (ekz. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+
+#: ../../../src/uibase.cpp:595
+msgid "Pay &To:"
+msgstr "Pagu &al:"
+
+#: ../../../src/uibase.cpp:610
+msgid "&Paste"
+msgstr "&Elpoŝigi"
+
+#: ../../../src/uibase.cpp:613
+msgid " Address &Book..."
+msgstr " &Adresaro..."
+
+#: ../../../src/uibase.cpp:620
+msgid "&Amount:"
+msgstr "&Kvanto:"
+
+#: ../../../src/uibase.cpp:630
+msgid "T&ransfer:"
+msgstr "T&ransfero:"
+
+#: ../../../src/uibase.cpp:636
+msgid " Standard"
+msgstr " Normo"
+
+#: ../../../src/uibase.cpp:663
+msgid "&Send"
+msgstr "&Sendu"
+
+#: ../../../src/uibase.cpp:711
+msgid ""
+"\n"
+"\n"
+"Connecting..."
+msgstr ""
+"\n"
+"\n"
+"Konektanta..."
+
+#: ../../../src/uibase.cpp:761
+msgid ""
+"These are your Bitcoin addresses for receiving payments.  You may want to "
+"give a different one to each sender so you can keep track of who is paying "
+"you.  The highlighted address is displayed in the main window."
+msgstr ""
+"Tiuj ĉi estas viaj bitmonerajn adresojn por ricevi pagojn. Vi povus voli "
+"doni malsaman adreson al ĉiuj sendanto, por ke vi povas vidi kiu pagis vin.  "
+"La markita adreso estas vidigita en la ĉefa fenestro."
+
+#: ../../../src/uibase.cpp:774 ../../../src/uibase.cpp:886
+msgid "&Edit..."
+msgstr "&Redakti..."
+
+#: ../../../src/uibase.cpp:777 ../../../src/uibase.cpp:889
+msgid " &New Address... "
+msgstr " &Nova adreso... "
+
+#: ../../../src/uibase.cpp:849
+msgid "Sending"
+msgstr "Sendanta"
+
+#: ../../../src/uibase.cpp:857
+msgid ""
+"These are your Bitcoin addresses for receiving payments.  You can give a "
+"different one to each sender to keep track of who is paying you.  The "
+"highlighted address will be displayed in the main window."
+msgstr ""
+"Tiuj estas viaj bitmoneraj adresoj por ricevi pagojn. Vi povas doni malsaman "
+"adreson al ĉiuj sendanto, por ke vi povas vidi kiu pagis vin. La markita "
+"adreso estas vidigita en la ĉefa fenestro."
+
+#: ../../../src/uibase.cpp:870
+msgid "Receiving"
+msgstr "Ricevanta"
+
+#: ../../../src/uibase.cpp:880
+msgid "&Delete"
+msgstr "&Viŝu"
+
+#: ../../../src/init.cpp:147
+msgid "Bitcoin version"
+msgstr "Versio de Bitmonero"
+
+#: ../../../src/init.cpp:148
+msgid "Usage:"
+msgstr "Uzado:"
+
+#: ../../../src/init.cpp:150
+msgid "Send command to -server or bitcoind\n"
+msgstr "Sendu komandon al aŭ -server aŭ bitcoind\n"
+
+#: ../../../src/init.cpp:151
+msgid "List commands\n"
+msgstr "Listigu komandojn\n"
+
+#: ../../../src/init.cpp:152
+msgid "Get help for a command\n"
+msgstr "Ricevu helpon de komando\n"
+
+#: ../../../src/init.cpp:153
+msgid "Options:\n"
+msgstr "Opcioj:\n"
+
+#: ../../../src/init.cpp:154
+msgid "Specify configuration file (default: bitcoin.conf)\n"
+msgstr "Elektu agordan dosieron (defaŭlto: bitcoin.conf)\n"
+
+#: ../../../src/init.cpp:155
+msgid "Specify pid file (default: bitcoind.pid)\n"
+msgstr "Elektu pid dosieron (defaŭlto: bitcoind.pid)\n"
+
+#: ../../../src/init.cpp:156
+msgid "Generate coins\n"
+msgstr "Generate coins\n"
+
+#: ../../../src/init.cpp:157
+msgid "Don't generate coins\n"
+msgstr "Ne kreu monerojn\n"
+
+#: ../../../src/init.cpp:158
+msgid "Start minimized\n"
+msgstr "Lanĉiĝu kaŝe\n"
+
+#: ../../../src/init.cpp:159
+msgid "Specify data directory\n"
+msgstr "Elektu datenara dosierujon\n"
+
+#: ../../../src/init.cpp:160
+msgid "Connect through socks4 proxy\n"
+msgstr "Konektu per socks4 prokuro\n"
+
+#: ../../../src/init.cpp:161
+msgid "Allow DNS lookups for addnode and connect\n"
+msgstr "Permesu DNS solvon por aldoni nodon kaj konekti\n"
+
+#: ../../../src/init.cpp:162
+msgid "Add a node to connect to\n"
+msgstr "Aldonu nodon konektotan\n"
+
+#: ../../../src/init.cpp:163
+msgid "Connect only to the specified node\n"
+msgstr "Konektu nur al specifan nodon\n"
+
+#: ../../../src/init.cpp:164
+msgid "Don't accept connections from outside\n"
+msgstr "Ne akceptu eksterajn konektojn\n"
+
+#: ../../../src/init.cpp:167
+msgid "Don't attempt to use UPnP to map the listening port\n"
+msgstr "Ne provu uzi UPnP-on por la pordplusendo\n"
+
+#: ../../../src/init.cpp:169
+msgid "Attempt to use UPnP to map the listening port\n"
+msgstr "Provu uzi UPnP-on por la pordplusendo\n"
+
+#: ../../../src/init.cpp:172
+msgid "Fee per KB to add to transactions you send\n"
+msgstr "Kosto po kilobajto aldonota al viaj transakcioj sendataj\n"
+
+#: ../../../src/init.cpp:174
+msgid "Accept command line and JSON-RPC commands\n"
+msgstr "Akceptu kaj komandliniajn kaj JSON-RPC-ajn komandojn\n"
+
+#: ../../../src/init.cpp:177
+msgid "Run in the background as a daemon and accept commands\n"
+msgstr "Lanĉigu fone kiel demono kaj akceptu komandojn\n"
+
+#: ../../../src/init.cpp:179
+msgid "Use the test network\n"
+msgstr "Uzu la testreton\n"
+
+#: ../../../src/init.cpp:180
+msgid "Username for JSON-RPC connections\n"
+msgstr "Salutnomo por JSON-RPC-aj konektoj\n"
+
+#: ../../../src/init.cpp:181
+msgid "Password for JSON-RPC connections\n"
+msgstr "Pasvorto por JSON-RPC-aj konektoj\n"
+
+#: ../../../src/init.cpp:182
+msgid "Listen for JSON-RPC connections on <port> (default: 8332)\n"
+msgstr "Aŭskultu JSON-RPC-ajn konektojn ĉe <pordo> (defaŭlto: 8332)\n"
+
+#: ../../../src/init.cpp:183
+msgid "Allow JSON-RPC connections from specified IP address\n"
+msgstr "Permesu JSON-RPC-ajn konektojn el specifa IP-adreso\n"
+
+#: ../../../src/init.cpp:184
+msgid "Send commands to node running on <ip> (default: 127.0.0.1)\n"
+msgstr "Sendu komandojn al nodo rulanta ĉe <ip> (defaŭlto: 127.0.0.1)\n"
+
+#: ../../../src/init.cpp:185
+msgid "Set key pool size to <n> (default: 100)\n"
+msgstr "Difinu la grandecon de la ĉifroŝlosilaro kiel <n> (defaŭlto: 100)\n"
+
+#: ../../../src/init.cpp:186
+msgid "Rescan the block chain for missing wallet transactions\n"
+msgstr "Reskandu la blokĉenon por mankantaj transakcioj en la monujo\n"
+
+#: ../../../src/init.cpp:190
+msgid ""
+"\n"
+"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+msgstr ""
+"\n"
+"SSL-aj opcioj: (Legu la Vikipedion de Bitmonero pri la agordaĵaj instruoj)\n"
+
+#: ../../../src/init.cpp:191
+msgid "Use OpenSSL (https) for JSON-RPC connections\n"
+msgstr "Uzu OpenSSL (https) por JSON-RPC-aj konektoj\n"
+
+#: ../../../src/init.cpp:192
+msgid "Server certificate file (default: server.cert)\n"
+msgstr "Argorda doesiero de la servilo (defaŭlto: server.cert)\n"
+
+#: ../../../src/init.cpp:193
+msgid "Server private key (default: server.pem)\n"
+msgstr "Privata ĉifroŝlosilo de la servilo (defaŭlto: server.pem)\n"
+
+#: ../../../src/init.cpp:194
+msgid ""
+"Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:"
+"@STRENGTH)\n"
+msgstr ""
+"\"Akcepteblaj ĉifroj (defaŭlto: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:"
+"@STRENGTH)\n"
+
+#: ../../../src/init.cpp:198
+msgid "This help message\n"
+msgstr "Ĉi tiu helpa mesaĝo\n"
+
+#: ../../../src/init.cpp:335
+#, c-format
+msgid ""
+"Cannot obtain a lock on data directory %s.  Bitcoin is probably already "
+"running."
+msgstr ""
+"Ne povas ŝlosi la datenan dosierujon %s. Verŝajne alia instanco de la "
+"programo Bitmonero jam rulas."
+
+#: ../../../src/init.cpp:361
+msgid "Error loading addr.dat      \n"
+msgstr "Eraro ŝarĝante la dosieron addr.dat      \n"
+
+#: ../../../src/init.cpp:367
+msgid "Error loading blkindex.dat      \n"
+msgstr "Eraro ŝarĝante la dosieron blkindex.dat      \n"
+
+#: ../../../src/init.cpp:374
+msgid "Error loading wallet.dat      \n"
+msgstr "Eraro ŝarĝante la dosieron wallet.dat      \n"
+
+#: ../../../src/init.cpp:454
+msgid "Invalid -proxy address"
+msgstr "Malvalida prokuradreso (-proxy)"
+
+#: ../../../src/init.cpp:477
+msgid "Invalid amount for -paytxfee=<amount>"
+msgstr "Malvalida kvanto de la transakcia kosto (-paytxfee=<kvanto>)"
+
+#: ../../../src/init.cpp:481
+msgid ""
+"Warning: -paytxfee is set very high.  This is the transaction fee you will "
+"pay if you send a transaction."
+msgstr ""
+"Averto: La transakcia kosto (-paytxfee) estas tre alta. Tiu ĉi estas la "
+"kosto, kiun vi devos pagi kiam vi sendos transakcion."
+
+#: ../../../src/uibase.h:147
+msgid "Transaction Details"
+msgstr "Detaloj pri transakcio"
+
+#: ../../../src/uibase.h:199
+msgid "Options"
+msgstr "Detaloj pri transakcio"
+
+#: ../../../src/uibase.h:228
+msgid "About Bitcoin"
+msgstr "Pri Bitmonero"
+
+#: ../../../src/uibase.h:337
+msgid "Your Bitcoin Addresses"
+msgstr "Viaj Bitmoneraj adresoj"

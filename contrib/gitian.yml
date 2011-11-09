@@ -1,0 +1,57 @@
+---
+name: "bitcoin"
+suites:
+- "lucid"
+architectures:
+- "i386"
+- "amd64"
+packages: 
+- "libdb4.7++-dev"
+- "libxxf86vm-dev"
+- "libgtk2.0-dev"
+- "libboost-all-dev"
+- "libssl-dev"
+- "git-core"
+reference_datetime: "2011-01-30 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "wxWidgets-2.9.1.tar.bz2"
+- "miniupnpc-1.5.tar.gz"
+- "toplevel.h.diff"
+- "toplevel.cpp.diff"
+script: |
+  INSTDIR="$HOME/install"
+  export LIBRARY_PATH="$INSTDIR/lib"
+  #
+  tar xzf miniupnpc-1.5.tar.gz
+  cd miniupnpc-1.5
+  INSTALLPREFIX=$INSTDIR make $MAKEOPTS install
+  cd ..
+  #
+  tar xjf wxWidgets-2.9.1.tar.bz2
+  cd wxWidgets-2.9.1
+  cd include/wx/gtk
+  patch < ../../../../toplevel.h.diff
+  cd ../../../src/gtk
+  patch < ../../../toplevel.cpp.diff
+  cd ../..
+  ./configure --prefix=$INSTDIR --enable-monolithic --disable-shared
+  perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
+  make $MAKEOPTS install
+  cd ..
+  #
+  cd bitcoin
+  mkdir -p $OUTDIR/src
+  cp -a . $OUTDIR/src
+  rm -rf $OUTDIR/src/.git
+  mv $OUTDIR/src/locale $OUTDIR
+  cp $OUTDIR/src/doc/README $OUTDIR
+  cp $OUTDIR/src/COPYING $OUTDIR
+  cd src
+  sed 's/$(DEBUGFLAGS)//' < makefile.unix > makefile.unix.2 && mv makefile.unix.2 makefile.unix
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoin USE_UPNP=1
+  PATH=$INSTDIR/bin:$PATH make -f makefile.unix CXX="g++ -I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
+  mkdir -p $OUTDIR/bin/$GBUILD_BITS
+  install -s bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS
