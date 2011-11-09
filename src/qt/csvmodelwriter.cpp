@@ -48,7 +48,11 @@ bool CSVModelWriter::write()
         return false;
     QTextStream out(&file);
 
-    int numRows = model->rowCount();
+    int numRows = 0;
+    if(model)
+    {
+        numRows = model->rowCount();
+    }
 
     // Header row
     for(int i=0; i<columns.size(); ++i)
