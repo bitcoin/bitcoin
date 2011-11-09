@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
@@ -80,6 +81,7 @@ void HandleSIGTERM(int)
 // Start
 //
 #ifndef GUI
+#if !defined(PPCOIN_GENESIS)
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -90,6 +92,7 @@ int main(int argc, char* argv[])
 
     return 1;
 }
+#endif
 #endif
 
 bool AppInit(int argc, char* argv[])

@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
+# Copyright (c) 2011 The PPCoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +27,10 @@ LIBS= \
 ifdef USE_UPNP
 	LIBS += -l miniupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
+endif
+
+ifneq (${PPCOIN_GENESIS}, 0)
+	DEFS += -DPPCOIN_GENESIS
 endif
 
 LIBS+= \
@@ -82,9 +87,16 @@ test_bitcoin: obj/test/test_bitcoin.o
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework
 
 clean:
-	-rm -f bitcoin bitcoind test_bitcoin
+	-rm -f bitcoin bitcoind test_bitcoin genesis
 	-rm -f obj/*.o
 	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o
 	-rm -f cryptopp/obj/*.o
 	-rm -f headers.h.gch
+	-rm -f ppcoin/obj/*.o
+
+ppcoin/obj/%.o: ppcoin/%.cpp
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+genesis: ppcoin/obj/genesis.o $(OBJS:obj/%=obj/nogui/%)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
