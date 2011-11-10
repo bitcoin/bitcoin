@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+umask 077
+
+basedir=~/.bitcoin
+dbfile="$basedir/DB_CONFIG"
+cfgfile="$basedir/bitcoin.conf"
+
+[ -e "$basedir" ] || mkdir "$basedir"
+
+[ -e "$cfgfile" ] || perl -le 'print"rpcpassword=",map{(a..z,A..Z,0..9)[rand 62]}0..9' > "$cfgfile"
+
+# Bitcoin does not clean up DB log files by default
+[ -e "$dbfile" ] || echo 'set_flags DB_LOG_AUTOREMOVE' > "$dbfile"
+
+exec /usr/lib/bitcoin/bitcoind "$@"
