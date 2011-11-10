@@ -155,36 +155,39 @@ TransactionView::TransactionView(QWidget *parent) :
 void TransactionView::setModel(WalletModel *model)
 {
     this->model = model;
+    if(model)
+    {
+        transactionProxyModel = new TransactionFilterProxy(this);
+        transactionProxyModel->setSourceModel(model->getTransactionTableModel());
+        transactionProxyModel->setDynamicSortFilter(true);
 
-    transactionProxyModel = new TransactionFilterProxy(this);
-    transactionProxyModel->setSourceModel(model->getTransactionTableModel());
-    transactionProxyModel->setDynamicSortFilter(true);
+        transactionProxyModel->setSortRole(Qt::EditRole);
 
-    transactionProxyModel->setSortRole(Qt::EditRole);
+        transactionView->setModel(transactionProxyModel);
+        transactionView->setAlternatingRowColors(true);
+        transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        transactionView->setSortingEnabled(true);
+        transactionView->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
+        transactionView->verticalHeader()->hide();
 
-    transactionView->setModel(transactionProxyModel);
-    transactionView->setAlternatingRowColors(true);
-    transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    transactionView->setSortingEnabled(true);
-    transactionView->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
-    transactionView->verticalHeader()->hide();
-
-    transactionView->horizontalHeader()->resizeSection(
-            TransactionTableModel::Status, 23);
-    transactionView->horizontalHeader()->resizeSection(
-            TransactionTableModel::Date, 120);
-    transactionView->horizontalHeader()->resizeSection(
-            TransactionTableModel::Type, 120);
-    transactionView->horizontalHeader()->setResizeMode(
-            TransactionTableModel::ToAddress, QHeaderView::Stretch);
-    transactionView->horizontalHeader()->resizeSection(
-            TransactionTableModel::Amount, 100);
-
+        transactionView->horizontalHeader()->resizeSection(
+                TransactionTableModel::Status, 23);
+        transactionView->horizontalHeader()->resizeSection(
+                TransactionTableModel::Date, 120);
+        transactionView->horizontalHeader()->resizeSection(
+                TransactionTableModel::Type, 120);
+        transactionView->horizontalHeader()->setResizeMode(
+                TransactionTableModel::ToAddress, QHeaderView::Stretch);
+        transactionView->horizontalHeader()->resizeSection(
+                TransactionTableModel::Amount, 100);
+    }
 }
 
 void TransactionView::chooseDate(int idx)
 {
+    if(!transactionProxyModel)
+        return;
     QDate current = QDate::currentDate();
     dateRangeWidget->setVisible(false);
     switch(dateWidget->itemData(idx).toInt())
@@ -231,17 +234,23 @@ void TransactionView::chooseDate(int idx)
 
 void TransactionView::chooseType(int idx)
 {
+    if(!transactionProxyModel)
+        return;
     transactionProxyModel->setTypeFilter(
         typeWidget->itemData(idx).toInt());
 }
 
 void TransactionView::changedPrefix(const QString &prefix)
 {
+    if(!transactionProxyModel)
+        return;
     transactionProxyModel->setAddressPrefix(prefix);
 }
 
 void TransactionView::changedAmount(const QString &amount)
 {
+    if(!transactionProxyModel)
+        return;
     qint64 amount_parsed = 0;
     if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
     {
@@ -294,6 +303,8 @@ void TransactionView::contextualMenu(const QPoint &point)
 
 void TransactionView::copyAddress()
 {
+    if(!transactionView->selectionModel())
+        return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
@@ -303,6 +314,8 @@ void TransactionView::copyAddress()
 
 void TransactionView::copyLabel()
 {
+    if(!transactionView->selectionModel())
+        return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
@@ -312,10 +325,14 @@ void TransactionView::copyLabel()
 
 void TransactionView::editLabel()
 {
+    if(!transactionView->selectionModel() ||!model)
+        return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
         AddressTableModel *addressBook = model->getAddressTableModel();
+        if(!addressBook)
+            return;
         QString address = selection.at(0).data(TransactionTableModel::AddressRole).toString();
         if(address.isEmpty())
         {
@@ -354,6 +371,8 @@ void TransactionView::editLabel()
 
 void TransactionView::showDetails()
 {
+    if(!transactionView->selectionModel())
+        return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
@@ -400,6 +419,8 @@ QWidget *TransactionView::createDateRangeWidget()
 
 void TransactionView::dateRangeChanged()
 {
+    if(!transactionProxyModel)
+        return;
     transactionProxyModel->setDateRange(
             QDateTime(dateFrom->date()),
             QDateTime(dateTo->date()).addDays(1));

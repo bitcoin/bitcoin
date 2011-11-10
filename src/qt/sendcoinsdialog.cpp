@@ -43,9 +43,11 @@ void SendCoinsDialog::setModel(WalletModel *model)
             entry->setModel(model);
         }
     }
-
-    setBalance(model->getBalance(), model->getUnconfirmedBalance());
-    connect(model, SIGNAL(balanceChanged(qint64, qint64)), this, SLOT(setBalance(qint64, qint64)));
+    if(model)
+    {
+        setBalance(model->getBalance(), model->getUnconfirmedBalance());
+        connect(model, SIGNAL(balanceChanged(qint64, qint64)), this, SLOT(setBalance(qint64, qint64)));
+    }
 }
 
 SendCoinsDialog::~SendCoinsDialog()
@@ -57,6 +59,10 @@ void SendCoinsDialog::on_sendButton_clicked()
 {
     QList<SendCoinsRecipient> recipients;
     bool valid = true;
+
+    if(!model)
+        return;
+
     for(int i = 0; i < ui->entries->count(); ++i)
     {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
@@ -255,6 +261,9 @@ void SendCoinsDialog::handleURL(const QUrl *url)
 void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance)
 {
     Q_UNUSED(unconfirmedBalance);
+    if(!model || !model->getOptionsModel())
+        return;
+
     int unit = model->getOptionsModel()->getDisplayUnit();
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
 }
