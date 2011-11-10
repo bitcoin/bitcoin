@@ -95,6 +95,10 @@ else
 endif
 endif
 
+ifdef USE_QRCODE
+	DEFS += -DUSE_QRCODE=$(USE_QRCODE)
+	LIBS += -lqrencode
+endif
 
 all: bitcoind
 
