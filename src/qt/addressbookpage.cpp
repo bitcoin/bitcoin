@@ -57,6 +57,8 @@ AddressBookPage::~AddressBookPage()
 void AddressBookPage::setModel(AddressTableModel *model)
 {
     this->model = model;
+    if(!model)
+        return;
     // Refresh list from core
     model->updateList();
 
@@ -96,16 +98,13 @@ void AddressBookPage::setModel(AddressTableModel *model)
     selectionChanged();
 }
 
-QTableView *AddressBookPage::getCurrentTable()
-{
-    return ui->tableView;
-}
-
 void AddressBookPage::on_copyToClipboard_clicked()
 {
     // Copy currently selected address to clipboard
     //   (or nothing, if nothing selected)
-    QTableView *table = getCurrentTable();
+    QTableView *table = ui->tableView;
+    if(!table->selectionModel())
+        return;
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
     foreach (QModelIndex index, indexes)
@@ -117,6 +116,8 @@ void AddressBookPage::on_copyToClipboard_clicked()
 
 void AddressBookPage::on_newAddressButton_clicked()
 {
+    if(!model)
+        return;
     EditAddressDialog dlg(
             tab == SendingTab ?
             EditAddressDialog::NewSendingAddress :
@@ -139,7 +140,9 @@ void AddressBookPage::on_newAddressButton_clicked()
 
 void AddressBookPage::on_deleteButton_clicked()
 {
-    QTableView *table = getCurrentTable();
+    QTableView *table = ui->tableView;
+    if(!table->selectionModel())
+        return;
     QModelIndexList indexes = table->selectionModel()->selectedRows();
     if(!indexes.isEmpty())
     {
@@ -150,7 +153,9 @@ void AddressBookPage::on_deleteButton_clicked()
 void AddressBookPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
-    QTableView *table = getCurrentTable();
+    QTableView *table = ui->tableView;
+    if(!table->selectionModel())
+        return;
 
     if(table->selectionModel()->hasSelection())
     {
@@ -174,12 +179,14 @@ void AddressBookPage::selectionChanged()
 
 void AddressBookPage::done(int retval)
 {
+    QTableView *table = ui->tableView;
+    if(!table->selectionModel() || !table->model())
+        return;
     // When this is a tab/widget and not a model dialog, ignore "done"
     if(mode == ForEditing)
         return;
 
     // Figure out which address was selected, and return it
-    QTableView *table = getCurrentTable();
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
     foreach (QModelIndex index, indexes)
