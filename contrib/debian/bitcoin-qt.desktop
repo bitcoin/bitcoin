@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Bitcoin
+Comment=Bitcoin P2P Cryptocurrency
+Exec=/usr/bin/bitcoin-qt
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/bitcoin80.xpm
+#For when bitcoin (finally) properly handles bitcoin: URLs
+#MimeType=x-scheme-handler/bitcoin;
+Categories=Office;
