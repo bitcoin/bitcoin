@@ -32,7 +32,7 @@ extern DbEnv dbenv;
 extern void DBFlush(bool fShutdown);
 void ThreadFlushWalletDB(void* parg);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
-
+extern bool Resilver(const std::string& strFile);
 
 
 
@@ -257,6 +257,8 @@ public:
     {
         return Write(std::string("version"), nVersion);
     }
+
+    friend bool Resilver(const std::string&);
 };
 
 
@@ -349,6 +351,7 @@ enum DBErrors
     DB_CORRUPT,
     DB_TOO_NEW,
     DB_LOAD_FAIL,
+    DB_NEED_RESILVER
 };
 
 class CWalletDB : public CDB
