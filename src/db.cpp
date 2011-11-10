@@ -165,6 +165,90 @@ void static CloseDb(const string& strFile)
     }
 }
 
+bool Resilver(const string& strFile)
+{
+    while (!fShutdown)
+    {
+        CRITICAL_BLOCK(cs_db)
+        {
+            if (!mapFileUseCount.count(strFile) || mapFileUseCount[strFile] == 0)
+            {
+                // Flush log data to the dat file
+                CloseDb(strFile);
+                dbenv.txn_checkpoint(0, 0, 0);
+                dbenv.lsn_reset(strFile.c_str(), 0);
+                mapFileUseCount.erase(strFile);
+
+                bool fSuccess = true;
+                printf("Resilvering %s...\n", strFile.c_str());
+                string strFileRes = strFile + ".resilver";
+                CDB db(strFile.c_str(), "r");
+                Db* pdbCopy = new Db(&dbenv, 0);
+
+                int ret = pdbCopy->open(NULL,                 // Txn pointer
+                                        strFileRes.c_str(),   // Filename
+                                        "main",    // Logical db name
+                                        DB_BTREE,  // Database type
+                                        DB_CREATE,    // Flags
+                                        0);
+                if (ret > 0)
+                {
+                    printf("Cannot create database file %s\n", strFileRes.c_str());
+                    fSuccess = false;
+                }
+
+                Dbc* pcursor = db.GetCursor();
+                if (pcursor)
+                    while (fSuccess)
+                    {
+                        CDataStream ssKey;
+                        CDataStream ssValue;
+                        int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
+                        if (ret == DB_NOTFOUND)
+                            break;
+                        else if (ret != 0)
+                        {
+                            pcursor->close();
+                            fSuccess = false;
+                            break;
+                        }
+                        Dbt datKey(&ssKey[0], ssKey.size());
+                        Dbt datValue(&ssValue[0], ssValue.size());
+                        int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
+                        if (ret2 > 0)
+                            fSuccess = false;
+                    }
+                if (fSuccess)
+                {
+                    Db* pdb = mapDb[strFile];
+                    if (pdb->close(0))
+                        fSuccess = false;
+                    if (pdbCopy->close(0))
+                        fSuccess = false;
+                    delete pdb;
+                    delete pdbCopy;
+                    mapDb[strFile] = NULL;
+                }
+                if (fSuccess)
+                {
+                    Db dbA(&dbenv, 0);
+                    if (dbA.remove(strFile.c_str(), NULL, 0))
+                        fSuccess = false;
+                    Db dbB(&dbenv, 0);
+                    if (dbB.rename(strFileRes.c_str(), NULL, strFile.c_str(), 0))
+                        fSuccess = false;
+                }
+                if (!fSuccess)
+                    printf("Resilvering of %s FAILED!\n", strFileRes.c_str());
+                return fSuccess;
+            }
+        }
+        Sleep(100);
+    }
+    return false;
+}
+
+
 void DBFlush(bool fShutdown)
 {
     // Flush log data to the actual data file
@@ -656,6 +740,8 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     pwallet->vchDefaultKey.clear();
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
+    bool fIsResilvered = false;
+    bool fIsEncrypted = false;
 
     // Modify defaults
 #ifndef WIN32
@@ -781,6 +867,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 ssValue >> vchPrivKey;
                 if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
                     return DB_CORRUPT;
+                fIsEncrypted = true;
             }
             else if (strType == "defaultkey")
             {
@@ -814,6 +901,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
                 if (strKey == "fUseProxy")          ssValue >> fUseProxy;
                 if (strKey == "addrProxy")          ssValue >> addrProxy;
+                if (strKey == "fIsResilvered")      ssValue >> fIsResilvered;
                 if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
             }
             else if (strType == "minversion")
@@ -851,6 +939,8 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
         WriteVersion(VERSION);
     }
 
+    if (fIsEncrypted && !fIsResilvered)
+        return DB_NEED_RESILVER;
 
     return DB_LOAD_OK;
 }

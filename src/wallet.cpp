@@ -189,6 +189,9 @@ bool CWallet::EncryptWallet(const string& strWalletPassphrase)
         Lock();
     }
 
+    if (Resilver(strWalletFile))
+        CWalletDB(strWalletFile, "r+").WriteSetting("fIsResilvered", true);
+
     return true;
 }
 
@@ -1142,6 +1145,13 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
         return false;
     fFirstRunRet = false;
     int nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    if (nLoadWalletRet == DB_NEED_RESILVER)
+    {
+        if (Resilver(strWalletFile))
+            CWalletDB(strWalletFile, "r+").WriteSetting("fIsResilvered", true);
+        nLoadWalletRet = DB_LOAD_OK;
+    }
+
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
     fFirstRunRet = vchDefaultKey.empty();
