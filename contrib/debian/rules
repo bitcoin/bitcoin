@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+# -*- mode: makefile; coding: utf-8 -*-
+
+#DEB_MAKE_CHECK_TARGET = test_bitcoin
+#build/bitcoind::
+#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bitcoin)
+
+DEB_INSTALL_EXAMPLES_bitcoind += debian/examples/*
+DEB_INSTALL_MANPAGES_bitcoind += debian/manpages/*
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cd src; $(MAKE) -f makefile.unix bitcoind
+	$(MAKE)
+
+override_dh_auto_clean:
+	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f bitcoin-qt; fi
+	cd src; $(MAKE) -f makefile.unix clean
+
+override_dh_auto_configure:
+	qmake bitcoin-qt.pro
+
+override_dh_auto_test:
+	cd src; $(MAKE) -f makefile.unix test_bitcoin
+	src/test_bitcoin
+
+# Ensure wrapper is set executable
+binary-post-install/bitcoind:
+	chmod +x $(cdbs_curdestdir)usr/bin/bitcoind
+binary-post-install/bitcoin-qt:
+	chmod +x $(cdbs_curdestdir)usr/bin/bitcoin-qt
