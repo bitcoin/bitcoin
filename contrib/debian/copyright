@@ -33,17 +33,17 @@ Files: src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
 Copyright: Wladimir van der Laan
 License: CC-BY-3
 
-Files: src/qt/res/icons/send.png
-Copyright: Icons Land
-License: Freeware Non-commercial
-Comment: Icon Pack: Vista Style Arrow
-         Site: http://findicons.com/icon/231371/right3green
-
-Files: src/qt/res/icons/address-book.png
-Copyright: FatCow Web Hosting
-License: CC-BY-3
-Comment: Icon Pack: Farm-Fresh Web
-         Site: http://findicons.com/icon/163938/book_open
+Files: src/qt/res/icons/address-book.png, src/qt/res/icons/export.png,
+       src/qt/res/icons/history.png, src/qt/res/icons/key.png,
+       src/qt/res/icons/overview.png, src/qt/res/icons/receive.png,
+       src/qt/res/icons/send.png
+Copyright: David Vignoni (david@icon-king.com)
+           ICON KING - www.icon-king.com
+License: LGPL
+Comment: NUVOLA ICON THEME for KDE 3.x
+         Original icons: kaddressbook, klipper_dock, view-list-text,
+                         key-password, kfm_home, go-down, go-next
+         Site: http://www.icon-king.com/projects/nuvola/
 
 Files: src/qt/res/icons/connect*.png, src/qt/res/icons/synced.png, src/qt/res/icons/lock_*.png
 Copyright: schollidesign
@@ -65,23 +65,10 @@ Copyright: http://www.everaldo.com
 License: LGPL
 Comment: Icon Pack: Crystal SVG
 
-Files: src/qt/res/icons/receive.png, src/qt/res/icons/history.png,
-      src/qt/res/icons/export.png
-Copyright: Oxygen team
-License: CC-BY-SA-3
-Comment: Icon Pack: Oxygen
-         Site: http://www.oxygen-icons.org/
-
 Files: src/qt/res/icons/bitcoin.png, src/qt/res/icons/toolbar.png
 Copyright: Bitboy (optimized for 16x16 by Wladimir van der Laan)
 License: PUB-DOM
 Comment: Site: http://forum.bitcoin.org/?topic=1756.0
-
-Files: src/qt/res/icons/overview.png
-Copyright: Jack Cai
-License: CC-BY-ND-3
-Comment: Icon Pack: Primo
-         Site: http://findicons.com/icon/175944/home?id=176221#
 
 Files:  scripts/img/reload.xcf, src/qt/res/movies/update_spinner.mng
 Copyright: Everaldo (Everaldo Coelho)
@@ -93,12 +80,6 @@ Files: src/qt/res/images/splash2.jpg
 License: PUB-DOM
 Copyright: Crobbo (forum)
 Comment: Site: https://bitcointalk.org/index.php?topic=32273.0
-
-Files: src/qt/res/icons/key.png
-Copyright: VisualPharm (Ivan Boyko)
-License: CC-BY-3
-Comment: Icon Pack: Must Have
-         Site: http://findicons.com/icon/51009/key?id=51009
 
 
 License: Expat
@@ -169,20 +150,6 @@ License: CC-BY-3
 Comment:
  You can get a full copy of the license at
  <http://creativecommons.org/licenses/by/3.0/>.
-
-License: CC-BY-ND-3
- This work is licensed under a Creative Commons Attribution-NoDerivs 3.0
- Unported License.
-Comment:
- You can get a full copy of the license at
- <http://creativecommons.org/licenses/by-nd/3.0/>.
-
-License: CC-BY-ND-3
- This work is licensed under a Creative Commons Attribution-ShareAlike
- 3.0 Unported License.
-Comment:
- You can get a full copy of the license at
- <http://creativecommons.org/licenses/by-sa/3.0/>.
 
 License: LGPL
  This program is free software: you can redistribute it and/or modify
