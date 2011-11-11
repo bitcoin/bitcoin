@@ -28,6 +28,34 @@ DbEnv dbenv(0);
 static map<string, int> mapFileUseCount;
 static map<string, Db*> mapDb;
 
+static void EnvShutdown(bool fRemoveLogFiles)
+{
+    if (!fDbEnvInit)
+        return;
+
+    fDbEnvInit = false;
+    dbenv.close(0);
+    DbEnv(0).remove(GetDataDir().c_str(), 0);
+
+    if (fRemoveLogFiles)
+    {
+        filesystem::path datadir(GetDataDir());
+        filesystem::directory_iterator it(datadir / "database");
+        while (it != filesystem::directory_iterator())
+        {
+            const filesystem::path& p = it->path();
+#if BOOST_FILESYSTEM_VERSION == 2
+            std::string f = p.filename();
+#else
+            std::string f = p.filename().generic_string();
+#endif
+            if (f.find("log.") == 0)
+                filesystem::remove(p);
+            ++it;
+        }
+    }
+}
+
 class CDBInit
 {
 public:
@@ -36,11 +64,7 @@ public:
     }
     ~CDBInit()
     {
-        if (fDbEnvInit)
-        {
-            dbenv.close(0);
-            fDbEnvInit = false;
-        }
+        EnvShutdown(false);
     }
 }
 instance_of_cdbinit;
@@ -165,7 +189,7 @@ void static CloseDb(const string& strFile)
     }
 }
 
-bool Resilver(const string& strFile)
+bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 {
     while (!fShutdown)
     {
@@ -180,8 +204,8 @@ bool Resilver(const string& strFile)
                 mapFileUseCount.erase(strFile);
 
                 bool fSuccess = true;
-                printf("Resilvering %s...\n", strFile.c_str());
-                string strFileRes = strFile + ".resilver";
+                printf("Rewriting %s...\n", strFile.c_str());
+                string strFileRes = strFile + ".rewrite";
                 CDB db(strFile.c_str(), "r");
                 Db* pdbCopy = new Db(&dbenv, 0);
 
@@ -212,6 +236,15 @@ bool Resilver(const string& strFile)
                             fSuccess = false;
                             break;
                         }
+                        if (pszSkip &&
+                            strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                            continue;
+                        if (strncmp(&ssKey[0], "\x07version", 8) == 0)
+                        {
+                            // Update version:
+                            ssValue.clear();
+                            ssValue << VERSION;
+                        }
                         Dbt datKey(&ssKey[0], ssKey.size());
                         Dbt datValue(&ssValue[0], ssValue.size());
                         int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
@@ -239,7 +272,7 @@ bool Resilver(const string& strFile)
                         fSuccess = false;
                 }
                 if (!fSuccess)
-                    printf("Resilvering of %s FAILED!\n", strFileRes.c_str());
+                    printf("Rewriting of %s FAILED!\n", strFileRes.c_str());
                 return fSuccess;
             }
         }
@@ -249,7 +282,7 @@ bool Resilver(const string& strFile)
 }
 
 
-void DBFlush(bool fShutdown)
+void DBFlush(bool fShutdown, bool fRemoveLogFiles)
 {
     // Flush log data to the actual data file
     //  on all files that are not in use
@@ -280,9 +313,10 @@ void DBFlush(bool fShutdown)
         {
             char** listp;
             if (mapFileUseCount.empty())
+            {
                 dbenv.log_archive(&listp, DB_ARCH_REMOVE);
-            dbenv.close(0);
-            fDbEnvInit = false;
+                EnvShutdown(fRemoveLogFiles);
+            }
         }
     }
 }
@@ -758,7 +792,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     pwallet->vchDefaultKey.clear();
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
-    bool fIsResilvered = false;
     bool fIsEncrypted = false;
 
     // Modify defaults
@@ -919,7 +952,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
                 if (strKey == "fUseProxy")          ssValue >> fUseProxy;
                 if (strKey == "addrProxy")          ssValue >> addrProxy;
-                if (strKey == "fIsResilvered")      ssValue >> fIsResilvered;
                 if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
             }
             else if (strType == "minversion")
@@ -947,8 +979,11 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
         printf("fUseUPnP = %d\n", fUseUPnP);
 
 
-    // Upgrade
-    if (nFileVersion < VERSION)
+    // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
+    if (fIsEncrypted && (nFileVersion == 40000 || nFileVersion == 50000))
+        return DB_NEED_REWRITE;
+
+    if (nFileVersion < VERSION) // Update
     {
         // Get rid of old debug.log file in current directory
         if (nFileVersion <= 105 && !pszSetDataDir[0])
@@ -956,9 +991,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
 
         WriteVersion(VERSION);
     }
-
-    if (fIsEncrypted && !fIsResilvered)
-        return DB_NEED_RESILVER;
 
     return DB_LOAD_OK;
 }
