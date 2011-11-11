@@ -29,10 +29,9 @@ extern unsigned int nWalletDBUpdated;
 extern DbEnv dbenv;
 
 
-extern void DBFlush(bool fShutdown);
+extern void DBFlush(bool fShutdown, bool fRemoveLogFiles);
 void ThreadFlushWalletDB(void* parg);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
-extern bool Resilver(const std::string& strFile);
 
 
 
@@ -258,7 +257,7 @@ public:
         return Write(std::string("version"), nVersion);
     }
 
-    friend bool Resilver(const std::string&);
+    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
 };
 
 
@@ -351,7 +350,7 @@ enum DBErrors
     DB_CORRUPT,
     DB_TOO_NEW,
     DB_LOAD_FAIL,
-    DB_NEED_RESILVER
+    DB_NEED_REWRITE
 };
 
 class CWalletDB : public CDB
