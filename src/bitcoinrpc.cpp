@@ -126,6 +126,7 @@ Value help(const Array& params, bool fHelp)
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod == "getamountreceived" ||
             strMethod == "getallreceived" ||
+            strMethod == "getblocknumber" || // deprecated
             (strMethod.find("label") != string::npos))
             continue;
         if (strCommand != "" && strMethod != strCommand)
@@ -178,12 +179,13 @@ Value getblockcount(const Array& params, bool fHelp)
 }
 
 
+// deprecated
 Value getblocknumber(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getblocknumber\n"
-            "Returns the block number of the latest block in the longest block chain.");
+            "Deprecated.  Use getblockcount.");
 
     return nBestHeight;
 }
@@ -1858,7 +1860,7 @@ string pAllowInSafeMode[] =
     "help",
     "stop",
     "getblockcount",
-    "getblocknumber",
+    "getblocknumber",  // deprecated
     "getconnectioncount",
     "getdifficulty",
     "getgenerate",
