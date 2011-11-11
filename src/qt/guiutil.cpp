@@ -11,6 +11,7 @@
 #include <QFont>
 #include <QLineEdit>
 #include <QUrl>
+#include <QTextDocument> // For Qt::escape
 
 QString GUIUtil::dateTimeStr(qint64 nTime)
 {
@@ -71,4 +72,19 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
         *out = rv;
     }
     return true;
+}
+
+QString GUIUtil::HtmlEscape(const QString& str, bool fMultiLine)
+{
+    QString escaped = Qt::escape(str);
+    if(fMultiLine)
+    {
+        escaped = escaped.replace("\n", "<br>\n");
+    }
+    return escaped;
+}
+
+QString GUIUtil::HtmlEscape(const std::string& str, bool fMultiLine)
+{
+    return HtmlEscape(QString::fromStdString(str), fMultiLine);
 }
