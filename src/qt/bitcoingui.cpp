@@ -112,7 +112,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Status bar notification icons
     QFrame *frameBlocks = new QFrame();
-    //frameBlocks->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     frameBlocks->setContentsMargins(0,0,0,0);
     frameBlocks->setMinimumWidth(56);
     frameBlocks->setMaximumWidth(56);
