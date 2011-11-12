@@ -100,7 +100,6 @@ TransactionView::TransactionView(QWidget *parent) :
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
-    //vlayout->addLayout(hlayout2);
 
     QTableView *view = new QTableView(this);
     vlayout->addLayout(hlayout);
