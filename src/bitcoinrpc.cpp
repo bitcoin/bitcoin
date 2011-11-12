@@ -160,10 +160,13 @@ Value stop(const Array& params, bool fHelp)
         throw runtime_error(
             "stop\n"
             "Stop bitcoin server.");
-
+#ifndef QT_GUI
     // Shutdown will take long enough that the response should get back
     CreateThread(Shutdown, NULL);
     return "bitcoin server stopping";
+#else
+    throw runtime_error("NYI: cannot shut down GUI with RPC command");
+#endif
 }
 
 
@@ -2175,11 +2178,13 @@ void ThreadRPCServer2(void* parg)
         else if (mapArgs.count("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
         PrintConsole(
-            _("Warning: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
+            _("Error: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"),
                 strWhatAmI.c_str(),
                 GetConfigFile().c_str());
+#ifndef QT_GUI
         CreateThread(Shutdown, NULL);
+#endif
         return;
     }
 
