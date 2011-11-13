@@ -478,11 +478,11 @@ void BitcoinGUI::error(const QString &title, const QString &message)
 void BitcoinGUI::changeEvent(QEvent *e)
 {
 #ifndef Q_WS_MAC // Ignored on Mac
-    if (e->type() == QEvent::WindowStateChange)
+    if(e->type() == QEvent::WindowStateChange)
     {
-        if (clientModel->getOptionsModel()->getMinimizeToTray())
+        if(clientModel && clientModel->getOptionsModel()->getMinimizeToTray())
         {
-            if (isMinimized())
+            if(isMinimized())
             {
                 hide();
                 e->ignore();
