@@ -8,6 +8,8 @@
 class CWallet;
 class CWalletTx;
 
+/** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
+ */
 class TransactionStatus
 {
 public:
@@ -20,7 +22,7 @@ public:
     {
         Immature,
         Mature,
-        MaturesWarning, /* Will likely not mature because no nodes have confirmed */
+        MaturesWarning, /**< Transaction will likely not mature because no nodes have confirmed */
         NotAccepted
     };
 
@@ -35,19 +37,26 @@ public:
     bool confirmed;
     std::string sortKey;
 
-    /* For "Generated" transactions */
+    /** @name Generated (mined) transactions
+       @{*/
     Maturity maturity;
     int matures_in;
+    /**@}*/
 
-    /* Reported status */
+    /** @name Reported status
+       @{*/
     Status status;
     int64 depth;
-    int64 open_for; /* Timestamp if status==OpenUntilDate, otherwise number of blocks */
+    int64 open_for; /**< Timestamp if status==OpenUntilDate, otherwise number of blocks */
+    /**@}*/
 
-    /* Current number of blocks (to know whether cached status is still valid. */
+    /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
 };
 
+/** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
+    multiple outputs.
+ */
 class TransactionRecord
 {
 public:
@@ -62,7 +71,7 @@ public:
         SendToSelf
     };
 
-    /* Number of confirmation needed for transaction */
+    /** Number of confirmation needed for transaction */
     static const int NumConfirmations = 6;
 
     TransactionRecord():
@@ -84,33 +93,35 @@ public:
     {
     }
 
-    /* Decompose CWallet transaction to model transaction records.
+    /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction(const CWalletTx &wtx);
     static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
 
-    /* Fixed */
+    /** @name Immutable transaction attributes
+      @{*/
     uint256 hash;
     int64 time;
     Type type;
     std::string address;
     int64 debit;
     int64 credit;
+    /**@}*/
 
-    /* Subtransaction index, for sort key */
+    /** Subtransaction index, for sort key */
     int idx;
 
-    /* Status: can change with block chain update */
+    /** Status: can change with block chain update */
     TransactionStatus status;
 
-    /* Return the unique identifier for this transaction (part) */
+    /** Return the unique identifier for this transaction (part) */
     std::string getTxID();
 
-    /* Update status from wallet tx.
+    /** Update status from core wallet tx.
      */
     void updateStatus(const CWalletTx &wtx);
 
-    /* Is a status update needed?
+    /** Return whether a status update is needed.
      */
     bool statusUpdateNeeded();
 };

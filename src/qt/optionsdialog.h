@@ -14,6 +14,7 @@ class MainOptionsPage;
 class DisplayOptionsPage;
 class MonitoredDataMapper;
 
+/** Preferences dialog. */
 class OptionsDialog : public QDialog
 {
     Q_OBJECT
@@ -25,6 +26,7 @@ public:
 signals:
 
 public slots:
+    /** Change the current page to \a index. */
     void changePage(int index);
 
 private slots:
@@ -33,6 +35,7 @@ private slots:
     void applyClicked();
     void enableApply();
     void disableApply();
+
 private:
     QListWidget *contents_widget;
     QStackedWidget *pages_widget;

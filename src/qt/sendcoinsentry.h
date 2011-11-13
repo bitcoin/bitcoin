@@ -9,6 +9,7 @@ namespace Ui {
 class WalletModel;
 class SendCoinsRecipient;
 
+/** A single entry in the dialog for sending bitcoins. */
 class SendCoinsEntry : public QFrame
 {
     Q_OBJECT
@@ -21,13 +22,13 @@ public:
     bool validate();
     SendCoinsRecipient getValue();
 
-    // Return true if the entry is still empty and unedited
+    /** Return whether the entry is still empty and unedited */
     bool isClear();
 
     void setValue(const SendCoinsRecipient &value);
 
-    // Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907)
-    // Hence we have to set it up manually
+    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907).
+     */
     QWidget *setupTabChain(QWidget *prev);
 
 public slots:
