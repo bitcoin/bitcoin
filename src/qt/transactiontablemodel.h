@@ -9,6 +9,8 @@ class TransactionTablePriv;
 class TransactionRecord;
 class WalletModel;
 
+/** UI model for the transaction table of a wallet.
+ */
 class TransactionTableModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -16,36 +18,37 @@ public:
     explicit TransactionTableModel(CWallet* wallet, WalletModel *parent = 0);
     ~TransactionTableModel();
 
-    enum {
+    enum ColumnIndex {
         Status = 0,
         Date = 1,
         Type = 2,
         ToAddress = 3,
         Amount = 4
-    } ColumnIndex;
+    };
 
-    // Roles to get specific information from a transaction row
-    // These are independent of column
-    enum {
-        // Type of transaction
+    /** Roles to get specific information from a transaction row.
+        These are independent of column.
+    */
+    enum RoleIndex {
+        /** Type of transaction */
         TypeRole = Qt::UserRole,
-        // Date and time this transaction was created
+        /** Date and time this transaction was created */
         DateRole,
-        // Long description (HTML format)
+        /** Long description (HTML format) */
         LongDescriptionRole,
-        // Address of transaction
+        /** Address of transaction */
         AddressRole,
-        // Label of address related to transaction
+        /** Label of address related to transaction */
         LabelRole,
-        // Net amount of transaction
+        /** Net amount of transaction */
         AmountRole,
-        // Unique identifier
+        /** Unique identifier */
         TxIDRole,
-        // Is transaction confirmed?
+        /** Is transaction confirmed? */
         ConfirmedRole,
-        // Formatted amount, without brackets when unconfirmed
+        /** Formatted amount, without brackets when unconfirmed */
         FormattedAmountRole
-    } RoleIndex;
+    };
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;

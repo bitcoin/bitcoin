@@ -8,7 +8,9 @@ QT_BEGIN_NAMESPACE
 class QAbstractItemModel;
 QT_END_NAMESPACE
 
-// Export TableModel to CSV file
+/** Export a Qt table model to a CSV file. This is useful for analyzing or post-processing the data in
+    a spreadsheet.
+ */
 class CSVModelWriter : public QObject
 {
     Q_OBJECT
@@ -18,8 +20,9 @@ public:
     void setModel(const QAbstractItemModel *model);
     void addColumn(const QString &title, int column, int role=Qt::EditRole);
 
-    // Perform write operation
-    // Returns true on success, false otherwise
+    /** Perform export of the model to CSV.
+        @returns true on success, false otherwise
+    */
     bool write();
 
 private:

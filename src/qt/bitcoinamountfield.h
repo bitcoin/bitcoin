@@ -8,8 +8,8 @@ class QDoubleSpinBox;
 class QValueComboBox;
 QT_END_NAMESPACE
 
-// Coin amount entry widget with separate parts for whole
-// coins and decimals.
+/** Widget for entering bitcoin amounts.
+  */
 class BitcoinAmountField: public QWidget
 {
     Q_OBJECT
@@ -20,25 +20,27 @@ public:
     qint64 value(bool *valid=0) const;
     void setValue(qint64 value);
 
-    // Mark current valid as invalid in UI
+    /** Mark current value as invalid in UI. */
     void setValid(bool valid);
+    /** Perform input validation, mark field as invalid if entered value is not valid. */
     bool validate();
 
-    // Change current unit
+    /** Change unit used to display amount. */
     void setDisplayUnit(int unit);
 
-    // Make field empty and ready for new input
+    /** Make field empty and ready for new input. */
     void clear();
 
-    // Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907)
-    // Hence we have to set it up manually
+    /** Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907),
+        in these cases we have to set it up manually.
+    */
     QWidget *setupTabChain(QWidget *prev);
 
 signals:
     void textChanged();
 
 protected:
-    // Intercept focus-in event and ',' keypresses
+    /** Intercept focus-in event and ',' keypresses */
     bool eventFilter(QObject *object, QEvent *event);
 
 private:

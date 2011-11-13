@@ -8,6 +8,9 @@ class AddressTablePriv;
 class CWallet;
 class WalletModel;
 
+/**
+   Qt model of the address book in the core. This allows views to access and modify the address book.
+ */
 class AddressTableModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -16,27 +19,28 @@ public:
     ~AddressTableModel();
 
     enum ColumnIndex {
-        Label = 0,   /* User specified label */
-        Address = 1  /* Bitcoin address */
+        Label = 0,   /**< User specified label */
+        Address = 1  /**< Bitcoin address */
     };
 
     enum RoleIndex {
-        TypeRole = Qt::UserRole
+        TypeRole = Qt::UserRole /**< Type of address (#Send or #Receive) */
     };
 
-    // Return status of last edit/insert operation
+    /** Return status of edit/insert operation */
     enum EditStatus {
         OK,
-        INVALID_ADDRESS,
-        DUPLICATE_ADDRESS,
-        WALLET_UNLOCK_FAILURE,
-        KEY_GENERATION_FAILURE
+        INVALID_ADDRESS,   /**< Unparseable address */
+        DUPLICATE_ADDRESS,  /**< Address already in address book */
+        WALLET_UNLOCK_FAILURE, /**< Wallet could not be unlocked to create new receiving address */
+        KEY_GENERATION_FAILURE /**< Generating a new public key for a receiving address failed */
     };
 
-    static const QString Send; /* Send addres */
-    static const QString Receive; /* Receive address */
+    static const QString Send; /**< Specifies send address */
+    static const QString Receive; /**< Specifies receive address */
 
-    /* Overridden methods from QAbstractTableModel */
+    /** @name Methods overridden from QAbstractTableModel
+        @{*/
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -45,6 +49,7 @@ public:
     QModelIndex index(int row, int column, const QModelIndex & parent) const;
     bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
     Qt::ItemFlags flags(const QModelIndex & index) const;
+    /*@}*/
 
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.

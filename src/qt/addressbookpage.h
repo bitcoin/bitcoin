@@ -14,6 +14,8 @@ class QItemSelection;
 class QSortFilterProxyModel;
 QT_END_NAMESPACE
 
+/** Widget that shows a list of sending or receiving addresses.
+  */
 class AddressBookPage : public QDialog
 {
     Q_OBJECT
@@ -25,8 +27,8 @@ public:
     };
 
     enum Mode {
-        ForSending, // Pick address for sending
-        ForEditing  // Open address book for editing
+        ForSending, /**< Open address book to pick address for sending */
+        ForEditing  /**< Open address book for editing */
     };
 
     explicit AddressBookPage(Mode mode, Tabs tab, QWidget *parent = 0);
