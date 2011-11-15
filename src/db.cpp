@@ -51,7 +51,7 @@ static void EnvShutdown(bool fRemoveLogFiles)
         while (it != filesystem::directory_iterator())
         {
             const filesystem::path& p = it->path();
-#if BOOST_FILESYSTEM_VERSION == 3
+#if BOOST_FILESYSTEM_VERSION >= 3
             std::string f = p.filename().generic_string();
 #else
             std::string f = p.filename();
