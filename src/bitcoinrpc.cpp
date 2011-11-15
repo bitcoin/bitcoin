@@ -1557,6 +1557,11 @@ Value encryptwallet(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an encrypted wallet, but encryptwallet was called.");
 
+#ifdef QT_GUI
+    // shutting down via RPC while the GUI is running does not work (yet):
+    throw runtime_error("Not Yet Implemented: use GUI to encrypt wallet, not RPC command");
+#endif
+
     string strWalletPass;
     strWalletPass.reserve(100);
     mlock(&strWalletPass[0], strWalletPass.capacity());
@@ -1576,7 +1581,11 @@ Value encryptwallet(const Array& params, bool fHelp)
     fill(strWalletPass.begin(), strWalletPass.end(), '\0');
     munlock(&strWalletPass[0], strWalletPass.capacity());
 
-    return Value::null;
+    // BDB seems to have a bad habit of writing old data into
+    // slack space in .dat files; that is bad if the old data is
+    // unencrypted private keys.  So:
+    CreateThread(Shutdown, NULL);
+    return "wallet encrypted; bitcoin server stopping, restart to run with encrypted wallet";
 }
 
 
