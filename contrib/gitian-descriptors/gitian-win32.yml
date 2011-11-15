@@ -13,7 +13,7 @@ packages:
 - "wine"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
+- "url": "https://git.gitorious.org/+bitcoin-stable-developers/bitcoin/bitcoind-stable.git"
   "dir": "bitcoin"
 files:
 - "wxwidgets-win32-2.9.2-gitian.zip"
