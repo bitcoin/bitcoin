@@ -187,6 +187,11 @@ bool CWallet::EncryptWallet(const string& strWalletPassphrase)
         }
 
         Lock();
+
+        // Need to completely rewrite the wallet file; if we don't, bdb might keep
+        // bits of the unencrypted private key in slack space in the database file.
+        setKeyPool.clear();
+        CDB::Rewrite(strWalletFile, "\x04pool");
     }
 
     return true;
@@ -1142,6 +1147,18 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
         return false;
     fFirstRunRet = false;
     int nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    if (nLoadWalletRet == DB_NEED_REWRITE)
+    {
+        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        {
+            setKeyPool.clear();
+            // Note: can't top-up keypool here, because wallet is locked.
+            // User will be prompted to unlock wallet the next operation
+            // the requires a new key.
+        }
+        nLoadWalletRet = DB_NEED_REWRITE;
+    }
+
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
     fFirstRunRet = vchDefaultKey.empty();
