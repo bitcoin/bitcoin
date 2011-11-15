@@ -1222,10 +1222,9 @@ void CMainFrame::OnMenuOptionsEncryptWallet(wxCommandEvent& event)
     fill(strWalletPassTest.begin(), strWalletPassTest.end(), '\0');
     munlock(&strWalletPass[0], strWalletPass.capacity());
     munlock(&strWalletPassTest[0], strWalletPassTest.capacity());
-    wxMessageBox(_("Wallet Encrypted.\nRemember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."), "Bitcoin");
+    wxMessageBox(_("Wallet Encrypted.\nBitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."), "Bitcoin");
 
-    m_menuOptions->Remove(m_menuOptionsEncryptWallet);
-    m_menuOptions->Insert(m_menuOptions->GetMenuItemCount() - 1, m_menuOptionsChangeWalletPassphrase);
+    Close(true);
 }
 
 void CMainFrame::OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event)
