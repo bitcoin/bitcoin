@@ -241,7 +241,7 @@ void AddressBookPage::exportClicked()
 void AddressBookPage::on_showQRCode_clicked()
 {
 #ifdef USE_QRCODE
-    QTableView *table = getCurrentTable();
+    QTableView *table = ui->tableView;
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
 
