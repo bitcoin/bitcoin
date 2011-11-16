@@ -72,6 +72,8 @@ void AskPassphraseDialog::setModel(WalletModel *model)
 void AskPassphraseDialog::accept()
 {
     std::string oldpass, newpass1, newpass2;
+    if(!model)
+        return;
     // TODO: mlock memory / munlock on return so they will not be swapped out, really need "mlockedstring" wrapper class to do this safely
     oldpass.reserve(MAX_PASSPHRASE_SIZE);
     newpass1.reserve(MAX_PASSPHRASE_SIZE);
@@ -99,7 +101,8 @@ void AskPassphraseDialog::accept()
                 if(model->setWalletEncrypted(true, newpass1))
                 {
                     QMessageBox::warning(this, tr("Wallet encrypted"),
-                                         tr("Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."));
+                                         tr("Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."));
+                    QApplication::quit();
                 }
                 else
                 {

@@ -44,8 +44,8 @@ void Shutdown(void* parg)
 {
     static CCriticalSection cs_Shutdown;
     static bool fTaken;
-    bool fFirstThread;
-    CRITICAL_BLOCK(cs_Shutdown)
+    bool fFirstThread = false;
+    TRY_CRITICAL_BLOCK(cs_Shutdown)
     {
         fFirstThread = !fTaken;
         fTaken = true;
@@ -55,9 +55,9 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         nTransactionsUpdated++;
-        DBFlush(false);
+        DBFlush(false, false);
         StopNode();
-        DBFlush(true);
+        DBFlush(true, true);
         boost::filesystem::remove(GetPidFile());
         UnregisterWallet(pwalletMain);
         delete pwalletMain;
@@ -362,6 +362,12 @@ bool AppInit2(int argc, char* argv[])
             strErrors += _("Error loading wallet.dat: Wallet corrupted      \n");
         else if (nLoadWalletRet == DB_TOO_NEW)
             strErrors += _("Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n");
+        else if (nLoadWalletRet == DB_NEED_REWRITE)
+        {
+            strErrors += _("Wallet needed to be rewritten: restart Bitcoin to complete    \n");
+            wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+            return false;
+        }
         else
             strErrors += _("Error loading wallet.dat      \n");
     }

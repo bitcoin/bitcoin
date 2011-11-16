@@ -47,8 +47,6 @@ private:
     QString returnValue;
     QSortFilterProxyModel *proxyModel;
 
-    QTableView *getCurrentTable();
-
 private slots:
     void on_deleteButton_clicked();
     void on_newAddressButton_clicked();

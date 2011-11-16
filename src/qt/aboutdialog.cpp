@@ -12,7 +12,10 @@ AboutDialog::AboutDialog(QWidget *parent) :
 
 void AboutDialog::setModel(ClientModel *model)
 {
-    ui->versionLabel->setText(model->formatFullVersion());
+    if(model)
+    {
+        ui->versionLabel->setText(model->formatFullVersion());
+    }
 }
 
 AboutDialog::~AboutDialog()

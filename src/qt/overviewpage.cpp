@@ -143,30 +143,34 @@ void OverviewPage::setNumTransactions(int count)
 void OverviewPage::setModel(WalletModel *model)
 {
     this->model = model;
+    if(model)
+    {
+        // Set up transaction list
+        TransactionFilterProxy *filter = new TransactionFilterProxy();
+        filter->setSourceModel(model->getTransactionTableModel());
+        filter->setLimit(NUM_ITEMS);
+        filter->setDynamicSortFilter(true);
+        filter->setSortRole(Qt::EditRole);
+        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
 
-    // Set up transaction list
-    TransactionFilterProxy *filter = new TransactionFilterProxy();
-    filter->setSourceModel(model->getTransactionTableModel());
-    filter->setLimit(NUM_ITEMS);
-    filter->setDynamicSortFilter(true);
-    filter->setSortRole(Qt::EditRole);
-    filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+        ui->listTransactions->setModel(filter);
+        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
-    ui->listTransactions->setModel(filter);
-    ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
+        // Keep up to date with wallet
+        setBalance(model->getBalance(), model->getUnconfirmedBalance());
+        connect(model, SIGNAL(balanceChanged(qint64, qint64)), this, SLOT(setBalance(qint64, qint64)));
 
-    // Keep up to date with wallet
-    setBalance(model->getBalance(), model->getUnconfirmedBalance());
-    connect(model, SIGNAL(balanceChanged(qint64, qint64)), this, SLOT(setBalance(qint64, qint64)));
+        setNumTransactions(model->getNumTransactions());
+        connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
 
-    setNumTransactions(model->getNumTransactions());
-    connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
-
-    connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(displayUnitChanged()));
+        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(displayUnitChanged()));
+    }
 }
 
 void OverviewPage::displayUnitChanged()
 {
+    if(!model || !model->getOptionsModel())
+        return;
     if(currentBalance != -1)
         setBalance(currentBalance, currentUnconfirmedBalance);
 

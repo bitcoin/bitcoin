@@ -160,10 +160,13 @@ Value stop(const Array& params, bool fHelp)
         throw runtime_error(
             "stop\n"
             "Stop bitcoin server.");
-
+#ifndef QT_GUI
     // Shutdown will take long enough that the response should get back
     CreateThread(Shutdown, NULL);
     return "bitcoin server stopping";
+#else
+    throw runtime_error("NYI: cannot shut down GUI with RPC command");
+#endif
 }
 
 
@@ -1554,6 +1557,11 @@ Value encryptwallet(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an encrypted wallet, but encryptwallet was called.");
 
+#ifdef QT_GUI
+    // shutting down via RPC while the GUI is running does not work (yet):
+    throw runtime_error("Not Yet Implemented: use GUI to encrypt wallet, not RPC command");
+#endif
+
     string strWalletPass;
     strWalletPass.reserve(100);
     mlock(&strWalletPass[0], strWalletPass.capacity());
@@ -1573,7 +1581,11 @@ Value encryptwallet(const Array& params, bool fHelp)
     fill(strWalletPass.begin(), strWalletPass.end(), '\0');
     munlock(&strWalletPass[0], strWalletPass.capacity());
 
-    return Value::null;
+    // BDB seems to have a bad habit of writing old data into
+    // slack space in .dat files; that is bad if the old data is
+    // unencrypted private keys.  So:
+    CreateThread(Shutdown, NULL);
+    return "wallet encrypted; bitcoin server stopping, restart to run with encrypted wallet";
 }
 
 
@@ -2175,11 +2187,13 @@ void ThreadRPCServer2(void* parg)
         else if (mapArgs.count("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
         PrintConsole(
-            _("Warning: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
+            _("Error: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"),
                 strWhatAmI.c_str(),
                 GetConfigFile().c_str());
+#ifndef QT_GUI
         CreateThread(Shutdown, NULL);
+#endif
         return;
     }
 
