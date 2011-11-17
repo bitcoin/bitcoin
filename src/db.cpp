@@ -28,7 +28,12 @@ DbEnv dbenv(0);
 static map<string, int> mapFileUseCount;
 static map<string, Db*> mapDb;
 
-static void EnvShutdown(bool fRemoveLogFiles)
+static bool fRemoveLogFiles = false;
+void RemoveLogFilesOnShutdown(bool fIn)
+{
+    fRemoveLogFiles = fIn;
+}
+static void EnvShutdown()
 {
     if (!fDbEnvInit)
         return;
@@ -71,7 +76,7 @@ public:
     }
     ~CDBInit()
     {
-        EnvShutdown(false);
+        EnvShutdown();
     }
 }
 instance_of_cdbinit;
@@ -289,7 +294,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 }
 
 
-void DBFlush(bool fShutdown, bool fRemoveLogFiles)
+void DBFlush(bool fShutdown)
 {
     // Flush log data to the actual data file
     //  on all files that are not in use
@@ -322,7 +327,7 @@ void DBFlush(bool fShutdown, bool fRemoveLogFiles)
             if (mapFileUseCount.empty())
             {
                 dbenv.log_archive(&listp, DB_ARCH_REMOVE);
-                EnvShutdown(fRemoveLogFiles);
+                EnvShutdown();
             }
         }
     }
