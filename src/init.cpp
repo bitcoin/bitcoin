@@ -45,9 +45,9 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         nTransactionsUpdated++;
-        DBFlush(false, false);
+        DBFlush(false);
         StopNode();
-        DBFlush(true, true);
+        DBFlush(true);
         boost::filesystem::remove(GetPidFile());
         UnregisterWallet(pwalletMain);
         delete pwalletMain;
