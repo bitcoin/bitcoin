@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1568,7 +1569,7 @@ boost::filesystem::path GetAutostartDir()
 
 boost::filesystem::path GetAutostartFilePath()
 {
-    return GetAutostartDir() / boost::filesystem::path("bitcoin.desktop");
+    return GetAutostartDir() / boost::filesystem::path("ppcoin.desktop");
 }
 
 bool GetStartOnSystemStartup()
@@ -1608,10 +1609,10 @@ void SetStartOnSystemStartup(bool fAutoStart)
         boost::filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
         if (!optionFile.good())
         {
-            wxMessageBox(_("Cannot write autostart/bitcoin.desktop file"), "Bitcoin");
+            wxMessageBox(_("Cannot write autostart/ppcoin.desktop file"), "Bitcoin");
             return;
         }
-        // Write a bitcoin.desktop file to the autostart directory:
+        // Write a ppcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         optionFile << "Name=Bitcoin\n";
@@ -2864,9 +2865,9 @@ bool CMyApp::OnInit()
     g_isPainting = 10000;
 #endif
 #if defined(__WXMSW__ ) || defined(__WXMAC_OSX__)
-    SetAppName("Bitcoin");
+    SetAppName("PPCoin");
 #else
-    SetAppName("bitcoin");
+    SetAppName("ppcoin");
 #endif
 #ifdef __WXMSW__
 #if wxUSE_UNICODE

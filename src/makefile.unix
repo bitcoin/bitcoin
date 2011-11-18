@@ -29,10 +29,6 @@ ifdef USE_UPNP
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
 
-ifneq (${PPCOIN_GENESIS}, 0)
-	DEFS += -DPPCOIN_GENESIS
-endif
-
 LIBS+= \
  -Wl,-Bdynamic \
    -l gthread-2.0 \
@@ -95,8 +91,10 @@ clean:
 	-rm -f headers.h.gch
 	-rm -f ppcoin/obj/*.o
 
-ppcoin/obj/%.o: ppcoin/%.cpp
+ppcoin/obj/genesis.o: ppcoin/genesis.cpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -DPPCOIN_GENESIS -o obj/nogui/init.o init.cpp
 
 genesis: ppcoin/obj/genesis.o $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	-rm -f obj/nogui/init.o
