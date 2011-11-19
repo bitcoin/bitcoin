@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2011 Satoshi Nakamoto & Bitcoin developers
+// Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -816,9 +817,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                 dPriority /= nBytes;
 
                 // Check that enough fee is included
-                int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                bool fAllowFree = CTransaction::AllowFree(dPriority);
-                int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+                int64 nPayFee = nTransactionFee;   // ppcoin: simplify tx fee
+                int64 nMinFee = wtxNew.GetMinFee(1, false);
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {
                     nFeeRet = max(nPayFee, nMinFee);

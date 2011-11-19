@@ -71,7 +71,7 @@ void PrintConsole(const char* format, ...)
 int64 AmountFromValue(const Value& value)
 {
     double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
+    if (dAmount <= 0.0 || dAmount > MAX_MONEY)
         throw JSONRPCError(-3, "Invalid amount");
     int64 nAmount = roundint64(dAmount * COIN);
     if (!MoneyRange(nAmount))
@@ -497,12 +497,13 @@ Value settxfee(const Array& params, bool fHelp)
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
             "settxfee <amount>\n"
-            "<amount> is a real and is rounded to the nearest 0.00000001");
+            "<amount> is a real and is rounded to the nearest 0.0001\n"
+            "Minimum and default transaction fee is 1 coin");
 
     // Amount
-    int64 nAmount = 0;
-    if (params[0].get_real() != 0.0)
-        nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
+    int64 nAmount = MIN_TX_FEE;
+    if (params[0].get_real() != 0.0)                    // rejects 0.0 amounts
+        nAmount = max(nAmount, AmountFromValue(params[0]));
 
     nTransactionFee = nAmount;
     return true;

@@ -55,7 +55,7 @@ int64 nHPSTimerStart;
 
 // Settings
 int fGenerateBitcoins = false;
-int64 nTransactionFee = 0;
+int64 nTransactionFee = MIN_TX_FEE;
 CAddress addrIncoming;
 int fLimitProcessors = false;
 int nLimitProcessors = 1;
@@ -413,7 +413,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         }
 
         // Don't accept it if it can't get into a block
-        if (nFees < GetMinFee(1000, true, true))
+        if (nFees < GetMinFee(1000, false, true))
             return error("AcceptToMemoryPool() : not enough fees");
 
         // Continuously rate-limit free transactions
@@ -2775,9 +2775,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
-            // Transaction fee required depends on block size
-            bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
-            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree, true);
+            // ppcoin: simplify transaction fee - allow free = false
+            int64 nMinFee = tx.GetMinFee(nBlockSize, false, true);
 
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
