@@ -28,8 +28,6 @@ class CBlockLocator;
 extern unsigned int nWalletDBUpdated;
 extern DbEnv dbenv;
 
-
-extern void RemoveLogFilesOnShutdown(bool fRemoveLogFiles);
 extern void DBFlush(bool fShutdown);
 void ThreadFlushWalletDB(void* parg);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
