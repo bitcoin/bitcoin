@@ -195,61 +195,63 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                 bool fSuccess = true;
                 printf("Rewriting %s...\n", strFile.c_str());
                 string strFileRes = strFile + ".rewrite";
-                CDB db(strFile.c_str(), "r");
-                Db* pdbCopy = new Db(&dbenv, 0);
-
-                int ret = pdbCopy->open(NULL,                 // Txn pointer
-                                        strFileRes.c_str(),   // Filename
-                                        "main",    // Logical db name
-                                        DB_BTREE,  // Database type
-                                        DB_CREATE,    // Flags
-                                        0);
-                if (ret > 0)
-                {
-                    printf("Cannot create database file %s\n", strFileRes.c_str());
-                    fSuccess = false;
-                }
-
-                Dbc* pcursor = db.GetCursor();
-                if (pcursor)
-                    while (fSuccess)
+                { // surround usage of db with extra {}
+                    CDB db(strFile.c_str(), "r");
+                    Db* pdbCopy = new Db(&dbenv, 0);
+    
+                    int ret = pdbCopy->open(NULL,                 // Txn pointer
+                                            strFileRes.c_str(),   // Filename
+                                            "main",    // Logical db name
+                                            DB_BTREE,  // Database type
+                                            DB_CREATE,    // Flags
+                                            0);
+                    if (ret > 0)
                     {
-                        CDataStream ssKey;
-                        CDataStream ssValue;
-                        int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
-                        if (ret == DB_NOTFOUND)
-                        {
-                            pcursor->close();
-                            break;
-                        }
-                        else if (ret != 0)
-                        {
-                            pcursor->close();
-                            fSuccess = false;
-                            break;
-                        }
-                        if (pszSkip &&
-                            strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
-                            continue;
-                        if (strncmp(&ssKey[0], "\x07version", 8) == 0)
-                        {
-                            // Update version:
-                            ssValue.clear();
-                            ssValue << VERSION;
-                        }
-                        Dbt datKey(&ssKey[0], ssKey.size());
-                        Dbt datValue(&ssValue[0], ssValue.size());
-                        int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
-                        if (ret2 > 0)
-                            fSuccess = false;
-                    }
-                if (fSuccess)
-                {
-                    db.Close();
-                    CloseDb(strFile);
-                    if (pdbCopy->close(0))
+                        printf("Cannot create database file %s\n", strFileRes.c_str());
                         fSuccess = false;
-                    delete pdbCopy;
+                    }
+    
+                    Dbc* pcursor = db.GetCursor();
+                    if (pcursor)
+                        while (fSuccess)
+                        {
+                            CDataStream ssKey;
+                            CDataStream ssValue;
+                            int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
+                            if (ret == DB_NOTFOUND)
+                            {
+                                pcursor->close();
+                                break;
+                            }
+                            else if (ret != 0)
+                            {
+                                pcursor->close();
+                                fSuccess = false;
+                                break;
+                            }
+                            if (pszSkip &&
+                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                                continue;
+                            if (strncmp(&ssKey[0], "\x07version", 8) == 0)
+                            {
+                                // Update version:
+                                ssValue.clear();
+                                ssValue << VERSION;
+                            }
+                            Dbt datKey(&ssKey[0], ssKey.size());
+                            Dbt datValue(&ssValue[0], ssValue.size());
+                            int ret2 = pdbCopy->put(NULL, &datKey, &datValue, DB_NOOVERWRITE);
+                            if (ret2 > 0)
+                                fSuccess = false;
+                        }
+                    if (fSuccess)
+                    {
+                        db.Close();
+                        CloseDb(strFile);
+                        if (pdbCopy->close(0))
+                            fSuccess = false;
+                        delete pdbCopy;
+                    }
                 }
                 if (fSuccess)
                 {
