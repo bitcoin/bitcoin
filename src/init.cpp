@@ -487,11 +487,6 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
-    if (GetBoolArg("-nodnsseed"))
-        printf("DNS seeding disabled\n");
-    else
-        DNSAddressSeed();
-
     if (mapArgs.count("-paytxfee"))
     {
         if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
