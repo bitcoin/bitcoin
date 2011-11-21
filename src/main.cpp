@@ -616,13 +616,11 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
         }
     }
 
-    // To limit dust spam, require base fee if any output is less than 0.01
-    if (nMinFee < nBaseFee)
-    {
-        BOOST_FOREACH(const CTxOut& txout, vout)
-            if (txout.nValue < CENT)
-                nMinFee = nBaseFee;
-    }
+    // Litecoin
+    // To limit dust spam, add nBaseFee for each output less than 0.01
+    BOOST_FOREACH(const CTxOut& txout, vout)
+        if (txout.nValue < 0.01)
+            nMinFee += nBaseFee;
 
     // Raise the price as the block approaches full
     if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
