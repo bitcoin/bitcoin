@@ -12,6 +12,8 @@ namespace Ui {
 }
 class AddressTableModel;
 
+/** Dialog for editing an address and associated information.
+ */
 class EditAddressDialog : public QDialog
 {
     Q_OBJECT
