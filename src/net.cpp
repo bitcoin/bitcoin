@@ -32,6 +32,7 @@ void ThreadOpenConnections2(void* parg);
 #ifdef USE_UPNP
 void ThreadMapPort2(void* parg);
 #endif
+void ThreadDNSAddressSeed2(void* parg);
 bool OpenNetworkConnection(const CAddress& addrConnect);
 
 
@@ -1213,8 +1214,28 @@ static const char *strDNSSeed[] = {
     "dnsseed.bluematt.me",
 };
 
-void DNSAddressSeed()
+void ThreadDNSAddressSeed(void* parg)
 {
+    IMPLEMENT_RANDOMIZE_STACK(ThreadDNSAddressSeed(parg));
+    try
+    {
+        vnThreadsRunning[6]++;
+        ThreadDNSAddressSeed2(parg);
+        vnThreadsRunning[6]--;
+    }
+    catch (std::exception& e) {
+        vnThreadsRunning[6]--;
+        PrintException(&e, "ThreadDNSAddressSeed()");
+    } catch (...) {
+        vnThreadsRunning[6]--;
+        throw; // support pthread_cancel()
+    }
+    printf("ThreadDNSAddressSeed exiting\n");
+}
+
+void ThreadDNSAddressSeed2(void* parg)
+{
+    printf("ThreadDNSAddressSeed started\n");
     int found = 0;
 
     if (!fTestNet)
@@ -1244,6 +1265,15 @@ void DNSAddressSeed()
 
     printf("%d addresses found from DNS seeds\n", found);
 }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1757,6 +1787,12 @@ void StartNode(void* parg)
     // Start threads
     //
 
+    if (GetBoolArg("-nodnsseed"))
+        printf("DNS seeding disabled\n");
+    else
+        if (!CreateThread(ThreadDNSAddressSeed, NULL))
+            printf("Error: CreateThread(ThreadDNSAddressSeed) failed\n");
+
     // Map ports with UPnP
     if (fHaveUPnP)
         MapPort(fUseUPnP);
@@ -1803,6 +1839,7 @@ bool StopNode()
     if (vnThreadsRunning[3] > 0) printf("ThreadBitcoinMiner still running\n");
     if (vnThreadsRunning[4] > 0) printf("ThreadRPCServer still running\n");
     if (fHaveUPnP && vnThreadsRunning[5] > 0) printf("ThreadMapPort still running\n");
+    if (vnThreadsRunning[6] > 0) printf("ThreadDNSAddressSeed still running\n");
     while (vnThreadsRunning[2] > 0 || vnThreadsRunning[4] > 0)
         Sleep(20);
     Sleep(50);
