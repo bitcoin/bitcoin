@@ -8,6 +8,8 @@ class QIcon;
 class QWidget;
 class objc_object;
 
+/** Macintosh-specific dock icon handler.
+ */
 class MacDockIconHandler : public QObject
 {
     Q_OBJECT
