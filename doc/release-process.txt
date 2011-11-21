@@ -2,6 +2,7 @@
   bitcoin-qt.pro
   src/serialize.h
   share/setup.nsi
+  doc/README*
 
 * tag version in git
 
