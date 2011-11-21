@@ -59,14 +59,28 @@ class CKey
 protected:
     EC_KEY* pkey;
     bool fSet;
+    bool fCompressedPubKey;
+
+    void SetCompressedPubKey()
+    {
+        EC_KEY_set_conv_form(pkey, POINT_CONVERSION_COMPRESSED);
+        fCompressedPubKey = true;
+    }
 
 public:
-    CKey()
+
+    void Reset()
     {
+        fCompressedPubKey = false;
         pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
         if (pkey == NULL)
             throw key_error("CKey::CKey() : EC_KEY_new_by_curve_name failed");
         fSet = false;
+    }
+
+    CKey()
+    {
+        Reset();
     }
 
     CKey(const CKey& b)
@@ -95,10 +109,17 @@ public:
         return !fSet;
     }
 
-    void MakeNewKey()
+    bool IsCompressed() const
+    {
+        return fCompressedPubKey;
+    }
+
+    void MakeNewKey(bool fCompressed = true)
     {
         if (!EC_KEY_generate_key(pkey))
             throw key_error("CKey::MakeNewKey() : EC_KEY_generate_key failed");
+        if (fCompressed)
+            SetCompressedPubKey();
         fSet = true;
     }
 
@@ -111,7 +132,7 @@ public:
         return true;
     }
 
-    bool SetSecret(const CSecret& vchSecret)
+    bool SetSecret(const CSecret& vchSecret, bool fCompressed = false)
     {
         EC_KEY_free(pkey);
         pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
@@ -126,10 +147,12 @@ public:
             throw key_error("CKey::SetSecret() : EC_KEY_regenerate_key failed");
         BN_clear_free(bn);
         fSet = true;
+        if (fCompressed || fCompressedPubKey)
+            SetCompressedPubKey();
         return true;
     }
 
-    CSecret GetSecret() const
+    CSecret GetSecret(bool &fCompressed) const
     {
         CSecret vchRet;
         vchRet.resize(32);
@@ -140,6 +163,7 @@ public:
         int n=BN_bn2bin(bn,&vchRet[32 - nBytes]);
         if (n != nBytes) 
             throw key_error("CKey::GetSecret(): BN_bn2bin failed");
+        fCompressed = fCompressedPubKey;
         return vchRet;
     }
 
@@ -161,6 +185,8 @@ public:
         if (!o2i_ECPublicKey(&pkey, &pbegin, vchPubKey.size()))
             return false;
         fSet = true;
+        if (vchPubKey.size() == 33)
+            SetCompressedPubKey();
         return true;
     }
 

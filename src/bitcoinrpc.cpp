@@ -1701,6 +1701,9 @@ Value validateaddress(const Array& params, bool fHelp)
             ret.push_back(Pair("pubkey", HexStr(vchPubKey)));
             std::string strPubKey(vchPubKey.begin(), vchPubKey.end());
             ret.push_back(Pair("pubkey58", EncodeBase58(vchPubKey)));
+            CKey key;
+            key.SetPubKey(vchPubKey);
+            ret.push_back(Pair("iscompressed", key.IsCompressed()));
         }
         else if (pwalletMain->HaveCScript(address.GetHash160()))
         {
