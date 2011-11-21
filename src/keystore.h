@@ -20,15 +20,7 @@ public:
 
     // Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CBitcoinAddress &address) const =0;
-    virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const 
-    {
-        CSecret vchSecret;
-        if (!GetSecret(address, vchSecret))
-            return false;
-        if (!keyOut.SetSecret(vchSecret))
-            return false;
-        return true;
-    }
+    virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
     virtual void GetKeys(std::set<CBitcoinAddress> &setAddress) const =0;
     virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
 
@@ -39,17 +31,17 @@ public:
 
     // Generate a new key, and add it to the store
     virtual std::vector<unsigned char> GenerateNewKey();
-    virtual bool GetSecret(const CBitcoinAddress &address, CSecret& vchSecret) const
+    virtual bool GetSecret(const CBitcoinAddress &address, CSecret& vchSecret, bool &fCompressed) const
     {
         CKey key;
         if (!GetKey(address, key))
             return false;
-        vchSecret = key.GetSecret();
+        vchSecret = key.GetSecret(fCompressed);
         return true;
     }
 };
 
-typedef std::map<CBitcoinAddress, CSecret> KeyMap;
+typedef std::map<CBitcoinAddress, std::pair<CSecret, bool> > KeyMap;
 typedef std::map<uint160, CScript > ScriptMap;
 
 // Basic key store, that keeps keys in an address->secret map
@@ -81,14 +73,15 @@ public:
             }
         }
     }
-    bool GetSecret(const CBitcoinAddress &address, CSecret &vchSecret) const
+    bool GetKey(const CBitcoinAddress &address, CKey &keyOut) const
     {
         CRITICAL_BLOCK(cs_KeyStore)
         {
             KeyMap::const_iterator mi = mapKeys.find(address);
             if (mi != mapKeys.end())
             {
-                vchSecret = (*mi).second;
+                keyOut.Reset();
+                keyOut.SetSecret((*mi).second.first, (*mi).second.second);
                 return true;
             }
         }
@@ -154,7 +147,6 @@ public:
     }
 
     virtual bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
-    std::vector<unsigned char> GenerateNewKey();
     bool AddKey(const CKey& key);
     bool HaveKey(const CBitcoinAddress &address) const
     {
@@ -166,7 +158,7 @@ public:
         }
         return false;
     }
-    bool GetSecret(const CBitcoinAddress &address, CSecret& vchSecret) const;
+    bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const;
     bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
     void GetKeys(std::set<CBitcoinAddress> &setAddress) const
     {

@@ -359,22 +359,25 @@ public:
 class CBitcoinSecret : public CBase58Data
 {
 public:
-    void SetSecret(const CSecret& vchSecret)
-    {
+    void SetSecret(const CSecret& vchSecret, bool fCompressed)
+    { 
+        assert(vchSecret.size() == 32);
         SetData(fTestNet ? 239 : 128, &vchSecret[0], vchSecret.size());
+        if (fCompressed)
+            vchData.push_back(1);
     }
 
-    CSecret GetSecret()
+    CSecret GetSecret(bool &fCompressedOut)
     {
         CSecret vchSecret;
-        vchSecret.resize(vchData.size());
-        memcpy(&vchSecret[0], &vchData[0], vchData.size());
+        vchSecret.resize(32);
+        memcpy(&vchSecret[0], &vchData[0], 32);
+        fCompressedOut = vchData.size() == 33;
         return vchSecret;
     }
 
     bool IsValid() const
     {
-        int nExpectedSize = 32;
         bool fExpectTestNet = false;
         switch(nVersion)
         {
@@ -388,12 +391,12 @@ public:
             default:
                 return false;
         }
-        return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
+        return fExpectTestNet == fTestNet && (vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1));
     }
 
-    CBitcoinSecret(const CSecret& vchSecret)
+    CBitcoinSecret(const CSecret& vchSecret, bool fCompressed)
     {
-        SetSecret(vchSecret);
+        SetSecret(vchSecret, fCompressed);
     }
 
     CBitcoinSecret()
