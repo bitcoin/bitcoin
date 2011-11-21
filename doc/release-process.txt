@@ -1,6 +1,7 @@
 * update (commit) version in sources
   src/serialize.h
   share/setup.nsi
+  doc/README*
 
 * update (commit) version in OSX app bundle
  contrib/Bitcoin.app/Contents/Info.plist
