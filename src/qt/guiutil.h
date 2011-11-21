@@ -12,6 +12,8 @@ class QUrl;
 QT_END_NAMESPACE
 class SendCoinsRecipient;
 
+/** Static utility functions used by the Bitcoin Qt UI.
+ */
 class GUIUtil
 {
 public:

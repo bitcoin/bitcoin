@@ -13,6 +13,7 @@ namespace Ui {
 class WalletModel;
 class TxViewDelegate;
 
+/** Overview ("home") page widget */
 class OverviewPage : public QWidget
 {
     Q_OBJECT
