@@ -1,3 +1,15 @@
+bitcoin (0.5.0-natty0) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Mon, 21 Nov 2011 11:32:00 -0500
+
+bitcoin (0.5.0~rc7-natty0) natty; urgency=low
+
+  * New upstream release candidate.
+
+ -- Matt Corallo <matt@bluematt.me>  Sun, 20 Nov 2011 17:08:00 -0500
+
 bitcoin (0.5.0~rc3-natty0) natty; urgency=low
 
   * New upstream release candidate.
