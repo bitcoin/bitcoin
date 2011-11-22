@@ -1928,12 +1928,12 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="125"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Status:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="126"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>; wurde noch nicht erfolgreich gesendet</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
@@ -1953,7 +1953,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
         <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Quelle:&lt;/b&gt; Generiert&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="131"/>
@@ -1963,27 +1963,27 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="132"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>unbekannt</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="133"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;An:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="134"/>
         <source> (yours, label: </source>
-        <translation type="unfinished"/>
+        <translation> (Ihre, Bezeichnung: </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="135"/>
         <source> (yours)</source>
-        <translation type="unfinished"/>
+        <translation> (Ihre)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Gutschrift:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
@@ -1993,12 +1993,12 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>(not accepted)</source>
-        <translation type="unfinished"/>
+        <translation>(nicht angenommen)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="139"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Belastung:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="140"/>
@@ -2008,22 +2008,22 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Nettobetrag:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="142"/>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>Nachricht:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
         <source>Comment:</source>
-        <translation type="unfinished"/>
+        <translation>Kommentar:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="144"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>Generierte Bitcoins müssen 120 Blöcke lang warten, bevor sie ausgegeben werden können. Als Sie diesen Block generierten, wurde er an das Netzwerk gesendet, um ihn der Blockkette hinzuzufügen. Falls dies fehlschlägt wird der Status in &quot;nicht angenommen&quot; geändert und der Betrag wird nicht verfügbar werden. Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block zur selben Zeit wie Sie generierte.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="150"/>
@@ -2033,12 +2033,12 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="151"/>
         <source>Main</source>
-        <translation type="unfinished"/>
+        <translation>Haupt</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="152"/>
         <source>&amp;Start Bitcoin on window system startup</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Bitcoin beim Systemstart ausführen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="153"/>
@@ -2058,7 +2058,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="156"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoins überweisen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="157"/>
@@ -2220,12 +2220,12 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Bezeichnung</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
@@ -2240,7 +2240,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Adresse bearbeiten</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>

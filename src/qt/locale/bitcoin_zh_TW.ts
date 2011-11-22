@@ -318,7 +318,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>結束</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
@@ -328,7 +328,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"/>
+        <translation>關於%1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="205"/>
@@ -473,7 +473,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="508"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %1 元的費用來傳送. 這項費用會付給處理該筆交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
+        <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %1 的費用來傳送. 這筆費用會付給處理該筆交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="513"/>
@@ -674,7 +674,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended.</source>
-        <translation>非必要的交易手續費, 有助於縮短你的交易處理時間. 以 KB 為計費單位, 而大部份交易的大小是 1KB. 建議設定為 0.01 位元幣.</translation>
+        <translation>非必要的交易手續費, 有助於縮短你的交易處理時間. 以 KB 為計費單位, 而大部份交易的大小是 1KB. 建議設定為 0.01 元.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -684,7 +684,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended.</source>
-        <translation>非必要的交易手續費, 有助於縮短你的交易處理時間. 以 KB 為計費單位, 而大部份交易的大小是 1KB. 建議設定為 0.01 位元幣.</translation>
+        <translation>非必要的交易手續費, 有助於縮短你的交易處理時間. 以 KB 為計費單位, 而大部份交易的大小是 1KB. 建議設定為 0.01 元.</translation>
     </message>
 </context>
 <context>
@@ -720,7 +720,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="47"/>
         <source>123.456 BTC</source>
-        <translation>123.456 位元幣</translation>
+        <translation>123.456 BTC</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="54"/>
@@ -740,7 +740,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="75"/>
         <source>0 BTC</source>
-        <translation>0 位元幣</translation>
+        <translation>0 BTC</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="82"/>
@@ -813,7 +813,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
         <source>123.456 BTC</source>
-        <translation>123.456 位元幣</translation>
+        <translation>123.456 BTC</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="141"/>
@@ -828,7 +828,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="85"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation>&lt;b&gt;%1&lt;/b&gt; 元給 %2 (%3)</translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; 給 %2 (%3)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="88"/>
@@ -838,7 +838,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="89"/>
         <source>Are you sure you want to send %1?</source>
-        <translation>確定要付出 %1 元嗎?</translation>
+        <translation>確定要付出 %1 嗎?</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="89"/>
@@ -863,12 +863,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="125"/>
         <source>Total exceeds your balance when the %1 transaction fee is included</source>
-        <translation>加上交易手續費  %1 元後的總金額超過了你的餘額</translation>
+        <translation>加上交易手續費  %1 後的總金額超過了你的餘額</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="131"/>
         <source>Duplicate address found, can only send to each address once in one send operation</source>
-        <translation>發現了重複的位址; 在一次付款作業中, 一個位址只能付給它一次</translation>
+        <translation>發現了重複的位址; 在一次付款作業中, 只能付給每個位址一次</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="136"/>
@@ -1041,7 +1041,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="149"/>
         <source>(%1 matures in %2 more blocks)</source>
-        <translation>(%1 元將在 %2 個區塊產出後熟成)</translation>
+        <translation>(%1 將在 %2 個區塊產出後熟成)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="153"/>
@@ -1735,7 +1735,7 @@ SSL 選項: (SSL 設定程序請見 Bitcoin Wiki)
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %s 元的費用來傳送. 這項費用會付給處理該筆交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
+        <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %s 的費用來傳送. 這項費用會付給處理該筆交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="72"/>
@@ -1815,7 +1815,7 @@ SSL 選項: (SSL 設定程序請見 Bitcoin Wiki)
     <message>
         <location filename="../bitcoinstrings.cpp" line="87"/>
         <source>Generated (%s matures in %d more blocks)</source>
-        <translation>已產出 (%s 元將在 %d 個區塊產出後熟成)</translation>
+        <translation>已產出 (%s 將在 %d 個區塊產出後熟成)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="88"/>
@@ -2005,7 +2005,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
         <source>(%s matures in %d more blocks)</source>
-        <translation>(%s 元將在 %d 個區塊產出後熟成)</translation>
+        <translation>(%s 將在 %d 個區塊產出後熟成)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
@@ -2110,7 +2110,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="163"/>
         <source>Sending %s to %s</source>
-        <translation>付出 %s 元給 %s</translation>
+        <translation>付出 %s 給 %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="164"/>
@@ -2180,7 +2180,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds</source>
-        <translation>這筆交易因為金額或複雜度或最近累積收款的關係, 需要至少 %s 元的手續費</translation>
+        <translation>這筆交易因為金額或複雜度或最近累積收款的關係, 需要至少 %s 的手續費</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="180"/>
@@ -2327,7 +2327,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoin.cpp" line="145"/>
         <source>Bitcoin Qt</source>
-        <translation type="unfinished"/>
+        <translation>位元幣Qt版</translation>
     </message>
 </context>
 </TS>
