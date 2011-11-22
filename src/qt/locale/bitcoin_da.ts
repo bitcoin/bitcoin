@@ -23,11 +23,11 @@ Distributed under the MIT/X11 software license, see the accompanying file licens
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>Copyright © 2009-2011 Bitcoin Developers
 
-Dette er eksperimentel software.
+Dette program er ekperimentielt.
 
-Distribueret under MIT/X11 softwarelicensen. Se den vedlagte fil, license.txt, eller http://www.opensource.org/licenses/mit-license.php.
+Det er gjort tilgængeligt under MIT/X11 softwarelicensen. Se den tilhørende fil &quot;license.txt&quot; eller http://www.opensource.org/licenses/mit-license.php.
 
-Dette produkt indeholder software udviklet af OpenSSL Project til brug i OpenSSL Toolkit (http://www.openssl.org/) og kryptografisk software skrevet af Eric Young (eay@cryptsoft.com) og UPnP software skrevet af Thomas Bernhard.</translation>
+Produktet indeholder software som er udviklet af OpenSSL Project til brug i OpenSSL Toolkit (http://www.openssl.org/), kryptografisk software skrevet af Eric Young (eay@cryptsoft.com) og UPnP-software skrevet by Thomas Bernard.</translation>
     </message>
 </context>
 <context>
@@ -40,12 +40,12 @@ Dette produkt indeholder software udviklet af OpenSSL Project til brug i OpenSSL
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
         <source>These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Dette er dine Bitcoinadresser for at modtage betalinger.  Du kan give en forskellig adresse til hver afsender, så du kan holde styr på hvem der betaler dig.</translation>
+        <translation>Dette er dine Bitcoinadresser til at modtage betalinger med.  Du kan give en forskellig adresse til hver afsender, så du kan holde styr på hvem der betaler dig.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
         <source>Double-click to edit address or label</source>
-        <translation>Dobbeltklik for at redigere adresse eller etiket</translation>
+        <translation>Dobbeltklik for at redigere adresse eller mærkat</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -318,7 +318,7 @@ Er du sikker på at du ønsker at kryptere din tegnebog?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Luk</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
@@ -328,7 +328,7 @@ Er du sikker på at du ønsker at kryptere din tegnebog?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Om %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="205"/>
@@ -764,7 +764,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../overviewpage.cpp" line="103"/>
         <source>Your current balance</source>
-        <translation>Din aktuelle saldo</translation>
+        <translation>Din nuværende saldo</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="108"/>
@@ -1915,411 +1915,415 @@ Husk at kryptere din tegnebog ikke fuldt ud kan beskytte din bitcoins mod at bli
     <message>
         <location filename="../bitcoinstrings.cpp" line="116"/>
         <source>Wallet is unencrypted, please encrypt it first.</source>
-        <translation type="unfinished"/>
+        <translation>Tegnebogen er ikke krypteret. Kryptér den venligst først.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="117"/>
         <source>Enter the new passphrase for the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Indtast den nye adgangskode til tegnebogen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="118"/>
         <source>Re-enter the new passphrase for the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Genindtast den nye adgangskode til tegnebogen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="119"/>
         <source>Wallet Passphrase Changed.</source>
-        <translation type="unfinished"/>
+        <translation>Adgangskode til tegnebog ændret.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="120"/>
         <source>New Receiving Address</source>
-        <translation type="unfinished"/>
+        <translation>Ny modtageradresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="121"/>
         <source>You should use a new address for each payment you receive.
 
 Label</source>
-        <translation type="unfinished"/>
+        <translation>Du bør bruge en ny adresse for hver betaling du modtager.
+
+Mærkat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="125"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Status:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="126"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>, er ikke blevet transmitteret endnu</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>, broadcast through %d node</source>
-        <translation type="unfinished"/>
+        <translation>, spredt gennem %d knudepunkt</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="128"/>
         <source>, broadcast through %d nodes</source>
-        <translation type="unfinished"/>
+        <translation>, spredt gennem %d knudepunkter</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="129"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Dato:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
         <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Kilde:&lt;/b&gt; Genereret&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="131"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Fra:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="132"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>ukendt</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="133"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Til:&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="134"/>
         <source> (yours, label: </source>
-        <translation type="unfinished"/>
+        <translation> (din, etiket:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="135"/>
         <source> (yours)</source>
-        <translation type="unfinished"/>
+        <translation> (din)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Kredit:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
         <source>(%s matures in %d more blocks)</source>
-        <translation type="unfinished"/>
+        <translation>(%s bliver moden om %d blokke)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>(not accepted)</source>
-        <translation type="unfinished"/>
+        <translation>(ikke accepteret)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="139"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Debet:&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="140"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Transaktionsgebyr:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Nettobeløb:&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="142"/>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>Besked:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
         <source>Comment:</source>
-        <translation type="unfinished"/>
+        <translation>Kommentar:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="144"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>Genererede coins skal vente 120 blokke, før de kan blive brugt.  Da du  genererede denne blok blev det transmitteret til netværket, for at blive føjet til blokkæden.  Hvis det mislykkes at komme ind i kæden, vil den skifte til &quot;ikke godkendt&quot;, og ikke blive kunne bruges.  Dette kan lejlighedsvis ske, hvis en anden node genererer en blok inden for få sekunder af din.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="150"/>
         <source>Cannot write autostart/bitcoin.desktop file</source>
-        <translation type="unfinished"/>
+        <translation>Skrivning til filen autostart/bitcoin.desktop ikke mulig</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="151"/>
         <source>Main</source>
-        <translation type="unfinished"/>
+        <translation>Generelt</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="152"/>
         <source>&amp;Start Bitcoin on window system startup</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Start Bitcoin når systemet startes</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="153"/>
         <source>&amp;Minimize on close</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Minimér ved lukning</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="154"/>
         <source>version %s</source>
-        <translation type="unfinished"/>
+        <translation>version %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>Error in amount  </source>
-        <translation type="unfinished"/>
+        <translation>Fejl i beløb  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="156"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Send Coins</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="157"/>
         <source>Amount exceeds your balance  </source>
-        <translation type="unfinished"/>
+        <translation>Beløb overstiger saldo  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
         <source>Total exceeds your balance when the </source>
-        <translation type="unfinished"/>
+        <translation>Det samlede beløb overstiger saldoen når </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="159"/>
         <source> transaction fee is included  </source>
-        <translation type="unfinished"/>
+        <translation> transaktionsgebyret er inkluderet  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="160"/>
         <source>Payment sent  </source>
-        <translation type="unfinished"/>
+        <translation>Betaling afsendt  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Sending...</source>
-        <translation type="unfinished"/>
+        <translation>Sender...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
         <source>Invalid address  </source>
-        <translation type="unfinished"/>
+        <translation>Ugyldig adresse  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="163"/>
         <source>Sending %s to %s</source>
-        <translation type="unfinished"/>
+        <translation>Sender %s til %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="164"/>
         <source>CANCELLED</source>
-        <translation type="unfinished"/>
+        <translation>ANNULLERET</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
         <source>Cancelled</source>
-        <translation type="unfinished"/>
+        <translation>Annulleret</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
         <source>Transfer cancelled  </source>
-        <translation type="unfinished"/>
+        <translation>Overførsel annulleret  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="167"/>
         <source>Error: </source>
-        <translation type="unfinished"/>
+        <translation>Fejl: </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="168"/>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>Du har ikke penge nok</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
         <source>Connecting...</source>
-        <translation type="unfinished"/>
+        <translation>Forbinder...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>
         <source>Unable to connect</source>
-        <translation type="unfinished"/>
+        <translation>Forbindelse mislykkedes</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="171"/>
         <source>Requesting public key...</source>
-        <translation type="unfinished"/>
+        <translation>Efterspørger offentlig nøgle...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="172"/>
         <source>Received public key...</source>
-        <translation type="unfinished"/>
+        <translation>Modtog offentlig nøgle...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="173"/>
         <source>Recipient is not accepting transactions sent by IP address</source>
-        <translation type="unfinished"/>
+        <translation>Modtageren accepterer ikke transaktioner sendt til en IP-adresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>Transfer was not accepted</source>
-        <translation type="unfinished"/>
+        <translation>Overførsel ikke accepteret</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>Invalid response received</source>
-        <translation type="unfinished"/>
+        <translation>Ugyldigt svar modtaget</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Creating transaction...</source>
-        <translation type="unfinished"/>
+        <translation>Opretter transaktion...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds</source>
-        <translation type="unfinished"/>
+        <translation>Denne transaktion kræver at du betaler et transaktionsgebyr på mindst %s pga. af transaktionens størrelse, dens kompleksitet eller fordi den gør brug af nyligt modtagne penge</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Transaction creation failed</source>
-        <translation type="unfinished"/>
+        <translation>Opretning af transaktion mislykkedes</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Transaction aborted</source>
-        <translation type="unfinished"/>
+        <translation>Transaktion afbrudt</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
         <source>Lost connection, transaction cancelled</source>
-        <translation type="unfinished"/>
+        <translation>Forbindelse afbrudt, transaktion annulleret</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Sending payment...</source>
-        <translation type="unfinished"/>
+        <translation>Sender betaling...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Transaktionen blev afvist.  Dette kan ske hvis nogle af pengene i din tegnebog allerede er brugt, for eksempel hvis du har brugt en kopi af din wallet.dat-fil og pengene er brugt i kopien af din tegnebog, men ikke blev markeret som brugte deri.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="188"/>
         <source>Waiting for confirmation...</source>
-        <translation type="unfinished"/>
+        <translation>Afventer bekræftelse...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
         <source>The payment was sent, but the recipient was unable to verify it.
 The transaction is recorded and will credit to the recipient,
 but the comment information will be blank.</source>
-        <translation type="unfinished"/>
+        <translation>Betalingen blev afsendt, men modtageren var ikke i stand til at bekræfte den.
+Transaktionen er oprettet og vil kreditere modtageren,
+men kommentarfeltet vil være tomt.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
         <source>Payment was sent, but an invalid response was received</source>
-        <translation type="unfinished"/>
+        <translation>Betalingen blev afsendt, men et ugyldigt svar blev modtaget</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Payment completed</source>
-        <translation type="unfinished"/>
+        <translation>Betaling fuldført</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Navn</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etiket</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Bitcoin Address</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoinadresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>This is one of your own addresses for receiving payments and cannot be entered in the address book.  </source>
-        <translation type="unfinished"/>
+        <translation>Dette er en af dine egne adresser til at modtage betalinger med, og kan ikke indtastes i adressebogen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Rediger Adresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Edit Address Label</source>
-        <translation type="unfinished"/>
+        <translation>Redigér adressemærkat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
         <source>Add Address</source>
-        <translation type="unfinished"/>
+        <translation>Tilføj adresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
         <source>Bitcoin - Generating</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin - Genererer</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="207"/>
         <source>Bitcoin - (not connected)</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin - (ikke tilsluttet)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="208"/>
         <source>&amp;Open Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Å&amp;bn Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="209"/>
         <source>&amp;Send Bitcoins</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Send Bitcoins</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="210"/>
         <source>O&amp;ptions...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Indstillinger...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Luk</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Program has crashed and will terminate.  </source>
-        <translation type="unfinished"/>
+        <translation>Programmet er gået ned og vil afslutte.  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Advarsel: Undersøg venligst at din computers dato og klokkeslet er korrekt indstillet.   Hvis der er fejl i disse vil Bitcoin ikke fungere korrekt.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="216"/>
         <source>beta</source>
-        <translation type="unfinished"/>
+        <translation>beta</translation>
     </message>
 </context>
 <context>
@@ -2327,7 +2331,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoin.cpp" line="145"/>
         <source>Bitcoin Qt</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Qt</translation>
     </message>
 </context>
 </TS>
