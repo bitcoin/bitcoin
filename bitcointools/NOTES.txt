@@ -1,0 +1,367 @@
+Most of this information is now at the Protocol Specification page at the bitcoin wiki:
+  https://en.bitcoin.it/wiki/Protocol_specification
+
+One of these days I might check this document against the wiki, add any missing information to the wiki, and remove the information below.
+
+
+Transaction dissection notes:
+-----------------------------
+
+My first two transactions look like this:
+
+==WalletTransaction== f240...2582
+Merkle hashBlock: 6d40...0000
+1 tx in, 1 out
+['TxIn: prev(e9d4...d2f4:0) pubkey: 1Lfic7L3z7xUbxRDvMNFiE3QxKRmSSrvEH sig: 72:3045...1a01 65:0403...7b86']
+['TxOut: value: 500.00 pubkey: 19vcWM6EEbQHVdN2W8NXv9ySgsPjbZ6gU3 Script: DUP HASH160 20:61e4...614c EQUALVERIFY CHECKSIG']
+ timeReceived:Thu May 27 14:25:48 2010 fromMe:True spent:True
+
+==WalletTransaction== f961...4472
+Merkle hashBlock: 7707...0000
+1 tx in, 2 out
+['TxIn: prev(f240...2582:0) pubkey: 19vcWM6EEbQHVdN2W8NXv9ySgsPjbZ6gU3 sig: 72:3045...a801 65:04a6...a541']
+['TxOut: value: 142.40 pubkey: 15F9miF9egehbeCiPKVSJSwgw5J96my7Rf Script: DUP HASH160 20:2e8d...5179 EQUALVERIFY CHECKSIG', 'TxOut: value: 357.60 pubkey: 1Av6tJSFv3bZvUfaALm4TQZmYvdeuHcbUb Script: DUP HASH160 20:6cc4...1755 EQUALVERIFY CHECKSIG']
+ timeReceived:Fri May 28 13:55:23 2010 fromMe:True spent:True
+
+So: whoever has sending bc address 1Lfic7L3z7xUbxRDvMNFiE3QxKRmSSrvEH sent 500 bitcoins to
+my 19vcWM6EEbQHVdN2W8NXv9ySgsPjbZ6gU3 receiving address.
+
+I then sent 142.40 to bcaddress 15F9miF9egehbeCiPKVSJSwgw5J96my7Rf.
+And got 357.60 in change (Bitcoin created a new address for the change:  1Av6tJSFv3bZvUfaALm4TQZmYvdeuHcbUb)
+
+Spending generated coins looks different:
+
+Transaction 6403...cc0e
+['TxIn: COIN GENERATED coinbase:0464ba0e1c010a']
+['TxOut: value: 50.00 pubkey: 1Cpr8WJYa5igdo8AtPS24hfVLkk6ANZSWN Script: 65:0442...11c2 CHECKSIG']
+
+Transaction db39...8dcd:
+['TxIn: COIN GENERATED coinbase:0464ba0e1c0130']
+['TxOut: value: 50.00 pubkey: 1LuamEE1rL1QAdgn48gGFD9T9mnqSeP17w Script: 65:04f2...e10f CHECKSIG']
+
+==WalletTransaction== 3860...f888
+['TxIn: prev(6403...cc0e:0) pubkey: (None) sig: 72:3045...f501', 'TxIn: prev(db39...8dcd:0) pubkey: (None) sig: 73:3046...9\
+601']
+['TxOut: value: 100.00 pubkey: 1BBWNxMqU2bTwSVeUDVKmNYJrWr4D1pBrf Script: DUP HASH160 20:6fad...ab90 EQUALVERIFY CHECKSIG']
+
+Here I received 100 bitcoins from two 50 COIN GENERATED transactions.
+
+
+blkindex.dat serialization notes:
+---------------------------------
+
+Keys beging with a serialized string, rest of key and value depend on that first string.  Possibilities are:
+
+tx : key continues with uint256 transaction hash/id (32 bytes)
+ value is:
+  version : 32-bit unsigned int
+  CDiskTxPos : location of transaction (in the blk000N.dat files)
+  vector<CDiskTxPos> : location of transactions that spend this transaction's inputs
+
+blockindex : key continues with uint256 block hash (32 bytes)
+ value is serialized CDiskBlockIndex
+
+version : value is integer version number
+
+hashBestChain : value is 32-byte SHA256 hash of last block in the longest block chain.
+
+
+wallet.dat serialization notes:
+-------------------------------
+Berkely DB BTREE file (key-value pairs).
+
+Keys begin with a serialized string, rest of key and value depend on that first string.  Possibilities are:
+
+name : key continues with 34-character Bitcoin "hash160" address
+ value is a simple string.
+
+tx : key continues with uint256 (32 bytes)
+  value is a serialized CTransaction+CMerkleTx+CWalletTx  (see below for details)
+
+key : key continues with vector<unsigned char> that is public key
+  value is vector<unsigned char> that is private key (full 271-byte
+    OpenSSL representation)
+
+wkey : key continues with vector<unsigned char> that is public key
+  value is serialized CWalletKey:
+    vector<unsigned char> that is private key
+    int64 nTimeCreated
+    int64 nTimeExpires
+    string comment
+
+ckey : enCrypted key continues with vector<unsigned char> that is public key
+  value is vector<unsigned char> that is private key (32 byte private part,
+    not full 271-byte OpenSSL representation)
+
+mkey : master key continues with unsigned int that is ID of the master key
+  value is serialized CMasterKey:
+    vector<unsigned char> encrypted key
+    vector<unsigned char> encrypted salt
+    unsigned int indicating the method to derive key from password
+    unsigned int indicating the number of times the derivation algorithm should be iterated
+    vector<unsigned char> holding other parameters to the derivation algorithm
+
+defaultkey :
+  value is vector<unsigned char> default key
+
+version :
+  value is int version number
+
+setting : key continues with setting name, value depends on setting as follows:
+  addrIncoming : CAddress serialized
+  addrProxy : CAddress serialized
+  fGenerateBitcoins : 1-character (boolean)
+  fLimitProcessors : 1-character (boolean)
+  fMinimizeOnClose : 1-character (boolean)
+  fMinimizeToTray : 1-character (boolean)
+  fUseProxy : 1-character (boolean)
+  nLimitProcessors : int
+  nTransactionFee : int64
+
+
+Complex value type serialization:
+---------------------------------
+
+CDiskTxPos:
+  uint32 nFile       : Which of the blk000*.dat files
+  uint32 nBlockPos   : Byte position in file
+  uint32 nTxPos      : Byte position in file
+
+CDiskBlockIndex:
+  int nVersion
+  uint256 hashNext
+  uint32 nFile       : Which of the blk000*.dat files
+  uint32 nBlockPos   : Byte position in file
+  int nHeight        : height in block chain
+  int blockVersion   :  ??? Not sure why version is repeated...
+  uint256 hashPrev
+  uint256 hashMerkleRoot
+  uint32 nTime
+  uint32 nBits
+  uint32 nNonce
+
+CBlock:
+    # Note:   4 bytes: f9 be b4 d9  are written before records in blk000N.dat files
+    # But the nBlockPos pointers in CDiskBlockIndex points to start of serializedSize
+  int serializedSize
+  int version
+  uint256 hashPrev
+  uint256 hashMerkleRoot
+  uint32 nTime
+  uint32 nBits
+  uint32 nNonce
+  vector<CTransaction>
+
+CAddress:
+  int nVersion
+  unsigned int nTime
+  uint64 nServices
+  unsigned char[12] pchReserved
+  unsigned int ip
+  unsigned short port
+
+CTransaction:
+  int nVersion
+  vector<CTxIn> vin
+  vector<CTxOut> vout
+  unsigned int nLockTime
+
+CTxIn:
+  COutPoint prevout
+  CScript scriptSig
+  unsigned int nSequence
+
+CTxOut:
+  int64 nValue
+  CScript scriptPubKey
+
+COutPoint:
+  36 bytes(FLATDATA): 32-byte hash, 4-byte unsigned int
+
+CScript:
+  vector<unsigned char> containing built-in little scripting-language script
+   (opcodes and arguments to do crypto stuff)
+
+CMerkleTx:
+  ... serialize CTransaction, then:
+  uint256 hashBlock
+  vector<uint256> vMerkleBranch
+  int nIndex
+
+CWalletTx:
+  ... serialized CMerkleTx, then:
+  vector<CMerkleTx> vtxPrev
+  map<string,string> mapValue
+  vector<pair<string,string> > vOrderForm
+  unsigned int fTimeReceivedIsTxTime
+  unsigned int nTimeReceived
+  char fFromMe
+  char fSpent
+
+CInv:
+  int type   :   1:tx   2:block
+  uint256 hash
+
+CBlockLocator:
+  int nVersion
+  vector<uint256>    # Block hashes, newest back to genesis block (dense to start, but then sparse)
+
+string:
+  1/3/5/9 bytes giving length:
+    1 byte if length < 253.
+    otherwise byte value '253'+ushort, '254'+uint, '255'+uint64
+  then length bytes.
+
+vector<type>:
+  1/3/5/9 bytes giving count (see string, above)
+  followed by that many <types> serialized one-after-another
+
+pair:
+  just first item followed by second item
+
+
+PUBLIC KEYS TO BITCOIN ADDRESSES
+--------------------------------
+
+Public key, in memory (65 bytes):
+
+0x94c7818:  0x04        0x57    0xcc    0xad    0xd7    0x1e    0xb0    0xf3
+0x94c7820:  0xc1        0x9d    0x22    0xb9    0xba    0x0e    0xa1    0xf3
+0x94c7828:  0x44        0x2a    0x6f    0x12    0x31    0x46    0xb5    0xbd
+0x94c7830:  0xff        0x10    0x60    0xbc    0xd1    0x11    0x68    0xe6
+0x94c7838:  0x6a        0x71    0xbe    0xd4    0xda    0x17    0x7c    0x12
+0x94c7840:  0xd7        0x30    0x9a    0xdd    0xfd    0xf5    0x6c    0x31
+0x94c7848:  0xd5        0xc8    0xa2    0x7b    0x8e    0x6a    0x22    0x20
+0x94c7850:  0x38        0x42    0xc6    0xc2    0x4f    0xd5    0x9b    0xd7
+0x94c7858:  0xb7
+Python string:
+public_key = "\x04\x57\xcc\xad\xd7\x1e\xb0\xf3\xc1\x9d\x22\xb9\xba\x0e\xa1\xf3\x44\x2a\x6f\x12\x31\x46\xb5\xbd\xff\x10\x60\xbc\xd1\x11\x68\xe6\x6a\x71\xbe\xd4\xda\x17\x7c\x12\xd7\x30\x9a\xdd\xfd\xf5\x6c\x31\xd5\xc8\xa2\x7b\x8e\x6a\x22\x20\x38\x42\xc6\xc2\x4f\xd5\x9b\xd7\xb7"
+
+SHA256 hash of that is:
+0xb6890938: 0x0d        0x72    0xab    0x02    0xc8    0xab    0x52    0xce
+0xb6890940: 0x7e        0x6b    0x04    0x00    0x95    0x58    0x09    0xf0
+0xb6890948: 0x93        0x48    0x21    0xb6    0x26    0xc3    0x27    0xc7
+0xb6890950: 0x9a        0x07    0x62    0xfd    0xbc    0x5e    0xb8    0xa5
+h1 = SHA256.new(public_key).digest()
+
+RIPEMD160(SHA256(public key)) is:
+0xb68909ac: 0x5c        0xc8    0x7f    0x4a    0x3f    0xdf    0xe3    0xa2
+0xb68909b4: 0x34        0x6b    0x69    0x53    0x26    0x7c    0xa8    0x67
+0xb68909bc: 0x28        0x26    0x30    0xd3
+h2 = RIPEMD160.new(h1).digest()
+
+Put version number '0x00' byte onto front:
+0x9eeb840:  0x00   0x5c   0xc8 0x7f 0x4a        0x3f    0xdf    0xe3
+0x9eeb848:  0xa2   0x34   0x6b 0x69 0x53        0x26    0x7c    0xa8
+0x9eeb850:  0x67   0x28   0x26 0x30 0xd3
+vh2 = "\x00"+h2
+
+Hash (double-SHA256) that:
+0xb68908e8:   0xf9   0xb7 0x8e  0x64    0x6e    0x20    0x27    0xc4
+0xb68908f0:   0xaa   0x62 0x66  0x04    0x2e    0xb6    0xa2    0xe0
+0xb68908f8:   0x41   0x03 0x9d  0xd8    0xe2    0x24    0x24    0xe8
+0xb6890900:   0x50   0xac 0x20  0x29    0xfb    0xcd    0xb4    0x6e
+h3=SHA256.new(SHA256.new(vh2).digest()).digest()
+
+Add first 4 bytes from Hash object onto end as check-bytes:
+0x9fa6628:  0x00  0x5c  0xc8    0x7f    0x4a    0x3f    0xdf    0xe3
+0x9fa6630:  0xa2  0x34  0x6b    0x69    0x53    0x26    0x7c    0xa8
+0x9fa6638:  0x67  0x28  0x26    0x30    0xd3    0xf9    0xb7    0x8e
+0x9fa6640:  0x64
+addr=vh2+h3[0:4]
+
+Result length should be:  int(math.floor(len(addr)*8/math.log(58,2)))
+Base58 encode that, front-pad with '1's if less than expected length
+to get:   19TbMSWwHvnxAKy12iNm3KdbGfzfaMFViT
+
+
+WIRE PROTOCOL NOTES
+-------------------
+Default port is 8333
+
+// Message format                                                                                                       
+//  (4) message start    { 0xf9, 0xbe, 0xb4, 0xd9 }
+//  (12) command
+//  (4) size       -- number of bytes of data
+//  (4) checksum   -- First four bytes of double SHA256 hash of data
+//  (x) data
+
+ --> messages might be split by network layer...
+
+Commands are:
+
+"version" :
+  int nVersion
+  uint64 nServices
+  int64 nTime
+  CAddress addrMe
+  CAddress addrFrom   # if nVersion > 106
+  uint64 nNonce
+  string strSubVer    # if nVersion > 106
+  int nStartingHeight # if nVersion > 209
+
+nNonce is random value (I think), used to detect self-connection.
+
+"verack" : no data.  Sent to sync min version (peer, peer)
+
+"addr" :
+  vector<CAddress>
+      (relayed to 10 random nodes so they spread)
+
+"inv" :
+  vector<CInv>
+
+"getdata" :   Asks for blocks or tx's (response is "block" or "tx" messages)
+  vector<CInv>
+
+"getblocks" :
+  CBLockLocator
+  uint256 hashStop
+
+"tx" :
+  CTransaction
+
+"block" :
+  CBlock
+
+"getaddr" : no data ("please send me addr messages")
+
+"checkorder"
+  uint256 hashReply
+  CWalletTx order
+
+"submitorder"
+  uint256 hashReply
+  CWalletTx wtxNew
+
+"reply"
+  uint256 hashReply
+
+"ping" : no data (and no reply)
+
+
+TRANSACTION SIGNING NOTES
+-------------------------
+
+So, I want to spend some bitcoin.
+First, I gotta have a Transaction to me-- specifically, a Transaction with a TxOut that contains a scriptPubKey that I can satisfy.
+
+TxOut.scriptPubKey's come in a couple different flavors:
+ DUP HASH160 {hash160(public_key) EQUALVERIFY CHECKSIG
+   --> I have to be able to supply a matching TxIn.scriptSig with: signature and public key
+ (public key) CHECKSIG
+   --> I have to supply a matching TxIn.scriptSig with: signature
+
+TODO: figure out what, exactly, is hashed (and how), and how, exactly, that hash value is signed with the private key.
+
+DIFFICULTY, NBITS, BN_mpi2bn
+----------------------------
+
+Hash targets are stored as "compact bignums;" the production block chain has an initial target of:
+0x1d00ffff  ... which means "create a bignum that is 0x1d (29) bytes long and has 0x00ffff as the
+three bytes on the big end."  Or: 0xffff0000000000000000000000000000000000000000000000000000
+
+As I write this, the current block->nBits is 0x1c010c5.  To compute difficulty:
+  php -r '$nBits = 0x1c010c5a; print( (0xffff << ((0x1d-($nBits>>24))*8)) / ($nBits&0xffffff) );'
+
+
