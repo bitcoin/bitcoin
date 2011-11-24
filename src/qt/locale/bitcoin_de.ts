@@ -328,7 +328,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Über %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="205"/>
@@ -1885,7 +1885,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="111"/>
         <source>Wallet encryption failed.</source>
-        <translation type="unfinished"/>
+        <translation>Verschlüsselung der Brieftasche fehlgeschlagen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="112"/>
@@ -1896,22 +1896,22 @@ Remember that encrypting your wallet cannot fully protect your bitcoins from bei
     <message>
         <location filename="../bitcoinstrings.cpp" line="116"/>
         <source>Wallet is unencrypted, please encrypt it first.</source>
-        <translation type="unfinished"/>
+        <translation>Brieftasche nicht verschlüsselt, bitte zuerst verschlüsseln.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="117"/>
         <source>Enter the new passphrase for the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Gib eine neue Passphrase für die Brieftasche eine.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="118"/>
         <source>Re-enter the new passphrase for the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Gib die neue Passphrase erneut ein.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="119"/>
         <source>Wallet Passphrase Changed.</source>
-        <translation type="unfinished"/>
+        <translation>Passphrase geändert.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="120"/>
@@ -1948,7 +1948,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="129"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Datum:&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
@@ -1958,7 +1958,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="131"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Von:&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="132"/>
@@ -2003,7 +2003,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="140"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Transaktionsgebühr:&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="141"/>
@@ -2048,7 +2048,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="154"/>
         <source>version %s</source>
-        <translation type="unfinished"/>
+        <translation>Version %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
@@ -2063,7 +2063,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="157"/>
         <source>Amount exceeds your balance  </source>
-        <translation type="unfinished"/>
+        <translation>Betrag übersteigt Ihr Guthaben  </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
@@ -2078,7 +2078,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="160"/>
         <source>Payment sent  </source>
-        <translation type="unfinished"/>
+        <translation>Zahlung gesendet</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
@@ -2088,22 +2088,22 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
         <source>Invalid address  </source>
-        <translation type="unfinished"/>
+        <translation>ungültige Adresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="163"/>
         <source>Sending %s to %s</source>
-        <translation type="unfinished"/>
+        <translation>Sende %s an %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="164"/>
         <source>CANCELLED</source>
-        <translation type="unfinished"/>
+        <translation>ABGEBROCHEN</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
         <source>Cancelled</source>
-        <translation type="unfinished"/>
+        <translation>Abgebrochen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
@@ -2113,7 +2113,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="167"/>
         <source>Error: </source>
-        <translation type="unfinished"/>
+        <translation>Fehler: </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="168"/>
@@ -2123,12 +2123,12 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
         <source>Connecting...</source>
-        <translation type="unfinished"/>
+        <translation>Verbinde...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>
         <source>Unable to connect</source>
-        <translation type="unfinished"/>
+        <translation>Kann nicht verbinden</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="171"/>
@@ -2173,7 +2173,7 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Transaction aborted</source>
-        <translation type="unfinished"/>
+        <translation>Transaktion abgebrochen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
@@ -2183,17 +2183,17 @@ Label</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Sending payment...</source>
-        <translation type="unfinished"/>
+        <translation>Sende Zahlung...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Fehler: Die Transaktion wurde abgelehnt. Dies kann passieren, wenn einige Ihrer Bitcoins aus Ihrer Brieftasche bereits ausgegeben wurden (z.B. aus einer Sicherungskopie Ihrer wallet.dat).</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="188"/>
         <source>Waiting for confirmation...</source>
-        <translation type="unfinished"/>
+        <translation>Warte auf Bestätigung...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
@@ -2210,12 +2210,12 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Payment completed</source>
-        <translation type="unfinished"/>
+        <translation>Die Zahlung wurde abgeschlossen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Name</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
@@ -2230,7 +2230,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Bitcoin Address</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Adresse</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
@@ -2250,22 +2250,22 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
         <source>Add Address</source>
-        <translation type="unfinished"/>
+        <translation>Adresse hinzufügen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
         <source>Bitcoin - Generating</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin - Generiere</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="207"/>
         <source>Bitcoin - (not connected)</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin - (nicht verbunden)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="208"/>
@@ -2300,7 +2300,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="216"/>
         <source>beta</source>
-        <translation type="unfinished"/>
+        <translation>Beta</translation>
     </message>
 </context>
 <context>
@@ -2308,7 +2308,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoin.cpp" line="145"/>
         <source>Bitcoin Qt</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Qt</translation>
     </message>
 </context>
 </TS>
