@@ -51,10 +51,12 @@
         <file alias="en">locale/bitcoin_en.qm</file>
         <file alias="es">locale/bitcoin_es.qm</file>
         <file alias="es_CL">locale/bitcoin_es_CL.qm</file>
+        <file alias="hu">locale/bitcoin_hu.qm</file>
         <file alias="it">locale/bitcoin_it.qm</file>
         <file alias="nb">locale/bitcoin_nb.qm</file>
         <file alias="nl">locale/bitcoin_nl.qm</file>
         <file alias="ru">locale/bitcoin_ru.qm</file>
+        <file alias="uk">locale/bitcoin_uk.qm</file>
         <file alias="zh_TW">locale/bitcoin_zh_TW.qm</file>
     </qresource>
 </RCC>
