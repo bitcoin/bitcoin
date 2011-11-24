@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="es" version="2.0">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="es">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
@@ -321,7 +323,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Salir</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
@@ -331,7 +333,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"/>
+        <translation>S&amp;obre %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="205"/>
@@ -426,7 +428,10 @@ Are you sure you wish to encrypt your wallet?</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="396"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n conexión activa hacia la red Bitcoin</numerusform><numerusform>%n conexiones activas hacia la red Bitcoin</numerusform></translation>
+        <translation>
+            <numerusform>%n conexión activa hacia la red Bitcoin</numerusform>
+            <numerusform>%n conexiones activas hacia la red Bitcoin</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="411"/>
@@ -441,22 +446,34 @@ Are you sure you wish to encrypt your wallet?</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="428"/>
         <source>%n second(s) ago</source>
-        <translation><numerusform>Hace %n segundo</numerusform><numerusform>Hace %n segundos</numerusform></translation>
+        <translation>
+            <numerusform>Hace %n segundo</numerusform>
+            <numerusform>Hace %n segundos</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="432"/>
         <source>%n minute(s) ago</source>
-        <translation><numerusform>Hace %n minuto</numerusform><numerusform>Hace %n minutos</numerusform></translation>
+        <translation>
+            <numerusform>Hace %n minuto</numerusform>
+            <numerusform>Hace %n minutos</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="436"/>
         <source>%n hour(s) ago</source>
-        <translation><numerusform>Hace %n hora</numerusform><numerusform>Hace %n horas</numerusform></translation>
+        <translation>
+            <numerusform>Hace %n hora</numerusform>
+            <numerusform>Hace %n horas</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="440"/>
         <source>%n day(s) ago</source>
-        <translation><numerusform>Hace %n día</numerusform><numerusform>Hace %n días</numerusform></translation>
+        <translation>
+            <numerusform>Hace %n día</numerusform>
+            <numerusform>Hace %n días</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="446"/>
@@ -750,12 +767,12 @@ Dirección: %4</translation>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cartera&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
@@ -988,12 +1005,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
         <source>, broadcast through %1 node</source>
-        <translation>, emitido mediante %d nodo</translation>
+        <translation>, emitido mediante %1 nodo</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="72"/>
         <source>, broadcast through %1 nodes</source>
-        <translation>, emitido mediante %d nodos</translation>
+        <translation>, emitido mediante %1 nodos</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
@@ -1044,7 +1061,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="149"/>
         <source>(%1 matures in %2 more blocks)</source>
-        <translation>(%s madura en %d bloques mas)</translation>
+        <translation>(%1 madura en %1 bloques mas)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="153"/>
@@ -1122,7 +1139,10 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Abierto por %n bloque</numerusform><numerusform>Abierto por %n bloques</numerusform></translation>
+        <translation>
+            <numerusform>Abierto por %n bloque</numerusform>
+            <numerusform>Abierto por %n bloques</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="277"/>
@@ -1147,7 +1167,10 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation><numerusform>El balance minado estará disponible en %n bloque mas</numerusform><numerusform>El balance minado estará disponible en %n bloques mas</numerusform></translation>
+        <translation>
+            <numerusform>El balance minado estará disponible en %n bloque mas</numerusform>
+            <numerusform>El balance minado estará disponible en %n bloques mas</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
@@ -1450,7 +1473,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Don't generate coins
+        <source>Don&apos;t generate coins
 </source>
         <translation>No generar monedas
 </translation>
@@ -1506,14 +1529,14 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
-        <source>Don't accept connections from outside
+        <source>Don&apos;t accept connections from outside
 </source>
         <translation>No aceptar conexiones desde el exterior
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="21"/>
-        <source>Don't attempt to use UPnP to map the listening port
+        <source>Don&apos;t attempt to use UPnP to map the listening port
 </source>
         <translation>No intentar usar UPnP para mapear el puerto de entrada
 </translation>
@@ -2336,7 +2359,7 @@ pero la información de los comentarios quedará en blanco.</translation>
     <message>
         <location filename="../bitcoin.cpp" line="145"/>
         <source>Bitcoin Qt</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Qt</translation>
     </message>
 </context>
 </TS>
