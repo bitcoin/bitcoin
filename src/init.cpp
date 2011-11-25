@@ -254,8 +254,6 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
-    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
-    fNoListen = GetBoolArg("-nolisten") || fTOR;
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
 #ifndef QT_GUI
@@ -464,6 +462,9 @@ bool AppInit2(int argc, char* argv[])
             return false;
         }
     }
+
+    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+    fNoListen = GetBoolArg("-nolisten") || fTOR;
 
     if (mapArgs.count("-addnode"))
     {
