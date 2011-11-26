@@ -2,7 +2,8 @@
 #define WALLETMODEL_H
 
 #include <QObject>
-#include <string>
+
+#include "util.h"
 
 class OptionsModel;
 class AddressTableModel;
@@ -72,10 +73,10 @@ public:
     SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients);
 
     // Wallet encryption
-    bool setWalletEncrypted(bool encrypted, const std::string &passphrase);
+    bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
     // Passphrase only needed when unlocking
-    bool setWalletLocked(bool locked, const std::string &passPhrase=std::string());
-    bool changePassphrase(const std::string &oldPass, const std::string &newPass);
+    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
+    bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
