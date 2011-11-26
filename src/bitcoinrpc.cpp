@@ -1453,21 +1453,16 @@ Value walletpassphrase(const Array& params, bool fHelp)
         throw JSONRPCError(-17, "Error: Wallet is already unlocked.");
 
     // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
-    string strWalletPass;
+    SecureString strWalletPass;
     strWalletPass.reserve(100);
-    mlock(&strWalletPass[0], strWalletPass.capacity());
-    strWalletPass = params[0].get_str();
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    strWalletPass = params[0].get_str().c_str();
 
     if (strWalletPass.length() > 0)
     {
         if (!pwalletMain->Unlock(strWalletPass))
-        {
-            fill(strWalletPass.begin(), strWalletPass.end(), '\0');
-            munlock(&strWalletPass[0], strWalletPass.capacity());
             throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
-        }
-        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
-        munlock(&strWalletPass[0], strWalletPass.capacity());
     }
     else
         throw runtime_error(
@@ -1493,15 +1488,15 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
     if (!pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
 
-    string strOldWalletPass;
+    // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    SecureString strOldWalletPass;
     strOldWalletPass.reserve(100);
-    mlock(&strOldWalletPass[0], strOldWalletPass.capacity());
-    strOldWalletPass = params[0].get_str();
+    strOldWalletPass = params[0].get_str().c_str();
 
-    string strNewWalletPass;
+    SecureString strNewWalletPass;
     strNewWalletPass.reserve(100);
-    mlock(&strNewWalletPass[0], strNewWalletPass.capacity());
-    strNewWalletPass = params[1].get_str();
+    strNewWalletPass = params[1].get_str().c_str();
 
     if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
         throw runtime_error(
@@ -1509,17 +1504,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
             "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
 
     if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
-    {
-        fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
-        fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
-        munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
-        munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
         throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
-    }
-    fill(strNewWalletPass.begin(), strNewWalletPass.end(), '\0');
-    fill(strOldWalletPass.begin(), strOldWalletPass.end(), '\0');
-    munlock(&strOldWalletPass[0], strOldWalletPass.capacity());
-    munlock(&strNewWalletPass[0], strNewWalletPass.capacity());
 
     return Value::null;
 }
@@ -1564,10 +1549,11 @@ Value encryptwallet(const Array& params, bool fHelp)
     throw runtime_error("Not Yet Implemented: use GUI to encrypt wallet, not RPC command");
 #endif
 
-    string strWalletPass;
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    SecureString strWalletPass;
     strWalletPass.reserve(100);
-    mlock(&strWalletPass[0], strWalletPass.capacity());
-    strWalletPass = params[0].get_str();
+    strWalletPass = params[0].get_str().c_str();
 
     if (strWalletPass.length() < 1)
         throw runtime_error(
@@ -1575,13 +1561,7 @@ Value encryptwallet(const Array& params, bool fHelp)
             "Encrypts the wallet with <passphrase>.");
 
     if (!pwalletMain->EncryptWallet(strWalletPass))
-    {
-        fill(strWalletPass.begin(), strWalletPass.end(), '\0');
-        munlock(&strWalletPass[0], strWalletPass.capacity());
         throw JSONRPCError(-16, "Error: Failed to encrypt the wallet.");
-    }
-    fill(strWalletPass.begin(), strWalletPass.end(), '\0');
-    munlock(&strWalletPass[0], strWalletPass.capacity());
 
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
