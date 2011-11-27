@@ -172,10 +172,10 @@ bool AppInit2(int argc, char* argv[])
         string strUsage = string() +
           _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
-            "  bitcoin [options]                   \t  " + "\n" +
-            "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
-            "  bitcoin [options] help              \t\t  " + _("List commands\n") +
-            "  bitcoin [options] help <command>    \t\t  " + _("Get help for a command\n") +
+            "  bitcoind [options]                   \t  " + "\n" +
+            "  bitcoind [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
+            "  bitcoind [options] help              \t\t  " + _("List commands\n") +
+            "  bitcoind [options] help <command>    \t\t  " + _("Get help for a command\n") +
           _("Options:\n") +
             "  -conf=<file>     \t\t  " + _("Specify configuration file (default: bitcoin.conf)\n") +
             "  -pid=<file>      \t\t  " + _("Specify pid file (default: bitcoind.pid)\n") +
@@ -186,11 +186,16 @@ bool AppInit2(int argc, char* argv[])
             "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)\n") +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect\n") +
+            "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)\n") +
+            "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)\n") +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
+            "  -nodnsseed       \t  "   + _("Don't bootstrap list of peers using DNS\n") +
             "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)\n") +
             "  -bantime=<n>     \t  "   + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)\n") +
+            "  -maxreceivebuffer=<n>\t  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 10000)\n") +
+            "  -maxsendbuffer=<n>\t  "   + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)\n") +
 #ifdef USE_UPNP
 #if USE_UPNP
             "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
@@ -206,6 +211,12 @@ bool AppInit2(int argc, char* argv[])
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
+            "  -debug           \t\t  " + _("Output extra debugging information\n") +
+            "  -logtimestamps   \t  "   + _("Prepend debug output with timestamp\n") +
+            "  -printtoconsole  \t  "   + _("Send trace/debug info to console instead of debug.log file\n") +
+#ifdef WIN32
+            "  -printtodebugger \t  "   + _("Send trace/debug info to debugger\n") +
+#endif
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
             "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
