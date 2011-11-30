@@ -30,7 +30,7 @@ string strMiscWarning;
 bool fTestNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
-
+CMedianFilter<int64> vTimeOffsets(200,0);
 
 
 
@@ -940,15 +940,12 @@ void AddTimeData(unsigned int ip, int64 nTime)
         return;
 
     // Add data
-    static vector<int64> vTimeOffsets;
-    if (vTimeOffsets.empty())
-        vTimeOffsets.push_back(0);
-    vTimeOffsets.push_back(nOffsetSample);
-    printf("Added time data, samples %d, offset %+"PRI64d" (%+"PRI64d" minutes)\n", vTimeOffsets.size(), vTimeOffsets.back(), vTimeOffsets.back()/60);
+    vTimeOffsets.input(nOffsetSample);
+    printf("Added time data, samples %d, offset %+"PRI64d" (%+"PRI64d" minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
     {
-        sort(vTimeOffsets.begin(), vTimeOffsets.end());
-        int64 nMedian = vTimeOffsets[vTimeOffsets.size()/2];
+        int64 nMedian = vTimeOffsets.median();
+        std::vector<int64> vSorted = vTimeOffsets.sorted();
         // Only let other nodes change our time by so much
         if (abs64(nMedian) < 70 * 60)
         {
@@ -963,7 +960,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
             {
                 // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
-                BOOST_FOREACH(int64 nOffset, vTimeOffsets)
+                BOOST_FOREACH(int64 nOffset, vSorted)
                     if (nOffset != 0 && abs64(nOffset) < 5 * 60)
                         fMatch = true;
 
@@ -978,7 +975,7 @@ void AddTimeData(unsigned int ip, int64 nTime)
             }
         }
         if (fDebug) {
-            BOOST_FOREACH(int64 n, vTimeOffsets)
+            BOOST_FOREACH(int64 n, vSorted)
                 printf("%+"PRI64d"  ", n);
             printf("|  ");
         }

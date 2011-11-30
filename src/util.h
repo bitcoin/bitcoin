@@ -623,6 +623,16 @@ public:
             return (vSorted[size/2-1] + vSorted[size/2]) / 2;
         }
     }
+
+    int size() const
+    {
+        return vValues.size();
+    }
+
+    std::vector<T> sorted () const
+    {
+        return vSorted;
+    }
 };
 
 
