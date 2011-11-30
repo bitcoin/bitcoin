@@ -977,9 +977,12 @@ void AddTimeData(unsigned int ip, int64 nTime)
                 }
             }
         }
-        BOOST_FOREACH(int64 n, vTimeOffsets)
-            printf("%+"PRI64d"  ", n);
-        printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
+        if (fDebug) {
+            BOOST_FOREACH(int64 n, vTimeOffsets)
+                printf("%+"PRI64d"  ", n);
+            printf("|  ");
+        }
+        printf("nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
     }
 }
 
