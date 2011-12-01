@@ -87,6 +87,7 @@ xCXXFLAGS=-pthread -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(HARDEN
 HEADERS = \
     base58.h \
     bignum.h \
+    checkpoints.h \
     crypter.h \
     db.h \
     headers.h \
@@ -107,6 +108,7 @@ HEADERS = \
     wallet.h
 
 OBJS= \
+    obj/checkpoints.o \
     obj/crypter.o \
     obj/db.o \
     obj/init.o \
