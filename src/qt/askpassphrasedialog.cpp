@@ -71,16 +71,17 @@ void AskPassphraseDialog::setModel(WalletModel *model)
 
 void AskPassphraseDialog::accept()
 {
-    std::string oldpass, newpass1, newpass2;
+    SecureString oldpass, newpass1, newpass2;
     if(!model)
         return;
-    // TODO: mlock memory / munlock on return so they will not be swapped out, really need "mlockedstring" wrapper class to do this safely
     oldpass.reserve(MAX_PASSPHRASE_SIZE);
     newpass1.reserve(MAX_PASSPHRASE_SIZE);
     newpass2.reserve(MAX_PASSPHRASE_SIZE);
-    oldpass.assign(ui->passEdit1->text().toStdString());
-    newpass1.assign(ui->passEdit2->text().toStdString());
-    newpass2.assign(ui->passEdit3->text().toStdString());
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make this input mlock()'d to begin with.
+    oldpass.assign(ui->passEdit1->text().toStdString().c_str());
+    newpass1.assign(ui->passEdit2->text().toStdString().c_str());
+    newpass2.assign(ui->passEdit3->text().toStdString().c_str());
 
     switch(mode)
     {

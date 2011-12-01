@@ -70,9 +70,9 @@ public:
     // Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
     bool LoadCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
 
-    bool Unlock(const std::string& strWalletPassphrase);
-    bool ChangeWalletPassphrase(const std::string& strOldWalletPassphrase, const std::string& strNewWalletPassphrase);
-    bool EncryptWallet(const std::string& strWalletPassphrase);
+    bool Unlock(const SecureString& strWalletPassphrase);
+    bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
+    bool EncryptWallet(const SecureString& strWalletPassphrase);
 
     bool AddToWallet(const CWalletTx& wtxIn);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false);
