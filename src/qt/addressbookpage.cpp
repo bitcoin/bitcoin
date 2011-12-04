@@ -4,11 +4,13 @@
 #include "addresstablemodel.h"
 #include "editaddressdialog.h"
 #include "csvmodelwriter.h"
+#include "guiutil.h"
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMenu>
 
 #ifdef USE_QRCODE
 #include "qrcodedialog.h"
@@ -53,7 +55,28 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
         break;
     }
     ui->tableView->setTabKeyNavigation(false);
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
+    // Context menu actions
+    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
+    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
+    QAction *editAction = new QAction(tr("Edit"), this);
+    deleteAction = new QAction(tr("Delete"), this);
+
+    contextMenu = new QMenu();
+    contextMenu->addAction(copyAddressAction);
+    contextMenu->addAction(copyLabelAction);
+    contextMenu->addAction(editAction);
+    contextMenu->addAction(deleteAction);
+
+    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyToClipboard_clicked()));
+    connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
+    connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
+    connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteButton_clicked()));
+
+    connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+
+    // Pass through accept action from button box
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
 
@@ -108,18 +131,29 @@ void AddressBookPage::setModel(AddressTableModel *model)
 
 void AddressBookPage::on_copyToClipboard_clicked()
 {
-    // Copy currently selected address to clipboard
-    //   (or nothing, if nothing selected)
-    QTableView *table = ui->tableView;
-    if(!table->selectionModel())
-        return;
-    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+    GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Address);
+}
+void AddressBookPage::onCopyLabelAction()
+{
+    GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Label);
+}
 
-    foreach (QModelIndex index, indexes)
-    {
-        QVariant address = index.data();
-        QApplication::clipboard()->setText(address.toString());
-    }
+void AddressBookPage::onEditAction()
+{
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
+    if(indexes.isEmpty())
+        return;
+
+    EditAddressDialog dlg(
+            tab == SendingTab ?
+            EditAddressDialog::EditSendingAddress :
+            EditAddressDialog::EditReceivingAddress);
+    dlg.setModel(model);
+    QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
+    dlg.loadRow(origIndex.row());
+    dlg.exec();
 }
 
 void AddressBookPage::on_newAddressButton_clicked()
@@ -170,10 +204,14 @@ void AddressBookPage::selectionChanged()
         switch(tab)
         {
         case SendingTab:
+            // In sending tab, allow deletion of selection
             ui->deleteButton->setEnabled(true);
+            deleteAction->setEnabled(true);
             break;
         case ReceivingTab:
+            // Deleting receiving addresses, however, is not allowed
             ui->deleteButton->setEnabled(false);
+            deleteAction->setEnabled(false);
             break;
         }
         ui->copyToClipboard->setEnabled(true);
@@ -207,6 +245,7 @@ void AddressBookPage::done(int retval)
 
     if(returnValue.isEmpty())
     {
+        // If no address entry selected, return rejected
         retval = Rejected;
     }
 
@@ -256,4 +295,13 @@ void AddressBookPage::on_showQRCode_clicked()
         d->show();
     }
 #endif
+}
+
+void AddressBookPage::contextualMenu(const QPoint &point)
+{
+    QModelIndex index = ui->tableView->indexAt(point);
+    if(index.isValid())
+    {
+        contextMenu->exec(QCursor::pos());
+    }
 }
