@@ -394,7 +394,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
     // a better way of identifying which outputs are 'the send' and which are
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
-    if (ExtractAddress(txout.scriptPubKey, this, address) && !address.IsScript())
+    if (ExtractAddress(txout.scriptPubKey, this, address))
         CRITICAL_BLOCK(cs_wallet)
             if (!mapAddressBook.count(address))
                 return true;
