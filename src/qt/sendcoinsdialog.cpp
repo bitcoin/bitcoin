@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QLocale>
 #include <QTextDocument>
+#include <QScrollBar>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -188,6 +189,12 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
 
     // Focus the field, so that entry can start immediately
     entry->clear();
+    entry->setFocus();
+    ui->scrollAreaWidgetContents->resize(ui->scrollAreaWidgetContents->sizeHint());
+    QCoreApplication::instance()->processEvents();
+    QScrollBar* bar = ui->scrollArea->verticalScrollBar();
+    if (bar)
+        bar->setSliderPosition(bar->maximum());
     return entry;
 }
 
