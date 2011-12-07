@@ -39,10 +39,10 @@ script: |
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
   sed 's/$(DEBUGFLAGS)//' -i makefile.unix
-  make -f makefile.unix STATIC=1 DEFS="-I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
+  make -f makefile.unix STATIC=1 DEFS="-I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0 USE_SSL=1
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoind $OUTDIR/bin/$GBUILD_BITS
   cd ..
-  qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib" RELEASE=1
+  qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib" RELEASE=1 USE_SSL=1
   make $MAKEOPTS
   install bitcoin-qt $OUTDIR/bin/$GBUILD_BITS
