@@ -148,7 +148,10 @@ bool AppInit2(int argc, char* argv[])
     //
     // Parameters
     //
+    // If Qt is used, parameters are parsed in qt/bitcoin.cpp's main()
+#if !defined(QT_GUI)
     ParseParameters(argc, argv);
+#endif
 
     if (mapArgs.count("-datadir"))
     {
