@@ -118,6 +118,8 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
 
+    ParseParameters(argc, argv);
+
     // Load language files for system locale:
     // - First load the translator for the base language, without territory
     // - Then load the more specific locale translator
