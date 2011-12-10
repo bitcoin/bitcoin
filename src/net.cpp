@@ -1074,11 +1074,17 @@ void ThreadMapPort2(void* parg)
     const char * rootdescurl = 0;
     const char * multicastif = 0;
     const char * minissdpdpath = 0;
-    int error = 0;
     struct UPNPDev * devlist = 0;
     char lanaddr[64];
 
+#ifndef UPNPDISCOVER_SUCCESS
+    /* miniupnpc 1.5 */
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
+#else
+    /* miniupnpc 1.6 */
+    int error = 0;
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
+#endif
 
     struct UPNPUrls urls;
     struct IGDdatas data;
@@ -1090,8 +1096,15 @@ void ThreadMapPort2(void* parg)
         char intClient[16];
         char intPort[6];
         string strDesc = "Bitcoin " + FormatFullVersion();
+#ifndef UPNPDISCOVER_SUCCESS
+    /* miniupnpc 1.5 */
+        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0);
+#else
+    /* miniupnpc 1.6 */
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
 	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
+#endif
 
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
