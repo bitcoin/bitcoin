@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>589</width>
-    <height>228</height>
+    <height>239</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -80,6 +80,21 @@
       <widget class="QLineEdit" name="passEdit3">
        <property name="echoMode">
         <enum>QLineEdit::Password</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLabel" name="capsLabel">
+       <property name="styleSheet">
+        <string notr="true">#capsLabel {
+	font: bold;
+}</string>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
