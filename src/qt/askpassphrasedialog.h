@@ -34,9 +34,12 @@ private:
     Ui::AskPassphraseDialog *ui;
     Mode mode;
     WalletModel *model;
+    bool fCapsLock;
 
 private slots:
     void textChanged();
+    bool event(QEvent *event);
+    bool eventFilter(QObject *, QEvent *event);
 };
 
 #endif // ASKPASSPHRASEDIALOG_H

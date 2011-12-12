@@ -6,17 +6,25 @@
 
 #include <QMessageBox>
 #include <QPushButton>
+#include <QKeyEvent>
 
 AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AskPassphraseDialog),
     mode(mode),
-    model(0)
+    model(0),
+    fCapsLock(false)
 {
     ui->setupUi(this);
     ui->passEdit1->setMaxLength(MAX_PASSPHRASE_SIZE);
     ui->passEdit2->setMaxLength(MAX_PASSPHRASE_SIZE);
     ui->passEdit3->setMaxLength(MAX_PASSPHRASE_SIZE);
+    
+    // Setup Caps Lock detection.
+    ui->passEdit1->installEventFilter(this);
+    ui->passEdit2->installEventFilter(this);
+    ui->passEdit3->installEventFilter(this);
+    ui->capsLabel->clear();
 
     switch(mode)
     {
@@ -187,4 +195,47 @@ void AskPassphraseDialog::textChanged()
         break;
     }
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(acceptable);
+}
+
+bool AskPassphraseDialog::event(QEvent *event)
+{
+    // Detect Caps Lock key press.
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+        if (ke->key() == Qt::Key_CapsLock) {
+            fCapsLock = !fCapsLock;
+        }
+        if (fCapsLock) {
+            ui->capsLabel->setText(tr("Warning: The Caps Lock key is on."));
+        } else {
+            ui->capsLabel->clear();
+        }
+    }
+    return QWidget::event(event);
+}
+
+bool AskPassphraseDialog::eventFilter(QObject *, QEvent *event)
+{
+    /* Detect Caps Lock. 
+     * There is no good OS-independent way to check a key state in Qt, but we
+     * can detect Caps Lock by checking for the following condition:
+     * Shift key is down and the result is a lower case character, or
+     * Shift key is not down and the result is an upper case character.
+     */
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+        QString str = ke->text();
+        if (str.length() != 0) {
+            const QChar *psz = str.unicode();
+            bool fShift = (ke->modifiers() & Qt::ShiftModifier) != 0;
+            if ((fShift && psz->isLower()) || (!fShift && psz->isUpper())) {
+                fCapsLock = true;
+                ui->capsLabel->setText(tr("Warning: The Caps Lock key is on."));
+            } else if (psz->isLetter()) {
+                fCapsLock = false;
+                ui->capsLabel->clear();
+            }
+        }
+    }
+    return false;
 }
