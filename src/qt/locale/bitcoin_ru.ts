@@ -121,89 +121,90 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Dialog</source>
-        <translation type="unfinished"/>
+        <translation>Dialog</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="32"/>
         <source>TextLabel</source>
-        <translation type="unfinished"/>
+        <translation>TextLabel</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Введите пароль</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Новый пароль</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Повторите новый пароль</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="26"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Введите новый пароль для бумажника. &lt;br/&gt; Пожалуйста, используйте фразы из &lt;b&gt;10 или более случайных символов,&lt;/b&gt; или &lt;b&gt;восьми и более слов.&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="27"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Зашифровать бумажник</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="30"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="35"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Разблокировать бумажник</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="38"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="43"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Расшифровать бумажник</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="46"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Сменить пароль</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="47"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Введите старый и новый пароль для бумажника.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="91"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Подтвердите шифрование бумажника</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="92"/>
         <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>ВНИМАНИЕ: Если вы зашифруете бумажник и потеряете свой ​​пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ БИТКОИНЫ!&lt;/b&gt;
+Вы действительно хотите зашифровать ваш бумажник?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="101"/>
         <location filename="../askpassphrasedialog.cpp" line="149"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Бумажник зашифрован</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Помните, что шифрование вашего бумажника не может полностью защитить ваши биткоины от кражи вредоносными программами, заражающими компьютер.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="106"/>
@@ -211,23 +212,23 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../askpassphrasedialog.cpp" line="155"/>
         <location filename="../askpassphrasedialog.cpp" line="161"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Не удалось зашифровать бумажник</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="107"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Шифрование бумажника не удалось из-за внутренней ошибки. Ваш бумажник не был зашифрован.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="114"/>
         <location filename="../askpassphrasedialog.cpp" line="162"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>Введённые пароли не совпадают.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="125"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Разблокировка бумажника не удалась</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="126"/>
@@ -239,12 +240,12 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="136"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Расшифрование бумажника не удалось</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="150"/>
         <source>Wallet passphrase was succesfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Пароль бумажника успешно изменён.</translation>
     </message>
 </context>
 <context>
@@ -317,7 +318,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>В&amp;ыход</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
@@ -327,7 +328,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"/>
+        <translation>&amp;О %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="205"/>
@@ -367,22 +368,22 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="214"/>
         <source>&amp;Encrypt Wallet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Зашифровать бумажник</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="215"/>
         <source>Encrypt or decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Зашифровать или расшифровать бумажник</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="217"/>
         <source>&amp;Change Passphrase</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Изменить пароль</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="218"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Изменить пароль шифрования бумажника</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
@@ -417,7 +418,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="355"/>
         <source>bitcoin-qt</source>
-        <translation type="unfinished"/>
+        <translation>bitcoin-qt</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="396"/>
@@ -496,17 +497,21 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished"/>
+        <translation>Дата: %1
+Количество: %2
+Тип: %3
+Адрес: %4
+</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="639"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Бумажник &lt;b&gt;зашифрован&lt;/b&gt; и в настоящее время &lt;b&gt;разблокирован&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="647"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Бумажник &lt;b&gt;зашифрован&lt;/b&gt; и в настоящее время &lt;b&gt;заблокирован&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -587,12 +592,12 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="97"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Не удается разблокировать бумажник.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="102"/>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>Генерация нового ключа не удалась.</translation>
     </message>
 </context>
 <context>
@@ -670,7 +675,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended.</source>
-        <translation>Опциональная комиссия за кадый KB транзакции, которое позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транщакций занимают 1 KB.  Рекомендованная комиссия: 0.01 BTC.</translation>
+        <translation>Опциональная комиссия за кадый KB транзакции, которое позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транзакций занимают 1 KB.  Рекомендованная комиссия: 0.01 BTC.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -799,7 +804,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Clear all</source>
-        <translation type="unfinished"/>
+        <translation>Очистить всё</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="103"/>
@@ -918,7 +923,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="113"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="120"/>
@@ -928,7 +933,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="130"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="137"/>
@@ -946,12 +951,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="34"/>
         <source>Open for %1 blocks</source>
-        <translation type="unfinished"/>
+        <translation>Открыто до получения %1 блоков</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>Открыто до %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
@@ -1037,7 +1042,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="149"/>
         <source>(%1 matures in %2 more blocks)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 станет доступно через %2 блоков)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="153"/>
@@ -1115,12 +1120,12 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Открыто для %n блока</numerusform><numerusform>Открыто для %n блоков</numerusform><numerusform>Открыто для %n блоков</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="277"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>Открыто до %1</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="280"/>
@@ -1349,7 +1354,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="277"/>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>ID</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="281"/>
@@ -2273,7 +2278,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Биткоин</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
@@ -2326,7 +2331,7 @@ but the comment information will be blank.</source>
     <message>
         <location filename="../bitcoin.cpp" line="145"/>
         <source>Bitcoin Qt</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin Qt</translation>
     </message>
 </context>
 </TS>
