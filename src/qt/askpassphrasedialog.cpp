@@ -55,7 +55,6 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
             ui->warningLabel->setText(tr("Enter the old and new passphrase to the wallet."));
             break;
     }
-    resize(minimumSize()); // Get rid of extra space in dialog
 
     textChanged();
     connect(ui->passEdit1, SIGNAL(textChanged(QString)), this, SLOT(textChanged()));
