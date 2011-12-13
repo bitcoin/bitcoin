@@ -108,6 +108,8 @@ public slots:
        @see WalletModel::EncryptionStatus
     */
     void setEncryptionStatus(int status);
+    /** Set the status bar text if there are any warnings (removes sync progress bar if applicable) */
+    void refreshStatusBar();
 
     /** Notify the user of an error in the network or transaction handling code. */
     void error(const QString &title, const QString &message);
