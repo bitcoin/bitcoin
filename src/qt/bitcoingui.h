@@ -96,6 +96,8 @@ public slots:
     void setNumConnections(int count);
     void setNumBlocks(int count);
     void setEncryptionStatus(int status);
+    /** Set the status bar text if there are any warnings (removes sync progress bar if applicable) */
+    void refreshStatusBar();
 
     void error(const QString &title, const QString &message);
     /* It is currently not possible to pass a return value to another thread through
