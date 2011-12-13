@@ -82,6 +82,7 @@ private:
     QAction *exportAction;
     QAction *encryptWalletAction;
     QAction *changePassphraseAction;
+    QAction *aboutQtAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
