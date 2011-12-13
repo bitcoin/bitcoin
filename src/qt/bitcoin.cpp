@@ -91,6 +91,8 @@ void UIThreadCall(boost::function0<void> fn)
 
 void MainFrameRepaint()
 {
+    if(guiref)
+        QMetaObject::invokeMethod(guiref, "refreshStatusBar", Qt::QueuedConnection);
 }
 
 void InitMessage(const std::string &message)

@@ -72,6 +72,11 @@ int ClientModel::getNumBlocksOfPeers() const
     return GetNumBlocksOfPeers();
 }
 
+QString ClientModel::getStatusBarWarnings() const
+{
+    return QString::fromStdString(GetWarnings("statusbar"));
+}
+
 OptionsModel *ClientModel::getOptionsModel()
 {
     return optionsModel;
