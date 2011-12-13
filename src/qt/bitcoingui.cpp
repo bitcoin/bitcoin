@@ -2,6 +2,7 @@
  * Qt4 bitcoin GUI.
  *
  * W.J. van der Laan 2011
+ * The Bitcoin Developers 2011
  */
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
@@ -412,15 +413,31 @@ void BitcoinGUI::setNumBlocks(int count)
 
     if(count < total)
     {
-        progressBarLabel->setVisible(true);
-        progressBar->setVisible(true);
-        progressBar->setMaximum(total - initTotal);
-        progressBar->setValue(count - initTotal);
+        if (clientModel->getStatusBarWarnings() == "")
+        {
+            progressBarLabel->setVisible(true);
+            progressBarLabel->setText(tr("Synchronizing with network..."));
+            progressBar->setVisible(true);
+            progressBar->setMaximum(total - initTotal);
+            progressBar->setValue(count - initTotal);
+        }
+        else
+        {
+            progressBarLabel->setText(clientModel->getStatusBarWarnings());
+            progressBarLabel->setVisible(true);
+            progressBar->setVisible(false);
+        }
         tooltip = tr("Downloaded %1 of %2 blocks of transaction history.").arg(count).arg(total);
     }
     else
     {
-        progressBarLabel->setVisible(false);
+        if (clientModel->getStatusBarWarnings() == "")
+            progressBarLabel->setVisible(false);
+        else
+        {
+            progressBarLabel->setText(clientModel->getStatusBarWarnings());
+            progressBarLabel->setVisible(true);
+        }
         progressBar->setVisible(false);
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
@@ -467,6 +484,19 @@ void BitcoinGUI::setNumBlocks(int count)
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
+}
+
+void BitcoinGUI::refreshStatusBar()
+{
+    /* Might display multiple times in the case of multiple alerts
+    static QString prevStatusBar;
+    QString newStatusBar = clientModel->getStatusBarWarnings();
+    if (prevStatusBar != newStatusBar)
+    {
+        prevStatusBar = newStatusBar;
+        error(tr("Network Alert"), newStatusBar);
+    }*/
+    setNumBlocks(clientModel->getNumBlocks());
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message)
