@@ -518,6 +518,14 @@ bool AppInit2(int argc, char* argv[])
 
     RandAddSeedPerfmon();
 
+    {
+        // Put "OP_EVAL" in the coinbase so everybody can tell when
+        // a majority of miners support it
+        const char* pOpEvalName = GetOpName(OP_EVAL);
+        std::vector<unsigned char> vchData(pOpEvalName, pOpEvalName+strlen(pOpEvalName));
+        mapAuxCoinbases[pOpEvalName] = CScript(vchData);
+    }
+
     if (!CreateThread(StartNode, NULL))
         wxMessageBox(_("Error: CreateThread(StartNode) failed"), "Bitcoin");
 

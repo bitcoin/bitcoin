@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../uint256.h"
+#include "uint256.h"
 
 extern void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 
