@@ -27,6 +27,10 @@ class CRequestTracker;
 class CNode;
 class CBlockIndex;
 
+static const int CLIENT_VERSION = 59900;
+static const bool VERSION_IS_BETA = true;
+extern const std::string CLIENT_NAME;
+
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
@@ -1521,6 +1525,7 @@ public:
 
     bool AppliesTo(int nVersion, std::string strSubVerIn) const
     {
+        // TODO: rework for client-version-embedded-in-strSubVer ?
         return (IsInEffect() &&
                 nMinVer <= nVersion && nVersion <= nMaxVer &&
                 (setSubVer.empty() || setSubVer.count(strSubVerIn)));
@@ -1528,7 +1533,7 @@ public:
 
     bool AppliesToMe() const
     {
-        return AppliesTo(VERSION, ::pszSubVer);
+        return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<std::string>()));
     }
 
     bool RelayTo(CNode* pnode) const
