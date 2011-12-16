@@ -183,7 +183,6 @@ std::string DecodeBase64(const std::string& str);
 std::string EncodeBase64(const unsigned char* pch, size_t len);
 std::string EncodeBase64(const std::string& str);
 void ParseParameters(int argc, char* argv[]);
-const char* wxGetTranslation(const char* psz);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
 int GetFilesize(FILE* file);

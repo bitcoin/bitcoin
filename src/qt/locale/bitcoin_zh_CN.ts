@@ -495,8 +495,7 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Date: %1
 Amount: %2
 Type: %3
-Address: %4
-</source>
+Address: %4</source>
         <translation>日期: %1
 金额: %2
 类别: %3
@@ -1399,246 +1398,211 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or bitcoind
-</source>
+        <source>Send command to -server or bitcoind</source>
         <translation>发送命令到服务器或者 bitcoind
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
-        <source>List commands
-</source>
+        <source>List commands</source>
         <translation>列出命令
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="7"/>
-        <source>Get help for a command
-</source>
+        <source>Get help for a command</source>
         <translation>获得某条命令的帮助
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Options:
-</source>
+        <source>Options:</source>
         <translation>选项：
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Specify configuration file (default: bitcoin.conf)
-</source>
+        <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>指定配置文件 (默认为 bitcoin.conf)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: bitcoind.pid)
-</source>
+        <source>Specify pid file (default: bitcoind.pid)</source>
         <translation>指定 pid 文件 (默认为 bitcoind.pid)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
-        <source>Generate coins
-</source>
+        <source>Generate coins</source>
         <translation>生成货币
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Don't generate coins
-</source>
+        <source>Don't generate coins</source>
         <translation>不要生成货币
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
-        <source>Start minimized
-</source>
+        <source>Start minimized</source>
         <translation>启动时最小化
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Specify data directory
-</source>
+        <source>Specify data directory</source>
         <translation>指定数据目录
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="15"/>
-        <source>Specify connection timeout (in milliseconds)
-</source>
+        <source>Specify connection timeout (in milliseconds)</source>
         <translation>指定连接超时时间 (微秒)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="16"/>
-        <source>Connect through socks4 proxy
-</source>
+        <source>Connect through socks4 proxy</source>
         <translation>通过 socks4 代理连接
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="17"/>
-        <source>Allow DNS lookups for addnode and connect
-</source>
+        <source>Allow DNS lookups for addnode and connect</source>
         <translation>连接节点时允许DNS查找
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
-        <source>Add a node to connect to
-</source>
+        <source>Add a node to connect to</source>
         <translation>连接到指定节点</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
-        <source>Connect only to the specified node
-</source>
+        <source>Connect only to the specified node</source>
         <translation>只连接到指定节点
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
-        <source>Don't accept connections from outside
-</source>
+        <source>Don't accept connections from outside</source>
         <translation>禁止接收外部连接
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="21"/>
-        <source>Don't attempt to use UPnP to map the listening port
-</source>
+        <source>Don't attempt to use UPnP to map the listening port</source>
         <translation>禁止使用 UPnP 映射监听端口
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="22"/>
-        <source>Attempt to use UPnP to map the listening port
-</source>
+        <source>Attempt to use UPnP to map the listening port</source>
         <translation>尝试使用 UPnP 映射监听端口
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
-        <source>Fee per KB to add to transactions you send
-</source>
+        <source>Fee per KB to add to transactions you send</source>
         <translation>每发送1KB交易所需的费用</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="24"/>
-        <source>Accept command line and JSON-RPC commands
-</source>
+        <source>Accept command line and JSON-RPC commands</source>
         <translation>接受命令行和 JSON-RPC 命令
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
-        <source>Run in the background as a daemon and accept commands
-</source>
+        <source>Run in the background as a daemon and accept commands</source>
         <translation>在后台运行并接受命令
 
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="26"/>
-        <source>Use the test network
-</source>
+        <source>Use the test network</source>
         <translation>使用测试网络
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
-        <source>Username for JSON-RPC connections
-</source>
+        <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC连接用户名
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
-        <source>Password for JSON-RPC connections
-</source>
+        <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC连接密码
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)
-</source>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
         <translation>JSON-RPC连接监听&lt;端口&gt; (默认为 8332)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
-        <source>Allow JSON-RPC connections from specified IP address
-</source>
+        <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>允许从指定IP接受到的JSON-RPC连接
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)
-</source>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>向IP地址为 &lt;ip&gt; 的节点发送指令 (缺省: 127.0.0.1)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>Set key pool size to &lt;n&gt; (default: 100)
-</source>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>设置密钥池大小为 &lt;n&gt; (缺省: 100)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
-        <source>Rescan the block chain for missing wallet transactions
-</source>
+        <source>Rescan the block chain for missing wallet transactions</source>
         <translation>重新扫描数据链以查找遗漏的交易
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>
-SSL options: (see the Bitcoin Wiki for SSL setup instructions)
-</source>
+SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>
 SSL 选项: (SSL 安装教程具体见比特币维基百科)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
-        <source>Use OpenSSL (https) for JSON-RPC connections
-</source>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>为 JSON-RPC 连接使用 OpenSSL (https)连接</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
-        <source>Server certificate file (default: server.cert)
-</source>
+        <source>Server certificate file (default: server.cert)</source>
         <translation>服务器证书 (默认为 server.cert)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
-        <source>Server private key (default: server.pem)
-</source>
+        <source>Server private key (default: server.pem)</source>
         <translation>服务器私钥 (默认为 server.pem)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
-        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
-</source>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>可接受的加密器 (默认为 TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
-        <source>This help message
-</source>
+        <source>This help message</source>
         <translation>该帮助信息
 </translation>
     </message>
@@ -1654,8 +1618,7 @@ SSL 选项: (SSL 安装教程具体见比特币维基百科)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="48"/>
-        <source>Error loading addr.dat      
-</source>
+        <source>Error loading addr.dat      </source>
         <translation>加载 addr.dat 错误
 </translation>
     </message>
@@ -1666,8 +1629,7 @@ SSL 选项: (SSL 安装教程具体见比特币维基百科)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
-        <source>Error loading blkindex.dat      
-</source>
+        <source>Error loading blkindex.dat      </source>
         <translation>加载 blkindex.dat 失败
 </translation>
     </message>
@@ -1678,22 +1640,19 @@ SSL 选项: (SSL 安装教程具体见比特币维基百科)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="52"/>
-        <source>Error loading wallet.dat: Wallet corrupted      
-</source>
+        <source>Error loading wallet.dat: Wallet corrupted      </source>
         <translation>加载 wallet.dat 失败：钱包崩溃
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="53"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      
-</source>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      </source>
         <translation>加载 wallet.dat 失败：运行钱包需要一个更新版本的比特币软件
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="55"/>
-        <source>Error loading wallet.dat      
-</source>
+        <source>Error loading wallet.dat      </source>
         <translation>加载 wallet.dat 失败
 </translation>
     </message>

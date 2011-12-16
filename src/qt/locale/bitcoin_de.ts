@@ -495,8 +495,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
         <source>Date: %1
 Amount: %2
 Type: %3
-Address: %4
-</source>
+Address: %4</source>
         <translation>Datum: %1
 Betrag: %2
 Typ: %3
@@ -1398,232 +1397,197 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or bitcoind
-</source>
+        <source>Send command to -server or bitcoind</source>
         <translation>Sende Befehl an -server oder bitcoind
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
-        <source>List commands
-</source>
+        <source>List commands</source>
         <translation>Befehle auflisten
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="7"/>
-        <source>Get help for a command
-</source>
+        <source>Get help for a command</source>
         <translation>Hilfe für Befehl erhalten
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Options:
-</source>
+        <source>Options:</source>
         <translation>Einstellungen:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Specify configuration file (default: bitcoin.conf)
-</source>
+        <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Bitte wählen Sie eine Konfigurationsdatei (Standard: bitcoin.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: bitcoind.pid)
-</source>
+        <source>Specify pid file (default: bitcoind.pid)</source>
         <translation>Bitte wählen Sie den Namen der PID Datei (Standard bitcoind.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
-        <source>Generate coins
-</source>
+        <source>Generate coins</source>
         <translation>Erarbeite Bitcoins</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Don't generate coins
-</source>
+        <source>Don't generate coins</source>
         <translation>Keine Bitcoins erarbeiten
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
-        <source>Start minimized
-</source>
+        <source>Start minimized</source>
         <translation>minimiert starten</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Specify data directory
-</source>
+        <source>Specify data directory</source>
         <translation>Bitte wählen Sie das Datenverzeichnis</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="15"/>
-        <source>Specify connection timeout (in milliseconds)
-</source>
+        <source>Specify connection timeout (in milliseconds)</source>
         <translation>Netzwerkverbindungsabbruch nach (in Millisekunden)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="16"/>
-        <source>Connect through socks4 proxy
-</source>
+        <source>Connect through socks4 proxy</source>
         <translation>Durch SOCKS4-Proxy verbinden</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="17"/>
-        <source>Allow DNS lookups for addnode and connect
-</source>
+        <source>Allow DNS lookups for addnode and connect</source>
         <translation>Erlaube DNS Namensauflösung für addnode und connect</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
-        <source>Add a node to connect to
-</source>
+        <source>Add a node to connect to</source>
         <translation>Bitcoin Knoten hinzufügen
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
-        <source>Connect only to the specified node
-</source>
+        <source>Connect only to the specified node</source>
         <translation>Nur zu angegebenen Knoten verbinden
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
-        <source>Don't accept connections from outside
-</source>
+        <source>Don't accept connections from outside</source>
         <translation>Keine externen Transatkionen akzeptieren</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="21"/>
-        <source>Don't attempt to use UPnP to map the listening port
-</source>
+        <source>Don't attempt to use UPnP to map the listening port</source>
         <translation>UPnP nicht verwenden</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="22"/>
-        <source>Attempt to use UPnP to map the listening port
-</source>
+        <source>Attempt to use UPnP to map the listening port</source>
         <translation>Versuche eine Verbindung mittels UPnP herzustellen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
-        <source>Fee per KB to add to transactions you send
-</source>
+        <source>Fee per KB to add to transactions you send</source>
         <translation>Gebühr pro KB, die gesendeten Transaktionen hinzugefügt wird
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="24"/>
-        <source>Accept command line and JSON-RPC commands
-</source>
+        <source>Accept command line and JSON-RPC commands</source>
         <translation>Erlaube Kommandozeilen und JSON-RPC Befehle
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
-        <source>Run in the background as a daemon and accept commands
-</source>
+        <source>Run in the background as a daemon and accept commands</source>
         <translation>Als Hintergrunddienst starten und Befehle akzeptieren
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="26"/>
-        <source>Use the test network
-</source>
+        <source>Use the test network</source>
         <translation>Das Test Netzwerk verwenden
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
-        <source>Username for JSON-RPC connections
-</source>
+        <source>Username for JSON-RPC connections</source>
         <translation>Benutzername für JSON-RPC Verbindungen
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
-        <source>Password for JSON-RPC connections
-</source>
+        <source>Password for JSON-RPC connections</source>
         <translation>Passwort für JSON-RPC Verbindungen
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)
-</source>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
         <translation>Port für JSON-RPC Befehle (Standard: 8332)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
-        <source>Allow JSON-RPC connections from specified IP address
-</source>
+        <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>JSON-RPC Befehle nur von dieser IP-Adresse erlauben
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)
-</source>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Befehle an Bitcoin Knoten &lt;ip&gt; senden (Standard: 127.0.0.1)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>Set key pool size to &lt;n&gt; (default: 100)
-</source>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Menge der vorgenerierten Adressen (Standard: 100)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
-        <source>Rescan the block chain for missing wallet transactions
-</source>
+        <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Blockkette nach verlorenen Transaktionen durchsuchen (rescan)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>
-SSL options: (see the Bitcoin Wiki for SSL setup instructions)
-</source>
+SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL Einstellungen: (Siehe im BitCoin-Wiki für eine detallierte Beschreibung)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
-        <source>Use OpenSSL (https) for JSON-RPC connections
-</source>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>JSON-RPC Befehle über OpenSSL (https)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
-        <source>Server certificate file (default: server.cert)
-</source>
+        <source>Server certificate file (default: server.cert)</source>
         <translation>SSL Server Zertifikat (Standard: server.cert)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
-        <source>Server private key (default: server.pem)
-</source>
+        <source>Server private key (default: server.pem)</source>
         <translation>Privater SSL Schlüssel (Standard: server.pem)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
-        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
-</source>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Erlaubte Kryptographiealgorithmen (Standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
-        <source>This help message
-</source>
+        <source>This help message</source>
         <translation>Dieser Hilfetext</translation>
     </message>
     <message>
@@ -1638,8 +1602,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="48"/>
-        <source>Error loading addr.dat      
-</source>
+        <source>Error loading addr.dat      </source>
         <translation>Fehler beim Laden der addr.dat
 </translation>
     </message>
@@ -1650,8 +1613,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
-        <source>Error loading blkindex.dat      
-</source>
+        <source>Error loading blkindex.dat      </source>
         <translation>Fehler beim laden der blkindex.dat</translation>
     </message>
     <message>
@@ -1661,22 +1623,19 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="52"/>
-        <source>Error loading wallet.dat: Wallet corrupted      
-</source>
+        <source>Error loading wallet.dat: Wallet corrupted      </source>
         <translation>Fehler beim Laden von wallet.dat: Brieftasche beschädigt
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="53"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      
-</source>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      </source>
         <translation>Fehler beim Laden von wallet.dat: Neuere Version von Bitcoin notwendig 
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="55"/>
-        <source>Error loading wallet.dat      
-</source>
+        <source>Error loading wallet.dat      </source>
         <translation>Fehler beim Laden von wallet.dat</translation>
     </message>
     <message>
