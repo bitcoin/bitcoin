@@ -1025,7 +1025,7 @@ bool EvalScriptInner(vector<vector<unsigned char> >& stack, const CScript& scrip
                     valtype& vchScript = stacktop(-1);
                     CScript subscript(vchScript.begin(), vchScript.end());
                     popstack(stack);
-                    
+
                     // Codeseparators not allowed; they don't make sense 'inside' an OP_EVAL, because
                     // their purpose is to change which parts of the scriptPubKey script is copied
                     // and signed by OP_CHECKSIG, but OP_EVAl'ed code is in the scriptSig, not the scriptPubKey.
