@@ -902,7 +902,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
 {
     if (IsCoinBase())
         return true; // Coinbase transactions have no inputs to fetch.
-    
+
     for (int i = 0; i < vin.size(); i++)
     {
         COutPoint prevout = vin[i].prevout;
