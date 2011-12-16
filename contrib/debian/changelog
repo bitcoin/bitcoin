@@ -1,3 +1,9 @@
+bitcoin (0.5.2-natty0) natty; urgency=low
+
+  * New upstream release.
+
+ -- Luke Dashjr <luke+bitcoin+deb@dashjr.org>  Fri, 16 Dec 2011 17:57:00 -0500
+
 bitcoin (0.5.1-natty0) natty; urgency=low
 
   * New upstream release.
