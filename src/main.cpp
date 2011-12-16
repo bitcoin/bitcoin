@@ -360,12 +360,16 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     if (IsCoinBase())
         return DoS(100, error("AcceptToMemoryPool() : coinbase as individual tx"));
 
+    unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK);
+
+    if (!GetBoolArg("-acceptnonstdtxn"))
+    {
+
     // To help v0.1.5 clients who would see it as a negative number
     if ((int64)nLockTime > INT_MAX)
         return error("AcceptToMemoryPool() : not accepting nLockTime beyond 2038 yet");
 
     // Safety limits
-    unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK);
     // Checking ECDSA signatures is a CPU bottleneck, so to avoid denial-of-service
     // attacks disallow transactions with more than one SigOp per 34 bytes.
     // 34 bytes because a TxOut is:
@@ -376,6 +380,8 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     // Rather not work on nonstandard transactions (unless -testnet)
     if (!fTestNet && !IsStandard())
         return error("AcceptToMemoryPool() : nonstandard transaction type");
+
+    }
 
     // Do we already have it?
     uint256 hash = GetHash();
