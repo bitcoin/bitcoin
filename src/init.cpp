@@ -329,36 +329,36 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Bind to the port early so we can tell if another instance is already running.
-    string strErrors;
     if (!fNoListen)
     {
-        if (!BindListenPort(strErrors))
+        std::string strError;
+        if (!BindListenPort(strError))
         {
-            wxMessageBox(strErrors, "Bitcoin");
+            wxMessageBox(strError, "Bitcoin");
             return false;
         }
     }
 
+    std::ostringstream strErrors;
     //
     // Load data files
     //
     if (fDaemon)
         fprintf(stdout, "bitcoin server starting\n");
-    strErrors = "";
     int64 nStart;
 
     InitMessage(_("Loading addresses..."));
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
     if (!LoadAddresses())
-        strErrors += _("Error loading addr.dat      \n");
+        strErrors << _("Error loading addr.dat") << "\n";
     printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
-        strErrors += _("Error loading blkindex.dat      \n");
+        strErrors << _("Error loading blkindex.dat") << "\n";
     printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     InitMessage(_("Loading wallet..."));
@@ -370,17 +370,17 @@ bool AppInit2(int argc, char* argv[])
     if (nLoadWalletRet != DB_LOAD_OK)
     {
         if (nLoadWalletRet == DB_CORRUPT)
-            strErrors += _("Error loading wallet.dat: Wallet corrupted      \n");
+            strErrors << _("Error loading wallet.dat: Wallet corrupted") << "\n";
         else if (nLoadWalletRet == DB_TOO_NEW)
-            strErrors += _("Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n");
+            strErrors << _("Error loading wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
-            strErrors += _("Wallet needed to be rewritten: restart Bitcoin to complete    \n");
-            wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+            strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
+            wxMessageBox(strErrors.str(), "Bitcoin", wxOK | wxICON_ERROR);
             return false;
         }
         else
-            strErrors += _("Error loading wallet.dat      \n");
+            strErrors << _("Error loading wallet.dat") << "\n";
     }
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
@@ -408,16 +408,16 @@ bool AppInit2(int argc, char* argv[])
     InitMessage(_("Done loading"));
     printf("Done loading\n");
 
-        //// debug print
-        printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
-        printf("nBestHeight = %d\n",            nBestHeight);
-        printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
-        printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
-        printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
+    //// debug print
+    printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
+    printf("nBestHeight = %d\n",            nBestHeight);
+    printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
+    printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
+    printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
 
-    if (!strErrors.empty())
+    if (!strErrors.str().empty())
     {
-        wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(strErrors.str(), "Bitcoin", wxOK | wxICON_ERROR);
         return false;
     }
 
