@@ -727,6 +727,21 @@ void CNode::Cleanup()
 }
 
 
+void CNode::PushVersion()
+{
+    /// when NTP implemented, change to just nTime = GetAdjustedTime()
+    int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
+    CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
+    CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
+    RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
+    PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
+                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight);
+}
+
+
+
+
+
 std::map<unsigned int, int64> CNode::setBanned;
 CCriticalSection CNode::cs_setBanned;
 

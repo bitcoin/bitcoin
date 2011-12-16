@@ -205,7 +205,7 @@ void SetMockTime(int64 nMockTimeIn);
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
 std::string FormatFullVersion();
-
+std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 
 
 
@@ -559,7 +559,7 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
 }
 
 template<typename T>
-uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=VERSION)
+uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
 {
     // Most of the time is spent allocating and deallocating CDataStream's
     // buffer.  If this ever needs to be optimized further, make a CStaticStream
