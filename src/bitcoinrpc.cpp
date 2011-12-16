@@ -41,7 +41,6 @@ static std::string strRPCUserColonPass;
 static int64 nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
-
 Object JSONRPCError(int code, const string& message)
 {
     Object error;
@@ -532,8 +531,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-static const string strMessageMagic = "Bitcoin Signed Message:\n";
-
 Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
@@ -662,7 +659,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
     if (params.size() > 1)
         nMinDepth = params[1].get_int();
 
-    // Get the set of pub keys that have the label
+    // Get the set of pub keys assigned to account
     string strAccount = AccountFromValue(params[0]);
     set<CBitcoinAddress> setAddress;
     GetAccountAddresses(strAccount, setAddress);
@@ -929,6 +926,68 @@ Value sendmany(const Array& params, bool fHelp)
         throw JSONRPCError(-4, "Transaction commit failed");
 
     return wtx.GetHash().GetHex();
+}
+
+Value addmultisigaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+    {
+        string msg = "addmultisigaddress <nrequired> <'[\"key\",\"key\"]'> [account]\n"
+            "Add a nrequired-to-sign multisignature address to the wallet\"\n"
+            "each key is a bitcoin address, hex or base58 public key\n"
+            "If [account] is specified, assign address to [account].";
+        throw runtime_error(msg);
+    }
+    if (!fTestNet)
+        throw runtime_error("addmultisigaddress available only when running -testnet\n");
+
+    int nRequired = params[0].get_int();
+    const Array& keys = params[1].get_array();
+    string strAccount;
+    if (params.size() > 2)
+        strAccount = AccountFromValue(params[2]);
+
+    // Gather public keys
+    if (keys.size() < nRequired)
+        throw runtime_error(
+            strprintf("addmultisigaddress: wrong number of keys (got %d, need at least %d)", keys.size(), nRequired));
+    std::vector<CKey> pubkeys;
+    pubkeys.resize(keys.size());
+    for (int i = 0; i < keys.size(); i++)
+    {
+        const std::string& ks = keys[i].get_str();
+        if (ks.size() == 130) // hex public key
+            pubkeys[i].SetPubKey(ParseHex(ks));
+        else if (ks.size() > 34) // base58-encoded
+        {
+            std::vector<unsigned char> vchPubKey;
+            if (DecodeBase58(ks, vchPubKey))
+                pubkeys[i].SetPubKey(vchPubKey);
+            else
+                throw runtime_error("Error base58 decoding key: "+ks);
+        }
+        else // bitcoin address for key in this wallet
+        {
+            CBitcoinAddress address(ks);
+            if (!pwalletMain->GetKey(address, pubkeys[i]))
+                throw runtime_error(
+                    strprintf("addmultisigaddress: unknown address: %s",ks.c_str()));
+        }
+    }
+
+    // Construct using OP_EVAL
+    CScript inner;
+    inner.SetMultisig(nRequired, pubkeys);
+
+    uint160 scriptHash = Hash160(inner);
+    CScript scriptPubKey;
+    scriptPubKey.SetEval(inner);
+    pwalletMain->AddCScript(scriptHash, inner);
+    CBitcoinAddress address;
+    address.SetScriptHash160(scriptHash);
+
+    pwalletMain->SetAddressBookName(address, strAccount);
+    return address.ToString();
 }
 
 
@@ -1591,11 +1650,68 @@ Value validateaddress(const Array& params, bool fHelp)
         // version of the address:
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
-        ret.push_back(Pair("ismine", (pwalletMain->HaveKey(address) > 0)));
+        if (pwalletMain->HaveKey(address))
+        {
+            ret.push_back(Pair("ismine", true));
+            std::vector<unsigned char> vchPubKey;
+            pwalletMain->GetPubKey(address, vchPubKey);
+            ret.push_back(Pair("pubkey", HexStr(vchPubKey)));
+            std::string strPubKey(vchPubKey.begin(), vchPubKey.end());
+            ret.push_back(Pair("pubkey58", EncodeBase58(vchPubKey)));
+        }
+        else if (pwalletMain->HaveCScript(address.GetHash160()))
+        {
+            ret.push_back(Pair("isscript", true));
+            CScript subscript;
+            pwalletMain->GetCScript(address.GetHash160(), subscript);
+            ret.push_back(Pair("ismine", ::IsMine(*pwalletMain, subscript)));
+            std::vector<CBitcoinAddress> addresses;
+            txnouttype whichType;
+            int nRequired;
+            ExtractAddresses(subscript, pwalletMain, whichType, addresses, nRequired);
+            ret.push_back(Pair("script", GetTxnOutputType(whichType)));
+            Array a;
+            BOOST_FOREACH(const CBitcoinAddress& addr, addresses)
+                a.push_back(addr.ToString());
+            ret.push_back(Pair("addresses", a));
+            if (whichType == TX_MULTISIG)
+                ret.push_back(Pair("sigsrequired", nRequired));
+        }
+        else
+            ret.push_back(Pair("ismine", false));
         if (pwalletMain->mapAddressBook.count(address))
             ret.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
     }
     return ret;
+}
+
+
+Value setworkaux(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setworkaux <id> [data]\n"
+            "If [data] is not specified, deletes aux.\n"
+        );
+
+    std::string strId = params[0].get_str();
+    if (params.size() > 1)
+    {
+        std::string strData = params[1].get_str();
+        std::vector<unsigned char> vchData = ParseHex(strData);
+        if (vchData.size() * 2 != strData.size())
+            throw JSONRPCError(-8, "Failed to parse data as hexadecimal");
+        CScript scriptBackup = mapAuxCoinbases[strId];
+        mapAuxCoinbases[strId] = CScript(vchData);
+        bool fOverflow;
+        BuildCoinbaseScriptSig(0, UINT_MAX, &fOverflow);
+        if (fOverflow)
+            throw JSONRPCError(-7, "Change would overflow coinbase script");
+    }
+    else
+        mapAuxCoinbases.erase(strId);
+
+    return true;
 }
 
 
@@ -1743,7 +1859,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             // Create new block
             if(pblock)
                 delete pblock;
-            pblock = CreateNewBlock(reservekey);
+            pblock = CreateNewBlock(reservekey, false);
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
         }
@@ -1837,10 +1953,12 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("move",                   &movecmd),
     make_pair("sendfrom",               &sendfrom),
     make_pair("sendmany",               &sendmany),
+    make_pair("addmultisigaddress",     &addmultisigaddress),
     make_pair("gettransaction",         &gettransaction),
     make_pair("listtransactions",       &listtransactions),
     make_pair("signmessage",           &signmessage),
     make_pair("verifymessage",         &verifymessage),
+    make_pair("setworkaux",             &setworkaux),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
@@ -2478,6 +2596,15 @@ int CommandLineRPC(int argc, char *argv[])
             params[1] = v.get_obj();
         }
         if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "addmultisigaddress"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "addmultisigaddress"      && n > 1)
+        {
+            string s = params[1].get_str();
+            Value v;
+            if (!read_string(s, v) || v.type() != array_type)
+                throw runtime_error("addmultisigaddress: type mismatch "+s);
+            params[1] = v.get_array();
+        }
 
         // Execute
         Object reply = CallRPC(strMethod, params);

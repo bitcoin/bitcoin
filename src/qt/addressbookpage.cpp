@@ -2,6 +2,7 @@
 #include "ui_addressbookpage.h"
 
 #include "addresstablemodel.h"
+#include "bitcoingui.h"
 #include "editaddressdialog.h"
 #include "csvmodelwriter.h"
 
@@ -9,6 +10,10 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include <QMessageBox>
+
+#ifdef USE_QRCODE
+#include "qrcodedialog.h"
+#endif
 
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
@@ -23,6 +28,10 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     ui->newAddressButton->setIcon(QIcon());
     ui->copyToClipboard->setIcon(QIcon());
     ui->deleteButton->setIcon(QIcon());
+#endif
+
+#ifndef USE_QRCODE
+    ui->showQRCode->setVisible(false);
 #endif
 
     switch(mode)
@@ -114,6 +123,24 @@ void AddressBookPage::on_copyToClipboard_clicked()
     }
 }
 
+void AddressBookPage::on_signMessage_clicked()
+{
+    QTableView *table = ui->tableView;
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+    QString addr;
+
+    foreach (QModelIndex index, indexes)
+    {
+        QVariant address = index.data();
+        addr = address.toString();
+    }
+
+    QObject *qoGUI = parent()->parent();
+    BitcoinGUI *gui = qobject_cast<BitcoinGUI *>(qoGUI);
+    if (gui)
+        gui->gotoMessagePage(addr);
+}
+
 void AddressBookPage::on_newAddressButton_clicked()
 {
     if(!model)
@@ -163,17 +190,22 @@ void AddressBookPage::selectionChanged()
         {
         case SendingTab:
             ui->deleteButton->setEnabled(true);
+            ui->signMessage->setEnabled(false);
             break;
         case ReceivingTab:
             ui->deleteButton->setEnabled(false);
+            ui->signMessage->setEnabled(true);
             break;
         }
         ui->copyToClipboard->setEnabled(true);
+        ui->showQRCode->setEnabled(true);
     }
     else
     {
         ui->deleteButton->setEnabled(false);
+        ui->showQRCode->setEnabled(false);
         ui->copyToClipboard->setEnabled(false);
+        ui->signMessage->setEnabled(false);
     }
 }
 
@@ -226,4 +258,24 @@ void AddressBookPage::exportClicked()
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
                               QMessageBox::Abort, QMessageBox::Abort);
     }
+}
+
+void AddressBookPage::on_showQRCode_clicked()
+{
+#ifdef USE_QRCODE
+    QTableView *table = ui->tableView;
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+
+
+    QRCodeDialog *d;
+    foreach (QModelIndex index, indexes)
+    {
+        QString address = index.data().toString(),
+            label = index.sibling(index.row(), 0).data().toString(),
+            title = QString("%1 << %2 >>").arg(label).arg(address);
+
+        QRCodeDialog *d = new QRCodeDialog(title, address, label, tab == ReceivingTab, this);
+        d->show();
+    }
+#endif
 }
