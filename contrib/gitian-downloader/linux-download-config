@@ -27,4 +27,8 @@ signers:
     weight: 40
     name: "Gavin Andresen"
     key: gavinandresen
+  71A3B16735405025D447E8F274810B012346C9A6
+    weight: 40
+    name: "Wladimir J. van der Laan"
+    key: laanwj
 minimum_weight: 120
