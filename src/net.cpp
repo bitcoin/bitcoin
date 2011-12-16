@@ -1174,6 +1174,7 @@ void MapPort(bool /* unused fMapPort */)
 static const char *strDNSSeed[] = {
     "bitseed.xf2.org",
     "dnsseed.bluematt.me",
+    "seed.bitcoin.sipa.be",
 };
 
 void ThreadDNSAddressSeed(void* parg)
