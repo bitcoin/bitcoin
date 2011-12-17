@@ -29,6 +29,7 @@ static const int MAX_OUTBOUND_CONNECTIONS = 8;
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
 void ThreadOpenConnections2(void* parg);
+void ThreadOpenAddedConnections2(void* parg);
 #ifdef USE_UPNP
 void ThreadMapPort2(void* parg);
 #endif
@@ -60,6 +61,9 @@ deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 map<CInv, int64> mapAlreadyAskedFor;
 
+
+set<CNetAddr> setservAddNodeAddresses;
+CCriticalSection cs_setservAddNodeAddresses;
 
 
 
@@ -750,7 +754,9 @@ void ThreadSocketHandler2(void* parg)
             }
             else if (nInbound >= GetArg("-maxconnections", 125) - MAX_OUTBOUND_CONNECTIONS)
             {
-                closesocket(hSocket);
+                CRITICAL_BLOCK(cs_setservAddNodeAddresses)
+                    if (!setservAddNodeAddresses.count(addr))
+                        closesocket(hSocket);
             }
             else if (CNode::IsBanned(addr))
             {
@@ -1214,22 +1220,6 @@ void ThreadOpenConnections2(void* parg)
         }
     }
 
-    // Connect to manually added nodes first
-    if (mapArgs.count("-addnode"))
-    {
-        BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
-        {
-            CAddress addr(strAddr, fAllowDNS);
-            if (addr.IsValid())
-            {
-                OpenNetworkConnection(addr);
-                Sleep(500);
-                if (fShutdown)
-                    return;
-            }
-        }
-    }
-
     // Initiate network connections
     int64 nStart = GetTime();
     loop
@@ -1355,6 +1345,76 @@ void ThreadOpenConnections2(void* parg)
 
         if (addrConnect.IsValid())
             OpenNetworkConnection(addrConnect);
+    }
+}
+
+void ThreadOpenAddedConnections(void* parg)
+{
+    IMPLEMENT_RANDOMIZE_STACK(ThreadOpenAddedConnections(parg));
+    try
+    {
+        vnThreadsRunning[7]++;
+        ThreadOpenAddedConnections2(parg);
+        vnThreadsRunning[7]--;
+    }
+    catch (std::exception& e) {
+        vnThreadsRunning[7]--;
+        PrintException(&e, "ThreadOpenAddedConnections()");
+    } catch (...) {
+        vnThreadsRunning[7]--;
+        PrintException(NULL, "ThreadOpenAddedConnections()");
+    }
+    printf("ThreadOpenAddedConnections exiting\n");
+}
+
+void ThreadOpenAddedConnections2(void* parg)
+{
+    printf("ThreadOpenAddedConnections started\n");
+
+    if (mapArgs.count("-addnode") == 0)
+        return;
+
+    vector<vector<CService> > vservAddressesToAdd(0);
+    BOOST_FOREACH(string& strAddNode, mapMultiArgs["-addnode"])
+    {
+        vector<CService> vservNode(0);
+        if(Lookup(strAddNode.c_str(), vservNode, GetDefaultPort(), fAllowDNS, 0))
+        {
+            vservAddressesToAdd.push_back(vservNode);
+            CRITICAL_BLOCK(cs_setservAddNodeAddresses)
+                BOOST_FOREACH(CService& serv, vservNode)
+                    setservAddNodeAddresses.insert(serv);
+        }
+    }
+    loop
+    {
+        vector<vector<CService> > vservConnectAddresses = vservAddressesToAdd;
+        // Attempt to connect to each IP for each addnode entry until at least one is successful per addnode entry
+        // (keeping in mind that addnode entries can have many IPs if fAllowDNS)
+        CRITICAL_BLOCK(cs_vNodes)
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                for (vector<vector<CService> >::iterator it = vservConnectAddresses.begin(); it != vservConnectAddresses.end(); it++)
+                    BOOST_FOREACH(CService& addrNode, *(it))
+                        if (pnode->addr == addrNode)
+                        {
+                            it = vservConnectAddresses.erase(it);
+                            it--;
+                            break;
+                        }
+        BOOST_FOREACH(vector<CService>& vserv, vservConnectAddresses)
+        {
+            OpenNetworkConnection(CAddress(*(vserv.begin())));
+            Sleep(500);
+            if (fShutdown)
+                return;
+        }
+        if (fShutdown)
+            return;
+        vnThreadsRunning[7]--;
+        Sleep(120000); // Retry every 2 minutes
+        vnThreadsRunning[7]++;
+        if (fShutdown)
+            return;
     }
 }
 
@@ -1634,6 +1694,10 @@ void StartNode(void* parg)
     if (!CreateThread(ThreadSocketHandler, NULL))
         printf("Error: CreateThread(ThreadSocketHandler) failed\n");
 
+    // Initiate outbound connections from -addnode
+    if (!CreateThread(ThreadOpenAddedConnections, NULL))
+        printf("Error: CreateThread(ThreadOpenAddedConnections) failed\n");
+
     // Initiate outbound connections
     if (!CreateThread(ThreadOpenConnections, NULL))
         printf("Error: CreateThread(ThreadOpenConnections) failed\n");
@@ -1652,7 +1716,7 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
-    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0
+    while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0 || vnThreadsRunning[6] > 0 || vnThreadsRunning[7] > 0
 #ifdef USE_UPNP
         || vnThreadsRunning[5] > 0
 #endif
@@ -1669,6 +1733,7 @@ bool StopNode()
     if (vnThreadsRunning[4] > 0) printf("ThreadRPCServer still running\n");
     if (fHaveUPnP && vnThreadsRunning[5] > 0) printf("ThreadMapPort still running\n");
     if (vnThreadsRunning[6] > 0) printf("ThreadDNSAddressSeed still running\n");
+    if (vnThreadsRunning[7] > 0) printf("ThreadOpenAddedConnections still running\n");
     while (vnThreadsRunning[2] > 0 || vnThreadsRunning[4] > 0)
         Sleep(20);
     Sleep(50);
