@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_UI_H
@@ -59,6 +60,8 @@ protected:
     void OnMenuFileExit(wxCommandEvent& event);
     void OnUpdateUIOptionsGenerate(wxUpdateUIEvent& event);
     void OnMenuOptionsChangeYourAddress(wxCommandEvent& event);
+    void OnMenuOptionsEncryptWallet(wxCommandEvent& event);
+    void OnMenuOptionsChangeWalletPassphrase(wxCommandEvent& event);
     void OnMenuOptionsOptions(wxCommandEvent& event);
     void OnMenuHelpAbout(wxCommandEvent& event);
     void OnButtonSend(wxCommandEvent& event);

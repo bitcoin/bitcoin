@@ -1,8 +1,10 @@
+#include <boost/test/unit_test.hpp>
+
 #include "../uint256.h"
 
 BOOST_AUTO_TEST_SUITE(uint160_tests)
 
-BOOST_AUTO_TEST_CASE(equality)
+BOOST_AUTO_TEST_CASE(uint160_equality)
 {
     uint160 num1 = 10;
     uint160 num2 = 11;

@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: m0Ray <m0ray@nm.ru>\n"
 "POT-Creation-Date: 2011-05-15 18:24+0100\n"
-"PO-Revision-Date: 2011-05-23 07:06+0500\n"
-"Last-Translator: m0Ray <m0ray@nm.ru>\n"
+"PO-Revision-Date: 2011-07-17 04:18+0100\n"
+"Last-Translator: Michael Bemmerl <mail@mx-server.de>\n"
 "Language-Team: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -448,7 +448,7 @@ msgstr "&Открыть Bitcoin"
 
 #: ../../../src/ui.cpp:2682
 msgid "&Send Bitcoins"
-msgstr "&Открыть Bitcoin"
+msgstr "&Отправить Bitcoins"
 
 #: ../../../src/ui.cpp:2683
 msgid "O&ptions..."

@@ -3,3 +3,9 @@ src/bitcoin
 src/bitcoind
 .*.swp
 *.*~*
+*.bak
+*.rej
+*.orig
+*.o
+*.patch
+.bitcoin

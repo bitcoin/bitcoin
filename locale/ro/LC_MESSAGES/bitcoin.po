@@ -1,0 +1,1078 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-09-06 03:47+0100\n"
+"PO-Revision-Date: 2011-09-06 06:36+0100\n"
+"Last-Translator: Alex B <paraipanakos@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-SourceCharset: iso-8859-2\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../src/init.cpp:163
+msgid "Bitcoin version"
+msgstr "versiune Bitcoin"
+
+#: ../../../src/init.cpp:164
+msgid "Usage:"
+msgstr "Uz:"
+
+#: ../../../src/init.cpp:166
+msgid "Send command to -server or bitcoind\n"
+msgstr "Trimite comanda la bitcoin lansat cu -server sau bitcoind\n"
+
+#: ../../../src/init.cpp:167
+msgid "List commands\n"
+msgstr "Listeaza comenzi\n"
+
+#: ../../../src/init.cpp:168
+msgid "Get help for a command\n"
+msgstr "Ajutor pentru o comanda\n"
+
+#: ../../../src/init.cpp:169
+msgid "Options:\n"
+msgstr "Optiuni:\n"
+
+#: ../../../src/init.cpp:170
+msgid "Specify configuration file (default: bitcoin.conf)\n"
+msgstr "Specifica fisier de configuratie (predeterminat: bitcoin.conf)\n"
+
+#: ../../../src/init.cpp:171
+msgid "Specify pid file (default: bitcoind.pid)\n"
+msgstr "Specifica fisier pid (predeterminat: bitcoin.pid)\n"
+
+#: ../../../src/init.cpp:172
+msgid "Generate coins\n"
+msgstr "Genereaza monede\n"
+
+#: ../../../src/init.cpp:173
+msgid "Don't generate coins\n"
+msgstr "Nu genera monede\n"
+
+#: ../../../src/init.cpp:174
+msgid "Start minimized\n"
+msgstr "Porneste minimizat\n"
+
+#: ../../../src/init.cpp:175
+msgid "Specify data directory\n"
+msgstr "Specifica directorul de date\n"
+
+#: ../../../src/init.cpp:176
+msgid "Specify connection timeout (in milliseconds)\n"
+msgstr "Specifica timpul maxim de conexiune (in milisecunde)\n"
+
+#: ../../../src/init.cpp:177
+msgid "Connect through socks4 proxy\n"
+msgstr "Conecteaza prin proxy socks4\n"
+
+#: ../../../src/init.cpp:178
+msgid "Allow DNS lookups for addnode and connect\n"
+msgstr "Permite cautare DNS pentru addnode si connect\n"
+
+#: ../../../src/init.cpp:179
+msgid "Add a node to connect to\n"
+msgstr "Adauga un nod de conectare\n"
+
+#: ../../../src/init.cpp:180
+msgid "Connect only to the specified node\n"
+msgstr "Conecteaza numai la nodul specificat\n"
+
+#: ../../../src/init.cpp:181
+msgid "Don't accept connections from outside\n"
+msgstr "Nu accepta conexiuni din exterior\n"
+
+#: ../../../src/init.cpp:184
+msgid "Don't attempt to use UPnP to map the listening port\n"
+msgstr "Nu utiliza UPnP pentru deschiderea portul de ascultare\n"
+
+#: ../../../src/init.cpp:186
+msgid "Attempt to use UPnP to map the listening port\n"
+msgstr "Incearca sa utilizezi UPnP pentru deschiderea portului de ascultare.\n"
+
+#: ../../../src/init.cpp:189
+msgid "Fee per KB to add to transactions you send\n"
+msgstr "Comision per KB ce se adauga la tranzactiile transmise\n"
+
+#: ../../../src/init.cpp:191
+msgid "Accept command line and JSON-RPC commands\n"
+msgstr "Accepta comenzi de consola si JSON-RPC\n"
+
+#: ../../../src/init.cpp:194
+msgid "Run in the background as a daemon and accept commands\n"
+msgstr "Executa ca daemon si accepta comenzi\n"
+
+#: ../../../src/init.cpp:196
+msgid "Use the test network\n"
+msgstr "Utilizeaza reteaua de probe\n"
+
+#: ../../../src/init.cpp:197
+msgid "Username for JSON-RPC connections\n"
+msgstr "Utilizator pentru conexiuni JSON-RPC\n"
+
+#: ../../../src/init.cpp:198
+msgid "Password for JSON-RPC connections\n"
+msgstr "Parola pentru conexiuni JSON-RPC\n"
+
+#: ../../../src/init.cpp:199
+msgid "Listen for JSON-RPC connections on <port> (default: 8332)\n"
+msgstr "Asculta conexiuni JSON-RPC pe portul <puerto> (predeterminat: 8332)\n"
+
+#: ../../../src/init.cpp:200
+msgid "Allow JSON-RPC connections from specified IP address\n"
+msgstr "Permite conexiuni JSON-RPC de la adresa IP specifica\n"
+
+#: ../../../src/init.cpp:201
+msgid "Send commands to node running on <ip> (default: 127.0.0.1)\n"
+msgstr "Trimite comanda la nod existent la <ip> (predeterminat: 127.0.0.1)\n"
+
+#: ../../../src/init.cpp:202
+msgid "Set key pool size to <n> (default: 100)\n"
+msgstr "Ajusteaza numarul de chei in rezerva (predeterminat: 100)\n"
+
+#: ../../../src/init.cpp:203
+msgid "Rescan the block chain for missing wallet transactions\n"
+msgstr "Rescaneza lantul de blocuri in cautare de tranzacti lipsa din portofel\n"
+
+#: ../../../src/init.cpp:207
+msgid ""
+"\n"
+"SSL options: (see the Bitcoin Wiki for SSL setup instructions)\n"
+msgstr ""
+"\n"
+"Optiuni SSL: (vezi la Wiki Bitcoin pentru instructiuni detaliate)\n"
+
+#: ../../../src/init.cpp:208
+msgid "Use OpenSSL (https) for JSON-RPC connections\n"
+msgstr "Utilizeaza OpenSSL (https) pentru conexiunile JSON-RPC\n"
+
+#: ../../../src/init.cpp:209
+msgid "Server certificate file (default: server.cert)\n"
+msgstr "Arhiva certificat de server (predeterminat: server.cert)\n"
+
+#: ../../../src/init.cpp:210
+msgid "Server private key (default: server.pem)\n"
+msgstr "Cheie privata de server (predeterminat: server.pem)\n"
+
+#: ../../../src/init.cpp:211
+msgid "Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+msgstr "Tipuri de cifrare acceptate (predeterminat: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n"
+
+#: ../../../src/init.cpp:215
+msgid "This help message\n"
+msgstr "Acest mesaj de ajutor\n"
+
+#: ../../../src/init.cpp:353
+#, c-format
+msgid "Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."
+msgstr "Nu se poate obtine permis de lucru in directorul de date %s. E posibil ca Bitcoin sa fie deja in executie."
+
+#: ../../../src/init.cpp:379
+msgid "Error loading addr.dat      \n"
+msgstr "Eroare la incarcare addr.dat      \n"
+
+#: ../../../src/init.cpp:385
+msgid "Error loading blkindex.dat      \n"
+msgstr "Eroare la incarcare blkindex.dat      \n"
+
+#: ../../../src/init.cpp:396
+msgid "Error loading wallet.dat: Wallet corrupted      \n"
+msgstr "Eroare la incarcare wallet.dat      \n"
+
+#: ../../../src/init.cpp:398
+msgid "Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n"
+msgstr "Eroare la incarcare wallet.dat: E necesare o versiune mai noua de Bitcoin      \n"
+
+#: ../../../src/init.cpp:400
+msgid "Error loading wallet.dat      \n"
+msgstr "Eroare la incarcare wallet.dat      \n"
+
+#: ../../../src/init.cpp:489
+msgid "Invalid -proxy address"
+msgstr "Adresa -proxy invalida"
+
+#: ../../../src/init.cpp:514
+msgid "Invalid amount for -paytxfee=<amount>"
+msgstr "Cantitate invalida pentru -paytxfee=<amount>"
+
+#: ../../../src/init.cpp:518
+msgid "Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."
+msgstr "Atentie: -paytxfee este prea mare. Acesta este comisionul platit la fiecare tranzactie."
+
+#: ../../../src/main.cpp:1398
+msgid "Warning: Disk space is low  "
+msgstr "Atentie: Spatiul pe hard disk este redus"
+
+#: ../../../src/net.cpp:1610
+#, c-format
+msgid "Unable to bind to port %d on this computer.  Bitcoin is probably already running."
+msgstr "Nu e posibila ascultarea pe portul %d in acest calculator. Probabil clientul Bitcoin este deja in executie."
+
+#: ../../../src/rpc.cpp:2005
+#: ../../../src/rpc.cpp:2007
+#, c-format
+msgid "To use the %s option"
+msgstr "Pentru a utiliza optiunea %s"
+
+#: ../../../src/rpc.cpp:2009
+#, c-format
+msgid ""
+"Warning: %s, you must set rpcpassword=<password>\n"
+"in the configuration file: %s\n"
+"If the file does not exist, create it with owner-readable-only file permissions.\n"
+msgstr ""
+"Atentie: %s, trebuie sa specifici rpcpassword=<password>\n"
+"in fisierul de configuratie: %s\n"
+"Daca fisierul nu exista trebuie creat cu permisiuni de citire numai pentru autor.\n"
+
+#: ../../../src/rpc.cpp:2185
+#, c-format
+msgid ""
+"You must set rpcpassword=<password> in the configuration file:\n"
+"%s\n"
+"If the file does not exist, create it with owner-readable-only file permissions."
+msgstr ""
+"Trebuie sa specifici rpcpassword=<password> in fisierul de configuratie:\n"
+"%s\n"
+"Daca fisierul nu exista trebuie creat cu permisiuni de citire numai pentru autor."
+
+#: ../../../src/ui.cpp:217
+#, c-format
+msgid "This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?"
+msgstr "Aceasta tranzactie trece peste limita de dimensiune. O poti trimite in continuare pentru %s, care taxa se imparte intre nodurile ce receptioneaza tranzactia si ajuta la mentinerea retelei. Continui tranzactia?"
+
+#: ../../../src/ui.cpp:261
+#: ../../../src/ui.cpp:1247
+msgid "Enter the current passphrase to the wallet."
+msgstr "Introduce parola actuala de portofel"
+
+#: ../../../src/ui.cpp:262
+#: ../../../src/ui.cpp:1183
+#: ../../../src/ui.cpp:1200
+#: ../../../src/ui.cpp:1248
+#: ../../../src/ui.cpp:1272
+#: ../../../src/ui.cpp:1292
+msgid "Passphrase"
+msgstr "Parola"
+
+#: ../../../src/ui.cpp:268
+msgid "Please supply the current wallet decryption passphrase."
+msgstr "Introduce parola actuala para decriptarea portofelului."
+
+#: ../../../src/ui.cpp:276
+#: ../../../src/ui.cpp:1257
+#: ../../../src/ui.cpp:1314
+msgid "The passphrase entered for the wallet decryption was incorrect."
+msgstr "Parola introdusa pentru decriptarea portofelului nu este corecta."
+
+#: ../../../src/ui.cpp:353
+msgid "Status"
+msgstr "Stare"
+
+#: ../../../src/ui.cpp:354
+msgid "Date"
+msgstr "Data"
+
+#: ../../../src/ui.cpp:355
+msgid "Description"
+msgstr "Descriere"
+
+#: ../../../src/ui.cpp:356
+msgid "Debit"
+msgstr "Debit"
+
+#: ../../../src/ui.cpp:357
+msgid "Credit"
+msgstr "Credit"
+
+#: ../../../src/ui.cpp:568
+#, c-format
+msgid "Open for %d blocks"
+msgstr "Deschis pentru %d blocuri"
+
+#: ../../../src/ui.cpp:570
+#, c-format
+msgid "Open until %s"
+msgstr "Deschis pana la %s"
+
+#: ../../../src/ui.cpp:576
+#, c-format
+msgid "%d/offline?"
+msgstr "%d/desconectat?"
+
+#: ../../../src/ui.cpp:578
+#, c-format
+msgid "%d/unconfirmed"
+msgstr "%d/neconfirmat"
+
+#: ../../../src/ui.cpp:580
+#, c-format
+msgid "%d confirmations"
+msgstr "%d confirmari"
+
+#: ../../../src/ui.cpp:665
+msgid "Generated"
+msgstr "Generat"
+
+#: ../../../src/ui.cpp:673
+#, c-format
+msgid "Generated (%s matures in %d more blocks)"
+msgstr "Generat (%s matureaza in %d blocuri)"
+
+#: ../../../src/ui.cpp:677
+msgid "Generated - Warning: This block was not received by any other nodes and will probably not be accepted!"
+msgstr "Generat - Atentie: Acest block nu se a receptionat de la alte noduri si probabil nu va fi acceptat!"
+
+#: ../../../src/ui.cpp:681
+msgid "Generated (not accepted)"
+msgstr "Generat (neaceptat)"
+
+#: ../../../src/ui.cpp:691
+msgid "From: "
+msgstr "De: "
+
+#: ../../../src/ui.cpp:715
+msgid "Received with: "
+msgstr "Receptionat cu: "
+
+#: ../../../src/ui.cpp:760
+msgid "Payment to yourself"
+msgstr "Plata proprie"
+
+#: ../../../src/ui.cpp:794
+msgid "To: "
+msgstr "Pentru: "
+
+#: ../../../src/ui.cpp:1109
+msgid "    Generating"
+msgstr "    Genereaza"
+
+#: ../../../src/ui.cpp:1111
+msgid "(not connected)"
+msgstr "(neconectat)"
+
+#: ../../../src/ui.cpp:1114
+#, c-format
+msgid "     %d connections     %d blocks     %d transactions"
+msgstr "     %d conexiuni     %d blocuri     %d tranzactii"
+
+#: ../../../src/ui.cpp:1171
+msgid "Wallet already encrypted."
+msgstr "Portofel deja encriptat."
+
+#: ../../../src/ui.cpp:1182
+msgid ""
+"Enter the new passphrase to the wallet.\n"
+"Please use a passphrase of 10 or more random characters, or eight or more words."
+msgstr ""
+"Introduce noua parola de portofel.\n"
+"Te rugam sa utilizezi o parola de 10 sau mai multe caracter aleatoare sau minimum opt cuvinte."
+
+#: ../../../src/ui.cpp:1189
+#: ../../../src/ui.cpp:1280
+msgid "Error: The supplied passphrase was too short."
+msgstr "Eroare: Parola introdusa este prea scurta."
+
+#: ../../../src/ui.cpp:1193
+msgid ""
+"WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!\n"
+"Are you sure you wish to encrypt your wallet?"
+msgstr ""
+"ATENTIE: Daca encriptezi portofelul si uiti parola vei pierde TOATE MONEDELE!\n"
+"Esti sigur ca vrei sa encriptezi portofelul?"
+
+#: ../../../src/ui.cpp:1199
+msgid "Please re-enter your new wallet passphrase."
+msgstr "Reintroduce noua parola de portofel."
+
+#: ../../../src/ui.cpp:1208
+#: ../../../src/ui.cpp:1302
+msgid "Error: the supplied passphrases didn't match."
+msgstr "Eroare: parolele introduse nu sunt identice."
+
+#: ../../../src/ui.cpp:1218
+msgid "Wallet encryption failed."
+msgstr "Encriptare portofel esuata."
+
+#: ../../../src/ui.cpp:1225
+msgid ""
+"Wallet Encrypted.\n"
+"Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer."
+msgstr ""
+"Portofel encriptat.\n"
+"Retine ca encriptarea portofelului nu iti poate proteja complet monedele daca pc-ul este infectat de malware."
+
+#: ../../../src/ui.cpp:1236
+msgid "Wallet is unencrypted, please encrypt it first."
+msgstr "Portofelul nu este encriptat, incearca sa-l encriptezi inainte."
+
+#: ../../../src/ui.cpp:1271
+msgid "Enter the new passphrase for the wallet."
+msgstr "Introduce noua parola de portofel."
+
+#: ../../../src/ui.cpp:1291
+msgid "Re-enter the new passphrase for the wallet."
+msgstr "Reintroduce noua parola de portofel."
+
+#: ../../../src/ui.cpp:1323
+msgid "Wallet Passphrase Changed."
+msgstr "Parola de portofel schimbata."
+
+#: ../../../src/ui.cpp:1379
+#: ../../../src/ui.cpp:2821
+msgid "New Receiving Address"
+msgstr "Adresa Noua de Primire"
+
+#: ../../../src/ui.cpp:1380
+#: ../../../src/ui.cpp:2822
+msgid ""
+"You should use a new address for each payment you receive.\n"
+"\n"
+"Label"
+msgstr ""
+"Cel mai indicat e sa utilizezi a adresa noua pentru fiecare plata primita.\n"
+"\n"
+"Eticheta"
+
+#: ../../../src/ui.cpp:1464
+msgid "<b>Status:</b> "
+msgstr "<b>Stare:</b> "
+
+#: ../../../src/ui.cpp:1469
+msgid ", has not been successfully broadcast yet"
+msgstr ", inca nu a fost trimisa cu succes"
+
+#: ../../../src/ui.cpp:1471
+#, c-format
+msgid ", broadcast through %d node"
+msgstr ", emis prin nod %d"
+
+#: ../../../src/ui.cpp:1473
+#, c-format
+msgid ", broadcast through %d nodes"
+msgstr ", emis prin noduri %d"
+
+#: ../../../src/ui.cpp:1477
+msgid "<b>Date:</b> "
+msgstr "<b>Data:</b> "
+
+#: ../../../src/ui.cpp:1485
+msgid "<b>Source:</b> Generated<br>"
+msgstr "<b>Sursa:</b> Generat<br>"
+
+#: ../../../src/ui.cpp:1491
+#: ../../../src/ui.cpp:1508
+msgid "<b>From:</b> "
+msgstr "<b>De:</b> "
+
+#: ../../../src/ui.cpp:1508
+msgid "unknown"
+msgstr "necunoscut"
+
+#: ../../../src/ui.cpp:1509
+#: ../../../src/ui.cpp:1533
+#: ../../../src/ui.cpp:1592
+msgid "<b>To:</b> "
+msgstr "<b>Pentru:</b> "
+
+#: ../../../src/ui.cpp:1512
+msgid " (yours, label: "
+msgstr "(tau, eticheta: "
+
+#: ../../../src/ui.cpp:1514
+msgid " (yours)"
+msgstr "(tau)"
+
+#: ../../../src/ui.cpp:1551
+#: ../../../src/ui.cpp:1563
+#: ../../../src/ui.cpp:1609
+#: ../../../src/ui.cpp:1626
+msgid "<b>Credit:</b> "
+msgstr "<b>Credit:</b> "
+
+#: ../../../src/ui.cpp:1553
+#, c-format
+msgid "(%s matures in %d more blocks)"
+msgstr "(%s matureaza in %d blocuri)"
+
+#: ../../../src/ui.cpp:1555
+msgid "(not accepted)"
+msgstr "(neaceptat)"
+
+#: ../../../src/ui.cpp:1600
+#: ../../../src/ui.cpp:1608
+#: ../../../src/ui.cpp:1623
+msgid "<b>Debit:</b> "
+msgstr "<b>Debit:</b> "
+
+#: ../../../src/ui.cpp:1614
+msgid "<b>Transaction fee:</b> "
+msgstr "<b>Comision tranzactie:</b> "
+
+#: ../../../src/ui.cpp:1630
+msgid "<b>Net amount:</b> "
+msgstr "<b>Cantitate neta:</b> "
+
+#: ../../../src/ui.cpp:1637
+msgid "Message:"
+msgstr "Mesaj:"
+
+#: ../../../src/ui.cpp:1639
+msgid "Comment:"
+msgstr "Comentariu:"
+
+#: ../../../src/ui.cpp:1642
+msgid "Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours."
+msgstr "Monedele generate trebuie sa astepte 120 de blocuri inainte sa poata fi cheltuite. Cand ai generat acest block, s-a transmis in retea pentru a fi incul in lantul de blocuri. Daca nu este acceptat in lant, se va schimba in \"neaceptat\" si nu se va putea cheltui. Acest lucru se poate intampla rareori cand alt nod genereaza un bloc in acelasi moment cu al tau ."
+
+#: ../../../src/ui.cpp:1822
+msgid "Cannot write autostart/bitcoin.desktop file"
+msgstr "Nu se poate scrie in fisierul autostart/bitcoin.desktop"
+
+#: ../../../src/ui.cpp:1858
+msgid "Main"
+msgstr "Principal"
+
+#: ../../../src/ui.cpp:1868
+msgid "&Start Bitcoin on window system startup"
+msgstr "&Porneste Bitcoin odata cu sistemul"
+
+#: ../../../src/ui.cpp:1875
+msgid "&Minimize on close"
+msgstr "&Minimizeaza la inchidere"
+
+#: ../../../src/ui.cpp:2017
+#, c-format
+msgid "version %s"
+msgstr "versiune %s"
+
+#: ../../../src/ui.cpp:2140
+msgid "Error in amount  "
+msgstr "Eroare in cantitate  "
+
+#: ../../../src/ui.cpp:2140
+#: ../../../src/ui.cpp:2145
+#: ../../../src/ui.cpp:2150
+#: ../../../src/ui.cpp:2203
+#: ../../../src/uibase.cpp:61
+msgid "Send Coins"
+msgstr "Trimite Monede"
+
+#: ../../../src/ui.cpp:2145
+msgid "Amount exceeds your balance  "
+msgstr "Cantitatea trece peste limita disponibila"
+
+#: ../../../src/ui.cpp:2150
+msgid "Total exceeds your balance when the "
+msgstr "Totalul trece peste limita cand"
+
+#: ../../../src/ui.cpp:2150
+msgid " transaction fee is included  "
+msgstr "comisionul de tranzactie este inclus"
+
+#: ../../../src/ui.cpp:2177
+msgid "Payment sent  "
+msgstr "Plata trimisa"
+
+#: ../../../src/ui.cpp:2177
+#: ../../../src/ui.cpp:2187
+#: ../../../src/ui.cpp:2337
+#: ../../../src/ui.cpp:2502
+#: ../../../src/wallet.cpp:1088
+msgid "Sending..."
+msgstr "Se trimite..."
+
+#: ../../../src/ui.cpp:2203
+msgid "Invalid address  "
+msgstr "Adresa incorecta"
+
+#: ../../../src/ui.cpp:2258
+#, c-format
+msgid "Sending %s to %s"
+msgstr "Se trimite %s la %s"
+
+#: ../../../src/ui.cpp:2331
+#: ../../../src/ui.cpp:2364
+msgid "CANCELLED"
+msgstr "ANULAT"
+
+#: ../../../src/ui.cpp:2335
+msgid "Cancelled"
+msgstr "Anulat"
+
+#: ../../../src/ui.cpp:2337
+msgid "Transfer cancelled  "
+msgstr "Transfer anulat"
+
+#: ../../../src/ui.cpp:2390
+msgid "Error: "
+msgstr "Eroare: "
+
+#: ../../../src/ui.cpp:2404
+#: ../../../src/ui.cpp:2473
+#: ../../../src/wallet.cpp:1106
+msgid "Insufficient funds"
+msgstr "Fonduri insuficiente"
+
+#: ../../../src/ui.cpp:2409
+msgid "Connecting..."
+msgstr "Se conecteaza..."
+
+#: ../../../src/ui.cpp:2414
+msgid "Unable to connect"
+msgstr "Conectare imposibila"
+
+#: ../../../src/ui.cpp:2419
+msgid "Requesting public key..."
+msgstr "Se cere cheia publica..."
+
+#: ../../../src/ui.cpp:2431
+msgid "Received public key..."
+msgstr "Cheia publica primita..."
+
+#: ../../../src/ui.cpp:2445
+msgid "Recipient is not accepting transactions sent by IP address"
+msgstr "Destinatarul nu accepta tranzacti trimise la adresa IP"
+
+#: ../../../src/ui.cpp:2447
+msgid "Transfer was not accepted"
+msgstr "Transferul nu a fost acceptat"
+
+#: ../../../src/ui.cpp:2456
+msgid "Invalid response received"
+msgstr "Raspuns invalid receptionat"
+
+#: ../../../src/ui.cpp:2469
+msgid "Creating transaction..."
+msgstr "Se creeaza tranzactia..."
+
+#: ../../../src/ui.cpp:2492
+#, c-format
+msgid "This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds"
+msgstr "Aceasta tranzactie necesita un comision de cel putin %s datorita cantitatii, complexitatii sau uzului de fonduri primite recent"
+
+#: ../../../src/ui.cpp:2494
+msgid "Transaction creation failed"
+msgstr "Crearea tranzactiei a esuat."
+
+#: ../../../src/ui.cpp:2504
+msgid "Transaction aborted"
+msgstr "Tranzactie anulata"
+
+#: ../../../src/ui.cpp:2512
+msgid "Lost connection, transaction cancelled"
+msgstr "Conexiune pierduta, tranzactie anulata"
+
+#: ../../../src/ui.cpp:2528
+msgid "Sending payment..."
+msgstr "Se trimite plata..."
+
+#: ../../../src/ui.cpp:2540
+msgid "The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Tranzactia a fost respinsa. Acest lucru se poate intampla daca vreuna din monede a fost cheltuita sau s-a folosit o copie de portofel (wallet.dat) si monedele a fost cheltuite in copie dar nu s-au marcat cheltuite aici."
+
+#: ../../../src/ui.cpp:2549
+msgid "Waiting for confirmation..."
+msgstr "Se asteapta confirmare..."
+
+#: ../../../src/ui.cpp:2566
+msgid ""
+"The payment was sent, but the recipient was unable to verify it.\n"
+"The transaction is recorded and will credit to the recipient,\n"
+"but the comment information will be blank."
+msgstr ""
+"Plata a fost trimisa dar destinatarul nu a putut sa o verifice.\n"
+"Tranzactia a fost inregistrata si creditul trimis la desinatar,\n"
+"dar informatia de comentarii va ramane in alb."
+
+#: ../../../src/ui.cpp:2575
+msgid "Payment was sent, but an invalid response was received"
+msgstr "Plata a fost trimisa dar s-a receptionat un raspuns incorect"
+
+#: ../../../src/ui.cpp:2581
+msgid "Payment completed"
+msgstr "Plata completa"
+
+#: ../../../src/ui.cpp:2623
+#: ../../../src/ui.cpp:2769
+#: ../../../src/ui.cpp:2809
+msgid "Name"
+msgstr "Nume"
+
+#: ../../../src/ui.cpp:2624
+#: ../../../src/ui.cpp:2769
+#: ../../../src/ui.cpp:2809
+msgid "Address"
+msgstr "Adresa"
+
+#: ../../../src/ui.cpp:2626
+#: ../../../src/ui.cpp:2781
+msgid "Label"
+msgstr "Eticheta"
+
+#: ../../../src/ui.cpp:2627
+#: ../../../src/uibase.cpp:847
+msgid "Bitcoin Address"
+msgstr "Adresa Bitcoin"
+
+#: ../../../src/ui.cpp:2751
+msgid "This is one of your own addresses for receiving payments and cannot be entered in the address book.  "
+msgstr "Aceasta este o adresa pentru primire de plati de aceea nu se poate introduce manual in agenda"
+
+#: ../../../src/ui.cpp:2769
+#: ../../../src/ui.cpp:2775
+msgid "Edit Address"
+msgstr "Editeaza adresa"
+
+#: ../../../src/ui.cpp:2781
+msgid "Edit Address Label"
+msgstr "Editeaza eticheta de adresa"
+
+#: ../../../src/ui.cpp:2809
+#: ../../../src/ui.cpp:2815
+msgid "Add Address"
+msgstr "Adauga adresa"
+
+#: ../../../src/ui.cpp:2902
+msgid "Bitcoin"
+msgstr "Bitcoin"
+
+#: ../../../src/ui.cpp:2904
+msgid "Bitcoin - Generating"
+msgstr "Bitcoin - Se genereaza"
+
+#: ../../../src/ui.cpp:2906
+msgid "Bitcoin - (not connected)"
+msgstr "Bitcoin - (neconectat)"
+
+#: ../../../src/ui.cpp:2985
+msgid "&Open Bitcoin"
+msgstr "&Deschide Bitcoin"
+
+#: ../../../src/ui.cpp:2986
+msgid "&Send Bitcoins"
+msgstr "&Trimite Bitcoin"
+
+#: ../../../src/ui.cpp:2987
+msgid "O&ptions..."
+msgstr "O&ptiuni"
+
+#: ../../../src/ui.cpp:2990
+#: ../../../src/uibase.cpp:25
+msgid "E&xit"
+msgstr "I&esire"
+
+#: ../../../src/ui.cpp:3216
+msgid "Program has crashed and will terminate.  "
+msgstr "Programul a detectat o eroare si se va inchide."
+
+#: ../../../src/uibase.cpp:28
+msgid "&File"
+msgstr "&Arhiva"
+
+#: ../../../src/uibase.cpp:32
+msgid "&Your Receiving Addresses..."
+msgstr "&Adresele de primire..."
+
+#: ../../../src/uibase.cpp:35
+msgid "&Encrypt Wallet..."
+msgstr "&Encripteaza portofel..."
+
+#: ../../../src/uibase.cpp:38
+msgid "&Change Wallet Encryption Passphrase..."
+msgstr "&Schimba parola de encriptare portofel..."
+
+#: ../../../src/uibase.cpp:42
+msgid "&Options..."
+msgstr "&Optiuni..."
+
+#: ../../../src/uibase.cpp:45
+msgid "&Settings"
+msgstr "&Cnfiguratie"
+
+#: ../../../src/uibase.cpp:49
+msgid "&About..."
+msgstr "&Despre..."
+
+#: ../../../src/uibase.cpp:52
+msgid "&Help"
+msgstr "&Ajutor"
+
+#: ../../../src/uibase.cpp:62
+msgid "Address Book"
+msgstr "Agenda cu adrese"
+
+#: ../../../src/uibase.cpp:75
+msgid "Your Bitcoin Address:"
+msgstr "Adresa Ta Bitcoin:"
+
+#: ../../../src/uibase.cpp:82
+msgid " &New... "
+msgstr " &Nou... "
+
+#: ../../../src/uibase.cpp:85
+#: ../../../src/uibase.cpp:790
+#: ../../../src/uibase.cpp:893
+msgid " &Copy to Clipboard "
+msgstr " &Copiaza in Clipboard"
+
+#: ../../../src/uibase.cpp:99
+msgid "Balance:"
+msgstr "Balant:"
+
+#: ../../../src/uibase.cpp:115
+msgid " All"
+msgstr "Tot"
+
+#: ../../../src/uibase.cpp:115
+msgid " Sent"
+msgstr "Trimis"
+
+#: ../../../src/uibase.cpp:115
+msgid " Received"
+msgstr "Primit"
+
+#: ../../../src/uibase.cpp:115
+msgid " In Progress"
+msgstr "In Curs"
+
+#: ../../../src/uibase.cpp:136
+msgid "All Transactions"
+msgstr "Toate Tranzactiile"
+
+#: ../../../src/uibase.cpp:147
+msgid "Sent/Received"
+msgstr "Trimis/Primit"
+
+#: ../../../src/uibase.cpp:158
+msgid "Sent"
+msgstr "Trimis"
+
+#: ../../../src/uibase.cpp:169
+msgid "Received"
+msgstr "Primit"
+
+#: ../../../src/uibase.cpp:312
+#: ../../../src/uibase.cpp:453
+#: ../../../src/uibase.cpp:552
+#: ../../../src/uibase.cpp:732
+#: ../../../src/uibase.cpp:793
+#: ../../../src/uibase.cpp:902
+#: ../../../src/uibase.cpp:991
+msgid "OK"
+msgstr "OK"
+
+#: ../../../src/uibase.cpp:355
+msgid "&Start Bitcoin on system startup"
+msgstr "&Porneste Bitcoin odata cu sistemul"
+
+#: ../../../src/uibase.cpp:358
+msgid "&Minimize to the tray instead of the taskbar"
+msgstr "&Minimizeaza in tray nu in bara de aplicatii"
+
+#: ../../../src/uibase.cpp:361
+msgid "Map port using &UPnP"
+msgstr "Reserva portul utilizand &UPnP"
+
+#: ../../../src/uibase.cpp:364
+msgid "M&inimize to the tray on close"
+msgstr "M&inimizeaza in tray la inchidere"
+
+#: ../../../src/uibase.cpp:370
+msgid "&Connect through socks4 proxy (requires restart to apply): "
+msgstr "&Conecteaza prin proxy socks4 (repornire apl. necesara): "
+
+#: ../../../src/uibase.cpp:381
+msgid "Proxy &IP:"
+msgstr "&IP de proxy:"
+
+#: ../../../src/uibase.cpp:389
+msgid " &Port:"
+msgstr " &Port:"
+
+#: ../../../src/uibase.cpp:402
+msgid "Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."
+msgstr "Comision optional per KB ce asigura ca tranzactiile tale sunt procesate rapid. Majoritatea tranzactiilor sunt de 1KB. Se recomanda un comision de 0.01."
+
+#: ../../../src/uibase.cpp:409
+msgid "Pay transaction fee:"
+msgstr "Comision de tranzactie:"
+
+#: ../../../src/uibase.cpp:430
+msgid "// [don't translate] Test panel 2 for future expansion"
+msgstr ""
+
+#: ../../../src/uibase.cpp:434
+msgid "// [don't translate] Let's not start multiple pages until the first page is filled up"
+msgstr ""
+
+#: ../../../src/uibase.cpp:456
+#: ../../../src/uibase.cpp:678
+#: ../../../src/uibase.cpp:737
+#: ../../../src/uibase.cpp:796
+#: ../../../src/uibase.cpp:905
+#: ../../../src/uibase.cpp:994
+msgid "Cancel"
+msgstr "Anuleaza"
+
+#: ../../../src/uibase.cpp:459
+msgid "&Apply"
+msgstr "&Aplica"
+
+#: ../../../src/uibase.cpp:518
+msgid "Bitcoin "
+msgstr "Bitcoin "
+
+#: ../../../src/uibase.cpp:524
+msgid "version"
+msgstr "versiune"
+
+#: ../../../src/uibase.cpp:535
+msgid ""
+"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"\n"
+"This is experimental software.\n"
+"\n"
+"Distributed under the MIT/X11 software license, see the accompanying file \n"
+"license.txt or http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"This product includes software developed by the OpenSSL Project for use in the \n"
+"OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \n"
+"Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."
+msgstr ""
+"Copyright (c) 2009-2011 Bitcoin Developers\n"
+"\n"
+"Acesta este un program experimental.\n"
+"\n"
+"Distribuit sub licenta MIT/X11, cauta fisierul adaugat de licenta \n"
+"license.txt sau http://www.opensource.org/licenses/mit-license.php.\n"
+"\n"
+"Acest produs contine software creat deOpenSSL Project pentru uz in \n"
+"OpenSSL Toolkit (http://www.openssl.org/), software cryptografic scris de \n"
+"Eric Young (eay@cryptsoft.com) si software UPnP scris de Thomas Bernard."
+
+#: ../../../src/uibase.cpp:591
+msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+msgstr "Introduce o a adresa Bitcoin (exemplu: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
+
+#: ../../../src/uibase.cpp:605
+msgid "Pay &To:"
+msgstr "Plateste &la:"
+
+#: ../../../src/uibase.cpp:620
+msgid "&Paste"
+msgstr "&Lipeste (paste)"
+
+#: ../../../src/uibase.cpp:623
+msgid " Address &Book..."
+msgstr "Agenda de &adrese..."
+
+#: ../../../src/uibase.cpp:630
+msgid "&Amount:"
+msgstr "&Cantitate:"
+
+#: ../../../src/uibase.cpp:640
+msgid "T&ransfer:"
+msgstr "T&ransfera:"
+
+#: ../../../src/uibase.cpp:646
+msgid " Standard"
+msgstr "Standard"
+
+#: ../../../src/uibase.cpp:673
+msgid "&Send"
+msgstr "&Trimite"
+
+#: ../../../src/uibase.cpp:721
+msgid ""
+"\n"
+"\n"
+"Connecting..."
+msgstr ""
+"\n"
+"\n"
+"Se conecteaza..."
+
+#: ../../../src/uibase.cpp:771
+msgid "These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.  The highlighted address is displayed in the main window."
+msgstr "Acestea sunt adresele tale pentru primit plati. Poti sa folosesti o adresa diferita pentru fiecare persoana care iti trimite pentru a putea tine cont de unde vin platile. Adresa selectionata este afisata in fereastra principala."
+
+#: ../../../src/uibase.cpp:784
+#: ../../../src/uibase.cpp:896
+msgid "&Edit..."
+msgstr "&Editeaza..."
+
+#: ../../../src/uibase.cpp:787
+#: ../../../src/uibase.cpp:899
+msgid " &New Address... "
+msgstr " &Adresa noua... "
+
+#: ../../../src/uibase.cpp:859
+msgid "Sending"
+msgstr "Se trimite"
+
+#: ../../../src/uibase.cpp:867
+msgid "These are your Bitcoin addresses for receiving payments.  You can give a different one to each sender to keep track of who is paying you.  The highlighted address will be displayed in the main window."
+msgstr "Acestea sunt adresele tale pentru primit plati. Poti sa folosesti o adresa diferita pentru fiecare persoana care iti trimite pentru a putea tine cont de unde vin platile. Adresa selectionata este afisata in fereastra principala."
+
+#: ../../../src/uibase.cpp:880
+msgid "Receiving"
+msgstr "Se receptioneaza"
+
+#: ../../../src/uibase.cpp:890
+msgid "&Delete"
+msgstr "&Sterge"
+
+#: ../../../src/util.cpp:870
+msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
+msgstr "Atentie: Regleaza corect hora si data calculatorului pentru ca Bitcoin sa functioneze corect."
+
+#: ../../../src/util.cpp:904
+msgid "beta"
+msgstr "beta"
+
+#: ../../../src/wallet.cpp:1073
+msgid "Error: Wallet locked, unable to create transaction  "
+msgstr "Eroare: Portofel blocat, nu se poate crea tranzactia"
+
+#: ../../../src/wallet.cpp:1081
+#, c-format
+msgid "Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  "
+msgstr "Eroare: Aceasta tranzactie necesita un comision de cel putin %s datorita cantitatii, complexitatii sau uzului de fonduri primite recent"
+
+#: ../../../src/wallet.cpp:1083
+msgid "Error: Transaction creation failed  "
+msgstr "Eroare: Crearea tranzactiei a esuat"
+
+#: ../../../src/wallet.cpp:1092
+msgid "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."
+msgstr "Error: Tranzactia a fost respinsa. Acest lucru se poate intampla daca vreuna din monede a fost cheltuita sau s-a folosit o copie de portofel (wallet.dat) si monedele a fost cheltuite in copie dar nu s-au marcat cheltuite aici."
+
+#: ../../../src/wallet.cpp:1104
+msgid "Invalid amount"
+msgstr "Cantitate incorecta"
+
+#: ../../../src/uibase.h:151
+msgid "Transaction Details"
+msgstr "Detalii de Tranzactie"
+
+#: ../../../src/uibase.h:203
+msgid "Options"
+msgstr "Optiuni"
+
+#: ../../../src/uibase.h:232
+msgid "About Bitcoin"
+msgstr "Despre Bitcoin"
+
+#: ../../../src/uibase.h:341
+msgid "Your Bitcoin Addresses"
+msgstr "Adresele Tale Bitcoin"
+
+#~ msgid "Invalid bitcoin address"
+#~ msgstr "Dirección Bitcoin inválida"
