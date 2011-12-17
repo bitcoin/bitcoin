@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
@@ -12,11 +13,6 @@
 
 #ifdef __WXMSW__
 #include <string.h>
-// This file can be downloaded as a part of the Windows Platform SDK
-// and is required for Bitcoin binaries to work properly on versions
-// of Windows before XP.  If you are doing builds of Bitcoin for
-// public release, you should uncomment this line.
-//#include <WSPiApi.h>
 #endif
 
 #ifdef USE_UPNP
@@ -50,10 +46,10 @@ bool fClient = false;
 bool fAllowDNS = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
 CAddress addrLocalHost("0.0.0.0", 0, false, nLocalServices);
-CNode* pnodeLocalHost = NULL;
+static CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 array<int, 10> vnThreadsRunning;
-SOCKET hListenSocket = INVALID_SOCKET;
+static SOCKET hListenSocket = INVALID_SOCKET;
 
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
@@ -99,7 +95,7 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
     SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
-#ifdef BSD
+#ifdef SO_NOSIGPIPE
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
@@ -441,13 +437,17 @@ void ThreadGetMyExternalIP(void* parg)
 
 
 
-bool AddAddress(CAddress addr, int64 nTimePenalty)
+bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
 {
     if (!addr.IsRoutable())
         return false;
     if (addr.ip == addrLocalHost.ip)
         return false;
     addr.nTime = max((int64)0, (int64)addr.nTime - nTimePenalty);
+    bool fUpdated = false;
+    bool fNew = false;
+    CAddress addrFound = addr;
+
     CRITICAL_BLOCK(cs_mapAddresses)
     {
         map<vector<unsigned char>, CAddress>::iterator it = mapAddresses.find(addr.GetKey());
@@ -456,13 +456,12 @@ bool AddAddress(CAddress addr, int64 nTimePenalty)
             // New address
             printf("AddAddress(%s)\n", addr.ToString().c_str());
             mapAddresses.insert(make_pair(addr.GetKey(), addr));
-            CAddrDB().WriteAddress(addr);
-            return true;
+            fUpdated = true;
+            fNew = true;
         }
         else
         {
-            bool fUpdated = false;
-            CAddress& addrFound = (*it).second;
+            addrFound = (*it).second;
             if ((addrFound.nServices | addr.nServices) != addrFound.nServices)
             {
                 // Services have been added
@@ -477,11 +476,22 @@ bool AddAddress(CAddress addr, int64 nTimePenalty)
                 addrFound.nTime = addr.nTime;
                 fUpdated = true;
             }
-            if (fUpdated)
-                CAddrDB().WriteAddress(addrFound);
         }
     }
-    return false;
+    // There is a nasty deadlock bug if this is done inside the cs_mapAddresses
+    // CRITICAL_BLOCK:
+    // Thread 1:  begin db transaction (locks inside-db-mutex)
+    //            then AddAddress (locks cs_mapAddresses)
+    // Thread 2:  AddAddress (locks cs_mapAddresses)
+    //             ... then db operation hangs waiting for inside-db-mutex
+    if (fUpdated)
+    {
+        if (pAddrDB)
+            pAddrDB->WriteAddress(addrFound);
+        else
+            CAddrDB().WriteAddress(addrFound);
+    }
+    return fNew;
 }
 
 void AddressCurrentlyConnected(const CAddress& addr)
@@ -832,7 +842,7 @@ void ThreadSocketHandler2(void* parg)
         {
             BOOST_FOREACH(CNode* pnode, vNodes)
             {
-                if (pnode->hSocket == INVALID_SOCKET || pnode->hSocket < 0)
+                if (pnode->hSocket == INVALID_SOCKET)
                     continue;
                 FD_SET(pnode->hSocket, &fdsetRecv);
                 FD_SET(pnode->hSocket, &fdsetError);
@@ -1071,10 +1081,11 @@ void ThreadMapPort2(void* parg)
     const char * rootdescurl = 0;
     const char * multicastif = 0;
     const char * minissdpdpath = 0;
+    int error = 0;
     struct UPNPDev * devlist = 0;
     char lanaddr[64];
 
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
 
     struct UPNPUrls urls;
     struct IGDdatas data;
@@ -1085,14 +1096,10 @@ void ThreadMapPort2(void* parg)
     {
         char intClient[16];
         char intPort[6];
+        string strDesc = "Bitcoin " + FormatFullVersion();
+        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+	                        port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
 
-#ifndef __WXMSW__
-        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0);
-#else
-        r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-	                        port, port, lanaddr, 0, "TCP", 0, "0");
-#endif
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
                 port, port, lanaddr, r, strupnperror(r));
@@ -1135,6 +1142,11 @@ void MapPort(bool fMapPort)
             printf("Error: ThreadMapPort(ThreadMapPort) failed\n");
     }
 }
+#else
+void MapPort(bool /* unused fMapPort */)
+{
+    // Intentionally left blank.
+}
 #endif
 
 
@@ -1157,6 +1169,8 @@ void DNSAddressSeed()
     if (!fTestNet)
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
+        CAddrDB addrDB;
+        addrDB.TxnBegin();
 
         for (int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
             vector<CAddress> vaddr;
@@ -1167,12 +1181,14 @@ void DNSAddressSeed()
                     if (addr.GetByte(3) != 127)
                     {
                         addr.nTime = 0;
-                        AddAddress(addr);
+                        AddAddress(addr, 0, &addrDB);
                         found++;
                     }
                 }
             }
         }
+
+        addrDB.TxnCommit();  // Save addresses (it's ok if this fails)
     }
 
     printf("%d addresses found from DNS seeds\n", found);
@@ -1275,7 +1291,6 @@ void ThreadOpenConnections2(void* parg)
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             // Add seed nodes if IRC isn't working
-            static bool fSeedUsed;
             bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
             if (mapAddresses.empty() && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
             {
@@ -1283,39 +1298,13 @@ void ThreadOpenConnections2(void* parg)
                 {
                     // It'll only connect to one or two seed nodes because once it connects,
                     // it'll get a pile of addresses with newer timestamps.
+                    // Seed nodes are given a random 'last seen time' of between one and two
+                    // weeks ago.
+                    const int64 nOneWeek = 7*24*60*60;
                     CAddress addr;
                     addr.ip = pnSeed[i];
-                    addr.nTime = 0;
+                    addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
                     AddAddress(addr);
-                }
-                fSeedUsed = true;
-            }
-
-            if (fSeedUsed && mapAddresses.size() > ARRAYLEN(pnSeed) + 100)
-            {
-                // Disconnect seed nodes
-                set<unsigned int> setSeed(pnSeed, pnSeed + ARRAYLEN(pnSeed));
-                static int64 nSeedDisconnected;
-                if (nSeedDisconnected == 0)
-                {
-                    nSeedDisconnected = GetTime();
-                    CRITICAL_BLOCK(cs_vNodes)
-                        BOOST_FOREACH(CNode* pnode, vNodes)
-                            if (setSeed.count(pnode->addr.ip))
-                                pnode->fDisconnect = true;
-                }
-
-                // Keep setting timestamps to 0 so they won't reconnect
-                if (GetTime() - nSeedDisconnected < 60 * 60)
-                {
-                    BOOST_FOREACH(PAIRTYPE(const vector<unsigned char>, CAddress)& item, mapAddresses)
-                    {
-                        if (setSeed.count(item.second.ip) && item.second.nTime != 0)
-                        {
-                            item.second.nTime = 0;
-                            CAddrDB().WriteAddress(item.second);
-                        }
-                    }
                 }
             }
         }
@@ -1526,7 +1515,7 @@ bool BindListenPort(string& strError)
         return false;
     }
 
-#ifdef BSD
+#ifdef SO_NOSIGPIPE
     // Different way of disabling SIGPIPE on BSD
     setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif
@@ -1660,7 +1649,7 @@ void StartNode(void* parg)
         printf("Error: CreateThread(ThreadIRCSeed) failed\n");
 
     // Send and receive from sockets, accept connections
-    pthread_t hThreadSocketHandler = CreateThread(ThreadSocketHandler, NULL, true);
+    CreateThread(ThreadSocketHandler, NULL);
 
     // Initiate outbound connections
     if (!CreateThread(ThreadOpenConnections, NULL))

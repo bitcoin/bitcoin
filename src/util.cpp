@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
@@ -761,8 +762,8 @@ string GetPidFile()
 
 void CreatePidFile(string pidFile, pid_t pid)
 {
-    FILE* file;
-    if (file = fopen(pidFile.c_str(), "w"))
+    FILE* file = fopen(pidFile.c_str(), "w");
+    if (file)
     {
         fprintf(file, "%d\n", pid);
         fclose(file);
@@ -791,7 +792,9 @@ void ShrinkDebugFile()
         fseek(file, -sizeof(pch), SEEK_END);
         int nBytes = fread(pch, 1, sizeof(pch), file);
         fclose(file);
-        if (file = fopen(strFile.c_str(), "w"))
+
+        file = fopen(strFile.c_str(), "w");
+        if (file)
         {
             fwrite(pch, 1, nBytes, file);
             fclose(file);
@@ -907,4 +910,140 @@ string FormatFullVersion()
 
 
 
+#ifdef DEBUG_LOCKORDER
+//
+// Early deadlock detection.
+// Problem being solved:
+//    Thread 1 locks  A, then B, then C
+//    Thread 2 locks  D, then C, then A
+//     --> may result in deadlock between the two threads, depending on when they run.
+// Solution implemented here:
+// Keep track of pairs of locks: (A before B), (A before C), etc.
+// Complain if any thread trys to lock in a different order.
+//
 
+struct CLockLocation
+{
+    CLockLocation(const char* pszName, const char* pszFile, int nLine)
+    {
+        mutexName = pszName;
+        sourceFile = pszFile;
+        sourceLine = nLine;
+    }
+
+    std::string ToString() const
+    {
+        return mutexName+"  "+sourceFile+":"+itostr(sourceLine);
+    }
+
+private:
+    std::string mutexName;
+    std::string sourceFile;
+    int sourceLine;
+};
+
+typedef std::vector< std::pair<CCriticalSection*, CLockLocation> > LockStack;
+
+static boost::interprocess::interprocess_mutex dd_mutex;
+static std::map<std::pair<CCriticalSection*, CCriticalSection*>, LockStack> lockorders;
+static boost::thread_specific_ptr<LockStack> lockstack;
+
+
+static void potential_deadlock_detected(const std::pair<CCriticalSection*, CCriticalSection*>& mismatch, const LockStack& s1, const LockStack& s2)
+{
+    printf("POTENTIAL DEADLOCK DETECTED\n");
+    printf("Previous lock order was:\n");
+    BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s2)
+    {
+        if (i.first == mismatch.first) printf(" (1)");
+        if (i.first == mismatch.second) printf(" (2)");
+        printf(" %s\n", i.second.ToString().c_str());
+    }
+    printf("Current lock order is:\n");
+    BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, s1)
+    {
+        if (i.first == mismatch.first) printf(" (1)");
+        if (i.first == mismatch.second) printf(" (2)");
+        printf(" %s\n", i.second.ToString().c_str());
+    }
+}
+
+static void push_lock(CCriticalSection* c, const CLockLocation& locklocation)
+{
+    bool fOrderOK = true;
+    if (lockstack.get() == NULL)
+        lockstack.reset(new LockStack);
+
+    if (fDebug) printf("Locking: %s\n", locklocation.ToString().c_str());
+    dd_mutex.lock();
+
+    (*lockstack).push_back(std::make_pair(c, locklocation));
+
+    BOOST_FOREACH(const PAIRTYPE(CCriticalSection*, CLockLocation)& i, (*lockstack))
+    {
+        if (i.first == c) break;
+
+        std::pair<CCriticalSection*, CCriticalSection*> p1 = std::make_pair(i.first, c);
+        if (lockorders.count(p1))
+            continue;
+        lockorders[p1] = (*lockstack);
+
+        std::pair<CCriticalSection*, CCriticalSection*> p2 = std::make_pair(c, i.first);
+        if (lockorders.count(p2))
+        {
+            potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
+            break;
+        }
+    }
+    dd_mutex.unlock();
+}
+
+static void pop_lock()
+{
+    if (fDebug) 
+    {
+        const CLockLocation& locklocation = (*lockstack).rbegin()->second;
+        printf("Unlocked: %s\n", locklocation.ToString().c_str());
+    }
+    dd_mutex.lock();
+    (*lockstack).pop_back();
+    dd_mutex.unlock();
+}
+
+void CCriticalSection::Enter(const char* pszName, const char* pszFile, int nLine)
+{
+    push_lock(this, CLockLocation(pszName, pszFile, nLine));
+    mutex.lock();
+}
+void CCriticalSection::Leave()
+{
+    mutex.unlock();
+    pop_lock();
+}
+bool CCriticalSection::TryEnter(const char* pszName, const char* pszFile, int nLine)
+{
+    push_lock(this, CLockLocation(pszName, pszFile, nLine));
+    bool result = mutex.try_lock();
+    if (!result) pop_lock();
+    return result;
+}
+
+#else
+
+void CCriticalSection::Enter(const char*, const char*, int)
+{
+    mutex.lock();
+}
+
+void CCriticalSection::Leave()
+{
+    mutex.unlock();
+}
+
+bool CCriticalSection::TryEnter(const char*, const char*, int)
+{
+    bool result = mutex.try_lock();
+    return result;
+}
+
+#endif /* DEBUG_LOCKORDER */

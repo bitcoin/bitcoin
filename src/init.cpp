@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
@@ -250,7 +251,8 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
-    fNoListen = GetBoolArg("-nolisten");
+    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
+    fNoListen = GetBoolArg("-nolisten") || fTOR;
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
     for (int i = 1; i < argc; i++)
@@ -390,8 +392,16 @@ bool AppInit2(int argc, char* argv[])
     nStart = GetTimeMillis();
     bool fFirstRun;
     pwalletMain = new CWallet("wallet.dat");
-    if (!pwalletMain->LoadWallet(fFirstRun))
-        strErrors += _("Error loading wallet.dat      \n");
+    int nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
+    if (nLoadWalletRet != DB_LOAD_OK)
+    {
+        if (nLoadWalletRet == DB_CORRUPT)
+            strErrors += _("Error loading wallet.dat: Wallet corrupted      \n");
+        else if (nLoadWalletRet == DB_TOO_NEW)
+            strErrors += _("Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n");
+        else
+            strErrors += _("Error loading wallet.dat      \n");
+    }
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     RegisterWallet(pwalletMain);
@@ -419,9 +429,7 @@ bool AppInit2(int argc, char* argv[])
         //// debug print
         printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
         printf("nBestHeight = %d\n",            nBestHeight);
-        printf("mapKeys.size() = %d\n",         pwalletMain->mapKeys.size());
         printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
-        printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
         printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
         printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
 
