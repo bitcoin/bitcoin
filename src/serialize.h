@@ -189,8 +189,8 @@ template<typename Stream> inline void Unserialize(Stream& s, bool& a, int, int=0
 inline unsigned int GetSizeOfCompactSize(uint64 nSize)
 {
     if (nSize < 253)             return sizeof(unsigned char);
-    else if (nSize <= USHRT_MAX) return sizeof(unsigned char) + sizeof(unsigned short);
-    else if (nSize <= UINT_MAX)  return sizeof(unsigned char) + sizeof(unsigned int);
+    else if (nSize <= std::numeric_limits<unsigned short>::max()) return sizeof(unsigned char) + sizeof(unsigned short);
+    else if (nSize <= std::numeric_limits<unsigned int>::max())  return sizeof(unsigned char) + sizeof(unsigned int);
     else                         return sizeof(unsigned char) + sizeof(uint64);
 }
 
@@ -202,14 +202,14 @@ void WriteCompactSize(Stream& os, uint64 nSize)
         unsigned char chSize = nSize;
         WRITEDATA(os, chSize);
     }
-    else if (nSize <= USHRT_MAX)
+    else if (nSize <= std::numeric_limits<unsigned short>::max())
     {
         unsigned char chSize = 253;
         unsigned short xSize = nSize;
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
-    else if (nSize <= UINT_MAX)
+    else if (nSize <= std::numeric_limits<unsigned int>::max())
     {
         unsigned char chSize = 254;
         unsigned int xSize = nSize;
