@@ -62,6 +62,8 @@ public:
     // keystore implementation
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& key);
+    // Remove a key from the store
+    bool RemoveKey(const CBitcoinAddress &address);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
 
@@ -78,6 +80,7 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false, bool fFindBlock = false);
     bool EraseFromWallet(uint256 hash);
+    int PurgeWallet();
     void WalletUpdateSpent(const CTransaction& prevout);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     int ScanForWalletTransaction(const uint256& hashTx);
@@ -100,7 +103,7 @@ public:
     void ReturnKey(int64 nIndex);
     bool GetKeyFromPool(std::vector<unsigned char> &key, bool fAllowReuse=true);
     int64 GetOldestKeyPoolTime();
-    void GetAllReserveAddresses(std::set<CBitcoinAddress>& setAddress);
+    void GetAllReserveAddresses(std::map<CBitcoinAddress,int64>& mapAddress);
 
     bool IsMine(const CTxIn& txin) const;
     int64 GetDebit(const CTxIn& txin) const;
