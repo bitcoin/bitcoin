@@ -304,7 +304,8 @@ Value getinfo(const Array& params, bool fHelp)
             "Returns an object containing various state info.");
 
     Object obj;
-    obj.push_back(Pair("version",       (int)VERSION));
+    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));

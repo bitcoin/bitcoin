@@ -1,6 +1,6 @@
 * update (commit) version in sources
   bitcoin-qt.pro
-  src/serialize.h
+  src/main.h      (CLIENT_VERSION : PROTOCOL_VERSION in serialize.h is updated only on protocol changes)
   share/setup.nsi
   doc/README*
 
