@@ -875,7 +875,7 @@ struct tallyitem
     tallyitem()
     {
         nAmount = 0;
-        nConf = INT_MAX;
+        nConf = std::numeric_limits<int>::max();
     }
 };
 
@@ -927,7 +927,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             continue;
 
         int64 nAmount = 0;
-        int nConf = INT_MAX;
+        int nConf = std::numeric_limits<int>::max();
         if (it != mapTally.end())
         {
             nAmount = (*it).second.nAmount;
@@ -947,7 +947,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             obj.push_back(Pair("account",       strAccount));
             obj.push_back(Pair("label",         strAccount)); // deprecated
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
+            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
             ret.push_back(obj);
         }
     }
@@ -962,7 +962,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             obj.push_back(Pair("account",       (*it).first));
             obj.push_back(Pair("label",         (*it).first)); // deprecated
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == INT_MAX ? 0 : nConf)));
+            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
             ret.push_back(obj);
         }
     }
