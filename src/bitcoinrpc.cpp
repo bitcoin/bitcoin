@@ -91,7 +91,13 @@ Value ValueFromAmount(int64 amount)
 
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
-    entry.push_back(Pair("confirmations", wtx.GetDepthInMainChain()));
+    int confirms = wtx.GetDepthInMainChain();
+    entry.push_back(Pair("confirmations", confirms));
+    if (confirms)
+    {
+        entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
+        entry.push_back(Pair("blockindex", wtx.nIndex));
+    }
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
     entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
     BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
