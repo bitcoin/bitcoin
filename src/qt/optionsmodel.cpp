@@ -101,7 +101,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case ProxyPort:
             {
                 int nPort = atoi(value.toString().toAscii().data());
-                if (nPort > 0 && nPort < USHRT_MAX)
+                if (nPort > 0 && nPort < std::numeric_limits<unsigned short>::max())
                 {
                     addrProxy.port = htons(nPort);
                     walletdb.WriteSetting("addrProxy", addrProxy);

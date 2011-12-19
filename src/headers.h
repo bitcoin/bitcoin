@@ -21,9 +21,6 @@
 
 // Include boost/foreach here as it defines __STDC_LIMIT_MACROS on some systems.
 #include <boost/foreach.hpp>
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS // to enable UINT64_MAX from stdint.h
-#endif
 
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>  // to get BSD define
@@ -44,7 +41,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <limits.h>
 #include <float.h>
 #include <assert.h>
 #include <iostream>
