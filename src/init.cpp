@@ -271,6 +271,13 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
+    {
+        std::string strVersion = FormatVersion(CODEBASE_VERSION);
+        vviClient.push_back(CVersionInfo(CODEBASE_NAME, strVersion));
+        if (!CLIENT_NAME.empty())
+            vviClient.push_back(CVersionInfo(CLIENT_NAME, strVersion));
+    }
+
 #ifndef QT_GUI
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))

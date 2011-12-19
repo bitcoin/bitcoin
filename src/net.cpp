@@ -529,7 +529,7 @@ void CNode::PushVersion()
     CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight);
+                nLocalHostNonce, FormatSubVersion(vviClient), nBestHeight);
 }
 
 

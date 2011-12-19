@@ -18,10 +18,19 @@ using namespace boost;
 // Global state
 //
 
-// Name of client reported in the 'version' message. Report the same name
-// for both bitcoind and bitcoin-qt, to make it harder for attackers to
-// target servers or GUI users specifically.
-const std::string CLIENT_NAME("bitcoin-qt");
+const std::string CODEBASE_NAME("Satoshi");
+
+const std::string CLIENT_NAME(
+#ifndef PUBLIC_CLIENT_NAME
+#elif defined(QT_GUI)
+"Bitcoin-Qt"
+#elif !defined(GUI)
+"bitcoind"
+#endif
+""
+);
+
+std::vector<CVersionInfo> vviClient;
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
