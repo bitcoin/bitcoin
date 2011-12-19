@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include "bignum.h"
+#include "key.h"
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -257,15 +258,14 @@ public:
 class CBitcoinAddress : public CBase58Data
 {
 public:
-    bool SetHash160(const uint160& hash160)
+    void SetHash160(const uint160& hash160)
     {
         SetData(fTestNet ? 111 : 0, &hash160, 20);
-        return true;
     }
 
-    bool SetPubKey(const std::vector<unsigned char>& vchPubKey)
+    void SetPubKey(const std::vector<unsigned char>& vchPubKey)
     {
-        return SetHash160(Hash160(vchPubKey));
+        SetHash160(Hash160(vchPubKey));
     }
 
     bool IsValid() const
@@ -317,6 +317,51 @@ public:
         uint160 hash160;
         memcpy(&hash160, &vchData[0], 20);
         return hash160;
+    }
+};
+
+class CBitcoinSecret : public CBase58Data
+{
+public:
+    void SetSecret(const CSecret& vchSecret)
+    {
+        SetData(fTestNet ? 239 : 128, &vchSecret[0], vchSecret.size());
+    }
+
+    CSecret GetSecret()
+    {
+        CSecret vchSecret;
+        vchSecret.resize(vchData.size());
+        memcpy(&vchSecret[0], &vchData[0], vchData.size());
+        return vchSecret;
+    }
+
+    bool IsValid() const
+    {
+        int nExpectedSize = 32;
+        bool fExpectTestNet = false;
+        switch(nVersion)
+        {
+            case 128:
+                break;
+
+            case 239:
+                fExpectTestNet = true;
+                break;
+
+            default:
+                return false;
+        }
+        return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
+    }
+
+    CBitcoinSecret(const CSecret& vchSecret)
+    {
+        SetSecret(vchSecret);
+    }
+
+    CBitcoinSecret()
+    {
     }
 };
 
