@@ -73,11 +73,7 @@ T* alignup(T* p)
 #ifdef WIN32
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
-#ifndef UINT64_MAX
-#define UINT64_MAX          _UI64_MAX
-#define INT64_MAX           _I64_MAX
-#define INT64_MIN           _I64_MIN
-#endif
+
 #ifndef S_IRUSR
 #define S_IRUSR             0400
 #define S_IWUSR             0200
