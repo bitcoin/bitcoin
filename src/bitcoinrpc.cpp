@@ -9,9 +9,11 @@
 #include "init.h"
 #undef printf
 #include <boost/asio.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #ifdef USE_SSL
 #include <boost/asio/ssl.hpp> 
 #include <boost/filesystem.hpp>
@@ -41,6 +43,8 @@ static std::string strRPCUserColonPass;
 static int64 nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
+extern Value dumpprivkey(const Array& params, bool fHelp);
+extern Value importprivkey(const Array& params, bool fHelp);
 
 Object JSONRPCError(int code, const string& message)
 {
@@ -596,7 +600,7 @@ Value verifymessage(const Array& params, bool fHelp)
     if (!key.SetCompactSignature(Hash(ss.begin(), ss.end()), vchSig))
         return false;
 
-    return (key.GetAddress() == addr);
+    return (CBitcoinAddress(key.GetPubKey()) == addr);
 }
 
 
@@ -1599,7 +1603,6 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
-
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -1840,13 +1843,15 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("sendmany",               &sendmany),
     make_pair("gettransaction",         &gettransaction),
     make_pair("listtransactions",       &listtransactions),
-    make_pair("signmessage",           &signmessage),
-    make_pair("verifymessage",         &verifymessage),
+    make_pair("signmessage",            &signmessage),
+    make_pair("verifymessage",          &verifymessage),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
     make_pair("getmemorypool",          &getmemorypool),
-    make_pair("listsinceblock",        &listsinceblock),
+    make_pair("listsinceblock",         &listsinceblock),
+    make_pair("dumpprivkey",            &dumpprivkey),
+    make_pair("importprivkey",          &importprivkey)
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 

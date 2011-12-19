@@ -810,7 +810,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 ssKey >> hash;
                 CWalletTx& wtx = pwallet->mapWallet[hash];
                 ssValue >> wtx;
-                wtx.pwallet = pwallet;
+                wtx.BindWallet(pwallet);
 
                 if (wtx.GetHash() != hash)
                     printf("Error in wallet.dat, hash mismatch\n");
