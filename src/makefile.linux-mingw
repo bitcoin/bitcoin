@@ -64,6 +64,7 @@ LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l w
 OBJS= \
     obj/checkpoints.o \
     obj/crypter.o \
+    obj/key.o \
     obj/db.o \
     obj/init.o \
     obj/irc.o \
@@ -72,6 +73,7 @@ OBJS= \
     obj/net.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
+    obj/rpcdump.o \
     obj/script.o \
     obj/util.o \
     obj/wallet.o
