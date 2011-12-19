@@ -364,19 +364,19 @@ public:
     }
 
 
-    unsigned int GetSerializeSize(int nType=0, int nVersion=VERSION) const
+    unsigned int GetSerializeSize(int nType=0, int nVersion=PROTOCOL_VERSION) const
     {
         return sizeof(pn);
     }
 
     template<typename Stream>
-    void Serialize(Stream& s, int nType=0, int nVersion=VERSION) const
+    void Serialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION) const
     {
         s.write((char*)pn, sizeof(pn));
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s, int nType=0, int nVersion=VERSION)
+    void Unserialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION)
     {
         s.read((char*)pn, sizeof(pn));
     }

@@ -17,6 +17,11 @@ using namespace boost;
 // Global state
 //
 
+// Name of client reported in the 'version' message. Report the same name
+// for both bitcoind and bitcoin-qt, to make it harder for attackers to
+// target servers or GUI users specifically.
+const std::string CLIENT_NAME("bitcoin-qt");
+
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
 
@@ -1847,9 +1852,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Change version
         if (pfrom->nVersion >= 209)
             pfrom->PushMessage("verack");
-        pfrom->vSend.SetVersion(min(pfrom->nVersion, VERSION));
+        pfrom->vSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
         if (pfrom->nVersion < 209)
-            pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
+            pfrom->vRecv.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
 
         if (!pfrom->fInbound)
         {
@@ -1902,7 +1907,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "verack")
     {
-        pfrom->vRecv.SetVersion(min(pfrom->nVersion, VERSION));
+        pfrom->vRecv.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
     }
 
 
