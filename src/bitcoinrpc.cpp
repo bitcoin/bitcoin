@@ -1603,6 +1603,9 @@ Value validateaddress(const Array& params, bool fHelp)
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
         ret.push_back(Pair("ismine", (pwalletMain->HaveKey(address) > 0)));
+        std::vector<unsigned char> pubkey;
+        if (pwalletMain->GetPubKey(address, pubkey))
+            ret.push_back(Pair("pubkey", HexStr(pubkey)));
         if (pwalletMain->mapAddressBook.count(address))
             ret.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
     }
