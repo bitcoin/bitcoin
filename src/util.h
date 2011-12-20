@@ -5,6 +5,8 @@
 #ifndef BITCOIN_UTIL_H
 #define BITCOIN_UTIL_H
 
+#include <stdint.h>
+
 #include "uint256.h"
 
 #ifndef WIN32
@@ -24,9 +26,6 @@
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
 
-
-typedef long long  int64;
-typedef unsigned long long  uint64;
 
 #define loop                for (;;)
 #define BEGIN(a)            ((char*)&(a))
@@ -98,7 +97,7 @@ typedef u_int SOCKET;
 #define _strlwr(psz)        to_lower(psz)
 #define MAX_PATH            1024
 #define Beep(n1,n2)         (0)
-inline void Sleep(int64 n)
+inline void Sleep(int64_t n)
 {
     boost::thread::sleep(boost::get_system_time() + boost::posix_time::milliseconds(n));
 }
@@ -158,9 +157,9 @@ void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
 void ParseString(const std::string& str, char c, std::vector<std::string>& v);
-std::string FormatMoney(int64 n, bool fPlus=false);
-bool ParseMoney(const std::string& str, int64& nRet);
-bool ParseMoney(const char* pszIn, int64& nRet);
+std::string FormatMoney(int64_t n, bool fPlus=false);
+bool ParseMoney(const std::string& str, int64_t& nRet);
+bool ParseMoney(const char* pszIn, int64_t& nRet);
 std::vector<unsigned char> ParseHex(const char* psz);
 std::vector<unsigned char> ParseHex(const std::string& str);
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
@@ -183,11 +182,11 @@ std::string GetDefaultDataDir();
 std::string GetDataDir();
 void ShrinkDebugFile();
 int GetRandInt(int nMax);
-uint64 GetRand(uint64 nMax);
-int64 GetTime();
-void SetMockTime(int64 nMockTimeIn);
-int64 GetAdjustedTime();
-void AddTimeData(unsigned int ip, int64 nTime);
+uint64_t GetRand(uint64_t nMax);
+int64_t GetTime();
+void SetMockTime(int64_t nMockTimeIn);
+int64_t GetAdjustedTime();
+void AddTimeData(unsigned int ip, int64_t nTime);
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 
@@ -284,7 +283,7 @@ typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> >
 
 
 
-inline std::string i64tostr(int64 n)
+inline std::string i64tostr(int64_t n)
 {
     return strprintf("%"PRI64d, n);
 }
@@ -294,7 +293,7 @@ inline std::string itostr(int n)
     return strprintf("%d", n);
 }
 
-inline int64 atoi64(const char* psz)
+inline int64_t atoi64(const char* psz)
 {
 #ifdef _MSC_VER
     return _atoi64(psz);
@@ -303,7 +302,7 @@ inline int64 atoi64(const char* psz)
 #endif
 }
 
-inline int64 atoi64(const std::string& str)
+inline int64_t atoi64(const std::string& str)
 {
 #ifdef _MSC_VER
     return _atoi64(str.c_str());
@@ -322,12 +321,12 @@ inline int roundint(double d)
     return (int)(d > 0 ? d + 0.5 : d - 0.5);
 }
 
-inline int64 roundint64(double d)
+inline int64_t roundint64(double d)
 {
-    return (int64)(d > 0 ? d + 0.5 : d - 0.5);
+    return (int64_t)(d > 0 ? d + 0.5 : d - 0.5);
 }
 
-inline int64 abs64(int64 n)
+inline int64_t abs64(int64_t n)
 {
     return (n >= 0 ? n : -n);
 }
@@ -381,9 +380,9 @@ inline void PrintHex(const std::vector<unsigned char>& vch, const char* pszForma
     printf(pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
-inline int64 GetPerformanceCounter()
+inline int64_t GetPerformanceCounter()
 {
-    int64 nCounter = 0;
+    int64_t nCounter = 0;
 #ifdef WIN32
     QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
 #else
@@ -394,13 +393,13 @@ inline int64 GetPerformanceCounter()
     return nCounter;
 }
 
-inline int64 GetTimeMillis()
+inline int64_t GetTimeMillis()
 {
     return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
             boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
 }
 
-inline std::string DateTimeStrFormat(const char* pszFormat, int64 nTime)
+inline std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
 {
     time_t n = nTime;
     struct tm* ptmTime = gmtime(&n);
@@ -432,7 +431,7 @@ inline std::string GetArg(const std::string& strArg, const std::string& strDefau
     return strDefault;
 }
 
-inline int64 GetArg(const std::string& strArg, int64 nDefault)
+inline int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
     if (mapArgs.count(strArg))
         return atoi64(mapArgs[strArg]);

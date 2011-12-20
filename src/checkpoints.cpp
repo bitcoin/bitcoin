@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#include <stdint.h>
+
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/foreach.hpp>
 
@@ -52,7 +54,7 @@ namespace Checkpoints
     {
         if (fTestNet) return NULL;
 
-        int64 nResult;
+        int64_t nResult;
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, mapCheckpoints)
         {
             const uint256& hash = i.second;

@@ -1,6 +1,7 @@
 #ifndef SENDCOINSDIALOG_H
 #define SENDCOINSDIALOG_H
 
+#include <QtGlobal>
 #include <QDialog>
 
 namespace Ui {

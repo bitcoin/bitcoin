@@ -1,3 +1,5 @@
+#include <QtGlobal>
+
 #include "optionsmodel.h"
 #include "bitcoinunits.h"
 
