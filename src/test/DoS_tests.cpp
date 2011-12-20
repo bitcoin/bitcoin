@@ -5,9 +5,10 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/foreach.hpp>
 
-#include "../main.h"
-#include "../net.h"
-#include "../util.h"
+#include "main.h"
+#include "wallet.h"
+#include "net.h"
+#include "util.h"
 
 using namespace std;
 
