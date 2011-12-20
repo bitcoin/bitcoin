@@ -1,3 +1,5 @@
+#include <QtGlobal>
+
 #include "transactionrecord.h"
 
 #include "headers.h"
@@ -33,10 +35,10 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
 QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx)
 {
     QList<TransactionRecord> parts;
-    int64 nTime = wtx.nTimeDisplayed = wtx.GetTxTime();
-    int64 nCredit = wtx.GetCredit(true);
-    int64 nDebit = wtx.GetDebit();
-    int64 nNet = nCredit - nDebit;
+    qint64 nTime = wtx.nTimeDisplayed = wtx.GetTxTime();
+    qint64 nCredit = wtx.GetCredit(true);
+    qint64 nDebit = wtx.GetDebit();
+    qint64 nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
@@ -58,7 +60,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
                 if (nCredit == 0)
                 {
-                    int64 nUnmatured = 0;
+                    qint64 nUnmatured = 0;
                     BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                         nUnmatured += wallet->GetCredit(txout);
                     sub.credit = nUnmatured;
@@ -103,7 +105,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if (fAllFromMe && fAllToMe)
             {
                 // Payment to self
-                int64 nChange = wtx.GetChange();
+                qint64 nChange = wtx.GetChange();
 
                 parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
                                 -(nDebit - nChange), nCredit - nChange));
@@ -113,7 +115,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 //
                 // Debit
                 //
-                int64 nTxFee = nDebit - wtx.GetValueOut();
+                qint64 nTxFee = nDebit - wtx.GetValueOut();
 
                 for (int nOut = 0; nOut < wtx.vout.size(); nOut++)
                 {
@@ -144,7 +146,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                         }
                     }
 
-                    int64 nValue = txout.nValue;
+                    qint64 nValue = txout.nValue;
                     /* Add fee to first output */
                     if (nTxFee > 0)
                     {
@@ -227,7 +229,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     // For generated transactions, determine maturity
     if(type == TransactionRecord::Generated)
     {
-        int64 nCredit = wtx.GetCredit(true);
+        qint64 nCredit = wtx.GetCredit(true);
         if (nCredit == 0)
         {
             status.maturity = TransactionStatus::Immature;

@@ -11,6 +11,7 @@
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
 
+#include <QtGlobal>
 #include <QScrollBar>
 #include <QComboBox>
 #include <QDoubleValidator>

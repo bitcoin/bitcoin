@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include <boost/assert.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>

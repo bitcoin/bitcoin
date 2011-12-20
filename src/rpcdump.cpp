@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#include <stdint.h>
+
 #include "headers.h"
 #include "init.h" // for pwalletMain
 #include "bitcoinrpc.h"
@@ -31,7 +33,7 @@ class CTxDump
 {
 public:
     CBlockIndex *pindex;
-    int64 nValue;
+    int64_t nValue;
     bool fSpent;
     CWalletTx* ptx;
     int nOut;

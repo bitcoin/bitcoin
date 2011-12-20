@@ -1,6 +1,7 @@
 #ifndef BITCOINGUI_H
 #define BITCOINGUI_H
 
+#include <QtGlobal>
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 
