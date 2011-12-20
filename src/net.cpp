@@ -249,8 +249,8 @@ bool Lookup(const char *pszName, vector<CAddress>& vaddr, int nServices, int nMa
             else
                 pszColon[0] = 0;
             port = portParsed;
-            if (port < 0 || port > USHRT_MAX)
-                port = USHRT_MAX;
+            if (port < 0 || port > std::numeric_limits<unsigned short>::max())
+                port = std::numeric_limits<unsigned short>::max();
         }
     }
 
@@ -1488,7 +1488,7 @@ void ThreadOpenConnections2(void* parg)
         // Choose an address to connect to based on most recently seen
         //
         CAddress addrConnect;
-        int64 nBest = INT64_MIN;
+        int64 nBest = std::numeric_limits<int64>::min();
 
         // Only connect to one address per a.b.?.? range.
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.

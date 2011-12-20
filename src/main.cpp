@@ -366,7 +366,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         return DoS(100, error("AcceptToMemoryPool() : coinbase as individual tx"));
 
     // To help v0.1.5 clients who would see it as a negative number
-    if ((int64)nLockTime > INT_MAX)
+    if ((int64)nLockTime > std::numeric_limits<int>::max())
         return error("AcceptToMemoryPool() : not accepting nLockTime beyond 2038 yet");
 
     // Safety limits
@@ -1875,7 +1875,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         // Ask the first connected node for block updates
-        static int nAskedForBlocks;
+        static int nAskedForBlocks = 0;
         if (!pfrom->fClient &&
             (pfrom->nVersion < 32000 || pfrom->nVersion >= 32400) &&
              (nAskedForBlocks < 1 || vNodes.size() <= 1))

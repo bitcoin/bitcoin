@@ -25,19 +25,8 @@
 #include <openssl/ripemd.h>
 
 
-#if defined(_MSC_VER) || defined(__BORLANDC__)
-typedef __int64  int64;
-typedef unsigned __int64  uint64;
-#else
 typedef long long  int64;
 typedef unsigned long long  uint64;
-#endif
-#if defined(_MSC_VER) && _MSC_VER < 1300
-#define for  if (false) ; else for
-#endif
-#ifndef _MSC_VER
-#define __forceinline  inline
-#endif
 
 #define loop                for (;;)
 #define BEGIN(a)            ((char*)&(a))
@@ -53,7 +42,7 @@ typedef unsigned long long  uint64;
 #define snprintf my_snprintf
 
 #ifndef PRI64d
-#if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MSVCRT__)
+#if defined(_MSC_VER) || defined(__MSVCRT__)
 #define PRI64d  "I64d"
 #define PRI64u  "I64u"
 #define PRI64x  "I64x"
@@ -84,11 +73,7 @@ T* alignup(T* p)
 #ifdef WIN32
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
-#ifndef UINT64_MAX
-#define UINT64_MAX          _UI64_MAX
-#define INT64_MAX           _I64_MAX
-#define INT64_MIN           _I64_MIN
-#endif
+
 #ifndef S_IRUSR
 #define S_IRUSR             0400
 #define S_IWUSR             0200
@@ -473,15 +458,6 @@ inline bool GetBoolArg(const std::string& strArg)
 
 
 
-
-inline void heapchk()
-{
-#ifdef WIN32
-    /// for debugging
-    //if (_heapchk() != _HEAPOK)
-    //    DebugBreak();
-#endif
-}
 
 // Randomize the stack to help protect against buffer overrun exploits
 #define IMPLEMENT_RANDOMIZE_STACK(ThreadFn)     \

@@ -178,13 +178,14 @@ public:
 
     bool Sign(uint256 hash, std::vector<unsigned char>& vchSig)
     {
-        vchSig.clear();
-        unsigned char pchSig[10000];
-        unsigned int nSize = 0;
-        if (!ECDSA_sign(0, (unsigned char*)&hash, sizeof(hash), pchSig, &nSize, pkey))
+        unsigned int nSize = ECDSA_size(pkey);
+        vchSig.resize(nSize); // Make sure it is big enough
+        if (!ECDSA_sign(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], &nSize, pkey))
+        {
+            vchSig.clear();
             return false;
-        vchSig.resize(nSize);
-        memcpy(&vchSig[0], pchSig, nSize);
+        }
+        vchSig.resize(nSize); // Shrink to fit actual size
         return true;
     }
 
