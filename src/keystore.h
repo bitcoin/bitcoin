@@ -6,6 +6,7 @@
 #define BITCOIN_KEYSTORE_H
 
 #include "crypter.h"
+#include "script.h"
 
 // A virtual base class for key stores
 class CKeyStore
@@ -31,6 +32,11 @@ public:
     virtual void GetKeys(std::set<CBitcoinAddress> &setAddress) const =0;
     virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
 
+    // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
+    virtual bool AddCScript(const uint160 &hash, const CScript& redeemScript) =0;
+    virtual bool HaveCScript(const uint160 &hash) const =0;
+    virtual bool GetCScript(const uint160 &hash, CScript& redeemScriptOut) const =0;
+
     // Generate a new key, and add it to the store
     virtual std::vector<unsigned char> GenerateNewKey();
     virtual bool GetSecret(const CBitcoinAddress &address, CSecret& vchSecret) const
@@ -44,12 +50,14 @@ public:
 };
 
 typedef std::map<CBitcoinAddress, CSecret> KeyMap;
+typedef std::map<uint160, CScript > ScriptMap;
 
 // Basic key store, that keeps keys in an address->secret map
 class CBasicKeyStore : public CKeyStore
 {
 protected:
     KeyMap mapKeys;
+    ScriptMap mapScripts;
 
 public:
     bool AddKey(const CKey& key);
@@ -86,6 +94,9 @@ public:
         }
         return false;
     }
+    virtual bool AddCScript(const uint160 &hash, const CScript& redeemScript);
+    virtual bool HaveCScript(const uint160 &hash) const;
+    virtual bool GetCScript(const uint160 &hash, CScript& redeemScriptOut) const;
 };
 
 typedef std::map<CBitcoinAddress, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;

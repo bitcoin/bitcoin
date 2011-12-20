@@ -2,7 +2,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/foreach.hpp>
 
-#include "../util.h"
+#include "main.h"
+#include "wallet.h"
+#include "util.h"
 
 using namespace std;
 

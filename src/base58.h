@@ -253,19 +253,37 @@ public:
 };
 
 // base58-encoded bitcoin addresses
-// Addresses have version 0 or 111 (testnet)
+// Public-key-hash-addresses have version 0 (or 192 testnet)
 // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key
+// Script-hash-addresses (OP_EVAL) have version 5 (or 196 testnet)
+// The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script
 class CBitcoinAddress : public CBase58Data
 {
 public:
-    void SetHash160(const uint160& hash160)
+    enum
     {
-        SetData(fTestNet ? 111 : 0, &hash160, 20);
+        PUBKEY_ADDRESS = 0,
+        SCRIPT_ADDRESS = 5,
+        PUBKEY_ADDRESS_TEST = 192,
+        PUBKEY_ADDRESS_TEST_LEGACY = 111,  // Deprecated: old testnet address
+        SCRIPT_ADDRESS_TEST = 196,
+    };
+
+    bool SetHash160(const uint160& hash160)
+    {
+        SetData(fTestNet ? PUBKEY_ADDRESS_TEST : PUBKEY_ADDRESS, &hash160, 20);
+        return true;
     }
 
     void SetPubKey(const std::vector<unsigned char>& vchPubKey)
     {
         SetHash160(Hash160(vchPubKey));
+    }
+
+    bool SetScriptHash160(const uint160& hash160)
+    {
+        SetData(fTestNet ? SCRIPT_ADDRESS_TEST : SCRIPT_ADDRESS, &hash160, 20);
+        return true;
     }
 
     bool IsValid() const
@@ -274,10 +292,22 @@ public:
         bool fExpectTestNet = false;
         switch(nVersion)
         {
-            case 0:
+            case PUBKEY_ADDRESS:
+                nExpectedSize = 20; // Hash of public key
+                fExpectTestNet = false;
+                break;
+            case SCRIPT_ADDRESS:
+                nExpectedSize = 20; // OP_EVAL, hash of CScript
+                fExpectTestNet = false;
                 break;
 
-            case 111:
+            case PUBKEY_ADDRESS_TEST_LEGACY:
+            case PUBKEY_ADDRESS_TEST:
+                nExpectedSize = 20;
+                fExpectTestNet = true;
+                break;
+            case SCRIPT_ADDRESS_TEST:
+                nExpectedSize = 20;
                 fExpectTestNet = true;
                 break;
 
@@ -285,6 +315,14 @@ public:
                 return false;
         }
         return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
+    }
+    bool IsScript() const
+    {
+        if (!IsValid())
+            return false;
+        if (fTestNet)
+            return nVersion == SCRIPT_ADDRESS_TEST;
+        return nVersion == SCRIPT_ADDRESS;
     }
 
     CBitcoinAddress()

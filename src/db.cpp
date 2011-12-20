@@ -934,6 +934,15 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 if (nMinVersion > CLIENT_VERSION)
                     return DB_TOO_NEW;
             }
+            else if (strType == "cscript")
+            {
+                uint160 hash;
+                ssKey >> hash;
+                CScript script;
+                ssValue >> script;
+                if (!pwallet->LoadCScript(hash, script))
+                    return DB_CORRUPT;
+            }
         }
         pcursor->close();
     }
