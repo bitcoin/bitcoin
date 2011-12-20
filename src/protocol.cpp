@@ -223,7 +223,7 @@ bool CAddress::IsValid() const
     if (memcmp(pchReserved, pchIPv4+3, sizeof(pchIPv4)-3) == 0)
         return false;
 
-    return (ip != 0 && ip != INADDR_NONE && port != htons(USHRT_MAX));
+    return (ip != 0 && ip != INADDR_NONE && port != htons(std::numeric_limits<unsigned short>::max()));
 }
 
 unsigned char CAddress::GetByte(int n) const
