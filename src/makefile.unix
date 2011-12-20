@@ -6,7 +6,7 @@ USE_UPNP:=0
 
 DEFS=-DNOPCH
 
-DEFS += $(addprefix -I,$(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
+DEFS += $(addprefix -I,$(CURDIR) $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
 LIBS += $(addprefix -l,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
 
 LMODE = dynamic
@@ -141,6 +141,8 @@ obj/nogui/%.o: %.cpp
 bitcoind: $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(xCXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
+TESTOBJS := $(patsubst test/%.cpp,obj/test/%.o,$(wildcard test/*.cpp))
+
 obj/test/%.o: test/%.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
@@ -148,7 +150,7 @@ obj/test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_bitcoin: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
+test_bitcoin: $(TESTOBJS) $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
 	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-Bstatic -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
 
 clean:
