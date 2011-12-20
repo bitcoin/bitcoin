@@ -11,4 +11,7 @@ void Shutdown(void* parg);
 bool AppInit(int argc, char* argv[]);
 bool AppInit2(int argc, char* argv[]);
 
+bool GetStartOnSystemStartup();
+bool SetStartOnSystemStartup(bool fAutoStart);
+
 #endif
