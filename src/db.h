@@ -28,11 +28,9 @@ class CBlockLocator;
 extern unsigned int nWalletDBUpdated;
 extern DbEnv dbenv;
 
-
 extern void DBFlush(bool fShutdown);
 void ThreadFlushWalletDB(void* parg);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
-
 
 
 
@@ -257,6 +255,8 @@ public:
     {
         return Write(std::string("version"), nVersion);
     }
+
+    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
 };
 
 
@@ -349,6 +349,7 @@ enum DBErrors
     DB_CORRUPT,
     DB_TOO_NEW,
     DB_LOAD_FAIL,
+    DB_NEED_REWRITE
 };
 
 class CWalletDB : public CDB

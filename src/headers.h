@@ -18,22 +18,20 @@
 #endif
 #define _WIN32_IE 0x0400
 #define WIN32_LEAN_AND_MEAN 1
+
+// Include boost/foreach here as it defines __STDC_LIMIT_MACROS on some systems.
+#include <boost/foreach.hpp>
+#ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS // to enable UINT64_MAX from stdint.h
+#endif
+
 #if (defined(__unix__) || defined(unix)) && !defined(USG)
 #include <sys/param.h>  // to get BSD define
 #endif
-#ifdef __WXMAC_OSX__
+#ifdef MAC_OSX
 #ifndef BSD
 #define BSD 1
 #endif
-#endif
-#ifdef GUI
-#include <wx/wx.h>
-#include <wx/stdpaths.h>
-#include <wx/snglinst.h>
-#include <wx/utils.h>
-#include <wx/clipbrd.h>
-#include <wx/taskbar.h>
 #endif
 #include <openssl/buffer.h>
 #include <openssl/ecdsa.h>
@@ -57,9 +55,7 @@
 #include <deque>
 #include <map>
 
-#include <boost/foreach.hpp>
-
-#ifdef __WXMSW__
+#ifdef WIN32
 #include <windows.h>
 #include <winsock2.h>
 #include <mswsock.h>
@@ -95,24 +91,8 @@
 #include "bignum.h"
 #include "base58.h"
 #include "main.h"
-#ifdef GUI
-#include "uibase.h"
-#include "ui.h"
+#ifdef QT_GUI
+#include "qtui.h"
 #else
 #include "noui.h"
-#endif
-
-#ifdef GUI
-#include "xpm/addressbook16.xpm"
-#include "xpm/addressbook20.xpm"
-#include "xpm/bitcoin16.xpm"
-#include "xpm/bitcoin20.xpm"
-#include "xpm/bitcoin32.xpm"
-#include "xpm/bitcoin48.xpm"
-#include "xpm/bitcoin80.xpm"
-#include "xpm/check.xpm"
-#include "xpm/send16.xpm"
-#include "xpm/send16noshadow.xpm"
-#include "xpm/send20.xpm"
-#include "xpm/about.xpm"
 #endif

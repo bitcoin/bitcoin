@@ -6,7 +6,7 @@
 #include "protocol.h"
 #include "util.h"
 
-#ifndef __WXMSW__
+#ifndef WIN32
 # include <arpa/inet.h>
 #endif
 

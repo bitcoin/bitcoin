@@ -65,7 +65,7 @@ public:
             ppmutexOpenSSL[i] = new boost::interprocess::interprocess_mutex();
         CRYPTO_set_locking_callback(locking_callback);
 
-#ifdef __WXMSW__
+#ifdef WIN32
         // Seed random number generator with screen scrape and other hardware sources
         RAND_screen();
 #endif
@@ -109,7 +109,7 @@ void RandAddSeedPerfmon()
         return;
     nLastPerfmon = GetTime();
 
-#ifdef __WXMSW__
+#ifdef WIN32
     // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
     // Seed with the entire set of perfmon data
     unsigned char pdata[250000];
@@ -199,7 +199,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         }
     }
 
-#ifdef __WXMSW__
+#ifdef WIN32
     if (fPrintToDebugger)
     {
         static CCriticalSection cs_OutputDebugStringF;
@@ -265,8 +265,7 @@ int my_snprintf(char* buffer, size_t limit, const char* format, ...)
     return ret;
 }
 
-
-string strprintf(const char* format, ...)
+string strprintf(const std::string &format, ...)
 {
     char buffer[50000];
     char* p = buffer;
@@ -276,7 +275,7 @@ string strprintf(const char* format, ...)
     {
         va_list arg_ptr;
         va_start(arg_ptr, format);
-        ret = _vsnprintf(p, limit, format, arg_ptr);
+        ret = _vsnprintf(p, limit, format.c_str(), arg_ptr);
         va_end(arg_ptr);
         if (ret >= 0 && ret < limit)
             break;
@@ -293,14 +292,13 @@ string strprintf(const char* format, ...)
     return str;
 }
 
-
-bool error(const char* format, ...)
+bool error(const std::string &format, ...)
 {
     char buffer[50000];
     int limit = sizeof(buffer);
     va_list arg_ptr;
     va_start(arg_ptr, format);
-    int ret = _vsnprintf(buffer, limit, format, arg_ptr);
+    int ret = _vsnprintf(buffer, limit, format.c_str(), arg_ptr);
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
     {
@@ -390,7 +388,7 @@ bool ParseMoney(const char* pszIn, int64& nRet)
     for (; *p; p++)
         if (!isspace(*p))
             return false;
-    if (strWhole.size() > 14)
+    if (strWhole.size() > 10) // guard against 63 bit overflow
         return false;
     if (nUnits < 0 || nUnits > COIN)
         return false;
@@ -446,7 +444,6 @@ vector<unsigned char> ParseHex(const string& str)
     return ParseHex(str.c_str());
 }
 
-
 void ParseParameters(int argc, char* argv[])
 {
     mapArgs.clear();
@@ -461,7 +458,7 @@ void ParseParameters(int argc, char* argv[])
             pszValue = strchr(psz, '=');
             *pszValue++ = '\0';
         }
-        #ifdef __WXMSW__
+        #ifdef WIN32
         _strlwr(psz);
         if (psz[0] == '/')
             psz[0] = '-';
@@ -473,39 +470,144 @@ void ParseParameters(int argc, char* argv[])
     }
 }
 
-
-const char* wxGetTranslation(const char* pszEnglish)
+string EncodeBase64(const unsigned char* pch, size_t len)
 {
-#ifdef GUI
-    // Wrapper of wxGetTranslation returning the same const char* type as was passed in
-    static CCriticalSection cs;
-    CRITICAL_BLOCK(cs)
+    static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    string strRet="";
+    strRet.reserve((len+2)/3*4);
+
+    int mode=0, left=0;
+    const unsigned char *pchEnd = pch+len;
+
+    while (pch<pchEnd)
     {
-        // Look in cache
-        static map<string, char*> mapCache;
-        map<string, char*>::iterator mi = mapCache.find(pszEnglish);
-        if (mi != mapCache.end())
-            return (*mi).second;
+        int enc = *(pch++);
+        switch (mode)
+        {
+            case 0: // we have no bits
+                strRet += pbase64[enc >> 2];
+                left = (enc & 3) << 4;
+                mode = 1;
+                break;
 
-        // wxWidgets translation
-        wxString strTranslated = wxGetTranslation(wxString(pszEnglish, wxConvUTF8));
+            case 1: // we have two bits
+                strRet += pbase64[left | (enc >> 4)];
+                left = (enc & 15) << 2;
+                mode = 2;
+                break;
 
-        // We don't cache unknown strings because caller might be passing in a
-        // dynamic string and we would keep allocating memory for each variation.
-        if (strcmp(pszEnglish, strTranslated.utf8_str()) == 0)
-            return pszEnglish;
-
-        // Add to cache, memory doesn't need to be freed.  We only cache because
-        // we must pass back a pointer to permanently allocated memory.
-        char* pszCached = new char[strlen(strTranslated.utf8_str())+1];
-        strcpy(pszCached, strTranslated.utf8_str());
-        mapCache[pszEnglish] = pszCached;
-        return pszCached;
+            case 2: // we have four bits
+                strRet += pbase64[left | (enc >> 6)];
+                strRet += pbase64[enc & 63];
+                mode = 0;
+                break;
+        }
     }
-    return NULL;
-#else
-    return pszEnglish;
-#endif
+
+    if (mode)
+    {
+        strRet += pbase64[left];
+        strRet += '=';
+        if (mode == 1)
+            strRet += '=';
+    }
+
+    return strRet;
+}
+
+string EncodeBase64(const string& str)
+{
+    return EncodeBase64((const unsigned char*)str.c_str(), str.size());
+}
+
+vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
+{
+    static const int decode64_table[256] =
+    {
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1,
+        -1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28,
+        29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+        49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+    };
+
+    if (pfInvalid)
+        *pfInvalid = false;
+
+    vector<unsigned char> vchRet;
+    vchRet.reserve(strlen(p)*3/4);
+
+    int mode = 0;
+    int left = 0;
+
+    while (1)
+    {
+         int dec = decode64_table[*p];
+         if (dec == -1) break;
+         p++;
+         switch (mode)
+         {
+             case 0: // we have no bits and get 6
+                 left = dec;
+                 mode = 1;
+                 break;
+
+              case 1: // we have 6 bits and keep 4
+                  vchRet.push_back((left<<2) | (dec>>4));
+                  left = dec & 15;
+                  mode = 2;
+                  break;
+
+             case 2: // we have 4 bits and get 6, we keep 2
+                 vchRet.push_back((left<<4) | (dec>>2));
+                 left = dec & 3;
+                 mode = 3;
+                 break;
+
+             case 3: // we have 2 bits and get 6
+                 vchRet.push_back((left<<6) | dec);
+                 mode = 0;
+                 break;
+         }
+    }
+
+    if (pfInvalid)
+        switch (mode)
+        {
+            case 0: // 4n base64 characters processed: ok
+                break;
+
+            case 1: // 4n+1 base64 character processed: impossible
+                *pfInvalid = true;
+                break;
+
+            case 2: // 4n+2 base64 characters processed: require '=='
+                if (left || p[0] != '=' || p[1] != '=' || decode64_table[p[2]] != -1)
+                    *pfInvalid = true;
+                break;
+
+            case 3: // 4n+3 base64 characters processed: require '='
+                if (left || p[0] != '=' || decode64_table[p[1]] != -1)
+                    *pfInvalid = true;
+                break;
+        }
+
+    return vchRet;
+}
+
+string DecodeBase64(const string& str)
+{
+    vector<unsigned char> vchRet = DecodeBase64(str.c_str());
+    return string((const char*)&vchRet[0], vchRet.size());
 }
 
 
@@ -547,7 +649,7 @@ bool WildcardMatch(const string& str, const string& mask)
 
 void FormatException(char* pszMessage, std::exception* pex, const char* pszThread)
 {
-#ifdef __WXMSW__
+#ifdef WIN32
     char pszModule[MAX_PATH];
     pszModule[0] = '\0';
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
@@ -576,10 +678,6 @@ void PrintException(std::exception* pex, const char* pszThread)
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
     strMiscWarning = pszMessage;
-#ifdef GUI
-    if (wxTheApp && !fDaemon)
-        MyMessageBox(pszMessage, "Bitcoin", wxOK | wxICON_ERROR);
-#endif
     throw;
 }
 
@@ -601,10 +699,6 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
     strMiscWarning = pszMessage;
-#ifdef GUI
-    if (wxTheApp && !fDaemon)
-        boost::thread(boost::bind(ThreadOneMessageBox, string(pszMessage)));
-#endif
 }
 
 
@@ -614,7 +708,7 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 
 
 
-#ifdef __WXMSW__
+#ifdef WIN32
 typedef WINSHELLAPI BOOL (WINAPI *PSHGETSPECIALFOLDERPATHA)(HWND hwndOwner, LPSTR lpszPath, int nFolder, BOOL fCreate);
 
 string MyGetSpecialFolderPath(int nFolder, bool fCreate)
@@ -655,7 +749,7 @@ string GetDefaultDataDir()
     // Windows: C:\Documents and Settings\username\Application Data\PPCoin
     // Mac: ~/Library/Application Support/PPCoin
     // Unix: ~/.ppcoin
-#ifdef __WXMSW__
+#ifdef WIN32
     // Windows
     return MyGetSpecialFolderPath(CSIDL_APPDATA, true) + "\\PPCoin";
 #else
@@ -665,7 +759,7 @@ string GetDefaultDataDir()
     string strHome = pszHome;
     if (strHome[strHome.size()-1] != '/')
         strHome += '/';
-#ifdef __WXMAC_OSX__
+#ifdef MAC_OSX
     // Mac
     strHome += "Library/Application Support/";
     filesystem::create_directory(strHome.c_str());
@@ -816,9 +910,18 @@ void ShrinkDebugFile()
 //  - Median of other nodes's clocks
 //  - The user (asking the user to fix the system clock if the first two disagree)
 //
+static int64 nMockTime = 0;  // For unit testing
+
 int64 GetTime()
 {
+    if (nMockTime) return nMockTime;
+
     return time(NULL);
+}
+
+void SetMockTime(int64 nMockTimeIn)
+{
+    nMockTime = nMockTimeIn;
 }
 
 static int64 nTimeOffset = 0;

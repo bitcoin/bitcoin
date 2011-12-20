@@ -10,7 +10,7 @@
 #include <boost/foreach.hpp>
 #include <openssl/rand.h>
 
-#ifndef __WXMSW__
+#ifndef WIN32
 #include <arpa/inet.h>
 #endif
 
@@ -40,7 +40,6 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
 void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
 void MapPort(bool fMapPort);
-void DNSAddressSeed();
 bool BindListenPort(std::string& strError=REF(std::string()));
 void StartNode(void* parg);
 bool StopNode();
@@ -124,6 +123,13 @@ public:
     bool fDisconnect;
 protected:
     int nRefCount;
+
+    // Denial-of-service detection/prevention
+    // Key is ip address, value is banned-until-time
+    static std::map<unsigned int, int64> setBanned;
+    static CCriticalSection cs_setBanned;
+    int nMisbehavior;
+
 public:
     int64 nReleaseTime;
     std::map<uint256, CRequestTracker> mapRequests;
@@ -147,7 +153,6 @@ public:
 
     // publish and subscription
     std::vector<char> vfSubscribe;
-
 
     CNode(SOCKET hSocketIn, CAddress addrIn, bool fInboundIn=false)
     {
@@ -185,6 +190,7 @@ public:
         nStartingHeight = -1;
         fGetAddr = false;
         vfSubscribe.assign(256, false);
+        nMisbehavior = 0;
 
         // Be shy and don't send version until we hear
         if (!fInbound)
@@ -568,6 +574,25 @@ public:
     void CancelSubscribe(unsigned int nChannel);
     void CloseSocketDisconnect();
     void Cleanup();
+
+
+    // Denial-of-service detection/prevention
+    // The idea is to detect peers that are behaving
+    // badly and disconnect/ban them, but do it in a
+    // one-coding-mistake-won't-shatter-the-entire-network
+    // way.
+    // IMPORTANT:  There should be nothing I can give a
+    // node that it will forward on that will make that
+    // node's peers drop it. If there is, an attacker
+    // can isolate a node and/or try to split the network.
+    // Dropping a node for sending stuff that is invalid
+    // now but might be valid in a later version is also
+    // dangerous, because it can cause a network split
+    // between nodes running old code and nodes running
+    // new code.
+    static void ClearBanned(); // needed for unit testing
+    static bool IsBanned(unsigned int ip);
+    bool Misbehaving(int howmuch); // 1 == a little, 100 == a lot
 };
 
 
