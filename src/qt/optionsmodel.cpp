@@ -2,6 +2,7 @@
 #include "bitcoinunits.h"
 
 #include "headers.h"
+#include "init.h"
 
 OptionsModel::OptionsModel(CWallet *wallet, QObject *parent) :
     QAbstractListModel(parent),
@@ -27,7 +28,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         switch(index.row())
         {
         case StartAtStartup:
-            return QVariant();
+            return QVariant(GetStartOnSystemStartup());
         case MinimizeToTray:
             return QVariant(fMinimizeToTray);
         case MapPortUPnP:
@@ -62,7 +63,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         switch(index.row())
         {
         case StartAtStartup:
-            successful = false; /*TODO*/
+            successful = SetStartOnSystemStartup(value.toBool());
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();
