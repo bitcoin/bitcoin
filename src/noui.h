@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NOUI_H
 #define BITCOIN_NOUI_H
 
+#include <stdint.h>
+
 #include <string>
 #include <boost/function.hpp>
 #include "wallet.h"
@@ -50,7 +52,7 @@ inline int ThreadSafeMessageBox(const std::string& message, const std::string& c
     return MyMessageBox(message, caption, style, parent, x, y);
 }
 
-inline bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
+inline bool ThreadSafeAskFee(int64_t nFeeRequired, const std::string& strCaption, wxWindow* parent)
 {
     return true;
 }

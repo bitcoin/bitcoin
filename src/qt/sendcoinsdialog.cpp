@@ -8,6 +8,7 @@
 #include "guiutil.h"
 #include "askpassphrasedialog.h"
 
+#include <QtGlobal>
 #include <QMessageBox>
 #include <QLocale>
 #include <QTextDocument>

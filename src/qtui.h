@@ -4,6 +4,8 @@
 #ifndef BITCOIN_EXTERNUI_H
 #define BITCOIN_EXTERNUI_H
 
+#include <stdint.h>
+
 #include <string>
 #include <boost/function/function0.hpp>
 #include "wallet.h"
@@ -39,7 +41,7 @@ typedef void wxWindow;
 extern int MyMessageBox(const std::string& message, const std::string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1);
 #define wxMessageBox  MyMessageBox
 extern int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1);
-extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent);
+extern bool ThreadSafeAskFee(int64_t nFeeRequired, const std::string& strCaption, wxWindow* parent);
 extern void CalledSetStatusBar(const std::string& strText, int nField);
 extern void UIThreadCall(boost::function0<void> fn);
 extern void MainFrameRepaint();

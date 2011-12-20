@@ -3,6 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#include <stdint.h>
+
 #include "headers.h"
 #include "irc.h"
 #include "db.h"
@@ -44,10 +46,10 @@ bool OpenNetworkConnection(const CAddress& addrConnect);
 //
 bool fClient = false;
 bool fAllowDNS = false;
-uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
+uint64_t nLocalServices = (fClient ? 0 : NODE_NETWORK);
 CAddress addrLocalHost("0.0.0.0", 0, false, nLocalServices);
 static CNode* pnodeLocalHost = NULL;
-uint64 nLocalHostNonce = 0;
+uint64_t nLocalHostNonce = 0;
 array<int, 10> vnThreadsRunning;
 static SOCKET hListenSocket = INVALID_SOCKET;
 
@@ -56,9 +58,9 @@ CCriticalSection cs_vNodes;
 map<vector<unsigned char>, CAddress> mapAddresses;
 CCriticalSection cs_mapAddresses;
 map<CInv, CDataStream> mapRelay;
-deque<pair<int64, CInv> > vRelayExpiration;
+deque<pair<int64_t, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
-map<CInv, int64> mapAlreadyAskedFor;
+map<CInv, int64_t> mapAlreadyAskedFor;
 
 // Settings
 int fUseProxy = false;
@@ -437,13 +439,13 @@ void ThreadGetMyExternalIP(void* parg)
 
 
 
-bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
+bool AddAddress(CAddress addr, int64_t nTimePenalty, CAddrDB *pAddrDB)
 {
     if (!addr.IsRoutable())
         return false;
     if (addr.ip == addrLocalHost.ip)
         return false;
-    addr.nTime = max((int64)0, (int64)addr.nTime - nTimePenalty);
+    addr.nTime = max((int64_t)0, (int64_t)addr.nTime - nTimePenalty);
     bool fUpdated = false;
     bool fNew = false;
     CAddress addrFound = addr;
@@ -469,7 +471,7 @@ bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
                 fUpdated = true;
             }
             bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
-            int64 nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
+            int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
             if (addrFound.nTime < addr.nTime - nUpdateInterval)
             {
                 // Periodically update most recently seen time
@@ -503,7 +505,7 @@ void AddressCurrentlyConnected(const CAddress& addr)
         if (it != mapAddresses.end())
         {
             CAddress& addrFound = (*it).second;
-            int64 nUpdateInterval = 20 * 60;
+            int64_t nUpdateInterval = 20 * 60;
             if (addrFound.nTime < GetAdjustedTime() - nUpdateInterval)
             {
                 // Periodically update most recently seen time
@@ -642,7 +644,7 @@ CNode* FindNode(CAddress addr)
     return NULL;
 }
 
-CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
+CNode* ConnectNode(CAddress addrConnect, int64_t nTimeout)
 {
     if (addrConnect.ip == addrLocalHost.ip)
         return NULL;
@@ -730,7 +732,7 @@ void CNode::Cleanup()
 void CNode::PushVersion()
 {
     /// when NTP implemented, change to just nTime = GetAdjustedTime()
-    int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
+    int64_t nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
     CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
@@ -742,7 +744,7 @@ void CNode::PushVersion()
 
 
 
-std::map<unsigned int, int64> CNode::setBanned;
+std::map<unsigned int, int64_t> CNode::setBanned;
 CCriticalSection CNode::cs_setBanned;
 
 void CNode::ClearBanned()
@@ -755,10 +757,10 @@ bool CNode::IsBanned(unsigned int ip)
     bool fResult = false;
     CRITICAL_BLOCK(cs_setBanned)
     {
-        std::map<unsigned int, int64>::iterator i = setBanned.find(ip);
+        std::map<unsigned int, int64_t>::iterator i = setBanned.find(ip);
         if (i != setBanned.end())
         {
-            int64 t = (*i).second;
+            int64_t t = (*i).second;
             if (GetTime() < t)
                 fResult = true;
         }
@@ -777,7 +779,7 @@ bool CNode::Misbehaving(int howmuch)
     nMisbehavior += howmuch;
     if (nMisbehavior >= GetArg("-banscore", 100))
     {
-        int64 banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
+        int64_t banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
         CRITICAL_BLOCK(cs_setBanned)
             if (setBanned[addr.ip] < banTime)
                 setBanned[addr.ip] = banTime;
@@ -1403,7 +1405,7 @@ void ThreadOpenConnections2(void* parg)
     // Connect to specific addresses
     if (mapArgs.count("-connect"))
     {
-        for (int64 nLoop = 0;; nLoop++)
+        for (int64_t nLoop = 0;; nLoop++)
         {
             BOOST_FOREACH(string strAddr, mapMultiArgs["-connect"])
             {
@@ -1437,7 +1439,7 @@ void ThreadOpenConnections2(void* parg)
     }
 
     // Initiate network connections
-    int64 nStart = GetTime();
+    int64_t nStart = GetTime();
     loop
     {
         // Limit outbound connections
@@ -1474,7 +1476,7 @@ void ThreadOpenConnections2(void* parg)
                     // it'll get a pile of addresses with newer timestamps.
                     // Seed nodes are given a random 'last seen time' of between one and two
                     // weeks ago.
-                    const int64 nOneWeek = 7*24*60*60;
+                    const int64_t nOneWeek = 7*24*60*60;
                     CAddress addr;
                     addr.ip = pnSeed[i];
                     addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
@@ -1488,7 +1490,7 @@ void ThreadOpenConnections2(void* parg)
         // Choose an address to connect to based on most recently seen
         //
         CAddress addrConnect;
-        int64 nBest = std::numeric_limits<int64>::min();
+        int64_t nBest = std::numeric_limits<int64_t>::min();
 
         // Only connect to one address per a.b.?.? range.
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
@@ -1497,7 +1499,7 @@ void ThreadOpenConnections2(void* parg)
             BOOST_FOREACH(CNode* pnode, vNodes)
                 setConnected.insert(pnode->addr.ip & 0x0000ffff);
 
-        int64 nANow = GetAdjustedTime();
+        int64_t nANow = GetAdjustedTime();
 
         CRITICAL_BLOCK(cs_mapAddresses)
         {
@@ -1506,11 +1508,11 @@ void ThreadOpenConnections2(void* parg)
                 const CAddress& addr = item.second;
                 if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip & 0x0000ffff))
                     continue;
-                int64 nSinceLastSeen = nANow - addr.nTime;
-                int64 nSinceLastTry = nANow - addr.nLastTry;
+                int64_t nSinceLastSeen = nANow - addr.nTime;
+                int64_t nSinceLastTry = nANow - addr.nLastTry;
 
                 // Randomize the order in a deterministic way, putting the standard port first
-                int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
+                int64_t nRandomizer = (uint64_t)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
                 if (addr.port != htons(GetDefaultPort()))
                     nRandomizer += 2 * 60 * 60;
 
@@ -1524,7 +1526,7 @@ void ThreadOpenConnections2(void* parg)
                 //   30 days   27 hours
                 //   90 days   46 hours
                 //  365 days   93 hours
-                int64 nDelay = (int64)(3600.0 * sqrt(fabs((double)nSinceLastSeen) / 3600.0) + nRandomizer);
+                int64_t nDelay = (int64_t)(3600.0 * sqrt(fabs((double)nSinceLastSeen) / 3600.0) + nRandomizer);
 
                 // Fast reconnect for one hour after last seen
                 if (nSinceLastSeen < 60 * 60)
@@ -1545,7 +1547,7 @@ void ThreadOpenConnections2(void* parg)
 
                 // If multiple addresses are ready, prioritize by time since
                 // last seen and time since last tried.
-                int64 nScore = min(nSinceLastTry, (int64)24 * 60 * 60) - nSinceLastSeen - nRandomizer;
+                int64_t nScore = min(nSinceLastTry, (int64_t)24 * 60 * 60) - nSinceLastSeen - nRandomizer;
                 if (nScore > nBest)
                 {
                     nBest = nScore;
@@ -1852,7 +1854,7 @@ bool StopNode()
     printf("StopNode()\n");
     fShutdown = true;
     nTransactionsUpdated++;
-    int64 nStart = GetTime();
+    int64_t nStart = GetTime();
     while (vnThreadsRunning[0] > 0 || vnThreadsRunning[2] > 0 || vnThreadsRunning[3] > 0 || vnThreadsRunning[4] > 0
 #ifdef USE_UPNP
         || vnThreadsRunning[5] > 0

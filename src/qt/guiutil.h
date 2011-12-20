@@ -1,6 +1,7 @@
 #ifndef GUIUTIL_H
 #define GUIUTIL_H
 
+#include <QtGlobal>
 #include <QString>
 
 QT_BEGIN_NAMESPACE

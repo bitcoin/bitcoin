@@ -27,6 +27,7 @@
 #include "macdockiconhandler.h"
 #endif
 
+#include <QtGlobal>
 #include <QApplication>
 #include <QMainWindow>
 #include <QMenuBar>

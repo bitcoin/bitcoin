@@ -28,7 +28,7 @@ someVariable.
 
 Common types:
 n       integer number: short, unsigned short, int, unsigned int,
-            int64, uint64, sometimes char if used as a number
+            int64_t, uint64_t, sometimes char if used as a number
 d       double, float
 f       flag
 hash    uint256

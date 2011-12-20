@@ -10,6 +10,8 @@
 #ifndef __INCLUDED_PROTOCOL_H__
 #define __INCLUDED_PROTOCOL_H__
 
+#include <stdint.h>
+
 #include "serialize.h"
 #include <string>
 #include "uint256.h"
@@ -65,12 +67,12 @@ class CAddress
 {
     public:
         CAddress();
-        CAddress(unsigned int ipIn, unsigned short portIn=0, uint64 nServicesIn=NODE_NETWORK);
-        explicit CAddress(const struct sockaddr_in& sockaddr, uint64 nServicesIn=NODE_NETWORK);
-        explicit CAddress(const char* pszIn, int portIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK);
-        explicit CAddress(const char* pszIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK);
-        explicit CAddress(std::string strIn, int portIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK);
-        explicit CAddress(std::string strIn, bool fNameLookup = false, uint64 nServicesIn=NODE_NETWORK);
+        CAddress(unsigned int ipIn, unsigned short portIn=0, uint64_t nServicesIn=NODE_NETWORK);
+        explicit CAddress(const struct sockaddr_in& sockaddr, uint64_t nServicesIn=NODE_NETWORK);
+        explicit CAddress(const char* pszIn, int portIn, bool fNameLookup = false, uint64_t nServicesIn=NODE_NETWORK);
+        explicit CAddress(const char* pszIn, bool fNameLookup = false, uint64_t nServicesIn=NODE_NETWORK);
+        explicit CAddress(std::string strIn, int portIn, bool fNameLookup = false, uint64_t nServicesIn=NODE_NETWORK);
+        explicit CAddress(std::string strIn, bool fNameLookup = false, uint64_t nServicesIn=NODE_NETWORK);
 
         void Init();
 
@@ -109,7 +111,7 @@ class CAddress
 
     // TODO: make private (improves encapsulation)
     public:
-        uint64 nServices;
+        uint64_t nServices;
         unsigned char pchReserved[12];
         unsigned int ip;
         unsigned short port;

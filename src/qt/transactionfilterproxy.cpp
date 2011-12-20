@@ -1,6 +1,7 @@
 #include "transactionfilterproxy.h"
 #include "transactiontablemodel.h"
 
+#include <QtGlobal>
 #include <QDateTime>
 
 #include <cstdlib>

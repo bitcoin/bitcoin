@@ -5,6 +5,7 @@
 
 #include "headers.h"
 
+#include <QtGlobal>
 #include <QString>
 #include <QDateTime>
 #include <QDoubleValidator>

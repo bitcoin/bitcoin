@@ -1,6 +1,7 @@
 #ifndef BITCOINFIELD_H
 #define BITCOINFIELD_H
 
+#include <QtGlobal>
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
