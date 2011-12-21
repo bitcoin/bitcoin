@@ -406,8 +406,8 @@ bool GetMyExternalIP(unsigned int& ipRet)
 
 void ThreadGetMyExternalIP(void* parg)
 {
-    // Wait for IRC to get it first
-    if (!GetBoolArg("-noirc"))
+    // Wait for IRC to get it first - disabled with ppcoin
+    if (false && !GetBoolArg("-noirc"))
     {
         for (int i = 0; i < 2 * 60; i++)
         {
@@ -1222,9 +1222,10 @@ void MapPort(bool /* unused fMapPort */)
 
 
 
-
+// testnet dns seed begins with 't', all else are ppcoin dns seeds.
 static const char *strDNSSeed[] = {
-    // "seeds.ppcoin.org"
+    "ppcseed.zapto.org",
+    "tncseed.zapto.org"
 };
 
 void ThreadDNSAddressSeed(void* parg)
@@ -1251,13 +1252,16 @@ void ThreadDNSAddressSeed2(void* parg)
     printf("ThreadDNSAddressSeed started\n");
     int found = 0;
 
-    if (!fTestNet)
+    if (true /*!fTestNet*/)  // ppcoin enables dns seeding with testnet too
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
         CAddrDB addrDB;
         addrDB.TxnBegin();
 
         for (int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
+            if (fTestNet && strDNSSeed[seed_idx][0] != 't') continue;
+            if ((!fTestNet) && strDNSSeed[seed_idx][0] == 't') continue;
+ 
             vector<CAddress> vaddr;
             if (Lookup(strDNSSeed[seed_idx], vaddr, NODE_NETWORK, -1, true))
             {
@@ -1424,7 +1428,7 @@ void ThreadOpenConnections2(void* parg)
             BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, CAddress)& item, mapAddresses)
             {
                 const CAddress& addr = item.second;
-                if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip & 0x0000ffff))
+                if (addr.ip == addrLocalHost.ip || !addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.ip & 0x0000ffff))
                     continue;
                 int64 nSinceLastSeen = nANow - addr.nTime;
                 int64 nSinceLastTry = nANow - addr.nLastTry;
@@ -1748,8 +1752,10 @@ void StartNode(void* parg)
         MapPort(fUseUPnP);
 
     // Get addresses from IRC and advertise ours
-    if (!CreateThread(ThreadIRCSeed, NULL))
-        printf("Error: CreateThread(ThreadIRCSeed) failed\n");
+    // if (!CreateThread(ThreadIRCSeed, NULL))
+    //     printf("Error: CreateThread(ThreadIRCSeed) failed\n");
+    // IRC disabled with ppcoin
+    printf("IRC seeding/communication disabled\n");
 
     // Send and receive from sockets, accept connections
     if (!CreateThread(ThreadSocketHandler, NULL))

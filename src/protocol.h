@@ -14,10 +14,15 @@
 #include <string>
 #include "uint256.h"
 
+#define PPCOIN_PORT  9901
+#define RPC_PORT     9902
+#define TESTNET_PORT 9903
+
 extern bool fTestNet;
+
 static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 {
-    return testnet ? 18333 : 8333;
+    return testnet ? TESTNET_PORT : PPCOIN_PORT;
 }
 
 //
