@@ -387,6 +387,12 @@ bool AppInit2()
             InitWarning(_("Warning: -paytxfee is set very high. This is the transaction fee you will pay if you send a transaction."));
     }
 
+    if (mapArgs.count("-maxtxfee"))
+    {
+        if (!ParseMoney(mapArgs["-maxtxfee"], nTransactionFeeMax))
+            return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s'"), mapArgs["-maxtxfee"].c_str()));
+    }
+
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
     // Make sure only a single Bitcoin process is using the data directory.

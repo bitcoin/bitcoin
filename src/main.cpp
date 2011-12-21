@@ -56,6 +56,7 @@ int64 nHPSTimerStart;
 
 // Settings
 int64 nTransactionFee = 0;
+int64 nTransactionFeeMax = CENT;
 bool fForceFee = false;
 
 
