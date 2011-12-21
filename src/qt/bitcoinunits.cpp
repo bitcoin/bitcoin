@@ -1,6 +1,5 @@
 #include "bitcoinunits.h"
 
-#include <QtGlobal>
 #include <QStringList>
 
 BitcoinUnits::BitcoinUnits(QObject *parent):

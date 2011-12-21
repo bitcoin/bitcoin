@@ -6,7 +6,6 @@
 
 #include "headers.h"
 
-#include <QtGlobal>
 #include <QTimer>
 #include <QSet>
 
@@ -121,7 +120,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     CRITICAL_BLOCK(wallet->cs_wallet)
     {
         // Sendmany
-        std::vector<std::pair<CScript, qint64> > vecSend;
+        std::vector<std::pair<CScript, int64> > vecSend;
         foreach(const SendCoinsRecipient &rcp, recipients)
         {
             CScript scriptPubKey;
@@ -131,7 +130,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
 
         CWalletTx wtx;
         CReserveKey keyChange(wallet);
-        qint64 nFeeRequired = 0;
+        int64 nFeeRequired = 0;
         bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
 
         if(!fCreated)

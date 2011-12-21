@@ -3,8 +3,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
-
 #include "headers.h"
 #include "db.h"
 #include "net.h"
@@ -16,7 +14,7 @@ using namespace boost;
 
 
 unsigned int nWalletDBUpdated;
-uint64_t nAccountingEntryNumber = 0;
+uint64 nAccountingEntryNumber = 0;
 
 
 
@@ -707,12 +705,12 @@ bool CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry)
     return Write(boost::make_tuple(string("acentry"), acentry.strAccount, ++nAccountingEntryNumber), acentry);
 }
 
-int64_t CWalletDB::GetAccountCreditDebit(const string& strAccount)
+int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
     list<CAccountingEntry> entries;
     ListAccountCreditDebit(strAccount, entries);
 
-    int64_t nCreditDebit = 0;
+    int64 nCreditDebit = 0;
     BOOST_FOREACH (const CAccountingEntry& entry, entries)
         nCreditDebit += entry.nCreditDebit;
 
@@ -732,7 +730,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
         // Read next record
         CDataStream ssKey;
         if (fFlags == DB_SET_RANGE)
-            ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64_t(0));
+            ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64(0));
         CDataStream ssValue;
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
@@ -848,7 +846,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 string strAccount;
                 ssKey >> strAccount;
-                uint64_t nNumber;
+                uint64 nNumber;
                 ssKey >> nNumber;
                 if (nNumber > nAccountingEntryNumber)
                     nAccountingEntryNumber = nNumber;
@@ -901,7 +899,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
             }
             else if (strType == "pool")
             {
-                int64_t nIndex;
+                int64 nIndex;
                 ssKey >> nIndex;
                 pwallet->setKeyPool.insert(nIndex);
             }
@@ -991,7 +989,7 @@ void ThreadFlushWalletDB(void* parg)
 
     unsigned int nLastSeen = nWalletDBUpdated;
     unsigned int nLastFlushed = nWalletDBUpdated;
-    int64_t nLastWalletUpdate = GetTime();
+    int64 nLastWalletUpdate = GetTime();
     while (!fShutdown)
     {
         Sleep(500);
@@ -1023,7 +1021,7 @@ void ThreadFlushWalletDB(void* parg)
                         printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
                         printf("Flushing wallet.dat\n");
                         nLastFlushed = nWalletDBUpdated;
-                        int64_t nStart = GetTimeMillis();
+                        int64 nStart = GetTimeMillis();
 
                         // Flush wallet.dat so it's self contained
                         CloseDb(strFile);

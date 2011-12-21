@@ -6,7 +6,6 @@
 #include "headers.h"
 #include "qtui.h"
 
-#include <QtGlobal>
 #include <QString>
 #include <QTextDocument> // For Qt::escape
 
@@ -56,10 +55,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         strHTML.reserve(4000);
         strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
 
-        qint64 nTime = wtx.GetTxTime();
-        qint64 nCredit = wtx.GetCredit();
-        qint64 nDebit = wtx.GetDebit();
-        qint64 nNet = nCredit - nDebit;
+        int64 nTime = wtx.GetTxTime();
+        int64 nCredit = wtx.GetCredit();
+        int64 nDebit = wtx.GetDebit();
+        int64 nNet = nCredit - nDebit;
 
         strHTML += tr("<b>Status:</b> ") + FormatTxStatus(wtx);
         int nRequests = wtx.GetRequestCount();
@@ -142,7 +141,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
             //
             // Coinbase
             //
-            qint64 nUnmatured = 0;
+            int64 nUnmatured = 0;
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 nUnmatured += wallet->GetCredit(txout);
             strHTML += tr("<b>Credit:</b> ");
@@ -201,13 +200,13 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                 if (fAllToMe)
                 {
                     // Payment to self
-                    qint64 nChange = wtx.GetChange();
-                    qint64 nValue = nCredit - nChange;
+                    int64 nChange = wtx.GetChange();
+                    int64 nValue = nCredit - nChange;
                     strHTML += tr("<b>Debit:</b> ") + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, -nValue) + "<br>";
                     strHTML += tr("<b>Credit:</b> ") + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, nValue) + "<br>";
                 }
 
-                qint64 nTxFee = nDebit - wtx.GetValueOut();
+                int64 nTxFee = nDebit - wtx.GetValueOut();
                 if (nTxFee > 0)
                     strHTML += tr("<b>Transaction fee:</b> ") + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC,-nTxFee) + "<br>";
             }

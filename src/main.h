@@ -5,8 +5,6 @@
 #ifndef BITCOIN_MAIN_H
 #define BITCOIN_MAIN_H
 
-#include <stdint.h>
-
 #include "bignum.h"
 #include "net.h"
 #include "key.h"
@@ -36,12 +34,12 @@ extern const std::string CLIENT_NAME;
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
-static const int64_t COIN = 100000000;
-static const int64_t CENT = 1000000;
-static const int64_t MIN_TX_FEE = 50000;
-static const int64_t MIN_RELAY_TX_FEE = 10000;
-static const int64_t MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+static const int64 COIN = 100000000;
+static const int64 CENT = 1000000;
+static const int64 MIN_TX_FEE = 50000;
+static const int64 MIN_RELAY_TX_FEE = 10000;
+static const int64 MAX_MONEY = 21000000 * COIN;
+inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int COINBASE_MATURITY = 100;
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
 static const int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
@@ -67,14 +65,14 @@ extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
 extern double dHashesPerSec;
-extern int64_t nHPSTimerStart;
-extern int64_t nTimeBestReceived;
+extern int64 nHPSTimerStart;
+extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 
 // Settings
 extern int fGenerateBitcoins;
-extern int64_t nTransactionFee;
+extern int64 nTransactionFee;
 extern int fLimitProcessors;
 extern int nLimitProcessors;
 extern int fMinimizeToTray;
@@ -92,7 +90,7 @@ class CTxIndex;
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
 bool ProcessBlock(CNode* pfrom, CBlock* pblock);
-bool CheckDiskSpace(uint64_t nAdditionalBytes=0);
+bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");
 FILE* AppendBlockFile(unsigned int& nFileRet);
 bool LoadBlockIndex(bool fAllowNew=true);
@@ -105,7 +103,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
-unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
+unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
@@ -332,7 +330,7 @@ public:
 class CTxOut
 {
 public:
-    int64_t nValue;
+    int64 nValue;
     CScript scriptPubKey;
 
     CTxOut()
@@ -340,7 +338,7 @@ public:
         SetNull();
     }
 
-    CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
+    CTxOut(int64 nValueIn, CScript scriptPubKeyIn)
     {
         nValue = nValueIn;
         scriptPubKey = scriptPubKeyIn;
@@ -451,7 +449,7 @@ public:
         return SerializeHash(*this);
     }
 
-    bool IsFinal(int nBlockHeight=0, int64_t nBlockTime=0) const
+    bool IsFinal(int nBlockHeight=0, int64 nBlockTime=0) const
     {
         // Time based nLockTime implemented in 0.1.6
         if (nLockTime == 0)
@@ -460,7 +458,7 @@ public:
             nBlockHeight = nBestHeight;
         if (nBlockTime == 0)
             nBlockTime = GetAdjustedTime();
-        if ((int64_t)nLockTime < (nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+        if ((int64)nLockTime < (nLockTime < LOCKTIME_THRESHOLD ? (int64)nBlockHeight : nBlockTime))
             return true;
         BOOST_FOREACH(const CTxIn& txin, vin)
             if (!txin.IsFinal())
@@ -505,9 +503,9 @@ public:
     bool IsStandard() const;
     bool AreInputsStandard(std::map<uint256, std::pair<CTxIndex, CTransaction> > mapInputs) const;
 
-    int64_t GetValueOut() const
+    int64 GetValueOut() const
     {
-        int64_t nValueOut = 0;
+        int64 nValueOut = 0;
         BOOST_FOREACH(const CTxOut& txout, vout)
         {
             nValueOut += txout.nValue;
@@ -524,14 +522,14 @@ public:
         return dPriority > COIN * 144 / 250;
     }
 
-    int64_t GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const
+    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const
     {
         // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
-        int64_t nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
+        int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 
         unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK);
         unsigned int nNewBlockSize = nBlockSize + nBytes;
-        int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
+        int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
         if (fAllowFree)
         {
@@ -637,7 +635,7 @@ public:
                      bool fBlock, bool fMiner, std::map<uint256, std::pair<CTxIndex, CTransaction> >& inputsRet);
     bool ConnectInputs(std::map<uint256, std::pair<CTxIndex, CTransaction> > inputs,
                        std::map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
-                       CBlockIndex* pindexBlock, int64_t& nFees, bool fBlock, bool fMiner, int& nSigOpsRet, int64_t nMinFee=0);
+                       CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int& nSigOpsRet, int64 nMinFee=0);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
@@ -842,9 +840,9 @@ public:
         return Hash(BEGIN(nVersion), END(nNonce));
     }
 
-    int64_t GetBlockTime() const
+    int64 GetBlockTime() const
     {
-        return (int64_t)nTime;
+        return (int64)nTime;
     }
 
 
@@ -1068,9 +1066,9 @@ public:
         return *phashBlock;
     }
 
-    int64_t GetBlockTime() const
+    int64 GetBlockTime() const
     {
-        return (int64_t)nTime;
+        return (int64)nTime;
     }
 
     CBigNum GetBlockWork() const
@@ -1109,11 +1107,11 @@ public:
 
     enum { nMedianTimeSpan=11 };
 
-    int64_t GetMedianTimePast() const
+    int64 GetMedianTimePast() const
     {
-        int64_t pmedian[nMedianTimeSpan];
-        int64_t* pbegin = &pmedian[nMedianTimeSpan];
-        int64_t* pend = &pmedian[nMedianTimeSpan];
+        int64 pmedian[nMedianTimeSpan];
+        int64* pbegin = &pmedian[nMedianTimeSpan];
+        int64* pend = &pmedian[nMedianTimeSpan];
 
         const CBlockIndex* pindex = this;
         for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
@@ -1123,7 +1121,7 @@ public:
         return pbegin[(pend - pbegin)/2];
     }
 
-    int64_t GetMedianTime() const
+    int64 GetMedianTime() const
     {
         const CBlockIndex* pindex = this;
         for (int i = 0; i < nMedianTimeSpan/2; i++)
@@ -1377,8 +1375,8 @@ class CUnsignedAlert
 {
 public:
     int nVersion;
-    int64_t nRelayUntil;      // when newer nodes stop relaying to newer nodes
-    int64_t nExpiration;
+    int64 nRelayUntil;      // when newer nodes stop relaying to newer nodes
+    int64 nExpiration;
     int nID;
     int nCancel;
     std::set<int> setCancel;

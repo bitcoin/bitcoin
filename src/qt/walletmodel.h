@@ -1,7 +1,6 @@
 #ifndef WALLETMODEL_H
 #define WALLETMODEL_H
 
-#include <QtGlobal>
 #include <QObject>
 
 #include "util.h"

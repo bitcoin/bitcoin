@@ -5,8 +5,6 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <stdint.h>
-
 #include <deque>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
@@ -35,10 +33,10 @@ bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout
 bool Lookup(const char *pszName, std::vector<CAddress>& vaddr, int nServices, int nMaxSolutions, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool GetMyExternalIP(unsigned int& ipRet);
-bool AddAddress(CAddress addr, int64_t nTimePenalty=0, CAddrDB *pAddrDB=NULL);
+bool AddAddress(CAddress addr, int64 nTimePenalty=0, CAddrDB *pAddrDB=NULL);
 void AddressCurrentlyConnected(const CAddress& addr);
 CNode* FindNode(unsigned int ip);
-CNode* ConnectNode(CAddress addrConnect, int64_t nTimeout=0);
+CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
 void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
 void MapPort(bool fMapPort);
@@ -76,9 +74,9 @@ public:
 
 extern bool fClient;
 extern bool fAllowDNS;
-extern uint64_t nLocalServices;
+extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
-extern uint64_t nLocalHostNonce;
+extern uint64 nLocalHostNonce;
 extern boost::array<int, 10> vnThreadsRunning;
 
 extern std::vector<CNode*> vNodes;
@@ -86,9 +84,9 @@ extern CCriticalSection cs_vNodes;
 extern std::map<std::vector<unsigned char>, CAddress> mapAddresses;
 extern CCriticalSection cs_mapAddresses;
 extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
+extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
-extern std::map<CInv, int64_t> mapAlreadyAskedFor;
+extern std::map<CInv, int64> mapAlreadyAskedFor;
 
 // Settings
 extern int fUseProxy;
@@ -103,16 +101,16 @@ class CNode
 {
 public:
     // socket
-    uint64_t nServices;
+    uint64 nServices;
     SOCKET hSocket;
     CDataStream vSend;
     CDataStream vRecv;
     CCriticalSection cs_vSend;
     CCriticalSection cs_vRecv;
-    int64_t nLastSend;
-    int64_t nLastRecv;
-    int64_t nLastSendEmpty;
-    int64_t nTimeConnected;
+    int64 nLastSend;
+    int64 nLastRecv;
+    int64 nLastSendEmpty;
+    int64 nTimeConnected;
     unsigned int nHeaderStart;
     unsigned int nMessageStart;
     CAddress addr;
@@ -128,12 +126,12 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is ip address, value is banned-until-time
-    static std::map<unsigned int, int64_t> setBanned;
+    static std::map<unsigned int, int64> setBanned;
     static CCriticalSection cs_setBanned;
     int nMisbehavior;
 
 public:
-    int64_t nReleaseTime;
+    int64 nReleaseTime;
     std::map<uint256, CRequestTracker> mapRequests;
     CCriticalSection cs_mapRequests;
     uint256 hashContinue;
@@ -151,7 +149,7 @@ public:
     std::set<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
-    std::multimap<int64_t, CInv> mapAskFor;
+    std::multimap<int64, CInv> mapAskFor;
 
     // publish and subscription
     std::vector<char> vfSubscribe;
@@ -219,7 +217,7 @@ public:
         return std::max(nRefCount, 0) + (GetTime() < nReleaseTime ? 1 : 0);
     }
 
-    CNode* AddRef(int64_t nTimeout=0)
+    CNode* AddRef(int64 nTimeout=0)
     {
         if (nTimeout != 0)
             nReleaseTime = std::max(nReleaseTime, GetTime() + nTimeout);
@@ -267,12 +265,12 @@ public:
     {
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
-        int64_t& nRequestTime = mapAlreadyAskedFor[inv];
+        int64& nRequestTime = mapAlreadyAskedFor[inv];
         printf("askfor %s   %"PRI64d"\n", inv.ToString().c_str(), nRequestTime);
 
         // Make sure not to reuse time indexes to keep things in the same order
-        int64_t nNow = (GetTime() - 1) * 1000000;
-        static int64_t nLastTime;
+        int64 nNow = (GetTime() - 1) * 1000000;
+        static int64 nLastTime;
         nLastTime = nNow = std::max(nNow, ++nLastTime);
 
         // Each retry is 2 minutes after the last

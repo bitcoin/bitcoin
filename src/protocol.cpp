@@ -3,8 +3,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
-
 #include "protocol.h"
 #include "util.h"
 
@@ -84,7 +82,7 @@ CAddress::CAddress()
     Init();
 }
 
-CAddress::CAddress(unsigned int ipIn, unsigned short portIn, uint64_t nServicesIn)
+CAddress::CAddress(unsigned int ipIn, unsigned short portIn, uint64 nServicesIn)
 {
     Init();
     ip = ipIn;
@@ -92,7 +90,7 @@ CAddress::CAddress(unsigned int ipIn, unsigned short portIn, uint64_t nServicesI
     nServices = nServicesIn;
 }
 
-CAddress::CAddress(const struct sockaddr_in& sockaddr, uint64_t nServicesIn)
+CAddress::CAddress(const struct sockaddr_in& sockaddr, uint64 nServicesIn)
 {
     Init();
     ip = sockaddr.sin_addr.s_addr;
@@ -100,25 +98,25 @@ CAddress::CAddress(const struct sockaddr_in& sockaddr, uint64_t nServicesIn)
     nServices = nServicesIn;
 }
 
-CAddress::CAddress(const char* pszIn, int portIn, bool fNameLookup, uint64_t nServicesIn)
+CAddress::CAddress(const char* pszIn, int portIn, bool fNameLookup, uint64 nServicesIn)
 {
     Init();
     Lookup(pszIn, *this, nServicesIn, fNameLookup, portIn);
 }
 
-CAddress::CAddress(const char* pszIn, bool fNameLookup, uint64_t nServicesIn)
+CAddress::CAddress(const char* pszIn, bool fNameLookup, uint64 nServicesIn)
 {
     Init();
     Lookup(pszIn, *this, nServicesIn, fNameLookup, 0, true);
 }
 
-CAddress::CAddress(std::string strIn, int portIn, bool fNameLookup, uint64_t nServicesIn)
+CAddress::CAddress(std::string strIn, int portIn, bool fNameLookup, uint64 nServicesIn)
 {
     Init();
     Lookup(strIn.c_str(), *this, nServicesIn, fNameLookup, portIn);
 }
 
-CAddress::CAddress(std::string strIn, bool fNameLookup, uint64_t nServicesIn)
+CAddress::CAddress(std::string strIn, bool fNameLookup, uint64 nServicesIn)
 {
     Init();
     Lookup(strIn.c_str(), *this, nServicesIn, fNameLookup, 0, true);

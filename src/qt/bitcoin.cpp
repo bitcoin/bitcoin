@@ -9,7 +9,6 @@
 #include "headers.h"
 #include "init.h"
 
-#include <QtGlobal>
 #include <QApplication>
 #include <QMessageBox>
 #include <QThread>
@@ -57,7 +56,7 @@ int ThreadSafeMessageBox(const std::string& message, const std::string& caption,
     return 4;
 }
 
-bool ThreadSafeAskFee(qint64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
+bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
 {
     if(!guiref)
         return false;

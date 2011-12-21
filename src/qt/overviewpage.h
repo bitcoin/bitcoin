@@ -1,7 +1,6 @@
 #ifndef OVERVIEWPAGE_H
 #define OVERVIEWPAGE_H
 
-#include <QtGlobal>
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE

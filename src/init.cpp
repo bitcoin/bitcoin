@@ -2,9 +2,6 @@
 // Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
-#include <stdint.h>
-
 #include "headers.h"
 #include "db.h"
 #include "bitcoinrpc.h"
@@ -352,7 +349,7 @@ bool AppInit2(int argc, char* argv[])
     //
     if (fDaemon)
         fprintf(stdout, "bitcoin server starting\n");
-    int64_t nStart;
+    int64 nStart;
 
     InitMessage(_("Loading addresses..."));
     printf("Loading addresses...\n");
