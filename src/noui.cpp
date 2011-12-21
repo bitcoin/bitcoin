@@ -17,7 +17,7 @@ static int noui_ThreadSafeMessageBox(const std::string& message, const std::stri
 
 static bool noui_ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
 {
-    return true;
+    return false;
 }
 
 void noui_connect()
