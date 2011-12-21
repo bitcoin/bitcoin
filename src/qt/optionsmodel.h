@@ -1,7 +1,6 @@
 #ifndef OPTIONSMODEL_H
 #define OPTIONSMODEL_H
 
-#include <QtGlobal>
 #include <QAbstractListModel>
 
 class CWallet;

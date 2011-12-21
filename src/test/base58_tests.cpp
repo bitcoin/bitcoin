@@ -1,5 +1,3 @@
-#include <stdint.h>
-
 #include <boost/test/unit_test.hpp>
 
 #include "main.h"

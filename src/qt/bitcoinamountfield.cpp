@@ -4,7 +4,6 @@
 
 #include "guiconstants.h"
 
-#include <QtGlobal>
 #include <QLabel>
 #include <QLineEdit>
 #include <QRegExpValidator>

@@ -3,8 +3,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
-
 #include "headers.h"
 #include "irc.h"
 #include "net.h"
@@ -356,7 +354,7 @@ void ThreadIRCSeed2(void* parg)
             Send(hSocket, strprintf("WHO #bitcoin%02d\r", channel_number).c_str());
         }
 
-        int64_t nStart = GetTime();
+        int64 nStart = GetTime();
         string strLine;
         strLine.reserve(10000);
         while (!fShutdown && RecvLineIRC(hSocket, strLine))

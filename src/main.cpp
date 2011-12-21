@@ -2,9 +2,6 @@
 // Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
-#include <stdint.h>
-
 #include "headers.h"
 #include "checkpoints.h"
 #include "db.h"
@@ -45,7 +42,7 @@ CBigNum bnBestChainWork = 0;
 CBigNum bnBestInvalidWork = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
-int64_t nTimeBestReceived = 0;
+int64 nTimeBestReceived = 0;
 
 CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes claim to have
 
@@ -57,11 +54,11 @@ multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
 
 
 double dHashesPerSec;
-int64_t nHPSTimerStart;
+int64 nHPSTimerStart;
 
 // Settings
 int fGenerateBitcoins = false;
-int64_t nTransactionFee = 0;
+int64 nTransactionFee = 0;
 int fLimitProcessors = false;
 int nLimitProcessors = 1;
 int fMinimizeToTray = true;
@@ -381,7 +378,7 @@ bool CTransaction::CheckTransaction() const
         return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
 
     // Check for negative or overflow output values
-    int64_t nValueOut = 0;
+    int64 nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         if (txout.nValue < 0)
@@ -430,7 +427,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         return DoS(100, error("AcceptToMemoryPool() : coinbase as individual tx"));
 
     // To help v0.1.5 clients who would see it as a negative number
-    if ((int64_t)nLockTime > std::numeric_limits<int>::max())
+    if ((int64)nLockTime > std::numeric_limits<int>::max())
         return error("AcceptToMemoryPool() : not accepting nLockTime beyond 2038 yet");
 
     // Rather not work on nonstandard transactions (unless -testnet)
@@ -490,7 +487,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
             return error("AcceptToMemoryPool() : nonstandard transaction input");
 
         // Check against previous transactions
-        int64_t nFees = 0;
+        int64 nFees = 0;
         int nSigOps = 0;
         if (!ConnectInputs(mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, nFees, false, false, nSigOps))
         {
@@ -516,8 +513,8 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         {
             static CCriticalSection cs;
             static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
+            static int64 nLastTime;
+            int64 nNow = GetTime();
 
             CRITICAL_BLOCK(cs)
             {
@@ -728,9 +725,9 @@ uint256 static GetOrphanRoot(const CBlock* pblock)
     return pblock->GetHash();
 }
 
-int64_t static GetBlockValue(int nHeight, int64_t nFees)
+int64 static GetBlockValue(int nHeight, int64 nFees)
 {
-    int64_t nSubsidy = 50 * COIN;
+    int64 nSubsidy = 50 * COIN;
 
     // Subsidy is cut in half every 4 years
     nSubsidy >>= (nHeight / 210000);
@@ -738,15 +735,15 @@ int64_t static GetBlockValue(int nHeight, int64_t nFees)
     return nSubsidy + nFees;
 }
 
-static const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-static const int64_t nTargetSpacing = 10 * 60;
-static const int64_t nInterval = nTargetTimespan / nTargetSpacing;
+static const int64 nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+static const int64 nTargetSpacing = 10 * 60;
+static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 
 //
 // minimum amount of work that could possibly be required nTime after
 // minimum work required was nBase
 //
-unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
+unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 {
     CBigNum bnResult;
     bnResult.SetCompact(nBase);
@@ -780,7 +777,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast)
     assert(pindexFirst);
 
     // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+    int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
     printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
     if (nActualTimespan < nTargetTimespan/4)
         nActualTimespan = nTargetTimespan/4;
@@ -831,7 +828,7 @@ bool IsInitialBlockDownload()
 {
     if (pindexBest == NULL || nBestHeight < (Checkpoints::GetTotalBlocksEstimate()-nInitialBlockThreshold))
         return true;
-    static int64_t nLastUpdate;
+    static int64 nLastUpdate;
     static CBlockIndex* pindexLastBest;
     if (pindexBest != pindexLastBest)
     {
@@ -954,7 +951,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
 
 bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inputs,
                                  map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
-                                 CBlockIndex* pindexBlock, int64_t& nFees, bool fBlock, bool fMiner, int& nSigOpsRet, int64_t nMinFee)
+                                 CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int& nSigOpsRet, int64 nMinFee)
 {
     // Take over previous transactions' spent pointers
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
@@ -962,7 +959,7 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
     // ... both are false when called from CTransaction::AcceptToMemoryPool
     if (!IsCoinBase())
     {
-        int64_t nValueIn = 0;
+        int64 nValueIn = 0;
         for (int i = 0; i < vin.size(); i++)
         {
             COutPoint prevout = vin[i].prevout;
@@ -992,7 +989,7 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
                     // To avoid being on the short end of a block-chain split,
                     // interpret OP_EVAL as a NO_OP until blocks with timestamps
                     // after opevaltime:
-                    int64_t nEvalSwitchTime = GetArg("opevaltime", 1328054400); // Feb 1, 2012
+                    int64 nEvalSwitchTime = GetArg("opevaltime", 1328054400); // Feb 1, 2012
                     fStrictOpEval = (pindexBlock->nTime >= nEvalSwitchTime);
                 }
                 // if !fBlock, then always be strict-- don't accept
@@ -1030,7 +1027,7 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
             return DoS(100, error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str()));
 
         // Tally transaction fees
-        int64_t nTxFee = nValueIn - GetValueOut();
+        int64 nTxFee = nValueIn - GetValueOut();
         if (nTxFee < 0)
             return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,10).c_str()));
         if (nTxFee < nMinFee)
@@ -1063,7 +1060,7 @@ bool CTransaction::ClientConnectInputs()
     // Take over previous transactions' spent pointers
     CRITICAL_BLOCK(cs_mapTransactions)
     {
-        int64_t nValueIn = 0;
+        int64 nValueIn = 0;
         for (int i = 0; i < vin.size(); i++)
         {
             // Get prev tx from single transactions in memory
@@ -1134,7 +1131,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - 1 + GetSizeOfCompactSize(vtx.size());
 
     map<uint256, CTxIndex> mapQueuedChanges;
-    int64_t nFees = 0;
+    int64 nFees = 0;
     int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
@@ -1502,7 +1499,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
-        int64_t deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
+        int64 deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
         if (deltaTime < 0)
         {
             pfrom->Misbehaving(100);
@@ -1568,12 +1565,12 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
 
 
-bool CheckDiskSpace(uint64_t nAdditionalBytes)
+bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
-    uint64_t nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
+    uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
 
     // Check for 15MB because database could create another 10MB log file at any time
-    if (nFreeBytesAvailable < (uint64_t)15000000 + nAdditionalBytes)
+    if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
         string strMessage = _("Warning: Disk space is low  ");
@@ -1948,10 +1945,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return false;
         }
 
-        int64_t nTime;
+        int64 nTime;
         CAddress addrMe;
         CAddress addrFrom;
-        uint64_t nNonce = 1;
+        uint64 nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
@@ -2062,8 +2059,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Store the new addresses
         CAddrDB addrDB;
         addrDB.TxnBegin();
-        int64_t nNow = GetAdjustedTime();
-        int64_t nSince = nNow - 10 * 60;
+        int64 nNow = GetAdjustedTime();
+        int64 nSince = nNow - 10 * 60;
         BOOST_FOREACH(CAddress& addr, vAddr)
         {
             if (fShutdown)
@@ -2085,7 +2082,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     static uint256 hashSalt;
                     if (hashSalt == 0)
                         RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
-                    uint256 hashRand = hashSalt ^ (((int64_t)addr.ip)<<32) ^ ((GetTime()+addr.ip)/(24*60*60));
+                    uint256 hashRand = hashSalt ^ (((int64)addr.ip)<<32) ^ ((GetTime()+addr.ip)/(24*60*60));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     multimap<uint256, CNode*> mapMix;
                     BOOST_FOREACH(CNode* pnode, vNodes)
@@ -2347,7 +2344,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         // Nodes rebroadcast an addr every 24 hours
         pfrom->vAddrToSend.clear();
-        int64_t nSince = GetAdjustedTime() - 3 * 60 * 60; // in the last 3 hours
+        int64 nSince = GetAdjustedTime() - 3 * 60 * 60; // in the last 3 hours
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             unsigned int nCount = 0;
@@ -2585,7 +2582,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         ResendWalletTransactions();
 
         // Address refresh broadcast
-        static int64_t nLastRebroadcast;
+        static int64 nLastRebroadcast;
         if (GetTime() - nLastRebroadcast > 24 * 60 * 60)
         {
             nLastRebroadcast = GetTime();
@@ -2608,7 +2605,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         }
 
         // Clear out old addresses periodically so it's not too much work at once
-        static int64_t nLastClear;
+        static int64 nLastClear;
         if (nLastClear == 0)
             nLastClear = GetTime();
         if (GetTime() - nLastClear > 10 * 60 && vNodes.size() >= 3)
@@ -2617,7 +2614,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             CRITICAL_BLOCK(cs_mapAddresses)
             {
                 CAddrDB addrdb;
-                int64_t nSince = GetAdjustedTime() - 14 * 24 * 60 * 60;
+                int64 nSince = GetAdjustedTime() - 14 * 24 * 60 * 60;
                 for (map<vector<unsigned char>, CAddress>::iterator mi = mapAddresses.begin();
                      mi != mapAddresses.end();)
                 {
@@ -2725,7 +2722,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Message: getdata
         //
         vector<CInv> vGetData;
-        int64_t nNow = GetTime() * 1000000;
+        int64 nNow = GetTime() * 1000000;
         CTxDB txdb("r");
         while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
@@ -2880,7 +2877,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     pblock->vtx.push_back(txNew);
 
     // Collect memory pool transactions into the block
-    int64_t nFees = 0;
+    int64 nFees = 0;
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_mapTransactions)
     {
@@ -2916,7 +2913,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                     porphan->setDependsOn.insert(txin.prevout.hash);
                     continue;
                 }
-                int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
+                int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
 
                 // Read block header
                 int nConf = txindex.GetDepthInMainChain();
@@ -2946,7 +2943,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
         // Collect transactions into block
         map<uint256, CTxIndex> mapTestPool;
-        uint64_t nBlockSize = 1000;
+        uint64 nBlockSize = 1000;
         int nBlockSigOps = 100;
         while (!mapPriority.empty())
         {
@@ -2962,7 +2959,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
             // Transaction fee required depends on block size
             bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
-            int64_t nMinFee = tx.GetMinFee(nBlockSize, fAllowFree, GMF_BLOCK);
+            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree, GMF_BLOCK);
 
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
@@ -3172,7 +3169,7 @@ void static BitcoinMiner(CWallet *pwallet)
         //
         // Search
         //
-        int64_t nStart = GetTime();
+        int64 nStart = GetTime();
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
@@ -3205,7 +3202,7 @@ void static BitcoinMiner(CWallet *pwallet)
             }
 
             // Meter hashes/sec
-            static int64_t nHashCounter;
+            static int64 nHashCounter;
             if (nHPSTimerStart == 0)
             {
                 nHPSTimerStart = GetTimeMillis();
@@ -3225,7 +3222,7 @@ void static BitcoinMiner(CWallet *pwallet)
                         nHashCounter = 0;
                         string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
                         UIThreadCall(boost::bind(CalledSetStatusBar, strStatus, 0));
-                        static int64_t nLogTime;
+                        static int64 nLogTime;
                         if (GetTime() - nLogTime > 30 * 60)
                         {
                             nLogTime = GetTime();

@@ -5,8 +5,6 @@
 #ifndef BITCOIN_DB_H
 #define BITCOIN_DB_H
 
-#include <stdint.h>
-
 #include "key.h"
 
 #include <map>
@@ -319,7 +317,7 @@ bool LoadAddresses();
 class CKeyPool
 {
 public:
-    int64_t nTime;
+    int64 nTime;
     std::vector<unsigned char> vchPubKey;
 
     CKeyPool()
@@ -458,18 +456,18 @@ public:
         return Write(std::string("defaultkey"), vchPubKey);
     }
 
-    bool ReadPool(int64_t nPool, CKeyPool& keypool)
+    bool ReadPool(int64 nPool, CKeyPool& keypool)
     {
         return Read(std::make_pair(std::string("pool"), nPool), keypool);
     }
 
-    bool WritePool(int64_t nPool, const CKeyPool& keypool)
+    bool WritePool(int64 nPool, const CKeyPool& keypool)
     {
         nWalletDBUpdated++;
         return Write(std::make_pair(std::string("pool"), nPool), keypool);
     }
 
-    bool ErasePool(int64_t nPool)
+    bool ErasePool(int64 nPool)
     {
         nWalletDBUpdated++;
         return Erase(std::make_pair(std::string("pool"), nPool));
@@ -491,7 +489,7 @@ public:
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
     bool WriteAccountingEntry(const CAccountingEntry& acentry);
-    int64_t GetAccountCreditDebit(const std::string& strAccount);
+    int64 GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
     int LoadWallet(CWallet* pwallet);
