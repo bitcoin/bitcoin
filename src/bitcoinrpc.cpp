@@ -802,7 +802,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (pwalletMain->IsLocked())
         throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, fForceFee);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, true, fForceFee ? nTransactionFeeMax : MAX_MONEY);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -1134,7 +1134,7 @@ Value sendfrom(const Array& params, bool fHelp)
         throw JSONRPCError(-6, "Account has insufficient funds");
 
     // Send
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, fForceFee);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, true, fForceFee ? nTransactionFeeMax : MAX_MONEY);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -1193,7 +1193,7 @@ Value sendmany(const Array& params, bool fHelp)
     // Send
     CReserveKey keyChange(pwalletMain);
     int64 nFeeRequired = 0;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, fForceFee);
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, fForceFee ? nTransactionFeeMax : MAX_MONEY);
     if (!fCreated)
     {
         if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
