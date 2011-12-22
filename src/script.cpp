@@ -1442,7 +1442,7 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     return false;
 }
 
-bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
+bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet)
 {
     vector<valtype> vSolutions;
     txnouttype whichType;
@@ -1468,7 +1468,7 @@ bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBit
     return false;
 }
 
-bool ExtractAddresses(const CScript& scriptPubKey, const CKeyStore* keystore, txnouttype& typeRet, vector<CBitcoinAddress>& addressRet, int& nRequiredRet)
+bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, vector<CBitcoinAddress>& addressRet, int& nRequiredRet)
 {
     addressRet.clear();
     typeRet = TX_NONSTANDARD;

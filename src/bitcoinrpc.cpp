@@ -689,7 +689,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             CBitcoinAddress address;
-            if (ExtractAddress(txout.scriptPubKey, pwalletMain, address) && setAddress.count(address))
+            if (ExtractAddress(txout.scriptPubKey, address) && pwalletMain->HaveKey(address) && setAddress.count(address))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
         }
@@ -1033,6 +1033,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
+
         if (wtx.IsCoinBase() || !wtx.IsFinal())
             continue;
 
@@ -1043,7 +1044,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             CBitcoinAddress address;
-            if (!ExtractAddress(txout.scriptPubKey, pwalletMain, address) || !address.IsValid())
+            if (!ExtractAddress(txout.scriptPubKey, address) || !pwalletMain->HaveKey(address) || !address.IsValid())
                 continue;
 
             tallyitem& item = mapTally[address];
@@ -1142,6 +1143,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     string strSentAccount;
     list<pair<CBitcoinAddress, int64> > listReceived;
     list<pair<CBitcoinAddress, int64> > listSent;
+
     wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
 
     bool fAllAccounts = (strAccount == string("*"));
@@ -1682,7 +1684,7 @@ Value validateaddress(const Array& params, bool fHelp)
             std::vector<CBitcoinAddress> addresses;
             txnouttype whichType;
             int nRequired;
-            ExtractAddresses(subscript, pwalletMain, whichType, addresses, nRequired);
+            ExtractAddresses(subscript, whichType, addresses, nRequired);
             ret.push_back(Pair("script", GetTxnOutputType(whichType)));
             Array a;
             BOOST_FOREACH(const CBitcoinAddress& addr, addresses)

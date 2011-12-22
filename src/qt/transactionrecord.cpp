@@ -80,7 +80,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     if(wallet->IsMine(txout))
                     {
                         CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
+                        if (ExtractAddress(txout.scriptPubKey, address) && wallet->HaveKey(address))
                         {
                             sub.address = address.ToString();
                         }
@@ -138,7 +138,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                         // Sent to Bitcoin Address
                         sub.type = TransactionRecord::SendToAddress;
                         CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, 0, address))
+                        if (ExtractAddress(txout.scriptPubKey, address))
                         {
                             sub.address = address.ToString();
                         }

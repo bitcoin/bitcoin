@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(Solver(s, whichType, solutions));
         BOOST_CHECK(solutions.size() == 1);
         CBitcoinAddress addr;
-        BOOST_CHECK(ExtractAddress(s, &keystore, addr));
+        BOOST_CHECK(ExtractAddress(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(Solver(s, whichType, solutions));
         BOOST_CHECK(solutions.size() == 1);
         CBitcoinAddress addr;
-        BOOST_CHECK(ExtractAddress(s, &keystore, addr));
+        BOOST_CHECK(ExtractAddress(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(Solver(s, whichType, solutions));
         BOOST_CHECK_EQUAL(solutions.size(), 4);
         CBitcoinAddress addr;
-        BOOST_CHECK(!ExtractAddress(s, &keystore, addr));
+        BOOST_CHECK(!ExtractAddress(s, addr));
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
     }
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK_EQUAL(solutions.size(), 4);
         vector<CBitcoinAddress> addrs;
         int nRequired;
-        BOOST_CHECK(ExtractAddresses(s, &keystore, whichType, addrs, nRequired));
+        BOOST_CHECK(ExtractAddresses(s, whichType, addrs, nRequired));
         BOOST_CHECK(addrs[0] == keyaddr[0]);
         BOOST_CHECK(addrs[1] == keyaddr[1]);
         BOOST_CHECK(nRequired = 1);
