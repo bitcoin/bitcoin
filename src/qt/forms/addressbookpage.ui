@@ -80,6 +80,17 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="showQRCode">
+       <property name="text">
+        <string>Show &amp;QR Code</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/images/qrcode</normaloff>:/images/qrcode</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="deleteButton">
        <property name="toolTip">
         <string>Delete the currently selected address from the list. Only sending addresses can be deleted.</string>
