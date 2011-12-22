@@ -264,8 +264,7 @@ public:
     {
         PUBKEY_ADDRESS = 0,
         SCRIPT_ADDRESS = 5,
-        PUBKEY_ADDRESS_TEST = 192,
-        PUBKEY_ADDRESS_TEST_LEGACY = 111,  // Deprecated: old testnet address
+        PUBKEY_ADDRESS_TEST = 111,
         SCRIPT_ADDRESS_TEST = 196,
     };
 
@@ -301,7 +300,6 @@ public:
                 fExpectTestNet = false;
                 break;
 
-            case PUBKEY_ADDRESS_TEST_LEGACY:
             case PUBKEY_ADDRESS_TEST:
                 nExpectedSize = 20;
                 fExpectTestNet = true;
