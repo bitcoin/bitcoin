@@ -589,8 +589,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-static const string strMessageMagic = "Bitcoin Signed Message:\n";
-
 Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
