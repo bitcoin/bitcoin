@@ -54,6 +54,7 @@ private slots:
     void on_newAddressButton_clicked();
     void on_copyToClipboard_clicked();
     void selectionChanged();
+    void on_showQRCode_clicked();
 };
 
 #endif // ADDRESSBOOKDIALOG_H

@@ -10,6 +10,10 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+#ifdef USE_QRCODE
+#include "qrcodedialog.h"
+#endif
+
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddressBookPage),
@@ -23,6 +27,10 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     ui->newAddressButton->setIcon(QIcon());
     ui->copyToClipboard->setIcon(QIcon());
     ui->deleteButton->setIcon(QIcon());
+#endif
+
+#ifndef USE_QRCODE
+    ui->showQRCode->setVisible(false);
 #endif
 
     switch(mode)
@@ -169,10 +177,12 @@ void AddressBookPage::selectionChanged()
             break;
         }
         ui->copyToClipboard->setEnabled(true);
+        ui->showQRCode->setEnabled(true);
     }
     else
     {
         ui->deleteButton->setEnabled(false);
+        ui->showQRCode->setEnabled(false);
         ui->copyToClipboard->setEnabled(false);
     }
 }
@@ -226,4 +236,24 @@ void AddressBookPage::exportClicked()
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
                               QMessageBox::Abort, QMessageBox::Abort);
     }
+}
+
+void AddressBookPage::on_showQRCode_clicked()
+{
+#ifdef USE_QRCODE
+    QTableView *table = ui->tableView;
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+
+
+    QRCodeDialog *d;
+    foreach (QModelIndex index, indexes)
+    {
+        QString address = index.data().toString(),
+            label = index.sibling(index.row(), 0).data().toString(),
+            title = QString("%1 << %2 >>").arg(label).arg(address);
+
+        QRCodeDialog *d = new QRCodeDialog(title, address, label, tab == ReceivingTab, this);
+        d->show();
+    }
+#endif
 }
