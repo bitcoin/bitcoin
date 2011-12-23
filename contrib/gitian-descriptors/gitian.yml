@@ -39,7 +39,7 @@ script: |
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
   sed 's/$(DEBUGFLAGS)//' -i makefile.unix
-  make -f makefile.unix STATIC=1 DEFS="-I$INSTDIR/include -L$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0 USE_SSL=1
+  make -f makefile.unix STATIC=1 OPENSSL_INCLUDE_PATH="$INSTDIR/include" OPENSSL_LIB_PATH="$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0 USE_SSL=1
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoind $OUTDIR/bin/$GBUILD_BITS
   cd ..
