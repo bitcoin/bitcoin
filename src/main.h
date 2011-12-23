@@ -25,7 +25,6 @@ class CAddress;
 class CInv;
 class CRequestTracker;
 class CNode;
-class CBlockIndex;
 
 static const int CLIENT_VERSION = 59900;
 static const bool VERSION_IS_BETA = true;
