@@ -2828,7 +2828,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
             // Transaction fee required depends on block size
             bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
-            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree, true);
+            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree);
 
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
