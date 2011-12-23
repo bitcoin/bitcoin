@@ -19,6 +19,14 @@ OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
 
+# use: qmake "USE_QRCODE=1"
+# libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
+contains(USE_QRCODE, 1) {
+    message(Building with QRCode support)
+    DEFINES += USE_QRCODE
+    LIBS += -lqrencode
+}
+
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
     # Mac: compile for maximum compatibility (10.5, 32-bit)
@@ -198,6 +206,12 @@ FORMS += \
     src/qt/forms/overviewpage.ui \
     src/qt/forms/sendcoinsentry.ui \
     src/qt/forms/askpassphrasedialog.ui
+
+contains(USE_QRCODE, 1) {
+HEADERS += src/qt/qrcodedialog.h
+SOURCES += src/qt/qrcodedialog.cpp
+FORMS += src/qt/forms/qrcodedialog.ui
+}
 
 CODECFORTR = UTF-8
 

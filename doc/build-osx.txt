@@ -43,6 +43,9 @@ pushd bitcoin/contrib/minipupnpc; sudo port install; popd
 (this will be unnecessary soon, you will just port install miniupnpc
 along with the rest of the dependencies).
 
+Optionally install qrencode (and set USE_QRCODE=1):
+sudo port install qrencode
+
 4.  Now you should be able to build bitcoind:
 
 cd bitcoin/src
