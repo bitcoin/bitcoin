@@ -7,24 +7,8 @@
 #include "qtui.h"
 
 #include <QString>
-#include <QTextDocument> // For Qt::escape
 
 using namespace std;
-
-QString TransactionDesc::HtmlEscape(const QString& str, bool fMultiLine)
-{
-    QString escaped = Qt::escape(str);
-    if(fMultiLine)
-    {
-        escaped = escaped.replace("\n", "<br>\n");
-    }
-    return escaped;
-}
-
-QString TransactionDesc::HtmlEscape(const std::string& str, bool fMultiLine)
-{
-    return HtmlEscape(QString::fromStdString(str), fMultiLine);
-}
 
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
@@ -86,7 +70,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         {
             // Online transaction
             if (!wtx.mapValue["from"].empty())
-                strHTML += tr("<b>From:</b> ") + HtmlEscape(wtx.mapValue["from"]) + "<br>";
+                strHTML += tr("<b>From:</b> ") + GUIUtil::HtmlEscape(wtx.mapValue["from"]) + "<br>";
         }
         else
         {
@@ -105,9 +89,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                             {
                                 strHTML += tr("<b>From:</b> ") + tr("unknown") + "<br>";
                                 strHTML += tr("<b>To:</b> ");
-                                strHTML += HtmlEscape(address.ToString());
+                                strHTML += GUIUtil::HtmlEscape(address.ToString());
                                 if (!wallet->mapAddressBook[address].empty())
-                                    strHTML += tr(" (yours, label: ") + HtmlEscape(wallet->mapAddressBook[address]) + ")";
+                                    strHTML += tr(" (yours, label: ") + GUIUtil::HtmlEscape(wallet->mapAddressBook[address]) + ")";
                                 else
                                     strHTML += tr(" (yours)");
                                 strHTML += "<br>";
@@ -129,8 +113,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
             strAddress = wtx.mapValue["to"];
             strHTML += tr("<b>To:</b> ");
             if (wallet->mapAddressBook.count(strAddress) && !wallet->mapAddressBook[strAddress].empty())
-                strHTML += HtmlEscape(wallet->mapAddressBook[strAddress]) + " ";
-            strHTML += HtmlEscape(strAddress) + "<br>";
+                strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[strAddress]) + " ";
+            strHTML += GUIUtil::HtmlEscape(strAddress) + "<br>";
         }
 
         //
@@ -188,8 +172,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                         {
                             strHTML += tr("<b>To:</b> ");
                             if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
-                                strHTML += HtmlEscape(wallet->mapAddressBook[address]) + " ";
-                            strHTML += HtmlEscape(address.ToString());
+                                strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address]) + " ";
+                            strHTML += GUIUtil::HtmlEscape(address.ToString());
                             strHTML += "<br>";
                         }
                     }
@@ -230,9 +214,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         // Message
         //
         if (!wtx.mapValue["message"].empty())
-            strHTML += QString("<br><b>") + tr("Message:") + "</b><br>" + HtmlEscape(wtx.mapValue["message"], true) + "<br>";
+            strHTML += QString("<br><b>") + tr("Message:") + "</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["message"], true) + "<br>";
         if (!wtx.mapValue["comment"].empty())
-            strHTML += QString("<br><b>") + tr("Comment:") + "</b><br>" + HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
+            strHTML += QString("<br><b>") + tr("Comment:") + "</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
         if (wtx.IsCoinBase())
             strHTML += QString("<br>") + tr("Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
@@ -251,7 +235,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                     strHTML += "<b>Credit:</b> " + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC,wallet->GetCredit(txout)) + "<br>";
 
             strHTML += "<br><b>Transaction:</b><br>";
-            strHTML += HtmlEscape(wtx.ToString(), true);
+            strHTML += GUIUtil::HtmlEscape(wtx.ToString(), true);
 
             CTxDB txdb("r"); // To fetch source txouts
 
@@ -274,7 +258,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                             if (ExtractAddress(vout.scriptPubKey, address))
                             {
                                 if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
-                                    strHTML += HtmlEscape(wallet->mapAddressBook[address]) + " ";
+                                    strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address]) + " ";
                                 strHTML += QString::fromStdString(address.ToString());
                             }
                             strHTML = strHTML + " Amount=" + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC,vout.nValue);
