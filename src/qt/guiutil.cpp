@@ -11,6 +11,10 @@
 #include <QFont>
 #include <QLineEdit>
 #include <QUrl>
+#include <QTextDocument> // For Qt::escape
+#include <QAbstractItemView>
+#include <QApplication>
+#include <QClipboard>
 
 QString GUIUtil::dateTimeStr(qint64 nTime)
 {
@@ -71,4 +75,32 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
         *out = rv;
     }
     return true;
+}
+
+QString GUIUtil::HtmlEscape(const QString& str, bool fMultiLine)
+{
+    QString escaped = Qt::escape(str);
+    if(fMultiLine)
+    {
+        escaped = escaped.replace("\n", "<br>\n");
+    }
+    return escaped;
+}
+
+QString GUIUtil::HtmlEscape(const std::string& str, bool fMultiLine)
+{
+    return HtmlEscape(QString::fromStdString(str), fMultiLine);
+}
+
+void GUIUtil::copyEntryData(QAbstractItemView *view, int column, int role)
+{
+    if(!view || !view->selectionModel())
+        return;
+    QModelIndexList selection = view->selectionModel()->selectedRows(column);
+
+    if(!selection.isEmpty())
+    {
+        // Copy first item
+        QApplication::clipboard()->setText(selection.at(0).data(role).toString());
+    }
 }

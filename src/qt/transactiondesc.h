@@ -18,8 +18,6 @@ public:
 private:
     TransactionDesc() {}
 
-    static QString HtmlEscape(const QString& str, bool fMultiLine=false);
-    static QString HtmlEscape(const std::string &str, bool fMultiLine=false);
     static QString FormatTxStatus(const CWalletTx& wtx);
 };
 
