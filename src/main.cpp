@@ -53,6 +53,9 @@ map<uint256, CDataStream*> mapOrphanTransactions;
 multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
 
 
+const string strMessageMagic = "Bitcoin Signed Message:\n";
+
+
 double dHashesPerSec;
 int64 nHPSTimerStart;
 
