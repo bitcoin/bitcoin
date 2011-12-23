@@ -57,6 +57,7 @@ private slots:
     void on_newAddressButton_clicked();
     /** Copy address of currently selected address entry to clipboard */
     void on_copyToClipboard_clicked();
+    void on_signMessage_clicked();
     void selectionChanged();
     void on_showQRCode_clicked();
     /** Spawn contextual menu (right mouse menu) for address book entry */
