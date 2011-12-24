@@ -78,6 +78,9 @@ public:
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
 
+    // Only allow client to send from specific address(es)
+    void setSendFromAddressRestriction(std::string addresses);
+
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
     {

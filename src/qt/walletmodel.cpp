@@ -239,6 +239,11 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
     return retval;
 }
 
+void WalletModel::setSendFromAddressRestriction(std::string addresses)
+{
+  wallet->setSendFromAddressRestriction(addresses);
+}
+
 // WalletModel::UnlockContext implementation
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {

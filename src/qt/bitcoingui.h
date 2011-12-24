@@ -11,6 +11,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
+class CoinControlPage;
 class Notificator;
 
 QT_BEGIN_NAMESPACE
@@ -44,7 +45,7 @@ public:
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
-    
+
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
@@ -62,6 +63,7 @@ private:
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    CoinControlPage *coinControlPage;
 
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
@@ -82,6 +84,7 @@ private:
     QAction *exportAction;
     QAction *encryptWalletAction;
     QAction *changePassphraseAction;
+    QAction *coinControlAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
@@ -99,6 +102,9 @@ private:
     void createTrayIcon();
 
 public slots:
+    /** Switch to send coins page */
+    void gotoSendCoinsPage();
+
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
@@ -132,8 +138,8 @@ private slots:
     void gotoAddressBookPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
-    /** Switch to send coins page */
-    void gotoSendCoinsPage();
+    /** Switch to coin control page */
+    void gotoCoinControlPage();
 
     /** Show configuration dialog */
     void optionsClicked();
@@ -154,6 +160,8 @@ private slots:
     void changePassphrase();
     /** Ask for pass phrase to unlock wallet temporarily */
     void unlockWallet();
+
+    void toggleCoinControlTab(bool);
 };
 
 #endif

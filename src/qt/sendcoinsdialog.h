@@ -2,10 +2,12 @@
 #define SENDCOINSDIALOG_H
 
 #include <QDialog>
+#include <QLineEdit>
 
 namespace Ui {
     class SendCoinsDialog;
 }
+class CWallet;
 class WalletModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
@@ -31,6 +33,7 @@ public:
 
     void pasteEntry(const SendCoinsRecipient &rv);
     void handleURL(const QUrl *url);
+    void setSendFromAddress(std::string address);
 
 public slots:
     void clear();
@@ -46,6 +49,7 @@ private:
 
 private slots:
     void on_sendButton_clicked();
+    void toggleSendFrom(bool);
 
     void removeEntry(SendCoinsEntry* entry);
 };

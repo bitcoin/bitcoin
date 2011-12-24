@@ -28,6 +28,7 @@ public:
         Fee, // qint64
         DisplayUnit, // BitcoinUnits::Unit
         DisplayAddresses, // bool
+        CoinControlFeatures, // bool
         OptionIDRowCount
     };
 
@@ -41,13 +42,16 @@ public:
     bool getMinimizeOnClose();
     int getDisplayUnit();
     bool getDisplayAddresses();
+    bool getCoinControlFeatures();
 private:
     // Wallet stores persistent options
     CWallet *wallet;
     int nDisplayUnit;
     bool bDisplayAddresses;
+    bool bCoinControlFeatures;
 signals:
     void displayUnitChanged(int unit);
+    void coinControlFeaturesChanged(bool);
 
 public slots:
 
