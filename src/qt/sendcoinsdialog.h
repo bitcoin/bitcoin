@@ -43,6 +43,7 @@ public slots:
 private:
     Ui::SendCoinsDialog *ui;
     WalletModel *model;
+    bool fNewRecipientAllowed;
 
 private slots:
     void on_sendButton_clicked();
