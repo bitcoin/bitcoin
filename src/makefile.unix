@@ -158,12 +158,12 @@ clean:
 	-rm -f obj/*.P
 	-rm -f obj/nogui/*.P
 	-rm -f obj/test/*.P
-	-rm -f ppcoin/obj/*.o
+	-rm -f ppcoin/obj/*
 
 ppcoin/obj/genesis.o: ppcoin/genesis.cpp
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-	$(CXX) -c $(CXXFLAGS) -DPPCOIN_GENESIS -o obj/nogui/init.o init.cpp
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(xCXXFLAGS) -MMD -DPPCOIN_GENESIS -o obj/nogui/init.o init.cpp
 
 genesis: ppcoin/obj/genesis.o $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
-	-rm -f obj/nogui/init.o
+	-rm -f obj/nogui/init.*
