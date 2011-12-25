@@ -29,7 +29,7 @@ unsigned int nTransactionsUpdated = 0;
 map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
-uint256 hashGenesisBlock("0x00000000e74ef41733382f8a94d41bf29f20c6c48a7ab489e1fab0ab719bf676");
+uint256 hashGenesisBlock("0x00000000b00cf820bc2b23ec0aad05da6c58af7fd71c34a6f21a747fd0f5620b");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 const int nInitialBlockThreshold = 120; // Regard blocks up until N-threshold as "initial download"
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -1262,8 +1262,13 @@ bool CBlock::CheckBlock() const
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
+    {
         if (!tx.CheckTransaction())
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
+        // ppcoin: check transaction timestamp
+        if (GetBlockTime() < (int64)tx.nTime)
+            return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
+    }
 
     // Check that it's not full of nonstandard transactions
     if (GetSigOpCount() > MAX_BLOCK_SIGOPS)
@@ -1507,6 +1512,7 @@ bool LoadBlockIndex(bool fAllowNew)
         // Genesis block
         const char* pszTimestamp = "MarketWatch 07/Nov/2011 Gold tops $1,790 to end at over six-week high";
         CTransaction txNew;
+        txNew.nTime = 1324698231;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
@@ -1517,9 +1523,9 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1320941849;
+        block.nTime    = 1324707839;
         block.nBits    = 0x1d00ffff;
-        block.nNonce   = 725069208;
+        block.nNonce   = 486102291;
 
         if (fTestNet)
         {
@@ -1532,7 +1538,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("%s\n", block.GetHash().ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x09cc647316c90e7e14f225113eec3539e80284695c91e7262a65c72c5d75a868"));
+        assert(block.hashMerkleRoot == uint256("0x487e83bd2b5a5196a2a6b87998d779a162101cb02cc64bf9ac33289dd0c22352"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
 
@@ -2805,6 +2811,10 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
+            // Timestamp limit
+            if (tx.nTime > GetAdjustedTime())
+                continue;
+
             // ppcoin: simplify transaction fee - allow free = false
             int64 nMinFee = tx.GetMinFee(nBlockSize, false, true);
 
@@ -2842,6 +2852,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
     pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    pblock->nTime          = max(pblock->GetBlockTime(), pblock->GetMaxTransactionTime());
     pblock->nBits          = GetNextWorkRequired(pindexPrev);
     pblock->nNonce         = 0;
 
@@ -3085,6 +3096,7 @@ void static BitcoinMiner(CWallet *pwallet)
 
             // Update nTime every few seconds
             pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+            pblock->nTime = max(pblock->GetBlockTime(), pblock->GetMaxTransactionTime()); 
             nBlockTime = ByteReverse(pblock->nTime);
         }
     }
