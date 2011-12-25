@@ -398,6 +398,7 @@ class CTransaction
 {
 public:
     int nVersion;
+    unsigned int nTime;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
@@ -415,6 +416,7 @@ public:
     (
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
+        READWRITE(nTime);
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
@@ -423,6 +425,7 @@ public:
     void SetNull()
     {
         nVersion = 1;
+        nTime = GetAdjustedTime();
         vin.clear();
         vout.clear();
         nLockTime = 0;
@@ -600,6 +603,7 @@ public:
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
         return (a.nVersion  == b.nVersion &&
+                a.nTime     == b.nTime &&
                 a.vin       == b.vin &&
                 a.vout      == b.vout &&
                 a.nLockTime == b.nLockTime);
@@ -614,8 +618,9 @@ public:
     std::string ToString() const
     {
         std::string str;
-        str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
+        str += strprintf("CTransaction(hash=%s, nTime=%d, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
             GetHash().ToString().substr(0,10).c_str(),
+            nTime,
             nVersion,
             vin.size(),
             vout.size(),
@@ -845,6 +850,15 @@ public:
     int64 GetBlockTime() const
     {
         return (int64)nTime;
+    }
+
+    // ppcoin: get max transaction timestamp
+    int64 GetMaxTransactionTime() const
+    {
+        int64 maxTransactionTime = 0;
+        BOOST_FOREACH(const CTransaction& tx, vtx)
+            maxTransactionTime = std::max(maxTransactionTime, (int64)tx.nTime);
+        return maxTransactionTime;
     }
 
     int GetSigOpCount() const
