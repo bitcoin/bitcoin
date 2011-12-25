@@ -945,10 +945,18 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
             if (!txPrev.ReadFromDisk(txindex.pos))
                 return error("FetchInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
         }
+    }
+
+    // Make sure all prevout.n's are valid:
+    for (int i = 0; i < vin.size(); i++)
+    {
+        const COutPoint prevout = vin[i].prevout;
+        const CTxIndex& txindex = inputsRet[prevout.hash].first;
+        const CTransaction& txPrev = inputsRet[prevout.hash].second;
         if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
             return DoS(100, error("FetchInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
-
     }
+
     return true;
 }
 
