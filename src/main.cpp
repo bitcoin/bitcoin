@@ -284,7 +284,7 @@ bool CTransaction::AreInputsStandard(std::map<uint256, std::pair<CTxIndex, CTran
         COutPoint prevout = vin[i].prevout;
         assert(mapInputs.count(prevout.hash) > 0);
         CTransaction& txPrev = mapInputs[prevout.hash].second;
-        assert(prevout.n >= txPrev.vout.size());
+        assert(prevout.n < txPrev.vout.size());
 
         vector<vector<unsigned char> > vSolutions;
         txnouttype whichType;
