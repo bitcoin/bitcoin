@@ -284,6 +284,7 @@ bool CTransaction::AreInputsStandard(std::map<uint256, std::pair<CTxIndex, CTran
         COutPoint prevout = vin[i].prevout;
         assert(mapInputs.count(prevout.hash) > 0);
         CTransaction& txPrev = mapInputs[prevout.hash].second;
+        assert(prevout.n >= txPrev.vout.size());
 
         vector<vector<unsigned char> > vSolutions;
         txnouttype whichType;
@@ -944,6 +945,9 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
             if (!txPrev.ReadFromDisk(txindex.pos))
                 return error("FetchInputs() : %s ReadFromDisk prev tx %s failed", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
         }
+        if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
+            return DoS(100, error("FetchInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
+
     }
     return true;
 }
