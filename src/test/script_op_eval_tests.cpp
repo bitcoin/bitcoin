@@ -93,31 +93,65 @@ BOOST_AUTO_TEST_CASE(script_op_eval2)
 {
     // Test OP_EVAL edge cases
 
-    CScript recurse;
-    recurse << OP_DUP << OP_EVAL;
+    // Make sure infinite recursion fails to validate:
+    CScript infiniteRecurse;
+    infiniteRecurse << OP_DUP << OP_EVAL;
 
-    uint160 recurseHash = Hash160(recurse);
+    uint160 infiniteRecurseHash = Hash160(infiniteRecurse);
 
-    CScript fund;
-    fund << OP_DUP << OP_HASH160 << recurseHash << OP_EQUALVERIFY << OP_EVAL;
+    CScript fund1;
+    fund1 << OP_DUP << OP_HASH160 << infiniteRecurseHash << OP_EQUALVERIFY << OP_EVAL;
 
-    CTransaction txFrom;  // Funding transaction:
-    txFrom.vout.resize(1);
-    txFrom.vout[0].scriptPubKey = fund;
+    CTransaction txFrom1;  // Funding transaction:
+    txFrom1.vout.resize(1);
+    txFrom1.vout[0].scriptPubKey = fund1;
 
-    BOOST_CHECK(txFrom.IsStandard()); // Looks like a standard transaction until you try to spend it
+    BOOST_CHECK(txFrom1.IsStandard()); // Looks like a standard transaction until you try to spend it
 
-    CTransaction txTo;
-    txTo.vin.resize(1);
-    txTo.vout.resize(1);
-    txTo.vin[0].prevout.n = 0;
-    txTo.vin[0].prevout.hash = txFrom.GetHash();
-    txTo.vin[0].scriptSig = CScript() << static_cast<std::vector<unsigned char> >(recurse);
-    txTo.vout[0].nValue = 1;
+    std::vector<unsigned char> infiniteRecurseSerialized(infiniteRecurse);
 
-    int nUnused = 0;
-    BOOST_CHECK(!VerifyScript(txTo.vin[0].scriptSig, txFrom.vout[0].scriptPubKey, txTo, 0, nUnused, 0, true));
-    BOOST_CHECK(!VerifySignature(txFrom, txTo, 0, nUnused, true));
+    CTransaction txTo1;
+    txTo1.vin.resize(1);
+    txTo1.vout.resize(1);
+    txTo1.vin[0].prevout.n = 0;
+    txTo1.vin[0].prevout.hash = txFrom1.GetHash();
+    txTo1.vin[0].scriptSig = CScript() << infiniteRecurseSerialized << infiniteRecurseSerialized;
+    txTo1.vout[0].nValue = 1;
+
+    int nUnused1 = 0;
+    BOOST_CHECK(!VerifyScript(txTo1.vin[0].scriptSig, txFrom1.vout[0].scriptPubKey, txTo1, 0, nUnused1, 0, true));
+    BOOST_CHECK(!VerifySignature(txFrom1, txTo1, 0, nUnused1, true));
+
+    // Make sure 3-level-deep recursion fails to validate:
+    CScript recurse3;
+    recurse3 << OP_EVAL;
+
+    uint160 recurse3Hash = Hash160(recurse3);
+
+    CScript fund2;
+    fund2 << OP_DUP << OP_HASH160 << recurse3Hash << OP_EQUALVERIFY << OP_EVAL;
+
+    CTransaction txFrom2;  // Funding transaction:
+    txFrom2.vout.resize(1);
+    txFrom2.vout[0].scriptPubKey = fund2;
+
+    BOOST_CHECK(txFrom2.IsStandard()); // Looks like a standard transaction until you try to spend it
+
+    std::vector<unsigned char> recurse3Serialized(recurse3);
+    CScript op1Script = CScript() << OP_1;
+    std::vector<unsigned char> op1Serialized(op1Script);
+
+    CTransaction txTo2;
+    txTo2.vin.resize(1);
+    txTo2.vout.resize(1);
+    txTo2.vin[0].prevout.n = 0;
+    txTo2.vin[0].prevout.hash = txFrom2.GetHash();
+    txTo2.vin[0].scriptSig = CScript() << op1Serialized << recurse3Serialized << recurse3Serialized;
+    txTo2.vout[0].nValue = 1;
+
+    int nUnused2 = 0;
+    BOOST_CHECK(!VerifyScript(txTo2.vin[0].scriptSig, txFrom2.vout[0].scriptPubKey, txTo2, 0, nUnused2, 0, true));
+    BOOST_CHECK(!VerifySignature(txFrom2, txTo2, 0, nUnused2, true));
 }
 
 BOOST_AUTO_TEST_CASE(script_op_eval3)
