@@ -1033,7 +1033,7 @@ bool EvalScriptInner(vector<vector<unsigned char> >& stack, const CScript& scrip
                         return false;
 
                     if (!EvalScriptInner(stack, subscript, txTo, nIn, nHashType,
-                                         pbegincodehash, pendcodehash, nOpCount, nSigOpCount, fStrictOpEval, nRecurseDepth++))
+                                         pbegincodehash, pendcodehash, nOpCount, nSigOpCount, fStrictOpEval, nRecurseDepth+1))
                         return false;
                 }
                 break;
