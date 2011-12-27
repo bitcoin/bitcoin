@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -458,14 +459,14 @@ bool CTxDB::WriteHashBestChain(uint256 hashBestChain)
     return Write(string("hashBestChain"), hashBestChain);
 }
 
-bool CTxDB::ReadBestInvalidWork(CBigNum& bnBestInvalidWork)
+bool CTxDB::ReadBestInvalidTrust(uint64& nBestInvalidTrust)
 {
-    return Read(string("bnBestInvalidWork"), bnBestInvalidWork);
+    return Read(string("nBestInvalidTrust"), nBestInvalidTrust);
 }
 
-bool CTxDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
+bool CTxDB::WriteBestInvalidTrust(uint64 nBestInvalidTrust)
 {
-    return Write(string("bnBestInvalidWork"), bnBestInvalidWork);
+    return Write(string("nBestInvalidTrust"), nBestInvalidTrust);
 }
 
 CBlockIndex static * InsertBlockIndex(uint256 hash)
@@ -525,6 +526,7 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
             pindexNew->nFile          = diskindex.nFile;
             pindexNew->nBlockPos      = diskindex.nBlockPos;
+            pindexNew->nChainTrust    = diskindex.nChainTrust;
             pindexNew->nHeight        = diskindex.nHeight;
             pindexNew->nVersion       = diskindex.nVersion;
             pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
@@ -546,21 +548,6 @@ bool CTxDB::LoadBlockIndex()
     }
     pcursor->close();
 
-    // Calculate bnChainWork
-    vector<pair<int, CBlockIndex*> > vSortedByHeight;
-    vSortedByHeight.reserve(mapBlockIndex.size());
-    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
-    {
-        CBlockIndex* pindex = item.second;
-        vSortedByHeight.push_back(make_pair(pindex->nHeight, pindex));
-    }
-    sort(vSortedByHeight.begin(), vSortedByHeight.end());
-    BOOST_FOREACH(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
-    {
-        CBlockIndex* pindex = item.second;
-        pindex->bnChainWork = (pindex->pprev ? pindex->pprev->bnChainWork : 0) + pindex->GetBlockWork();
-    }
-
     // Load hashBestChain pointer to end of best chain
     if (!ReadHashBestChain(hashBestChain))
     {
@@ -572,11 +559,11 @@ bool CTxDB::LoadBlockIndex()
         return error("CTxDB::LoadBlockIndex() : hashBestChain not found in the block index");
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
-    bnBestChainWork = pindexBest->bnChainWork;
+    nBestChainTrust = pindexBest->nChainTrust;
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight);
 
-    // Load bnBestInvalidWork, OK if it doesn't exist
-    ReadBestInvalidWork(bnBestInvalidWork);
+    // Load nBestInvalidTrust, OK if it doesn't exist
+    ReadBestInvalidTrust(nBestInvalidTrust);
 
     // Verify blocks in the best chain
     CBlockIndex* pindexFork = NULL;

@@ -56,8 +56,8 @@ extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
-extern CBigNum bnBestChainWork;
-extern CBigNum bnBestInvalidWork;
+extern uint64 nBestChainTrust;
+extern uint64 nBestInvalidTrust;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
@@ -1003,6 +1003,7 @@ public:
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
     bool CheckBlock() const;
     bool AcceptBlock();
+    uint64 GetBlockCoinAge(); // ppcoin: calculate total coin age spent in block
 };
 
 
@@ -1026,8 +1027,8 @@ public:
     CBlockIndex* pnext;
     unsigned int nFile;
     unsigned int nBlockPos;
+    uint64 nChainTrust;// ppcoin: trust score of chain, in the unit of coin-days
     int nHeight;
-    CBigNum bnChainWork;
 
     // block header
     int nVersion;
@@ -1045,7 +1046,7 @@ public:
         nFile = 0;
         nBlockPos = 0;
         nHeight = 0;
-        bnChainWork = 0;
+        nChainTrust = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1062,7 +1063,7 @@ public:
         nFile = nFileIn;
         nBlockPos = nBlockPosIn;
         nHeight = 0;
-        bnChainWork = 0;
+        nChainTrust = 0;
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -1094,13 +1095,9 @@ public:
         return (int64)nTime;
     }
 
-    CBigNum GetBlockWork() const
+    int64 GetBlockTrust() const
     {
-        CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
-        if (bnTarget <= 0)
-            return 0;
-        return (CBigNum(1)<<256) / (bnTarget+1);
+        return (nChainTrust - pprev->nChainTrust);
     }
 
     bool IsInMainChain() const
@@ -1160,8 +1157,8 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, pnext, nFile, nBlockPos, nHeight,
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, merkle=%s, hashBlock=%s)",
+            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
     }
@@ -1203,6 +1200,7 @@ public:
         READWRITE(hashNext);
         READWRITE(nFile);
         READWRITE(nBlockPos);
+        READWRITE(nChainTrust);
         READWRITE(nHeight);
 
         // block header

@@ -34,8 +34,8 @@ static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 const int nInitialBlockThreshold = 120; // Regard blocks up until N-threshold as "initial download"
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
-CBigNum bnBestChainWork = 0;
-CBigNum bnBestInvalidWork = 0;
+uint64 nBestChainTrust = 0;
+uint64 nBestInvalidTrust = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64 nTimeBestReceived = 0;
@@ -744,15 +744,15 @@ bool IsInitialBlockDownload()
 
 void static InvalidChainFound(CBlockIndex* pindexNew)
 {
-    if (pindexNew->bnChainWork > bnBestInvalidWork)
+    if (pindexNew->nChainTrust > nBestInvalidTrust)
     {
-        bnBestInvalidWork = pindexNew->bnChainWork;
-        CTxDB().WriteBestInvalidWork(bnBestInvalidWork);
+        nBestInvalidTrust = pindexNew->nChainTrust;
+        CTxDB().WriteBestInvalidTrust(nBestInvalidTrust);
         MainFrameRepaint();
     }
-    printf("InvalidChainFound: invalid block=%s  height=%d  work=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, pindexNew->bnChainWork.ToString().c_str());
-    printf("InvalidChainFound:  current best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
-    if (pindexBest && bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6)
+    printf("InvalidChainFound: invalid block=%s  height=%d  trust=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, CBigNum(pindexNew->nChainTrust).ToString().c_str());
+    printf("InvalidChainFound:  current best=%s  height=%d  trust=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, CBigNum(nBestChainTrust).ToString().c_str());
+    if (pindexBest && nBestInvalidTrust > nBestChainTrust + pindexBest->GetBlockTrust() * 6)
         printf("InvalidChainFound: WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.\n");
 }
 
@@ -859,6 +859,10 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
                 for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
+
+            // ppcoin: check transaction timestamp
+            if (txPrev.nTime > nTime)
+                return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
 
             // Skip ECDSA signature verification when connecting blocks (fBlock=true) during initial download
             // (before the last blockchain checkpoint). This is safe because block merkle hashes are
@@ -1178,12 +1182,56 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     hashBestChain = hash;
     pindexBest = pindexNew;
     nBestHeight = pindexBest->nHeight;
-    bnBestChainWork = pindexNew->bnChainWork;
+    nBestChainTrust = pindexNew->nChainTrust;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
-    printf("SetBestChain: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
+    printf("SetBestChain: new best=%s  height=%d  trust=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, CBigNum(nBestChainTrust).ToString().c_str());
 
     return true;
+}
+
+
+// ppcoin: total coin age spent in block, in the unit of coin-days.
+uint64 CBlock::GetBlockCoinAge()
+{
+    uint64 nCoinAge = 0;
+
+    BOOST_FOREACH(const CTransaction& tx, vtx)
+    {
+        if (tx.IsCoinBase())
+            continue;
+
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            // First try finding the previous transaction in database
+            CTransaction txPrev;
+            if (!txPrev.ReadFromDisk(txin.prevout))
+            {
+                // If database lookup fails try memory pool
+                CRITICAL_BLOCK(cs_mapTransactions)
+                {
+                    if (!mapTransactions.count(txin.prevout.hash))
+                        return 0; // Neither found in database nor memory pool
+                    txPrev = mapTransactions[txin.prevout.hash];
+                }
+            }
+
+            if (tx.nTime < txPrev.nTime)
+                return 0;  // Transaction timestamp violation
+
+            int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
+            CBigNum bnTxInCoinAge = CBigNum(nValueIn) * (tx.nTime - txPrev.nTime) / COIN / (24 * 60 * 60);
+            nCoinAge += bnTxInCoinAge.getuint64();
+
+            if (fDebug && GetBoolArg("-printcoinage"))
+                printf("coin age     nValueIn=%-12I64d nTimeDiff=%d nCoinAge=%"PRI64d"\n", nValueIn, tx.nTime - txPrev.nTime, nCoinAge);
+        }
+    }
+
+    if (!nCoinAge) 
+        nCoinAge = 1;
+
+    return nCoinAge;
 }
 
 
@@ -1206,7 +1254,10 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
     }
-    pindexNew->bnChainWork = (pindexNew->pprev ? pindexNew->pprev->bnChainWork : 0) + pindexNew->GetBlockWork();
+    uint64 nCoinAge = GetBlockCoinAge();
+    if (!nCoinAge)
+        return error("AddToBlockIndex() : invalid or orphaned transaction in block");
+    pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + nCoinAge;
 
     CTxDB txdb;
     txdb.TxnBegin();
@@ -1215,7 +1266,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         return false;
 
     // New best
-    if (pindexNew->bnChainWork > bnBestChainWork)
+    if (pindexNew->nChainTrust > nBestChainTrust)
         if (!SetBestChain(txdb, pindexNew))
             return false;
 
@@ -1661,7 +1712,7 @@ string GetWarnings(string strFor)
     }
 
     // Longer invalid proof-of-work chain
-    if (pindexBest && bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6)
+    if (pindexBest && nBestInvalidTrust > nBestChainTrust + pindexBest->GetBlockTrust() * 6)
     {
         nPriority = 2000;
         strStatusBar = strRPC = "WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.";
