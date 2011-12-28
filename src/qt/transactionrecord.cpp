@@ -64,17 +64,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.credit = nUnmatured;
                 }
             }
-            else if (!mapValue["from"].empty() || !mapValue["message"].empty())
-            {
-                // Received by IP connection
-                sub.type = TransactionRecord::RecvFromIP;
-                if (!mapValue["from"].empty())
-                    sub.address = mapValue["from"];
-            }
             else
             {
+                bool foundAddress = false;
                 // Received by Bitcoin Address
-                sub.type = TransactionRecord::RecvWithAddress;
                 BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 {
                     if(wallet->IsMine(txout))
@@ -82,10 +75,18 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                         CBitcoinAddress address;
                         if (ExtractAddress(txout.scriptPubKey, address) && wallet->HaveKey(address))
                         {
+                            sub.type = TransactionRecord::RecvWithAddress;
                             sub.address = address.ToString();
+                            foundAddress = true;
+                            break;
                         }
-                        break;
                     }
+                }
+                if(!foundAddress)
+                {
+                    // Received by IP connection, or other non-address transaction like OP_EVAL
+                    sub.type = TransactionRecord::RecvFromOther;
+                    sub.address = mapValue["from"];
                 }
             }
             parts.append(sub);
@@ -127,21 +128,19 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                         // from a transaction sent back to our own address.
                         continue;
                     }
-                    else if(!mapValue["to"].empty())
-                    {
-                        // Sent to IP
-                        sub.type = TransactionRecord::SendToIP;
-                        sub.address = mapValue["to"];
-                    }
-                    else
+
+                    CBitcoinAddress address;
+                    if (ExtractAddress(txout.scriptPubKey, address))
                     {
                         // Sent to Bitcoin Address
                         sub.type = TransactionRecord::SendToAddress;
-                        CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, address))
-                        {
-                            sub.address = address.ToString();
-                        }
+                        sub.address = address.ToString();
+                    }
+                    else
+                    {
+                        // Sent to IP, or other non-address transaction like OP_EVAL
+                        sub.type = TransactionRecord::SendToOther;
+                        sub.address = mapValue["to"];
                     }
 
                     int64 nValue = txout.nValue;
