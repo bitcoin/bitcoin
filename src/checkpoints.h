@@ -8,9 +8,10 @@
 #include <map>
 #include "util.h"
 
-// ppcoin: auto checkpoint min at 1 day; max at 1 week
-#define AUTO_CHECKPOINT_MIN_SPAN (60 * 60 * 24)
-#define AUTO_CHECKPOINT_MAX_SPAN (60 * 60 * 24 * 7)
+// ppcoin: auto checkpoint min at 1 day; max at 5 days
+#define AUTO_CHECKPOINT_MIN_SPAN   (60 * 60 * 24)
+#define AUTO_CHECKPOINT_MAX_SPAN   (60 * 60 * 24 * 5)
+#define AUTO_CHECKPOINT_TRUST_SPAN (60 * 60 * 24 * 7)
 
 class uint256;
 class CBlockIndex;
