@@ -1029,6 +1029,7 @@ public:
     unsigned int nBlockPos;
     uint64 nChainTrust;// ppcoin: trust score of chain, in the unit of coin-days
     int nHeight;
+    int nCheckpoint;    // ppcoin: chain auto checkpoint height
 
     // block header
     int nVersion;
@@ -1047,6 +1048,7 @@ public:
         nBlockPos = 0;
         nHeight = 0;
         nChainTrust = 0;
+        nCheckpoint = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1064,6 +1066,7 @@ public:
         nBlockPos = nBlockPosIn;
         nHeight = 0;
         nChainTrust = 0;
+        nCheckpoint = 0;
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -1157,8 +1160,8 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight,
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, nCheckpoint=%d, merkle=%s, hashBlock=%s)",
+            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight, nCheckpoint,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
     }
@@ -1202,6 +1205,7 @@ public:
         READWRITE(nBlockPos);
         READWRITE(nChainTrust);
         READWRITE(nHeight);
+        READWRITE(nCheckpoint);
 
         // block header
         READWRITE(this->nVersion);

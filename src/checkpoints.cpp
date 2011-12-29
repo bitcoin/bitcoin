@@ -1,4 +1,5 @@
 // Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +11,7 @@
 
 namespace Checkpoints
 {
-    typedef std::map<int, uint256> MapCheckpoints;
+    typedef std::map<int, uint256> MapCheckpoints;   // hardened checkpoints
 
     //
     // What makes a good checkpoint block?
@@ -24,13 +25,94 @@ namespace Checkpoints
         ( 0, hashGenesisBlock )
         ; // ppcoin: no checkpoint yet; to be created in future releases
 
-    bool CheckBlock(int nHeight, const uint256& hash)
+    // ppcoin: automatic checkpoint (represented by height of checkpoint)
+    int nAutoCheckpoint = 0;
+
+    bool CheckHardened(int nHeight, const uint256& hash)
     {
         if (fTestNet) return true; // Testnet has no checkpoints
 
         MapCheckpoints::const_iterator i = mapCheckpoints.find(nHeight);
         if (i == mapCheckpoints.end()) return true;
         return hash == i->second;
+    }
+
+    // ppcoin: check automatic checkpoint
+    // To pass the check:
+    //   - All ancestors (including the block itself) have block index already
+    //   - The immediate ancestor in main chain must not have height less than
+    //     checkpoint height
+    bool CheckAuto(const CBlockIndex *pindex)
+    {
+        while (pindex)
+        {
+            if (pindex->IsInMainChain())
+            {
+                if (pindex->nHeight >= nAutoCheckpoint)
+                    return true;
+                else
+                    return error("Checkpoints: new block on alternative branch at height=%d before auto checkpoint at height=%d", pindex->nHeight, nAutoCheckpoint);
+            }
+            else
+                pindex = pindex->pprev;
+        }
+        return error("Checkpoints: failed to find any ancestor on main chain for the new block - internal error");
+    }
+
+    // ppcoin: get next auto checkpoint in the chain
+    int GetNextChainCheckpoint(const CBlockIndex *pindexLast)
+    {
+        CBigNum bnTarget;
+        CBigNum bnTargetMax = 0;  // max target of all blocks since checkpoint
+        CBigNum bnTargetMin = 0;  // min target of all candidate checkpoints
+        int nMinTargetHeight = 0; // min target height since checkpoint
+        int nCheckpointMin = 0;   // minimum candidate checkpoint
+        int nCheckpointMax = 0;   // maximum candidate checkpoint
+        int nDepth = pindexLast->nHeight - pindexLast->nCheckpoint;
+        const CBlockIndex *pindex = pindexLast;
+        while (nDepth >= 0 && pindex)
+        {
+            bnTarget.SetCompact(pindex->nBits);
+            if (bnTarget > bnTargetMax)
+                bnTargetMax = bnTarget;
+            if (nCheckpointMax > 0 && bnTarget < bnTargetMin)
+            {
+                bnTargetMin = bnTarget;
+                nMinTargetHeight = pindex->nHeight;
+            }
+            if (nCheckpointMax == 0 && pindexLast->GetBlockTime() - pindex->GetBlockTime() > AUTO_CHECKPOINT_MIN_SPAN)
+            {
+                nCheckpointMax = pindex->nHeight;
+                bnTargetMin.SetCompact(pindex->nBits);
+                nMinTargetHeight = pindex->nHeight;
+            }
+            if (pindexLast->GetBlockTime() - pindex->GetBlockTime() < AUTO_CHECKPOINT_MAX_SPAN)
+                nCheckpointMin = pindex->nHeight;
+            pindex = pindex->pprev;
+            nDepth--;
+        }
+
+        assert (nDepth == -1);  // arrive at chain checkpoint now
+
+        printf("Checkpoints: min=%d max=%d tminheight=%d tmin=0x%08x tmax=0x%08x\n",
+            nCheckpointMin, nCheckpointMax, nMinTargetHeight,
+            bnTargetMin.GetCompact(), bnTargetMax.GetCompact());
+        if (nCheckpointMax == 0) // checkpoint stays if max candidate not found
+            return pindexLast->nCheckpoint;
+
+        if (bnTargetMin * 100 > bnTargetMax * 90)
+            return nCheckpointMax;
+        if (bnTarget * 100 > bnTargetMax * 90)
+            return std::min(nCheckpointMax, nMinTargetHeight);
+        else
+            return nCheckpointMin;
+    }
+
+    // ppcoin: advance to next automatic checkpoint
+    void AdvanceAutoCheckpoint(int nCheckpoint)
+    {
+        nAutoCheckpoint = std::max(nAutoCheckpoint, nCheckpoint);
+        printf("Checkpoints: auto checkpoint now at height=%d\n", nAutoCheckpoint);
     }
 
     int GetTotalBlocksEstimate()

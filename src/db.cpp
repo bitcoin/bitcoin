@@ -7,6 +7,7 @@
 #include "headers.h"
 #include "db.h"
 #include "net.h"
+#include "checkpoints.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -469,6 +470,16 @@ bool CTxDB::WriteBestInvalidTrust(uint64 nBestInvalidTrust)
     return Write(string("nBestInvalidTrust"), nBestInvalidTrust);
 }
 
+bool CTxDB::ReadAutoCheckpoint(int& nAutoCheckpoint)
+{
+    return Read(string("nAutoCheckpoint"), nAutoCheckpoint);
+}
+
+bool CTxDB::WriteAutoCheckpoint(int nCheckpoint)
+{
+    return Write(string("nAutoCheckpoint"), max(Checkpoints::nAutoCheckpoint, nCheckpoint));
+}
+
 CBlockIndex static * InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
@@ -560,7 +571,12 @@ bool CTxDB::LoadBlockIndex()
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
     nBestChainTrust = pindexBest->nChainTrust;
-    printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight);
+    printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust);
+
+    // Load nAutoCheckpoint
+    if (!ReadAutoCheckpoint(Checkpoints::nAutoCheckpoint))
+        return error("CTxDB::LoadBlockIndex() : nAutoCheckpoint not loaded");
+    printf("LoadBlockIndex(): automatic checkpoint at height=%d\n", Checkpoints::nAutoCheckpoint);
 
     // Load nBestInvalidTrust, OK if it doesn't exist
     ReadBestInvalidTrust(nBestInvalidTrust);
