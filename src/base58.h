@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin Developers
+// Copyright (c) 2011 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -251,6 +252,8 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 };
 
+#define PPCOIN_ADDRESS_VERSION   55   // ppcoin: addresses begin with 'P'
+
 // base58-encoded bitcoin addresses
 // Addresses have version 0 or 111 (testnet)
 // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key
@@ -259,7 +262,7 @@ class CBitcoinAddress : public CBase58Data
 public:
     bool SetHash160(const uint160& hash160)
     {
-        SetData(fTestNet ? 111 : 0, &hash160, 20);
+        SetData(fTestNet ? 111 : PPCOIN_ADDRESS_VERSION, &hash160, 20);
         return true;
     }
 
@@ -274,7 +277,7 @@ public:
         bool fExpectTestNet = false;
         switch(nVersion)
         {
-            case 0:
+            case PPCOIN_ADDRESS_VERSION:
                 break;
 
             case 111:
