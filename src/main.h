@@ -1100,7 +1100,7 @@ public:
 
     int64 GetBlockTrust() const
     {
-        return (nChainTrust - pprev->nChainTrust);
+        return (nChainTrust - (pprev? pprev->nChainTrust : 0));
     }
 
     bool IsInMainChain() const
