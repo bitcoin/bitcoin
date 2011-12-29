@@ -1196,9 +1196,15 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 
 
 // ppcoin: total coin age spent in block, in the unit of coin-days.
+// Only those coins last spent at least a week ago count. As those
+// transactions not in main chain are not currently indexed so we
+// might not find out about their coin age. Older transactions are 
+// guaranteed to be in main chain by auto checkpoint. This rule is
+// introduced to help nodes establish a consistent view of the coin
+// age (trust score) of competing branches.
 uint64 CBlock::GetBlockCoinAge()
 {
-    uint64 nCoinAge = 0;
+    CBigNum bnCentSecond = 0;
 
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -1208,34 +1214,34 @@ uint64 CBlock::GetBlockCoinAge()
         BOOST_FOREACH(const CTxIn& txin, tx.vin)
         {
             // First try finding the previous transaction in database
+            CTxDB txdb("r");
             CTransaction txPrev;
-            if (!txPrev.ReadFromDisk(txin.prevout))
-            {
-                // If database lookup fails try memory pool
-                CRITICAL_BLOCK(cs_mapTransactions)
-                {
-                    if (!mapTransactions.count(txin.prevout.hash))
-                        return 0; // Neither found in database nor memory pool
-                    txPrev = mapTransactions[txin.prevout.hash];
-                }
-            }
-
+            CTxIndex txindex;
+            if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
+                continue;  // previous transaction not in main chain
             if (tx.nTime < txPrev.nTime)
                 return 0;  // Transaction timestamp violation
 
+            // Read block header
+            CBlock block;
+            if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+                return 0; // unable to read block of previous transaction
+            if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > tx.nTime)
+                continue; // only count coins from at least one week ago
+
             int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
-            CBigNum bnTxInCoinAge = CBigNum(nValueIn) * (tx.nTime - txPrev.nTime) / COIN / (24 * 60 * 60);
-            nCoinAge += bnTxInCoinAge.getuint64();
+            bnCentSecond += CBigNum(nValueIn) * (tx.nTime-txPrev.nTime) / CENT;
 
             if (fDebug && GetBoolArg("-printcoinage"))
-                printf("coin age     nValueIn=%-12I64d nTimeDiff=%d nCoinAge=%"PRI64d"\n", nValueIn, tx.nTime - txPrev.nTime, nCoinAge);
+                printf("coin age nValueIn=%-12I64d nTimeDiff=%d bnCentSecond=%s\n", nValueIn, tx.nTime - txPrev.nTime, bnCentSecond.ToString().c_str());
         }
     }
 
-    if (!nCoinAge) 
-        nCoinAge = 1;
+    CBigNum bnCoinAge = bnCentSecond * CENT / COIN / (24 * 60 * 60);
+    if (bnCoinAge == 0) 
+        bnCoinAge = 1;
 
-    return nCoinAge;
+    return bnCoinAge.getuint64();
 }
 
 
@@ -1267,7 +1273,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     // ppcoin: compute chain trust score
     uint64 nCoinAge = GetBlockCoinAge();
     if (!nCoinAge)
-        return error("AddToBlockIndex() : invalid or orphaned transaction in block");
+        return error("AddToBlockIndex() : invalid transaction in block");
     pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + nCoinAge;
 
     CTxDB txdb;
