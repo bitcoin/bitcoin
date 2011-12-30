@@ -167,3 +167,4 @@ ppcoin/obj/genesis.o: ppcoin/genesis.cpp
 genesis: ppcoin/obj/genesis.o $(OBJS:obj/%=obj/nogui/%)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 	-rm -f obj/nogui/init.*
+	-rm -f ppcoin/obj/genesis.*

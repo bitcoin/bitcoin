@@ -29,7 +29,7 @@ unsigned int nTransactionsUpdated = 0;
 map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
-uint256 hashGenesisBlock("0x00000000b00cf820bc2b23ec0aad05da6c58af7fd71c34a6f21a747fd0f5620b");
+uint256 hashGenesisBlock("0x000000007ba3367beb8b04bf8bc62a8e265662d99779824070f3cdfe89852a66");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 const int nInitialBlockThreshold = 120; // Regard blocks up until N-threshold as "initial download"
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -650,12 +650,34 @@ uint256 static GetOrphanRoot(const CBlock* pblock)
     return pblock->GetHash();
 }
 
-int64 static GetBlockValue(int nHeight, int64 nFees)
+int64 static GetBlockValue(unsigned int nBits, int64 nFees)
 {
-    int64 nSubsidy = 50 * COIN;
+    CBigNum bnSubsidyLimit = 9999 * COIN; // subsidy amount for difficulty 1
+    CBigNum bnTarget;
+    bnTarget.SetCompact(nBits);
+    CBigNum bnTargetLimit = bnProofOfWorkLimit;
+    bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
 
-    // Subsidy is cut in half every 4 years
-    nSubsidy >>= (nHeight / 210000);
+    // ppcoin: subsidy is cut in half every 16x multiply of difficulty
+    // A reasonably continuous curve is used to avoid shock to market
+    // (nSubsidyLimit / nSubsidy) ** 4 == bnProofOfWorkLimit / bnTarget
+    CBigNum bnLowerBound = CENT;
+    CBigNum bnUpperBound = bnSubsidyLimit;
+    while (bnLowerBound + CENT <= bnUpperBound)
+    {
+        CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
+        if (fDebug && GetBoolArg("-printcreation"))
+            printf("GetBlockValue() : lower=%d upper=%d mid=%d\n", bnLowerBound.getint(), bnUpperBound.getint(), bnMidValue.getint());
+        if (bnMidValue * bnMidValue * bnMidValue * bnMidValue > bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnTarget / bnTargetLimit)
+            bnUpperBound = bnMidValue;
+        else
+            bnLowerBound = bnMidValue;
+    }
+
+    int64 nSubsidy = bnUpperBound.getuint64();
+    nSubsidy = (nSubsidy / CENT) * CENT;
+    if (fDebug && GetBoolArg("-printcreation"))
+        printf("GetBlockValue() : nBits=0x%08x nSubsidy=%"PRI64d"\n", nBits, nSubsidy);
 
     return nSubsidy + nFees;
 }
@@ -1016,7 +1038,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             return error("ConnectBlock() : UpdateTxIndex failed");
     }
 
-    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
+    if (vtx[0].GetValueOut() > GetBlockValue(nBits, nFees))
         return false;
 
     // Update block index on disk without changing it in memory.
@@ -1584,20 +1606,20 @@ bool LoadBlockIndex(bool fAllowNew)
         // Genesis block
         const char* pszTimestamp = "MarketWatch 07/Nov/2011 Gold tops $1,790 to end at over six-week high";
         CTransaction txNew;
-        txNew.nTime = 1324698231;
+        txNew.nTime = 1325225177;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = 50 * COIN;
+        txNew.vout[0].nValue = 9999 * COIN;
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1324707839;
-        block.nBits    = 0x1d00ffff;
-        block.nNonce   = 486102291;
+        block.nTime    = 1325228535;
+        block.nBits    = bnProofOfWorkLimit.GetCompact();
+        block.nNonce   = 1664714209;
 
         if (fTestNet)
         {
@@ -1610,7 +1632,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("%s\n", block.GetHash().ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x487e83bd2b5a5196a2a6b87998d779a162101cb02cc64bf9ac33289dd0c22352"));
+        assert(block.hashMerkleRoot == uint256("0x1fe83f5d79b725b13786bd4377b6fd4d5bba5c2777649a989783d47a63a27b91"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
 
@@ -2918,14 +2940,14 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             }
         }
     }
-    pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+    pblock->nBits          = GetNextWorkRequired(pindexPrev);
+    pblock->vtx[0].vout[0].nValue = GetBlockValue(pblock->nBits, nFees);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
     pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
     pblock->nTime          = max(pblock->GetBlockTime(), pblock->GetMaxTransactionTime());
-    pblock->nBits          = GetNextWorkRequired(pindexPrev);
     pblock->nNonce         = 0;
 
     return pblock.release();
