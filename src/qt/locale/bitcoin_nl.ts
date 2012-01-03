@@ -917,7 +917,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
-        <source>Choose adress from address book</source>
+        <source>Choose address from address book</source>
         <translation>Kies adres uit adresboek</translation>
     </message>
     <message>
