@@ -190,6 +190,7 @@ bool AppInit2(int argc, char* argv[])
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)\n") +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
+            "  -noirc           \t  "   + _("Don't find peers using internet relay chat\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
             "  -nodnsseed       \t  "   + _("Don't bootstrap list of peers using DNS\n") +
             "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)\n") +
@@ -243,8 +244,8 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
+    fTestNet = GetBoolArg("-testnet");
     fDebug = GetBoolArg("-debug");
-    fAllowDNS = GetBoolArg("-dns");
 
 #ifndef WIN32
     fDaemon = GetBoolArg("-daemon");
@@ -263,10 +264,6 @@ bool AppInit2(int argc, char* argv[])
 #endif
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
-
-    fTestNet = GetBoolArg("-testnet");
-    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
-    fNoListen = GetBoolArg("-nolisten") || fTOR;
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
 #ifndef QT_GUI
@@ -328,16 +325,7 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
-    // Bind to the port early so we can tell if another instance is already running.
     string strErrors;
-    if (!fNoListen)
-    {
-        if (!BindListenPort(strErrors))
-        {
-            wxMessageBox(strErrors, "Bitcoin");
-            return false;
-        }
-    }
 
     //
     // Load data files
@@ -424,6 +412,10 @@ bool AppInit2(int argc, char* argv[])
     // Add wallet transactions that aren't already in a block to mapTransactions
     pwalletMain->ReacceptWalletTransactions();
 
+    // Note: Bitcoin-QT stores several settings in the wallet, so we want
+    // to load the wallet BEFORE parsing command-line arguments, so
+    // the command-line/bitcoin.conf settings override GUI setting.
+
     //
     // Parameters
     //
@@ -476,6 +468,42 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
+    bool fTor = (fUseProxy && addrProxy.port == htons(9050));
+    if (fTor)
+    {
+        // Use SoftSetArg here so user can override any of these if they wish.
+        // Note: the GetBoolArg() calls for all of these must happen later.
+        SoftSetArg("-nolisten", true);
+        SoftSetArg("-noirc", true);
+        SoftSetArg("-nodnsseed", true);
+        SoftSetArg("-noupnp", true);
+        SoftSetArg("-upnp", false);
+        SoftSetArg("-dns", false);
+    }
+
+    fAllowDNS = GetBoolArg("-dns");
+    fNoListen = GetBoolArg("-nolisten");
+
+    if (fHaveUPnP)
+    {
+#if USE_UPNP
+    if (GetBoolArg("-noupnp"))
+        fUseUPnP = false;
+#else
+    if (GetBoolArg("-upnp"))
+        fUseUPnP = true;
+#endif
+    }
+
+    if (!fNoListen)
+    {
+        if (!BindListenPort(strErrors))
+        {
+            wxMessageBox(strErrors, "Bitcoin");
+            return false;
+        }
+    }
+
     if (mapArgs.count("-addnode"))
     {
         BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
@@ -496,17 +524,6 @@ bool AppInit2(int argc, char* argv[])
         }
         if (nTransactionFee > 0.25 * COIN)
             wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
-    }
-
-    if (fHaveUPnP)
-    {
-#if USE_UPNP
-    if (GetBoolArg("-noupnp"))
-        fUseUPnP = false;
-#else
-    if (GetBoolArg("-upnp"))
-        fUseUPnP = true;
-#endif
     }
 
     //
