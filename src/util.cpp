@@ -948,12 +948,12 @@ int64 GetAdjustedTime()
     return GetTime() + nTimeOffset;
 }
 
-void AddTimeData(unsigned int ip, int64 nTime)
+void AddTimeData(const CNetAddr& ip, int64 nTime)
 {
     int64 nOffsetSample = nTime - GetTime();
 
     // Ignore duplicates
-    static set<unsigned int> setKnown;
+    static set<CNetAddr> setKnown;
     if (!setKnown.insert(ip).second)
         return;
 
@@ -1000,7 +1000,6 @@ void AddTimeData(unsigned int ip, int64 nTime)
         printf("nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
     }
 }
-
 
 
 
@@ -1178,3 +1177,4 @@ bool CCriticalSection::TryEnter(const char*, const char*, int)
 }
 
 #endif /* DEBUG_LOCKORDER */
+

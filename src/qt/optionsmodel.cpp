@@ -88,9 +88,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             {
                 // Use CAddress to parse and check IP
                 CAddress addr(value.toString().toStdString() + ":1");
-                if (addr.ip != INADDR_NONE)
+                if (addr.IsValid())
                 {
-                    addrProxy.ip = addr.ip;
+                    addrProxy.SetIP(addr);
                     walletdb.WriteSetting("addrProxy", addrProxy);
                 }
                 else
@@ -104,7 +104,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 int nPort = atoi(value.toString().toAscii().data());
                 if (nPort > 0 && nPort < std::numeric_limits<unsigned short>::max())
                 {
-                    addrProxy.port = htons(nPort);
+                    addrProxy.SetPort(nPort);
                     walletdb.WriteSetting("addrProxy", addrProxy);
                 }
                 else
