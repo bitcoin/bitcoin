@@ -1405,7 +1405,7 @@ void ThreadOpenConnections2(void* parg)
         {
             // Add seed nodes if IRC isn't working
             bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
-            if (mapAddresses.empty() && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
+            if (mapAddresses.empty() && (GetTime() - nStart > 60 || fUseProxy) && !fTestNet)
                 fAddSeeds = true;
         }
 

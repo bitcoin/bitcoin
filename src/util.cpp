@@ -472,6 +472,23 @@ void ParseParameters(int argc, char* argv[])
     }
 }
 
+bool SoftSetArg(const std::string& strArg, const std::string& strValue)
+{
+    if (mapArgs.count(strArg))
+        return false;
+    mapArgs[strArg] = strValue;
+    return true;
+}
+
+bool SoftSetArg(const std::string& strArg, bool fValue)
+{
+    if (fValue)
+        return SoftSetArg(strArg, std::string("1"));
+    else
+        return SoftSetArg(strArg, std::string("0"));
+}
+
+
 
 const char* wxGetTranslation(const char* pszEnglish)
 {
