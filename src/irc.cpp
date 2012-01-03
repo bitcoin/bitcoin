@@ -264,19 +264,14 @@ void ThreadIRCSeed2(void* parg)
     int nErrorWait = 10;
     int nRetryWait = 10;
     bool fNameInUse = false;
-    bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
 
     while (!fShutdown)
     {
-        //CAddress addrConnect("216.155.130.130:6667"); // chat.freenode.net
         CAddress addrConnect("92.243.23.21", 6667); // irc.lfnet.org
-        if (!fTOR)
-        {
-            //struct hostent* phostent = gethostbyname("chat.freenode.net");
-            CAddress addrIRC("irc.lfnet.org", 6667, true);
-            if (addrIRC.IsValid())
-                addrConnect = addrIRC;
-        }
+
+        CAddress addrIRC("irc.lfnet.org", 6667, true);
+        if (addrIRC.IsValid())
+            addrConnect = addrIRC;
 
         SOCKET hSocket;
         if (!ConnectSocket(addrConnect, hSocket))
@@ -405,10 +400,6 @@ void ThreadIRCSeed2(void* parg)
         }
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
-
-        // IRC usually blocks TOR, so only try once
-        if (fTOR)
-            return;
 
         if (GetTime() - nStart > 20 * 60)
         {
