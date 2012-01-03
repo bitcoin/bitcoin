@@ -237,6 +237,7 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
+    fTestNet = GetBoolArg("-testnet");
     fDebug = GetBoolArg("-debug");
 
 #ifndef __WXMSW__
@@ -499,7 +500,6 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
-    fTestNet = GetBoolArg("-testnet");
     bool fTor = (fUseProxy && addrProxy.port == htons(9050));
     if (fTor)
     {
