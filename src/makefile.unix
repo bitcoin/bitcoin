@@ -88,6 +88,7 @@ HEADERS = \
     base58.h \
     bignum.h \
     checkpoints.h \
+    compat.h \
     crypter.h \
     db.h \
     headers.h \
@@ -109,6 +110,7 @@ HEADERS = \
 
 OBJS= \
     obj/checkpoints.o \
+    obj/netbase.o \
     obj/crypter.o \
     obj/key.o \
     obj/db.o \

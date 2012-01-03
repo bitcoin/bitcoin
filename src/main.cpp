@@ -1931,7 +1931,7 @@ unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
-    static map<unsigned int, vector<unsigned char> > mapReuseKey;
+    static map<CService, vector<unsigned char> > mapReuseKey;
     RandAddSeedPerfmon();
     if (fDebug) {
         printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
@@ -1987,7 +1987,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
 
-        AddTimeData(pfrom->addr.ip, nTime);
+        AddTimeData(pfrom->addr, nTime);
 
         // Change version
         if (pfrom->nVersion >= 209)
@@ -2093,7 +2093,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     static uint256 hashSalt;
                     if (hashSalt == 0)
                         RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
-                    uint256 hashRand = hashSalt ^ (((int64)addr.ip)<<32) ^ ((GetTime()+addr.ip)/(24*60*60));
+                    int64 hashAddr = addr.GetHash();
+                    uint256 hashRand = hashSalt ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     multimap<uint256, CNode*> mapMix;
                     BOOST_FOREACH(CNode* pnode, vNodes)
@@ -2392,12 +2393,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         /// we have a chance to check the order here
 
         // Keep giving the same key to the same ip until they use it
-        if (!mapReuseKey.count(pfrom->addr.ip))
-            pwalletMain->GetKeyFromPool(mapReuseKey[pfrom->addr.ip], true);
+        if (!mapReuseKey.count(pfrom->addr))
+            pwalletMain->GetKeyFromPool(mapReuseKey[pfrom->addr], true);
 
         // Send back approval of order and pubkey to use
         CScript scriptPubKey;
-        scriptPubKey << mapReuseKey[pfrom->addr.ip] << OP_CHECKSIG;
+        scriptPubKey << mapReuseKey[pfrom->addr] << OP_CHECKSIG;
         pfrom->PushMessage("reply", hashReply, (int)0, scriptPubKey);
     }
 
