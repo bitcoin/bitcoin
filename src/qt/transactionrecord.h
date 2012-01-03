@@ -65,9 +65,9 @@ public:
         Other,
         Generated,
         SendToAddress,
-        SendToIP,
+        SendToOther,
         RecvWithAddress,
-        RecvFromIP,
+        RecvFromOther,
         SendToSelf
     };
 
