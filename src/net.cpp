@@ -496,21 +496,25 @@ bool AddAddress(CAddress addr, int64 nTimePenalty, CAddrDB *pAddrDB)
 
 void AddressCurrentlyConnected(const CAddress& addr)
 {
+    CAddress *paddrFound = NULL;
+
     CRITICAL_BLOCK(cs_mapAddresses)
     {
         // Only if it's been published already
         map<vector<unsigned char>, CAddress>::iterator it = mapAddresses.find(addr.GetKey());
         if (it != mapAddresses.end())
+            paddrFound = &(*it).second;
+    }
+
+    if (paddrFound)
+    {
+        int64 nUpdateInterval = 20 * 60;
+        if (paddrFound->nTime < GetAdjustedTime() - nUpdateInterval)
         {
-            CAddress& addrFound = (*it).second;
-            int64 nUpdateInterval = 20 * 60;
-            if (addrFound.nTime < GetAdjustedTime() - nUpdateInterval)
-            {
-                // Periodically update most recently seen time
-                addrFound.nTime = GetAdjustedTime();
-                CAddrDB addrdb;
-                addrdb.WriteAddress(addrFound);
-            }
+            // Periodically update most recently seen time
+            paddrFound->nTime = GetAdjustedTime();
+            CAddrDB addrdb;
+            addrdb.WriteAddress(*paddrFound);
         }
     }
 }
@@ -1256,13 +1260,13 @@ void ThreadDNSAddressSeed2(void* parg)
     if (!fTestNet)
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
-        CAddrDB addrDB;
-        addrDB.TxnBegin();
 
         for (int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
             vector<CAddress> vaddr;
             if (Lookup(strDNSSeed[seed_idx], vaddr, NODE_NETWORK, -1, true))
             {
+                CAddrDB addrDB;
+                addrDB.TxnBegin();
                 BOOST_FOREACH (CAddress& addr, vaddr)
                 {
                     if (addr.GetByte(3) != 127)
@@ -1272,10 +1276,9 @@ void ThreadDNSAddressSeed2(void* parg)
                         found++;
                     }
                 }
+                addrDB.TxnCommit();  // Save addresses (it's ok if this fails)
             }
         }
-
-        addrDB.TxnCommit();  // Save addresses (it's ok if this fails)
     }
 
     printf("%d addresses found from DNS seeds\n", found);
@@ -1447,27 +1450,31 @@ void ThreadOpenConnections2(void* parg)
         if (fShutdown)
             return;
 
+        bool fAddSeeds = false;
+
         CRITICAL_BLOCK(cs_mapAddresses)
         {
             // Add seed nodes if IRC isn't working
             bool fTOR = (fUseProxy && addrProxy.port == htons(9050));
-            if (mapAddresses.empty() && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
-            {
-                for (int i = 0; i < ARRAYLEN(pnSeed); i++)
-                {
-                    // It'll only connect to one or two seed nodes because once it connects,
-                    // it'll get a pile of addresses with newer timestamps.
-                    // Seed nodes are given a random 'last seen time' of between one and two
-                    // weeks ago.
-                    const int64 nOneWeek = 7*24*60*60;
-                    CAddress addr;
-                    addr.ip = pnSeed[i];
-                    addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
-                    AddAddress(addr);
-                }
-            }
+            if (mapAddresses.empty() && (GetTime() - nStart > 60 || fUseProxy) && !fTestNet)
+                fAddSeeds = true;
         }
 
+        if (fAddSeeds)
+        {
+            for (int i = 0; i < ARRAYLEN(pnSeed); i++)
+            {
+                // It'll only connect to one or two seed nodes because once it connects,
+                // it'll get a pile of addresses with newer timestamps.
+                // Seed nodes are given a random 'last seen time' of between one and two
+                // weeks ago.
+                const int64 nOneWeek = 7*24*60*60;
+                CAddress addr;
+                addr.ip = pnSeed[i];
+                addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
+                AddAddress(addr);
+            }
+        }
 
         //
         // Choose an address to connect to based on most recently seen
