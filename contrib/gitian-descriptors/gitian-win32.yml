@@ -21,6 +21,9 @@ files:
 - "openssl-1.0.0e.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
+- "zlib-1.2.5.tar.gz"
+- "libpng-1.5.7.tar.gz"
+- "qrencode-3.2.0.tar.bz2"
 script: |
   #
   mkdir $HOME/qt
@@ -62,6 +65,23 @@ script: |
   cd ..
   mv miniupnpc-1.6 miniupnpc
   #
+  tar xzf zlib-1.2.5.tar.gz
+  cd zlib-1.2.5
+  make -f win32/Makefile.gcc PREFIX=i586-mingw32msvc- $MAKEOPTS
+  cd ..
+  #
+  tar xzf libpng-1.5.7.tar.gz
+  cd libpng-1.5.7
+  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld LDFLAGS="-L../zlib-1.2.5/" CFLAGS="-I../zlib-1.2.5/"
+  make $MAKEOPTS
+  cd ..
+  #
+  tar xjf qrencode-3.2.0.tar.bz2
+  cd qrencode-3.2.0
+  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld png_LIBS="../libpng-1.5.7/.libs/libpng15.a ../zlib-1.2.5/libz.a" png_CFLAGS="-I../libpng-1.5.7"
+  make $MAKEOPTS
+  cd ..
+  #
   cd bitcoin
   mkdir -p $OUTDIR/src
   cp -a . $OUTDIR/src
@@ -71,7 +91,7 @@ script: |
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross USE_SSL=1 MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.0e OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.0e/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin
+  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross USE_SSL=1 MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.0e OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.0e/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin
   make $MAKEOPTS
   cp release/bitcoin-qt.exe $OUTDIR/
   #
