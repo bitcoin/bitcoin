@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     // one key that would satisfy an (a|b) or 2-of-3 keys needed
     // to spend an escrow transaction.
     //
-    CBasicKeyStore keystore, emptykeystore;
+    CBasicKeyStore keystore, emptykeystore, partialkeystore;
     CKey key[3];
     CBitcoinAddress keyaddr[3];
     for (int i = 0; i < 3; i++)
@@ -183,6 +183,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         keystore.AddKey(key[i]);
         keyaddr[i].SetPubKey(key[i].GetPubKey());
     }
+    partialkeystore.AddKey(key[0]);
 
     {
         vector<valtype> solutions;
@@ -221,6 +222,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(!ExtractAddress(s, addr));
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
+        BOOST_CHECK(!IsMine(partialkeystore, s));
     }
     {
         vector<valtype> solutions;
@@ -237,6 +239,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(nRequired = 1);
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
+        BOOST_CHECK(!IsMine(partialkeystore, s));
     }
     {
         vector<valtype> solutions;
