@@ -60,6 +60,7 @@ CFLAGS=-mmacosx-version-min=10.5 -arch i386 -O3 \
 OBJS= \
     obj/checkpoints.o \
     obj/netbase.o \
+    obj/addrman.o \
     obj/crypter.o \
     obj/key.o \
     obj/db.o \
