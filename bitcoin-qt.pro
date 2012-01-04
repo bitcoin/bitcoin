@@ -101,6 +101,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/aboutdialog.h \
     src/qt/editaddressdialog.h \
     src/qt/bitcoinaddressvalidator.h \
+    src/addrman.h \
     src/base58.h \
     src/bignum.h \
     src/checkpoints.h \
@@ -174,6 +175,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/net.cpp \
     src/irc.cpp \
     src/checkpoints.cpp \
+    src/addrman.cpp \
     src/db.cpp \
     src/json/json_spirit_writer.cpp \
     src/json/json_spirit_value.cpp \

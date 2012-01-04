@@ -543,7 +543,7 @@ bool AppInit2(int argc, char* argv[])
             CAddress addr(CService(strAddr, GetDefaultPort(), fAllowDNS));
             addr.nTime = 0; // so it won't relay unless successfully connected
             if (addr.IsValid())
-                AddAddress(addr);
+                addrman.Add(addr, CNetAddr("127.0.0.1"));
         }
     }
 

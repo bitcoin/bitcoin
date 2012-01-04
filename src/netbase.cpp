@@ -519,15 +519,22 @@ bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 std::vector<unsigned char> CNetAddr::GetGroup() const
 {
     std::vector<unsigned char> vchRet;
-    int nClass = 0; // 0=IPv6, 1=IPv4, 255=unroutable
+    int nClass = 0; // 0=IPv6, 1=IPv4, 254=local, 255=unroutable
     int nStartByte = 0;
     int nBits = 16;
 
-    // for unroutable addresses, each address is considered different
+    // all local addresses belong to the same group
+    if (IsLocal())
+    {
+        nClass = 254;
+        nBits = 0;
+    }
+
+    // all unroutable addresses belong to the same group
     if (!IsRoutable())
     {
         nClass = 255;
-        nBits = 128;
+        nBits = 0;
     }
     // for IPv4 addresses, '1' + the 16 higher-order bits of the IP
     // includes mapped IPv4, SIIT translated IPv4, and the well-known prefix
