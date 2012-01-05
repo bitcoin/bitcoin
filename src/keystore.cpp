@@ -36,10 +36,10 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     return true;
 }
 
-bool CBasicKeyStore::AddCScript(const uint160 &hash, const CScript& redeemScript)
+bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
     CRITICAL_BLOCK(cs_KeyStore)
-        mapScripts[hash] = redeemScript;
+        mapScripts[Hash160(redeemScript)] = redeemScript;
     return true;
 }
 

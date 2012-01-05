@@ -20,8 +20,8 @@ using namespace boost::assign;
 typedef vector<unsigned char> valtype;
 
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int& nSigOpCount,
-                         int nHashType, bool fStrictOpEval);
+extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+                         bool fValidatePayToScriptHash, int nHashType);
 
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
@@ -75,25 +75,24 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 
     vector<CKey> keys;
     CScript s;
-    int nUnused = 0;
 
     // Test a AND b:
     keys.clear();
     keys += key[0],key[1]; // magic operator+= from boost.assign
     s = sign_multisig(a_and_b, keys, txTo[0], 0);
-    BOOST_CHECK(VerifyScript(s, a_and_b, txTo[0], 0, nUnused, 0, true));
+    BOOST_CHECK(VerifyScript(s, a_and_b, txTo[0], 0, true, 0));
 
     for (int i = 0; i < 4; i++)
     {
         keys.clear();
         keys += key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, nUnused, 0, true), strprintf("a&b 1: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, true, 0), strprintf("a&b 1: %d", i));
 
         keys.clear();
         keys += key[1],key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, nUnused, 0, true), strprintf("a&b 2: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, txTo[0], 0, true, 0), strprintf("a&b 2: %d", i));
     }
 
     // Test a OR b:
@@ -103,16 +102,16 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         keys += key[i];
         s = sign_multisig(a_or_b, keys, txTo[1], 0);
         if (i == 0 || i == 1)
-            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, txTo[1], 0, nUnused, 0, true), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, txTo[1], 0, true, 0), strprintf("a|b: %d", i));
         else
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, txTo[1], 0, nUnused, 0, true), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, txTo[1], 0, true, 0), strprintf("a|b: %d", i));
     }
     s.clear();
     s << OP_0 << OP_0;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, nUnused, 0, true));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, true, 0));
     s.clear();
     s << OP_0 << OP_1;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, nUnused, 0, true));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, true, 0));
 
 
     for (int i = 0; i < 4; i++)
@@ -122,9 +121,9 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             keys += key[i],key[j];
             s = sign_multisig(escrow, keys, txTo[2], 0);
             if (i < j && i < 3 && j < 3)
-                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, txTo[2], 0, nUnused, 0, true), strprintf("escrow 1: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, txTo[2], 0, true, 0), strprintf("escrow 1: %d %d", i, j));
             else
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, txTo[2], 0, nUnused, 0, true), strprintf("escrow 2: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, txTo[2], 0, true, 0), strprintf("escrow 2: %d %d", i, j));
         }
 }
 

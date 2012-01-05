@@ -42,13 +42,13 @@ bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector
     return false;
 }
 
-bool CWallet::AddCScript(const uint160 &hash, const CScript& redeemScript)
+bool CWallet::AddCScript(const CScript& redeemScript)
 {
-    if (!CCryptoKeyStore::AddCScript(hash, redeemScript))
+    if (!CCryptoKeyStore::AddCScript(redeemScript))
         return false;
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).WriteCScript(hash, redeemScript);
+    return CWalletDB(strWalletFile).WriteCScript(Hash160(redeemScript), redeemScript);
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)

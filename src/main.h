@@ -503,7 +503,9 @@ public:
     }
 
     bool IsStandard() const;
-    bool AreInputsStandard(std::map<uint256, std::pair<CTxIndex, CTransaction> > mapInputs) const;
+    bool AreInputsStandard(const std::map<uint256, std::pair<CTxIndex, CTransaction> >& mapInputs) const;
+
+    int GetLegacySigOpCount() const;
 
     int64 GetValueOut() const
     {
@@ -636,8 +638,8 @@ public:
     bool FetchInputs(CTxDB& txdb, const std::map<uint256, CTxIndex>& mapTestPool,
                      bool fBlock, bool fMiner, std::map<uint256, std::pair<CTxIndex, CTransaction> >& inputsRet);
     bool ConnectInputs(std::map<uint256, std::pair<CTxIndex, CTransaction> > inputs,
-                       std::map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
-                       CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int& nSigOpsRet, int64 nMinFee=0);
+                       std::map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
+                       const CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int& nSigOpsRet, int64 nMinFee=0);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
