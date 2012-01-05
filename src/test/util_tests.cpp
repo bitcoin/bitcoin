@@ -232,4 +232,19 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
     BOOST_CHECK(!ParseMoney("92233720368.54775808", ret));
 }
 
+BOOST_AUTO_TEST_CASE(util_IsHex)
+{
+    BOOST_CHECK(IsHex("00"));
+    BOOST_CHECK(IsHex("00112233445566778899aabbccddeeffAABBCCDDEEFF"));
+    BOOST_CHECK(IsHex("ff"));
+    BOOST_CHECK(IsHex("FF"));
+
+    BOOST_CHECK(!IsHex(""));
+    BOOST_CHECK(!IsHex("0"));
+    BOOST_CHECK(!IsHex("a"));
+    BOOST_CHECK(!IsHex("eleven"));
+    BOOST_CHECK(!IsHex("00xx00"));
+    BOOST_CHECK(!IsHex("0x0000"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

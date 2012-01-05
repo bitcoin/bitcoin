@@ -158,10 +158,8 @@ enum opcodetype
     OP_CHECKMULTISIG,
     OP_CHECKMULTISIGVERIFY,
 
-    // meta
-    OP_EVAL, // Was OP_NOP1
-
     // expansion
+    OP_NOP1,
     OP_NOP2,
     OP_NOP3,
     OP_NOP4,
@@ -177,7 +175,6 @@ enum opcodetype
     // template matching params
     OP_SMALLINTEGER = 0xfa,
     OP_PUBKEYS = 0xfb,
-    OP_SCRIPTHASH = 0xfc,
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 
@@ -485,24 +482,18 @@ public:
         return nFound;
     }
 
-    // This method should be removed when a compatibility-breaking block chain split has passed.
-    // Compatibility method for old clients that count sigops differently:
-    int GetSigOpCount() const
-    {
-        int n = 0;
-        const_iterator pc = begin();
-        while (pc < end())
-        {
-            opcodetype opcode;
-            if (!GetOp(pc, opcode))
-                break;
-            if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
-                n++;
-            else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-                n += 20;
-        }
-        return n;
-    }
+    // Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
+    // as 20 sigops. With pay-to-script-hash, that changed:
+    // CHECKMULTISIGs serialized in scriptSigs are
+    // counted more accurately, assuming they are of the form
+    //  ... OP_N CHECKMULTISIG ...
+    int GetSigOpCount(bool fAccurate) const;
+
+    // Accurately count sigOps, including sigOps in
+    // pay-to-script-hash transactions:
+    int GetSigOpCount(const CScript& scriptSig) const;
+
+    bool IsPayToScriptHash() const;
 
     // Called by CTransaction::IsStandard
     bool IsPushOnly() const
@@ -526,7 +517,7 @@ public:
         SetBitcoinAddress(CBitcoinAddress(vchPubKey));
     }
     void SetMultisig(int nRequired, const std::vector<CKey>& keys);
-    void SetEval(const CScript& subscript);
+    void SetPayToScriptHash(const CScript& subscript);
 
 
     void PrintHex() const
@@ -567,14 +558,13 @@ public:
 
 
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType, bool fStrictOpEval, int& nSigOpCountRet);
-
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet);
 bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CBitcoinAddress>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int& nSigOpCountRet, int nHashType=0, bool fStrictOpEval=true);
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType);
 
 #endif

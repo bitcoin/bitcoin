@@ -1008,41 +1008,62 @@ Value addmultisigaddress(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[2]);
 
     // Gather public keys
-    if (keys.size() < nRequired)
+    if (nRequired < 1 || keys.size() < nRequired)
         throw runtime_error(
-            strprintf("addmultisigaddress: wrong number of keys (got %d, need at least %d)", keys.size(), nRequired));
+            strprintf("wrong number of keys"
+                      "(got %d, need at least %d)", keys.size(), nRequired));
     std::vector<CKey> pubkeys;
     pubkeys.resize(keys.size());
     for (int i = 0; i < keys.size(); i++)
     {
         const std::string& ks = keys[i].get_str();
-        if (ks.size() == 130) // hex public key
-            pubkeys[i].SetPubKey(ParseHex(ks));
-        else if (ks.size() > 34) // base58-encoded
+
+        // Case 1: bitcoin address and we have full public key:
+        CBitcoinAddress address(ks);
+        if (address.IsValid())
         {
-            std::vector<unsigned char> vchPubKey;
-            if (DecodeBase58(ks, vchPubKey))
-                pubkeys[i].SetPubKey(vchPubKey);
-            else
-                throw runtime_error("Error base58 decoding key: "+ks);
-        }
-        else // bitcoin address for key in this wallet
-        {
-            CBitcoinAddress address(ks);
+            if (address.IsScript())
+                throw runtime_error(
+                    strprintf("%s is a pay-to-script address",ks.c_str()));
             if (!pwalletMain->GetKey(address, pubkeys[i]))
                 throw runtime_error(
-                    strprintf("addmultisigaddress: unknown address: %s",ks.c_str()));
+                    strprintf("no full public key for address %s",ks.c_str()));
+            continue;
         }
+
+        // Case 2: hex public key
+        if (IsHex(ks))
+        {
+            vector<unsigned char> vchPubKey = ParseHex(ks);
+            if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
+                throw runtime_error(" Invalid public key: "+ks);
+            // There is approximately a zero percent chance a random
+            // public key encoded as base58 will consist entirely
+            // of hex characters.
+            continue;
+        }
+        // Case 3: base58-encoded public key
+        {
+            vector<unsigned char> vchPubKey;
+            if (!DecodeBase58(ks, vchPubKey))
+                throw runtime_error("base58 decoding failed: "+ks);
+            if (vchPubKey.size() < 33) // 33 is size of a compressed public key
+                throw runtime_error("decoded public key too short: "+ks);
+            if (pubkeys[i].SetPubKey(vchPubKey))
+                continue;
+        }
+
+        throw runtime_error(" Invalid public key: "+ks);
     }
 
-    // Construct using OP_EVAL
+    // Construct using pay-to-script-hash:
     CScript inner;
     inner.SetMultisig(nRequired, pubkeys);
 
     uint160 scriptHash = Hash160(inner);
     CScript scriptPubKey;
-    scriptPubKey.SetEval(inner);
-    pwalletMain->AddCScript(scriptHash, inner);
+    scriptPubKey.SetPayToScriptHash(inner);
+    pwalletMain->AddCScript(inner);
     CBitcoinAddress address;
     address.SetScriptHash160(scriptHash);
 
@@ -2681,7 +2702,7 @@ int CommandLineRPC(int argc, char *argv[])
             string s = params[1].get_str();
             Value v;
             if (!read_string(s, v) || v.type() != array_type)
-                throw runtime_error("addmultisigaddress: type mismatch "+s);
+                throw runtime_error("type mismatch "+s);
             params[1] = v.get_array();
         }
 
