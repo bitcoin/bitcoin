@@ -215,7 +215,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
                 CWalletTx& wtx = (*mi).second;
                 if (!wtx.IsSpent(txin.prevout.n) && IsMine(wtx.vout[txin.prevout.n]))
                 {
-                    printf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                    printf("WalletUpdateSpent found spent coin %sppc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
                     wtx.MarkSpent(txin.prevout.n);
                     wtx.WriteToDisk();
                     vWalletUpdated.push_back(txin.prevout.hash);
@@ -624,7 +624,7 @@ void CWallet::ReacceptWalletTransactions()
                 }
                 if (fUpdated)
                 {
-                    printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                    printf("ReacceptWalletTransactions found spent coin %sppc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
                     wtx.MarkDirty();
                     wtx.WriteToDisk();
                 }
@@ -1014,7 +1014,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                 dPriority /= nBytes;
 
                 // Check that enough fee is included
-                int64 nPayFee = nTransactionFee;   // ppcoin: simplify tx fee
+                int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
                 int64 nMinFee = wtxNew.GetMinFee(1, false);
                 if (nFeeRet < max(nPayFee, nMinFee))
                 {

@@ -483,18 +483,14 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
 Value settxfee(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 1)
+    if (fHelp || params.size() < 1 || params.size() > 1 || AmountFromValue(params[0]) < MIN_TX_FEE)
         throw runtime_error(
             "settxfee <amount>\n"
-            "<amount> is a real and is rounded to the nearest 0.0001\n"
-            "Minimum and default transaction fee is 1 coin");
+            "<amount> is a real and is rounded to 0.01 (cent)\n"
+            "Minimum and default transaction fee per KB is 1 cent");
 
-    // Amount
-    int64 nAmount = MIN_TX_FEE;
-    if (params[0].get_real() != 0.0)                    // rejects 0.0 amounts
-        nAmount = max(nAmount, AmountFromValue(params[0]));
-
-    nTransactionFee = nAmount;
+    nTransactionFee = AmountFromValue(params[0]);
+    nTransactionFee = (nTransactionFee / CENT) * CENT;  // round to cent
     return true;
 }
 
@@ -503,12 +499,12 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
             "sendtoaddress <ppcoinaddress> <amount> [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.0001\n"
+            "<amount> is a real and is rounded to the nearest 0.000001\n"
             "requires wallet passphrase to be set with walletpassphrase first");
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
             "sendtoaddress <ppcoinaddress> <amount> [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.0001");
+            "<amount> is a real and is rounded to the nearest 0.000001");
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
@@ -824,12 +820,12 @@ Value sendfrom(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 3 || params.size() > 6))
         throw runtime_error(
             "sendfrom <fromaccount> <toppcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.0001\n"
+            "<amount> is a real and is rounded to the nearest 0.000001\n"
             "requires wallet passphrase to be set with walletpassphrase first");
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() < 3 || params.size() > 6))
         throw runtime_error(
             "sendfrom <fromaccount> <toppcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest 0.0001");
+            "<amount> is a real and is rounded to the nearest 0.000001");
 
     string strAccount = AccountFromValue(params[0]);
     CBitcoinAddress address(params[1].get_str());

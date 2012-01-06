@@ -31,11 +31,11 @@ class CBlockIndex;
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
-static const int64 COIN = 10000;
-static const int64 CENT = 100;
+static const int64 COIN = 1000000;
+static const int64 CENT = 10000;
 static const int64 MIN_TX_FEE = 10000;
 static const int64 MIN_RELAY_TX_FEE = 10000;
-static const int64 MAX_MONEY = 800000000000000 * COIN;
+static const int64 MAX_MONEY = 2000000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int COINBASE_MATURITY = 100;
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
@@ -533,14 +533,14 @@ public:
         return dPriority > COIN * 144 / 250;
     }
 
-    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, bool fForRelay=false) const
+    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=false, bool fForRelay=false) const
     {
         // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
         int64 nBaseFee = fForRelay ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 
         unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK);
         unsigned int nNewBlockSize = nBlockSize + nBytes;
-        int64 nMinFee = nBaseFee;          // ppcoin: simplify transaction fee
+        int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
         if (fAllowFree)
         {

@@ -492,12 +492,13 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-paytxfee"))
     {
-        if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
+        if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee) || nTransactionFee < MIN_TX_FEE)
         {
             wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
             return false;
         }
-        if (nTransactionFee >= 10 * COIN)
+        nTransactionFee = (nTransactionFee / CENT) * CENT;  // round to cent
+        if (nTransactionFee >= 0.25 * COIN)
             wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
     }
 
