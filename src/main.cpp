@@ -668,7 +668,7 @@ int64 static GetBlockValue(unsigned int nBits, int64 nFees)
         CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
         if (fDebug && GetBoolArg("-printcreation"))
             printf("GetBlockValue() : lower=%d upper=%d mid=%d\n", bnLowerBound.getint(), bnUpperBound.getint(), bnMidValue.getint());
-        if (bnMidValue * bnMidValue * bnMidValue * bnMidValue > bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnTarget / bnTargetLimit)
+        if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnTarget)
             bnUpperBound = bnMidValue;
         else
             bnLowerBound = bnMidValue;
@@ -685,6 +685,7 @@ int64 static GetBlockValue(unsigned int nBits, int64 nFees)
 static const int64 nTargetTimespan = 7 * 24 * 60 * 60; // one week
 static const int64 nTargetSpacing = 10 * 60;
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
+static const int64 nMaxClockDrift = 2 * 60 * 60; // 2 hours
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -1124,7 +1125,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     }
     if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
         return error("Reorganize() : WriteHashBestChain failed");
-    if (!txdb.WriteAutoCheckpoint(pindexNew->nCheckpoint))
+    if (!txdb.WriteAutoCheckpoint(Checkpoints::GetNextAutoCheckpoint(pindexNew->nCheckpoint)))
         return error("Reorganize() : WriteAutoCheckpoint failed");
 
     // Make sure it's successfully written to disk before changing memory structure
@@ -1161,7 +1162,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
     {
         txdb.WriteHashBestChain(hash);
-        txdb.WriteAutoCheckpoint(pindexNew->nCheckpoint);
+        txdb.WriteAutoCheckpoint(Checkpoints::GetNextAutoCheckpoint(pindexNew->nCheckpoint));
         if (!txdb.TxnCommit())
             return error("SetBestChain() : TxnCommit failed");
         pindexGenesisBlock = pindexNew;
@@ -1169,7 +1170,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     else if (hashPrevBlock == hashBestChain)
     {
         // Adding to current best branch
-        if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash) || !txdb.WriteAutoCheckpoint(pindexNew->nCheckpoint))
+        if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash) || !txdb.WriteAutoCheckpoint(Checkpoints::GetNextAutoCheckpoint(pindexNew->nCheckpoint)))
         {
             txdb.TxnAbort();
             InvalidChainFound(pindexNew);
@@ -1340,7 +1341,7 @@ bool CBlock::CheckBlock() const
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
-    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+    if (GetBlockTime() > GetAdjustedTime() + nMaxClockDrift)
         return error("CheckBlock() : block timestamp too far in the future");
 
     // First transaction must be coinbase, the rest must not be
@@ -1349,6 +1350,10 @@ bool CBlock::CheckBlock() const
     for (int i = 1; i < vtx.size(); i++)
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
+
+    // Check coinbase timestamp
+    if (GetBlockTime() > (int64)vtx[0].nTime + nMaxClockDrift)
+        return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -1390,7 +1395,7 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : incorrect proof of work"));
 
     // Check timestamp against prev
-    if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
+    if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
         return error("AcceptBlock() : block's timestamp is too early");
 
     // Check that all transactions are finalized
@@ -1610,7 +1615,7 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = 9999 * COIN;
+        txNew.vout[0].nValue = GetBlockValue(bnProofOfWorkLimit.GetCompact(), 0);
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
         CBlock block;
         block.vtx.push_back(txNew);
@@ -2948,6 +2953,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
     pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
     pblock->nTime          = max(pblock->GetBlockTime(), pblock->GetMaxTransactionTime());
+    pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
     pblock->nNonce         = 0;
 
     return pblock.release();
@@ -3191,7 +3197,10 @@ void static BitcoinMiner(CWallet *pwallet)
             // Update nTime every few seconds
             pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
             pblock->nTime = max(pblock->GetBlockTime(), pblock->GetMaxTransactionTime()); 
+            pblock->nTime = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
             nBlockTime = ByteReverse(pblock->nTime);
+            if (pblock->GetBlockTime() >= (int64)pblock->vtx[0].nTime + nMaxClockDrift)
+                break;  // need to update coinbase timestamp
         }
     }
 }
