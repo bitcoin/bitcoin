@@ -59,13 +59,13 @@ namespace Checkpoints
         return error("Checkpoints: failed to find any ancestor on main chain for the new block - internal error");
     }
 
-    // ppcoin: get next auto checkpoint in the chain
+    // ppcoin: get next chain checkpoint
     int GetNextChainCheckpoint(const CBlockIndex *pindexLast)
     {
         CBigNum bnTarget;
         CBigNum bnTargetMax = 0;  // max target of all blocks since checkpoint
         CBigNum bnTargetMin = 0;  // min target of all candidate checkpoints
-        int nMinTargetHeight = 0; // min target height since checkpoint
+        int nMinTargetHeight = 0; // min target height of candidate checkpoints
         int nCheckpointMin = 0;   // minimum candidate checkpoint
         int nCheckpointMax = 0;   // maximum candidate checkpoint
         int nDepth = pindexLast->nHeight - pindexLast->nCheckpoint;
@@ -103,15 +103,21 @@ namespace Checkpoints
         if (bnTargetMin * 100 > bnTargetMax * 90)
             return nCheckpointMax;
         if (bnTarget * 100 > bnTargetMax * 90)
-            return std::min(nCheckpointMax, nMinTargetHeight);
+            return nMinTargetHeight;
         else
             return nCheckpointMin;
+    }
+
+    // ppcoin: get next auto checkpoint from the new chain checkpoint
+    int GetNextAutoCheckpoint(int nCheckpoint)
+    {
+        return (std::max(nAutoCheckpoint, nCheckpoint));
     }
 
     // ppcoin: advance to next automatic checkpoint
     void AdvanceAutoCheckpoint(int nCheckpoint)
     {
-        nAutoCheckpoint = std::max(nAutoCheckpoint, nCheckpoint);
+        nAutoCheckpoint = GetNextAutoCheckpoint(nCheckpoint);
         printf("Checkpoints: auto checkpoint now at height=%d\n", nAutoCheckpoint);
     }
 

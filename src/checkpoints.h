@@ -29,6 +29,7 @@ namespace Checkpoints
     bool CheckAuto(const CBlockIndex *pindex);
 
     int  GetNextChainCheckpoint(const CBlockIndex *pindex);
+    int  GetNextAutoCheckpoint(int nCheckpoint);
     void AdvanceAutoCheckpoint(int nCheckpoint);
 
     // Return conservative estimate of total number of blocks, 0 if unknown
