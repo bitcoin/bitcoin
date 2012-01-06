@@ -10,40 +10,47 @@
 #include "net.h"
 #include "util.h"
 
-using namespace std;
+#include <stdint.h>
+
+CService ip(uint32_t i)
+{
+    struct in_addr s;
+    s.s_addr = i;
+    return CService(CNetAddr(s), GetDefaultPort());
+}
 
 BOOST_AUTO_TEST_SUITE(DoS_tests)
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
     CNode::ClearBanned();
-    CAddress addr1(0xa0b0c001);
+    CAddress addr1(ip(0xa0b0c001));
     CNode dummyNode1(INVALID_SOCKET, addr1, true);
     dummyNode1.Misbehaving(100); // Should get banned
-    BOOST_CHECK(CNode::IsBanned(addr1.ip));
-    BOOST_CHECK(!CNode::IsBanned(addr1.ip|0x0000ff00)); // Different ip, not banned
+    BOOST_CHECK(CNode::IsBanned(addr1));
+    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different ip, not banned
 
-    CAddress addr2(0xa0b0c002);
+    CAddress addr2(ip(0xa0b0c002));
     CNode dummyNode2(INVALID_SOCKET, addr2, true);
     dummyNode2.Misbehaving(50);
-    BOOST_CHECK(!CNode::IsBanned(addr2.ip)); // 2 not banned yet...
-    BOOST_CHECK(CNode::IsBanned(addr1.ip));  // ... but 1 still should be
+    BOOST_CHECK(!CNode::IsBanned(addr2)); // 2 not banned yet...
+    BOOST_CHECK(CNode::IsBanned(addr1));  // ... but 1 still should be
     dummyNode2.Misbehaving(50);
-    BOOST_CHECK(CNode::IsBanned(addr2.ip));
+    BOOST_CHECK(CNode::IsBanned(addr2));
 }    
 
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
     CNode::ClearBanned();
     mapArgs["-banscore"] = "111"; // because 11 is my favorite number
-    CAddress addr1(0xa0b0c001);
+    CAddress addr1(ip(0xa0b0c001));
     CNode dummyNode1(INVALID_SOCKET, addr1, true);
     dummyNode1.Misbehaving(100);
-    BOOST_CHECK(!CNode::IsBanned(addr1.ip));
+    BOOST_CHECK(!CNode::IsBanned(addr1));
     dummyNode1.Misbehaving(10);
-    BOOST_CHECK(!CNode::IsBanned(addr1.ip));
+    BOOST_CHECK(!CNode::IsBanned(addr1));
     dummyNode1.Misbehaving(1);
-    BOOST_CHECK(CNode::IsBanned(addr1.ip));
+    BOOST_CHECK(CNode::IsBanned(addr1));
     mapArgs["-banscore"] = "100";
 }
 
@@ -53,20 +60,20 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     int64 nStartTime = GetTime();
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
-    CAddress addr(0xa0b0c001);
+    CAddress addr(ip(0xa0b0c001));
     CNode dummyNode(INVALID_SOCKET, addr, true);
 
     dummyNode.Misbehaving(100);
-    BOOST_CHECK(CNode::IsBanned(addr.ip));
+    BOOST_CHECK(CNode::IsBanned(addr));
 
     SetMockTime(nStartTime+60*60);
-    BOOST_CHECK(CNode::IsBanned(addr.ip));
+    BOOST_CHECK(CNode::IsBanned(addr));
 
     SetMockTime(nStartTime+60*60*24+1);
-    BOOST_CHECK(!CNode::IsBanned(addr.ip));
-}    
+    BOOST_CHECK(!CNode::IsBanned(addr));
+}
 
-static bool CheckNBits(unsigned int nbits1, int64 time1, unsigned int nbits2, int64 time2)
+static bool CheckNBits(unsigned int nbits1, int64 time1, unsigned int nbits2, int64 time2)\
 {
     if (time1 > time2)
         return CheckNBits(nbits2, time2, nbits1, time1);

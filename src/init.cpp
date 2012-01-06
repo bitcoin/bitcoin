@@ -470,7 +470,7 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
-    bool fTor = (fUseProxy && addrProxy.port == htons(9050));
+    bool fTor = (fUseProxy && addrProxy.GetPort() == 9050);
     if (fTor)
     {
         // Use SoftSetArg here so user can override any of these if they wish.

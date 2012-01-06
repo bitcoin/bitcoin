@@ -623,7 +623,7 @@ inline const uint256 operator-(const uint256& a, const uint256& b)      { return
 
 
 
-
+#ifdef TEST_UINT256
 
 inline int Testuint256AdHoc(std::vector<std::string> vArg)
 {
@@ -754,5 +754,7 @@ inline int Testuint256AdHoc(std::vector<std::string> vArg)
 
     return (0);
 }
+
+#endif
 
 #endif
