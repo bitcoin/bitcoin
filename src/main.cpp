@@ -29,7 +29,7 @@ unsigned int nTransactionsUpdated = 0;
 map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
-uint256 hashGenesisBlock("0x000000007ba3367beb8b04bf8bc62a8e265662d99779824070f3cdfe89852a66");
+uint256 hashGenesisBlock("0x000000006d52486334316794cc38ffeb7ebf35a7ebd661fd39f5f46b0d001575");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 const int nInitialBlockThreshold = 120; // Regard blocks up until N-threshold as "initial download"
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -667,7 +667,7 @@ int64 static GetBlockValue(unsigned int nBits, int64 nFees)
     {
         CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
         if (fDebug && GetBoolArg("-printcreation"))
-            printf("GetBlockValue() : lower=%d upper=%d mid=%d\n", bnLowerBound.getint(), bnUpperBound.getint(), bnMidValue.getint());
+            printf("GetBlockValue() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
         if (bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnTargetLimit > bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnTarget)
             bnUpperBound = bnMidValue;
         else
@@ -923,8 +923,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
         int64 nTxFee = nValueIn - GetValueOut();
         if (nTxFee < 0)
             return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,10).c_str()));
-        if (nTxFee < nMinFee)
-            return false;
+        if (nTxFee < nMinFee) //ppcoin: enforce transaction fees for every block
+            return fBlock? DoS(100, error("ConnectInputs() : %s not paying required fee=%s, paid=%s", GetHash().ToString().substr(0,10).c_str(), FormatMoney(nMinFee).c_str(), FormatMoney(nTxFee).c_str())) : false;
         nFees += nTxFee;
         if (!MoneyRange(nFees))
             return DoS(100, error("ConnectInputs() : nFees out of range"));
@@ -1029,7 +1029,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
         nTxPos += ::GetSerializeSize(tx, SER_DISK);
 
-        if (!tx.ConnectInputs(txdb, mapQueuedChanges, posThisTx, pindex, nFees, true, false))
+        if (!tx.ConnectInputs(txdb, mapQueuedChanges, posThisTx, pindex, nFees, true, false, tx.GetMinFee()))
             return false;
     }
     // Write queued txindex changes
@@ -1611,7 +1611,7 @@ bool LoadBlockIndex(bool fAllowNew)
         // Genesis block
         const char* pszTimestamp = "MarketWatch 07/Nov/2011 Gold tops $1,790 to end at over six-week high";
         CTransaction txNew;
-        txNew.nTime = 1325225177;
+        txNew.nTime = 1325878371;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
@@ -1622,9 +1622,9 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1325228535;
+        block.nTime    = 1325882536;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 1664714209;
+        block.nNonce   = 2081920190;
 
         if (fTestNet)
         {
@@ -1637,7 +1637,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("%s\n", block.GetHash().ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x1fe83f5d79b725b13786bd4377b6fd4d5bba5c2777649a989783d47a63a27b91"));
+        assert(block.hashMerkleRoot == uint256("0xc7311b56de266580cca65be108ae53d7100b5c3b17da8b1106044103abd7a521"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
 
