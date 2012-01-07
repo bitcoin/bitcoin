@@ -650,7 +650,7 @@ uint256 static GetOrphanRoot(const CBlock* pblock)
     return pblock->GetHash();
 }
 
-int64 static GetBlockValue(unsigned int nBits, int64 nFees)
+int64 static GetBlockValue(unsigned int nBits)
 {
     CBigNum bnSubsidyLimit = 9999 * COIN; // subsidy amount for difficulty 1
     CBigNum bnTarget;
@@ -677,9 +677,9 @@ int64 static GetBlockValue(unsigned int nBits, int64 nFees)
     int64 nSubsidy = bnUpperBound.getuint64();
     nSubsidy = (nSubsidy / CENT) * CENT;
     if (fDebug && GetBoolArg("-printcreation"))
-        printf("GetBlockValue() : nBits=0x%08x nSubsidy=%"PRI64d"\n", nBits, nSubsidy);
+        printf("GetBlockValue() : create=%s nBits=0x%08x nSubsidy=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nBits, nSubsidy);
 
-    return nSubsidy + nFees;
+    return nSubsidy;
 }
 
 static const int64 nTargetTimespan = 7 * 24 * 60 * 60; // one week
@@ -1039,8 +1039,12 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             return error("ConnectBlock() : UpdateTxIndex failed");
     }
 
-    if (vtx[0].GetValueOut() > GetBlockValue(nBits, nFees))
+    // ppcoin: fees are not collected by miners as in bitcoin
+    // ppcoin: fees are destroyed to compensate the entire network
+    if (vtx[0].GetValueOut() > GetBlockValue(nBits))
         return false;
+    if (fDebug && GetBoolArg("-printcreation"))
+        printf("ConnectBlock() : destroy=%s nFees=%"PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
 
     // Update block index on disk without changing it in memory.
     // The memory index structure will be changed after the db commits.
@@ -1615,7 +1619,7 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = GetBlockValue(bnProofOfWorkLimit.GetCompact(), 0);
+        txNew.vout[0].nValue = GetBlockValue(bnProofOfWorkLimit.GetCompact());
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
         CBlock block;
         block.vtx.push_back(txNew);
@@ -2946,7 +2950,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
         }
     }
     pblock->nBits          = GetNextWorkRequired(pindexPrev);
-    pblock->vtx[0].vout[0].nValue = GetBlockValue(pblock->nBits, nFees);
+    pblock->vtx[0].vout[0].nValue = GetBlockValue(pblock->nBits);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
