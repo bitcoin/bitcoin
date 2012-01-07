@@ -24,6 +24,7 @@
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
 
+#include "netbase.h"
 
 typedef long long  int64;
 typedef unsigned long long  uint64;
@@ -79,20 +80,7 @@ T* alignup(T* p)
 #define S_IWUSR             0200
 #endif
 #define unlink              _unlink
-typedef int socklen_t;
 #else
-#define WSAGetLastError()   errno
-#define WSAEINVAL           EINVAL
-#define WSAEALREADY         EALREADY
-#define WSAEWOULDBLOCK      EWOULDBLOCK
-#define WSAEMSGSIZE         EMSGSIZE
-#define WSAEINTR            EINTR
-#define WSAEINPROGRESS      EINPROGRESS
-#define WSAEADDRINUSE       EADDRINUSE
-#define WSAENOTSOCK         EBADF
-#define INVALID_SOCKET      (SOCKET)(~0)
-#define SOCKET_ERROR        -1
-typedef u_int SOCKET;
 #define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
 #define strlwr(psz)         to_lower(psz)
 #define _strlwr(psz)        to_lower(psz)
@@ -104,19 +92,6 @@ inline void Sleep(int64 n)
 }
 #endif
 
-inline int myclosesocket(SOCKET& hSocket)
-{
-    if (hSocket == INVALID_SOCKET)
-        return WSAENOTSOCK;
-#ifdef WIN32
-    int ret = closesocket(hSocket);
-#else
-    int ret = close(hSocket);
-#endif
-    hSocket = INVALID_SOCKET;
-    return ret;
-}
-#define closesocket(s)      myclosesocket(s)
 #if !defined(QT_GUI)
 inline const char* _(const char* psz)
 {
@@ -187,9 +162,9 @@ uint64 GetRand(uint64 nMax);
 int64 GetTime();
 void SetMockTime(int64 nMockTimeIn);
 int64 GetAdjustedTime();
-void AddTimeData(unsigned int ip, int64 nTime);
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
+void AddTimeData(const CNetAddr& ip, int64 nTime);
 
 
 
@@ -745,3 +720,4 @@ inline uint32_t ByteReverse(uint32_t value)
 }
 
 #endif
+
