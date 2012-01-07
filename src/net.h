@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include "netbase.h"
 #include "protocol.h"
 
 class CAddrDB;
@@ -21,7 +22,6 @@ class CRequestTracker;
 class CNode;
 class CBlockIndex;
 extern int nBestHeight;
-extern int nConnectTimeout;
 
 
 
@@ -29,13 +29,11 @@ inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer"
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 10*1000); }
 static const unsigned int PUBLISH_HOPS = 5;
 
-bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout=nConnectTimeout);
-bool Lookup(const char *pszName, std::vector<CAddress>& vaddr, int nServices, int nMaxSolutions, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
-bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
-bool GetMyExternalIP(unsigned int& ipRet);
+bool GetMyExternalIP(CNetAddr& ipRet);
 bool AddAddress(CAddress addr, int64 nTimePenalty=0, CAddrDB *pAddrDB=NULL);
-void AddressCurrentlyConnected(const CAddress& addr);
-CNode* FindNode(unsigned int ip);
+void AddressCurrentlyConnected(const CService& addr);
+CNode* FindNode(const CNetAddr& ip);
+CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
 void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
 bool AnySubscribed(unsigned int nChannel);
@@ -88,9 +86,6 @@ extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
 extern std::map<CInv, int64> mapAlreadyAskedFor;
 
-// Settings
-extern int fUseProxy;
-extern CAddress addrProxy;
 
 
 
@@ -126,7 +121,7 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is ip address, value is banned-until-time
-    static std::map<unsigned int, int64> setBanned;
+    static std::map<CNetAddr, int64> setBanned;
     static CCriticalSection cs_setBanned;
     int nMisbehavior;
 
@@ -355,7 +350,6 @@ public:
 
 
 
-
     void PushVersion();
 
 
@@ -581,7 +575,7 @@ public:
     // between nodes running old code and nodes running
     // new code.
     static void ClearBanned(); // needed for unit testing
-    static bool IsBanned(unsigned int ip);
+    static bool IsBanned(CNetAddr ip);
     bool Misbehaving(int howmuch); // 1 == a little, 100 == a lot
 };
 

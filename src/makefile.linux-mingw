@@ -33,6 +33,7 @@ HEADERS = \
     base58.h \
     bignum.h \
     checkpoints.h \
+    compat.h \
     crypter.h \
     db.h \
     headers.h \
@@ -63,6 +64,7 @@ LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l w
 
 OBJS= \
     obj/checkpoints.o \
+    obj/netbase.o \
     obj/crypter.o \
     obj/key.o \
     obj/db.o \
