@@ -145,7 +145,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/qvaluecombobox.h \
     src/qt/askpassphrasedialog.h \
     src/protocol.h \
-    src/qt/notificator.h
+    src/qt/notificator.h \
+    src/qt/qtipcserver.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -194,7 +195,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/qvaluecombobox.cpp \
     src/qt/askpassphrasedialog.cpp \
     src/protocol.cpp \
-    src/qt/notificator.cpp
+    src/qt/notificator.cpp \
+    src/qt/qtipcserver.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
