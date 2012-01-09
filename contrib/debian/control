@@ -24,7 +24,7 @@ Vcs-Browser: http://github.com/bitcoin/bitcoin
 Package: bitcoind
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: peer-to-peer network based anonymous digital currency - daemon
+Description: peer-to-peer network based digital currency - daemon
  Bitcoin is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
@@ -42,7 +42,7 @@ Description: peer-to-peer network based anonymous digital currency - daemon
 Package: bitcoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: peer-to-peer network based anonymous digital currency - QT GUI
+Description: peer-to-peer network based digital currency - QT GUI
  Bitcoin is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
