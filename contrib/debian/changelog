@@ -1,3 +1,12 @@
+bitcoin (0.5.1-natty1) natty; urgency=low
+
+  * Remove mentions on anonymity in package descriptions and manpage.
+    These should never have been there, bitcoin isnt anonymous without
+    a ton of work that virtually no users will ever be willing and
+    capable of doing
+
+ -- Matt Corallo <matt@bluematt.me>  Sat, 7 Jan 2012 13:37:00 -0500
+
 bitcoin (0.5.1-natty0) natty; urgency=low
 
   * New upstream release.
