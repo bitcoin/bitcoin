@@ -1,3 +1,9 @@
+bitcoin (0.5.0.4-natty0) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Tue, 10 Jan 2012 15:53:00 -0500
+
 bitcoin (0.5.0.3-natty1) natty; urgency=low
 
   * Remove mentions on anonymity in package descriptions and manpage.
