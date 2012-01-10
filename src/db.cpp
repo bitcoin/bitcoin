@@ -860,12 +860,14 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 {
                     CPrivKey pkey;
                     ssValue >> pkey;
+                    key.SetPubKey(vchPubKey);
                     key.SetPrivKey(pkey);
                 }
                 else
                 {
                     CWalletKey wkey;
                     ssValue >> wkey;
+                    key.SetPubKey(vchPubKey);
                     key.SetPrivKey(wkey.vchPrivKey);
                 }
                 if (!pwallet->LoadKey(key))

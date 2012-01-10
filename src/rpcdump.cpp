@@ -62,7 +62,9 @@ Value importprivkey(const Array& params, bool fHelp)
     if (!fGood) throw JSONRPCError(-5,"Invalid private key");
 
     CKey key;
-    key.SetSecret(vchSecret.GetSecret());
+    bool fCompressed;
+    CSecret secret = vchSecret.GetSecret(fCompressed);
+    key.SetSecret(secret, fCompressed);
     CBitcoinAddress vchAddress = CBitcoinAddress(key.GetPubKey());
 
     CRITICAL_BLOCK(cs_main)
@@ -95,7 +97,8 @@ Value dumpprivkey(const Array& params, bool fHelp)
     if (!address.SetString(strAddress))
         throw JSONRPCError(-5, "Invalid bitcoin address");
     CSecret vchSecret;
-    if (!pwalletMain->GetSecret(address, vchSecret))
+    bool fCompressed;
+    if (!pwalletMain->GetSecret(address, vchSecret, fCompressed))
         throw JSONRPCError(-4,"Private key for address " + strAddress + " is not known");
-    return CBitcoinSecret(vchSecret).ToString();
+    return CBitcoinSecret(vchSecret, fCompressed).ToString();
 }
