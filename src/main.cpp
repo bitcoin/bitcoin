@@ -275,26 +275,22 @@ bool CTransaction::IsStandard() const
 // expensive-to-check-upon-redemption script like:
 //   DUP CHECKSIG DROP ... repeated 100 times... OP_1
 //
-bool CTransaction::AreInputsStandard(const std::map<uint256, std::pair<CTxIndex, CTransaction> >& mapInputs) const
+bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
 {
     if (fTestNet)
         return true; // Allow non-standard on testnet
 
+    if (IsCoinBase())
+        return true; // Coinbases are allowed to have any input
+
     for (int i = 0; i < vin.size(); i++)
     {
-        COutPoint prevout = vin[i].prevout;
-
-        std::map<uint256, std::pair<CTxIndex, CTransaction> >::const_iterator mi = mapInputs.find(prevout.hash);
-        if (mi == mapInputs.end())
-            return false;
-
-        const CTransaction& txPrev = (mi->second).second;
-        assert(prevout.n < txPrev.vout.size());
+        const CTxOut& prev = GetOutputFor(vin[i], mapInputs);
 
         vector<vector<unsigned char> > vSolutions;
         txnouttype whichType;
         // get the scriptPubKey corresponding to this input:
-        const CScript& prevScript = txPrev.vout[prevout.n].scriptPubKey;
+        const CScript& prevScript = prev.scriptPubKey;
         if (!Solver(prevScript, whichType, vSolutions))
             return false;
         if (whichType == TX_SCRIPTHASH)
@@ -494,7 +490,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
 
     if (fCheckInputs)
     {
-        map<uint256, pair<CTxIndex, CTransaction> > mapInputs;
+        MapPrevTx mapInputs;
         map<uint256, CTxIndex> mapUnused;
         if (!FetchInputs(txdb, mapUnused, false, false, mapInputs))
         {
@@ -507,26 +503,19 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         if (!AreInputsStandard(mapInputs))
             return error("AcceptToMemoryPool() : nonstandard transaction input");
 
-        // Check against previous transactions
-        int64 nFees = 0;
-        int nSigOps = 0;
-        if (!ConnectInputs(mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, nFees, false, false, nSigOps))
-        {
-            if (pfMissingInputs)
-                *pfMissingInputs = true;
-            return error("AcceptToMemoryPool() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
-        }
-
-        // Checking ECDSA signatures is a CPU bottleneck, so to avoid denial-of-service
-        // attacks disallow transactions with more than one SigOp per 65 bytes.
-        // 65 bytes because that is the minimum size of an ECDSA signature
+        int64 nFees = GetValueIn(mapInputs)-GetValueOut();
+        int nSigOps = GetSigOpCount(mapInputs);
         unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK);
-        if (nSigOps > nSize / 65 || nSize < 100)
-            return error("AcceptToMemoryPool() : transaction with out-of-bounds SigOpCount");
 
         // Don't accept it if it can't get into a block
         if (nFees < GetMinFee(1000, true, GMF_RELAY))
             return error("AcceptToMemoryPool() : not enough fees");
+
+        // Checking ECDSA signatures is a CPU bottleneck, so to avoid denial-of-service
+        // attacks disallow transactions with more than one SigOp per 65 bytes.
+        // 65 bytes because that is the minimum size of an ECDSA signature
+        if (nSigOps > nSize / 65 || nSize < 100)
+            return error("AcceptToMemoryPool() : transaction with out-of-bounds SigOpCount");
 
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
@@ -551,6 +540,15 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
                     printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
                 dFreeCount += nSize;
             }
+        }
+
+        // Check against previous transactions
+        // This is done last to help prevent CPU exhaustion denial-of-service attacks.
+        if (!ConnectInputs(mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, false, false))
+        {
+            if (pfMissingInputs)
+                *pfMissingInputs = true;
+            return error("AcceptToMemoryPool() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
         }
     }
 
@@ -925,7 +923,7 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb)
 
 
 bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTestPool,
-                               bool fBlock, bool fMiner, map<uint256, pair<CTxIndex, CTransaction> >& inputsRet)
+                               bool fBlock, bool fMiner, MapPrevTx& inputsRet)
 {
     if (IsCoinBase())
         return true; // Coinbase transactions have no inputs to fetch.
@@ -978,6 +976,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
     for (int i = 0; i < vin.size(); i++)
     {
         const COutPoint prevout = vin[i].prevout;
+        assert(inputsRet.count(prevout.hash) != 0);
         const CTxIndex& txindex = inputsRet[prevout.hash].first;
         const CTransaction& txPrev = inputsRet[prevout.hash].second;
         if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
@@ -987,9 +986,49 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
     return true;
 }
 
-bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inputs,
+const CTxOut& CTransaction::GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const
+{
+    MapPrevTx::const_iterator mi = inputs.find(input.prevout.hash);
+    if (mi == inputs.end())
+        throw std::runtime_error("CTransaction::GetOutputFor() : prevout.hash not found");
+
+    const CTransaction& txPrev = (mi->second).second;
+    if (input.prevout.n >= txPrev.vout.size())
+        throw std::runtime_error("CTransaction::GetOutputFor() : prevout.n out of range");
+
+    return txPrev.vout[input.prevout.n];
+}
+
+int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
+{
+    if (IsCoinBase())
+        return 0;
+
+    int64 nResult = 0;
+    for (int i = 0; i < vin.size(); i++)
+    {
+        nResult += GetOutputFor(vin[i], inputs).nValue;
+    }
+    return nResult;
+
+}
+
+int CTransaction::GetSigOpCount(const MapPrevTx& inputs) const
+{
+    if (IsCoinBase())
+        return 0;
+
+    int nSigOps = 0;
+    for (int i = 0; i < vin.size(); i++)
+    {
+        nSigOps += GetOutputFor(vin[i], inputs).scriptPubKey.GetSigOpCount(vin[i].scriptSig);
+    }
+    return nSigOps;
+}
+
+bool CTransaction::ConnectInputs(MapPrevTx inputs,
                                  map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                                 const CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int& nSigOpsRet, int64 nMinFee)
+                                 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner)
 {
     // Take over previous transactions' spent pointers
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
@@ -998,6 +1037,7 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
     if (!IsCoinBase())
     {
         int64 nValueIn = 0;
+        int64 nFees = 0;
         for (int i = 0; i < vin.size(); i++)
         {
             COutPoint prevout = vin[i].prevout;
@@ -1013,6 +1053,17 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
                 for (const CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
+
+            // Check for conflicts (double-spend)
+            // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
+            // for an attacker to attempt to split the network.
+            if (!txindex.vSpent[prevout.n].IsNull())
+                return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
+
+            // Check for negative or overflow input values
+            nValueIn += txPrev.vout[prevout.n].nValue;
+            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+                return DoS(100, error("ConnectInputs() : txin values out of range"));
 
             bool fStrictPayToScriptHash = true;
             if (fBlock)
@@ -1038,20 +1089,6 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
                     return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
             }
 
-            // Check for conflicts (double-spend)
-            // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
-            // for an attacker to attempt to split the network.
-            if (!txindex.vSpent[prevout.n].IsNull())
-                return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
-
-            // Check for negative or overflow input values
-            nValueIn += txPrev.vout[prevout.n].nValue;
-            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-                return DoS(100, error("ConnectInputs() : txin values out of range"));
-
-            // Calculate sigOps accurately:
-            nSigOpsRet += txPrev.vout[prevout.n].scriptPubKey.GetSigOpCount(vin[i].scriptSig);
-
             // Mark outpoints as spent
             txindex.vSpent[prevout.n] = posThisTx;
 
@@ -1069,8 +1106,6 @@ bool CTransaction::ConnectInputs(map<uint256, pair<CTxIndex, CTransaction> > inp
         int64 nTxFee = nValueIn - GetValueOut();
         if (nTxFee < 0)
             return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,10).c_str()));
-        if (nTxFee < nMinFee)
-            return false;
         nFees += nTxFee;
         if (!MoneyRange(nFees))
             return DoS(100, error("ConnectInputs() : nFees out of range"));
@@ -1176,20 +1211,27 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
         nTxPos += ::GetSerializeSize(tx, SER_DISK);
 
-        map<uint256, pair<CTxIndex, CTransaction> > mapInputs;
-        if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs))
-            return false;
+        MapPrevTx mapInputs;
+        if (!tx.IsCoinBase())
+        {
+            if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs))
+                return false;
 
-        int nTxOps = 0;
-        if (!tx.ConnectInputs(mapInputs, mapQueuedChanges, posThisTx, pindex, nFees, true, false, nTxOps))
-            return false;
+            int nTxOps = tx.GetSigOpCount(mapInputs);
+            nSigOps += nTxOps;
+            if (nSigOps > MAX_BLOCK_SIGOPS)
+                return DoS(100, error("ConnectBlock() : too many sigops"));
+            // There is a different MAX_BLOCK_SIGOPS check in AcceptBlock();
+            // a block must satisfy both to make it into the best-chain
+            // (AcceptBlock() is always called before ConnectBlock())
 
-        nSigOps += nTxOps;
-        if (nSigOps > MAX_BLOCK_SIGOPS)
-            return DoS(100, error("ConnectBlock() : too many sigops"));
-        // There is a different MAX_BLOCK_SIGOPS check in AcceptBlock();
-        // a block must satisfy both to make it into the best-chain
-        // (AcceptBlock() is always called before ConnectBlock())
+            nFees += tx.GetValueIn(mapInputs)-tx.GetValueOut();
+        }
+
+        // It seems wrong that ConnectInputs must be called on the coinbase transaction
+        // (which has no inputs) : TODO: refactor the code at the end of ConnectInputs out...
+        if (!tx.ConnectInputs(mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
+            return false;
     }
 
     // Write queued txindex changes
@@ -3031,14 +3073,19 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
             map<uint256, CTxIndex> mapTestPoolTmp(mapTestPool);
-            map<uint256, pair<CTxIndex, CTransaction> > mapInputs;
+            MapPrevTx mapInputs;
             if (!tx.FetchInputs(txdb, mapTestPoolTmp, false, true, mapInputs))
                 continue;
 
-            int nTxSigOps2 = 0;
-            if (!tx.ConnectInputs(mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, nFees, false, true, nTxSigOps2, nMinFee))
+            int64 nFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
+            if (nFees < nMinFee)
                 continue;
+
+            int nTxSigOps2 = tx.GetSigOpCount(mapInputs);
             if (nBlockSigOps2 + nTxSigOps2 >= MAX_BLOCK_SIGOPS)
+                continue;
+
+            if (!tx.ConnectInputs(mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
                 continue;
             swap(mapTestPool, mapTestPoolTmp);
 
