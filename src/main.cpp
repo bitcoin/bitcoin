@@ -1111,17 +1111,6 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             return DoS(100, error("ConnectInputs() : nFees out of range"));
     }
 
-    if (fBlock)
-    {
-        // Add transaction to changes
-        mapTestPool[GetHash()] = CTxIndex(posThisTx, vout.size());
-    }
-    else if (fMiner)
-    {
-        // Add transaction to test pool
-        mapTestPool[GetHash()] = CTxIndex(CDiskTxPos(1,1,1), vout.size());
-    }
-
     return true;
 }
 
@@ -1226,12 +1215,12 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             // (AcceptBlock() is always called before ConnectBlock())
 
             nFees += tx.GetValueIn(mapInputs)-tx.GetValueOut();
+
+            if (!tx.ConnectInputs(mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
+                return false;
         }
 
-        // It seems wrong that ConnectInputs must be called on the coinbase transaction
-        // (which has no inputs) : TODO: refactor the code at the end of ConnectInputs out...
-        if (!tx.ConnectInputs(mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
-            return false;
+        mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
     }
 
     // Write queued txindex changes
@@ -3087,6 +3076,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 
             if (!tx.ConnectInputs(mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
                 continue;
+            mapTestPoolTmp[tx.GetHash()] = CTxIndex(CDiskTxPos(1,1,1), tx.vout.size());
             swap(mapTestPool, mapTestPoolTmp);
 
             // Added
