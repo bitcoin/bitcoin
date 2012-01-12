@@ -84,29 +84,6 @@ LIBS+= \
 DEBUGFLAGS=-g
 CXXFLAGS=-O2
 xCXXFLAGS=-pthread -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
-HEADERS = \
-    base58.h \
-    bignum.h \
-    checkpoints.h \
-    compat.h \
-    crypter.h \
-    db.h \
-    headers.h \
-    init.h \
-    irc.h \
-    key.h \
-    keystore.h \
-    main.h \
-    net.h \
-    noui.h \
-    protocol.h \
-    bitcoinrpc.h \
-    script.h \
-    serialize.h \
-    strlcpy.h \
-    uint256.h \
-    util.h \
-    wallet.h
 
 OBJS= \
     obj/checkpoints.o \

@@ -47,29 +47,6 @@ DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_SSL
 DEBUGFLAGS=-g
 # ppc doesn't work because we don't support big-endian
 CFLAGS=-mmacosx-version-min=10.5 -arch i386 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS = \
-    base58.h \
-    bignum.h \
-    checkpoints.h \
-    compat.h \
-    crypter.h \
-    db.h \
-    headers.h \
-    init.h \
-    irc.h \
-    key.h \
-    keystore.h \
-    main.h \
-    net.h \
-    noui.h \
-    protocol.h \
-    bitcoinrpc.h \
-    script.h \
-    serialize.h \
-    strlcpy.h \
-    uint256.h \
-    util.h \
-    wallet.h
 
 OBJS= \
     obj/checkpoints.o \
