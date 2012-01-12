@@ -26,29 +26,7 @@ LIBS= \
 DEFS=-DWIN32 -D_WINDOWS -DNOPCH -DUSE_SSL -DBOOST_THREAD_USE_LIB
 DEBUGFLAGS=-g
 CFLAGS=-mthreads -O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS = \
-    base58.h \
-    bignum.h \
-    checkpoints.h \
-    compat.h \
-    crypter.h \
-    db.h \
-    headers.h \
-    init.h \
-    irc.h \
-    key.h \
-    keystore.h \
-    main.h \
-    net.h \
-    noui.h \
-    protocol.h \
-    bitcoinrpc.h \
-    script.h \
-    serialize.h \
-    strlcpy.h \
-    uint256.h \
-    util.h \
-    wallet.h
+
 
 ifdef USE_UPNP
  INCLUDEPATHS += -I"C:\miniupnpc-1.6-mgw"
@@ -58,6 +36,9 @@ ifdef USE_UPNP
 endif
 
 LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
+
+# TODO: make the mingw builds smarter about dependencies, like the linux/osx builds are
+HEADERS = $(wildcard *.h)
 
 OBJS= \
     obj/checkpoints.o \
