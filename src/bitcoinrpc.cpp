@@ -994,7 +994,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     {
         string msg = "addmultisigaddress <nrequired> <'[\"key\",\"key\"]'> [account]\n"
             "Add a nrequired-to-sign multisignature address to the wallet\"\n"
-            "each key is a bitcoin address, hex or base58 public key\n"
+            "each key is a bitcoin address or hex-encoded public key\n"
             "If [account] is specified, assign address to [account].";
         throw runtime_error(msg);
     }
@@ -1028,32 +1028,19 @@ Value addmultisigaddress(const Array& params, bool fHelp)
             if (!pwalletMain->GetKey(address, pubkeys[i]))
                 throw runtime_error(
                     strprintf("no full public key for address %s",ks.c_str()));
-            continue;
         }
 
         // Case 2: hex public key
-        if (IsHex(ks))
+        else if (IsHex(ks))
         {
             vector<unsigned char> vchPubKey = ParseHex(ks);
             if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
                 throw runtime_error(" Invalid public key: "+ks);
-            // There is approximately a zero percent chance a random
-            // public key encoded as base58 will consist entirely
-            // of hex characters.
-            continue;
         }
-        // Case 3: base58-encoded public key
+        else
         {
-            vector<unsigned char> vchPubKey;
-            if (!DecodeBase58(ks, vchPubKey))
-                throw runtime_error("base58 decoding failed: "+ks);
-            if (vchPubKey.size() < 33) // 33 is size of a compressed public key
-                throw runtime_error("decoded public key too short: "+ks);
-            if (pubkeys[i].SetPubKey(vchPubKey))
-                continue;
+            throw runtime_error(" Invalid public key: "+ks);
         }
-
-        throw runtime_error(" Invalid public key: "+ks);
     }
 
     // Construct using pay-to-script-hash:
@@ -1739,8 +1726,6 @@ Value validateaddress(const Array& params, bool fHelp)
             std::vector<unsigned char> vchPubKey;
             pwalletMain->GetPubKey(address, vchPubKey);
             ret.push_back(Pair("pubkey", HexStr(vchPubKey)));
-            std::string strPubKey(vchPubKey.begin(), vchPubKey.end());
-            ret.push_back(Pair("pubkey58", EncodeBase58(vchPubKey)));
             CKey key;
             key.SetPubKey(vchPubKey);
             ret.push_back(Pair("iscompressed", key.IsCompressed()));
