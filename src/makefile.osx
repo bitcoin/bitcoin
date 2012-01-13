@@ -46,7 +46,9 @@ DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_SSL
 
 DEBUGFLAGS=-g
 # ppc doesn't work because we don't support big-endian
-CFLAGS=-mmacosx-version-min=10.5 -arch i386 -O3 -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-mmacosx-version-min=10.5 -arch i386 -O3 \
+    -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-offsetof -Wformat-security \
+    $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 OBJS= \
     obj/checkpoints.o \
@@ -78,17 +80,17 @@ endif
 all: bitcoind
 
 # auto-generated dependencies:
--include obj/nogui/*.P
+-include obj/*.P
 -include obj/test/*.P
 
-obj/nogui/%.o: %.cpp
+obj/%.o: %.cpp
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-bitcoind: $(OBJS:obj/%=obj/nogui/%)
+bitcoind: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj/test/%.o,$(wildcard test/*.cpp))
@@ -100,14 +102,12 @@ obj/test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_bitcoin: $(TESTOBJS) $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
+test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) $(DEPSDIR)/lib/libboost_unit_test_framework-mt.a
 
 clean:
 	-rm -f bitcoind test_bitcoin
 	-rm -f obj/*.o
-	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o
 	-rm -f obj/*.P
-	-rm -f obj/nogui/*.P
 	-rm -f obj/test/*.P

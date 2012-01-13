@@ -62,23 +62,22 @@ OBJS= \
 
 all: bitcoind.exe
 
-obj/nogui/%.o: %.cpp $(HEADERS)
+obj/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/nogui/%)
+bitcoind.exe: $(OBJS:obj/%=obj/%)
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
 obj/test/%.o: obj/test/%.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
-test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
+test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework-mt-s
 
 
 clean:
 	-rm -f obj/*.o
-	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o
 	-rm -f test/*.o
 	-rm -f headers.h.gch
