@@ -4,17 +4,23 @@
 #include "main.h"
 #include "wallet.h"
 
+CWallet* pwalletMain;
+
 extern bool fPrintToConsole;
 struct TestingSetup {
     TestingSetup() {
         fPrintToConsole = true; // don't want to write to debug.log file
+        pwalletMain = new CWallet();
+        RegisterWallet(pwalletMain);
     }
-    ~TestingSetup() { }
+    ~TestingSetup()
+    {
+        delete pwalletMain;
+        pwalletMain = NULL;
+    }
 };
 
 BOOST_GLOBAL_FIXTURE(TestingSetup);
-
-CWallet* pwalletMain;
 
 void Shutdown(void* parg)
 {

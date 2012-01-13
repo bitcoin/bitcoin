@@ -25,7 +25,7 @@ public:
     virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
 
     // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
-    virtual bool AddCScript(const uint160 &hash, const CScript& redeemScript) =0;
+    virtual bool AddCScript(const CScript& redeemScript) =0;
     virtual bool HaveCScript(const uint160 &hash) const =0;
     virtual bool GetCScript(const uint160 &hash, CScript& redeemScriptOut) const =0;
 
@@ -87,7 +87,7 @@ public:
         }
         return false;
     }
-    virtual bool AddCScript(const uint160 &hash, const CScript& redeemScript);
+    virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const uint160 &hash) const;
     virtual bool GetCScript(const uint160 &hash, CScript& redeemScriptOut) const;
 };

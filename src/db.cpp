@@ -942,7 +942,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 ssKey >> hash;
                 CScript script;
                 ssValue >> script;
-                if (!pwallet->LoadCScript(hash, script))
+                if (!pwallet->LoadCScript(script))
                     return DB_CORRUPT;
             }
         }
