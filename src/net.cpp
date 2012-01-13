@@ -748,7 +748,7 @@ void ThreadSocketHandler2(void* parg)
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
                     printf("socket error accept failed: %d\n", WSAGetLastError());
             }
-            else if (nInbound >= GetArg("-maxconnections", 125) - MAX_OUTBOUND_CONNECTIONS)
+            else if (nInbound >= GetArg("-maxconnections", 125) + (addr.IsLocal() ? 10 : 0) - MAX_OUTBOUND_CONNECTIONS)
             {
                 closesocket(hSocket);
             }
