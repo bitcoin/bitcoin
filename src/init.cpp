@@ -538,6 +538,14 @@ bool AppInit2(int argc, char* argv[])
 
     RandAddSeedPerfmon();
 
+    if (mapArgs.count("-p2sh")) {
+        // Put "/P2SH/" in the coinbase so everybody can tell when
+        // a majority of miners support it
+        const char* pszP2SH = GetBoolArg("-p2sh") ? "/P2SH/" : "NOP2SH";
+
+        COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+    }
+
     if (!CreateThread(StartNode, NULL))
         wxMessageBox(_("Error: CreateThread(StartNode) failed"), "Bitcoin");
 
