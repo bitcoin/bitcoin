@@ -25,7 +25,9 @@ static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
-    struct addrinfo aiHint = {};
+    struct addrinfo aiHint;
+    memset(&aiHint, 0, sizeof(struct addrinfo));
+
     aiHint.ai_socktype = SOCK_STREAM;
     aiHint.ai_protocol = IPPROTO_TCP;
 #ifdef WIN32

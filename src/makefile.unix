@@ -83,7 +83,8 @@ LIBS+= \
 
 DEBUGFLAGS=-g
 CXXFLAGS=-O2
-xCXXFLAGS=-pthread -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
+xCXXFLAGS=-pthread -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-offsetof -Wformat-security \
+    $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 OBJS= \
     obj/checkpoints.o \
@@ -107,17 +108,17 @@ OBJS= \
 all: bitcoind
 
 # auto-generated dependencies:
--include obj/nogui/*.P
+-include obj/*.P
 -include obj/test/*.P
 
-obj/nogui/%.o: %.cpp
+obj/%.o: %.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-bitcoind: $(OBJS:obj/%=obj/nogui/%)
+bitcoind: $(OBJS:obj/%=obj/%)
 	$(CXX) $(xCXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj/test/%.o,$(wildcard test/*.cpp))
@@ -129,14 +130,12 @@ obj/test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_bitcoin: $(TESTOBJS) $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
+test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-Bstatic -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
 
 clean:
 	-rm -f bitcoind test_bitcoin
 	-rm -f obj/*.o
-	-rm -f obj/nogui/*.o
 	-rm -f obj/test/*.o
 	-rm -f obj/*.P
-	-rm -f obj/nogui/*.P
 	-rm -f obj/test/*.P
