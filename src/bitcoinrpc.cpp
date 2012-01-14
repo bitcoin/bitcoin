@@ -1871,6 +1871,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             "  \"previousblockhash\" : hash of current highest block\n"
             "  \"transactions\" : contents of non-coinbase transactions that should be included in the next block\n"
             "  \"coinbasevalue\" : maximum allowable input to coinbase transaction, including the generation award and transaction fees\n"
+            "  \"coinbaseflags\" : data that should be included in coinbase so support for new features can be judged\n"
             "  \"time\" : timestamp appropriate for next block\n"
             "  \"bits\" : compressed target of next block\n"
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
@@ -1925,6 +1926,7 @@ Value getmemorypool(const Array& params, bool fHelp)
         result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
         result.push_back(Pair("transactions", transactions));
         result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
+        result.push_back(Pair("coinbaseflags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
         result.push_back(Pair("time", (int64_t)pblock->nTime));
 
         union {

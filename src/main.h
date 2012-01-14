@@ -49,6 +49,12 @@ static const int fHaveUPnP = false;
 #endif
 
 
+// Put "/P2SH/" in the coinbase so everybody can tell when
+// a majority of miners support it
+static const char* pszP2SH = "/P2SH/";
+static const CScript COINBASE_FLAGS = CScript() << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+
+
 
 
 
