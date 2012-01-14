@@ -380,32 +380,32 @@ namespace json_spirit
 
         static void throw_not_value( Iter_type begin, Iter_type end )
         {
-    	    throw_error( begin, "not a value" );
+            throw_error( begin, "not a value" );
         }
 
         static void throw_not_array( Iter_type begin, Iter_type end )
         {
-    	    throw_error( begin, "not an array" );
+            throw_error( begin, "not an array" );
         }
 
         static void throw_not_object( Iter_type begin, Iter_type end )
         {
-    	    throw_error( begin, "not an object" );
+            throw_error( begin, "not an object" );
         }
 
         static void throw_not_pair( Iter_type begin, Iter_type end )
         {
-    	    throw_error( begin, "not a pair" );
+            throw_error( begin, "not a pair" );
         }
 
         static void throw_not_colon( Iter_type begin, Iter_type end )
         {
-    	    throw_error( begin, "no colon in pair" );
+            throw_error( begin, "no colon in pair" );
         }
 
         static void throw_not_string( Iter_type begin, Iter_type end )
         {
-    	    throw_error( begin, "not a string" );
+            throw_error( begin, "not a string" );
         }
 
         template< typename ScannerT >
