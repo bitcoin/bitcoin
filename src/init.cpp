@@ -192,7 +192,7 @@ bool AppInit2(int argc, char* argv[])
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect") + "\n" +
             "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n" +
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
-            "  -addnode=<ip>    \t  "   + _("Add a node to connect to") + "\n" +
+            "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
             "  -noirc           \t  "   + _("Don't find peers using internet relay chat") + "\n" +
             "  -nolisten        \t  "   + _("Don't accept connections from outside") + "\n" +
