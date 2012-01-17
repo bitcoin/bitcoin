@@ -67,7 +67,7 @@ class CAddress : public CService
 {
     public:
         CAddress();
-        CAddress(CService ipIn, uint64 nServicesIn=NODE_NETWORK);
+        explicit CAddress(CService ipIn, uint64 nServicesIn=NODE_NETWORK);
 
         void Init();
 

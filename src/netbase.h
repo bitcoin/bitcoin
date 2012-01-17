@@ -39,8 +39,8 @@ class CNetAddr
     public:
         CNetAddr();
         CNetAddr(const struct in_addr& ipv4Addr);
-        CNetAddr(const char *pszIp, bool fAllowLookup = false);
-        CNetAddr(const std::string &strIp, bool fAllowLookup = false);
+        explicit CNetAddr(const char *pszIp, bool fAllowLookup = false);
+        explicit CNetAddr(const std::string &strIp, bool fAllowLookup = false);
         void Init();
         void SetIP(const CNetAddr& ip);
         bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
@@ -91,10 +91,10 @@ class CService : public CNetAddr
         CService(const CNetAddr& ip, unsigned short port);
         CService(const struct in_addr& ipv4Addr, unsigned short port);
         CService(const struct sockaddr_in& addr);
-        CService(const char *pszIp, int port, bool fAllowLookup = false);
-        CService(const char *pszIpPort, bool fAllowLookup = false);
-        CService(const std::string& strIp, int port, bool fAllowLookup = false);
-        CService(const std::string& strIpPort, bool fAllowLookup = false);
+        explicit CService(const char *pszIpPort, int portDefault, bool fAllowLookup = false);
+        explicit CService(const char *pszIpPort, bool fAllowLookup = false);
+        explicit CService(const std::string& strIpPort, int portDefault, bool fAllowLookup = false);
+        explicit CService(const std::string& strIpPort, bool fAllowLookup = false);
         void Init();
         void SetPort(unsigned short portIn);
         unsigned short GetPort() const;
