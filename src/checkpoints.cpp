@@ -52,7 +52,6 @@ namespace Checkpoints
     {
         if (fTestNet) return NULL;
 
-        int64 nResult;
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, mapCheckpoints)
         {
             const uint256& hash = i.second;

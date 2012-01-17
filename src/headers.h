@@ -83,8 +83,6 @@
 #endif
 
 
-#pragma hdrstop
-
 #include "serialize.h"
 #include "uint256.h"
 #include "util.h"
