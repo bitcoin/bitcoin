@@ -3130,12 +3130,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
         hashPrevBlock = pblock->hashPrevBlock;
     }
     ++nExtraNonce;
-    pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nTime << CBigNum(nExtraNonce);
-
-    // Put "/P2SH/" in the coinbase so everybody can tell when
-    // a majority of miners support it
-    const char* pszP2SH = "/P2SH/";
-    pblock->vtx[0].vin[0].scriptSig += CScript() << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+    pblock->vtx[0].vin[0].scriptSig = (CScript() << pblock->nTime << CBigNum(nExtraNonce)) + COINBASE_FLAGS;
     assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);
 
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
