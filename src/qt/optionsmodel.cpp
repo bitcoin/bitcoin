@@ -40,7 +40,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case ProxyIP:
             return QVariant(QString::fromStdString(addrProxy.ToStringIP()));
         case ProxyPort:
-            return QVariant(QString::fromStdString(addrProxy.ToStringPort()));
+            return QVariant(addrProxy.GetPort());
         case Fee:
             return QVariant(nTransactionFee);
         case DisplayUnit:
