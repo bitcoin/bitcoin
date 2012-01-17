@@ -82,7 +82,7 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Copyright © 2009-2011 Bitcoin Developers
+        <string>Copyright © 2009-2012 Bitcoin Developers
 
 This is experimental software.
 
