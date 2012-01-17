@@ -87,7 +87,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case ProxyIP:
             {
                 // Use CAddress to parse and check IP
-                CAddress addr(value.toString().toStdString() + ":1");
+                CNetAddr addr(value.toString().toStdString());
                 if (addr.IsValid())
                 {
                     addrProxy.SetIP(addr);
