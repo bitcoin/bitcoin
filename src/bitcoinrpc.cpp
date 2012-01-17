@@ -1312,7 +1312,7 @@ Value listsinceblock(const Array& params, bool fHelp)
         CBlockIndex *block;
         for (block = pindexBest;
              block && block->nHeight > target_height;
-             block = block->pprev);
+             block = block->pprev)  { }
 
         lastblock = block ? block->GetBlockHash() : 0;
     }
