@@ -1082,7 +1082,6 @@ void ThreadMapPort2(void* parg)
     char port[6];
     sprintf(port, "%d", GetListenPort());
 
-    const char * rootdescurl = 0;
     const char * multicastif = 0;
     const char * minissdpdpath = 0;
     struct UPNPDev * devlist = 0;
@@ -1104,8 +1103,6 @@ void ThreadMapPort2(void* parg)
     r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
     if (r == 1)
     {
-        char intClient[16];
-        char intPort[6];
         string strDesc = "Bitcoin " + FormatFullVersion();
 #ifndef UPNPDISCOVER_SUCCESS
     /* miniupnpc 1.5 */

@@ -264,7 +264,9 @@ public:
         // Make sure not to reuse time indexes to keep things in the same order
         int64 nNow = (GetTime() - 1) * 1000000;
         static int64 nLastTime;
-        nLastTime = nNow = std::max(nNow, ++nLastTime);
+        ++nLastTime;
+        nNow = std::max(nNow, nLastTime);
+        nLastTime = nNow;
 
         // Each retry is 2 minutes after the last
         nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
