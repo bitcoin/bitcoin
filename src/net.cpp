@@ -137,7 +137,7 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
 // We now get our external IP from the IRC server first and only use this as a backup
 bool GetMyExternalIP(CNetAddr& ipRet)
 {
-    CAddress addrConnect;
+    CService addrConnect;
     const char* pszGet;
     const char* pszKeyword;
 
@@ -153,7 +153,7 @@ bool GetMyExternalIP(CNetAddr& ipRet)
         //  <?php echo $_SERVER["REMOTE_ADDR"]; ?>
         if (nHost == 1)
         {
-            addrConnect = CAddress("91.198.22.70",80); // checkip.dyndns.org
+            addrConnect = CService("91.198.22.70",80); // checkip.dyndns.org
 
             if (nLookup == 1)
             {
@@ -172,7 +172,7 @@ bool GetMyExternalIP(CNetAddr& ipRet)
         }
         else if (nHost == 2)
         {
-            addrConnect = CAddress("74.208.43.192", 80); // www.showmyip.com
+            addrConnect = CService("74.208.43.192", 80); // www.showmyip.com
 
             if (nLookup == 1)
             {
@@ -529,8 +529,8 @@ void CNode::PushVersion()
 {
     /// when NTP implemented, change to just nTime = GetAdjustedTime()
     int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
-    CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
-    CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
+    CAddress addrYou = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addr);
+    CAddress addrMe = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight);
@@ -1204,7 +1204,7 @@ void ThreadOpenConnections2(void* parg)
         {
             BOOST_FOREACH(string strAddr, mapMultiArgs["-connect"])
             {
-                CAddress addr(strAddr, fAllowDNS);
+                CAddress addr(CService(strAddr, GetDefaultPort(), fAllowDNS));
                 if (addr.IsValid())
                     OpenNetworkConnection(addr);
                 for (int i = 0; i < 10 && i < nLoop; i++)

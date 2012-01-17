@@ -463,7 +463,7 @@ bool AppInit2(int argc, char* argv[])
     if (mapArgs.count("-proxy"))
     {
         fUseProxy = true;
-        addrProxy = CAddress(mapArgs["-proxy"]);
+        addrProxy = CService(mapArgs["-proxy"], 9050);
         if (!addrProxy.IsValid())
         {
             wxMessageBox(_("Invalid -proxy address"), "Bitcoin");
@@ -512,7 +512,7 @@ bool AppInit2(int argc, char* argv[])
     {
         BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
         {
-            CAddress addr(strAddr, fAllowDNS);
+            CAddress addr(CService(strAddr, GetDefaultPort(), fAllowDNS));
             addr.nTime = 0; // so it won't relay unless successfully connected
             if (addr.IsValid())
                 AddAddress(addr);

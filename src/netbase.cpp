@@ -627,11 +627,12 @@ CService::CService(const char *pszIpPort, bool fAllowLookup)
         *this = ip;
 }
 
-CService::CService(const char *pszIp, int portIn, bool fAllowLookup)
+CService::CService(const char *pszIpPort, int portDefault, bool fAllowLookup)
 {
-    std::vector<CNetAddr> ip;
-    if (LookupHost(pszIp, ip, 1, fAllowLookup))
-        *this = CService(ip[0], portIn);
+    Init();
+    CService ip;
+    if (Lookup(pszIpPort, ip, portDefault, fAllowLookup))
+        *this = ip;
 }
 
 CService::CService(const std::string &strIpPort, bool fAllowLookup)
@@ -642,11 +643,12 @@ CService::CService(const std::string &strIpPort, bool fAllowLookup)
         *this = ip;
 }
 
-CService::CService(const std::string &strIp, int portIn, bool fAllowLookup)
+CService::CService(const std::string &strIpPort, int portDefault, bool fAllowLookup)
 {
-    std::vector<CNetAddr> ip;
-    if (LookupHost(strIp.c_str(), ip, 1, fAllowLookup))
-        *this = CService(ip[0], portIn);
+    Init();
+    CService ip;
+    if (Lookup(strIpPort.c_str(), ip, portDefault, fAllowLookup))
+        *this = ip;
 }
 
 unsigned short CService::GetPort() const
