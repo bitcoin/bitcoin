@@ -1,3 +1,5 @@
+* update translations (ping tcatm on IRC for now)
+
 * update (commit) version in sources
   bitcoin-qt.pro
   src/serialize.h
@@ -77,9 +79,9 @@
  Build output expected:
   Bitcoin-Qt.dmg
 
-* upload source and builds to SourceForge
+* upload builds to SourceForge
 
-* create SHA1SUMS for builds, and PGP-sign it
+* create SHA256SUMS for builds, and PGP-sign it
 
 * update bitcoin.org version
 
