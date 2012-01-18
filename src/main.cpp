@@ -411,10 +411,11 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         // Check against previous transactions
         map<uint256, CTxIndex> mapUnused;
         int64 nFees = 0;
-        if (!ConnectInputs(txdb, mapUnused, CDiskTxPos(1,1,1), pindexBest, nFees, false, false))
+        bool fInvalid = false;
+        if (!ConnectInputs(txdb, mapUnused, CDiskTxPos(1,1,1), pindexBest, nFees, false, false, 0, fInvalid))
         {
-            if (pfMissingInputs)
-                *pfMissingInputs = true;
+            if (fInvalid)
+                return error("AcceptToMemoryPool() : FetchInputs found invalid tx %s", hash.ToString().substr(0,10).c_str());
             return error("AcceptToMemoryPool() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
         }
 
@@ -833,8 +834,15 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb)
 
 
 bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
-                                 CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee)
+                                 CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee,
+                                 bool& fInvalid)
 {
+    // FetchInputs can return false either because we just haven't seen some inputs
+    // (in which case the transaction should be stored as an orphan)
+    // or because the transaction is malformed (in which case the transaction should
+    // be dropped).  If tx is definitely invalid, fInvalid will be set to true.
+    fInvalid = false;
+
     // Take over previous transactions' spent pointers
     if (!IsCoinBase())
     {
@@ -881,7 +889,12 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             }
 
             if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
+            {
+                // Revisit this if/when transaction replacement is implemented and allows
+                // adding inputs:
+                fInvalid = true;
                 return error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str());
+            }
 
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
@@ -1025,7 +1038,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
         nTxPos += ::GetSerializeSize(tx, SER_DISK);
 
-        if (!tx.ConnectInputs(txdb, mapQueuedChanges, posThisTx, pindex, nFees, true, false))
+        bool fInvalid;
+        if (!tx.ConnectInputs(txdb, mapQueuedChanges, posThisTx, pindex, nFees, true, false, 0, fInvalid))
             return false;
     }
     // Write queued txindex changes
@@ -2806,7 +2820,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
             map<uint256, CTxIndex> mapTestPoolTmp(mapTestPool);
-            if (!tx.ConnectInputs(txdb, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, nFees, false, true, nMinFee))
+            bool fInvalid;
+            if (!tx.ConnectInputs(txdb, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, nFees, false, true, nMinFee, fInvalid))
                 continue;
             swap(mapTestPool, mapTestPoolTmp);
 
