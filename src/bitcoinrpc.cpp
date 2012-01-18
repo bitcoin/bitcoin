@@ -43,6 +43,9 @@ static std::string strRPCUserColonPass;
 static int64 nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
+static CBlock* pLastBlockReturned;
+static CCriticalSection cs_pLastBlockReturned;
+
 extern Value dumpprivkey(const Array& params, bool fHelp);
 extern Value importprivkey(const Array& params, bool fHelp);
 
@@ -367,12 +370,18 @@ Value getmininginfo(const Array& params, bool fHelp)
             "Returns an object containing mining-related information.");
 
     Object obj;
+    CRITICAL_BLOCK(cs_pLastBlockReturned)
+    {
+        if (pLastBlockReturned)
+            obj.push_back(Pair("currentblocktx",(uint64_t)pLastBlockReturned->vtx.size()));
+    }
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
     obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
+    obj.push_back(Pair("pooledtx",      (uint64_t)GetPooledTxSize()));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
 }
@@ -1753,6 +1762,7 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -1786,23 +1796,27 @@ Value getwork(const Array& params, bool fHelp)
         if (pindexPrev != pindexBest ||
             (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 60))
         {
-            if (pindexPrev != pindexBest)
+            CRITICAL_BLOCK(cs_pLastBlockReturned)
             {
-                // Deallocate old blocks since they're obsolete now
-                mapNewBlock.clear();
-                BOOST_FOREACH(CBlock* pblock, vNewBlock)
-                    delete pblock;
-                vNewBlock.clear();
-            }
-            nTransactionsUpdatedLast = nTransactionsUpdated;
-            pindexPrev = pindexBest;
-            nStart = GetTime();
+                if (pindexPrev != pindexBest)
+                {
+                    // Deallocate old blocks since they're obsolete now
+                    mapNewBlock.clear();
+                    BOOST_FOREACH(CBlock* pblock, vNewBlock)
+                        delete pblock;
+                    vNewBlock.clear();
+                }
+                nTransactionsUpdatedLast = nTransactionsUpdated;
+                pindexPrev = pindexBest;
+                nStart = GetTime();
 
-            // Create new block
-            pblock = CreateNewBlock(reservekey);
-            if (!pblock)
-                throw JSONRPCError(-7, "Out of memory");
-            vNewBlock.push_back(pblock);
+                // Create new block
+                pblock = CreateNewBlock(reservekey);
+                pLastBlockReturned = pblock;
+                if (!pblock)
+                    throw JSONRPCError(-7, "Out of memory");
+                vNewBlock.push_back(pblock);
+            }
         }
 
         // Update nTime

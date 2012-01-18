@@ -709,6 +709,11 @@ int CTxIndex::GetDepthInMainChain() const
     return 1 + nBestHeight - pindex->nHeight;
 }
 
+uint64_t GetPooledTxSize()
+{
+    return mapTransactions.size();
+}
+
 
 
 
