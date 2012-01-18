@@ -1,3 +1,5 @@
+* update translations (ping tcatm on IRC for now)
+
 * update (commit) version in sources
   src/serialize.h
   share/setup.nsi
@@ -34,9 +36,9 @@
   2. windows 32-bit binary + source
   3. windows installer
 
-* upload source and builds to SF
+* upload builds to SF
 
-* create SHA1SUMS for builds, and PGP-sign it
+* create SHA256SUMS for builds, and PGP-sign it
 
 * update bitcoin.org version
 
