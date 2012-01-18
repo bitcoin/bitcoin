@@ -684,10 +684,11 @@ public:
      @param[in] fBlock	True if being called to add a new best-block to the chain
      @param[in] fMiner	True if being called by CreateNewBlock
      @param[out] inputsRet	Pointers to this transaction's inputs
+     @param[out] fInvalid	returns true if transaction is invalid
      @return	Returns true if all inputs are in txdb or mapTestPool
      */
     bool FetchInputs(CTxDB& txdb, const std::map<uint256, CTxIndex>& mapTestPool,
-                     bool fBlock, bool fMiner, MapPrevTx& inputsRet);
+                     bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid);
 
     /** Sanity check previous transactions, then, if all checks succeed,
         mark them as spent by this transaction.
