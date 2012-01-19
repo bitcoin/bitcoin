@@ -293,6 +293,15 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     BOOST_CHECK(txTo.AreInputsStandard(mapInputs));
 
+    // Make sure adding crap to the scriptSigs makes them non-standard:
+    for (int i = 0; i < 3; i++)
+    {
+        CScript t = txTo.vin[i].scriptSig;
+        txTo.vin[i].scriptSig = (CScript() << 11) + t;
+        BOOST_CHECK(!txTo.AreInputsStandard(mapInputs));
+        txTo.vin[i].scriptSig = t;
+    }
+
     CTransaction txToNonStd;
     txToNonStd.vout.resize(1);
     txToNonStd.vout[0].scriptPubKey.SetBitcoinAddress(key[1].GetPubKey());
