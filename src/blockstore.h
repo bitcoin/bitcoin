@@ -79,6 +79,7 @@ public:
     void RegisterCommitBlock(boost::function<void (const CBlock&)> func) { sigCommitBlock.connect(func); }
 
     // Register a handler (of the form void f(const CTransaction& block)) to be called after every transaction commit to memory pool
+    //   CommitTransactionToMemoryPool is called even when !HasFullBlocks() and txes should NOT be forwarded in that case.
     void RegisterCommitTransactionToMemoryPool(boost::function<void (const CTransaction&)> func) { sigCommitTransactionToMemoryPool.connect(func); }
 
     // Register a handler (of the form void f(const uint256)) to be called when a transaciton is replaced

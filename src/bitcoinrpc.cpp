@@ -2225,6 +2225,9 @@ Value getblock(const Array& params, bool fHelp)
             "getblock <hash> [decompositions]\n"
             "Returns details of a block with given block-hash.");
 
+    if (!pblockstore->HasFullBlocks())
+        throw JSONRPCError(-18, "Bitcoin does not have full blocks for transaction verification...");
+
     std::string strHash = params[0].get_str();
     uint256 hash(strHash);
 

@@ -500,9 +500,9 @@ bool AppInit2()
         if (walletdb.ReadBestBlock(locator))
             pindexRescan = locator.GetBlockIndex();
     }
-    if (pblockstore->GetBestBlockIndex() != pindexRescan)
+    //TODO: support downloading blocks that are needed for a rescan
+    if (pblockstore->HasFullBlocks() && pblockstore->GetBestBlockIndex() != pindexRescan)
     {
-        assert(pblockstore->HasFullBlocks());
         InitMessage(_("Rescanning..."));
         printf("Rescanning last %i blocks (from block %i)...\n", pblockstore->GetBestBlockIndex()->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
@@ -524,7 +524,9 @@ bool AppInit2()
         return InitError(strErrors.str());
 
     // Add wallet transactions that aren't already in a block to mapTransactions
-    pwalletMain->ReacceptWalletTransactions();
+    // TODO Implement this for SPV mode?
+    if (pblockstore->HasFullBlocks())
+        pwalletMain->ReacceptWalletTransactions();
 
     // Note: Bitcoin-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so

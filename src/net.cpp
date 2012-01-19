@@ -86,6 +86,8 @@ void AddOneShot(string strDest)
 
 void HandleCommitTransactionToMemoryPool(const CTransaction& tx)
 {
+    if (!pblockstore->HasFullBlocks())
+        return;
     CInv inv(MSG_TX, tx.GetHash());
     RelayMessage(inv, tx);
 
