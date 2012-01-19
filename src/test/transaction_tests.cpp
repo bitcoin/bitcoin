@@ -24,8 +24,9 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 
 //
 // Helper: create two dummy transactions, each with
-// two outputs.  The first has 11 and 50 CENT outputs,
-// the second 21 and 22 CENT outputs.
+// two outputs.  The first has 11 and 50 CENT outputs
+// paid to a TX_PUBKEY, the second 21 and 22 CENT outputs
+// paid to a TX_PUBKEYHASH.
 //
 static std::vector<CTransaction>
 SetupDummyInputs(CBasicKeyStore& keystoreRet, MapPrevTx& inputsRet)
@@ -44,9 +45,9 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, MapPrevTx& inputsRet)
     // Create some dummy input transactions
     dummyTransactions[0].vout.resize(2);
     dummyTransactions[0].vout[0].nValue = 11*CENT;
-    dummyTransactions[0].vout[0].scriptPubKey.SetBitcoinAddress(key[0].GetPubKey());
+    dummyTransactions[0].vout[0].scriptPubKey << key[0].GetPubKey() << OP_CHECKSIG;
     dummyTransactions[0].vout[1].nValue = 50*CENT;
-    dummyTransactions[0].vout[1].scriptPubKey.SetBitcoinAddress(key[1].GetPubKey());
+    dummyTransactions[0].vout[1].scriptPubKey << key[1].GetPubKey() << OP_CHECKSIG;
     inputsRet[dummyTransactions[0].GetHash()] = make_pair(CTxIndex(), dummyTransactions[0]);
 
     dummyTransactions[1].vout.resize(2);
@@ -69,10 +70,13 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vin.resize(3);
     t1.vin[0].prevout.hash = dummyTransactions[0].GetHash();
     t1.vin[0].prevout.n = 1;
-    t1.vin[1].prevout.hash = dummyTransactions[1].GetHash();;
+    t1.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
+    t1.vin[1].prevout.hash = dummyTransactions[1].GetHash();
     t1.vin[1].prevout.n = 0;
-    t1.vin[2].prevout.hash = dummyTransactions[1].GetHash();;
+    t1.vin[1].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
+    t1.vin[2].prevout.hash = dummyTransactions[1].GetHash();
     t1.vin[2].prevout.n = 1;
+    t1.vin[2].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
     t1.vout.resize(2);
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
@@ -80,6 +84,14 @@ BOOST_AUTO_TEST_CASE(test_Get)
     BOOST_CHECK(t1.AreInputsStandard(dummyInputs));
     BOOST_CHECK_EQUAL(t1.GetSigOpCount(dummyInputs), 3);
     BOOST_CHECK_EQUAL(t1.GetValueIn(dummyInputs), (50+21+22)*CENT);
+
+    // Adding extra junk to the scriptSig should make it non-standard:
+    t1.vin[0].scriptSig << OP_11;
+    BOOST_CHECK(!t1.AreInputsStandard(dummyInputs));
+
+    // ... as should not having enough:
+    t1.vin[0].scriptSig = CScript();
+    BOOST_CHECK(!t1.AreInputsStandard(dummyInputs));
 }
 
 BOOST_AUTO_TEST_CASE(test_GetThrow)
