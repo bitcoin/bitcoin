@@ -383,8 +383,9 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         return error("CTxMemPool::accept() : CheckTransaction failed");
 
     // Coinbase is only valid in a block, not as a loose transaction
-    if (tx.IsCoinBase())
-        return tx.DoS(100, error("CTxMemPool::accept() : coinbase as individual tx"));
+    if (pblockstore->HasFullBlocks())
+        if (tx.IsCoinBase())
+            return tx.DoS(100, error("CTxMemPool::accept() : coinbase as individual tx"));
 
     // To help v0.1.5 clients who would see it as a negative number
     if ((int64)tx.nLockTime > std::numeric_limits<int>::max())
@@ -607,27 +608,6 @@ int CMerkleTx::GetBlocksToMaturity() const
     if (!IsCoinBase())
         return 0;
     return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
-}
-
-
-bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
-{
-    if (!pblockstore->HasFullBlocks())
-    {
-        if (!IsInMainChain() && !ClientConnectInputs())
-            return false;
-        return CTransaction::AcceptToMemoryPool(txdb, false);
-    }
-    else
-    {
-        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs);
-    }
-}
-
-bool CMerkleTx::AcceptToMemoryPool()
-{
-    CTxDB txdb("r");
-    return AcceptToMemoryPool(txdb);
 }
 
 
@@ -1204,10 +1184,10 @@ bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     return true;
 }
 
-bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
+bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fHeadersOnly)
 {
     // Check it again in case a previous version let a bad block in
-    if (!CheckBlock())
+    if (!CheckBlock(fHeadersOnly))
         return false;
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
@@ -1254,7 +1234,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         nTxPos += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 
         MapPrevTx mapInputs;
-        if (!tx.IsCoinBase())
+        if (!tx.IsCoinBase() && pblockstore->HasFullBlocks())
         {
             bool fInvalid;
             if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
@@ -1276,18 +1256,23 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
                 return false;
         }
 
-        mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
+        if (pblockstore->HasFullBlocks())
+            mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
     }
 
-    // Write queued txindex changes
-    for (map<uint256, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
+    if (pblockstore->HasFullBlocks())
     {
-        if (!txdb.UpdateTxIndex((*mi).first, (*mi).second))
-            return error("ConnectBlock() : UpdateTxIndex failed");
-    }
+        // Write queued txindex changes
+        for (map<uint256, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
+        {
+            if (!txdb.UpdateTxIndex((*mi).first, (*mi).second))
+                return error("ConnectBlock() : UpdateTxIndex failed");
+        }
 
-    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
-        return false;
+        // No way to calculate fees on a node which doesnt have a full blockstore
+        if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
+            return false;
+    }
 
     // Update block index on disk without changing it in memory.
     // The memory index structure will be changed after the db commits.
@@ -1339,7 +1324,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
     {
         CBlock block;
-        if (!block.ReadFromDisk(pindex))
+        if (!block.ReadFromDisk(pindex, pblockstore->HasFullBlocks()))
             return error("Reorganize() : ReadFromDisk for disconnect failed");
         if (!block.DisconnectBlock(txdb, pindex))
             return error("Reorganize() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
@@ -1356,9 +1341,9 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     {
         CBlockIndex* pindex = vConnect[i];
         CBlock block;
-        if (!block.ReadFromDisk(pindex))
+        if(!block.ReadFromDisk(pindex, pblockstore->HasFullBlocks()))
             return error("Reorganize() : ReadFromDisk for connect failed");
-        if (!block.ConnectBlock(txdb, pindex))
+        if (!block.ConnectBlock(txdb, pindex, true))
         {
             // Invalid block
             txdb.TxnAbort();
@@ -1539,14 +1524,20 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
 
 
-bool CBlock::CheckBlock() const
+bool CBlock::CheckBlock(bool fHeadersOnly) const
 {
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
 
     // Size limits
-    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return DoS(100, error("CheckBlock() : size limits failed"));
+    if (!fHeadersOnly)
+    {
+        if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+            return DoS(100, error("CheckBlock() : size limits failed"));
+    }else{
+        if (vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+            return DoS(100, error("CheckBlock() : size limits failed"));
+    }
 
     // Check proof of work matches claimed amount
     if (!CheckProofOfWork(GetHash(), nBits))
@@ -1557,38 +1548,41 @@ bool CBlock::CheckBlock() const
         return error("CheckBlock() : block timestamp too far in the future");
 
     // First transaction must be coinbase, the rest must not be
-    if (vtx.empty() || !vtx[0].IsCoinBase())
-        return DoS(100, error("CheckBlock() : first tx is not coinbase"));
-    for (unsigned int i = 1; i < vtx.size(); i++)
-        if (vtx[i].IsCoinBase())
-            return DoS(100, error("CheckBlock() : more than one coinbase"));
-
-    // Check transactions
-    BOOST_FOREACH(const CTransaction& tx, vtx)
-        if (!tx.CheckTransaction())
-            return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
-
-    // Check for duplicate txids. This is caught by ConnectInputs(),
-    // but catching it earlier avoids a potential DoS attack:
-    set<uint256> uniqueTx;
-    BOOST_FOREACH(const CTransaction& tx, vtx)
+    if (!fHeadersOnly)
     {
-        uniqueTx.insert(tx.GetHash());
-    }
-    if (uniqueTx.size() != vtx.size())
-        return DoS(100, error("CheckBlock() : duplicate transaction"));
+        if (vtx.empty() || !vtx[0].IsCoinBase())
+            return DoS(100, error("CheckBlock() : first tx is not coinbase"));
+        for (unsigned int i = 1; i < vtx.size(); i++)
+            if (vtx[i].IsCoinBase())
+                return DoS(100, error("CheckBlock() : more than one coinbase"));
 
-    unsigned int nSigOps = 0;
-    BOOST_FOREACH(const CTransaction& tx, vtx)
-    {
-        nSigOps += tx.GetLegacySigOpCount();
-    }
-    if (nSigOps > MAX_BLOCK_SIGOPS)
-        return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+        // Check transactions
+        BOOST_FOREACH(const CTransaction& tx, vtx)
+            if (!tx.CheckTransaction())
+                return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
-    // Check merkleroot
-    if (hashMerkleRoot != BuildMerkleTree())
-        return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+        // Check for duplicate txids. This is caught by ConnectInputs(),
+        // but catching it earlier avoids a potential DoS attack:
+        set<uint256> uniqueTx;
+        BOOST_FOREACH(const CTransaction& tx, vtx)
+        {
+            uniqueTx.insert(tx.GetHash());
+        }
+        if (uniqueTx.size() != vtx.size())
+            return DoS(100, error("CheckBlock() : duplicate transaction"));
+
+        unsigned int nSigOps = 0;
+        BOOST_FOREACH(const CTransaction& tx, vtx)
+        {
+            nSigOps += tx.GetLegacySigOpCount();
+        }
+        if (nSigOps > MAX_BLOCK_SIGOPS)
+            return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+
+        // Check merkleroot
+        if (hashMerkleRoot != BuildMerkleTree())
+            return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+    }
 
     return true;
 }
@@ -2151,21 +2145,29 @@ bool CBlockStore::NeedInv(const CInv* pinv)
 {
     {
         LOCK(cs_main);
-        CTxDB txdb("r");
         switch (pinv->type)
         {
         case MSG_TX:
             {
+            if (pblockstore->IsInitialBlockDownload())
+                return false;
+
             bool txNotInMap = false;
                 {
                 LOCK(mempool.cs);
                 txNotInMap = !(mempool.exists(pinv->hash));
                 }
-            if (pblockstore->IsInitialBlockDownload())
-                return false;
-            return txNotInMap &&
-                   !mapOrphanTransactions.count(pinv->hash) &&
-                   !txdb.ContainsTx(pinv->hash);
+
+            if (pblockstore->HasFullBlocks())
+            {
+                CTxDB txdb("r");
+                return txNotInMap &&
+                       !mapOrphanTransactions.count(pinv->hash) &&
+                       !txdb.ContainsTx(pinv->hash);
+            }
+            else
+                return txNotInMap &&
+                       !mapOrphanTransactions.count(pinv->hash);
             }
         case MSG_BLOCK:
             if (mapOrphanBlocks.count(pinv->hash))
@@ -2781,11 +2783,16 @@ bool CBlockStore::EmitTransaction(CTransaction& transaction)
 {
     {
         LOCK(cs_main);
+
+        if (!pblockstore->HasFullBlocks())
+            if (!transaction.ClientConnectInputs())
+                return false;
+
         vector<uint256> vWorkQueue;
         CTxDB txdb("r");
         bool fMissingInputs = false;
 
-        if (transaction.AcceptToMemoryPool(txdb, true, &fMissingInputs))
+        if (transaction.AcceptToMemoryPool(txdb, pblockstore->HasFullBlocks(), &fMissingInputs))
         {
             {
                 LOCK(cs_callbacks);
