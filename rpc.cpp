@@ -1,4 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1118,6 +1119,17 @@ Value getwork(const Array& params, bool fHelp)
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
         pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nBits << CBigNum(nExtraNonce);
+
+        // Put "p2sh/CHV" in the coinbase to express support for the new "Pay to Script Hash"
+        // transaction type:
+        const char* pszP2SH = "p2sh/CHV";
+        pblock->vtx[0].vin[0].scriptSig += CScript(std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH)));
+        if (pblock->vtx[0].vin[0].scriptSig.size() > 100)
+        {
+            printf("ERROR: IncrementExtraNonce() overflowed coinbase; truncating\n");
+            pblock->vtx[0].vin[0].scriptSig.resize(100);
+        }
+
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         return CheckWork(pblock, reservekey);

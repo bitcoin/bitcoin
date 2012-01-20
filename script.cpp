@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2011 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,7 +68,7 @@ static inline void popstack(vector<valtype>& stack)
 }
 
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType)
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType, bool fValidatePayToScriptHash, std::vector<unsigned char> &vchLastScript)
 {
     CAutoBN_CTX pctx;
     CScript::const_iterator pc = script.begin();
@@ -152,7 +153,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 // Control
                 //
                 case OP_NOP:
-                case OP_NOP1: case OP_NOP2: case OP_NOP3: case OP_NOP4: case OP_NOP5:
+                case OP_NOP1: case OP_NOP3: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 break;
 
@@ -766,6 +767,36 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 }
                 break;
 
+                case OP_CHECKHASHVERIFY:
+                {
+                    // This was OP_NOP2 in old scripts
+                    if (!fValidatePayToScriptHash)
+                        break;
+
+                    if (stack.size() < 1)
+                        return false;
+
+                    // The only stack item here is what we expect the code to hash to
+                    valtype& vchHashCheck = stacktop(-1);
+
+                    // This hashes the code with RIPEMD160(SHA256(vchLastScript))
+                    valtype vchHash(20);
+                    {
+                        uint160 hash160 = Hash160(vchLastScript);
+                        memcpy(&vchHash[0], &hash160, sizeof(hash160));
+                    }
+
+                    bool fEqual = (vchHash == vchHashCheck);
+
+                    // Don't pop anything off the stack, for backward compatibility
+
+                    if (!fEqual)
+                        // If the hash doesn't match, abort
+                        return false;
+                    // If the hash matches, we're good: act like OP_NOP2 for compatibility
+                }
+                break;
+
                 case OP_CHECKMULTISIG:
                 case OP_CHECKMULTISIGVERIFY:
                 {
@@ -847,6 +878,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
             if (stack.size() + altstack.size() > 1000)
                 return false;
         }
+
+        // Save the last code segment (from the last executed OP_CODESEPARATOR onward)
+        vchLastScript = std::vector<unsigned char>(pbegincodehash, pend);
     }
     catch (...)
     {
@@ -1145,12 +1179,14 @@ bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret)
 }
 
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int nHashType)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+                  bool fValidatePayToScriptHash, int nHashType)
 {
     vector<vector<unsigned char> > stack;
-    if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType))
+    std::vector<unsigned char> vchLastScript;
+    if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType, fValidatePayToScriptHash, vchLastScript))
         return false;
-    if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType))
+    if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType, fValidatePayToScriptHash, vchLastScript))
         return false;
     if (stack.empty())
         return false;
@@ -1176,14 +1212,14 @@ bool SignSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int 
 
     // Test solution
     if (scriptPrereq.empty())
-        if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, 0))
+        if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, true, 0))
             return false;
 
     return true;
 }
 
 
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType)
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType)
 {
     assert(nIn < txTo.vin.size());
     const CTxIn& txin = txTo.vin[nIn];
@@ -1194,7 +1230,7 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
 
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nHashType))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, nHashType))
         return false;
 
     // Anytime a signature is successfully verified, it's proof the outpoint is spent,
