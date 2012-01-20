@@ -78,7 +78,6 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].scriptPubKey << OP_1;
 
     BOOST_CHECK(t1.AreInputsStandard(dummyInputs));
-    BOOST_CHECK_EQUAL(t1.GetSigOpCount(dummyInputs), 3);
     BOOST_CHECK_EQUAL(t1.GetValueIn(dummyInputs), (50+21+22)*CENT);
 }
 
@@ -103,7 +102,6 @@ BOOST_AUTO_TEST_CASE(test_GetThrow)
     t1.vout[0].scriptPubKey << OP_1;
 
     BOOST_CHECK_THROW(t1.AreInputsStandard(missingInputs), runtime_error);
-    BOOST_CHECK_THROW(t1.GetSigOpCount(missingInputs), runtime_error);
     BOOST_CHECK_THROW(t1.GetValueIn(missingInputs), runtime_error);
 }
 
