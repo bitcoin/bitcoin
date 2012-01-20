@@ -1004,6 +1004,9 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
 
         // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         vTemplates.push_back(CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG);
+
+        // Push-to-script-hash txn, sender provides hash of verification script, receiver provides script
+        vTemplates.push_back(CScript() << OP_SCRIPTHASH << OP_CHECKHASHVERIFY << OP_DROP);
     }
 
     // Scan templates
@@ -1036,6 +1039,12 @@ bool Solver(const CScript& scriptPubKey, vector<pair<opcodetype, valtype> >& vSo
                 vSolutionRet.push_back(make_pair(opcode2, vch1));
             }
             else if (opcode2 == OP_PUBKEYHASH)
+            {
+                if (vch1.size() != sizeof(uint160))
+                    break;
+                vSolutionRet.push_back(make_pair(opcode2, vch1));
+            }
+            else if (opcode2 == OP_SCRIPTHASH)
             {
                 if (vch1.size() != sizeof(uint160))
                     break;
@@ -1114,6 +1123,37 @@ bool IsStandard(const CScript& scriptPubKey)
 {
     vector<pair<opcodetype, valtype> > vSolution;
     return Solver(scriptPubKey, vSolution);
+}
+
+bool IsStandardInput(const CScript& scriptSig)
+{
+    CScript::const_iterator pc = scriptSig.begin();
+    CScript::const_iterator pend = scriptSig.end();
+    CScript::const_iterator pcodesep = pend;
+    CScript::const_iterator pafter;
+    opcodetype opcode;
+
+    for ( ; pc < pend; pc = pafter)
+    {
+        pafter = pc;
+        if (!scriptSig.GetOp(pafter, opcode))
+            return false;
+        if (opcode == OP_CODESEPARATOR)
+        {
+            pcodesep = pc;
+            break;
+        }
+    }
+
+    CScript scriptSigData(scriptSig.begin(), pcodesep);
+    if (!scriptSigData.IsPushOnly())
+        return false;
+
+    if (pcodesep == pend)
+        return true;
+
+    CScript scriptSigCode(pafter, pend);
+    return IsStandard(scriptSigCode);
 }
 
 

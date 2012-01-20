@@ -152,6 +152,7 @@ enum opcodetype
 
 
     // template matching params
+    OP_SCRIPTHASH = 0xfc,
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 
@@ -299,6 +300,7 @@ inline const char* GetOpName(opcodetype opcode)
 
 
     // template matching params
+    case OP_SCRIPTHASH             : return "OP_SCRIPTHASH";
     case OP_PUBKEYHASH             : return "OP_PUBKEYHASH";
     case OP_PUBKEY                 : return "OP_PUBKEY";
 
@@ -703,6 +705,7 @@ public:
 
 uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 bool IsStandard(const CScript& scriptPubKey);
+bool IsStandardInput(const CScript& scriptSig);
 bool IsMine(const CScript& scriptPubKey);
 bool ExtractPubKey(const CScript& scriptPubKey, bool fMineOnly, vector<unsigned char>& vchPubKeyRet);
 bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret);
