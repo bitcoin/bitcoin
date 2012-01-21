@@ -277,11 +277,8 @@ bool CTransaction::IsStandard() const
 //
 bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
 {
-    if (fTestNet)
-        return true; // Allow non-standard on testnet
-
     if (IsCoinBase())
-        return true; // Coinbases are allowed to have any input
+        return true; // Coinbases don't use vin normally
 
     for (int i = 0; i < vin.size(); i++)
     {
@@ -500,7 +497,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         }
 
         // Check for non-standard pay-to-script-hash in inputs
-        if (!AreInputsStandard(mapInputs))
+        if (!AreInputsStandard(mapInputs) && !fTestNet)
             return error("AcceptToMemoryPool() : nonstandard transaction input");
 
         int64 nFees = GetValueIn(mapInputs)-GetValueOut();
