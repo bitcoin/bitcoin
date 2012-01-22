@@ -30,7 +30,6 @@ enum txnouttype
     // 'standard' transaction types:
     TX_PUBKEY,
     TX_PUBKEYHASH,
-    TX_SCRIPTHASH,
     TX_MULTISIG,
 };
 
@@ -489,12 +488,6 @@ public:
     //  ... OP_N CHECKMULTISIG ...
     int GetSigOpCount(bool fAccurate) const;
 
-    // Accurately count sigOps, including sigOps in
-    // pay-to-script-hash transactions:
-    int GetSigOpCount(const CScript& scriptSig) const;
-
-    bool IsPayToScriptHash() const;
-
     // Called by CTransaction::IsStandard
     bool IsPushOnly() const
     {
@@ -565,6 +558,6 @@ bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet);
 bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CBitcoinAddress>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType);
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
 #endif

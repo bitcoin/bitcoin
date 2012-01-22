@@ -77,7 +77,6 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_NONSTANDARD: return "nonstandard";
     case TX_PUBKEY: return "pubkey";
     case TX_PUBKEYHASH: return "pubkeyhash";
-    case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     }
     return NULL;
@@ -1139,16 +1138,6 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
     }
 
-    // Shortcut for pay-to-script-hash, which are more constrained than the other types:
-    // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
-    if (scriptPubKey.IsPayToScriptHash())
-    {
-        typeRet = TX_SCRIPTHASH;
-        vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
-        vSolutionsRet.push_back(hashBytes);
-        return true;
-    }
-
     // Scan templates
     const CScript& script1 = scriptPubKey;
     BOOST_FOREACH(const PAIRTYPE(txnouttype, CScript)& tplate, mTemplates)
@@ -1270,8 +1259,7 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 
 //
 // Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
-// Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
-// unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
+// Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed).
 // Returns false if scriptPubKey could not be completely satisified.
 //
 bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType,
@@ -1302,9 +1290,6 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
             scriptSigRet << vch;
         }
         return true;
-    case TX_SCRIPTHASH:
-        return keystore.GetCScript(uint160(vSolutions[0]), scriptSigRet);
-
     case TX_MULTISIG:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, keystore, hash, nHashType, scriptSigRet));
@@ -1366,13 +1351,6 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     case TX_PUBKEYHASH:
         address.SetHash160(uint160(vSolutions[0]));
         return keystore.HaveKey(address);
-    case TX_SCRIPTHASH:
-    {
-        CScript subscript;
-        if (!keystore.GetCScript(uint160(vSolutions[0]), subscript))
-            return false;
-        return IsMine(keystore, subscript);
-    }
     case TX_MULTISIG:
     {
         // Only consider transactions "mine" if we own ALL the
@@ -1404,11 +1382,6 @@ bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet)
         addressRet.SetHash160(uint160(vSolutions[0]));
         return true;
     }
-    else if (whichType == TX_SCRIPTHASH)
-    {
-        addressRet.SetScriptHash160(uint160(vSolutions[0]));
-        return true;
-    }
     // Multisig txns have more than one address...
     return false;
 }
@@ -1438,8 +1411,6 @@ bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, vector<C
         CBitcoinAddress address;
         if (typeRet == TX_PUBKEYHASH)
             address.SetHash160(uint160(vSolutions.front()));
-        else if (typeRet == TX_SCRIPTHASH)
-            address.SetScriptHash160(uint160(vSolutions.front()));
         else if (typeRet == TX_PUBKEY)
             address.SetPubKey(vSolutions.front());
         addressRet.push_back(address);
@@ -1449,39 +1420,16 @@ bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, vector<C
 }
 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                  bool fValidatePayToScriptHash, int nHashType)
+                  int nHashType)
 {
-    vector<vector<unsigned char> > stack, stackCopy;
+    vector<vector<unsigned char> > stack;
     if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType))
         return false;
-    if (fValidatePayToScriptHash)
-        stackCopy = stack;
     if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType))
         return false;
     if (stack.empty())
         return false;
-
-    if (CastToBool(stack.back()) == false)
-        return false;
-
-    // Additional validation for spend-to-script-hash transactions:
-    if (fValidatePayToScriptHash && scriptPubKey.IsPayToScriptHash())
-    {
-        if (!scriptSig.IsPushOnly()) // scriptSig must be literals-only
-            return false;            // or validation fails
-
-        const valtype& pubKeySerialized = stackCopy.back();
-        CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
-        popstack(stackCopy);
-
-        if (!EvalScript(stackCopy, pubKey2, txTo, nIn, nHashType))
-            return false;
-        if (stackCopy.empty())
-            return false;
-        return CastToBool(stackCopy.back());
-    }
-
-    return true;
+    return CastToBool(stack.back());
 }
 
 
@@ -1500,32 +1448,15 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTrans
     if (!Solver(keystore, txout.scriptPubKey, hash, nHashType, txin.scriptSig, whichType))
         return false;
 
-    if (whichType == TX_SCRIPTHASH)
-    {
-        // Solver returns the subscript that need to be evaluated;
-        // the final scriptSig is the signatures from that
-        // and then the serialized subscript:
-        CScript subscript = txin.scriptSig;
-
-        // Recompute txn hash using subscript in place of scriptPubKey:
-        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
-        txnouttype subType;
-        if (!Solver(keystore, subscript, hash2, nHashType, txin.scriptSig, subType))
-            return false;
-        if (subType == TX_SCRIPTHASH)
-            return false;
-        txin.scriptSig << static_cast<valtype>(subscript); // Append serialized subscript
-    }
-
     // Test solution
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, true, 0))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, 0))
         return false;
 
     return true;
 }
 
 
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType)
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     assert(nIn < txTo.vin.size());
     const CTxIn& txin = txTo.vin[nIn];
@@ -1536,7 +1467,7 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
 
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, nHashType))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nHashType))
         return false;
 
     return true;
@@ -1566,44 +1497,11 @@ int CScript::GetSigOpCount(bool fAccurate) const
     return n;
 }
 
-int CScript::GetSigOpCount(const CScript& scriptSig) const
-{
-    if (!IsPayToScriptHash())
-        return GetSigOpCount(true);
-
-    // This is a pay-to-script-hash scriptPubKey;
-    // get the last item that the scriptSig
-    // pushes onto the stack:
-    const_iterator pc = scriptSig.begin();
-    vector<unsigned char> data;
-    while (pc < scriptSig.end())
-    {
-        opcodetype opcode;
-        if (!scriptSig.GetOp(pc, opcode, data))
-            return 0;
-        if (opcode > OP_16)
-            return 0;
-    }
-
-    /// ... and return it's opcount:
-    CScript subscript(data.begin(), data.end());
-    return subscript.GetSigOpCount(true);
-}
-
-bool CScript::IsPayToScriptHash() const
-{
-    // Extra-fast test for pay-to-script-hash CScripts:
-    return (this->size() == 23 &&
-            this->at(0) == OP_HASH160 &&
-            this->at(1) == 0x14 &&
-            this->at(22) == OP_EQUAL);
-}
-
 void CScript::SetBitcoinAddress(const CBitcoinAddress& address)
 {
     this->clear();
     if (address.IsScript())
-        *this << OP_HASH160 << address.GetHash160() << OP_EQUAL;
+        throw std::runtime_error("CScript::SetBitcoinAddress() : no P2SH support");
     else
         *this << OP_DUP << OP_HASH160 << address.GetHash160() << OP_EQUALVERIFY << OP_CHECKSIG;
 }
@@ -1621,7 +1519,5 @@ void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
 void CScript::SetPayToScriptHash(const CScript& subscript)
 {
     assert(!subscript.empty());
-    uint160 subscriptHash = Hash160(subscript);
-    this->clear();
-    *this << OP_HASH160 << subscriptHash << OP_EQUAL;
+    throw std::runtime_error("CScript::SetPayToScriptHash() : no P2SH support");
 }

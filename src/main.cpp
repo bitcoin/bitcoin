@@ -268,15 +268,15 @@ bool CTransaction::IsStandard() const
 }
 
 //
-// Check transaction inputs, and make sure any
-// pay-to-script-hash transactions are evaluating IsStandard scripts
+// Check transaction inputs, and make sure their scriptPubKeys are "standard"
 //
-// Why bother? To avoid denial-of-service attacks; an attacker
-// can submit a standard HASH... OP_EQUAL transaction,
-// which will get accepted into blocks. The redemption
-// script can be anything; an attacker could use a very
-// expensive-to-check-upon-redemption script like:
+// Why bother? To avoid denial-of-service attacks; an attacker can mine a
+// non-standard transaction with an expensive scriptPubKey, and then use a
+// standard transaction to trick a miner into executing it. For example:
 //   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+//
+// Note that this does NOT check scriptSig, as that is already done execution
+// for the inputs.
 //
 bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
 {
@@ -291,20 +291,8 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
         txnouttype whichType;
         // get the scriptPubKey corresponding to this input:
         const CScript& prevScript = prev.scriptPubKey;
-        if (!Solver(prevScript, whichType, vSolutions))
+        if (!::IsStandard(prevScript))
             return false;
-        if (whichType == TX_SCRIPTHASH)
-        {
-            vector<vector<unsigned char> > stack;
-
-            if (!EvalScript(stack, vin[i].scriptSig, *this, i, 0))
-                return false;
-            if (stack.empty())
-                return false;
-            CScript subscript(stack.back().begin(), stack.back().end());
-            if (!::IsStandard(subscript))
-                return false;
-        }
     }
 
     return true;
@@ -1031,8 +1019,7 @@ int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
     for (int i = 0; i < vin.size(); i++)
     {
         const CTxOut& prevout = GetOutputFor(vin[i], inputs);
-        if (prevout.scriptPubKey.IsPayToScriptHash())
-            nSigOps += prevout.scriptPubKey.GetSigOpCount(vin[i].scriptSig);
+        nSigOps += prevout.scriptPubKey.GetSigOpCount(true);
     }
     return nSigOps;
 }
@@ -1082,7 +1069,7 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
             {
                 // Verify signature
-                if (!VerifySignature(txPrev, *this, i, fStrictPayToScriptHash, 0))
+                if (!VerifySignature(txPrev, *this, i, 0))
                     return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
             }
 
@@ -1133,7 +1120,7 @@ bool CTransaction::ClientConnectInputs()
                 return false;
 
             // Verify signature
-            if (!VerifySignature(txPrev, *this, i, true, 0))
+            if (!VerifySignature(txPrev, *this, i, 0))
                 return error("ConnectInputs() : VerifySignature failed");
 
             ///// this is redundant with the mapNextTx stuff, not sure which I want to get rid of
