@@ -45,7 +45,6 @@ BOOST_FIXTURE_TEST_CASE(rpc_addmultisig, TestNetFixture)
 
     Value v;
     CBitcoinAddress address;
-#if 0
     BOOST_CHECK_NO_THROW(v = addmultisig(createArgs(1, address1Hex), false));
     address.SetString(v.get_str());
     BOOST_CHECK(address.IsValid() && address.IsScript());
@@ -57,7 +56,6 @@ BOOST_FIXTURE_TEST_CASE(rpc_addmultisig, TestNetFixture)
     BOOST_CHECK_NO_THROW(v = addmultisig(createArgs(2, address1Hex, address2Hex), false));
     address.SetString(v.get_str());
     BOOST_CHECK(address.IsValid() && address.IsScript());
-#endif
 
     BOOST_CHECK_THROW(addmultisig(createArgs(0), false), runtime_error);
     BOOST_CHECK_THROW(addmultisig(createArgs(1), false), runtime_error);

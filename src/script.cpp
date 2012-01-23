@@ -1303,7 +1303,8 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 
 //
 // Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
-// Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed).
+// Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
+// unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
 // Returns false if scriptPubKey could not be completely satisified.
 //
 bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType,
@@ -1334,6 +1335,9 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
             scriptSigRet << vch;
         }
         return true;
+    case TX_SCRIPTHASH:
+        return keystore.GetCScript(uint160(vSolutions[0]), scriptSigRet);
+
     case TX_MULTISIG:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, keystore, hash, nHashType, scriptSigRet));
@@ -1426,6 +1430,13 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     case TX_PUBKEYHASH:
         address.SetHash160(uint160(vSolutions[0]));
         return keystore.HaveKey(address);
+    case TX_SCRIPTHASH:
+    {
+        CScript subscript;
+        if (!keystore.GetCScript(uint160(vSolutions[0]), subscript))
+            return false;
+        return IsMine(keystore, subscript);
+    }
     case TX_MULTISIG:
     {
         // Only consider transactions "mine" if we own ALL the
@@ -1457,6 +1468,11 @@ bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet)
         addressRet.SetHash160(uint160(vSolutions[0]));
         return true;
     }
+    else if (whichType == TX_SCRIPTHASH)
+    {
+        addressRet.SetScriptHash160(uint160(vSolutions[0]));
+        return true;
+    }
     // Multisig txns have more than one address...
     return false;
 }
@@ -1486,6 +1502,8 @@ bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, vector<C
         CBitcoinAddress address;
         if (typeRet == TX_PUBKEYHASH)
             address.SetHash160(uint160(vSolutions.front()));
+        else if (typeRet == TX_SCRIPTHASH)
+            address.SetScriptHash160(uint160(vSolutions.front()));
         else if (typeRet == TX_PUBKEY)
             address.SetPubKey(vSolutions.front());
         addressRet.push_back(address);
@@ -1523,6 +1541,23 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTrans
     txnouttype whichType;
     if (!Solver(keystore, txout.scriptPubKey, hash, nHashType, txin.scriptSig, whichType))
         return false;
+
+    if (whichType == TX_SCRIPTHASH)
+    {
+        // Solver returns the end of the scriptSig; the final scriptSig is the
+        // signatures for that and then this end script:
+        CScript subscript = txin.scriptSig;
+
+        // Recompute txn hash using subscript in place of scriptPubKey:
+        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
+        txnouttype subType;
+        if (!Solver(keystore, subscript, hash2, nHashType, txin.scriptSig, subType))
+            return false;
+        if (subType == TX_SCRIPTHASH)
+            return false;
+        txin.scriptSig << OP_CODESEPARATOR;
+        txin.scriptSig += subscript;
+    }
 
     // Test solution
     if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, true, 0))
@@ -1577,7 +1612,7 @@ void CScript::SetBitcoinAddress(const CBitcoinAddress& address)
 {
     this->clear();
     if (address.IsScript())
-        throw std::runtime_error("CScript::SetBitcoinAddress() : no P2SH support");
+        *this << address.GetHash160() << OP_CHECKHASHVERIFY << OP_DROP;
     else
         *this << OP_DUP << OP_HASH160 << address.GetHash160() << OP_EQUALVERIFY << OP_CHECKSIG;
 }
@@ -1595,5 +1630,7 @@ void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
 void CScript::SetPayToScriptHash(const CScript& subscript)
 {
     assert(!subscript.empty());
-    throw std::runtime_error("CScript::SetPayToScriptHash() : no P2SH support");
+    uint160 subscriptHash = Hash160(subscript);
+    this->clear();
+    *this << subscriptHash << OP_CHECKHASHVERIFY << OP_DROP;
 }
