@@ -503,19 +503,16 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         if (!AreInputsStandard(mapInputs) && !fTestNet)
             return error("AcceptToMemoryPool() : nonstandard transaction input");
 
+        // Note: if you modify this code to accept non-standard transactions, then
+        // you should add code here to check that the transaction does a
+        // reasonable number of ECDSA signature verifications.
+
         int64 nFees = GetValueIn(mapInputs)-GetValueOut();
-        int nSigOps = GetSigOpCount(mapInputs);
         unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK);
 
         // Don't accept it if it can't get into a block
         if (nFees < GetMinFee(1000, true, GMF_RELAY))
             return error("AcceptToMemoryPool() : not enough fees");
-
-        // Checking ECDSA signatures is a CPU bottleneck, so to avoid denial-of-service
-        // attacks disallow transactions with more than one SigOp per 65 bytes.
-        // 65 bytes because that is the minimum size of an ECDSA signature
-        if (nSigOps > nSize / 65 || nSize < 100)
-            return error("AcceptToMemoryPool() : transaction with out-of-bounds SigOpCount");
 
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
@@ -1022,7 +1019,7 @@ int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
 
 }
 
-int CTransaction::GetSigOpCount(const MapPrevTx& inputs) const
+int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
 {
     if (IsCoinBase())
         return 0;
@@ -1030,14 +1027,16 @@ int CTransaction::GetSigOpCount(const MapPrevTx& inputs) const
     int nSigOps = 0;
     for (int i = 0; i < vin.size(); i++)
     {
-        nSigOps += GetOutputFor(vin[i], inputs).scriptPubKey.GetSigOpCount(vin[i].scriptSig);
+        const CTxOut& prevout = GetOutputFor(vin[i], inputs);
+        if (prevout.scriptPubKey.IsPayToScriptHash())
+            nSigOps += prevout.scriptPubKey.GetSigOpCount(vin[i].scriptSig);
     }
     return nSigOps;
 }
 
 bool CTransaction::ConnectInputs(MapPrevTx inputs,
                                  map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                                 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner)
+                                 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash)
 {
     // Take over previous transactions' spent pointers
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
@@ -1073,20 +1072,6 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             nValueIn += txPrev.vout[prevout.n].nValue;
             if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
                 return DoS(100, error("ConnectInputs() : txin values out of range"));
-
-            bool fStrictPayToScriptHash = true;
-            if (fBlock)
-            {
-                // To avoid being on the short end of a block-chain split,
-                // don't do secondary validation of pay-to-script-hash transactions
-                // until blocks with timestamps after paytoscripthashtime:
-                int64 nEvalSwitchTime = GetArg("paytoscripthashtime", 1329264000); // Feb 15, 2012
-                fStrictPayToScriptHash = (pindexBlock->nTime >= nEvalSwitchTime);
-            }
-            // if !fBlock, then always be strict-- don't accept
-            // invalid-under-new-rules pay-to-script-hash transactions into
-            // our memory pool (don't relay them, don't include them
-            // in blocks we mine).
 
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
@@ -1198,6 +1183,12 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     if (!CheckBlock())
         return false;
 
+    // To avoid being on the short end of a block-chain split,
+    // don't do secondary validation of pay-to-script-hash transactions
+    // until blocks with timestamps after paytoscripthashtime:
+    int64 nEvalSwitchTime = GetArg("-paytoscripthashtime", 1329264000); // Feb 15, 2012
+    bool fStrictPayToScriptHash = (pindex->nTime >= nEvalSwitchTime);
+
     //// issue here: it doesn't know the version
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - 1 + GetSizeOfCompactSize(vtx.size());
 
@@ -1206,6 +1197,10 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
+        nSigOps += tx.GetLegacySigOpCount();
+        if (nSigOps > MAX_BLOCK_SIGOPS)
+            return DoS(100, error("ConnectBlock() : too many sigops"));
+
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
         nTxPos += ::GetSerializeSize(tx, SER_DISK);
 
@@ -1216,17 +1211,19 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
                 return false;
 
-            int nTxOps = tx.GetSigOpCount(mapInputs);
-            nSigOps += nTxOps;
-            if (nSigOps > MAX_BLOCK_SIGOPS)
-                return DoS(100, error("ConnectBlock() : too many sigops"));
-            // There is a different MAX_BLOCK_SIGOPS check in AcceptBlock();
-            // a block must satisfy both to make it into the best-chain
-            // (AcceptBlock() is always called before ConnectBlock())
+            if (fStrictPayToScriptHash)
+            {
+                // Add in sigops done by pay-to-script-hash inputs;
+                // this is to prevent a "rogue miner" from creating
+                // an incredibly-expensive-to-validate block.
+                nSigOps += tx.GetP2SHSigOpCount(mapInputs);
+                if (nSigOps > MAX_BLOCK_SIGOPS)
+                    return DoS(100, error("ConnectBlock() : too many sigops"));
+            }
 
             nFees += tx.GetValueIn(mapInputs)-tx.GetValueOut();
 
-            if (!tx.ConnectInputs(mapInputs, mapQueuedChanges, posThisTx, pindex, true, false))
+            if (!tx.ConnectInputs(mapInputs, mapQueuedChanges, posThisTx, pindex, true, false, fStrictPayToScriptHash))
                 return false;
         }
 
@@ -1510,9 +1507,6 @@ bool CBlock::CheckBlock() const
         if (!tx.CheckTransaction())
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
-    // Pre-pay-to-script-hash (before version 0.6), this is how sigops
-    // were counted; there is another check in ConnectBlock when
-    // transaction inputs are fetched to count pay-to-script-hash sigops:
     int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -3046,8 +3040,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
         map<uint256, CTxIndex> mapTestPool;
         uint64 nBlockSize = 1000;
         uint64 nBlockTx = 0;
-        int nBlockSigOps1 = 100; // pre-0.6 count of sigOps
-        int nBlockSigOps2 = 100; // post-0.6 count of sigOps
+        int nBlockSigOps = 100;
         while (!mapPriority.empty())
         {
             // Take highest priority transaction off priority queue
@@ -3061,8 +3054,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 continue;
 
             // Legacy limits on sigOps:
-            int nTxSigOps1 = tx.GetLegacySigOpCount();
-            if (nBlockSigOps1 + nTxSigOps1 >= MAX_BLOCK_SIGOPS)
+            int nTxSigOps = tx.GetLegacySigOpCount();
+            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
             // Transaction fee required depends on block size
@@ -3081,8 +3074,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             if (nFees < nMinFee)
                 continue;
 
-            int nTxSigOps2 = tx.GetSigOpCount(mapInputs);
-            if (nBlockSigOps2 + nTxSigOps2 >= MAX_BLOCK_SIGOPS)
+            nTxSigOps += tx.GetP2SHSigOpCount(mapInputs);
+            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
             if (!tx.ConnectInputs(mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
@@ -3094,8 +3087,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             pblock->vtx.push_back(tx);
             nBlockSize += nTxSize;
             ++nBlockTx;
-            nBlockSigOps1 += nTxSigOps1;
-            nBlockSigOps2 += nTxSigOps2;
+            nBlockSigOps += nTxSigOps;
 
             // Add transactions that depend on this one to the priority queue
             uint256 hash = tx.GetHash();

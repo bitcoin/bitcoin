@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     }
 
     CTransaction txFrom;
-    txFrom.vout.resize(5);
+    txFrom.vout.resize(6);
 
     // First three are standard:
     CScript pay1; pay1.SetBitcoinAddress(key[0].GetPubKey());
@@ -267,12 +267,18 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout[1].scriptPubKey = pay1;
     txFrom.vout[2].scriptPubKey = pay1of3;
 
-    // Last two non-standard:
+    // Last three non-standard:
     CScript empty;
     keystore.AddCScript(empty);
     txFrom.vout[3].scriptPubKey = empty;
     // Can't use SetPayToScriptHash, it checks for the empty Script. So:
     txFrom.vout[4].scriptPubKey << OP_HASH160 << Hash160(empty) << OP_EQUAL;
+    CScript oneOfEleven;
+    oneOfEleven << OP_1;
+    for (int i = 0; i < 11; i++)
+        oneOfEleven << key[0].GetPubKey();
+    oneOfEleven << OP_11 << OP_CHECKMULTISIG;
+    txFrom.vout[5].scriptPubKey.SetPayToScriptHash(oneOfEleven);
 
     mapInputs[txFrom.GetHash()] = make_pair(CTxIndex(), txFrom);
 
@@ -292,16 +298,21 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 2));
 
     BOOST_CHECK(txTo.AreInputsStandard(mapInputs));
+    BOOST_CHECK_EQUAL(txTo.GetP2SHSigOpCount(mapInputs), 1);
 
     CTransaction txToNonStd;
     txToNonStd.vout.resize(1);
     txToNonStd.vout[0].scriptPubKey.SetBitcoinAddress(key[1].GetPubKey());
-    txToNonStd.vin.resize(1);
+    txToNonStd.vin.resize(2);
     txToNonStd.vin[0].prevout.n = 4;
     txToNonStd.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd.vin[0].scriptSig << Serialize(empty);
+    txToNonStd.vin[1].prevout.n = 5;
+    txToNonStd.vin[1].prevout.hash = txFrom.GetHash();
+    txToNonStd.vin[1].scriptSig << OP_0 << Serialize(oneOfEleven);
 
     BOOST_CHECK(!txToNonStd.AreInputsStandard(mapInputs));
+    BOOST_CHECK_EQUAL(txToNonStd.GetP2SHSigOpCount(mapInputs), 11);
 
     txToNonStd.vin[0].scriptSig.clear();
     BOOST_CHECK(!txToNonStd.AreInputsStandard(mapInputs));
