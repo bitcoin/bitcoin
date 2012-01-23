@@ -1025,9 +1025,12 @@ Value addmultisigaddress(const Array& params, bool fHelp)
             if (address.IsScript())
                 throw runtime_error(
                     strprintf("%s is a pay-to-script address",ks.c_str()));
-            if (!pwalletMain->GetKey(address, pubkeys[i]))
+            std::vector<unsigned char> vchPubKey;
+            if (!pwalletMain->GetPubKey(address, vchPubKey))
                 throw runtime_error(
                     strprintf("no full public key for address %s",ks.c_str()));
+            if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
+                throw runtime_error(" Invalid public key: "+ks);
         }
 
         // Case 2: hex public key
