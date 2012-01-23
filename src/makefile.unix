@@ -16,6 +16,8 @@ ifdef STATIC
 	ifeq (${STATIC}, all)
 		LMODE2 = static
 	endif
+else
+	TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
 # for boost 1.37, add -mt to the boost libraries
@@ -109,7 +111,7 @@ all: bitcoind
 
 # auto-generated dependencies:
 -include obj/*.P
--include obj/test/*.P
+-include obj-test/*.P
 
 obj/%.o: %.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
@@ -121,21 +123,21 @@ obj/%.o: %.cpp
 bitcoind: $(OBJS:obj/%=obj/%)
 	$(CXX) $(xCXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-TESTOBJS := $(patsubst test/%.cpp,obj/test/%.o,$(wildcard test/*.cpp))
+TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
-obj/test/%.o: test/%.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+obj-test/%.o: test/%.cpp
+	$(CXX) -c $(TESTDEFS) $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
 test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-Bstatic -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
+	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
 
 clean:
 	-rm -f bitcoind test_bitcoin
 	-rm -f obj/*.o
-	-rm -f obj/test/*.o
+	-rm -f obj-test/*.o
 	-rm -f obj/*.P
-	-rm -f obj/test/*.P
+	-rm -f obj-test/*.P
