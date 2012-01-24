@@ -70,7 +70,7 @@ void OptionsModel::Init(bool resetSettings)
     // Display
     if (!settings.contains("nDisplayUnit"))
         settings.setValue("nDisplayUnit", BitcoinUnits::BTC);
-    nDisplayUnit = settings.value("nDisplayUnit").toInt();
+    nDisplayUnit = BitcoinUnits::fromSetting(settings.value("nDisplayUnit").toString());
 
     if (!settings.contains("strThirdPartyTxUrls"))
         settings.setValue("strThirdPartyTxUrls", "");
@@ -488,7 +488,7 @@ void OptionsModel::setDisplayUnit(const QVariant &value)
     {
         QSettings settings;
         nDisplayUnit = value.toInt();
-        settings.setValue("nDisplayUnit", nDisplayUnit);
+        settings.setValue("nDisplayUnit", BitcoinUnits::toSetting(nDisplayUnit));
         Q_EMIT displayUnitChanged(nDisplayUnit);
     }
 }
