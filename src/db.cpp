@@ -879,6 +879,8 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                     CPrivKey pkey;
                     ssValue >> pkey;
                     key.SetPrivKey(pkey);
+                    if (key.GetPubKey() != vchPubKey)
+                        return DB_CORRUPT;
                 }
                 else
                 {
