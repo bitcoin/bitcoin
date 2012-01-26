@@ -233,6 +233,17 @@ public:
     {
         return CBitcoinAddress(GetPubKey());
     }
+
+    bool IsValid()
+    {
+        if (!fSet)
+            return false;
+
+        CSecret secret = GetSecret();
+        CKey key2;
+        key2.SetSecret(secret);
+        return GetPubKey() == key2.GetPubKey();
+    }
 };
 
 #endif
