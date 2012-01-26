@@ -670,6 +670,13 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
     event->acceptProposedAction();
 }
 
+void BitcoinGUI::handleURL(QString strURL)
+{
+    gotoSendCoinsPage();
+    QUrl url = QUrl(strURL);
+    sendCoinsPage->handleURL(&url);
+}
+
 void BitcoinGUI::setEncryptionStatus(int status)
 {
     switch(status)

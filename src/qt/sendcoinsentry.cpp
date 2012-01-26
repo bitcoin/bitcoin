@@ -151,3 +151,8 @@ bool SendCoinsEntry::isClear()
     return ui->payTo->text().isEmpty();
 }
 
+void SendCoinsEntry::setFocus()
+{
+    ui->payTo->setFocus();
+}
+
