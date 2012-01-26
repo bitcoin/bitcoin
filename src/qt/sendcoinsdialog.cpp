@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QLocale>
 #include <QTextDocument>
+#include <QScrollBar>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -29,6 +30,8 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
 
     connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addEntry()));
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+
+    fNewRecipientAllowed = true;
 }
 
 void SendCoinsDialog::setModel(WalletModel *model)
@@ -91,6 +94,8 @@ void SendCoinsDialog::on_sendButton_clicked()
         formatted.append(tr("<b>%1</b> to %2 (%3)").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, rcp.amount), Qt::escape(rcp.label), rcp.address));
     }
 
+    fNewRecipientAllowed = false;
+
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
                           tr("Are you sure you want to send %1?").arg(formatted.join(tr(" and "))),
           QMessageBox::Yes|QMessageBox::Cancel,
@@ -98,6 +103,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     if(retval != QMessageBox::Yes)
     {
+        fNewRecipientAllowed = true;
         return;
     }
 
@@ -105,6 +111,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     if(!ctx.isValid())
     {
         // Unlock wallet was cancelled
+        fNewRecipientAllowed = true;
         return;
     }
 
@@ -151,6 +158,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         accept();
         break;
     }
+    fNewRecipientAllowed = true;
 }
 
 void SendCoinsDialog::clear()
@@ -188,6 +196,12 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
 
     // Focus the field, so that entry can start immediately
     entry->clear();
+    entry->setFocus();
+    ui->scrollAreaWidgetContents->resize(ui->scrollAreaWidgetContents->sizeHint());
+    QCoreApplication::instance()->processEvents();
+    QScrollBar* bar = ui->scrollArea->verticalScrollBar();
+    if (bar)
+        bar->setSliderPosition(bar->maximum());
     return entry;
 }
 
@@ -229,6 +243,9 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
 
 void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
 {
+    if (!fNewRecipientAllowed)
+        return;
+
     SendCoinsEntry *entry = 0;
     // Replace the first entry if it is still unused
     if(ui->entries->count() == 1)

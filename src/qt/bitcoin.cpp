@@ -8,6 +8,7 @@
 
 #include "headers.h"
 #include "init.h"
+#include "qtipcserver.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -17,6 +18,8 @@
 #include <QTranslator>
 #include <QSplashScreen>
 #include <QLibraryInfo>
+
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 // Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;
@@ -79,6 +82,22 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindo
     return payFee;
 }
 
+void ThreadSafeHandleURL(const std::string& strURL)
+{
+    if(!guiref)
+        return;
+
+    // Call slot on GUI thread.
+    // If called from another thread, use a blocking QueuedConnection.
+    Qt::ConnectionType connectionType = Qt::DirectConnection;
+    if(QThread::currentThread() != QCoreApplication::instance()->thread())
+    {
+        connectionType = Qt::BlockingQueuedConnection;
+    }
+    QMetaObject::invokeMethod(guiref, "handleURL", connectionType,
+                               Q_ARG(QString, QString::fromStdString(strURL)));
+}
+
 void CalledSetStatusBar(const std::string& strText, int nField)
 {
     // Only used for built-in mining, which is disabled, simple ignore
@@ -114,6 +133,25 @@ std::string _(const char* psz)
 
 int main(int argc, char *argv[])
 {
+    // Do this early as we don't want to bother initializing if we are just calling IPC
+    for (int i = 1; i < argc; i++)
+    {
+        if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
+        {
+            const char *strURL = argv[i];
+            try {
+                boost::interprocess::message_queue mq(boost::interprocess::open_only, "BitcoinURL");
+                if(mq.try_send(strURL, strlen(strURL), 0))
+                    exit(0);
+                else
+                    break;
+            }
+            catch (boost::interprocess::interprocess_exception &ex) {
+                break;
+            }
+        }
+    }
+
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
@@ -183,6 +221,23 @@ int main(int argc, char *argv[])
                 else
                 {
                     window.show();
+                }
+
+                // Place this here as guiref has to be defined if we dont want to lose URLs
+                ipcInit();
+                // Check for URL in argv
+                for (int i = 1; i < argc; i++)
+                {
+                    if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
+                    {
+                        const char *strURL = argv[i];
+                        try {
+                            boost::interprocess::message_queue mq(boost::interprocess::open_only, "BitcoinURL");
+                            mq.try_send(strURL, strlen(strURL), 0);
+                        }
+                        catch (boost::interprocess::interprocess_exception &ex) {
+                        }
+                    }
                 }
 
                 app.exec();
