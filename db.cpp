@@ -592,9 +592,9 @@ bool CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
     return Write(make_pair(string("acc"), strAccount), account);
 }
 
-bool CWalletDB::WriteAccountingEntry(const string& strAccount, const CAccountingEntry& acentry)
+bool CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry)
 {
-    return Write(make_tuple(string("acentry"), strAccount, ++nAccountingEntryNumber), acentry);
+    return Write(make_tuple(string("acentry"), acentry.strAccount, ++nAccountingEntryNumber), acentry);
 }
 
 int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
@@ -613,6 +613,8 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 {
     int64 nCreditDebit = 0;
 
+    bool fAllAccounts = (strAccount == "*");
+
     Dbc* pcursor = GetCursor();
     if (!pcursor)
         throw runtime_error("CWalletDB::ListAccountCreditDebit() : cannot create DB cursor");
@@ -622,7 +624,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
         // Read next record
         CDataStream ssKey;
         if (fFlags == DB_SET_RANGE)
-            ssKey << make_tuple(string("acentry"), strAccount, uint64(0));
+            ssKey << make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64(0));
         CDataStream ssValue;
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
@@ -639,18 +641,18 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
         ssKey >> strType;
         if (strType != "acentry")
             break;
-        string strAccountName;
-        ssKey >> strAccountName;
-        if (strAccountName != strAccount)
+        CAccountingEntry acentry;
+        ssKey >> acentry.strAccount;
+        if (!fAllAccounts && acentry.strAccount != strAccount)
             break;
 
-        CAccountingEntry acentry;
         ssValue >> acentry;
         entries.push_back(acentry);
     }
 
     pcursor->close();
 }
+
 
 bool CWalletDB::LoadWallet()
 {

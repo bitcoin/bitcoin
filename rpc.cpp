@@ -81,11 +81,18 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     entry.push_back(Pair("confirmations", wtx.GetDepthInMainChain()));
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
+    entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
     foreach(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
 
-
+string AccountFromValue(const Value& value)
+{
+    string strAccount = value.get_str();
+    if (strAccount == "*")
+        throw JSONRPCError(-11, "Invalid account name");
+    return strAccount;
+}
 
 
 
@@ -240,6 +247,8 @@ Value setgenerate(const Array& params, bool fHelp)
         CWalletDB().WriteSetting("fLimitProcessors", fLimitProcessors);
         if (nGenProcLimit != -1)
             CWalletDB().WriteSetting("nLimitProcessors", nLimitProcessors = nGenProcLimit);
+        if (nGenProcLimit == 0)
+            fGenerate = false;
     }
 
     GenerateBitcoins(fGenerate);
@@ -297,7 +306,7 @@ Value getnewaddress(const Array& params, bool fHelp)
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
     if (params.size() > 0)
-        strAccount = params[0].get_str();
+        strAccount = AccountFromValue(params[0]);
 
     // Generate a new key that is added to wallet
     string strAddress = PubKeyToAddress(GetKeyFromKeyPool());
@@ -307,15 +316,9 @@ Value getnewaddress(const Array& params, bool fHelp)
 }
 
 
-Value getaccountaddress(const Array& params, bool fHelp)
+string GetAccountAddress(string strAccount, bool bForceNew=false)
 {
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getaccountaddress <account>\n"
-            "Returns the current bitcoin address for receiving payments to this account.");
-
-    // Parse the account first so we don't generate a key if there's an error
-    string strAccount = params[0].get_str();
+    string strAddress;
 
     CRITICAL_BLOCK(cs_mapWallet)
     {
@@ -342,7 +345,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
         }
 
         // Generate a new key
-        if (account.vchPubKey.empty())
+        if (account.vchPubKey.empty() || bForceNew)
         {
             account.vchPubKey = GetKeyFromKeyPool();
             string strAddress = PubKeyToAddress(account.vchPubKey);
@@ -351,9 +354,24 @@ Value getaccountaddress(const Array& params, bool fHelp)
         }
 
         walletdb.TxnCommit();
-        return PubKeyToAddress(account.vchPubKey);
+        strAddress = PubKeyToAddress(account.vchPubKey);
     }
+    return strAddress;
 }
+
+Value getaccountaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getaccountaddress <account>\n"
+            "Returns the current bitcoin address for receiving payments to this account.");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount = AccountFromValue(params[0]);
+
+    return GetAccountAddress(strAccount);
+}
+
 
 
 Value setaccount(const Array& params, bool fHelp)
@@ -366,7 +384,18 @@ Value setaccount(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     string strAccount;
     if (params.size() > 1)
-        strAccount = params[1].get_str();
+        strAccount = AccountFromValue(params[1]);
+
+    // Detect when changing the account of an address that is the 'unused current key' of another account:
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        if (mapAddressBook.count(strAddress))
+        {
+            string strOldAccount = mapAddressBook[strAddress];
+            if (strAddress == GetAccountAddress(strOldAccount))
+                GetAccountAddress(strOldAccount, true);
+        }
+    }
 
     SetAddressBookName(strAddress, strAccount);
     return Value::null;
@@ -400,7 +429,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
             "getaddressesbyaccount <account>\n"
             "Returns the list of addresses for the given account.");
 
-    string strAccount = params[0].get_str();
+    string strAccount = AccountFromValue(params[0]);
 
     // Find all addresses that have the given account
     Array ret;
@@ -437,7 +466,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     // Wallet comments
     CWalletTx wtx;
     if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
-        wtx.mapValue["message"] = params[2].get_str();
+        wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["to"]      = params[3].get_str();
 
@@ -523,7 +552,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
         nMinDepth = params[1].get_int();
 
     // Get the set of pub keys that have the label
-    string strAccount = params[0].get_str();
+    string strAccount = AccountFromValue(params[0]);
     set<CScript> setPubKey;
     GetAccountPubKeys(strAccount, setPubKey);
 
@@ -550,9 +579,6 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
 int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth)
 {
-    set<CScript> setPubKey;
-    GetAccountPubKeys(strAccount, setPubKey);
-
     int64 nBalance = 0;
     CRITICAL_BLOCK(cs_mapWallet)
     {
@@ -564,7 +590,7 @@ int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinD
                 continue;
 
             int64 nGenerated, nReceived, nSent, nFee;
-            wtx.GetAccountAmounts(strAccount, setPubKey, nGenerated, nReceived, nSent, nFee);
+            wtx.GetAccountAmounts(strAccount, nGenerated, nReceived, nSent, nFee);
 
             if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
                 nBalance += nReceived;
@@ -596,7 +622,37 @@ Value getbalance(const Array& params, bool fHelp)
     if (params.size() == 0)
         return ((double)GetBalance() / (double)COIN);
 
-    string strAccount = params[0].get_str();
+    if (params[0].get_str() == "*") {
+        // Calculate total balance a different way from GetBalance()
+        // (GetBalance() sums up all unspent TxOuts)
+        // getbalance and getbalance '*' should always return the same number.
+        int64 nBalance = 0;
+        vector<string> vAccounts;
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            int64 allGenerated, allFee;
+            allGenerated = allFee = 0;
+            string strSentAccount;
+            list<pair<string, int64> > listReceived;
+            list<pair<string, int64> > listSent;
+            wtx.GetAmounts(allGenerated, listReceived, listSent, allFee, strSentAccount);
+            foreach(const PAIRTYPE(string,int64)& r, listReceived)
+            {
+                nBalance += r.second;
+                if (!count(vAccounts.begin(), vAccounts.end(), r.first))
+                    vAccounts.push_back(r.first);
+            }
+            foreach(const PAIRTYPE(string,int64)& r, listSent)
+                nBalance -= r.second;
+            nBalance -= allFee;
+            nBalance += allGenerated;
+        }
+        printf("Found %d accounts\n", vAccounts.size());
+        return (double)nBalance / (double)COIN;
+    }
+
+    string strAccount = AccountFromValue(params[0]);
     int nMinDepth = 1;
     if (params.size() > 1)
         nMinDepth = params[1].get_int();
@@ -614,8 +670,8 @@ Value movecmd(const Array& params, bool fHelp)
             "move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
             "Move from one account in your wallet to another.");
 
-    string strFrom = params[0].get_str();
-    string strTo = params[1].get_str();
+    string strFrom = AccountFromValue(params[0]);
+    string strTo = AccountFromValue(params[1]);
     int64 nAmount = AmountFromValue(params[2]);
     int nMinDepth = 1;
     if (params.size() > 3)
@@ -648,19 +704,21 @@ Value movecmd(const Array& params, bool fHelp)
 
         // Debit
         CAccountingEntry debit;
+        debit.strAccount = strFrom;
         debit.nCreditDebit = -nAmount;
         debit.nTime = nNow;
         debit.strOtherAccount = strTo;
         debit.strComment = strComment;
-        walletdb.WriteAccountingEntry(strFrom, debit);
+        walletdb.WriteAccountingEntry(debit);
 
         // Credit
         CAccountingEntry credit;
+        credit.strAccount = strTo;
         credit.nCreditDebit = nAmount;
         credit.nTime = nNow;
         credit.strOtherAccount = strFrom;
         credit.strComment = strComment;
-        walletdb.WriteAccountingEntry(strTo, credit);
+        walletdb.WriteAccountingEntry(credit);
 
         walletdb.TxnCommit();
     }
@@ -675,7 +733,7 @@ Value sendfrom(const Array& params, bool fHelp)
             "sendfrom <fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.01");
 
-    string strAccount = params[0].get_str();
+    string strAccount = AccountFromValue(params[0]);
     string strAddress = params[1].get_str();
     int64 nAmount = AmountFromValue(params[2]);
     int nMinDepth = 1;
@@ -685,7 +743,7 @@ Value sendfrom(const Array& params, bool fHelp)
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
     if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
-        wtx.mapValue["message"] = params[4].get_str();
+        wtx.mapValue["comment"] = params[4].get_str();
     if (params.size() > 5 && params[5].type() != null_type && !params[5].get_str().empty())
         wtx.mapValue["to"]      = params[5].get_str();
 
@@ -850,97 +908,200 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
     return ListReceived(params, true);
 }
 
-void ListAccountTransactions(CWalletDB& walletdb, const string& strAccount, int nMinDepth, multimap<int64, Object>& ret)
+void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
-    set<CScript> setPubKey;
-    GetAccountPubKeys(strAccount, setPubKey);
+    int64 nGenerated, nFee;
+    string strSentAccount;
+    list<pair<string, int64> > listReceived;
+    list<pair<string, int64> > listSent;
+    wtx.GetAmounts(nGenerated, listReceived, listSent, nFee, strSentAccount);
 
-    CRITICAL_BLOCK(cs_mapWallet)
+    bool fAllAccounts = (strAccount == string("*"));
+
+    // Generated blocks assigned to account ""
+    if (nGenerated != 0 && (fAllAccounts || strAccount == ""))
     {
-        // Wallet: generate/send/receive transactions
-        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-        {
-            const CWalletTx& wtx = (*it).second;
-            if (!wtx.IsFinal())
-                continue;
+        Object entry;
+        entry.push_back(Pair("account", string("")));
+        entry.push_back(Pair("category", "generate"));
+        entry.push_back(Pair("amount", ValueFromAmount(nGenerated)));
+        if (fLong)
+            WalletTxToJSON(wtx, entry);
+        ret.push_back(entry);
+    }
 
-            int64 nGenerated, nReceived, nSent, nFee;
-            wtx.GetAccountAmounts(strAccount, setPubKey, nGenerated, nReceived, nSent, nFee);
-
-            // Generated blocks count to account ""
-            if (nGenerated != 0)
-            {
-                Object entry;
-                entry.push_back(Pair("category", "generate"));
-                entry.push_back(Pair("amount", ValueFromAmount(nGenerated)));
-                WalletTxToJSON(wtx, entry);
-                ret.insert(make_pair(wtx.GetTxTime(), entry));
-            }
-
-            // Sent
-            if (nSent != 0 || nFee != 0)
-            {
-                Object entry;
-                entry.push_back(Pair("category", "send"));
-                entry.push_back(Pair("amount", ValueFromAmount(-nSent)));
-                entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
-                WalletTxToJSON(wtx, entry);
-                ret.insert(make_pair(wtx.GetTxTime(), entry));
-            }
-
-            // Received
-            if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
-            {
-                Object entry;
-                entry.push_back(Pair("category", "receive"));
-                entry.push_back(Pair("amount", ValueFromAmount(nReceived)));
-                WalletTxToJSON(wtx, entry);
-                ret.insert(make_pair(wtx.GetTxTime(), entry));
-            }
-        }
-
-        // Internal accounting entries
-        list<CAccountingEntry> acentries;
-        walletdb.ListAccountCreditDebit(strAccount, acentries);
-        foreach (const CAccountingEntry& acentry, acentries)
+    // Sent
+    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
+    {
+        foreach(const PAIRTYPE(string, int64)& s, listSent)
         {
             Object entry;
-            entry.push_back(Pair("category", "move"));
-            entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
-            entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
-            ret.insert(make_pair(acentry.nTime, entry));
+            entry.push_back(Pair("account", strSentAccount));
+            entry.push_back(Pair("address", s.first));
+            entry.push_back(Pair("category", "send"));
+            entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
+            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            if (fLong)
+                WalletTxToJSON(wtx, entry);
+            ret.push_back(entry);
         }
+    }
+
+    // Received
+    if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+        CRITICAL_BLOCK(cs_mapAddressBook)
+        {
+            foreach(const PAIRTYPE(string, int64)& r, listReceived)
+            {
+                string account;
+                if (mapAddressBook.count(r.first))
+                    account = mapAddressBook[r.first];
+                if (fAllAccounts || (account == strAccount))
+                {
+                    Object entry;
+                    entry.push_back(Pair("account", account));
+                    entry.push_back(Pair("address", r.first));
+                    entry.push_back(Pair("category", "receive"));
+                    entry.push_back(Pair("amount", ValueFromAmount(r.second)));
+                    if (fLong)
+                        WalletTxToJSON(wtx, entry);
+                    ret.push_back(entry);
+                }
+            }
+        }
+
+}
+
+void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Array& ret)
+{
+    bool fAllAccounts = (strAccount == string("*"));
+
+    if (fAllAccounts || acentry.strAccount == strAccount)
+    {
+        Object entry;
+        entry.push_back(Pair("account", acentry.strAccount));
+        entry.push_back(Pair("category", "move"));
+        entry.push_back(Pair("time", (boost::int64_t)acentry.nTime));
+        entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
+        entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
+        entry.push_back(Pair("comment", acentry.strComment));
+        ret.push_back(entry);
     }
 }
 
 Value listtransactions(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "listtransactions <account> [count=10]\n"
+            "listtransactions [account] [count=10]\n"
             "Returns up to [count] most recent transactions for account <account>.");
 
-    string strAccount = params[0].get_str();
+    string strAccount = "*";
+    if (params.size() > 0)
+        strAccount = params[0].get_str();
     int nCount = 10;
     if (params.size() > 1)
         nCount = params[1].get_int();
 
+    Array ret;
     CWalletDB walletdb;
-    multimap<int64, Object> mapByTime;  // keys are transaction time
-    ListAccountTransactions(walletdb, strAccount, 0, mapByTime);
 
-    // Return only last nCount items:
-    int nToErase = mapByTime.size()-nCount;
-    if (nToErase > 0)
+    CRITICAL_BLOCK(cs_mapWallet)
     {
-        multimap<int64, Object>::iterator end = mapByTime.begin();
-        std::advance(end, nToErase);
-        mapByTime.erase(mapByTime.begin(), end);
+        // Firs: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap:
+        typedef pair<CWalletTx*, CAccountingEntry*> TxPair;
+        typedef multimap<int64, TxPair > TxItems;
+        TxItems txByTime;
+
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            CWalletTx* wtx = &((*it).second);
+            txByTime.insert(make_pair(wtx->GetTxTime(), TxPair(wtx, (CAccountingEntry*)0)));
+        }
+        list<CAccountingEntry> acentries;
+        walletdb.ListAccountCreditDebit(strAccount, acentries);
+        foreach(CAccountingEntry& entry, acentries)
+        {
+            txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
+        }
+
+        // Now: iterate backwards until we have nCount items to return:
+        for (TxItems::reverse_iterator it = txByTime.rbegin(); it != txByTime.rend(); ++it)
+        {
+            CWalletTx *const pwtx = (*it).second.first;
+            if (pwtx != 0)
+                ListTransactions(*pwtx, strAccount, 0, true, ret);
+            CAccountingEntry *const pacentry = (*it).second.second;
+            if (pacentry != 0)
+                AcentryToJSON(*pacentry, strAccount, ret);
+
+            if (ret.size() >= nCount) break;
+        }
+        // ret is now newest to oldest
+    }
+    
+    // Make sure we return only last nCount items (sends-to-self might give us an extra):
+    if (ret.size() > nCount)
+    {
+        Array::iterator last = ret.begin();
+        std::advance(last, nCount);
+        ret.erase(last, ret.end());
+    }
+    std::reverse(ret.begin(), ret.end()); // oldest to newest
+
+    return ret;
+}
+
+Value listaccounts(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "listaccounts [minconf=1]\n"
+            "Returns Object that has account names as keys, account balances as values.");
+
+    int nMinDepth = 1;
+    if (params.size() > 0)
+        nMinDepth = params[0].get_int();
+
+    map<string, int64> mapAccountBalances;
+    CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        foreach(const PAIRTYPE(string, string)& entry, mapAddressBook)
+            mapAccountBalances[entry.second] = 0;
+
+        for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            int64 nGenerated, nFee;
+            string strSentAccount;
+            list<pair<string, int64> > listReceived;
+            list<pair<string, int64> > listSent;
+            wtx.GetAmounts(nGenerated, listReceived, listSent, nFee, strSentAccount);
+            mapAccountBalances[strSentAccount] -= nFee;
+            foreach(const PAIRTYPE(string, int64)& s, listSent)
+                mapAccountBalances[strSentAccount] -= s.second;
+            if (wtx.GetDepthInMainChain() >= nMinDepth)
+            {
+                mapAccountBalances[""] += nGenerated;
+                foreach(const PAIRTYPE(string, int64)& r, listReceived)
+                    if (mapAddressBook.count(r.first))
+                        mapAccountBalances[mapAddressBook[r.first]] += r.second;
+                    else
+                        mapAccountBalances[""] += r.second;
+            }
+        }
     }
 
-    Array ret;
-    foreach(const PAIRTYPE(int64, Object)& item, mapByTime)
-        ret.push_back(item.second);
+    list<CAccountingEntry> acentries;
+    CWalletDB().ListAccountCreditDebit("*", acentries);
+    foreach(const CAccountingEntry& entry, acentries)
+        mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
+
+    Object ret;
+    foreach(const PAIRTYPE(string, int64)& accountBalance, mapAccountBalances) {
+        ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
+    }
     return ret;
 }
 
@@ -958,7 +1119,7 @@ Value gettransaction(const Array& params, bool fHelp)
     CRITICAL_BLOCK(cs_mapWallet)
     {
         if (!mapWallet.count(hash))
-            throw JSONRPCError(-5, "Invalid transaction id");
+            throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
         const CWalletTx& wtx = mapWallet[hash];
 
         int64 nCredit = wtx.GetCredit();
@@ -969,7 +1130,12 @@ Value gettransaction(const Array& params, bool fHelp)
         entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
         if (wtx.IsFromMe())
             entry.push_back(Pair("fee", ValueFromAmount(nFee)));
+
         WalletTxToJSON(mapWallet[hash], entry);
+
+        Array details;
+        ListTransactions(mapWallet[hash], "*", 0, false, details);
+        entry.push_back(Pair("details", details));
     }
 
     return entry;
@@ -1187,6 +1353,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("gettransaction",        &gettransaction),
     make_pair("listtransactions",      &listtransactions),
     make_pair("getwork",               &getwork),
+    make_pair("listaccounts",          &listaccounts),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -1259,7 +1426,7 @@ string HTTPReply(int nStatus, const string& strMsg)
             "Server: bitcoin-json-rpc\r\n"
             "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
             "Content-Type: text/html\r\n"
-            "Content-Length: 311\r\n"
+            "Content-Length: 296\r\n"
             "\r\n"
             "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\r\n"
             "\"http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd\">\r\n"
@@ -1433,6 +1600,17 @@ string JSONRPCReply(const Value& result, const Value& error, const Value& id)
     return write_string(Value(reply), false) + "\n";
 }
 
+void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
+{
+    // Send error reply from json-rpc error object
+    int nStatus = 500;
+    int code = find_value(objError, "code").get_int();
+    if (code == -32600) nStatus = 400;
+    else if (code == -32601) nStatus = 404;
+    string strReply = JSONRPCReply(Value::null, objError, id);
+    stream << HTTPReply(nStatus, strReply) << std::flush;
+}
+
 bool ClientAllowed(const string& strAddress)
 {
     if (strAddress == asio::ip::address_v4::loopback().to_string())
@@ -1593,10 +1771,16 @@ void ThreadRPCServer2(void* parg)
         if (!ClientAllowed(peer.address().to_string()))
             continue;
 
-        // Receive request
         map<string, string> mapHeaders;
         string strRequest;
-        ReadHTTP(stream, mapHeaders, strRequest);
+
+        boost::thread api_caller(ReadHTTP, boost::ref(stream), boost::ref(mapHeaders), boost::ref(strRequest));
+        if (!api_caller.timed_join(boost::posix_time::seconds(GetArg("-rpctimeout", 30))))
+        {   // Timed out:
+            acceptor.cancel();
+            printf("ThreadRPCServer ReadHTTP timeout\n");
+            continue;
+        }
 
         // Check authorization
         if (mapHeaders.count("Authorization") == 0)
@@ -1668,26 +1852,16 @@ void ThreadRPCServer2(void* parg)
             }
             catch (std::exception& e)
             {
-                // Send error reply from method
-                string strReply = JSONRPCReply(Value::null, JSONRPCError(-1, e.what()), id);
-                stream << HTTPReply(500, strReply) << std::flush;
+                ErrorReply(stream, JSONRPCError(-1, e.what()), id);
             }
         }
         catch (Object& objError)
         {
-            // Send error reply from json-rpc error object
-            int nStatus = 500;
-            int code = find_value(objError, "code").get_int();
-            if (code == -32600) nStatus = 400;
-            else if (code == -32601) nStatus = 404;
-            string strReply = JSONRPCReply(Value::null, objError, id);
-            stream << HTTPReply(nStatus, strReply) << std::flush;
+            ErrorReply(stream, objError, id);
         }
         catch (std::exception& e)
         {
-            // Send error reply from other json-rpc parsing errors
-            string strReply = JSONRPCReply(Value::null, JSONRPCError(-32700, e.what()), id);
-            stream << HTTPReply(500, strReply) << std::flush;
+            ErrorReply(stream, JSONRPCError(-32700, e.what()), id);
         }
     }
 }
@@ -1824,6 +1998,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);

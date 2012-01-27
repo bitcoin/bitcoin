@@ -188,6 +188,19 @@ bool AddToWalletIfMine(const CTransaction& tx, const CBlock* pblock)
     return true;
 }
 
+bool AddToWalletIfFromMe(const CTransaction& tx, const CBlock* pblock)
+{
+    if (tx.IsFromMe() || mapWallet.count(tx.GetHash()))
+    {
+        CWalletTx wtx(tx);
+        // Get merkle branch if transaction was found in a block
+        if (pblock)
+            wtx.SetMerkleBranch(pblock);
+        return AddToWallet(wtx);
+    }
+    return true;
+}
+
 bool EraseFromWallet(uint256 hash)
 {
     CRITICAL_BLOCK(cs_mapWallet)
@@ -395,6 +408,98 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
+void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listReceived,
+                           list<pair<string, int64> >& listSent, int64& nFee, string& strSentAccount) const
+{
+    nGenerated = nFee = 0;
+    listReceived.clear();
+    listSent.clear();
+    strSentAccount = strFromAccount;
+
+    if (IsCoinBase())
+    {
+        if (GetDepthInMainChain() >= COINBASE_MATURITY)
+            nGenerated = GetCredit();
+        return;
+    }
+
+    // Compute fee:
+    int64 nDebit = GetDebit();
+    if (nDebit > 0) // debit>0 means we signed/sent this transaction
+    {
+        int64 nValueOut = GetValueOut();
+        nFee = nDebit - nValueOut;
+    }
+
+    // Sent/received.  Standard client will never generate a send-to-multiple-recipients,
+    // but non-standard clients might (so return a list of address/amount pairs)
+    foreach(const CTxOut& txout, vout)
+    {
+        string address;
+        uint160 hash160;
+        vector<unsigned char> vchPubKey;
+        if (ExtractHash160(txout.scriptPubKey, hash160))
+            address = Hash160ToAddress(hash160);
+        else if (ExtractPubKey(txout.scriptPubKey, false, vchPubKey))
+            address = PubKeyToAddress(vchPubKey);
+        else
+        {
+            printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+                   this->GetHash().ToString().c_str());
+            address = " unknown ";
+        }
+
+        // Don't report 'change' txouts
+        if (nDebit > 0 && txout.IsChange())
+            continue;
+
+        if (nDebit > 0)
+            listSent.push_back(make_pair(address, txout.nValue));
+
+        if (txout.IsMine())
+            listReceived.push_back(make_pair(address, txout.nValue));
+    }
+
+}
+
+void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
+                                  int64& nSent, int64& nFee) const
+{
+    nGenerated = nReceived = nSent = nFee = 0;
+
+    int64 allGenerated, allFee;
+    allGenerated = allFee = 0;
+    string strSentAccount;
+    list<pair<string, int64> > listReceived;
+    list<pair<string, int64> > listSent;
+    GetAmounts(allGenerated, listReceived, listSent, allFee, strSentAccount);
+
+    if (strAccount == "")
+        nGenerated = allGenerated;
+    if (strAccount == strSentAccount)
+    {
+        foreach(const PAIRTYPE(string,int64)& s, listSent)
+            nSent += s.second;
+        nFee = allFee;
+    }
+    CRITICAL_BLOCK(cs_mapAddressBook)
+    {
+        foreach(const PAIRTYPE(string,int64)& r, listReceived)
+        {
+            if (mapAddressBook.count(r.first))
+            {
+                if (mapAddressBook[r.first] == strAccount)
+                {
+                    nReceived += r.second;
+                }
+            }
+            else if (strAccount.empty())
+            {
+                nReceived += r.second;
+            }
+        }
+    }
+}
 
 
 
@@ -774,11 +879,50 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
     return false;
 }
 
+int ScanForWalletTransactions(CBlockIndex* pindexStart)
+{
+    int ret = 0;
+
+    CBlockIndex* pindex = pindexStart;
+    CRITICAL_BLOCK(cs_mapWallet)
+    {
+        while (pindex)
+        {
+            CBlock block;
+            block.ReadFromDisk(pindex, true);
+            foreach(CTransaction& tx, block.vtx)
+            {
+                uint256 hash = tx.GetHash();
+                if (mapWallet.count(hash)) continue;
+                AddToWalletIfMine(tx, &block);
+                if (mapWallet.count(hash))
+                {
+                    ++ret;
+                    printf("Added missing RECEIVE %s\n", hash.ToString().c_str());
+                    continue;
+                }
+                AddToWalletIfFromMe(tx, &block);
+                if (mapWallet.count(hash))
+                {
+                    ++ret;
+                    printf("Added missing SEND %s\n", hash.ToString().c_str());
+                    continue;
+                }
+            }
+            pindex = pindex->pnext;
+        }
+    }
+    return ret;
+}
+
 void ReacceptWalletTransactions()
 {
     CTxDB txdb("r");
-    CRITICAL_BLOCK(cs_mapWallet)
+    bool fRepeat = true;
+    while (fRepeat) CRITICAL_BLOCK(cs_mapWallet)
     {
+        fRepeat = false;
+        vector<CDiskTxPos> vMissingTx;
         foreach(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
@@ -800,11 +944,14 @@ void ReacceptWalletTransactions()
                     {
                         if (!txindex.vSpent[i].IsNull() && wtx.vout[i].IsMine())
                         {
-                            printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
                             wtx.fSpent = true;
-                            wtx.WriteToDisk();
-                            break;
+                            vMissingTx.push_back(txindex.vSpent[i]);
                         }
+                    }
+                    if (wtx.fSpent)
+                    {
+                        printf("ReacceptWalletTransactions found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
+                        wtx.WriteToDisk();
                     }
                 }
             }
@@ -814,6 +961,12 @@ void ReacceptWalletTransactions()
                 if (!wtx.IsCoinBase())
                     wtx.AcceptWalletTransaction(txdb, false);
             }
+        }
+        if (!vMissingTx.empty())
+        {
+            // TODO: optimize this to scan just part of the block chain?
+            if (ScanForWalletTransactions(pindexGenesisBlock))
+                fRepeat = true;  // Found missing transactions: re-do Reaccept.
         }
     }
 }
@@ -992,7 +1145,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 
 bool IsInitialBlockDownload()
 {
-    if (pindexBest == NULL || (!fTestNet && nBestHeight < 74000))
+    if (pindexBest == NULL || (!fTestNet && nBestHeight < 105000))
         return true;
     static int64 nLastUpdate;
     static CBlockIndex* pindexLastBest;
@@ -1300,8 +1453,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     return true;
 }
 
-
-
 bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 {
     printf("REORGANIZE\n");
@@ -1569,11 +1720,12 @@ bool CBlock::AcceptBlock()
 
     // Check that the block chain matches the known block chain up to a checkpoint
     if (!fTestNet)
-        if ((nHeight == 11111 && hash != uint256("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")) ||
-            (nHeight == 33333 && hash != uint256("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")) ||
-            (nHeight == 68555 && hash != uint256("0x00000000001e1b4903550a0b96e9a9405c8a95f387162e4944e8d9fbe501cd6a")) ||
-            (nHeight == 70567 && hash != uint256("0x00000000006a49b14bcf27462068f1264c961f11fa2e0eddd2be0791e1d4124a")) ||
-            (nHeight == 74000 && hash != uint256("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")))
+        if ((nHeight ==  11111 && hash != uint256("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")) ||
+            (nHeight ==  33333 && hash != uint256("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")) ||
+            (nHeight ==  68555 && hash != uint256("0x00000000001e1b4903550a0b96e9a9405c8a95f387162e4944e8d9fbe501cd6a")) ||
+            (nHeight ==  70567 && hash != uint256("0x00000000006a49b14bcf27462068f1264c961f11fa2e0eddd2be0791e1d4124a")) ||
+            (nHeight ==  74000 && hash != uint256("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")) ||
+            (nHeight == 105000 && hash != uint256("0x00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97")))
             return error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight);
 
     // Write block to history file
@@ -1590,7 +1742,7 @@ bool CBlock::AcceptBlock()
     if (hashBestChain == hash)
         CRITICAL_BLOCK(cs_vNodes)
             foreach(CNode* pnode, vNodes)
-                if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 55000))
+                if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 105000))
                     pnode->PushInventory(CInv(MSG_BLOCK, hash));
 
     return true;
@@ -1761,7 +1913,7 @@ bool LoadBlockIndex(bool fAllowNew)
 {
     if (fTestNet)
     {
-        hashGenesisBlock = uint256("0x0000000224b1593e3ff16a0e3b61285bbc393a39f78c8aa48c456142671f7110");
+        hashGenesisBlock = uint256("0x00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008");
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 28);
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -1811,9 +1963,9 @@ bool LoadBlockIndex(bool fAllowNew)
 
         if (fTestNet)
         {
-            block.nTime    = 1279232055;
+            block.nTime    = 1296688602;
             block.nBits    = 0x1d07fff8;
-            block.nNonce   = 81622180;
+            block.nNonce   = 384568319;
         }
 
         //// debug print
@@ -2991,7 +3143,7 @@ void CallCPUID(int in, int& aret, int& cret)
         "mov %%ecx, %1;" // ecx into c
         :"=r"(a),"=r"(c) /* output */
         :"r"(in) /* input */
-        :"%eax","%ecx" /* clobbered register */
+        :"%eax","%ebx","%ecx","%edx" /* clobbered register */
     );
     aret = a;
     cret = c;
@@ -3405,7 +3557,7 @@ void BitcoinMiner()
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     bool f4WaySSE2 = Detect128BitSSE2();
     if (mapArgs.count("-4way"))
-        f4WaySSE2 = GetBoolArg(mapArgs["-4way"]);
+        f4WaySSE2 = GetBoolArg("-4way");
 
     // Each thread has its own key and counter
     CReserveKey reservekey;

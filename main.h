@@ -70,6 +70,7 @@ bool AddKey(const CKey& key);
 vector<unsigned char> GenerateNewKey();
 bool AddToWallet(const CWalletTx& wtxIn);
 void WalletUpdateSpent(const COutPoint& prevout);
+int ScanForWalletTransactions(CBlockIndex* pindexStart);
 void ReacceptWalletTransactions();
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
@@ -874,36 +875,11 @@ public:
         return nChangeCached;
     }
 
-    void GetAccountAmounts(string strAccount, const set<CScript>& setPubKey,
-                           int64& nGenerated, int64& nReceived, int64& nSent, int64& nFee) const
-    {
-        nGenerated = nReceived = nSent = nFee = 0;
+    void GetAmounts(int64& nGenerated, list<pair<string /* address */, int64> >& listReceived,
+                    list<pair<string /* address */, int64> >& listSent, int64& nFee, string& strSentAccount) const;
 
-        // Generated blocks count to account ""
-        if (IsCoinBase())
-        {
-            if (strAccount == "" && GetBlocksToMaturity() == 0)
-                nGenerated = GetCredit();
-            return;
-        }
-
-        // Received
-        foreach(const CTxOut& txout, vout)
-            if (setPubKey.count(txout.scriptPubKey))
-                nReceived += txout.nValue;
-
-        // Sent
-        if (strFromAccount == strAccount)
-        {
-            int64 nDebit = GetDebit();
-            if (nDebit > 0)
-            {
-                int64 nValueOut = GetValueOut();
-                nFee = nDebit - nValueOut;
-                nSent = nValueOut - GetChange();
-            }
-        }
-    }
+    void GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
+                           int64& nSent, int64& nFee) const;
 
     bool IsFromMe() const
     {
@@ -1696,6 +1672,7 @@ public:
 class CAccountingEntry
 {
 public:
+    string strAccount;
     int64 nCreditDebit;
     int64 nTime;
     string strOtherAccount;
@@ -1710,6 +1687,7 @@ public:
     {
         nCreditDebit = 0;
         nTime = 0;
+        strAccount.clear();
         strOtherAccount.clear();
         strComment.clear();
     }
@@ -1718,6 +1696,7 @@ public:
     (
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
+        // Note: strAccount is serialized as part of the key, not here.
         READWRITE(nCreditDebit);
         READWRITE(nTime);
         READWRITE(strOtherAccount);
@@ -1734,6 +1713,8 @@ public:
 
 
 //
+// Alerts are for notifying old versions if they become too obsolete and
+// need to upgrade.  The message is displayed in the status bar.
 // Alert messages are broadcast as a vector of signed data.  Unserializing may
 // not read the entire buffer if the alert is for a newer version, but older
 // versions can still relay the original data.

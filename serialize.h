@@ -25,8 +25,9 @@ class CDataStream;
 class CAutoFile;
 static const unsigned int MAX_SIZE = 0x02000000;
 
-static const int VERSION = 31900;
+static const int VERSION = 32001;
 static const char* pszSubVer = "";
+static const bool VERSION_IS_BETA = true;
 
 
 
@@ -762,6 +763,8 @@ struct secure_allocator : public std::allocator<T>
     typedef typename base::value_type value_type;
     secure_allocator() throw() {}
     secure_allocator(const secure_allocator& a) throw() : base(a) {}
+    template <typename U>
+    secure_allocator(const secure_allocator<U>& a) throw() : base(a) {}
     ~secure_allocator() throw() {}
     template<typename _Other> struct rebind
     { typedef secure_allocator<_Other> other; };

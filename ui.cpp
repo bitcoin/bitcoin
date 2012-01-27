@@ -746,6 +746,12 @@ bool CMainFrame::InsertTransaction(const CWalletTx& wtx, bool fNew, int nIndex)
                         strDescription += " - ";
                     strDescription += mapValue["message"];
                 }
+                else if (!mapValue["comment"].empty())
+                {
+                    if (!strDescription.empty())
+                        strDescription += " - ";
+                    strDescription += mapValue["comment"];
+                }
 
                 int64 nValue = txout.nValue;
                 if (nTxFee > 0)
@@ -1405,6 +1411,8 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
         //
         if (!wtx.mapValue["message"].empty())
             strHTML += string() + "<br><b>" + _("Message:") + "</b><br>" + HtmlEscape(wtx.mapValue["message"], true) + "<br>";
+        if (!wtx.mapValue["comment"].empty())
+            strHTML += string() + "<br><b>" + _("Comment:") + "</b><br>" + HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
         if (wtx.IsCoinBase())
             strHTML += string() + "<br>" + _("Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
@@ -1458,8 +1466,7 @@ CTxDetailsDialog::CTxDetailsDialog(wxWindow* parent, CWalletTx wtx) : CTxDetails
 
 void CTxDetailsDialog::OnButtonOK(wxCommandEvent& event)
 {
-    Close();
-    //Destroy();
+    EndModal(false);
 }
 
 
@@ -1728,12 +1735,12 @@ void COptionsDialog::OnKillFocusProxy(wxFocusEvent& event)
 void COptionsDialog::OnButtonOK(wxCommandEvent& event)
 {
     OnButtonApply(event);
-    Close();
+    EndModal(false);
 }
 
 void COptionsDialog::OnButtonCancel(wxCommandEvent& event)
 {
-    Close();
+    EndModal(false);
 }
 
 void COptionsDialog::OnButtonApply(wxCommandEvent& event)
@@ -1820,7 +1827,7 @@ CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 
 void CAboutDialog::OnButtonOK(wxCommandEvent& event)
 {
-    Close();
+    EndModal(false);
 }
 
 

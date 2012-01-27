@@ -158,7 +158,9 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
+        string beta = VERSION_IS_BETA ? _(" beta") : "";
         string strUsage = string() +
+          _("Bitcoin version") + " " + FormatVersion(VERSION) + pszSubVer + beta + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
             "  bitcoin [options]                   \t  " + "\n" +
             "  bitcoin [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
@@ -173,23 +175,26 @@ bool AppInit2(int argc, char* argv[])
             "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy\n") +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
+            "  -nolisten        \t  "   + _("Don't accept connections from outside") +
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
             "  -testnet         \t\t  " + _("Use the test network\n") +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
-            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port>\n") +
+            "  -rpcport=<port>  \t\t  " + _("Listen for JSON-RPC connections on <port> (default: 8332)\n") +
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address\n") +
-            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip>\n");
+            "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)\n") +
+            "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)\n") +
+            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions\n");
 
 #ifdef USE_SSL
         strUsage += string() +
             _("\nSSL options: (see the Bitcoin Wiki for SSL setup instructions)\n") +
-            "  -rpcssl=1                             \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
-            "  -rpcsslcertificatchainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
-            "  -rpcsslprivatekeyfile=<file.pem>      \t  " + _("Server private key (default: server.pem)\n") +
-            "  -rpcsslciphers=<ciphers>              \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
+            "  -rpcssl                                \t  " + _("Use OpenSSL (https) for JSON-RPC connections\n") +
+            "  -rpcsslcertificatechainfile=<file.cert>\t  " + _("Server certificate file (default: server.cert)\n") +
+            "  -rpcsslprivatekeyfile=<file.pem>       \t  " + _("Server private key (default: server.pem)\n") +
+            "  -rpcsslciphers=<ciphers>               \t  " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)\n");
 #endif
 
         strUsage += string() +
@@ -208,9 +213,12 @@ bool AppInit2(int argc, char* argv[])
 
     fDebug = GetBoolArg("-debug");
 
+    fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
+    
+    fNoListen = GetBoolArg("-nolisten");
 
     if (fCommandLine)
     {
@@ -221,7 +229,7 @@ bool AppInit2(int argc, char* argv[])
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %s%s beta\n", FormatVersion(VERSION).c_str(), pszSubVer);
+    printf("Bitcoin version %s%s%s\n", FormatVersion(VERSION).c_str(), pszSubVer, VERSION_IS_BETA ? _(" beta") : "");
 #ifdef GUI
     printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
     printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
@@ -290,10 +298,13 @@ bool AppInit2(int argc, char* argv[])
 
     // Bind to the port early so we can tell if another instance is already running.
     string strErrors;
-    if (!BindListenPort(strErrors))
+    if (!fNoListen)
     {
-        wxMessageBox(strErrors, "Bitcoin");
-        return false;
+        if (!BindListenPort(strErrors))
+        {
+            wxMessageBox(strErrors, "Bitcoin");
+            return false;
+        }
     }
 
     //
@@ -322,6 +333,13 @@ bool AppInit2(int argc, char* argv[])
     if (!LoadWallet(fFirstRun))
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+
+    if (GetBoolArg("-rescan"))
+    {
+        nStart = GetTimeMillis();
+        ScanForWalletTransactions(pindexGenesisBlock);
+        printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    }
 
     printf("Done loading\n");
 
