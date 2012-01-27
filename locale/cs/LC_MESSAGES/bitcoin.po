@@ -524,8 +524,8 @@ msgid "Warning: Please check that your computer's date and time are correct.  If
 msgstr "Varování: Prosím zkontroluj, že datum a čas jsou na tvém počítači správně nastaveny. Pokud jsou nastaveny špatně, Bitcoin nebude fungovat správně."
 
 #: ../../../src/util.cpp:899
-msgid "-beta"
-msgstr "-beta"
+msgid "beta"
+msgstr "beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -775,10 +775,6 @@ msgstr "Tvoje adresy (pro příjem)"
 #: ../../../src/uibase.cpp:880
 msgid "&Delete"
 msgstr "&Smazat"
-
-#: ../../../src/init.cpp:140
-msgid " beta"
-msgstr " beta"
 
 #: ../../../src/init.cpp:142
 msgid "Bitcoin version"

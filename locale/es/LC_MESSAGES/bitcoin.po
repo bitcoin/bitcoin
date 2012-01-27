@@ -521,8 +521,8 @@ msgid "Warning: Please check that your computer's date and time are correct.  If
 msgstr "Precaución: Por favor revisa que la fecha y hora de tu computador son correctas. Si tu reloj está mal, Bitcoin no funcionará correctamente."
 
 #: ../../../src/util.cpp:899
-msgid "-beta"
-msgstr "-beta"
+msgid "beta"
+msgstr "beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -703,7 +703,7 @@ msgstr ""
 
 #: ../../../src/uibase.cpp:581
 msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Ponga una dirección Bitcoin (ejemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L)"
+msgstr "Ponga una dirección Bitcoin (ejemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:595
 msgid "Pay &To:"
@@ -772,10 +772,6 @@ msgstr "Recibiendo"
 #: ../../../src/uibase.cpp:880
 msgid "&Delete"
 msgstr "&Borrar"
-
-#: ../../../src/init.cpp:140
-msgid " beta"
-msgstr " beta"
 
 #: ../../../src/init.cpp:142
 msgid "Bitcoin version"
@@ -969,51 +965,3 @@ msgstr "Acerca de Bitcoin"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "Sus direcciones Bitcoin"
-
-#~ msgid ""
-#~ "Error: This is an oversized transaction that requires a transaction fee "
-#~ "of %s  "
-#~ msgstr ""
-#~ "Error: Esta es una gran transaccion que requiere una comision de %s  "
-
-#~ msgid "version %s%s BETA"
-#~ msgstr "version %s%s BETA"
-
-#~ msgid "Will appear as \"From: Unknown\""
-#~ msgstr "Aparecera como \"De: Desconocido\""
-
-#~ msgid "n/a"
-#~ msgstr "Desconocido"
-
-#~ msgid "Unknown"
-#~ msgstr "Desconocido"
-
-#~ msgid "Can't include a message when sending to a Bitcoin address"
-#~ msgstr ""
-#~ "No se ha podido incluir un mensaje mientras se enviaba la direccion "
-#~ "Bitcoin"
-
-#~ msgid ""
-#~ "This is an oversized transaction that requires a transaction fee of %s"
-#~ msgstr "Esta es una gran transaccion que requiere una comision de %s"
-
-#~ msgid ""
-#~ "Optional transaction fee you give to the nodes that process your "
-#~ "transactions."
-#~ msgstr ""
-#~ "Comision opcional que se da a los nodos que procesan sus transacciones"
-
-#~ msgid "&Limit coin generation to"
-#~ msgstr "&Limitar la generacion de monedas a"
-
-#~ msgid "processors"
-#~ msgstr "procesadores"
-
-#~ msgid "&From:"
-#~ msgstr "&De:"
-
-#~ msgid "&Message:"
-#~ msgstr "&Mensaje:"
-
-#~ msgid "Usage: bitcoin [options]"
-#~ msgstr "Uso: bitcoin [opciones]"

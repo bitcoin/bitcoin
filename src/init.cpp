@@ -2,9 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
+#include "db.h"
+#include "rpc.h"
+#include "net.h"
+#include "init.h"
+#include "strlcpy.h"
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
 
 using namespace std;
 using namespace boost;
+
+CWallet* pwalletMain;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -38,6 +48,8 @@ void Shutdown(void* parg)
         StopNode();
         DBFlush(true);
         boost::filesystem::remove(GetPidFile());
+        UnregisterWallet(pwalletMain);
+        delete pwalletMain;
         CreateThread(ExitTimeout, NULL);
         Sleep(50);
         printf("Bitcoin exiting\n\n");
@@ -129,9 +141,18 @@ bool AppInit2(int argc, char* argv[])
 
     if (mapArgs.count("-datadir"))
     {
-        filesystem::path pathDataDir = filesystem::system_complete(mapArgs["-datadir"]);
-        strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
+        if (filesystem::is_directory(filesystem::system_complete(mapArgs["-datadir"])))
+        {
+            filesystem::path pathDataDir = filesystem::system_complete(mapArgs["-datadir"]);
+            strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
+        }
+        else
+        {
+            fprintf(stderr, "Error: Specified directory does not exist\n");
+            Shutdown(NULL);
+        }
     }
+
 
     ReadConfigFile(mapArgs, mapMultiArgs); // Must be done after processing datadir
 
@@ -365,16 +386,19 @@ bool AppInit2(int argc, char* argv[])
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
     bool fFirstRun;
-    if (!LoadWallet(fFirstRun))
+    pwalletMain = new CWallet("wallet.dat");
+    if (!pwalletMain->LoadWallet(fFirstRun))
         strErrors += _("Error loading wallet.dat      \n");
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+
+    RegisterWallet(pwalletMain);
 
     CBlockIndex *pindexRescan = pindexBest;
     if (GetBoolArg("-rescan"))
         pindexRescan = pindexGenesisBlock;
     else
     {
-        CWalletDB walletdb;
+        CWalletDB walletdb("wallet.dat");
         CBlockLocator locator;
         if (walletdb.ReadBestBlock(locator))
             pindexRescan = locator.GetBlockIndex();
@@ -383,7 +407,7 @@ bool AppInit2(int argc, char* argv[])
     {
         printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
-        ScanForWalletTransactions(pindexRescan, true);
+        pwalletMain->ScanForWalletTransactions(pindexRescan, true);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
 
@@ -392,10 +416,11 @@ bool AppInit2(int argc, char* argv[])
         //// debug print
         printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
         printf("nBestHeight = %d\n",            nBestHeight);
-        printf("mapKeys.size() = %d\n",         mapKeys.size());
+        printf("mapKeys.size() = %d\n",         pwalletMain->mapKeys.size());
+        printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
         printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
-        printf("mapWallet.size() = %d\n",       mapWallet.size());
-        printf("mapAddressBook.size() = %d\n",  mapAddressBook.size());
+        printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
+        printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
 
     if (!strErrors.empty())
     {
@@ -404,7 +429,7 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Add wallet transactions that aren't already in a block to mapTransactions
-    ReacceptWalletTransactions();
+    pwalletMain->ReacceptWalletTransactions();
 
     //
     // Parameters
@@ -469,7 +494,9 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
-    if (mapArgs.count("-dnsseed"))
+    if (GetBoolArg("-nodnsseed"))
+        printf("DNS seeding disabled\n");
+    else
         DNSAddressSeed();
 
     if (mapArgs.count("-paytxfee"))

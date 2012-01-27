@@ -511,19 +511,19 @@ msgstr ""
 msgid ""
 "You must set rpcpassword=<password> in the configuration file:\n"
 "%s\n"
-"If the file does not exist, create it with owner-readable-only file permissions.\n"
+"If the file does not exist, create it with owner-readable-only file permissions."
 msgstr ""
 "rpcpassword=<password> moet ingesteld in het configuratie bestand:\n"
 "%s\n"
-"Als het bestand nog niet bestaat, maak het dan aan met enkel-leesbaar-door-eigenaar rechten.\n"
+"Als het bestand nog niet bestaat, maak het dan aan met enkel-leesbaar-door-eigenaar rechten."
 
 #: ../../../src/util.cpp:865
 msgid "Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly."
 msgstr "Waarschuwing: Controleer of uw computers datum en tijd correct ingesteld zijn. Als uw klok fout staat zal Bitcoin niet correct werken."
 
 #: ../../../src/util.cpp:898
-msgid "-beta"
-msgstr "-beta"
+msgid "beta"
+msgstr "beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -705,7 +705,7 @@ msgstr ""
 
 #: ../../../src/uibase.cpp:581
 msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Voer een bitcoin-adres (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L)"
+msgstr "Voer een bitcoin-adres (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:595
 msgid "Pay &To:"
@@ -775,10 +775,6 @@ msgstr "Ontvangen..."
 msgid "&Delete"
 msgstr "&Verwijderen"
 
-#: ../../../src/init.cpp:145
-msgid " beta"
-msgstr " beta"
-
 #: ../../../src/init.cpp:147
 msgid "Bitcoin version"
 msgstr "Bitcoin "
@@ -826,6 +822,10 @@ msgstr "Geminimaliseerd starten\n"
 #: ../../../src/init.cpp:159
 msgid "Specify data directory\n"
 msgstr "Stel datamap in\n"
+
+#: ../../../src/init.cpp:161
+msgid "Specify connection timeout (in milliseconds)\n"
+msgstr "Gelieve de time-out tijd te specifieren (in milliseconden)\n"
 
 #: ../../../src/init.cpp:160
 msgid "Connect through socks4 proxy\n"
@@ -971,49 +971,3 @@ msgstr "Over Bitcoin"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "Uw bitcoin-adressen"
-
-#~ msgid "Usage: bitcoin [options]"
-#~ msgstr "Commandoregel: bitcoin [opties]"
-
-#~ msgid ""
-#~ "Error: This is an oversized transaction that requires a transaction fee "
-#~ "of %s  "
-#~ msgstr "Fout: Dit is een te grote transactie, die een fooi vereist van %s  "
-
-#~ msgid "version %s%s BETA"
-#~ msgstr "versie %s%s BETA"
-
-#~ msgid "Will appear as \"From: Unknown\""
-#~ msgstr "Wordt weergegeven als \"Van: Onbekend\""
-
-#~ msgid "n/a"
-#~ msgstr "Onbekend"
-
-#~ msgid "Unknown"
-#~ msgstr "Onbekend"
-
-#~ msgid "Can't include a message when sending to a Bitcoin address"
-#~ msgstr "Kan geen mededeling bijvoegen bij gebruik van bitcoin-adressen"
-
-#~ msgid ""
-#~ "This is an oversized transaction that requires a transaction fee of %s"
-#~ msgstr "Fout: Dit is een te grote transactie, die een fooi vereist van %s"
-
-#~ msgid ""
-#~ "Optional transaction fee you give to the nodes that process your "
-#~ "transactions."
-#~ msgstr ""
-#~ "Optionele transactiefooi die u geeft aan de nodes die uw transacties "
-#~ "verwerken."
-
-#~ msgid "&Limit coin generation to"
-#~ msgstr "&Limiteer coin-generatie tot"
-
-#~ msgid "processors"
-#~ msgstr "processors"
-
-#~ msgid "&From:"
-#~ msgstr "&Van:"
-
-#~ msgid "&Message:"
-#~ msgstr "&Mededeling:"

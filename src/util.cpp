@@ -2,6 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
+#include "strlcpy.h"
+#include <boost/program_options/detail/config_file.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
+#include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;
@@ -338,11 +346,6 @@ string FormatMoney(int64 n, bool fPlus)
     if (nTrim)
         str.erase(str.size()-nTrim, nTrim);
 
-    // Insert thousands-separators:
-    size_t point = str.find(".");
-    for (int i = (str.size()-point)+3; i < str.size(); i += 4)
-        if (isdigit(str[str.size() - i - 1]))
-            str.insert(str.size() - i, 1, ',');
     if (n < 0)
         str.insert((unsigned int)0, 1, '-');
     else if (fPlus && n > 0)
@@ -365,8 +368,6 @@ bool ParseMoney(const char* pszIn, int64& nRet)
         p++;
     for (; *p; p++)
     {
-        if (*p == ',' && p > pszIn && isdigit(p[-1]) && isdigit(p[1]) && isdigit(p[2]) && isdigit(p[3]) && !isdigit(p[4]))
-            continue;
         if (*p == '.')
         {
             p++;
@@ -895,8 +896,10 @@ string FormatVersion(int nVersion)
 string FormatFullVersion()
 {
     string s = FormatVersion(VERSION) + pszSubVer;
-    if (VERSION_IS_BETA)
-        s += _("-beta");
+    if (VERSION_IS_BETA) {
+        s += "-";
+        s += _("beta");
+    }
     return s;
 }
 

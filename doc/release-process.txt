@@ -1,3 +1,9 @@
+* update (commit) version in sources
+
+* update (commit) version in OSX app bundle
+
+  * CFBundleShortVersionString should have value like 0.3.23
+  * CFBundleVersion should have value like 323
 
 * tag version in git
 
@@ -14,9 +20,19 @@
 
 * perform gitian builds
 
-  { insert useful info here }
+  * From the bitcoin source dir
+  $ cd ../gitian-builder
+  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian.yml
+  $ ./bin/gbuild --commit bitcoin=v0.3.23 ../bitcoin/contrib/gitian-win32.yml
  
+  Build output expected:
+  1. linux 32-bit and 64-bit binaries + source
+  2. windows 32-bit binary + source
+  3. windows installer
+
 * upload source and builds to SF
+
+* create SHA1SUMS for builds, and PGP-sign it
 
 * update bitcoin.org version
 

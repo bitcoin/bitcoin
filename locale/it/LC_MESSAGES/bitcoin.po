@@ -521,8 +521,8 @@ msgid "Warning: Please check that your computer's date and time are correct.  If
 msgstr "Attenzione: Controlla che data/ora del tuo computer siano corrette. Se il tuo orologio è sbagliato bitcoin non funzionerà correttamente"
 
 #: ../../../src/util.cpp:898
-msgid "-beta"
-msgstr "-beta"
+msgid "beta"
+msgstr "beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -703,7 +703,7 @@ msgstr ""
 
 #: ../../../src/uibase.cpp:581
 msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Inserisci un indirizzo Bitcoin (es. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L)"
+msgstr "Inserisci un indirizzo Bitcoin (es. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:595
 msgid "Pay &To:"
@@ -772,10 +772,6 @@ msgstr "Ricevendo"
 #: ../../../src/uibase.cpp:880
 msgid "&Delete"
 msgstr "&Cancella"
-
-#: ../../../src/init.cpp:145
-msgid " beta"
-msgstr " beta"
 
 #: ../../../src/init.cpp:147
 msgid "Bitcoin version"
@@ -969,55 +965,3 @@ msgstr "Info Bitcoin"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "Il tuo indirizzo Bitcoin"
-
-#~ msgid "Usage: bitcoin [options]"
-#~ msgstr "Uso: bitcoin [options]"
-
-#~ msgid ""
-#~ "Error: This is an oversized transaction that requires a transaction fee "
-#~ "of %s  "
-#~ msgstr ""
-#~ "Errore: Questa è un operazione fuorimisura che richiede un sovrapprezzo"
-#~ "di %s  "
-
-#~ msgid "version %s%s BETA"
-#~ msgstr "versione %s%s BETA"
-
-#~ msgid "Will appear as \"From: Unknown\""
-#~ msgstr "Apparirà come \"Da: Sconosciuto\""
-
-#~ msgid "n/a"
-#~ msgstr "Non disponibile"
-
-#~ msgid "Unknown"
-#~ msgstr "Sconosciuto"
-
-#~ msgid "Can't include a message when sending to a Bitcoin address"
-#~ msgstr ""
-#~ "Non si può includere un messaggio quando si invia attraverso l'indirizzo "
-#~ "Bitcoin"
-
-#~ msgid ""
-#~ "This is an oversized transaction that requires a transaction fee of %s"
-#~ msgstr ""
-#~ "Questo è un trasferimento fuorimisura che richiede un costo aggiuntivo di %s "
-
-
-#~ msgid ""
-#~ "Optional transaction fee you give to the nodes that process your "
-#~ "transactions."
-#~ msgstr ""
-#~ "Costo aggiuntivo opzionale che tu dai ai nodi che realizzano i tuoi "
-#~ "trasferimenti"
-
-#~ msgid "&Limit coin generation to"
-#~ msgstr "&Limita la generazione di Bitcoin a"
-
-#~ msgid "processors"
-#~ msgstr "processori"
-
-#~ msgid "&From:"
-#~ msgstr "&Proveniente da:"
-
-#~ msgid "&Message:"
-#~ msgstr "&Messaggio:"

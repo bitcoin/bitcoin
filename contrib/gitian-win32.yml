@@ -1,0 +1,84 @@
+---
+name: "bitcoin"
+suites:
+- "lucid"
+architectures:
+- "i386"
+packages: 
+- "mingw32"
+- "git-core"
+- "unzip"
+- "nsis"
+reference_datetime: "2011-01-30 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "wxWidgets-2.9.1.tar.bz2"
+- "boost_1_43_0.tar.bz2"
+- "openssl-1.0.0d.tar.gz"
+- "db-4.7.25.NC.tar.gz"
+- "upnpc-exe-win32-20110215.zip"
+- "miniupnpc-1.5.20110215.tar.gz"
+- "WSPiApi.h"
+script: |
+  #
+  tar xjf wxWidgets-2.9.1.tar.bz2
+  cd wxWidgets-2.9.1
+  ./configure --host=i586-mingw32msvc --build=i686-linux --disable-shared --enable-monolithic --without-libpng --disable-svg
+  perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
+  make $MAKEOPTS
+  cd ..
+  #
+  tar xzf openssl-1.0.0d.tar.gz
+  cd openssl-1.0.0d
+  ./Configure --cross-compile-prefix=i586-mingw32msvc- mingw
+  make
+  cd ..
+  #
+  tar xzf db-4.7.25.NC.tar.gz
+  cd db-4.7.25.NC/build_unix
+  ../dist/configure --enable-mingw --enable-cxx --host=i586-mingw32msvc CFLAGS="-I/usr/i586-mingw32msvc/include"
+  make $MAKEOPTS
+  cd ../..
+  #
+  tar xjf boost_1_43_0.tar.bz2
+  cd boost_1_43_0
+  echo "using gcc : 4.4 : i586-mingw32msvc-g++
+        :
+        <rc>i586-mingw32msvc-windres
+        <archiver>i586-mingw32msvc-ar
+  ;" > user-config.jam
+  ./bootstrap.sh --without-icu
+  ./bjam toolset=gcc target-os=windows threadapi=win32 threading=multi --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 -sNO_ZLIB=1 --layout=tagged --build-type=complete $MAKEOPTS stage
+  cd ..
+  #
+  mkdir upnpc-exe-win32-20110215
+  cd upnpc-exe-win32-20110215
+  unzip ../upnpc-exe-win32-20110215.zip
+  mkdir miniupnpc
+  cd miniupnpc
+  tar xzf ../../miniupnpc-1.5.20110215.tar.gz
+  mv ./miniupnpc-1.5.20110215/* ./
+  cd ../..
+  #
+  cp WSPiApi.h $HOME/build
+  #
+  cd bitcoin
+  mkdir -p $OUTDIR/src
+  cp -a . $OUTDIR/src
+  rm -rf $OUTDIR/src/.git
+  cp -a $OUTDIR/src/locale $OUTDIR
+  cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
+  cp $OUTDIR/src/COPYING $OUTDIR/license.txt
+  cd src
+  sed 's/$(DEBUGFLAGS)//' < makefile.linux-mingw > makefile.linux-mingw.2 && mv makefile.linux-mingw.2 makefile.linux-mingw
+  sed 's|//#include <WSPiApi.h>|#include <WSPiApi.h>|' < net.cpp > net.cpp.2 && mv net.cpp.2 net.cpp
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoin.exe USE_UPNP=1
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoind.exe USE_UPNP=0
+  i586-mingw32msvc-strip bitcoin.exe
+  i586-mingw32msvc-strip bitcoind.exe
+  makensis ../share/setup.nsi
+  cp bitcoin.exe ../share/bitcoin-*-win32-setup.exe $OUTDIR/
+  mkdir $OUTDIR/daemon
+  cp bitcoind.exe $OUTDIR/daemon

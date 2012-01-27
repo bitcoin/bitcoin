@@ -557,8 +557,8 @@ msgstr ""
 "ĝusta. Se viaj horloĝo malĝustas, Bitmonero ne funkcios korekte."
 
 #: ../../../src/util.cpp:898
-msgid "-beta"
-msgstr "-beta"
+msgid "beta"
+msgstr "beta"
 
 #: ../../../src/uibase.cpp:28
 msgid "&File"
@@ -743,7 +743,7 @@ msgstr ""
 
 #: ../../../src/uibase.cpp:581
 msgid "Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
-msgstr "Entajpu bitmoneran adreson (ekz. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L)"
+msgstr "Entajpu bitmoneran adreson (ekz. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"
 
 #: ../../../src/uibase.cpp:595
 msgid "Pay &To:"
@@ -822,10 +822,6 @@ msgstr "Ricevanta"
 #: ../../../src/uibase.cpp:880
 msgid "&Delete"
 msgstr "&Viŝu"
-
-#: ../../../src/init.cpp:145
-msgid " beta"
-msgstr " beta"
 
 #: ../../../src/init.cpp:147
 msgid "Bitcoin version"
@@ -1031,51 +1027,3 @@ msgstr "Pri Bitmonero"
 #: ../../../src/uibase.h:337
 msgid "Your Bitcoin Addresses"
 msgstr "Viaj Bitmoneraj adresoj"
-
-#~ msgid "Usage: bitcoin [options]"
-#~ msgstr "Uzado: bitcoin [opcioj]"
-
-#~ msgid ""
-#~ "Error: This is an oversized transaction that requires a transaction fee "
-#~ "of %s  "
-#~ msgstr ""
-#~ "Eraro: Tiu ĉi estas grandega transakcio, kiu necesas transakcian koston "
-#~ "de %s.  "
-
-#~ msgid "version %s%s BETA"
-#~ msgstr "versio %s%s BETA"
-
-#~ msgid "Will appear as \"From: Unknown\""
-#~ msgstr "Vidigonta kiel \"De: Nekonata\""
-
-#~ msgid "n/a"
-#~ msgstr "n/d"
-
-#~ msgid "Unknown"
-#~ msgstr "Nekonata"
-
-#~ msgid "Can't include a message when sending to a Bitcoin address"
-#~ msgstr "Sendante al bitmonaran adreson ne povas inkludi mesaĝon"
-
-#~ msgid ""
-#~ "This is an oversized transaction that requires a transaction fee of %s"
-#~ msgstr "Tiu ĉi estas grandega transakcio, kiu necesas transakcian koston de %s"
-
-#~ msgid ""
-#~ "Optional transaction fee you give to the nodes that process your "
-#~ "transactions."
-#~ msgstr ""
-#~ "Opcian transakcian koston vi donas al la nodoj kiuj plenumas viajn "
-#~ "transakciojn."
-
-#~ msgid "&Limit coin generation to"
-#~ msgstr "&Limitu bitmoneran kreadon al"
-
-#~ msgid "processors"
-#~ msgstr "procesoroj"
-
-#~ msgid "&From:"
-#~ msgstr "&De:"
-
-#~ msgid "&Message:"
-#~ msgstr "&Mesaĝo:"

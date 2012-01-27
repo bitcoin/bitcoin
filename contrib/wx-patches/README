@@ -1,0 +1,4 @@
+This folder contains two patches which are applied to wxWidgets
+2.9.1 before building the wxWidgets which is used for release
+versions of bitcoin.  They make the GUI show up on newer OSs
+with new libgtks, such as Ubuntu 11.04.
