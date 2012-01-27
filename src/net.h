@@ -19,6 +19,7 @@ class CRequestTracker;
 class CNode;
 class CBlockIndex;
 extern int nBestHeight;
+extern int nConnectTimeout;
 
 
 
@@ -32,7 +33,7 @@ enum
 
 
 
-bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet);
+bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet, int nTimeout=nConnectTimeout);
 bool Lookup(const char *pszName, std::vector<CAddress>& vaddr, int nServices, int nMaxSolutions, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool Lookup(const char *pszName, CAddress& addr, int nServices, bool fAllowLookup = false, int portDefault = 0, bool fAllowPort = false);
 bool GetMyExternalIP(unsigned int& ipRet);
@@ -283,13 +284,29 @@ public:
         return (memcmp(pchReserved, pchIPv4, sizeof(pchIPv4)) == 0);
     }
 
+    bool IsRFC1918() const
+    {
+      return IsIPv4() && (GetByte(3) == 10 ||
+        (GetByte(3) == 192 && GetByte(2) == 168) ||
+        (GetByte(3) == 172 &&
+          (GetByte(2) >= 16 && GetByte(2) <= 31)));
+    }
+
+    bool IsRFC3927() const
+    {
+      return IsIPv4() && (GetByte(3) == 169 && GetByte(2) == 254);
+    }
+
+    bool IsLocal() const
+    {
+      return IsIPv4() && (GetByte(3) == 127 ||
+          GetByte(3) == 0);
+    }
+
     bool IsRoutable() const
     {
         return IsValid() &&
-            !(GetByte(3) == 10 ||
-              (GetByte(3) == 192 && GetByte(2) == 168) ||
-              GetByte(3) == 127 ||
-              GetByte(3) == 0);
+            !(IsRFC1918() || IsRFC3927() || IsLocal());
     }
 
     bool IsValid() const

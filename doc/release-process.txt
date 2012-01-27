@@ -1,0 +1,29 @@
+
+* tag version in git
+
+  $ git tag -a v0.3.23
+
+* write release notes.  git shortlog helps a lot:
+
+  $ git shortlog --no-merges v0.3.22..
+
+* create source-only archive
+
+  $ git archive --format=tar --prefix=bitcoin-0.3.23/ HEAD | \
+  	gzip -9c > ~/tmp/bitcoin-0.3.23-src.tar.gz 
+
+* perform gitian builds
+
+  { insert useful info here }
+ 
+* upload source and builds to SF
+
+* update bitcoin.org version
+
+* update forum version
+
+* update wiki
+
+* update wiki download links
+
+
