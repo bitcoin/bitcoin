@@ -1,0 +1,92 @@
+---
+name: "bitcoin"
+suites:
+- "lucid"
+architectures:
+- "i386"
+packages: 
+- "mingw32"
+- "git-core"
+- "unzip"
+- "nsis"
+- "faketime"
+- "wine"
+reference_datetime: "2011-01-30 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "wxwidgets-win32-2.9.2-gitian.zip"
+- "boost-win32-1.47.0-gitian.zip"
+- "openssl-1.0.0d.tar.gz"
+- "db-4.8.30.NC.tar.gz"
+- "miniupnpc-1.6.tar.gz"
+script: |
+  #
+  mkdir wxWidgets-2.9.2
+  cd wxWidgets-2.9.2
+  mkdir lib
+  unzip ../wxwidgets-win32-2.9.2-gitian.zip
+  cd bin/$GBUILD_BITS
+  for lib in wx_mswu; do
+    i586-mingw32msvc-ar rc ../../lib/lib${lib}-2.9-i586-mingw32msvc.a $lib/*.o
+    i586-mingw32msvc-ranlib ../../lib/lib${lib}-2.9-i586-mingw32msvc.a
+  done
+  cp -a wx ../../lib
+  cd ../..
+  mv include/wx-2.9/wx include
+  cd ..
+  #
+  mkdir boost_1_47_0
+  cd boost_1_47_0
+  mkdir -p stage/lib
+  unzip ../boost-win32-1.47.0-gitian.zip
+  cd bin/$GBUILD_BITS
+  for lib in *; do
+    i586-mingw32msvc-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
+    i586-mingw32msvc-ranlib ../../stage/lib/libboost_${lib}-mt-s.a
+  done
+  cd ../..
+  mv include/boost .
+  cd ..
+  #
+  tar xzf openssl-1.0.0d.tar.gz
+  cd openssl-1.0.0d
+  ./Configure --cross-compile-prefix=i586-mingw32msvc- mingw
+  make
+  cd ..
+  #
+  tar xzf db-4.8.30.NC.tar.gz
+  cd db-4.8.30.NC/build_unix
+  ../dist/configure --enable-mingw --enable-cxx --host=i586-mingw32msvc CFLAGS="-I/usr/i586-mingw32msvc/include"
+  make $MAKEOPTS
+  cd ../..
+  #
+  tar xzf miniupnpc-1.6.tar.gz
+  cd miniupnpc-1.6
+  sed 's/dllwrap -k --driver-name gcc/$(DLLWRAP) -k --driver-name $(CC)/' -i Makefile.mingw
+  sed 's|wingenminiupnpcstrings $< $@|./wingenminiupnpcstrings $< $@|' -i Makefile.mingw
+  make -f Makefile.mingw DLLWRAP=i586-mingw32msvc-dllwrap CC=i586-mingw32msvc-gcc AR=i586-mingw32msvc-ar
+  cd ..
+  mv miniupnpc-1.6 miniupnpc
+  #
+  cd bitcoin
+  mkdir -p $OUTDIR/src
+  cp -a . $OUTDIR/src
+  rm -rf $OUTDIR/src/.git
+  cp -a $OUTDIR/src/locale $OUTDIR
+  cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
+  cp $OUTDIR/src/COPYING $OUTDIR/license.txt
+  cd src
+  sed 's/$(DEBUGFLAGS)/-frandom-seed=bitcoin/' -i makefile.linux-mingw
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoin.exe USE_UPNP=1
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoind.exe USE_UPNP=0
+  i586-mingw32msvc-strip bitcoin.exe
+  i586-mingw32msvc-strip bitcoind.exe
+  makensis ../share/setup.nsi
+  cp bitcoin.exe ../share/bitcoin-*-win32-setup.exe $OUTDIR/
+  mkdir $OUTDIR/daemon
+  cp bitcoind.exe $OUTDIR/daemon

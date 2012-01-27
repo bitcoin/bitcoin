@@ -581,6 +581,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     case OP_ABS:        if (bn < bnZero) bn = -bn; break;
                     case OP_NOT:        bn = (bn == bnZero); break;
                     case OP_0NOTEQUAL:  bn = (bn != bnZero); break;
+                    default:            assert(!"invalid opcode"); break;
                     }
                     popstack(stack);
                     stack.push_back(bn.getvch());
@@ -660,6 +661,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     case OP_GREATERTHANOREQUAL:  bn = (bn1 >= bn2); break;
                     case OP_MIN:                 bn = (bn1 < bn2 ? bn1 : bn2); break;
                     case OP_MAX:                 bn = (bn1 > bn2 ? bn1 : bn2); break;
+                    default:                     assert(!"invalid opcode"); break;
                     }
                     popstack(stack);
                     popstack(stack);
@@ -1073,49 +1075,44 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         return false;
 
     // Compile solution
-    CRITICAL_BLOCK(keystore.cs_mapKeys)
+    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
     {
-        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        if (item.first == OP_PUBKEY)
         {
-            if (item.first == OP_PUBKEY)
-            {
-                // Sign
-                const valtype& vchPubKey = item.second;
-                CPrivKey privkey;
-                if (!keystore.GetPrivKey(vchPubKey, privkey))
-                    return false;
-                if (hash != 0)
-                {
-                    vector<unsigned char> vchSig;
-                    if (!CKey::Sign(privkey, hash, vchSig))
-                        return false;
-                    vchSig.push_back((unsigned char)nHashType);
-                    scriptSigRet << vchSig;
-                }
-            }
-            else if (item.first == OP_PUBKEYHASH)
-            {
-                // Sign and give pubkey
-                map<uint160, valtype>::iterator mi = mapPubKeys.find(uint160(item.second));
-                if (mi == mapPubKeys.end())
-                    return false;
-                const vector<unsigned char>& vchPubKey = (*mi).second;
-                CPrivKey privkey;
-                if (!keystore.GetPrivKey(vchPubKey, privkey))
-                    return false;
-                if (hash != 0)
-                {
-                    vector<unsigned char> vchSig;
-                    if (!CKey::Sign(privkey, hash, vchSig))
-                        return false;
-                    vchSig.push_back((unsigned char)nHashType);
-                    scriptSigRet << vchSig << vchPubKey;
-                }
-            }
-            else
-            {
+            // Sign
+            const valtype& vchPubKey = item.second;
+            CKey key;
+            if (!keystore.GetKey(Hash160(vchPubKey), key))
                 return false;
+            if (key.GetPubKey() != vchPubKey)
+                return false;
+            if (hash != 0)
+            {
+                vector<unsigned char> vchSig;
+                if (!key.Sign(hash, vchSig))
+                    return false;
+                vchSig.push_back((unsigned char)nHashType);
+                scriptSigRet << vchSig;
             }
+        }
+        else if (item.first == OP_PUBKEYHASH)
+        {
+            // Sign and give pubkey
+            CKey key;
+            if (!keystore.GetKey(uint160(item.second), key))
+                return false;
+            if (hash != 0)
+            {
+                vector<unsigned char> vchSig;
+                if (!key.Sign(hash, vchSig))
+                    return false;
+                vchSig.push_back((unsigned char)nHashType);
+                scriptSigRet << vchSig << key.GetPubKey();
+            }
+        }
+        else
+        {
+            return false;
         }
     }
 
@@ -1163,62 +1160,61 @@ bool IsStandardInput(const CScript& scriptSig)
 
 bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
-    CScript scriptSig;
-    return Solver(keystore, scriptPubKey, 0, 0, scriptSig);
-}
-
-
-bool ExtractPubKey(const CScript& scriptPubKey, const CKeyStore* keystore, vector<unsigned char>& vchPubKeyRet)
-{
-    vchPubKeyRet.clear();
-
     vector<pair<opcodetype, valtype> > vSolution;
     if (!Solver(scriptPubKey, vSolution))
         return false;
 
-    CRITICAL_BLOCK(cs_mapPubKeys)
+    // Compile solution
+    BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
     {
-        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        if (item.first == OP_PUBKEY)
         {
-            valtype vchPubKey;
-            if (item.first == OP_PUBKEY)
-            {
-                vchPubKey = item.second;
-            }
-            else if (item.first == OP_PUBKEYHASH)
-            {
-                map<uint160, valtype>::iterator mi = mapPubKeys.find(uint160(item.second));
-                if (mi == mapPubKeys.end())
-                    continue;
-                vchPubKey = (*mi).second;
-            }
-            if (keystore == NULL || keystore->HaveKey(vchPubKey))
-            {
-                vchPubKeyRet = vchPubKey;
-                return true;
-            }
+            const valtype& vchPubKey = item.second;
+            vector<unsigned char> vchPubKeyFound;
+            if (!keystore.GetPubKey(Hash160(vchPubKey), vchPubKeyFound))
+                return false;
+            if (vchPubKeyFound != vchPubKey)
+                return false;
+        }
+        else if (item.first == OP_PUBKEYHASH)
+        {
+            if (!keystore.HaveKey(uint160(item.second)))
+                return false;
+        }
+        else
+        {
+            return false;
         }
     }
-    return false;
+
+    return true;
 }
 
-
-bool ExtractHash160(const CScript& scriptPubKey, uint160& hash160Ret)
+bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
 {
-    hash160Ret = 0;
-
     vector<pair<opcodetype, valtype> > vSolution;
     if (!Solver(scriptPubKey, vSolution))
         return false;
 
     BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
     {
-        if (item.first == OP_PUBKEYHASH)
-        {
-            hash160Ret = uint160(item.second);
+        if (item.first == OP_PUBKEY)
+            addressRet.SetPubKey(item.second);
+        else if (item.first == OP_PUBKEYHASH)
+            addressRet.SetHash160((uint160)item.second);
+        if (keystore == NULL || keystore->HaveKey(addressRet))
             return true;
-        }
     }
+    return false;
+}
+
+
+bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBitcoinAddress& addressRet)
+{
+    if (keystore)
+        return ExtractAddressInner(scriptPubKey, keystore, addressRet);
+    else
+        return ExtractAddressInner(scriptPubKey, NULL, addressRet);
     return false;
 }
 
