@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version Apr 16 2008)
+// C++ code generated with wxFormBuilder (version Dec 21 2009)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO "NOT" EDIT THIS FILE!
@@ -61,7 +61,6 @@ CMainFrameBase::CMainFrameBase( wxWindow* parent, wxWindowID id, const wxString&
 	m_toolBar->Realize();
 	
 	m_statusBar = this->CreateStatusBar( 1, wxST_SIZEGRIP, wxID_ANY );
-	
 	wxBoxSizer* bSizer2;
 	bSizer2 = new wxBoxSizer( wxVERTICAL );
 	
@@ -355,7 +354,6 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	bSizer71 = new wxBoxSizer( wxHORIZONTAL );
 	
 	m_checkBoxLimitProcessors = new wxCheckBox( m_panelMain, wxID_ANY, _("&Limit coin generation to"), wxDefaultPosition, wxDefaultSize, 0 );
-	
 	bSizer71->Add( m_checkBoxLimitProcessors, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	m_spinCtrlLimitProcessors = new wxSpinCtrl( m_panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 48,-1 ), wxSP_ARROW_KEYS, 1, 999, 1 );
@@ -368,22 +366,21 @@ COptionsDialogBase::COptionsDialogBase( wxWindow* parent, wxWindowID id, const w
 	bSizer69->Add( bSizer71, 0, 0, 5 );
 	
 	m_checkBoxStartOnSystemStartup = new wxCheckBox( m_panelMain, wxID_ANY, _("&Start Bitcoin on system startup"), wxDefaultPosition, wxDefaultSize, 0 );
-	
 	bSizer69->Add( m_checkBoxStartOnSystemStartup, 0, wxALL, 5 );
 	
 	m_checkBoxMinimizeToTray = new wxCheckBox( m_panelMain, wxID_ANY, _("&Minimize to the tray instead of the taskbar"), wxDefaultPosition, wxDefaultSize, 0 );
-	
 	bSizer69->Add( m_checkBoxMinimizeToTray, 0, wxALL, 5 );
 	
-	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, _("M&inimize to the tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_checkBoxUseUPnP = new wxCheckBox( m_panelMain, wxID_ANY, _("Map port using &UPnP"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer69->Add( m_checkBoxUseUPnP, 0, wxALL, 5 );
 	
+	m_checkBoxMinimizeOnClose = new wxCheckBox( m_panelMain, wxID_ANY, _("M&inimize to the tray on close"), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer69->Add( m_checkBoxMinimizeOnClose, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 	
 	wxBoxSizer* bSizer102;
 	bSizer102 = new wxBoxSizer( wxHORIZONTAL );
 	
 	m_checkBoxUseProxy = new wxCheckBox( m_panelMain, wxID_ANY, _("&Connect through socks4 proxy: "), wxDefaultPosition, wxDefaultSize, 0 );
-	
 	bSizer102->Add( m_checkBoxUseProxy, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 	
 	bSizer69->Add( bSizer102, 1, wxEXPAND, 5 );
@@ -550,7 +547,7 @@ CAboutDialogBase::CAboutDialogBase( wxWindow* parent, wxWindowID id, const wxStr
 	
 	bSizer631->Add( 0, 4, 0, wxEXPAND, 5 );
 	
-	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright (c) 2009-2010 Bitcoin Developers\n\nThis is experimental software.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com)."), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextMain = new wxStaticText( this, wxID_ANY, _("Copyright (c) 2009-2011 Bitcoin Developers\n\nThis is experimental software.\n\nDistributed under the MIT/X11 software license, see the accompanying file \nlicense.txt or http://www.opensource.org/licenses/mit-license.php.\n\nThis product includes software developed by the OpenSSL Project for use in the \nOpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by \nEric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard."), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticTextMain->Wrap( -1 );
 	bSizer631->Add( m_staticTextMain, 0, wxALL, 5 );
 	
@@ -606,7 +603,7 @@ CSendDialogBase::CSendDialogBase( wxWindow* parent, wxWindowID id, const wxStrin
 	
 	fgSizer1->Add( 0, 0, 0, wxEXPAND, 5 );
 	
-	m_staticTextInstructions = new wxStaticText( this, wxID_ANY, _("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJED9L) or IP address (e.g. 123.45.6.7)"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticTextInstructions = new wxStaticText( this, wxID_ANY, _("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticTextInstructions->Wrap( -1 );
 	fgSizer1->Add( m_staticTextInstructions, 0, wxTOP|wxRIGHT|wxLEFT, 5 );
 	
@@ -680,36 +677,7 @@ CSendDialogBase::CSendDialogBase( wxWindow* parent, wxWindowID id, const wxStrin
 	wxBoxSizer* bSizer672;
 	bSizer672 = new wxBoxSizer( wxHORIZONTAL );
 	
-	wxBoxSizer* bSizer681;
-	bSizer681 = new wxBoxSizer( wxVERTICAL );
-	
-	m_staticTextFrom = new wxStaticText( this, wxID_ANY, _("&From:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticTextFrom->Wrap( -1 );
-	bSizer681->Add( m_staticTextFrom, 0, wxBOTTOM|wxLEFT, 5 );
-	
-	m_textCtrlFrom = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( -1,-1 ), 0 );
-	bSizer681->Add( m_textCtrlFrom, 0, wxLEFT|wxEXPAND, 5 );
-	
-	bSizer672->Add( bSizer681, 1, wxEXPAND|wxBOTTOM|wxRIGHT|wxLEFT, 5 );
-	
 	bSizer21->Add( bSizer672, 0, wxEXPAND, 5 );
-	
-	wxBoxSizer* bSizer67;
-	bSizer67 = new wxBoxSizer( wxHORIZONTAL );
-	
-	wxBoxSizer* bSizer68;
-	bSizer68 = new wxBoxSizer( wxVERTICAL );
-	
-	m_staticTextMessage = new wxStaticText( this, wxID_ANY, _("&Message:"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticTextMessage->Wrap( -1 );
-	bSizer68->Add( m_staticTextMessage, 0, wxTOP|wxBOTTOM|wxLEFT, 5 );
-	
-	m_textCtrlMessage = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE );
-	bSizer68->Add( m_textCtrlMessage, 1, wxEXPAND|wxLEFT, 5 );
-	
-	bSizer67->Add( bSizer68, 1, wxEXPAND|wxBOTTOM|wxRIGHT|wxLEFT, 5 );
-	
-	bSizer21->Add( bSizer67, 1, wxEXPAND, 5 );
 	
 	wxBoxSizer* bSizer23;
 	bSizer23 = new wxBoxSizer( wxHORIZONTAL );
@@ -737,8 +705,6 @@ CSendDialogBase::CSendDialogBase( wxWindow* parent, wxWindowID id, const wxStrin
 	m_buttonAddress->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CSendDialogBase::OnButtonAddressBook ), NULL, this );
 	m_textCtrlAmount->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( CSendDialogBase::OnKeyDown ), NULL, this );
 	m_textCtrlAmount->Connect( wxEVT_KILL_FOCUS, wxFocusEventHandler( CSendDialogBase::OnKillFocusAmount ), NULL, this );
-	m_textCtrlFrom->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( CSendDialogBase::OnKeyDown ), NULL, this );
-	m_textCtrlMessage->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( CSendDialogBase::OnKeyDown ), NULL, this );
 	m_buttonSend->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CSendDialogBase::OnButtonSend ), NULL, this );
 	m_buttonCancel->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CSendDialogBase::OnButtonCancel ), NULL, this );
 }
@@ -752,8 +718,6 @@ CSendDialogBase::~CSendDialogBase()
 	m_buttonAddress->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CSendDialogBase::OnButtonAddressBook ), NULL, this );
 	m_textCtrlAmount->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( CSendDialogBase::OnKeyDown ), NULL, this );
 	m_textCtrlAmount->Disconnect( wxEVT_KILL_FOCUS, wxFocusEventHandler( CSendDialogBase::OnKillFocusAmount ), NULL, this );
-	m_textCtrlFrom->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( CSendDialogBase::OnKeyDown ), NULL, this );
-	m_textCtrlMessage->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( CSendDialogBase::OnKeyDown ), NULL, this );
 	m_buttonSend->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CSendDialogBase::OnButtonSend ), NULL, this );
 	m_buttonCancel->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( CSendDialogBase::OnButtonCancel ), NULL, this );
 }

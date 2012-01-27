@@ -1,0 +1,37 @@
+---
+name: "bitcoin"
+suites:
+- "lucid"
+architectures:
+- "i386"
+- "amd64"
+packages: 
+- "libdb4.8++-dev"
+- "libxxf86vm-dev"
+- "libgtk2.0-dev"
+- "libboost-all-dev"
+- "libssl-dev"
+- "git-core"
+reference_datetime: "2011-01-30 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoin/bitcoin.git"
+  "dir": "bitcoin"
+files:
+- "wxWidgets-2.9.1.tar.bz2"
+script: |
+  INSTDIR="$HOME/install"
+  export LIBRARY_PATH="$INSTDIR/lib"
+  tar xjf wxWidgets-2.9.1.tar.bz2
+  cd wxWidgets-2.9.1
+  ./configure --prefix=$INSTDIR --enable-monolithic --disable-shared
+  perl -i -p -e "s/__TIME__/\"$REFERENCE_TIME\"/;s/__DATE__/\"$REFERENCE_DATE\"/" include/wx/chartype.h
+  make $MAKEOPTS install
+  cd ../bitcoin
+  mkdir -p $OUTDIR/src
+  cp -a . $OUTDIR/src
+  rm -rf $OUTDIR/src/.git
+  mv $OUTDIR/src/locale $OUTDIR
+  cp $OUTDIR/src/license.txt $OUTDIR
+  make -f makefile.unix $MAKEOPTS  WXLIBS="-Wl,-Bstatic -l wx_gtk2u-2.9 -Wl,-Bdynamic -l gtk-x11-2.0 -l SM -l Xxf86vm" INCLUDEPATHS="`$INSTDIR/bin/wx-config --cflags`" bitcoin bitcoind
+  mkdir -p $OUTDIR/bin/$GBUILD_BITS
+  cp bitcoin bitcoind $OUTDIR/bin/$GBUILD_BITS

@@ -668,8 +668,8 @@ bool CWalletDB::LoadWallet()
 #endif
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
-    CRITICAL_BLOCK(cs_mapKeys)
     CRITICAL_BLOCK(cs_mapWallet)
+    CRITICAL_BLOCK(cs_mapKeys)
     {
         // Get cursor
         Dbc* pcursor = GetCursor();
@@ -790,7 +790,7 @@ bool CWalletDB::LoadWallet()
                 if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
                 if (strKey == "fUseProxy")          ssValue >> fUseProxy;
                 if (strKey == "addrProxy")          ssValue >> addrProxy;
-
+                if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
             }
         }
         pcursor->close();
@@ -807,6 +807,8 @@ bool CWalletDB::LoadWallet()
     printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);
     printf("fUseProxy = %d\n", fUseProxy);
     printf("addrProxy = %s\n", addrProxy.ToString().c_str());
+    if (fHaveUPnP)
+        printf("fUseUPnP = %d\n", fUseUPnP);
 
 
     // Upgrade
@@ -843,7 +845,7 @@ bool LoadWallet(bool& fFirstRunRet)
         keyUser.MakeNewKey();
         if (!AddKey(keyUser))
             return false;
-        if (!SetAddressBookName(PubKeyToAddress(keyUser.GetPubKey()), "Your Address"))
+        if (!SetAddressBookName(PubKeyToAddress(keyUser.GetPubKey()), ""))
             return false;
         CWalletDB().WriteDefaultKey(keyUser.GetPubKey());
     }

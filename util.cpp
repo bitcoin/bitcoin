@@ -14,10 +14,12 @@ char pszSetDataDir[MAX_PATH] = "";
 bool fRequestShutdown = false;
 bool fShutdown = false;
 bool fDaemon = false;
+bool fServer = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
 bool fNoListen = false;
+bool fLogTimestamps = false;
 
 
 
@@ -169,8 +171,16 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         }
         if (fileout)
         {
-            //// Debug print useful for profiling
-            //fprintf(fileout, " %"PRI64d" ", GetTimeMillis());
+            static bool fStartedNewLine = true;
+
+            // Debug print useful for profiling
+            if (fLogTimestamps && fStartedNewLine)
+                fprintf(fileout, "%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+            if (pszFormat[strlen(pszFormat) - 1] == '\n')
+                fStartedNewLine = true;
+            else
+                fStartedNewLine = false;
+
             va_list arg_ptr;
             va_start(arg_ptr, pszFormat);
             ret = vfprintf(fileout, pszFormat, arg_ptr);
@@ -313,9 +323,23 @@ void ParseString(const string& str, char c, vector<string>& v)
 
 string FormatMoney(int64 n, bool fPlus)
 {
-    n /= CENT;
-    string str = strprintf("%"PRI64d".%02"PRI64d, (n > 0 ? n : -n)/100, (n > 0 ? n : -n)%100);
-    for (int i = 6; i < str.size(); i += 4)
+    // Note: not using straight sprintf here because we do NOT want
+    // localized number formatting.
+    int64 n_abs = (n > 0 ? n : -n);
+    int64 quotient = n_abs/COIN;
+    int64 remainder = n_abs%COIN;
+    string str = strprintf("%"PRI64d".%08"PRI64d, quotient, remainder);
+
+    // Right-trim excess 0's before the decimal point:
+    int nTrim = 0;
+    for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
+        ++nTrim;
+    if (nTrim)
+        str.erase(str.size()-nTrim, nTrim);
+
+    // Insert thousands-separators:
+    size_t point = str.find(".");
+    for (int i = (str.size()-point)+3; i < str.size(); i += 4)
         if (isdigit(str[str.size() - i - 1]))
             str.insert(str.size() - i, 1, ',');
     if (n < 0)
@@ -334,7 +358,7 @@ bool ParseMoney(const string& str, int64& nRet)
 bool ParseMoney(const char* pszIn, int64& nRet)
 {
     string strWhole;
-    int64 nCents = 0;
+    int64 nUnits = 0;
     const char* p = pszIn;
     while (isspace(*p))
         p++;
@@ -345,11 +369,11 @@ bool ParseMoney(const char* pszIn, int64& nRet)
         if (*p == '.')
         {
             p++;
-            if (isdigit(*p))
+            int64 nMult = CENT*10;
+            while (isdigit(*p) && (nMult > 0))
             {
-                nCents = 10 * (*p++ - '0');
-                if (isdigit(*p))
-                    nCents += (*p++ - '0');
+                nUnits += nMult * (*p++ - '0');
+                nMult /= 10;
             }
             break;
         }
@@ -364,15 +388,11 @@ bool ParseMoney(const char* pszIn, int64& nRet)
             return false;
     if (strWhole.size() > 14)
         return false;
-    if (nCents < 0 || nCents > 99)
+    if (nUnits < 0 || nUnits > COIN)
         return false;
     int64 nWhole = atoi64(strWhole);
-    int64 nPreValue = nWhole * 100 + nCents;
-    int64 nValue = nPreValue * CENT;
-    if (nValue / CENT != nPreValue)
-        return false;
-    if (nValue / COIN != nWhole)
-        return false;
+    int64 nValue = nWhole*COIN + nUnits;
+
     nRet = nValue;
     return true;
 }
@@ -727,6 +747,25 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
     }
 }
 
+string GetPidFile()
+{
+    namespace fs = boost::filesystem;
+    fs::path pathConfig(GetArg("-pid", "bitcoind.pid"));
+    if (!pathConfig.is_complete())
+        pathConfig = fs::path(GetDataDir()) / pathConfig;
+    return pathConfig.string();
+}
+
+void CreatePidFile(string pidFile, pid_t pid)
+{
+    FILE* file;
+    if (file = fopen(pidFile.c_str(), "w"))
+    {
+        fprintf(file, "%d\n", pid);
+        fclose(file);
+    }
+}
+
 int GetFilesize(FILE* file)
 {
     int nSavePos = ftell(file);
@@ -835,3 +874,32 @@ void AddTimeData(unsigned int ip, int64 nTime)
         printf("|  nTimeOffset = %+"PRI64d"  (%+"PRI64d" minutes)\n", nTimeOffset, nTimeOffset/60);
     }
 }
+
+
+
+
+
+
+
+
+
+string FormatVersion(int nVersion)
+{
+    if (nVersion%100 == 0)
+        return strprintf("%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100);
+    else
+        return strprintf("%d.%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100, nVersion%100);
+}
+
+string FormatFullVersion()
+{
+    string s = FormatVersion(VERSION) + pszSubVer;
+    if (VERSION_IS_BETA)
+        s += _("-beta");
+    return s;
+}
+
+
+
+
+

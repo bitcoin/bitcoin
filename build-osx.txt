@@ -3,7 +3,8 @@ Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
 the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
-cryptographic software written by Eric Young (eay@cryptsoft.com).
+cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
+software written by Thomas Bernard.
 
 
 Mac OS X build instructions
@@ -58,7 +59,10 @@ cd ~/bitcoin/deps
 tar xvjf ~/Downloads/boost_1_42_0.tar.bz2
 cd boost_1_42_0
 ./bootstrap.sh
-./bjam architecture=combined address-model=32_64 macosx-version=10.6 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/bitcoin/deps install
+./bjam architecture=combined address-model=32_64 macosx-version=10.5 macosx-version-min=10.5 link=static runtime-link=static --toolset=darwin --prefix=/Users/macosuser/bitcoin/deps install
+
+If you're using Snow Leopard, you will need to specify 10.6 as your Mac OS X
+version instead of 10.5.
 
 This part takes a while.. use your judgement and fix it if something doesn't
 build for some reason.
@@ -89,12 +93,12 @@ tar xvf ~/Downloads/openssl-1.0.0.tar
 mv openssl-1.0.0 openssl-1.0.0-x86_64
 # build i386 (32 bit intel) binary
 cd openssl-1.0.0-i386
-./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/deps/openssl darwin-i386-cc && make
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin-i386-cc && make
 make install # only do this on one of the architectures, to install the headers
 cd ..
 # build x86_64 (64 bit intel) binary
 cd openssl-1.0.0-x86_64
-./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/deps/openssl darwin64-x86_64-cc && make
+./Configure --prefix=/Users/macosuser/bitcoin/deps --openssldir=/Users/macosuser/bitcoin/deps/openssl darwin64-x86_64-cc && make
 cd ..
 
 # combine the libs
@@ -108,9 +112,49 @@ file lib/libcrypto.a
 
 output should look like this:
 
-ib/libcrypto.a: Mach-O universal binary with 2 architectures
+lib/libcrypto.a: Mach-O universal binary with 2 architectures
 lib/libcrypto.a (for architecture i386):	current ar archive random library
 lib/libcrypto.a (for architecture x86_64):	current ar archive random library
+
+
+miniupnpc
+---------
+
+The process for miniupnpc (optional) is similar to that of OpenSSL.
+
+Download from http://miniupnp.tuxfamily.org/files/.
+
+cd ~/bitcoin/deps
+tar xvf ~/Downloads/miniupnpc-1.5.tar
+mv miniupnpc-1.5 miniupnpc-1.5-x86_64
+tar xvf ~/Downloads/miniupnpc-1.5.tar
+mv miniupnpc-1.5 miniupnpc-1.5-i386
+# build x86_64 (64 bit intel) binary
+cd miniupnpc-1.5-x86_64
+export CFLAGS="-arch x86_64"
+export LDFLAGS="-arch x86_64"
+export PREFIX="/Users/macuser/bitcoin/deps"
+make && make install
+# build i386 (32 bit intel) binary
+cd miniupnpc-1.5-i386
+export CFLAGS="-arch i386"
+export LDFLAGS="-arch i386"
+export PREFIX="/Users/macuser/bitcoin/deps"
+make
+
+# combine the libs
+cd ~/bitcoin/deps
+lipo -arch i386 miniupnpc-1.5-i386/libminiupnpc.a -arch x86_64 miniupnpc-1.5-x86_64/libminiupnpc.a -o lib/libminiupnpc.a -create
+
+Verify your binaries
+
+file lib/libminiupnpc.a
+
+output should look like this:
+
+lib/libminiupnpc.a: Mach-O universal binary with 2 architectures
+lib/libminiupnpc.a (for architecture i386):	current ar archive random library
+lib/libminiupnpc.a (for architecture x86_64):	current ar archive random library
 
 
 Berkeley DB

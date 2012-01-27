@@ -1665,6 +1665,10 @@ COptionsDialog::COptionsDialog(wxWindow* parent) : COptionsDialogBase(parent)
     m_checkBoxStartOnSystemStartup->SetValue(fTmpStartOnSystemStartup = GetStartOnSystemStartup());
     m_checkBoxMinimizeToTray->SetValue(fMinimizeToTray);
     m_checkBoxMinimizeOnClose->SetValue(fMinimizeOnClose);
+    if (fHaveUPnP)
+        m_checkBoxUseUPnP->SetValue(fUseUPnP);
+    else
+        m_checkBoxUseUPnP->Enable(false);
     m_checkBoxUseProxy->SetValue(fUseProxy);
     m_textCtrlProxyIP->Enable(fUseProxy);
     m_textCtrlProxyPort->Enable(fUseProxy);
@@ -1784,6 +1788,13 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
         walletdb.WriteSetting("fMinimizeOnClose", fMinimizeOnClose);
     }
 
+    if (fHaveUPnP && fUseUPnP != m_checkBoxUseUPnP->GetValue())
+    {
+        fUseUPnP = m_checkBoxUseUPnP->GetValue();
+        walletdb.WriteSetting("fUseUPnP", fUseUPnP);
+        MapPort(fUseUPnP);
+    }
+
     fUseProxy = m_checkBoxUseProxy->GetValue();
     walletdb.WriteSetting("fUseProxy", fUseProxy);
 
@@ -1803,7 +1814,7 @@ void COptionsDialog::OnButtonApply(wxCommandEvent& event)
 
 CAboutDialog::CAboutDialog(wxWindow* parent) : CAboutDialogBase(parent)
 {
-    m_staticTextVersion->SetLabel(strprintf(_("version %s%s BETA"), FormatVersion(VERSION).c_str(), pszSubVer));
+    m_staticTextVersion->SetLabel(strprintf(_("version %s"), FormatFullVersion().c_str()));
 
     // Change (c) into UTF-8 or ANSI copyright symbol
     wxString str = m_staticTextMain->GetLabel();
@@ -1854,7 +1865,7 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     if (fontTmp.GetPointSize() > 9);
         fontTmp.SetPointSize(9);
     m_staticTextInstructions->SetFont(fontTmp);
-    SetSize(725, 380);
+    SetSize(725, 180);
 #endif
 
     // Set Icon
@@ -1862,42 +1873,10 @@ CSendDialog::CSendDialog(wxWindow* parent, const wxString& strAddress) : CSendDi
     iconSend.CopyFromBitmap(wxBitmap(send16noshadow_xpm));
     SetIcon(iconSend);
 
-    wxCommandEvent event;
-    OnTextAddress(event);
-
     // Fixup the tab order
     m_buttonPaste->MoveAfterInTabOrder(m_buttonCancel);
     m_buttonAddress->MoveAfterInTabOrder(m_buttonPaste);
     this->Layout();
-}
-
-void CSendDialog::OnTextAddress(wxCommandEvent& event)
-{
-    // Check mark
-    event.Skip();
-    bool fBitcoinAddress = IsValidBitcoinAddress(m_textCtrlAddress->GetValue());
-    m_bitmapCheckMark->Show(fBitcoinAddress);
-
-    // Grey out message if bitcoin address
-    bool fEnable = !fBitcoinAddress;
-    m_staticTextFrom->Enable(fEnable);
-    m_textCtrlFrom->Enable(fEnable);
-    m_staticTextMessage->Enable(fEnable);
-    m_textCtrlMessage->Enable(fEnable);
-    m_textCtrlMessage->SetBackgroundColour(wxSystemSettings::GetColour(fEnable ? wxSYS_COLOUR_WINDOW : wxSYS_COLOUR_BTNFACE));
-    if (!fEnable && fEnabledPrev)
-    {
-        strFromSave    = m_textCtrlFrom->GetValue();
-        strMessageSave = m_textCtrlMessage->GetValue();
-        m_textCtrlFrom->SetValue(_("n/a"));
-        m_textCtrlMessage->SetValue(_("Can't include a message when sending to a Bitcoin address"));
-    }
-    else if (fEnable && !fEnabledPrev)
-    {
-        m_textCtrlFrom->SetValue(strFromSave);
-        m_textCtrlMessage->SetValue(strMessageSave);
-    }
-    fEnabledPrev = fEnable;
 }
 
 void CSendDialog::OnKillFocusAmount(wxFocusEvent& event)
@@ -1966,20 +1945,23 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
 
         if (fBitcoinAddress)
         {
-            // Send to bitcoin address
-            CScript scriptPubKey;
-            scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
+	    CRITICAL_BLOCK(cs_main)
+	    {
+                // Send to bitcoin address
+                CScript scriptPubKey;
+                scriptPubKey << OP_DUP << OP_HASH160 << hash160 << OP_EQUALVERIFY << OP_CHECKSIG;
 
-            string strError = SendMoney(scriptPubKey, nValue, wtx, true);
-            if (strError == "")
-                wxMessageBox(_("Payment sent  "), _("Sending..."));
-            else if (strError == "ABORTED")
-                return; // leave send dialog open
-            else
-            {
-                wxMessageBox(strError + "  ", _("Sending..."));
-                EndModal(false);
-            }
+                string strError = SendMoney(scriptPubKey, nValue, wtx, true);
+                if (strError == "")
+                    wxMessageBox(_("Payment sent  "), _("Sending..."));
+                else if (strError == "ABORTED")
+                    return; // leave send dialog open
+                else
+                {
+                    wxMessageBox(strError + "  ", _("Sending..."));
+                    EndModal(false);
+                }
+	    }
         }
         else
         {
@@ -1993,8 +1975,6 @@ void CSendDialog::OnButtonSend(wxCommandEvent& event)
 
             // Message
             wtx.mapValue["to"] = strAddress;
-            wtx.mapValue["from"] = m_textCtrlFrom->GetValue();
-            wtx.mapValue["message"] = m_textCtrlMessage->GetValue();
 
             // Send to IP address
             CSendingDialog* pdialog = new CSendingDialog(this, addr, nValue, wtx);
@@ -2267,7 +2247,7 @@ void CSendingDialog::OnReply2(CDataStream& vRecv)
         if (!CreateTransaction(scriptPubKey, nPrice, wtx, reservekey, nFeeRequired))
         {
             if (nPrice + nFeeRequired > GetBalance())
-                Error(strprintf(_("This is an oversized transaction that requires a transaction fee of %s"), FormatMoney(nFeeRequired).c_str()));
+                Error(strprintf(_("This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds"), FormatMoney(nFeeRequired).c_str()));
             else
                 Error(_("Transaction creation failed"));
             return;
@@ -2839,6 +2819,10 @@ bool CMyApp::Initialize(int& argc, wxChar** argv)
             }
             if (pid > 0)
                 pthread_exit((void*)0);
+
+            pid_t sid = setsid();
+            if (sid < 0)
+                fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
         }
 
         return true;
