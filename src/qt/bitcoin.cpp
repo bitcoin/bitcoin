@@ -91,6 +91,8 @@ void UIThreadCall(boost::function0<void> fn)
 
 void MainFrameRepaint()
 {
+    if(guiref)
+        QMetaObject::invokeMethod(guiref, "refreshStatusBar", Qt::QueuedConnection);
 }
 
 void InitMessage(const std::string &message)
@@ -159,7 +161,7 @@ int main(int argc, char *argv[])
         {
             {
                 // Put this in a block, so that BitcoinGUI is cleaned up properly before
-                // calling Shutdown().
+                // calling Shutdown() in case of exceptions.
                 BitcoinGUI window;
                 splash.finish(&window);
                 OptionsModel optionsModel(pwalletMain);
@@ -170,7 +172,15 @@ int main(int argc, char *argv[])
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);
 
-                window.show();
+                // If -min option passed, start window minimized.
+                if(GetBoolArg("-min"))
+                {
+                    window.showMinimized();
+                }
+                else
+                {
+                    window.show();
+                }
 
                 app.exec();
 

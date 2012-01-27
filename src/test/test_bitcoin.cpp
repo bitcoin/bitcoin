@@ -13,6 +13,7 @@
 #include "util_tests.cpp"
 #include "base58_tests.cpp"
 #include "miner_tests.cpp"
+#include "Checkpoints_tests.cpp"
 
 CWallet* pwalletMain;
 

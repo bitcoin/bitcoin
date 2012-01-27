@@ -2,6 +2,7 @@
  * Qt4 bitcoin GUI.
  *
  * W.J. van der Laan 2011
+ * The Bitcoin Developers 2011
  */
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
@@ -191,10 +192,15 @@ void BitcoinGUI::createActions()
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
+    connect(overviewAction, SIGNAL(triggered()), this, SLOT(show()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
+    connect(historyAction, SIGNAL(triggered()), this, SLOT(show()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(addressBookAction, SIGNAL(triggered()), this, SLOT(show()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
+    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(show()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(show()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
@@ -412,15 +418,31 @@ void BitcoinGUI::setNumBlocks(int count)
 
     if(count < total)
     {
-        progressBarLabel->setVisible(true);
-        progressBar->setVisible(true);
-        progressBar->setMaximum(total - initTotal);
-        progressBar->setValue(count - initTotal);
+        if (clientModel->getStatusBarWarnings() == "")
+        {
+            progressBarLabel->setVisible(true);
+            progressBarLabel->setText(tr("Synchronizing with network..."));
+            progressBar->setVisible(true);
+            progressBar->setMaximum(total - initTotal);
+            progressBar->setValue(count - initTotal);
+        }
+        else
+        {
+            progressBarLabel->setText(clientModel->getStatusBarWarnings());
+            progressBarLabel->setVisible(true);
+            progressBar->setVisible(false);
+        }
         tooltip = tr("Downloaded %1 of %2 blocks of transaction history.").arg(count).arg(total);
     }
     else
     {
-        progressBarLabel->setVisible(false);
+        if (clientModel->getStatusBarWarnings() == "")
+            progressBarLabel->setVisible(false);
+        else
+        {
+            progressBarLabel->setText(clientModel->getStatusBarWarnings());
+            progressBarLabel->setVisible(true);
+        }
         progressBar->setVisible(false);
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
@@ -467,6 +489,19 @@ void BitcoinGUI::setNumBlocks(int count)
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
+}
+
+void BitcoinGUI::refreshStatusBar()
+{
+    /* Might display multiple times in the case of multiple alerts
+    static QString prevStatusBar;
+    QString newStatusBar = clientModel->getStatusBarWarnings();
+    if (prevStatusBar != newStatusBar)
+    {
+        prevStatusBar = newStatusBar;
+        error(tr("Network Alert"), newStatusBar);
+    }*/
+    setNumBlocks(clientModel->getNumBlocks());
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message)
@@ -563,7 +598,6 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
 
 void BitcoinGUI::gotoOverviewPage()
 {
-    show();
     overviewAction->setChecked(true);
     centralWidget->setCurrentWidget(overviewPage);
 
@@ -573,7 +607,6 @@ void BitcoinGUI::gotoOverviewPage()
 
 void BitcoinGUI::gotoHistoryPage()
 {
-    show();
     historyAction->setChecked(true);
     centralWidget->setCurrentWidget(transactionsPage);
 
@@ -584,7 +617,6 @@ void BitcoinGUI::gotoHistoryPage()
 
 void BitcoinGUI::gotoAddressBookPage()
 {
-    show();
     addressBookAction->setChecked(true);
     centralWidget->setCurrentWidget(addressBookPage);
 
@@ -595,7 +627,6 @@ void BitcoinGUI::gotoAddressBookPage()
 
 void BitcoinGUI::gotoReceiveCoinsPage()
 {
-    show();
     receiveCoinsAction->setChecked(true);
     centralWidget->setCurrentWidget(receiveCoinsPage);
 
@@ -606,7 +637,6 @@ void BitcoinGUI::gotoReceiveCoinsPage()
 
 void BitcoinGUI::gotoSendCoinsPage()
 {
-    show();
     sendCoinsAction->setChecked(true);
     centralWidget->setCurrentWidget(sendCoinsPage);
 

@@ -1,7 +1,7 @@
 Icon: src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
       src/qt/res/src/*.svg
 Designer: Wladimir van der Laan
-License: Creative Commons Attribution
+License: MIT
 
 Icon: src/qt/res/icons/address-book.png, src/qt/res/icons/export.png,
       src/qt/res/icons/history.png, src/qt/res/icons/key.png,
