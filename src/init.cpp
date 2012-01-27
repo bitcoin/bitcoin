@@ -4,13 +4,23 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
 #include "db.h"
-#include "rpc.h"
+#include "bitcoinrpc.h"
 #include "net.h"
 #include "init.h"
 #include "strlcpy.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
+
+#if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
+#define _BITCOIN_QT_PLUGINS_INCLUDED
+#define __INSURE__
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(qcncodecs)
+Q_IMPORT_PLUGIN(qjpcodecs)
+Q_IMPORT_PLUGIN(qtwcodecs)
+Q_IMPORT_PLUGIN(qkrcodecs)
+#endif
 
 using namespace std;
 using namespace boost;
@@ -24,7 +34,7 @@ CWallet* pwalletMain;
 
 void ExitTimeout(void* parg)
 {
-#ifdef __WXMSW__
+#ifdef WIN32
     Sleep(5000);
     ExitProcess(0);
 #endif
@@ -34,8 +44,8 @@ void Shutdown(void* parg)
 {
     static CCriticalSection cs_Shutdown;
     static bool fTaken;
-    bool fFirstThread;
-    CRITICAL_BLOCK(cs_Shutdown)
+    bool fFirstThread = false;
+    TRY_CRITICAL_BLOCK(cs_Shutdown)
     {
         fFirstThread = !fTaken;
         fTaken = true;
@@ -80,7 +90,7 @@ void HandleSIGTERM(int)
 //
 // Start
 //
-#ifndef GUI
+#if !defined(QT_GUI)
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -121,10 +131,10 @@ bool AppInit2(int argc, char* argv[])
     // Disable confusing "helpful" text message on abort, ctrl-c
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
-#ifndef __WXMSW__
+#ifndef WIN32
     umask(077);
 #endif
-#ifndef __WXMSW__
+#ifndef WIN32
     // Clean shutdown on SIGTERM
     struct sigaction sa;
     sa.sa_handler = HandleSIGTERM;
@@ -179,6 +189,8 @@ bool AppInit2(int argc, char* argv[])
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to\n") +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node\n") +
             "  -nolisten        \t  "   + _("Don't accept connections from outside\n") +
+            "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)\n") +
+            "  -bantime=<n>     \t  "   + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)\n") +
 #ifdef USE_UPNP
 #if USE_UPNP
             "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port\n") +
@@ -190,7 +202,7 @@ bool AppInit2(int argc, char* argv[])
 #ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif
-#ifndef __WXMSW__
+#ifndef WIN32
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
@@ -214,21 +226,16 @@ bool AppInit2(int argc, char* argv[])
         strUsage += string() +
             "  -?               \t\t  " + _("This help message\n");
 
-#if defined(__WXMSW__) && defined(GUI)
-        // Tabs make the columns line up in the message box
-        wxMessageBox(strUsage, "Bitcoin", wxOK);
-#else
         // Remove tabs
         strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
         fprintf(stderr, "%s", strUsage.c_str());
-#endif
         return false;
     }
 
     fDebug = GetBoolArg("-debug");
     fAllowDNS = GetBoolArg("-dns");
 
-#ifndef __WXMSW__
+#ifndef WIN32
     fDaemon = GetBoolArg("-daemon");
 #else
     fDaemon = false;
@@ -240,10 +247,9 @@ bool AppInit2(int argc, char* argv[])
         fServer = GetBoolArg("-server");
 
     /* force fServer when running without GUI */
-#ifndef GUI
+#if !defined(QT_GUI)
     fServer = true;
 #endif
-
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
@@ -252,6 +258,7 @@ bool AppInit2(int argc, char* argv[])
     fNoListen = GetBoolArg("-nolisten") || fTOR;
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
+#ifndef QT_GUI
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))
             fCommandLine = true;
@@ -261,8 +268,9 @@ bool AppInit2(int argc, char* argv[])
         int ret = CommandLineRPC(argc, argv);
         exit(ret);
     }
+#endif
 
-#ifndef __WXMSW__
+#ifndef WIN32
     if (fDaemon)
     {
         // Daemonize
@@ -288,11 +296,6 @@ bool AppInit2(int argc, char* argv[])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %s\n", FormatFullVersion().c_str());
-#ifdef GUI
-    printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
-    printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
-    printf("Language file %s (%s)\n", (string("locale/") + (string)g_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)g_locale.GetLocale()).c_str());
-#endif
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
     if (GetBoolArg("-loadblockindextest"))
@@ -302,46 +305,6 @@ bool AppInit2(int argc, char* argv[])
         PrintBlockTree();
         return false;
     }
-
-    //
-    // Limit to single instance per user
-    // Required to protect the database files if we're going to keep deleting log.*
-    //
-#if defined(__WXMSW__) && defined(GUI)
-    // wxSingleInstanceChecker doesn't work on Linux
-    wxString strMutexName = wxString("bitcoin_running.") + getenv("HOMEPATH");
-    for (int i = 0; i < strMutexName.size(); i++)
-        if (!isalnum(strMutexName[i]))
-            strMutexName[i] = '.';
-    wxSingleInstanceChecker* psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
-    if (psingleinstancechecker->IsAnotherRunning())
-    {
-        printf("Existing instance found\n");
-        unsigned int nStart = GetTime();
-        loop
-        {
-            // Show the previous instance and exit
-            HWND hwndPrev = FindWindowA("wxWindowClassNR", "Bitcoin");
-            if (hwndPrev)
-            {
-                if (IsIconic(hwndPrev))
-                    ShowWindow(hwndPrev, SW_RESTORE);
-                SetForegroundWindow(hwndPrev);
-                return false;
-            }
-
-            if (GetTime() > nStart + 60)
-                return false;
-
-            // Resume this instance if the other exits
-            delete psingleinstancechecker;
-            Sleep(1000);
-            psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
-            if (!psingleinstancechecker->IsAnotherRunning())
-                break;
-        }
-    }
-#endif
 
     // Make sure only a single bitcoin process is using the data directory.
     string strLockFile = GetDataDir() + "/.lock";
@@ -373,18 +336,21 @@ bool AppInit2(int argc, char* argv[])
     strErrors = "";
     int64 nStart;
 
+    InitMessage(_("Loading addresses..."));
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
     if (!LoadAddresses())
         strErrors += _("Error loading addr.dat      \n");
     printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
+    InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
         strErrors += _("Error loading blkindex.dat      \n");
     printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
+    InitMessage(_("Loading wallet..."));
     printf("Loading wallet...\n");
     nStart = GetTimeMillis();
     bool fFirstRun;
@@ -396,6 +362,12 @@ bool AppInit2(int argc, char* argv[])
             strErrors += _("Error loading wallet.dat: Wallet corrupted      \n");
         else if (nLoadWalletRet == DB_TOO_NEW)
             strErrors += _("Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n");
+        else if (nLoadWalletRet == DB_NEED_REWRITE)
+        {
+            strErrors += _("Wallet needed to be rewritten: restart Bitcoin to complete    \n");
+            wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+            return false;
+        }
         else
             strErrors += _("Error loading wallet.dat      \n");
     }
@@ -415,12 +387,14 @@ bool AppInit2(int argc, char* argv[])
     }
     if (pindexBest != pindexRescan)
     {
+        InitMessage(_("Rescanning..."));
         printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
         pwalletMain->ScanForWalletTransactions(pindexRescan, true);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
     }
 
+    InitMessage(_("Done loading"));
     printf("Done loading\n");
 
         //// debug print
@@ -530,30 +504,20 @@ bool AppInit2(int argc, char* argv[])
     }
 
     //
-    // Create the main window and start the node
+    // Start the node
     //
-#ifdef GUI
-    if (!fDaemon)
-        CreateMainWindow();
-#endif
-
     if (!CheckDiskSpace())
         return false;
 
     RandAddSeedPerfmon();
 
     if (!CreateThread(StartNode, NULL))
-        wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
+        wxMessageBox(_("Error: CreateThread(StartNode) failed"), "Bitcoin");
 
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
 
-#if defined(__WXMSW__) && defined(GUI)
-    if (fFirstRun)
-        SetStartOnSystemStartup(true);
-#endif
-
-#ifndef GUI
+#if !defined(QT_GUI)
     while (1)
         Sleep(5000);
 #endif

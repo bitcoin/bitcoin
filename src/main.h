@@ -85,6 +85,7 @@ class CTxIndex;
 
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
+bool ProcessBlock(CNode* pfrom, CBlock* pblock);
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");
 FILE* AppendBlockFile(unsigned int& nFileRet);
@@ -99,6 +100,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 int GetTotalBlocksEstimate();
+int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
 
@@ -399,6 +401,9 @@ public:
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
 
+    // Denial-of-service detection:
+    mutable int nDoS;
+    bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
 
     CTransaction()
     {
@@ -420,6 +425,7 @@ public:
         vin.clear();
         vout.clear();
         nLockTime = 0;
+        nDoS = 0;  // Denial-of-service prevention
     }
 
     bool IsNull() const
@@ -786,6 +792,9 @@ public:
     // memory only
     mutable std::vector<uint256> vMerkleTree;
 
+    // Denial-of-service detection:
+    mutable int nDoS;
+    bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
 
     CBlock()
     {
@@ -819,6 +828,7 @@ public:
         nNonce = 0;
         vtx.clear();
         vMerkleTree.clear();
+        nDoS = 0;
     }
 
     bool IsNull() const
@@ -917,7 +927,7 @@ public:
         fflush(fileout);
         if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
         {
-#ifdef __WXMSW__
+#ifdef WIN32
             _commit(_fileno(fileout));
 #else
             fsync(fileno(fileout));

@@ -1205,6 +1205,7 @@ bool static ExtractAddressInner(const CScript& scriptPubKey, const CKeyStore* ke
         if (keystore == NULL || keystore->HaveKey(addressRet))
             return true;
     }
+
     return false;
 }
 

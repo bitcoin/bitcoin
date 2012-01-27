@@ -67,4 +67,8 @@ inline void MainFrameRepaint()
 {
 }
 
+inline void InitMessage(const std::string &message)
+{
+}
+
 #endif

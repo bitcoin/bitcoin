@@ -7,7 +7,7 @@
 
 #include "uint256.h"
 
-#ifndef __WXMSW__
+#ifndef WIN32
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -65,7 +65,7 @@ typedef unsigned long long  uint64;
 #endif
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
-#define PAIRTYPE(t1, t2)    pair<t1, t2>
+#define PAIRTYPE(t1, t2)    std::pair<t1, t2>
 
 // Align by increasing pointer, must have extra space at end of buffer
 template <size_t nBytes, typename T>
@@ -81,7 +81,7 @@ T* alignup(T* p)
     return u.ptr;
 }
 
-#ifdef __WXMSW__
+#ifdef WIN32
 #define MSG_NOSIGNAL        0
 #define MSG_DONTWAIT        0
 #ifndef UINT64_MAX
@@ -123,7 +123,7 @@ inline int myclosesocket(SOCKET& hSocket)
 {
     if (hSocket == INVALID_SOCKET)
         return WSAENOTSOCK;
-#ifdef __WXMSW__
+#ifdef WIN32
     int ret = closesocket(hSocket);
 #else
     int ret = close(hSocket);
@@ -132,14 +132,12 @@ inline int myclosesocket(SOCKET& hSocket)
     return ret;
 }
 #define closesocket(s)      myclosesocket(s)
-
-#ifndef GUI
+#if !defined(QT_GUI)
 inline const char* _(const char* psz)
 {
     return psz;
 }
 #endif
-
 
 
 
@@ -169,8 +167,8 @@ void RandAddSeed();
 void RandAddSeedPerfmon();
 int OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
-std::string strprintf(const char* format, ...);
-bool error(const char* format, ...);
+std::string strprintf(const std::string &format, ...);
+bool error(const std::string &format, ...);
 void LogException(std::exception* pex, const char* pszThread);
 void PrintException(std::exception* pex, const char* pszThread);
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
@@ -180,6 +178,10 @@ bool ParseMoney(const std::string& str, int64& nRet);
 bool ParseMoney(const char* pszIn, int64& nRet);
 std::vector<unsigned char> ParseHex(const char* psz);
 std::vector<unsigned char> ParseHex(const std::string& str);
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
+std::string DecodeBase64(const std::string& str);
+std::string EncodeBase64(const unsigned char* pch, size_t len);
+std::string EncodeBase64(const std::string& str);
 void ParseParameters(int argc, char* argv[]);
 const char* wxGetTranslation(const char* psz);
 bool WildcardMatch(const char* psz, const char* mask);
@@ -190,7 +192,7 @@ std::string GetConfigFile();
 std::string GetPidFile();
 void CreatePidFile(std::string pidFile, pid_t pid);
 void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
-#ifdef __WXMSW__
+#ifdef WIN32
 std::string MyGetSpecialFolderPath(int nFolder, bool fCreate);
 #endif
 std::string GetDefaultDataDir();
@@ -199,6 +201,7 @@ void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
 int64 GetTime();
+void SetMockTime(int64 nMockTimeIn);
 int64 GetAdjustedTime();
 void AddTimeData(unsigned int ip, int64 nTime);
 std::string FormatFullVersion();
@@ -387,7 +390,7 @@ inline void PrintHex(const std::vector<unsigned char>& vch, const char* pszForma
 inline int64 GetPerformanceCounter()
 {
     int64 nCounter = 0;
-#ifdef __WXMSW__
+#ifdef WIN32
     QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
 #else
     timeval t;
@@ -421,7 +424,7 @@ void skipspaces(T& it)
 
 inline bool IsSwitchChar(char c)
 {
-#ifdef __WXMSW__
+#ifdef WIN32
     return c == '-' || c == '/';
 #else
     return c == '-';
@@ -464,7 +467,7 @@ inline bool GetBoolArg(const std::string& strArg)
 
 inline void heapchk()
 {
-#ifdef __WXMSW__
+#ifdef WIN32
     /// for debugging
     //if (_heapchk() != _HEAPOK)
     //    DebugBreak();
@@ -567,6 +570,51 @@ inline uint160 Hash160(const std::vector<unsigned char>& vch)
 }
 
 
+// Median filter over a stream of values
+// Returns the median of the last N numbers
+template <typename T> class CMedianFilter
+{
+private:
+    std::vector<T> vValues;
+    std::vector<T> vSorted;
+    int nSize;
+public:
+    CMedianFilter(int size, T initial_value):
+        nSize(size)
+    {
+        vValues.reserve(size);
+        vValues.push_back(initial_value);
+        vSorted = vValues;
+    }
+    
+    void input(T value)
+    {
+        if(vValues.size() == nSize)
+        {
+            vValues.erase(vValues.begin());
+        }
+        vValues.push_back(value);
+
+        vSorted.resize(vValues.size());
+        std::copy(vValues.begin(), vValues.end(), vSorted.begin());
+        std::sort(vSorted.begin(), vSorted.end());
+    }
+
+    T median() const
+    {
+        int size = vSorted.size();
+        assert(size>0);
+        if(size & 1) // Odd number of elements
+        {
+            return vSorted[size/2];
+        }
+        else // Even number of elements
+        {
+            return (vSorted[size/2-1] + vSorted[size/2]) / 2;
+        }
+    }
+};
+
 
 
 
@@ -578,7 +626,7 @@ inline uint160 Hash160(const std::vector<unsigned char>& vch)
 
 // Note: It turns out we might have been able to use boost::thread
 // by using TerminateThread(boost::thread.native_handle(), 0);
-#ifdef __WXMSW__
+#ifdef WIN32
 typedef HANDLE pthread_t;
 
 inline pthread_t CreateThread(void(*pfn)(void*), void* parg, bool fWantHandle=false)
@@ -660,10 +708,10 @@ inline void ExitThread(size_t nExitCode)
 
 inline bool AffinityBugWorkaround(void(*pfn)(void*))
 {
-#ifdef __WXMSW__
+#ifdef WIN32
     // Sometimes after a few hours affinity gets stuck on one processor
-    DWORD dwProcessAffinityMask = -1;
-    DWORD dwSystemAffinityMask = -1;
+    DWORD_PTR dwProcessAffinityMask = -1;
+    DWORD_PTR dwSystemAffinityMask = -1;
     GetProcessAffinityMask(GetCurrentProcess(), &dwProcessAffinityMask, &dwSystemAffinityMask);
     DWORD dwPrev1 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
     DWORD dwPrev2 = SetThreadAffinityMask(GetCurrentThread(), dwProcessAffinityMask);
@@ -676,6 +724,12 @@ inline bool AffinityBugWorkaround(void(*pfn)(void*))
     }
 #endif
     return false;
+}
+
+inline uint32_t ByteReverse(uint32_t value)
+{
+	value = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
+	return (value<<16) | (value>>16);
 }
 
 #endif
