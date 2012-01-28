@@ -1,6 +1,12 @@
 #include <string>
 #include <vector>
 
+#include <QClipboard>
+#include <QInputDialog>
+#include <QList>
+#include <QListWidgetItem>
+#include <QMessageBox>
+
 #include "main.h"
 #include "wallet.h"
 #include "init.h"
@@ -12,12 +18,6 @@
 #include "addressbookpage.h"
 #include "guiutil.h"
 #include "walletmodel.h"
-
-#include <QClipboard>
-#include <QInputDialog>
-#include <QList>
-#include <QListWidgetItem>
-#include <QMessageBox>
 
 MessagePage::MessagePage(QWidget *parent) :
     QDialog(parent),
