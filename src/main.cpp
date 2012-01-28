@@ -2845,14 +2845,30 @@ bool CBlockStore::EmitTransaction(CTransaction& transaction)
 
 const CBlockIndex* CBlockStore::GetBestBlockIndex() const
 {
-    LOCK(cs_main);
+    // TODO: This should have a cs_main lock around it,
+    // however such a lock causes noticeable lag in the UI and is thus missing.
+    // This should not be a problem as setting a pointer is an atomic operation on most machines,
+    // and it is unlikely that gcc will reorder functions which set pindexBest,
+    // however it is not guaranteed and should be further researched.
+    // see: http://stackoverflow.com/questions/879077/is-changing-a-pointer-considered-an-atomic-action-in-c
     return pindexBest;
 }
 
 const CBlockIndex* CBlockStore::GetGenesisBlockIndex() const
 {
-    LOCK(cs_main);
     return pindexGenesisBlock;
+}
+
+const CBlockIndex* CBlockStore::GetBlockIndex(const uint256 nBlockHash)
+{
+    // TODO: This should also have a cs_main lock, however this is not the only place
+    // This exact code doesn't get such a lock, see, for example, src/qt/transactionrecord.cpp:191
+    // which calls CMerkleTx::GetDepthInMainChain() without a cs_main lock
+    // Also note that this code was usually not locked pre-CBlockStore
+    std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(nBlockHash);
+    if (mi != mapBlockIndex.end())
+        return (*mi).second;
+    return NULL;
 }
 
 void CBlockStore::RelayAlerts(CNode* pnode)
@@ -2861,13 +2877,3 @@ void CBlockStore::RelayAlerts(CNode* pnode)
     BOOST_FOREACH(PAIRTYPE(const uint256, CAlert*)& item, mapAlerts)
         item.second->RelayTo(pnode);
 }
-
-const CBlockIndex* CBlockStore::GetBlockIndex(const uint256 nBlockHash)
-{
-    LOCK(cs_main);
-    std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(nBlockHash);
-    if (mi != mapBlockIndex.end())
-        return (*mi).second;
-    return NULL;
-}
-
