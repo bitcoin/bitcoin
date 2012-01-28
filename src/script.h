@@ -30,6 +30,7 @@ enum txnouttype
     // 'standard' transaction types:
     TX_PUBKEY,
     TX_PUBKEYHASH,
+    TX_SCRIPTHASH,
     TX_MULTISIG,
 };
 
@@ -159,7 +160,7 @@ enum opcodetype
 
     // expansion
     OP_NOP1,
-    OP_NOP2,
+    OP_CHECKHASHVERIFY,  // "crypto"
     OP_NOP3,
     OP_NOP4,
     OP_NOP5,
@@ -174,6 +175,7 @@ enum opcodetype
     // template matching params
     OP_SMALLINTEGER = 0xfa,
     OP_PUBKEYS = 0xfb,
+    OP_SCRIPTHASH = 0xfc,
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 
@@ -551,13 +553,14 @@ public:
 
 
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType, bool fValidatePayToScriptHash, std::vector<unsigned char> &vchLastScript);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 bool IsStandard(const CScript& scriptPubKey);
+bool IsStandardInput(const CScript& scriptSig);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet);
 bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CBitcoinAddress>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType);
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType);
 
 #endif

@@ -77,6 +77,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_NONSTANDARD: return "nonstandard";
     case TX_PUBKEY: return "pubkey";
     case TX_PUBKEYHASH: return "pubkeyhash";
+    case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     }
     return NULL;
@@ -204,7 +205,7 @@ const char* GetOpName(opcodetype opcode)
 
     // expanson
     case OP_NOP1                   : return "OP_NOP1";
-    case OP_NOP2                   : return "OP_NOP2";
+    case OP_CHECKHASHVERIFY        : return "OP_CHECKHASHVERIFY";
     case OP_NOP3                   : return "OP_NOP3";
     case OP_NOP4                   : return "OP_NOP4";
     case OP_NOP5                   : return "OP_NOP5";
@@ -217,6 +218,7 @@ const char* GetOpName(opcodetype opcode)
 
 
     // template matching params
+    case OP_SCRIPTHASH             : return "OP_SCRIPTHASH";
     case OP_PUBKEYHASH             : return "OP_PUBKEYHASH";
     case OP_PUBKEY                 : return "OP_PUBKEY";
 
@@ -226,7 +228,7 @@ const char* GetOpName(opcodetype opcode)
     }
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType)
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, int nHashType, bool fValidatePayToScriptHash, std::vector<unsigned char> &vchLastScript)
 {
     CAutoBN_CTX pctx;
     CScript::const_iterator pc = script.begin();
@@ -311,7 +313,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 // Control
                 //
                 case OP_NOP:
-                case OP_NOP1: case OP_NOP2: case OP_NOP3: case OP_NOP4: case OP_NOP5:
+                case OP_NOP1: case OP_NOP3: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 break;
 
@@ -927,6 +929,36 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 }
                 break;
 
+                case OP_CHECKHASHVERIFY:
+                {
+                    // This was OP_NOP2 in old scripts
+                    if (!fValidatePayToScriptHash)
+                        break;
+
+                    if (stack.size() < 1)
+                        return false;
+
+                    // The only stack item here is what we expect the code to hash to
+                    valtype& vchHashCheck = stacktop(-1);
+
+                    // This hashes the code with RIPEMD160(SHA256(vchLastScript))
+                    valtype vchHash(20);
+                    {
+                        uint160 hash160 = Hash160(vchLastScript);
+                        memcpy(&vchHash[0], &hash160, sizeof(hash160));
+                    }
+
+                    bool fEqual = (vchHash == vchHashCheck);
+
+                    // Don't pop anything off the stack, for backward compatibility
+
+                    if (!fEqual)
+                        // If the hash doesn't match, abort
+                        return false;
+                    // If the hash matches, we're good: act like OP_NOP2 for compatibility
+                }
+                break;
+
                 case OP_CHECKMULTISIG:
                 case OP_CHECKMULTISIGVERIFY:
                 {
@@ -1008,6 +1040,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
             if (stack.size() + altstack.size() > 1000)
                 return false;
         }
+
+        // Save the last code segment (from the last executed OP_CODESEPARATOR onward)
+        vchLastScript = std::vector<unsigned char>(pbegincodehash, pend);
     }
     catch (...)
     {
@@ -1136,6 +1171,9 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // Push-to-script-hash txn, sender provides hash of verification script, receiver provides script
+        mTemplates.insert(make_pair(TX_SCRIPTHASH, CScript() << OP_SCRIPTHASH << OP_CHECKHASHVERIFY << OP_DROP));
     }
 
     // Scan templates
@@ -1209,6 +1247,12 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 }
                 else
                     break;
+            }
+            else if (opcode2 == OP_SCRIPTHASH)
+            {
+                if (vch1.size() != sizeof(uint160))
+                    break;
+                vSolutionsRet.push_back(vch1);
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
@@ -1319,6 +1363,37 @@ bool IsStandard(const CScript& scriptPubKey)
     return whichType != TX_NONSTANDARD;
 }
 
+bool IsStandardInput(const CScript& scriptSig)
+{
+    CScript::const_iterator pc = scriptSig.begin();
+    CScript::const_iterator pend = scriptSig.end();
+    CScript::const_iterator pcodesep = pend;
+    CScript::const_iterator pafter;
+    opcodetype opcode;
+
+    for ( ; pc < pend; pc = pafter)
+    {
+        pafter = pc;
+        if (!scriptSig.GetOp(pafter, opcode))
+            return false;
+        if (opcode == OP_CODESEPARATOR)
+        {
+            pcodesep = pc;
+            break;
+        }
+    }
+
+    CScript scriptSigData(scriptSig.begin(), pcodesep);
+    if (!scriptSigData.IsPushOnly())
+        return false;
+
+    if (pcodesep == pend)
+        return true;
+
+    CScript scriptSigCode(pafter, pend);
+    return IsStandard(scriptSigCode);
+}
+
 
 int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
@@ -1420,12 +1495,13 @@ bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, vector<C
 }
 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                  int nHashType)
+                  bool fValidatePayToScriptHash, int nHashType)
 {
     vector<vector<unsigned char> > stack;
-    if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType))
+    std::vector<unsigned char> vchLastScript;
+    if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType, fValidatePayToScriptHash, vchLastScript))
         return false;
-    if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType))
+    if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType, fValidatePayToScriptHash, vchLastScript))
         return false;
     if (stack.empty())
         return false;
@@ -1449,14 +1525,14 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTrans
         return false;
 
     // Test solution
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, 0))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, true, 0))
         return false;
 
     return true;
 }
 
 
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType)
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType)
 {
     assert(nIn < txTo.vin.size());
     const CTxIn& txin = txTo.vin[nIn];
@@ -1467,7 +1543,7 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
 
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nHashType))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, nHashType))
         return false;
 
     return true;

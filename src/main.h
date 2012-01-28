@@ -49,7 +49,10 @@ static const int fHaveUPnP = false;
 #endif
 
 
-static const CScript COINBASE_FLAGS = CScript();
+// Put "p2sh/CHV" in the coinbase to express support for the new "Pay to Script Hash"
+// transaction type:
+static const char* pszP2SH = "p2sh/CHV";
+static const CScript COINBASE_FLAGS = CScript() << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
 
 
 

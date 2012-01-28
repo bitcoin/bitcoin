@@ -258,7 +258,7 @@ bool CTransaction::IsStandard() const
         // ~65-byte public keys, plus a few script ops.
         if (txin.scriptSig.size() > 500)
             return false;
-        if (!txin.scriptSig.IsPushOnly())
+        if (!::IsStandardInput(txin.scriptSig))
             return false;
     }
     BOOST_FOREACH(const CTxOut& txout, vout)
@@ -1063,13 +1063,27 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
                 return DoS(100, error("ConnectInputs() : txin values out of range"));
 
+            bool fStrictPayToScriptHash = true;
+            if (fBlock)
+            {
+                // To avoid being on the short end of a block-chain split,
+                // don't do validation of pay-to-script-hash transactions
+                // until blocks with timestamps after p2shtime:
+                int64 nP2SHSwitchTime = GetArg("-p2shtime", 1329955200); // Feb 23, 2012 @ 00:00:00 UTC
+                fStrictPayToScriptHash = (pindexBlock->nTime >= nP2SHSwitchTime);
+            }
+            // if !fBlock, then always be strict-- don't accept
+            // invalid-under-new-rules pay-to-script-hash transactions into
+            // our memory pool (don't relay them, don't include them
+            // in blocks we mine).
+
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
             // still computed and checked, and any change will be caught at the next checkpoint.
             if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
             {
                 // Verify signature
-                if (!VerifySignature(txPrev, *this, i, 0))
+                if (!VerifySignature(txPrev, *this, i, fStrictPayToScriptHash, 0))
                     return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
             }
 
@@ -1120,7 +1134,7 @@ bool CTransaction::ClientConnectInputs()
                 return false;
 
             // Verify signature
-            if (!VerifySignature(txPrev, *this, i, 0))
+            if (!VerifySignature(txPrev, *this, i, true, 0))
                 return error("ConnectInputs() : VerifySignature failed");
 
             ///// this is redundant with the mapNextTx stuff, not sure which I want to get rid of
