@@ -307,6 +307,18 @@ public:
             return false;
         return true;
     }
+
+    bool IsValid()
+    {
+        if (!fSet)
+            return false;
+
+        bool fCompr;
+        CSecret secret = GetSecret(fCompr);
+        CKey key2;
+        key2.SetSecret(secret, fCompr);
+        return GetPubKey() == key2.GetPubKey();
+    }
 };
 
 #endif
