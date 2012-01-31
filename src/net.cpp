@@ -967,11 +967,11 @@ void ThreadMapPort2(void* parg)
     {
         string strDesc = "Bitcoin " + FormatFullVersion();
 #ifndef UPNPDISCOVER_SUCCESS
-    /* miniupnpc 1.5 */
+        /* miniupnpc 1.5 */
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
                             port, port, lanaddr, strDesc.c_str(), "TCP", 0);
 #else
-    /* miniupnpc 1.6 */
+        /* miniupnpc 1.6 */
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
                             port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
 #endif
@@ -981,6 +981,7 @@ void ThreadMapPort2(void* parg)
                 port, port, lanaddr, r, strupnperror(r));
         else
             printf("UPnP Port Mapping successful.\n");
+        int i = 1;
         loop {
             if (fShutdown || !fUseUPnP)
             {
@@ -990,7 +991,26 @@ void ThreadMapPort2(void* parg)
                 FreeUPNPUrls(&urls);
                 return;
             }
+            if (i % 600 == 0) // Refresh every 20 minutes
+            {
+#ifndef UPNPDISCOVER_SUCCESS
+                /* miniupnpc 1.5 */
+                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+                                    port, port, lanaddr, strDesc.c_str(), "TCP", 0);
+#else
+                /* miniupnpc 1.6 */
+                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+                                    port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
+#endif
+
+                if(r!=UPNPCOMMAND_SUCCESS)
+                    printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
+                        port, port, lanaddr, r, strupnperror(r));
+                else
+                    printf("UPnP Port Mapping successful.\n");;
+            }
             Sleep(2000);
+            i++;
         }
     } else {
         printf("No valid UPnP IGDs found\n");
