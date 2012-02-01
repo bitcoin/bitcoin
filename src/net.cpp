@@ -141,7 +141,7 @@ bool GetMyExternalIP(CNetAddr& ipRet)
     const char* pszGet;
     const char* pszKeyword;
 
-    if (fUseProxy)
+    if (fNoListen||fUseProxy)
         return false;
 
     for (int nLookup = 0; nLookup <= 1; nLookup++)
