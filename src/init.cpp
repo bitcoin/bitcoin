@@ -516,16 +516,11 @@ bool AppInit2(int argc, char* argv[])
     fAllowDNS = GetBoolArg("-dns");
     fNoListen = GetBoolArg("-nolisten");
 
-    if (fHaveUPnP)
-    {
-#if USE_UPNP
-    if (GetBoolArg("-noupnp"))
-        fUseUPnP = false;
-#else
-    if (GetBoolArg("-upnp"))
-        fUseUPnP = true;
-#endif
-    }
+    // Command-line args override in-wallet settings:
+    if (mapArgs.count("-upnp"))
+        fUseUPnP = GetBoolArg("-upnp");
+    else if (mapArgs.count("-noupnp"))
+        fUseUPnP = !GetBoolArg("-noupnp");
 
     if (!fNoListen)
     {
