@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_SUITE(script_P2SH_tests)
 BOOST_AUTO_TEST_CASE(sign)
 {
     // Pay-to-script-hash looks like this:
-    // scriptSig:    <sig> <sig...> <serialized_script>
-    // scriptPubKey: HASH160 <hash> EQUAL
+    // scriptSig:    <sig> <sig...> OP_CODESEPARATOR <script>
+    // scriptPubKey: <hash> CHECKHASHVERIFY DROP
 
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
     CBasicKeyStore keystore;
@@ -114,32 +114,6 @@ BOOST_AUTO_TEST_CASE(sign)
         }
 }
 
-BOOST_AUTO_TEST_CASE(norecurse)
-{
-    // Make sure only the outer pay-to-script-hash does the
-    // extra-validation thing:
-    CScript invalidAsScript;
-    invalidAsScript << OP_INVALIDOPCODE << OP_INVALIDOPCODE;
-
-    CScript p2sh;
-    p2sh.SetPayToScriptHash(invalidAsScript);
-
-    CScript scriptSig;
-    scriptSig << Serialize(invalidAsScript);
-
-    // Should not verify, because it will try to execute OP_INVALIDOPCODE
-    BOOST_CHECK(!Verify(scriptSig, p2sh, true));
-
-    // Try to recurse, and verification should succeed because
-    // the inner HASH160 <> EQUAL should only check the hash:
-    CScript p2sh2;
-    p2sh2.SetPayToScriptHash(p2sh);
-    CScript scriptSig2;
-    scriptSig2 << Serialize(invalidAsScript) << Serialize(p2sh);
-
-    BOOST_CHECK(Verify(scriptSig2, p2sh2, true));
-}
-
 BOOST_AUTO_TEST_CASE(set)
 {
     // Test the CScript::Set* methods
@@ -192,44 +166,25 @@ BOOST_AUTO_TEST_CASE(set)
     }
 }
 
-BOOST_AUTO_TEST_CASE(is)
+BOOST_AUTO_TEST_CASE(solver)
 {
-    // Test CScript::IsPayToScriptHash()
+    // Test CScript::Solver
     uint160 dummy;
     CScript p2sh;
-    p2sh << OP_HASH160 << dummy << OP_EQUAL;
-    BOOST_CHECK(p2sh.IsPayToScriptHash());
-
-    // Not considered pay-to-script-hash if using one of the OP_PUSHDATA opcodes:
-    static const unsigned char direct[] =    { OP_HASH160, 20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, OP_EQUAL };
-    BOOST_CHECK(CScript(direct, direct+sizeof(direct)).IsPayToScriptHash());
-    static const unsigned char pushdata1[] = { OP_HASH160, OP_PUSHDATA1, 20, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, OP_EQUAL };
-    BOOST_CHECK(!CScript(pushdata1, pushdata1+sizeof(pushdata1)).IsPayToScriptHash());
-    static const unsigned char pushdata2[] = { OP_HASH160, OP_PUSHDATA2, 20,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, OP_EQUAL };
-    BOOST_CHECK(!CScript(pushdata2, pushdata2+sizeof(pushdata2)).IsPayToScriptHash());
-    static const unsigned char pushdata4[] = { OP_HASH160, OP_PUSHDATA4, 20,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, OP_EQUAL };
-    BOOST_CHECK(!CScript(pushdata4, pushdata4+sizeof(pushdata4)).IsPayToScriptHash());
-
-    CScript not_p2sh;
-    BOOST_CHECK(!not_p2sh.IsPayToScriptHash());
-
-    not_p2sh.clear(); not_p2sh << OP_HASH160 << dummy << dummy << OP_EQUAL;
-    BOOST_CHECK(!not_p2sh.IsPayToScriptHash());
-
-    not_p2sh.clear(); not_p2sh << OP_NOP << dummy << OP_EQUAL;
-    BOOST_CHECK(!not_p2sh.IsPayToScriptHash());
-
-    not_p2sh.clear(); not_p2sh << OP_HASH160 << dummy << OP_CHECKSIG;
-    BOOST_CHECK(!not_p2sh.IsPayToScriptHash());
+    txnouttype type;
+    std::vector<std::vector<unsigned char> > vSolutions;
+    p2sh << dummy << OP_CHECKHASHVERIFY << OP_DROP;
+    BOOST_CHECK(Solver(p2sh, type, vSolutions));
+    BOOST_CHECK(type == TX_SCRIPTHASH);
 }
 
 BOOST_AUTO_TEST_CASE(switchover)
 {
     // Test switchover code
     CScript notValid;
-    notValid << OP_11 << OP_12 << OP_EQUALVERIFY;
+    notValid << OP_2;
     CScript scriptSig;
-    scriptSig << Serialize(notValid);
+    scriptSig << OP_CODESEPARATOR << OP_1;
 
     CScript fund;
     fund.SetPayToScriptHash(notValid);
@@ -255,7 +210,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     }
 
     CTransaction txFrom;
-    txFrom.vout.resize(6);
+    txFrom.vout.resize(5);
 
     // First three are standard:
     CScript pay1; pay1.SetBitcoinAddress(key[0].GetPubKey());
@@ -267,18 +222,12 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout[1].scriptPubKey = pay1;
     txFrom.vout[2].scriptPubKey = pay1of3;
 
-    // Last three non-standard:
+    // Last two non-standard:
     CScript empty;
     keystore.AddCScript(empty);
     txFrom.vout[3].scriptPubKey = empty;
-    // Can't use SetPayToScriptHash, it checks for the empty Script. So:
-    txFrom.vout[4].scriptPubKey << OP_HASH160 << Hash160(empty) << OP_EQUAL;
-    CScript oneOfEleven;
-    oneOfEleven << OP_1;
-    for (int i = 0; i < 11; i++)
-        oneOfEleven << key[0].GetPubKey();
-    oneOfEleven << OP_11 << OP_CHECKMULTISIG;
-    txFrom.vout[5].scriptPubKey.SetPayToScriptHash(oneOfEleven);
+    // This is missing DROP:
+    txFrom.vout[4].scriptPubKey << Hash160(empty) << OP_CHECKHASHVERIFY;
 
     mapInputs[txFrom.GetHash()] = make_pair(CTxIndex(), txFrom);
 
@@ -298,21 +247,16 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 2));
 
     BOOST_CHECK(txTo.AreInputsStandard(mapInputs));
-    BOOST_CHECK_EQUAL(txTo.GetP2SHSigOpCount(mapInputs), 1);
 
     CTransaction txToNonStd;
     txToNonStd.vout.resize(1);
     txToNonStd.vout[0].scriptPubKey.SetBitcoinAddress(key[1].GetPubKey());
-    txToNonStd.vin.resize(2);
+    txToNonStd.vin.resize(1);
     txToNonStd.vin[0].prevout.n = 4;
     txToNonStd.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd.vin[0].scriptSig << Serialize(empty);
-    txToNonStd.vin[1].prevout.n = 5;
-    txToNonStd.vin[1].prevout.hash = txFrom.GetHash();
-    txToNonStd.vin[1].scriptSig << OP_0 << Serialize(oneOfEleven);
 
     BOOST_CHECK(!txToNonStd.AreInputsStandard(mapInputs));
-    BOOST_CHECK_EQUAL(txToNonStd.GetP2SHSigOpCount(mapInputs), 11);
 
     txToNonStd.vin[0].scriptSig.clear();
     BOOST_CHECK(!txToNonStd.AreInputsStandard(mapInputs));
