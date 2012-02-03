@@ -54,6 +54,8 @@ private:
 
     QStackedWidget *centralWidget;
 
+    QWidget *dummyWidget;
+
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     AddressBookPage *addressBookPage;
@@ -106,6 +108,8 @@ public slots:
        http://bugreports.qt.nokia.com/browse/QTBUG-10440
     */
     void askFee(qint64 nFeeRequired, bool *payFee);
+
+    void showNormal();
 
 private slots:
     // UI pages
