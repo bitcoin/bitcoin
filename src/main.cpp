@@ -418,10 +418,11 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         // Check against previous transactions
         map<uint256, CTxIndex> mapUnused;
         int64 nFees = 0;
-        if (!ConnectInputs(txdb, mapUnused, CDiskTxPos(1,1,1), pindexBest, nFees, false, false))
+        bool fInvalid = false;
+        if (!ConnectInputs(txdb, mapUnused, CDiskTxPos(1,1,1), pindexBest, nFees, false, false, 0, fInvalid))
         {
-            if (pfMissingInputs)
-                *pfMissingInputs = true;
+            if (fInvalid)
+                return error("AcceptToMemoryPool() : FetchInputs found invalid tx %s", hash.ToString().substr(0,10).c_str());
             return error("AcceptToMemoryPool() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
         }
 
@@ -668,6 +669,11 @@ static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 //
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 {
+    // Testnet has min-difficulty blocks
+    // after nTargetSpacing*2 time between blocks:
+    if (fTestNet && nTime > nTargetSpacing*2)
+        return bnProofOfWorkLimit.GetCompact();
+
     CBigNum bnResult;
     bnResult.SetCompact(nBase);
     while (nTime > 0 && bnResult < bnProofOfWorkLimit)
@@ -682,16 +688,36 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     return bnResult.GetCompact();
 }
 
-unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast)
+unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlock *pblock)
 {
+    unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
 
     // Genesis block
     if (pindexLast == NULL)
-        return bnProofOfWorkLimit.GetCompact();
+        return nProofOfWorkLimit;
 
     // Only change once per interval
     if ((pindexLast->nHeight+1) % nInterval != 0)
+    {
+        // Special rules for testnet after 15 Feb 2012:
+        if (fTestNet && pblock->nTime > 1329264000)
+        {
+            // If the new block's timestamp is more than 2* 10 minutes
+            // then allow mining of a min-difficulty block.
+            if (pblock->nTime - pindexLast->nTime > nTargetSpacing*2)
+                return nProofOfWorkLimit;
+            else
+            {
+                // Return the last non-special-min-difficulty-rules-block
+                const CBlockIndex* pindex = pindexLast;
+                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
+                    pindex = pindex->pprev;
+                return pindex->nBits;
+            }
+        }
+
         return pindexLast->nBits;
+    }
 
     // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
@@ -821,8 +847,15 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb)
 
 
 bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPool, CDiskTxPos posThisTx,
-                                 CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee)
+                                 CBlockIndex* pindexBlock, int64& nFees, bool fBlock, bool fMiner, int64 nMinFee,
+                                 bool& fInvalid)
 {
+    // FetchInputs can return false either because we just haven't seen some inputs
+    // (in which case the transaction should be stored as an orphan)
+    // or because the transaction is malformed (in which case the transaction should
+    // be dropped).  If tx is definitely invalid, fInvalid will be set to true.
+    fInvalid = false;
+
     // Take over previous transactions' spent pointers
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
     // fMiner is true when called from the internal bitcoin miner
@@ -872,7 +905,12 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             }
 
             if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
+            {
+                // Revisit this if/when transaction replacement is implemented and allows
+                // adding inputs:
+                fInvalid = true;
                 return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
+            }
 
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
@@ -1022,7 +1060,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
         nTxPos += ::GetSerializeSize(tx, SER_DISK);
 
-        if (!tx.ConnectInputs(txdb, mapQueuedChanges, posThisTx, pindex, nFees, true, false))
+        bool fInvalid;
+        if (!tx.ConnectInputs(txdb, mapQueuedChanges, posThisTx, pindex, nFees, true, false, 0, fInvalid))
             return false;
     }
     // Write queued txindex changes
@@ -1311,7 +1350,7 @@ bool CBlock::AcceptBlock()
     int nHeight = pindexPrev->nHeight+1;
 
     // Check proof of work
-    if (nBits != GetNextWorkRequired(pindexPrev))
+    if (nBits != GetNextWorkRequired(pindexPrev, this))
         return DoS(100, error("AcceptBlock() : incorrect proof of work"));
 
     // Check timestamp against prev
@@ -2832,7 +2871,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // Connecting shouldn't fail due to dependency on other memory pool transactions
             // because we're already processing them in order of dependency
             map<uint256, CTxIndex> mapTestPoolTmp(mapTestPool);
-            if (!tx.ConnectInputs(txdb, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, nFees, false, true, nMinFee))
+            bool fInvalid;
+            if (!tx.ConnectInputs(txdb, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, nFees, false, true, nMinFee, fInvalid))
                 continue;
             swap(mapTestPool, mapTestPoolTmp);
 
@@ -2863,7 +2903,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
     pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-    pblock->nBits          = GetNextWorkRequired(pindexPrev);
+    pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock.get());
     pblock->nNonce         = 0;
 
     return pblock.release();
