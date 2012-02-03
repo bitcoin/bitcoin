@@ -1028,7 +1028,7 @@ string FormatVersion(int nVersion)
 
 string FormatFullVersion()
 {
-    string s = FormatVersion(CLIENT_VERSION);
+    string s = FormatVersion(CODEBASE_VERSION);
     if (VERSION_IS_BETA) {
         s += "-";
         s += _("beta");
@@ -1036,15 +1036,24 @@ string FormatFullVersion()
     return s;
 }
 
+std::ostream& operator<<(std::ostream& ss, const CVersionInfo& vi)
+{
+    ss << vi.strName << ":" << vi.strVersion;
+    if (!vi.vstrComments.empty())
+        ss << "(" << boost::algorithm::join(vi.vstrComments, "; ") << ")";
+    ss << "/";
+    return ss;
+}
+
 // Format the subversion field according to BIP 14 spec (https://en.bitcoin.it/wiki/BIP_0014)
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
+std::string FormatSubVersion(const std::vector<CVersionInfo>& versions)
 {
     std::ostringstream ss;
+    std::vector<CVersionInfo>::const_iterator it;
+
     ss << "/";
-    ss << name << ":" << FormatVersion(nClientVersion);
-    if (!comments.empty())
-        ss << "(" << boost::algorithm::join(comments, "; ") << ")";
-    ss << "/";
+    for (it = versions.begin(); it < versions.end(); ++it)
+        ss << *it;
     return ss.str();
 }
 

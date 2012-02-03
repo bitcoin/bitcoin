@@ -26,9 +26,11 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int CLIENT_VERSION = 59900;
+static const int CODEBASE_VERSION = 59900;
 static const bool VERSION_IS_BETA = true;
+extern const std::string CODEBASE_NAME;
 extern const std::string CLIENT_NAME;
+extern std::vector<CVersionInfo> vviClient;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
@@ -1597,7 +1599,7 @@ public:
 
     bool AppliesToMe() const
     {
-        return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<std::string>()));
+        return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(vviClient));
     }
 
     bool RelayTo(CNode* pnode) const

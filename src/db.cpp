@@ -131,7 +131,7 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
             {
                 bool fTmp = fReadOnly;
                 fReadOnly = false;
-                WriteVersion(CLIENT_VERSION);
+                WriteVersion(CODEBASE_VERSION);
                 fReadOnly = fTmp;
             }
 
@@ -236,7 +236,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                             {
                                 // Update version:
                                 ssValue.clear();
-                                ssValue << CLIENT_VERSION;
+                                ssValue << CODEBASE_VERSION;
                             }
                             Dbt datKey(&ssKey[0], ssKey.size());
                             Dbt datValue(&ssValue[0], ssValue.size());
@@ -937,7 +937,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 int nMinVersion = 0;
                 ssValue >> nMinVersion;
-                if (nMinVersion > CLIENT_VERSION)
+                if (nMinVersion > CODEBASE_VERSION)
                     return DB_TOO_NEW;
             }
             else if (strType == "cscript")
@@ -971,13 +971,13 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     if (fIsEncrypted && (nFileVersion == 40000 || nFileVersion == 50000))
         return DB_NEED_REWRITE;
 
-    if (nFileVersion < CLIENT_VERSION) // Update
+    if (nFileVersion < CODEBASE_VERSION) // Update
     {
         // Get rid of old debug.log file in current directory
         if (nFileVersion <= 105 && !pszSetDataDir[0])
             unlink("debug.log");
 
-        WriteVersion(CLIENT_VERSION);
+        WriteVersion(CODEBASE_VERSION);
     }
 
     return DB_LOAD_OK;

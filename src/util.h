@@ -12,6 +12,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
+#include <iostream>
 #include <map>
 #include <vector>
 #include <string>
@@ -163,8 +164,22 @@ uint64 GetRand(uint64 nMax);
 int64 GetTime();
 void SetMockTime(int64 nMockTimeIn);
 int64 GetAdjustedTime();
+std::string FormatVersion(int nVersion);
 std::string FormatFullVersion();
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
+
+class CVersionInfo
+{
+public:
+    std::string strName;
+    std::string strVersion;
+    std::vector<std::string> vstrComments;
+    CVersionInfo(const std::string& name, const std::string& version)
+      : strName(name), strVersion(version) { };
+    CVersionInfo(const std::string& name, const std::string& version, const std::vector<std::string>& comments)
+      : strName(name), strVersion(version), vstrComments(comments) { };
+};
+std::ostream& operator<<(std::ostream&, const CVersionInfo&);
+std::string FormatSubVersion(const std::vector<CVersionInfo>& versions);
 void AddTimeData(const CNetAddr& ip, int64 nTime);
 
 
