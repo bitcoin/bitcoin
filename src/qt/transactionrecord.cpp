@@ -47,49 +47,35 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Credit
             //
-            TransactionRecord sub(hash, nTime);
-
-            sub.credit = nNet;
-
-            if (wtx.IsCoinBase())
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             {
-                // Generated
-                sub.type = TransactionRecord::Generated;
-
-                if (nCredit == 0)
+                if(wallet->IsMine(txout))
                 {
-                    int64 nUnmatured = 0;
-                    BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                        nUnmatured += wallet->GetCredit(txout);
-                    sub.credit = nUnmatured;
-                }
-            }
-            else
-            {
-                bool foundAddress = false;
-                // Received by Bitcoin Address
-                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                {
-                    if(wallet->IsMine(txout))
+                    TransactionRecord sub(hash, nTime);
+                    CBitcoinAddress address;
+                    sub.idx = parts.size(); // sequence number
+                    sub.credit = txout.nValue;
+                    if (wtx.IsCoinBase())
                     {
-                        CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, wallet, address))
-                        {
-                            sub.type = TransactionRecord::RecvWithAddress;
-                            sub.address = address.ToString();
-                            foundAddress = true;
-                            break;
-                        }
+                        // Generated
+                        sub.type = TransactionRecord::Generated;
                     }
-                }
-                if(!foundAddress)
-                {
-                    // Received by IP connection, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::RecvFromOther;
-                    sub.address = mapValue["from"];
+                    else if (ExtractAddress(txout.scriptPubKey, wallet, address))
+                    {
+                        // Received by Bitcoin Address
+                        sub.type = TransactionRecord::RecvWithAddress;
+                        sub.address = address.ToString();
+                    }
+                    else
+                    {
+                        // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
+                        sub.type = TransactionRecord::RecvFromOther;
+                        sub.address = mapValue["from"];
+                    }
+
+                    parts.append(sub);
                 }
             }
-            parts.append(sub);
         }
         else
         {
