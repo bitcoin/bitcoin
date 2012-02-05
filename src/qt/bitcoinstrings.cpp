@@ -29,7 +29,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection receive buffer, <n>*10
 QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Don't attempt to use UPnP to map the listening port"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Attempt to use UPnP to map the listening port"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Fee per KB to add to transactions you send"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Fee per kB to add to transactions you send"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept command line and JSON-RPC commands"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Run in the background as a daemon and accept commands"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Use the test network"),
