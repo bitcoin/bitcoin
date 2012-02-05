@@ -36,12 +36,7 @@ git clone git@github.com:bitcoin/bitcoin.git bitcoin
 
 3.  Install dependencies from MacPorts
 
-sudo port install boost db48 openssl
-
-Install the right version of miniupnpc:
-pushd bitcoin/contrib/minipupnpc; sudo port install; popd
-(this will be unnecessary soon, you will just port install miniupnpc
-along with the rest of the dependencies).
+sudo port install boost db48 openssl miniupnpc
 
 Optionally install qrencode (and set USE_QRCODE=1):
 sudo port install qrencode

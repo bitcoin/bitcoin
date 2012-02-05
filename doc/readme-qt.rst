@@ -92,7 +92,7 @@ Mac OS X
 ::
 
 	sudo port selfupdate
-	sudo port install boost db48
+	sudo port install boost db48 miniupnpc
 
 - Open the .pro file in Qt Creator and build as normal (cmd-B)
 
@@ -126,14 +126,6 @@ Set USE_UPNP to a different value to control this:
 +------------+--------------------------------------------------------------------------+
 | USE_UPNP=1 | build with UPnP support turned on by default at runtime.                 |
 +------------+--------------------------------------------------------------------------+
-
-Mac OS X users: miniupnpc is currently outdated on MacPorts. An updated Portfile is provided in contrib/miniupnpc within this project.
-You can execute the following commands in a terminal to install it:
-
-::
-
-	cd <location of bitcoin-qt>/contrib/miniupnpc
-	sudo port install
 
 Notification support for recent (k)ubuntu versions
 ---------------------------------------------------
