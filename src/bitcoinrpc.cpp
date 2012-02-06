@@ -2368,18 +2368,25 @@ void ThreadRPCServer2(void* parg)
     printf("ThreadRPCServer started\n");
 
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
-    if (strRPCUserColonPass == ":")
+    if (mapArgs["-rpcpassword"] == "")
     {
+        unsigned char rand_pwd[32];
+        RAND_bytes(rand_pwd, 32);
         string strWhatAmI = "To use bitcoind";
         if (mapArgs.count("-server"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
         else if (mapArgs.count("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
         PrintConsole(
-            _("Error: %s, you must set rpcpassword=<password>\nin the configuration file: %s\n"
+            _("Error: %s, you must set a rpcpassword in the configuration file:\n %s\n"
+              "It is recommended you use the following random password:\n"
+              "rpcuser=bitcoinrpc\n"
+              "rpcpassword=%s\n"
+              "(you do not need to remember this password)\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"),
                 strWhatAmI.c_str(),
-                GetConfigFile().c_str());
+                GetConfigFile().c_str(),
+                EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str());
 #ifndef QT_GUI
         CreateThread(Shutdown, NULL);
 #endif
@@ -2468,12 +2475,14 @@ void ThreadRPCServer2(void* parg)
         }
         if (!HTTPAuthorized(mapHeaders))
         {
-            // Deter brute-forcing short passwords
-            if (mapArgs["-rpcpassword"].size() < 15)
-                Sleep(50);
+            printf("ThreadRPCServer incorrect password attempt from %s\n",peer.address().to_string().c_str());
+            /* Deter brute-forcing short passwords.
+               If this results in a DOS the user really
+               shouldn't have their RPC port exposed.*/
+            if (mapArgs["-rpcpassword"].size() < 20)
+                Sleep(250);
 
             stream << HTTPReply(401, "") << std::flush;
-            printf("ThreadRPCServer incorrect password attempt\n");
             continue;
         }
 
