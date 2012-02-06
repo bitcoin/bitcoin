@@ -3154,6 +3154,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
 }
 
 
+CScript COINBASE_FLAGS = CScript();
+
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
