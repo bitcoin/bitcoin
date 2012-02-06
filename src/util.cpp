@@ -454,7 +454,7 @@ vector<unsigned char> ParseHex(const string& str)
     return ParseHex(str.c_str());
 }
 
-void ParseParameters(int argc, char* argv[])
+void ParseParameters(int argc, const char*const argv[])
 {
     mapArgs.clear();
     mapMultiArgs.clear();
@@ -478,6 +478,31 @@ void ParseParameters(int argc, char* argv[])
         mapArgs[psz] = pszValue;
         mapMultiArgs[psz].push_back(pszValue);
     }
+}
+
+std::string GetArg(const std::string& strArg, const std::string& strDefault)
+{
+    if (mapArgs.count(strArg))
+        return mapArgs[strArg];
+    return strDefault;
+}
+
+int64 GetArg(const std::string& strArg, int64 nDefault)
+{
+    if (mapArgs.count(strArg))
+        return atoi64(mapArgs[strArg]);
+    return nDefault;
+}
+
+bool GetBoolArg(const std::string& strArg, bool fDefault)
+{
+    if (mapArgs.count(strArg))
+    {
+        if (mapArgs[strArg].empty())
+            return true;
+        return (atoi(mapArgs[strArg]) != 0);
+    }
+    return fDefault;
 }
 
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)
