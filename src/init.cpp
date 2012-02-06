@@ -194,18 +194,18 @@ bool AppInit2(int argc, char* argv[])
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
-            "  -noirc           \t  "   + _("Don't find peers using internet relay chat") + "\n" +
-            "  -nolisten        \t  "   + _("Don't accept connections from outside") + "\n" +
-            "  -nodnsseed       \t  "   + _("Don't bootstrap list of peers using DNS") + "\n" +
+            "  -irc             \t  "   + _("Find peers using internet relay chat (default: 0)") + "\n" +
+            "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
+            "  -dnsseed         \t  "   + _("Find peers using DNS lookup (default: 1)") + "\n" +
             "  -banscore=<n>    \t  "   + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
             "  -bantime=<n>     \t  "   + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
             "  -maxreceivebuffer=<n>\t  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 10000)") + "\n" +
             "  -maxsendbuffer=<n>\t  "   + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)") + "\n" +
 #ifdef USE_UPNP
 #if USE_UPNP
-            "  -noupnp          \t  "   + _("Don't attempt to use UPnP to map the listening port") + "\n" +
+            "  -upnp            \t  "   + _("Use Universal Plug and Play to map the listening port (default: 1)") + "\n" +
 #else
-            "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port") + "\n" +
+            "  -upnp            \t  "   + _("Use Universal Plug and Play to map the listening port (default: 0)") + "\n" +
 #endif
 #endif
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send") + "\n" +
@@ -476,16 +476,15 @@ bool AppInit2(int argc, char* argv[])
     {
         // Use SoftSetBoolArg here so user can override any of these if they wish.
         // Note: the GetBoolArg() calls for all of these must happen later.
-        SoftSetBoolArg("-nolisten", true);
-        SoftSetBoolArg("-noirc", true);
-        SoftSetBoolArg("-nodnsseed", true);
-        SoftSetBoolArg("-noupnp", true);
+        SoftSetBoolArg("-listen", false);
+        SoftSetBoolArg("-irc", false);
+        SoftSetBoolArg("-dnsseed", false);
         SoftSetBoolArg("-upnp", false);
         SoftSetBoolArg("-dns", false);
     }
 
     fAllowDNS = GetBoolArg("-dns");
-    fNoListen = GetBoolArg("-nolisten");
+    fNoListen = !GetBoolArg("-listen", true);
 
     // This code can be removed once a super-majority of the network has upgraded.
     if (GetBoolArg("-bip16", true))
@@ -507,10 +506,11 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Command-line args override in-wallet settings:
-    if (mapArgs.count("-upnp"))
-        fUseUPnP = GetBoolArg("-upnp");
-    else if (mapArgs.count("-noupnp"))
-        fUseUPnP = !GetBoolArg("-noupnp");
+#if USE_UPNP
+    fUseUPnP = GetBoolArg("-upnp", true);
+#else
+    fUseUPnP = GetBoolArg("-upnp", false);
+#endif
 
     if (!fNoListen)
     {
