@@ -293,18 +293,33 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
         const CScript& prevScript = prev.scriptPubKey;
         if (!Solver(prevScript, whichType, vSolutions))
             return false;
+        int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
+
+        // Transactions with extra stuff in their scriptSigs are
+        // non-standard. Note that this EvalScript() call will
+        // be quick, because if there are any operations
+        // beside "push data" in the scriptSig the
+        // IsStandard() call returns false
+        vector<vector<unsigned char> > stack;
+        if (!EvalScript(stack, vin[i].scriptSig, *this, i, 0))
+            return false;
+
         if (whichType == TX_SCRIPTHASH)
         {
-            vector<vector<unsigned char> > stack;
-
-            if (!EvalScript(stack, vin[i].scriptSig, *this, i, 0))
-                return false;
             if (stack.empty())
                 return false;
             CScript subscript(stack.back().begin(), stack.back().end());
-            if (!::IsStandard(subscript))
+            vector<vector<unsigned char> > vSolutions2;
+            txnouttype whichType2;
+            if (!Solver(subscript, whichType2, vSolutions2))
                 return false;
+            if (whichType2 == TX_SCRIPTHASH)
+                return false;
+            nArgsExpected += ScriptSigArgsExpected(whichType2, vSolutions2);
         }
+
+        if (stack.size() != nArgsExpected)
+            return false;
     }
 
     return true;
