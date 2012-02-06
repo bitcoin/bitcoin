@@ -990,7 +990,7 @@ void ThreadFlushWalletDB(void* parg)
     if (fOneThread)
         return;
     fOneThread = true;
-    if (mapArgs.count("-noflushwallet"))
+    if (!GetBoolArg("-flushwallet", true))
         return;
 
     unsigned int nLastSeen = nWalletDBUpdated;
