@@ -21,8 +21,8 @@ files:
 - "openssl-1.0.0e.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
-- "zlib-1.2.5.tar.gz"
-- "libpng-1.5.7.tar.gz"
+- "zlib-1.2.6.tar.gz"
+- "libpng-1.5.8.tar.gz"
 - "qrencode-3.2.0.tar.bz2"
 script: |
   #
@@ -65,20 +65,20 @@ script: |
   cd ..
   mv miniupnpc-1.6 miniupnpc
   #
-  tar xzf zlib-1.2.5.tar.gz
-  cd zlib-1.2.5
+  tar xzf zlib-1.2.6.tar.gz
+  cd zlib-1.2.6
   make -f win32/Makefile.gcc PREFIX=i586-mingw32msvc- $MAKEOPTS
   cd ..
   #
-  tar xzf libpng-1.5.7.tar.gz
-  cd libpng-1.5.7
-  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld LDFLAGS="-L../zlib-1.2.5/" CFLAGS="-I../zlib-1.2.5/"
+  tar xzf libpng-1.5.8.tar.gz
+  cd libpng-1.5.8
+  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld LDFLAGS="-L../zlib-1.2.6/" CFLAGS="-I../zlib-1.2.6/"
   make $MAKEOPTS
   cd ..
   #
   tar xjf qrencode-3.2.0.tar.bz2
   cd qrencode-3.2.0
-  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld png_LIBS="../libpng-1.5.7/.libs/libpng15.a ../zlib-1.2.5/libz.a" png_CFLAGS="-I../libpng-1.5.7"
+  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld png_LIBS="../libpng-1.5.8/.libs/libpng15.a ../zlib-1.2.6/libz.a" png_CFLAGS="-I../libpng-1.5.8"
   make $MAKEOPTS
   cd ..
   #
