@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, os, shutil, os.path
+import subprocess, sys, re, os, shutil, stat, os.path
 from time import sleep
 from argparse import ArgumentParser
 
@@ -256,7 +256,11 @@ def copyFramework(framework, path, verbose):
     if verbose >= 3:
         print "Copied:", fromPath
         print " to:", toPath
-    
+
+    permissions = os.stat(toPath)
+    if not permissions.st_mode & stat.S_IWRITE:
+      os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
+
     if not framework.isDylib(): # Copy resources for real frameworks
         fromResourcesDir = framework.sourceResourcesDirectory
         if os.path.exists(fromResourcesDir):
