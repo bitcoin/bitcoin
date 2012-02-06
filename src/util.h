@@ -442,7 +442,7 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  * @param fValue Value (e.g. false)
  * @return true if argument gets set, false if it already had a value
  */
-bool SoftSetArg(const std::string& strArg, bool fValue);
+bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 
 
