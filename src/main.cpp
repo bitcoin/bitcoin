@@ -52,6 +52,8 @@ multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
 map<uint256, CDataStream*> mapOrphanTransactions;
 multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
 
+// Constant stuff for coinbase transactions we create:
+CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
@@ -1213,8 +1215,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     // To avoid being on the short end of a block-chain split,
     // don't do secondary validation of pay-to-script-hash transactions
-    // until blocks with timestamps after paytoscripthashtime:
-    int64 nEvalSwitchTime = GetArg("-paytoscripthashtime", 1329264000); // Feb 15, 2012
+    // until blocks with timestamps after paytoscripthashtime (see init.cpp for default).
+    // This code can be removed once a super-majority of the network has upgraded.
+    int64 nEvalSwitchTime = GetArg("-paytoscripthashtime", std::numeric_limits<int64_t>::max());
     bool fStrictPayToScriptHash = (pindex->nTime >= nEvalSwitchTime);
 
     //// issue here: it doesn't know the version

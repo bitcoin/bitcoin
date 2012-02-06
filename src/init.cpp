@@ -474,18 +474,37 @@ bool AppInit2(int argc, char* argv[])
     bool fTor = (fUseProxy && addrProxy.GetPort() == 9050);
     if (fTor)
     {
-        // Use SoftSetArg here so user can override any of these if they wish.
+        // Use SoftSetBoolArg here so user can override any of these if they wish.
         // Note: the GetBoolArg() calls for all of these must happen later.
-        SoftSetArg("-nolisten", true);
-        SoftSetArg("-noirc", true);
-        SoftSetArg("-nodnsseed", true);
-        SoftSetArg("-noupnp", true);
-        SoftSetArg("-upnp", false);
-        SoftSetArg("-dns", false);
+        SoftSetBoolArg("-nolisten", true);
+        SoftSetBoolArg("-noirc", true);
+        SoftSetBoolArg("-nodnsseed", true);
+        SoftSetBoolArg("-noupnp", true);
+        SoftSetBoolArg("-upnp", false);
+        SoftSetBoolArg("-dns", false);
     }
 
     fAllowDNS = GetBoolArg("-dns");
     fNoListen = GetBoolArg("-nolisten");
+
+    // This code can be removed once a super-majority of the network has upgraded.
+    if (GetBoolArg("-bip16", true))
+    {
+        if (fTestNet)
+            SoftSetArg("-paytoscripthashtime", "1329264000"); // Feb 15
+        else
+            SoftSetArg("-paytoscripthashtime", "1330578000"); // Mar 1
+
+        // Put "/P2SH/" in the coinbase so everybody can tell when
+        // a majority of miners support it
+        const char* pszP2SH = "/P2SH/";
+        COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+    }
+    else
+    {
+        const char* pszP2SH = "NOP2SH";
+        COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+    }
 
     // Command-line args override in-wallet settings:
     if (mapArgs.count("-upnp"))
