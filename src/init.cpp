@@ -204,7 +204,7 @@ bool AppInit2(int argc, char* argv[])
             "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
 #endif
 #endif
-            "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
+            "  -paytxfee=<amt>  \t  "   + _("Fee per kB to add to transactions you send\n") +
 #ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif

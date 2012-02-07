@@ -669,8 +669,8 @@ Address: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended.</source>
-        <translation>Опциональная комиссия за кадый KB транзакции, которое позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транщакций занимают 1 KB.  Рекомендованная комиссия: 0.01 BTC.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1kB.  Fee 0.01 recommended.</source>
+        <translation>Опциональная комиссия за кадый kB транзакции, которое позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транщакций занимают 1 kB.  Рекомендованная комиссия: 0.01 BTC.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -679,8 +679,8 @@ Address: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended.</source>
-        <translation>Опциональная комиссия за кадый KB транзакции, которая позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транзакций занимают 1 KB.  Рекомендованная комиссия: 0.01 BTC.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1kB. Fee 0.01 recommended.</source>
+        <translation>Опциональная комиссия за кадый kB транзакции, которая позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транзакций занимают 1 kB.  Рекомендованная комиссия: 0.01 BTC.</translation>
     </message>
 </context>
 <context>
@@ -1519,9 +1519,9 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
-        <source>Fee per KB to add to transactions you send
+        <source>Fee per kB to add to transactions you send
 </source>
-        <translation>Комиссия (за каждый KB транзакции)
+        <translation>Комиссия (за каждый kB транзакции)
 </translation>
     </message>
     <message>
