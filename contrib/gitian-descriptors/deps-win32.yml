@@ -58,6 +58,8 @@ script: |
   make $MAKEOPTS
   cd ..
   #
-  tar cjvpf "$OUTDIR/bitcoin-deps-0.0.1.tbz2" "$HOME/build"
-
-
+  tar --mtime "$REFERENCE_DATETIME" -cjvpf "$OUTDIR/bitcoin-deps-0.0.2.tbz2" \
+    qrencode-*/{qrencode.h,.libs/libqrencode.{,l}a} \
+    db-*/build_unix/{libdb_cxx.a,db.h,db_cxx.h,libdb.a,.libs/libdb_cxx-?.?.a} \
+    $(find openssl-* -name '*.a' -o -name '*.h') \
+    miniupnpc
