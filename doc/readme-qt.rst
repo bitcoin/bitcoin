@@ -1,39 +1,6 @@
 Bitcoin-qt: Qt4 GUI for Bitcoin
 ===============================
 
-Features
-========
-
-- All functionality of the Wx GUI, including wallet encryption
-
-- Compatibility with Linux (both GNOME and KDE), MacOSX and Windows
-
-- Notification on incoming / outgoing transactions (compatible with FreeDesktop and other desktop notification schemes)
-
-- General interface improvements: Splash screen, tabbed interface
-
-- Overview page with current balance, unconfirmed balance, and such
-
-- Better transaction list with status icons, real-time filtering and a context menu
-
-- Asks for confirmation before sending coins, for your own safety
-
-- CSV export of transactions and address book (for Excel bookkeeping)
-
-- Shows alternative icon when connected to testnet, so you never accidentally send real coins during testing
-
-- Shows a progress bar on initial block download, so that you don't have to wonder how many blocks it needs to download to be up to date
-
-- Sendmany support, send to multiple recipients at the same time
-
-- Multiple unit support, can show subdivided bitcoins (uBTC, mBTC) for users that like large numbers
-
-- Support for English, German, Russian and Dutch languages
-
-- Address books and transaction table can be sorted by any column
-
-- Accepts "bitcoin:" URLs from browsers and other sources through drag and drop
-
 Build instructions
 ===================
 
@@ -136,6 +103,20 @@ FreeDesktop notification interface through DBUS using the following qmake option
 ::
 
     qmake "USE_DBUS=1"
+
+Generation of QR codes
+-----------------------
+
+libqrencode may be used to generate QRCode images for payment requests. 
+It can be downloaded from http://fukuchi.org/works/qrencode/index.html.en, or installed via your package manager. Pass the USE_QRCODE 
+flag to qmake to control this:
+
++--------------+--------------------------------------------------------------------------+
+| USE_QRCODE=0 | (the default) No QRCode support - libarcode not required                 |
++--------------+--------------------------------------------------------------------------+
+| USE_QRCODE=1 | QRCode support enabled                                                   |
++--------------+--------------------------------------------------------------------------+
+
 
 Berkely DB version warning
 ==========================
