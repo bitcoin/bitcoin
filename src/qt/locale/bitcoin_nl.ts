@@ -675,8 +675,8 @@ Adres: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended.</source>
-        <translation>Optionele transactiekosten per KB die helpen ervoor te zorgen dat uw transacties snel verwerkt worden. De meeste transacties zijn 1KB. Transactiekosten van 0.01 wordt aangeraden.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1kB.  Fee 0.01 recommended.</source>
+        <translation>Optionele transactiekosten per kB die helpen ervoor te zorgen dat uw transacties snel verwerkt worden. De meeste transacties zijn 1kB. Transactiekosten van 0.01 wordt aangeraden.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -685,8 +685,8 @@ Adres: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended.</source>
-        <translation>Optionele transactiekosten per KB die helpen ervoor te zorgen dat uw transacties snel verwerkt worden. De meeste transacties zijn 1KB. Transactiekosten van 0.01 wordt aangeraden.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1kB. Fee 0.01 recommended.</source>
+        <translation>Optionele transactiekosten per kB die helpen ervoor te zorgen dat uw transacties snel verwerkt worden. De meeste transacties zijn 1kB. Transactiekosten van 0.01 wordt aangeraden.</translation>
     </message>
 </context>
 <context>
@@ -1526,9 +1526,9 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
-        <source>Fee per KB to add to transactions you send
+        <source>Fee per kB to add to transactions you send
 </source>
-        <translation>Kosten per KB om aan transacties toe te voegen die u verstuurt
+        <translation>Kosten per kB om aan transacties toe te voegen die u verstuurt
 </translation>
     </message>
     <message>
