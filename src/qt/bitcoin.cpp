@@ -1,5 +1,5 @@
 /*
- * W.J. van der Laan 2011
+ * W.J. van der Laan 20011-2012
  */
 #include "bitcoingui.h"
 #include "clientmodel.h"
