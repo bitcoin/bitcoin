@@ -345,12 +345,11 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     {
     case TransactionRecord::RecvWithAddress:
         return tr("Received with");
-    case TransactionRecord::RecvFromIP:
-        return tr("Received from IP");
+    case TransactionRecord::RecvFromOther:
+        return tr("Received from");
     case TransactionRecord::SendToAddress:
+    case TransactionRecord::SendToOther:
         return tr("Sent to");
-    case TransactionRecord::SendToIP:
-        return tr("Sent to IP");
     case TransactionRecord::SendToSelf:
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
@@ -367,10 +366,10 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     case TransactionRecord::Generated:
         return QIcon(":/icons/tx_mined");
     case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::RecvFromIP:
+    case TransactionRecord::RecvFromOther:
         return QIcon(":/icons/tx_input");
     case TransactionRecord::SendToAddress:
-    case TransactionRecord::SendToIP:
+    case TransactionRecord::SendToOther:
         return QIcon(":/icons/tx_output");
     default:
         return QIcon(":/icons/tx_inout");
@@ -382,12 +381,12 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
 {
     switch(wtx->type)
     {
-    case TransactionRecord::RecvFromIP:
+    case TransactionRecord::RecvFromOther:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
         return lookupAddress(wtx->address, tooltip);
-    case TransactionRecord::SendToIP:
+    case TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::SendToSelf:
     case TransactionRecord::Generated:
@@ -478,7 +477,7 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
-    if(rec->type==TransactionRecord::RecvFromIP || rec->type==TransactionRecord::SendToIP ||
+    if(rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
        rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
