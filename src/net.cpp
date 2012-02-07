@@ -200,7 +200,7 @@ bool GetMyExternalIP(CNetAddr& ipRet)
 void ThreadGetMyExternalIP(void* parg)
 {
     // Wait for IRC to get it first
-    if (!GetBoolArg("-noirc"))
+    if (GetBoolArg("-irc", false))
     {
         for (int i = 0; i < 2 * 60; i++)
         {
@@ -1706,7 +1706,7 @@ void StartNode(void* parg)
     // Start threads
     //
 
-    if (GetBoolArg("-nodnsseed"))
+    if (!GetBoolArg("-dnsseed", true))
         printf("DNS seeding disabled\n");
     else
         if (!CreateThread(ThreadDNSAddressSeed, NULL))
