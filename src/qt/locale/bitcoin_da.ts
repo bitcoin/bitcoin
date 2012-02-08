@@ -674,8 +674,8 @@ Adresse: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended.</source>
-        <translation>Valgfri transaktionsgebyr pr. KB, der hjælper dine transaktioner med at blive behandlet hurtigt.  De fleste transaktioner er på 1KB.  Gebyr på 0.01 anbefales.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1kB.  Fee 0.01 recommended.</source>
+        <translation>Valgfri transaktionsgebyr pr. kB, der hjælper dine transaktioner med at blive behandlet hurtigt.  De fleste transaktioner er på 1kB.  Gebyr på 0.01 anbefales.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -684,8 +684,8 @@ Adresse: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended.</source>
-        <translation>Valgfri transaktionsgebyr pr. KB, der hjælper dine transaktioner med at blive behandlet hurtigt. De fleste transaktioner er på 1KB. Gebyr på 0.01 anbefales.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1kB. Fee 0.01 recommended.</source>
+        <translation>Valgfri transaktionsgebyr pr. kB, der hjælper dine transaktioner med at blive behandlet hurtigt. De fleste transaktioner er på 1kB. Gebyr på 0.01 anbefales.</translation>
     </message>
 </context>
 <context>
@@ -1523,9 +1523,9 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
-        <source>Fee per KB to add to transactions you send
+        <source>Fee per kB to add to transactions you send
 </source>
-        <translation>Gebyr pr. KB, som skal tilføjes til transaktioner du sender
+        <translation>Gebyr pr. kB, som skal tilføjes til transaktioner du sender
 </translation>
     </message>
     <message>

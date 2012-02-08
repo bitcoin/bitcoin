@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
@@ -204,7 +204,7 @@ bool AppInit2(int argc, char* argv[])
             "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
 #endif
 #endif
-            "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
+            "  -paytxfee=<amt>  \t  "   + _("Fee per kB to add to transactions you send\n") +
 #ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif
