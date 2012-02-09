@@ -618,11 +618,15 @@ bool CTransaction::RemoveFromMemoryPool()
     // Remove transaction from memory pool
     CRITICAL_BLOCK(cs_mapTransactions)
     {
-        BOOST_FOREACH(const CTxIn& txin, vin)
-            mapNextTx.erase(txin.prevout);
-        mapTransactions.erase(GetHash());
-        nTransactionsUpdated++;
-        --nPooledTx;
+        uint256 hash = GetHash();
+        if (mapTransactions.count(hash))
+        {
+            BOOST_FOREACH(const CTxIn& txin, vin)
+                mapNextTx.erase(txin.prevout);
+            mapTransactions.erase(hash);
+            nTransactionsUpdated++;
+            --nPooledTx;
+        }
     }
     return true;
 }
