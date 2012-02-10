@@ -355,7 +355,7 @@ public:
         /// when NTP implemented, change to just nTime = GetAdjustedTime()
         int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
         CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
-        CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
+        CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress("0.0.0.0") : addrLocalHost);
         RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
         PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe,
                     nLocalHostNonce, std::string(pszSubVer), nBestHeight);
