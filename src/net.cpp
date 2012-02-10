@@ -530,7 +530,7 @@ void CNode::PushVersion()
     /// when NTP implemented, change to just nTime = GetAdjustedTime()
     int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addr);
-    CAddress addrMe = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
+    CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight);
@@ -965,6 +965,26 @@ void ThreadMapPort2(void* parg)
     r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
     if (r == 1)
     {
+        if (!addrLocalHost.IsRoutable())
+        {
+            char externalIPAddress[40];
+            r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
+            if(r != UPNPCOMMAND_SUCCESS)
+                printf("UPnP: GetExternalIPAddress() returned %d\n", r);
+            else
+            {
+                if(externalIPAddress[0])
+                {
+                    printf("UPnP: ExternalIPAddress = %s\n", externalIPAddress);
+                    CAddress addrExternalFromUPnP(CService(externalIPAddress, 0), nLocalServices);
+                    if (addrExternalFromUPnP.IsRoutable())
+                        addrLocalHost = addrExternalFromUPnP;
+                }
+                else
+                    printf("UPnP: GetExternalIPAddress failed.\n");
+            }
+        }
+
         string strDesc = "Bitcoin " + FormatFullVersion();
 #ifndef UPNPDISCOVER_SUCCESS
         /* miniupnpc 1.5 */
