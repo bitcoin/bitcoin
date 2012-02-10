@@ -76,7 +76,7 @@ contains(FIRST_CLASS_MESSAGING, 1) {
 
 contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     DEFINES += BITCOIN_NEED_QT_PLUGINS
-    QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs
+    QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs qtaccessiblewidgets
 }
 
 !windows {
