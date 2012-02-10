@@ -131,6 +131,7 @@ std::string _(const char* psz)
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
 }
 
+#ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
     // Do this early as we don't want to bother initializing if we are just calling IPC
@@ -257,3 +258,4 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
+#endif // BITCOIN_QT_TEST
