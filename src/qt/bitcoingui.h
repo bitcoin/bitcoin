@@ -58,6 +58,8 @@ private:
 
     QStackedWidget *centralWidget;
 
+    QWidget *dummyWidget;
+
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     AddressBookPage *addressBookPage;
@@ -130,6 +132,8 @@ public slots:
 
     void gotoMessagePage();
     void gotoMessagePage(QString);
+
+    void showNormal();
 
 private slots:
     /** Switch to overview (home) page */
