@@ -192,7 +192,7 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
         BOOST_FOREACH(KeyMap::value_type& mKey, mapKeys)
         {
             CKey key;
-            if (!key.SetSecret(mKey.second.first, false))
+            if (!key.SetSecret(mKey.second.first, mKey.second.second))
                 return false;
             const std::vector<unsigned char> vchPubKey = key.GetPubKey();
             std::vector<unsigned char> vchCryptedSecret;
