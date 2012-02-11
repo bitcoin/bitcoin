@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2011 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin developers
-// Copyright (c) 2011 The PPCoin developers
+// Copyright (c) 2011-2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -377,7 +377,7 @@ int CWalletTx::GetRequestCount() const
     int nRequests = -1;
     CRITICAL_BLOCK(pwallet->cs_wallet)
     {
-        if (IsCoinBase())
+        if (IsCoinBase() || IsCoinStake())
         {
             // Generated block
             if (hashBlock != 0)
@@ -418,7 +418,7 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
     listSent.clear();
     strSentAccount = strFromAccount;
 
-    if (IsCoinBase())
+    if (IsCoinBase() || IsCoinStake())
     {
         if (GetBlocksToMaturity() > 0)
             nGeneratedImmature = pwallet->GetCredit(*this);
@@ -598,7 +598,7 @@ void CWallet::ReacceptWalletTransactions()
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
-            if (wtx.IsCoinBase() && wtx.IsSpent(0))
+            if ((wtx.IsCoinBase() || wtx.IsCoinStake()) && wtx.IsSpent(0))
                 continue;
 
             CTxIndex txindex;
@@ -632,7 +632,7 @@ void CWallet::ReacceptWalletTransactions()
             else
             {
                 // Reaccept any txes of ours that aren't already in a block
-                if (!wtx.IsCoinBase())
+                if (!(wtx.IsCoinBase() || wtx.IsCoinStake()))
                     wtx.AcceptWalletTransaction(txdb, false);
             }
         }
@@ -649,14 +649,14 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
 {
     BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
     {
-        if (!tx.IsCoinBase())
+        if (!(tx.IsCoinBase() || tx.IsCoinStake()))
         {
             uint256 hash = tx.GetHash();
             if (!txdb.ContainsTx(hash))
                 RelayMessage(CInv(MSG_TX, hash), (CTransaction)tx);
         }
     }
-    if (!IsCoinBase())
+    if (!(IsCoinBase() || IsCoinStake()))
     {
         uint256 hash = GetHash();
         if (!txdb.ContainsTx(hash))
@@ -767,7 +767,7 @@ int64 CWallet::GetStake() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+            if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
                 nTotal += CWallet::GetCredit(*pcoin);
         }
     }
@@ -799,7 +799,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
             if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
                 continue;
 
-            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+            if ((pcoin->IsCoinBase() || pcoin->IsCoinStake()) && pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain();
@@ -1054,6 +1054,63 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
     vector< pair<CScript, int64> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, nValue));
     return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet);
+}
+
+// ppcoin: create coin stake transaction
+bool CWallet::CreateCoinStake(CScript scriptPubKey, CTransaction& txNew)
+{
+    CRITICAL_BLOCK(cs_main)
+    CRITICAL_BLOCK(cs_wallet)
+    {
+        // txdb must be opened before the mapWallet lock
+        CTxDB txdb("r");
+        {
+            txNew.vin.clear();
+            txNew.vout.clear();
+            // Mark coin stake transaction
+            CScript scriptEmpty;
+            scriptEmpty.clear();
+            txNew.vout.push_back(CTxOut(0, scriptEmpty));
+            // Choose coins to use
+            set<pair<const CWalletTx*,unsigned int> > setCoins;
+            int64 nValueIn = 0;
+            if (!SelectCoins(GetBalance(), txNew.nTime, setCoins, nValueIn))
+                return false;
+            int64 nCredit = 0;
+            BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
+            {
+                nCredit += pcoin.first->vout[pcoin.second].nValue;
+                // Only spend one tx for now
+                break;
+            }
+            // Fill vin
+            BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+            {
+                txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
+                // Only spend one tx for now
+                break;
+            }
+            // Calculate coin age reward
+            uint64 nCoinAge;
+            if (!txNew.GetCoinAge(nCoinAge))
+                return false;
+            nCredit += GetProofOfStakeReward(nCoinAge);
+            // Fill vout
+            txNew.vout.push_back(CTxOut(nCredit, scriptPubKey));
+
+
+            // Sign
+            int nIn = 0;
+            BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+            {
+                if (!SignSignature(*this, *coin.first, txNew, nIn++))
+                    return false;
+                // Only spend one tx for now
+                break;
+            }
+        }
+    }
+    return true;
 }
 
 // Call after CreateTransaction unless you want to abort
