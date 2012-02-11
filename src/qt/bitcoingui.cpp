@@ -85,6 +85,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create the tray icon (or setup the dock icon)
     createTrayIcon();
 
+    // Dummy widget used when restoring window state after minimization
+    dummyWidget = new QWidget();
+
     // Create tabs
     overviewPage = new OverviewPage();
 
@@ -403,6 +406,7 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     if(reason == QSystemTrayIcon::Trigger)
     {
         // Click on system tray icon triggers "open bitcoin"
+        setParent(NULL, Qt::Window);
         openBitcoinAction->trigger();
     }
 
@@ -550,6 +554,8 @@ void BitcoinGUI::changeEvent(QEvent *e)
         {
             if(isMinimized())
             {
+                // Hiding the window from taskbar
+                setParent(dummyWidget, Qt::SubWindow);
                 hide();
                 e->ignore();
             }
