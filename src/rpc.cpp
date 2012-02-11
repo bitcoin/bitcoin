@@ -1301,7 +1301,7 @@ void ThreadCleanWalletPassphrase(void* parg)
             if (nWalletUnlockTime < nMyWakeTime)
                 nWalletUnlockTime = nMyWakeTime;
         }
-        free(parg);
+        delete (int*)parg;
         return;
     }
 
