@@ -56,19 +56,36 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
 
     SendCoinsRecipient rv;
     rv.address = url->path();
-    rv.label = url->queryItemValue("label");
-
-    QString amount = url->queryItemValue("amount");
-    if(amount.isEmpty())
+    rv.amount = 0;
+    QList<QPair<QString, QString> > items = url->queryItems();
+    for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
-        rv.amount = 0;
-    }
-    else // Amount is non-empty
-    {
-        if(!BitcoinUnits::parse(BitcoinUnits::BTC, amount, &rv.amount))
+        bool fShouldReturnFalse = false;
+        if (i->first.startsWith("req-"))
         {
-            return false;
+            i->first.remove(0, 4);
+            fShouldReturnFalse = true;
         }
+
+        if (i->first == "label")
+        {
+            rv.label = i->second;
+            fShouldReturnFalse = false;
+        }
+        else if (i->first == "amount")
+        {
+            if(!i->second.isEmpty())
+            {
+                if(!BitcoinUnits::parse(BitcoinUnits::BTC, i->second, &rv.amount))
+                {
+                    return false;
+                }
+            }
+            fShouldReturnFalse = false;
+        }
+
+        if (fShouldReturnFalse)
+            return false;
     }
     if(out)
     {

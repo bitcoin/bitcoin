@@ -226,6 +226,16 @@ SOURCES += src/qt/qrcodedialog.cpp
 FORMS += src/qt/forms/qrcodedialog.ui
 }
 
+contains(BITCOIN_QT_TEST, 1) {
+SOURCES += src/qt/test/test_main.cpp \
+    src/qt/test/urltests.cpp
+HEADERS += src/qt/test/urltests.h
+DEPENDPATH += src/qt/test
+QT += testlib
+TARGET = bitcoin-qt_test
+DEFINES += BITCOIN_QT_TEST
+}
+
 CODECFORTR = UTF-8
 
 # for lrelease/lupdate
