@@ -12,7 +12,6 @@ using namespace std;
 using namespace boost;
 
 int nGotIRCAddresses = 0;
-bool fGotExternalIP = false;
 
 void ThreadIRCSeed2(void* parg);
 
@@ -248,9 +247,10 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
 
+        CNetAddr addrLocal;
         string strMyName;
-        if (addrLocalHost.IsRoutable() && !fUseProxy && !fNameInUse)
-            strMyName = EncodeAddress(addrLocalHost);
+        if (GetLocal(addrLocal, &addrConnect))
+            strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
         else
             strMyName = strprintf("x%u", GetRand(1000000000));
 
@@ -285,9 +285,8 @@ void ThreadIRCSeed2(void* parg)
             if (!fUseProxy && addrFromIRC.IsRoutable())
             {
                 // IRC lets you to re-nick
-                fGotExternalIP = true;
-                addrLocalHost.SetIP(addrFromIRC);
-                strMyName = EncodeAddress(addrLocalHost);
+                AddLocal(addrFromIRC, LOCAL_IRC);
+                strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
                 Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
             }
         }
