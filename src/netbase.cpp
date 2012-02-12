@@ -772,6 +772,29 @@ void CNetAddr::print() const
     printf("CNetAddr(%s)\n", ToString().c_str());
 }
 
+// for IPv6 partners:        for unknown/Teredo partners:      for IPv4 partners:
+// 0 - unroutable            // 0 - unroutable                 // 0 - unroutable
+// 1 - teredo                // 1 - teredo                     // 1 - ipv4
+// 2 - tunneled ipv6         // 2 - tunneled ipv6
+// 3 - ipv4                  // 3 - ipv6
+// 4 - ipv6                  // 4 - ipv4
+int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
+{
+    if (!IsValid() || !IsRoutable())
+        return 0;
+    if (paddrPartner && paddrPartner->IsIPv4())
+        return IsIPv4() ? 1 : 0;
+    if (IsRFC4380())
+        return 1;
+    if (IsRFC3964() || IsRFC6052())
+        return 2;
+    bool fRealIPv6 = paddrPartner && !paddrPartner->IsRFC4380() && paddrPartner->IsValid() && paddrPartner->IsRoutable();
+    if (fRealIPv6)
+        return IsIPv4() ? 3 : 4;
+    else
+        return IsIPv4() ? 4 : 3;
+}
+
 void CService::Init()
 {
     port = 0;
