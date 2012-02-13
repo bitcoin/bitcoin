@@ -25,7 +25,7 @@ public:
     void setModel(WalletModel *model);
 
 public slots:
-    void setBalance(qint64 balance, qint64 unconfirmedBalance);
+    void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
     void setNumTransactions(int count);
 
 signals:
@@ -36,6 +36,7 @@ private:
     WalletModel *model;
     qint64 currentBalance;
     qint64 currentUnconfirmedBalance;
+    qint64 currentImmatureBalance;
 
     TxViewDelegate *txdelegate;
 

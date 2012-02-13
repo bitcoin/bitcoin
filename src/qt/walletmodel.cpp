@@ -12,7 +12,8 @@
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
     transactionTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0),
+    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
+    cachedNumTransactions(0),
     cachedEncryptionStatus(Unencrypted)
 {
     // Until signal notifications is built into the bitcoin core,
@@ -35,6 +36,11 @@ qint64 WalletModel::getUnconfirmedBalance() const
     return wallet->GetUnconfirmedBalance();
 }
 
+qint64 WalletModel::getImmatureBalance() const
+{
+    return wallet->GetImmatureBalance();
+}
+
 int WalletModel::getNumTransactions() const
 {
     int numTransactions = 0;
@@ -49,11 +55,12 @@ void WalletModel::update()
 {
     qint64 newBalance = getBalance();
     qint64 newUnconfirmedBalance = getUnconfirmedBalance();
+    qint64 newImmatureBalance = getImmatureBalance();
     int newNumTransactions = getNumTransactions();
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
 
-    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance)
-        emit balanceChanged(newBalance, newUnconfirmedBalance);
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
+        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance);
 
     if(cachedNumTransactions != newNumTransactions)
         emit numTransactionsChanged(newNumTransactions);
@@ -63,6 +70,7 @@ void WalletModel::update()
 
     cachedBalance = newBalance;
     cachedUnconfirmedBalance = newUnconfirmedBalance;
+    cachedImmatureBalance = newImmatureBalance;
     cachedNumTransactions = newNumTransactions;
 
     addressTableModel->update();
