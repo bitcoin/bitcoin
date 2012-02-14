@@ -567,7 +567,7 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
 
 }
 
-void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived, 
+void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, int64& nReceived,
                                   int64& nSent, int64& nFee) const
 {
     nGenerated = nReceived = nSent = nFee = 0;
@@ -851,9 +851,8 @@ int64 CWallet::GetBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
-                continue;
-            nTotal += pcoin->GetAvailableCredit();
+            if (pcoin->IsFinal() && pcoin->IsConfirmed())
+                nTotal += pcoin->GetAvailableCredit();
         }
     }
 
@@ -868,9 +867,23 @@ int64 CWallet::GetUnconfirmedBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (pcoin->IsFinal() && pcoin->IsConfirmed())
-                continue;
-            nTotal += pcoin->GetAvailableCredit();
+            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+                nTotal += pcoin->GetAvailableCredit();
+        }
+    }
+    return nTotal;
+}
+
+int64 CWallet::GetImmatureBalance() const
+{
+    int64 nTotal = 0;
+    {
+        LOCK(cs_wallet);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& pcoin = (*it).second;
+            if (pcoin.IsCoinBase() && pcoin.GetBlocksToMaturity() > 0 && pcoin.GetDepthInMainChain() >= 2)
+                nTotal += GetCredit(pcoin);
         }
     }
     return nTotal;
