@@ -776,9 +776,8 @@ int64 CWallet::GetBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
-                continue;
-            nTotal += pcoin->GetAvailableCredit();
+            if (pcoin->IsFinal() && pcoin->IsConfirmed())
+                nTotal += pcoin->GetAvailableCredit();
         }
     }
 
@@ -793,9 +792,23 @@ int64 CWallet::GetUnconfirmedBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (pcoin->IsFinal() && pcoin->IsConfirmed())
-                continue;
-            nTotal += pcoin->GetAvailableCredit();
+            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+                nTotal += pcoin->GetAvailableCredit();
+        }
+    }
+    return nTotal;
+}
+
+int64 CWallet::GetImmatureBalance() const
+{
+    int64 nTotal = 0;
+    CRITICAL_BLOCK(cs_wallet)
+    {
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx& pcoin = (*it).second;
+            if (pcoin.IsCoinBase() && pcoin.GetBlocksToMaturity() > 0 && pcoin.GetDepthInMainChain() >= 2)
+                nTotal += GetCredit(pcoin);
         }
     }
     return nTotal;
