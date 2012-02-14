@@ -7,7 +7,7 @@ Icon: src/qt/res/icons/address-book.png, src/qt/res/icons/export.png,
       src/qt/res/icons/history.png, src/qt/res/icons/key.png,
       src/qt/res/icons/lock_*.png, src/qt/res/icons/overview.png,
       src/qt/res/icons/receive.png, src/qt/res/icons/send.png,
-      src/qt/res/icons/synced.png
+      src/qt/res/icons/synced.png, src/qt/res/icons/filesave.png
 Icon Pack: NUVOLA ICON THEME for KDE 3.x
 Designer: David Vignoni (david@icon-king.com)
           ICON KING - www.icon-king.com
