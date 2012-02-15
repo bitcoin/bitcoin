@@ -7,7 +7,6 @@
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
-#include <QFileDialog>
 #include <QMessageBox>
 
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
@@ -206,10 +205,9 @@ void AddressBookPage::done(int retval)
 void AddressBookPage::exportClicked()
 {
     // CSV is currently the only supported format
-    QString filename = QFileDialog::getSaveFileName(
+    QString filename = GUIUtil::getSaveFileName(
             this,
-            tr("Export Address Book Data"),
-            QDir::currentPath(),
+            tr("Export Address Book Data"), QString(),
             tr("Comma separated file (*.csv)"));
 
     if (filename.isNull()) return;
