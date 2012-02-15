@@ -1,9 +1,9 @@
 #include "qrcodedialog.h"
 #include "ui_qrcodedialog.h"
+#include "guiutil.h"
+
 #include <QPixmap>
 #include <QUrl>
-#include <QFileDialog>
-#include <QDesktopServices>
 #include <QDebug>
 
 #include <qrencode.h>
@@ -98,7 +98,7 @@ void QRCodeDialog::on_lnMessage_textChanged(const QString &)
 
 void QRCodeDialog::on_btnSaveAs_clicked()
 {
-    QString fn = QFileDialog::getSaveFileName(this, "Save Image...", QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation), "Images (*.png)");
+    QString fn = GUIUtil::getSaveFileName(this, tr("Save Image..."), QString(), tr("PNG Images (*.png)"));
     if(!fn.isEmpty()) {
         myImage.scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE).save(fn);
     }
