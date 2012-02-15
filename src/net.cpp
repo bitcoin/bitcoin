@@ -885,13 +885,17 @@ void ThreadSocketHandler2(void* parg)
             struct sockaddr_in sockaddr;
             socklen_t len = sizeof(sockaddr);
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
-            CAddress addr(sockaddr);
+            CAddress addr;
             int nInbound = 0;
+
+            if (hSocket != INVALID_SOCKET)
+                addr = CAddress(sockaddr);
 
             CRITICAL_BLOCK(cs_vNodes)
                 BOOST_FOREACH(CNode* pnode, vNodes)
                 if (pnode->fInbound)
                     nInbound++;
+
             if (hSocket == INVALID_SOCKET)
             {
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
