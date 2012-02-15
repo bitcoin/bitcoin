@@ -20,7 +20,6 @@
 #include <QTableView>
 #include <QHeaderView>
 #include <QPushButton>
-#include <QFileDialog>
 #include <QMessageBox>
 #include <QPoint>
 #include <QMenu>
@@ -265,10 +264,9 @@ void TransactionView::changedAmount(const QString &amount)
 void TransactionView::exportClicked()
 {
     // CSV is currently the only supported format
-    QString filename = QFileDialog::getSaveFileName(
+    QString filename = GUIUtil::getSaveFileName(
             this,
-            tr("Export Transaction Data"),
-            QDir::currentPath(),
+            tr("Export Transaction Data"), QString(),
             tr("Comma separated file (*.csv)"));
 
     if (filename.isNull()) return;
