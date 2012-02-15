@@ -218,6 +218,12 @@ public:
 #define CRITICAL_BLOCK(cs)     \
     if (CCriticalBlock criticalblock = CCriticalBlock(cs, #cs, __FILE__, __LINE__))
 
+#define ENTER_CRITICAL_SECTION(cs) \
+    (cs).Enter(#cs, __FILE__, __LINE__)
+
+#define LEAVE_CRITICAL_SECTION(cs) \
+    (cs).Leave()
+
 class CTryCriticalBlock
 {
 protected:
