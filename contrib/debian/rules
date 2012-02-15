@@ -20,7 +20,7 @@ override_dh_auto_clean:
 	cd src; $(MAKE) -f makefile.unix clean
 
 override_dh_auto_configure:
-	qmake bitcoin-qt.pro
+	qmake bitcoin-qt.pro USE_SSL=1 USE_QRCODE=1
 
 override_dh_auto_test:
 	cd src; $(MAKE) -f makefile.unix test_bitcoin

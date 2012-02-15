@@ -19,14 +19,6 @@ OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
 
-# use: qmake "USE_QRCODE=1"
-# libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
-contains(USE_QRCODE, 1) {
-    message(Building with QRCode support)
-    DEFINES += USE_QRCODE
-    LIBS += -lqrencode
-}
-
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
     # Mac: compile for maximum compatibility (10.5, 32-bit)
@@ -36,6 +28,14 @@ contains(RELEASE, 1) {
         # Linux: static link
         LIBS += -Wl,-Bstatic
     }
+}
+
+# use: qmake "USE_QRCODE=1"
+# libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
+contains(USE_QRCODE, 1) {
+    message(Building with QRCode support)
+    DEFINES += USE_QRCODE
+    LIBS += -lqrencode
 }
 
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
