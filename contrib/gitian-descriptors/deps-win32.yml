@@ -59,5 +59,3 @@ script: |
   cd ..
   #
   tar cjvpf "$OUTDIR/bitcoin-deps-0.0.1.tbz2" "$HOME/build"
-
-
