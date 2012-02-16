@@ -473,8 +473,6 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
-    fGenerateBitcoins = GetBoolArg("-gen");
-
     if (mapArgs.count("-proxy"))
     {
         fUseProxy = true;
@@ -519,13 +517,6 @@ bool AppInit2(int argc, char* argv[])
         const char* pszP2SH = "NOP2SH";
         COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
     }
-
-    // Command-line args override in-wallet settings:
-#if USE_UPNP
-    fUseUPnP = GetBoolArg("-upnp", true);
-#else
-    fUseUPnP = GetBoolArg("-upnp", false);
-#endif
 
     if (!fNoListen)
     {
