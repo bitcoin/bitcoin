@@ -598,7 +598,7 @@ void CWallet::ReacceptWalletTransactions()
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
             CWalletTx& wtx = item.second;
-            if ((wtx.IsCoinBase() || wtx.IsCoinStake()) && wtx.IsSpent(0))
+            if ((wtx.IsCoinBase() && wtx.IsSpent(0)) || (wtx.IsCoinStake() && wtx.IsSpent(1)))
                 continue;
 
             CTxIndex txindex;
@@ -1062,52 +1062,51 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, CTransaction& txNew)
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_wallet)
     {
-        // txdb must be opened before the mapWallet lock
-        CTxDB txdb("r");
+        txNew.vin.clear();
+        txNew.vout.clear();
+        // Mark coin stake transaction
+        CScript scriptEmpty;
+        scriptEmpty.clear();
+        txNew.vout.push_back(CTxOut(0, scriptEmpty));
+        // Choose coins to use
+        set<pair<const CWalletTx*,unsigned int> > setCoins;
+        int64 nValueIn = 0;
+        if (!SelectCoins(GetBalance(), txNew.nTime, setCoins, nValueIn))
+            return false;
+        int64 nCredit = 0;
+        BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
         {
-            txNew.vin.clear();
-            txNew.vout.clear();
-            // Mark coin stake transaction
-            CScript scriptEmpty;
-            scriptEmpty.clear();
-            txNew.vout.push_back(CTxOut(0, scriptEmpty));
-            // Choose coins to use
-            set<pair<const CWalletTx*,unsigned int> > setCoins;
-            int64 nValueIn = 0;
-            if (!SelectCoins(GetBalance(), txNew.nTime, setCoins, nValueIn))
-                return false;
-            int64 nCredit = 0;
-            BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
-            {
-                nCredit += pcoin.first->vout[pcoin.second].nValue;
-                // Only spend one tx for now
-                break;
-            }
-            // Fill vin
-            BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-            {
-                txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
-                // Only spend one tx for now
-                break;
-            }
-            // Calculate coin age reward
+            nCredit += pcoin.first->vout[pcoin.second].nValue;
+            // Only spend one tx for now
+            break;
+        }
+        // Fill vin
+        BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+        {
+            txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
+            // Only spend one tx for now
+            break;
+        }
+        // Calculate coin age reward
+        {
             uint64 nCoinAge;
-            if (!txNew.GetCoinAge(nCoinAge))
+            CTxDB txdb("r");
+            if (!txNew.GetCoinAge(txdb, nCoinAge))
                 return false;
             nCredit += GetProofOfStakeReward(nCoinAge);
-            // Fill vout
-            txNew.vout.push_back(CTxOut(nCredit, scriptPubKey));
+        }
+        // Fill vout
+        txNew.vout.push_back(CTxOut(nCredit, scriptPubKey));
 
 
-            // Sign
-            int nIn = 0;
-            BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-            {
-                if (!SignSignature(*this, *coin.first, txNew, nIn++))
-                    return false;
-                // Only spend one tx for now
-                break;
-            }
+        // Sign
+        int nIn = 0;
+        BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+        {
+            if (!SignSignature(*this, *coin.first, txNew, nIn++))
+                return false;
+            // Only spend one tx for now
+            break;
         }
     }
     return true;

@@ -1644,7 +1644,7 @@ Value getwork(const Array& params, bool fHelp)
             nStart = GetTime();
 
             // Create new block
-            pblock = CreateNewBlock(reservekey, pwalletMain);
+            pblock = CreateNewBlock(pwalletMain);
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
             vNewBlock.push_back(pblock);
@@ -1742,7 +1742,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             // Create new block
             if(pblock)
                 delete pblock;
-            pblock = CreateNewBlock(reservekey, pwalletMain);
+            pblock = CreateNewBlock(pwalletMain);
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
         }

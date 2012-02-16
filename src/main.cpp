@@ -933,8 +933,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
         if (IsCoinStake())
         {
             // ppcoin: coin stake tx earns reward instead of paying fee
-            uint64 nCoinAge = 0;
-            if (!GetCoinAge(nCoinAge))
+            uint64 nCoinAge;
+            if (!GetCoinAge(txdb, nCoinAge))
                 return error("ConnectInputs() : %s unable to get coin age for coinstake", GetHash().ToString().substr(0,10).c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
             if (nStakeReward > GetProofOfStakeReward(nCoinAge))
@@ -1257,7 +1257,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 // guaranteed to be in main chain by auto checkpoint. This rule is
 // introduced to help nodes establish a consistent view of the coin
 // age (trust score) of competing branches.
-bool CTransaction::GetCoinAge(uint64& nCoinAge) const
+bool CTransaction::GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const
 {
     CBigNum bnCentSecond = 0;  // coin age in the unit of cent-seconds
     nCoinAge = 0;
@@ -1268,7 +1268,6 @@ bool CTransaction::GetCoinAge(uint64& nCoinAge) const
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
         // First try finding the previous transaction in database
-        CTxDB txdb("r");
         CTransaction txPrev;
         CTxIndex txindex;
         if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
@@ -1290,23 +1289,23 @@ bool CTransaction::GetCoinAge(uint64& nCoinAge) const
             printf("coin age nValueIn=%-12I64d nTimeDiff=%d bnCentSecond=%s\n", nValueIn, nTime - txPrev.nTime, bnCentSecond.ToString().c_str());
     }
 
-    CBigNum bnCoinAge = bnCentSecond * CENT / COIN / (24 * 60 * 60);
+    CBigNum bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
     if (fDebug && GetBoolArg("-printcoinage"))
-        printf("coin age nCoinDays=%s\n", bnCoinAge.ToString().c_str());
-    nCoinAge = bnCoinAge.getuint64();
+        printf("coin age bnCoinDay=%s\n", bnCoinDay.ToString().c_str());
+    nCoinAge = bnCoinDay.getuint64();
     return true;
 }
 
 // ppcoin: total coin age spent in block, in the unit of coin-days.
 bool CBlock::GetCoinAge(uint64& nCoinAge) const
 {
-    CBigNum bnCentSecond = 0;
     nCoinAge = 0;
 
+    CTxDB txdb("r");
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
-        uint64 nTxCoinAge = 0;
-        if (tx.GetCoinAge(nTxCoinAge))
+        uint64 nTxCoinAge;
+        if (tx.GetCoinAge(txdb, nTxCoinAge))
             nCoinAge += nTxCoinAge;
         else
             return false;
@@ -1346,7 +1345,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     }
 
     // ppcoin: compute chain trust score
-    uint64 nCoinAge = 0;
+    uint64 nCoinAge;
     if (!GetCoinAge(nCoinAge))
         return error("AddToBlockIndex() : invalid transaction in block");
     pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + nCoinAge;
@@ -2864,9 +2863,10 @@ public:
 };
 
 
-CBlock* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet)
+CBlock* CreateNewBlock(CWallet* pwallet)
 {
     CBlockIndex* pindexPrev = pindexBest;
+    CReserveKey reservekey(pwallet);
 
     // Create new block
     auto_ptr<CBlock> pblock(new CBlock());
@@ -2887,8 +2887,6 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, CWallet* pwallet)
     CTransaction txCoinStake;
     if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, txCoinStake))
         pblock->vtx.push_back(txCoinStake);
-    else
-        printf("CreateNewBlock: unable to find coins to stake\n");
 
     // Collect memory pool transactions into the block
     int64 nFees = 0;
@@ -3154,7 +3152,7 @@ void static BitcoinMiner(CWallet *pwallet)
         unsigned int nTransactionsUpdatedLast = nTransactionsUpdated;
         CBlockIndex* pindexPrev = pindexBest;
 
-        auto_ptr<CBlock> pblock(CreateNewBlock(reservekey, pwallet));
+        auto_ptr<CBlock> pblock(CreateNewBlock(pwallet));
         if (!pblock.get())
             return;
         IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
