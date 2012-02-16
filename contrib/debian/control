@@ -15,7 +15,8 @@ Build-Depends: debhelper,
  libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
  libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
  qt4-qmake,
- libqt4-dev
+ libqt4-dev,
+ libqrencode-dev
 Standards-Version: 3.9.2
 Homepage: http://www.bitcoin.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
