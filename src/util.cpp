@@ -920,7 +920,19 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
         // Don't overwrite existing settings so command line settings override bitcoin.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
+        {
             mapSettingsRet[strKey] = it->value[0];
+            if (strKey.find("-no") == 0)
+            {
+                std::string positive("-");
+                positive.append(strKey.begin()+3, strKey.end());
+                if (mapSettingsRet.count(positive) == 0)
+                {
+                    bool value = !GetBoolArg(strKey);
+                    mapSettingsRet[positive] = (value ? "1" : "0");
+                }
+            }
+        }
         mapMultiSettingsRet[strKey].push_back(it->value[0]);
     }
 }
