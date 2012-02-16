@@ -913,6 +913,7 @@ public:
         return (int64)nTime;
     }
 
+    void UpdateTime(const CBlockIndex* pindexPrev);
 
 
     uint256 BuildMerkleTree() const
