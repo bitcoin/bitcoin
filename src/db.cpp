@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin developers
-// Copyright (c) 2011 The PPCoin developers
+// Copyright (c) 2011-2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -475,9 +475,10 @@ bool CTxDB::ReadAutoCheckpoint(int& nAutoCheckpoint)
     return Read(string("nAutoCheckpoint"), nAutoCheckpoint);
 }
 
-bool CTxDB::WriteAutoCheckpoint(int nCheckpoint)
+bool CTxDB::WriteAutoCheckpoint(int nCheckpoint, bool fReset)
 {
-    return Write(string("nAutoCheckpoint"), max(Checkpoints::nAutoCheckpoint, nCheckpoint));
+    nCheckpoint = fReset? nCheckpoint : max(Checkpoints::nAutoCheckpoint, nCheckpoint);
+    return Write(string("nAutoCheckpoint"), nCheckpoint);
 }
 
 CBlockIndex static * InsertBlockIndex(uint256 hash)

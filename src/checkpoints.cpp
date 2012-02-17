@@ -1,5 +1,5 @@
 // Copyright (c) 2011 The Bitcoin developers
-// Copyright (c) 2011 The PPCoin developers
+// Copyright (c) 2011-2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,6 +27,7 @@ namespace Checkpoints
 
     // ppcoin: automatic checkpoint (represented by height of checkpoint)
     int nAutoCheckpoint = 0;
+    int nBranchPoint = 0;    // branch point to alternative branch
 
     bool CheckHardened(int nHeight, const uint256& hash)
     {
@@ -51,7 +52,10 @@ namespace Checkpoints
                 if (pindex->nHeight >= nAutoCheckpoint)
                     return true;
                 else
+                {
+                    nBranchPoint = pindex->nHeight;
                     return error("Checkpoints: new block on alternative branch at height=%d before auto checkpoint at height=%d", pindex->nHeight, nAutoCheckpoint);
+                }
             }
             else
                 pindex = pindex->pprev;
@@ -126,6 +130,32 @@ namespace Checkpoints
         if (fTestNet) return 0;
 
         return mapCheckpoints.rbegin()->first;
+    }
+
+    // ppcoin: reset auto checkpoint
+    bool ResetAutoCheckpoint(int nCheckpoint)
+    {
+        if (nCheckpoint <= 0 || nCheckpoint > nBestHeight)
+            return error("ResetAutoCheckpoint() : new checkpoint invalid");
+        if (nCheckpoint >= nAutoCheckpoint)
+            return error("ResetAutoCheckpoint() : new checkpoint not earlier than current auto checkpoint");
+        CTxDB txdb;
+        txdb.TxnBegin();
+        if (!txdb.WriteAutoCheckpoint(nCheckpoint, true))
+            return error("ResetAutoCheckpoint() : database write failed");
+        if (!txdb.TxnCommit())
+            return error("ResetAutoCheckpoint() : database commit failed");
+        nAutoCheckpoint = nCheckpoint;
+        nBranchPoint = 0;  // clear branch point
+
+        // clear ban list to accept alternative branches
+        CRITICAL_BLOCK(cs_vNodes)
+        {
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                pnode->ClearBanned();
+        }
+
+        return true;
     }
 
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
