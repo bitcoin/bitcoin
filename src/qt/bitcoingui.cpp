@@ -723,7 +723,7 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
         QList<QUrl> urls = event->mimeData()->urls();
         foreach(const QUrl &url, urls)
         {
-            sendCoinsPage->handleURL(&url);
+            sendCoinsPage->handleURL(url.toString());
         }
     }
 
@@ -733,8 +733,7 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
 void BitcoinGUI::handleURL(QString strURL)
 {
     gotoSendCoinsPage();
-    QUrl url = QUrl(strURL);
-    sendCoinsPage->handleURL(&url);
+    sendCoinsPage->handleURL(strURL);
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)

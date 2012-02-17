@@ -265,7 +265,7 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
 }
 
 
-void SendCoinsDialog::handleURL(const QUrl *url)
+void SendCoinsDialog::handleURL(const QString &url)
 {
     SendCoinsRecipient rv;
     if(!GUIUtil::parseBitcoinURL(url, &rv))

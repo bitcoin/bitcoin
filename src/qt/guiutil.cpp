@@ -49,15 +49,15 @@ void GUIUtil::setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
-bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
+bool GUIUtil::parseBitcoinURL(const QUrl &url, SendCoinsRecipient *out)
 {
-    if(url->scheme() != QString("bitcoin"))
+    if(url.scheme() != QString("bitcoin"))
         return false;
 
     SendCoinsRecipient rv;
-    rv.address = url->path();
+    rv.address = url.path();
     rv.amount = 0;
-    QList<QPair<QString, QString> > items = url->queryItems();
+    QList<QPair<QString, QString> > items = url.queryItems();
     for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
         bool fShouldReturnFalse = false;
@@ -92,6 +92,20 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
         *out = rv;
     }
     return true;
+}
+
+bool GUIUtil::parseBitcoinURL(QString url, SendCoinsRecipient *out)
+{
+    // Convert bitcoin:// to bitcoin:
+    //
+    //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
+    //    which will lowercase it (and thus invalidate the address).
+    if(url.startsWith("bitcoin://"))
+    {
+        url.replace(0, 10, "bitcoin:");
+    }
+    QUrl urlInstance(url);
+    return parseBitcoinURL(urlInstance, out);
 }
 
 QString GUIUtil::HtmlEscape(const QString& str, bool fMultiLine)
