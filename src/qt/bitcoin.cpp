@@ -27,18 +27,10 @@ QSplashScreen *splashref;
 
 int MyMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
 {
-    // Message from main thread
-    if(guiref)
-    {
-        guiref->error(QString::fromStdString(caption),
-                      QString::fromStdString(message));
-    }
-    else
-    {
-        QMessageBox::critical(0, QString::fromStdString(caption),
-            QString::fromStdString(message),
-            QMessageBox::Ok, QMessageBox::Ok);
-    }
+    // Message from AppInit2(), always in main thread before main window is constructed
+    QMessageBox::critical(0, QString::fromStdString(caption),
+        QString::fromStdString(message),
+        QMessageBox::Ok, QMessageBox::Ok);
     return 4;
 }
 
