@@ -1,5 +1,5 @@
 // Copyright (c) 2011 The Bitcoin developers
-// Copyright (c) 2011 The PPCoin developers
+// Copyright (c) 2011-2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_CHECKPOINT_H
@@ -23,6 +23,7 @@ class CBlockIndex;
 namespace Checkpoints
 {
     extern int nAutoCheckpoint;
+    extern int nBranchPoint;
 
     // Returns true if block passes checkpoint checks
     bool CheckHardened(int nHeight, const uint256& hash);
@@ -31,6 +32,7 @@ namespace Checkpoints
     int  GetNextChainCheckpoint(const CBlockIndex *pindex);
     int  GetNextAutoCheckpoint(int nCheckpoint);
     void AdvanceAutoCheckpoint(int nCheckpoint);
+    bool ResetAutoCheckpoint(int nCheckpoint);
 
     // Return conservative estimate of total number of blocks, 0 if unknown
     int GetTotalBlocksEstimate();

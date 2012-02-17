@@ -8,6 +8,7 @@
 #include "db.h"
 #include "net.h"
 #include "init.h"
+#include "checkpoints.h"
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/iostreams/concepts.hpp>
@@ -1790,7 +1791,49 @@ Value getmemorypool(const Array& params, bool fHelp)
 }
 
 
+// ppcoin: reset auto checkpoint
+Value resetcheckpoint(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "resetcheckpoint <checkpointheight>\n"
+            "Reset automatic checkpoint to specified height.\n"
+            "<checkpointheight> is the height of the new checkpoint block.\n");
 
+    int nCheckpoint = params[0].get_int();
+    if (nCheckpoint <= 0 || nCheckpoint >= nBestHeight)
+        throw runtime_error(
+            "invalid checkpoint height.\n"
+        );
+    if (nCheckpoint >= Checkpoints::nAutoCheckpoint)
+        throw runtime_error(
+            "new checkpoint must be earlier than current auto checkpoint.\n"
+        );
+    if (!Checkpoints::ResetAutoCheckpoint(nCheckpoint))
+        throw runtime_error(
+            "internal error - reset checkpoint failed.\n"
+        );
+
+    return Value::null;
+}
+
+
+// ppcoin: get branch point of alternative branch
+Value getbranchpoint(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getbranchpoint\n"
+            "Returns height of branch point of alternative branch.\n");
+
+    Object result;
+    if (Checkpoints::nBranchPoint > 0)
+        result.push_back(Pair("branchpoint", Checkpoints::nBranchPoint));
+    else
+        result.push_back(Pair("branchpoint", "none"));
+    result.push_back(Pair("checkpoint", Checkpoints::nAutoCheckpoint));
+    return result;
+}
 
 
 
@@ -1845,6 +1888,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("settxfee",               &settxfee),
     make_pair("getmemorypool",          &getmemorypool),
     make_pair("listsinceblock",        &listsinceblock),
+    make_pair("resetcheckpoint",        &resetcheckpoint),
+    make_pair("getbranchpoint",         &getbranchpoint),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2477,6 +2522,7 @@ int CommandLineRPC(int argc, char *argv[])
             params[1] = v.get_obj();
         }
         if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "resetcheckpoint"         && n > 0) ConvertTo<boost::int64_t>(params[0]);
 
         // Execute
         Object reply = CallRPC(strMethod, params);
