@@ -792,8 +792,10 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb)
     }
 
     // Remove transaction from index
-    if (!txdb.EraseTxIndex(*this))
-        return error("DisconnectInputs() : EraseTxPos failed");
+    // This can fail if a duplicate of this transaction was in a chain that got
+    // reorganized away. This is only possible if this transaction was completely
+    // spent, so erasing it would be a no-op anway.
+    txdb.EraseTxIndex(*this);
 
     return true;
 }
@@ -981,6 +983,26 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock())
         return false;
+
+    // Do not allow blocks that contain transactions which 'overwrite' older transactions,
+    // unless those are already completely spent.
+    // If such overwrites are allowed, coinbases and transactions depending upon those
+    // can be duplicated to remove the ability to spend the first instance -- even after
+    // being sent to another address.
+    // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
+    // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
+    // already refuses previously-known transaction id's entirely.
+    // This rule applies to all blocks whose timestamp is after March 15, 2012, 0:00 UTC.
+    // On testnet it is enabled as of februari 20, 2012, 0:00 UTC.
+    if (pindex->nTime > 1331769600 || (fTestNet && pindex->nTime > 1329696000))
+        BOOST_FOREACH(CTransaction& tx, vtx)
+        {
+            CTxIndex txindexOld;
+            if (txdb.ReadTxIndex(tx.GetHash(), txindexOld))
+                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
+                    if (pos.IsNull())
+                        return false;
+        }
 
     //// issue here: it doesn't know the version
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - 1 + GetSizeOfCompactSize(vtx.size());
