@@ -454,6 +454,21 @@ vector<unsigned char> ParseHex(const string& str)
     return ParseHex(str.c_str());
 }
 
+static void InterpretNegativeSetting(string name, map<string, string>& mapSettingsRet)
+{
+    // interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
+    if (name.find("-no") == 0)
+    {
+        std::string positive("-");
+        positive.append(name.begin()+3, name.end());
+        if (mapSettingsRet.count(positive) == 0)
+        {
+            bool value = !GetBoolArg(name);
+            mapSettingsRet[positive] = (value ? "1" : "0");
+        }
+    }
+}
+
 void ParseParameters(int argc, const char*const argv[])
 {
     mapArgs.clear();
@@ -494,17 +509,8 @@ void ParseParameters(int argc, const char*const argv[])
             name = singleDash;
         }
 
-        //  interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1, as long as -foo not set)
-        if (name.find("-no") == 0)
-        {
-            std::string positive("-");
-            positive.append(name.begin()+3, name.end());
-            if (mapArgs.count(positive) == 0)
-            {
-                bool value = !GetBoolArg(name);
-                mapArgs[positive] = (value ? "1" : "0");
-            }
-        }
+        // interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
+        InterpretNegativeSetting(name, mapArgs);
     }
 }
 
@@ -920,7 +926,11 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
         // Don't overwrite existing settings so command line settings override bitcoin.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
+        {
             mapSettingsRet[strKey] = it->value[0];
+            //  interpret nofoo=1 as foo=0 (and nofoo=0 as foo=1) as long as foo not set)
+            InterpretNegativeSetting(strKey, mapSettingsRet);
+        }
         mapMultiSettingsRet[strKey].push_back(it->value[0]);
     }
 }
