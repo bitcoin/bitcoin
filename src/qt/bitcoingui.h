@@ -81,7 +81,7 @@ private:
     QAction *aboutAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
-    QAction *openBitcoinAction;
+    QAction *toggleHideAction;
     QAction *exportAction;
     QAction *encryptWalletAction;
     QAction *backupWalletAction;
@@ -166,6 +166,8 @@ private slots:
 
     /** Show window if hidden, unminimize when minimized */
     void showNormalIfMinimized();
+    /** Hide window if visible, show if hidden */
+    void toggleHidden();
 };
 
 #endif
