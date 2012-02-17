@@ -55,7 +55,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QMainWindow(parent),
     clientModel(0),
     walletModel(0),
-    dummyWidget(0),
     encryptWalletAction(0),
     changePassphraseAction(0),
     aboutQtAction(0),
@@ -84,9 +83,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Create the tray icon (or setup the dock icon)
     createTrayIcon();
-
-    // Dummy widget used when restoring window state after minimization
-    dummyWidget = new QWidget();
 
     // Create tabs
     overviewPage = new OverviewPage();
@@ -161,7 +157,6 @@ BitcoinGUI::~BitcoinGUI()
 #ifdef Q_WS_MAC
     delete appMenuBar;
 #endif
-    delete dummyWidget;
 }
 
 void BitcoinGUI::createActions()
@@ -387,14 +382,6 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 }
 #endif
 
-void BitcoinGUI::showNormal()
-{
-    // Reparent window to the desktop (in case it was hidden on minimize)
-    if(parent() != NULL)
-        setParent(NULL, Qt::Window);
-    QMainWindow::showNormal();
-}
-
 void BitcoinGUI::optionsClicked()
 {
     if(!clientModel || !clientModel->getOptionsModel())
@@ -541,15 +528,19 @@ void BitcoinGUI::changeEvent(QEvent *e)
     {
         if(clientModel && clientModel->getOptionsModel()->getMinimizeToTray())
         {
-            if(isMinimized())
+            QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
+            bool wasMinimized = wsevt->oldState() & Qt::WindowMinimized;
+            bool isMinimized = windowState() & Qt::WindowMinimized;
+            if(!wasMinimized && isMinimized)
             {
-                // Hiding the window from taskbar
-                setParent(dummyWidget, Qt::SubWindow);
+                // Minimized, hide the window from taskbar
+                setWindowFlags(windowFlags() | Qt::Tool);
                 return;
             }
-            else
+            else if(wasMinimized && !isMinimized)
             {
-                showNormal();
+                // Unminimized, show the window in taskbar
+                setWindowFlags(windowFlags() &~ Qt::Tool);
             }
         }
     }
