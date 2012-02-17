@@ -217,7 +217,11 @@ int main(int argc, char *argv[])
                 // If -min option passed, start window minimized.
                 if(GetBoolArg("-min"))
                 {
+                    // If we minimize to tray in the start-up phase, the GUI cannot be unminimized again
+                    int fMinimizeToTrayTemp = fMinimizeToTray;
+                    fMinimizeToTray = false;
                     window.showMinimized();
+                    fMinimizeToTray = fMinimizeToTrayTemp;
                 }
                 else
                 {
