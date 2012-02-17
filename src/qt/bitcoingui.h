@@ -162,6 +162,9 @@ private slots:
     void changePassphrase();
     /** Ask for pass phrase to unlock wallet temporarily */
     void unlockWallet();
+
+    /** Show window if hidden, unminimize when minimized */
+    void showNormalIfMinimized();
 };
 
 #endif
