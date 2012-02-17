@@ -86,6 +86,7 @@ private:
     QAction *openBitcoinAction;
     QAction *exportAction;
     QAction *encryptWalletAction;
+    QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
 
@@ -162,6 +163,8 @@ private slots:
     void incomingTransaction(const QModelIndex & parent, int start, int end);
     /** Encrypt the wallet */
     void encryptWallet(bool status);
+    /** Backup the wallet */
+    void backupWallet();
     /** Change encrypted wallet passphrase */
     void changePassphrase();
     /** Ask for pass phrase to unlock wallet temporarily */

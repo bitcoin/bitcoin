@@ -77,6 +77,8 @@ public:
     // Passphrase only needed when unlocking
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+    // Wallet backup
+    bool backupWallet(const QString &filename);
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
