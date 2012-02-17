@@ -55,6 +55,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QMainWindow(parent),
     clientModel(0),
     walletModel(0),
+    dummyWidget(0),
     encryptWalletAction(0),
     changePassphraseAction(0),
     aboutQtAction(0),
@@ -83,6 +84,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Create the tray icon (or setup the dock icon)
     createTrayIcon();
+
+    // Dummy widget used when restoring window state after minimization
+    dummyWidget = new QWidget();
 
     // Create tabs
     overviewPage = new OverviewPage();
@@ -157,6 +161,7 @@ BitcoinGUI::~BitcoinGUI()
 #ifdef Q_WS_MAC
     delete appMenuBar;
 #endif
+    delete dummyWidget;
 }
 
 void BitcoinGUI::createActions()
@@ -193,15 +198,15 @@ void BitcoinGUI::createActions()
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
-    connect(overviewAction, SIGNAL(triggered()), this, SLOT(show()));
+    connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormal()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
-    connect(historyAction, SIGNAL(triggered()), this, SLOT(show()));
+    connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormal()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
-    connect(addressBookAction, SIGNAL(triggered()), this, SLOT(show()));
+    connect(addressBookAction, SIGNAL(triggered()), this, SLOT(showNormal()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
-    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(show()));
+    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormal()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(show()));
+    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormal()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
@@ -379,9 +384,16 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
         // Click on system tray icon triggers "open bitcoin"
         openBitcoinAction->trigger();
     }
-
 }
 #endif
+
+void BitcoinGUI::showNormal()
+{
+    // Reparent window to the desktop (in case it was hidden on minimize)
+    if(parent() != NULL)
+        setParent(NULL, Qt::Window);
+    QMainWindow::showNormal();
+}
 
 void BitcoinGUI::optionsClicked()
 {
@@ -524,13 +536,13 @@ void BitcoinGUI::changeEvent(QEvent *e)
         {
             if(isMinimized())
             {
-                hide();
-                e->ignore();
+                // Hiding the window from taskbar
+                setParent(dummyWidget, Qt::SubWindow);
+                return;
             }
             else
             {
-                show();
-                e->accept();
+                showNormal();
             }
         }
     }

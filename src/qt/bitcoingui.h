@@ -57,6 +57,8 @@ private:
 
     QStackedWidget *centralWidget;
 
+    QWidget *dummyWidget;
+
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     AddressBookPage *addressBookPage;
@@ -123,6 +125,8 @@ public slots:
       @param[out] payFee            true to pay the fee, false to not pay the fee
     */
     void askFee(qint64 nFeeRequired, bool *payFee);
+
+    void showNormal();
 
 private slots:
     /** Switch to overview (home) page */

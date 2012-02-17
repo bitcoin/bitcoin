@@ -20,6 +20,7 @@ Q_IMPORT_PLUGIN(qcncodecs)
 Q_IMPORT_PLUGIN(qjpcodecs)
 Q_IMPORT_PLUGIN(qtwcodecs)
 Q_IMPORT_PLUGIN(qkrcodecs)
+Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
 using namespace std;
@@ -208,7 +209,7 @@ bool AppInit2(int argc, char* argv[])
 #ifdef GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif
-#ifndef WIN32
+#if !defined(WIN32) && !defined(GUI)
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
@@ -247,7 +248,7 @@ bool AppInit2(int argc, char* argv[])
     fTestNet = GetBoolArg("-testnet");
     fDebug = GetBoolArg("-debug");
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(GUI)
     fDaemon = GetBoolArg("-daemon");
 #else
     fDaemon = false;
@@ -278,7 +279,7 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(GUI)
     if (fDaemon)
     {
         // Daemonize
