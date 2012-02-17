@@ -29,6 +29,7 @@ public:
     // Parse "bitcoin:" URL into recipient object, return true on succesful parsing
     // See Bitcoin URL definition discussion here: https://bitcointalk.org/index.php?topic=33490.0
     static bool parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out);
+    static bool parseBitcoinURL(QString url, SendCoinsRecipient *out);
 };
 
 #endif // GUIUTIL_H

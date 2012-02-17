@@ -265,6 +265,16 @@ void SendCoinsDialog::handleURL(const QUrl *url)
     pasteEntry(rv);
 }
 
+void SendCoinsDialog::handleURL(const QString &url)
+{
+    SendCoinsRecipient rv;
+    if(!GUIUtil::parseBitcoinURL(url, &rv))
+    {
+        return;
+    }
+    pasteEntry(rv);
+}
+
 void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance)
 {
     Q_UNUSED(unconfirmedBalance);
