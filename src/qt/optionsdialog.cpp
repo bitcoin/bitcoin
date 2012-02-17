@@ -175,17 +175,15 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     minimize_to_tray = new QCheckBox(tr("&Minimize to the tray instead of the taskbar"));
     minimize_to_tray->setToolTip(tr("Show only a tray icon after minimizing the window"));
     layout->addWidget(minimize_to_tray);
+
+    minimize_on_close = new QCheckBox(tr("M&inimize on close"));
+    minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu."));
+    layout->addWidget(minimize_on_close);
 #endif
 
     map_port_upnp = new QCheckBox(tr("Map port using &UPnP"));
     map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled."));
     layout->addWidget(map_port_upnp);
-
-#ifndef Q_WS_MAC
-    minimize_on_close = new QCheckBox(tr("M&inimize on close"));
-    minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu."));
-    layout->addWidget(minimize_on_close);
-#endif
 
     connect_socks4 = new QCheckBox(tr("&Connect through SOCKS4 proxy:"));
     connect_socks4->setToolTip(tr("Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)"));
