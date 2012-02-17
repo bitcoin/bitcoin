@@ -30,7 +30,7 @@ public:
     QWidget *setupTabChain(QWidget *prev);
 
     void pasteEntry(const SendCoinsRecipient &rv);
-    void handleURL(const QUrl *url);
+    void handleURL(const QString &url);
 
 public slots:
     void clear();
