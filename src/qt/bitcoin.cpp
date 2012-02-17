@@ -152,7 +152,27 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(bitcoin);
     QApplication app(argc, argv);
 
+    // Command-line options take precedence:
     ParseParameters(argc, argv);
+
+    // ... then bitcoin.conf:
+    if (!ReadConfigFile(mapArgs, mapMultiArgs))
+    {
+        fprintf(stderr, "Error: Specified directory does not exist\n");
+        return 1;
+    }
+
+    // Application identification (must be set before OptionsModel is initialized,
+    // as it is used to locate QSettings)
+    app.setOrganizationName("Bitcoin");
+    app.setOrganizationDomain("bitcoin.org");
+    if(GetBoolArg("-testnet")) // Separate UI settings for testnet
+        app.setApplicationName("Bitcoin-Qt-testnet");
+    else
+        app.setApplicationName("Bitcoin-Qt");
+
+    // ... then GUI settings:
+    OptionsModel optionsModel;
 
     // Get desired locale ("en_US") from command line or system locale
     QString lang_territory = QString::fromStdString(GetArg("-lang", QLocale::system().name().toStdString()));
@@ -180,8 +200,6 @@ int main(int argc, char *argv[])
     if (!translator.isEmpty())
         app.installTranslator(&translator);
 
-    app.setApplicationName(QApplication::translate("main", "Bitcoin-Qt"));
-
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
     {
@@ -201,10 +219,13 @@ int main(int argc, char *argv[])
             {
                 // Put this in a block, so that BitcoinGUI is cleaned up properly before
                 // calling Shutdown() in case of exceptions.
+
+                optionsModel.Upgrade(); // Must be done after AppInit2
+
                 BitcoinGUI window;
                 if (splashref)
                     splash.finish(&window);
-                OptionsModel optionsModel(pwalletMain);
+
                 ClientModel clientModel(&optionsModel);
                 WalletModel walletModel(pwalletMain, &optionsModel);
 
