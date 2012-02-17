@@ -1409,33 +1409,31 @@ void ThreadCleanWalletPassphrase(void* parg)
 {
     int64 nMyWakeTime = GetTime() + *((int*)parg);
 
+    ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
+
     if (nWalletUnlockTime == 0)
     {
-        CRITICAL_BLOCK(cs_nWalletUnlockTime)
-        {
-            nWalletUnlockTime = nMyWakeTime;
-        }
+        nWalletUnlockTime = nMyWakeTime;
 
         while (GetTime() < nWalletUnlockTime)
-            Sleep(GetTime() - nWalletUnlockTime);
-
-        CRITICAL_BLOCK(cs_nWalletUnlockTime)
         {
-            nWalletUnlockTime = 0;
+            int64 nToSleep = GetTime() - nWalletUnlockTime;
+
+            LEAVE_CRITICAL_SECTION(cs_nWalletUnlockTime);
+            Sleep(nToSleep);
+            ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
         }
+
+        nWalletUnlockTime = 0;
+        pwalletMain->Lock();
     }
     else
     {
-        CRITICAL_BLOCK(cs_nWalletUnlockTime)
-        {
-            if (nWalletUnlockTime < nMyWakeTime)
-                nWalletUnlockTime = nMyWakeTime;
-        }
-        delete (int*)parg;
-        return;
+        if (nWalletUnlockTime < nMyWakeTime)
+            nWalletUnlockTime = nMyWakeTime;
     }
 
-    pwalletMain->Lock();
+    LEAVE_CRITICAL_SECTION(cs_nWalletUnlockTime);
 
     delete (int*)parg;
 }
