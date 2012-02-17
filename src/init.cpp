@@ -210,10 +210,10 @@ bool AppInit2(int argc, char* argv[])
 #endif
 #endif
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send") + "\n" +
-#ifdef GUI
+#ifdef QT_GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands") + "\n" +
 #endif
-#if !defined(WIN32) && !defined(GUI)
+#if !defined(WIN32) && !defined(QT_GUI)
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands") + "\n" +
 #endif
             "  -testnet         \t\t  " + _("Use the test network") + "\n" +
@@ -253,7 +253,7 @@ bool AppInit2(int argc, char* argv[])
     fTestNet = GetBoolArg("-testnet");
     fDebug = GetBoolArg("-debug");
 
-#if !defined(WIN32) && !defined(GUI)
+#if !defined(WIN32) && !defined(QT_GUI)
     fDaemon = GetBoolArg("-daemon");
 #else
     fDaemon = false;
@@ -284,7 +284,7 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
-#if !defined(WIN32) && !defined(GUI)
+#if !defined(WIN32) && !defined(QT_GUI)
     if (fDaemon)
     {
         // Daemonize
