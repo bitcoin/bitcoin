@@ -908,15 +908,28 @@ string GetConfigFile()
     return pathConfig.string();
 }
 
-void ReadConfigFile(map<string, string>& mapSettingsRet,
+bool ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
     namespace fs = boost::filesystem;
     namespace pod = boost::program_options::detail;
 
+    if (mapSettingsRet.count("-datadir"))
+    {
+        if (fs::is_directory(fs::system_complete(mapSettingsRet["-datadir"])))
+        {
+            fs::path pathDataDir = fs::system_complete(mapSettingsRet["-datadir"]);
+            strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     fs::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return;
+        return true; // No bitcoin.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
@@ -933,6 +946,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
         }
         mapMultiSettingsRet[strKey].push_back(it->value[0]);
     }
+    return true;
 }
 
 string GetPidFile()
