@@ -402,7 +402,7 @@ bool CNetAddr::IsRFC6145() const
 
 bool CNetAddr::IsRFC4843() const
 {
-    return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && GetByte(12) & 0xF0 == 0x10);
+    return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10);
 }
 
 bool CNetAddr::IsLocal() const
