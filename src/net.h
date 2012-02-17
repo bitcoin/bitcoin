@@ -68,14 +68,26 @@ public:
 
 
 
+enum threadId
+{
+    THREAD_SOCKETHANDLER,
+    THREAD_OPENCONNECTIONS,
+    THREAD_MESSAGEHANDLER,
+    THREAD_MINER,
+    THREAD_RPCSERVER,
+    THREAD_UPNP,
+    THREAD_DNSSEED,
+    THREAD_ADDEDCONNECTIONS,
 
+    THREAD_MAX
+};
 
 extern bool fClient;
 extern bool fAllowDNS;
 extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
 extern uint64 nLocalHostNonce;
-extern boost::array<int, 10> vnThreadsRunning;
+extern boost::array<int, THREAD_MAX> vnThreadsRunning;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;

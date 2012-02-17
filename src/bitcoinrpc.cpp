@@ -2355,15 +2355,15 @@ void ThreadRPCServer(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer(parg));
     try
     {
-        vnThreadsRunning[4]++;
+        vnThreadsRunning[THREAD_RPCSERVER]++;
         ThreadRPCServer2(parg);
-        vnThreadsRunning[4]--;
+        vnThreadsRunning[THREAD_RPCSERVER]--;
     }
     catch (std::exception& e) {
-        vnThreadsRunning[4]--;
+        vnThreadsRunning[THREAD_RPCSERVER]--;
         PrintException(&e, "ThreadRPCServer()");
     } catch (...) {
-        vnThreadsRunning[4]--;
+        vnThreadsRunning[THREAD_RPCSERVER]--;
         PrintException(NULL, "ThreadRPCServer()");
     }
     printf("ThreadRPCServer exiting\n");
@@ -2443,7 +2443,7 @@ void ThreadRPCServer2(void* parg)
 #endif
 
         ip::tcp::endpoint peer;
-        vnThreadsRunning[4]--;
+        vnThreadsRunning[THREAD_RPCSERVER]--;
 #ifdef USE_SSL
         acceptor.accept(sslStream.lowest_layer(), peer);
 #else
