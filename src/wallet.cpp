@@ -1073,6 +1073,8 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, CTransaction& txNew)
         int64 nValueIn = 0;
         if (!SelectCoins(GetBalance(), txNew.nTime, setCoins, nValueIn))
             return false;
+        if (setCoins.empty())
+            return false;
         int64 nCredit = 0;
         BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
         {
