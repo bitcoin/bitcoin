@@ -486,6 +486,11 @@ public:
         return Write(std::make_pair(std::string("setting"), strKey), value);
     }
 
+    bool WriteMinVersion(int nVersion)
+    {
+        return Write(std::string("minversion"), nVersion);
+    }
+
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
     bool WriteAccountingEntry(const CAccountingEntry& acentry);
