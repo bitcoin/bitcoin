@@ -183,7 +183,7 @@ bool CWallet::EncryptWallet(const string& strWalletPassphrase)
             if (!pwalletdbEncryption->TxnCommit())
                 exit(1); //We now have keys encrypted in memory, but no on disk...die to avoid confusion and let the user reload their unencrypted wallet.
 
-            pwalletdbEncryption->Close();
+            delete pwalletdbEncryption;
             pwalletdbEncryption = NULL;
         }
 
