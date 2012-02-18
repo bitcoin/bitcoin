@@ -56,7 +56,6 @@ extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern uint256 hashGenesisBlock;
 extern unsigned int nTransactionsUpdated;
-extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
 extern const std::string strMessageMagic;
 extern double dHashesPerSec;
@@ -1560,7 +1559,5 @@ public:
         return mapTx[hash];
     }
 };
-
-extern CTxMemPool mempool;
 
 #endif

@@ -134,6 +134,8 @@ public:
     // Return transaction with hash in tx, and if it was found inside a block, its hash is placed in hashBlock
     bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock);
 
+    unsigned long GetPooledTxSize();
+
 //Connected wallet/etc access methods
 
     // Ask that any listeners who have access to ask other nodes for blocks
