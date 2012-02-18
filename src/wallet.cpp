@@ -15,6 +15,16 @@ using namespace std;
 // mapWallet
 //
 
+std::vector<unsigned char> CWallet::GenerateNewKey()
+{
+    RandAddSeedPerfmon();
+    CKey key;
+    key.MakeNewKey();
+    if (!AddKey(key))
+        throw std::runtime_error("CWallet::GenerateNewKey() : AddKey failed");
+    return key.GetPubKey();
+}
+
 bool CWallet::AddKey(const CKey& key)
 {
     if (!CCryptoKeyStore::AddKey(key))
