@@ -23,6 +23,7 @@ typedef long long  int64;
 typedef unsigned long long  uint64;
 
 #ifdef WIN32
+#define _WIN32_WINNT 0x0501
 #include <windows.h>
 // This is used to attempt to keep keying material out of swap
 // Note that VirtualLock does not provide this as a guarantee on Windows,
