@@ -8,16 +8,6 @@
 #include "db.h"
 #include "script.h"
 
-std::vector<unsigned char> CKeyStore::GenerateNewKey()
-{
-    RandAddSeedPerfmon();
-    CKey key;
-    key.MakeNewKey();
-    if (!AddKey(key))
-        throw std::runtime_error("CKeyStore::GenerateNewKey() : AddKey failed");
-    return key.GetPubKey();
-}
-
 bool CKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const
 {
     CKey key;
