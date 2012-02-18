@@ -17,9 +17,16 @@ using namespace std;
 
 std::vector<unsigned char> CWallet::GenerateNewKey()
 {
+    bool fCompressed = true; // default to compressed public keys
+
     RandAddSeedPerfmon();
     CKey key;
-    key.MakeNewKey();
+    key.MakeNewKey(fCompressed);
+
+    // Compressed public keys were introduced in version 0.6.0
+    if (fCompressed)
+        SetMinVersion(59900);
+
     if (!AddKey(key))
         throw std::runtime_error("CWallet::GenerateNewKey() : AddKey failed");
     return key.GetPubKey();
