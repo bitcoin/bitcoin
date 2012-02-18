@@ -1916,6 +1916,8 @@ string pAllowInSafeMode[] =
     "validateaddress",
     "getwork",
     "getmemorypool",
+    "resetcheckpoint",
+    "getbranchpoint",
 };
 set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
 
