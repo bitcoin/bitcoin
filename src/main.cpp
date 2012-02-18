@@ -521,6 +521,11 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
 }
 
+unsigned long CBlockStore::GetPooledTxSize()
+{
+    return mempool.size();
+}
+
 bool CTxMemPool::addUnchecked(CTransaction &tx)
 {
     printf("addUnchecked(): size %lu\n",  mapTx.size());
@@ -2285,7 +2290,6 @@ public:
 };
 
 
-uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
 
 CBlock* CreateNewBlock(CReserveKey& reservekey)
@@ -2374,7 +2378,6 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
         // Collect transactions into block
         map<uint256, CTxIndex> mapTestPool;
         uint64 nBlockSize = 1000;
-        uint64 nBlockTx = 0;
         int nBlockSigOps = 100;
         while (!mapPriority.empty())
         {
@@ -2421,7 +2424,6 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // Added
             pblock->vtx.push_back(tx);
             nBlockSize += nTxSize;
-            ++nBlockTx;
             nBlockSigOps += nTxSigOps;
             nFees += nTxFees;
 
@@ -2441,7 +2443,6 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             }
         }
 
-        nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         printf("CreateNewBlock(): total size %lu\n", nBlockSize);
 
