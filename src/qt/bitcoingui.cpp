@@ -165,6 +165,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
 BitcoinGUI::~BitcoinGUI()
 {
+    if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
+        trayIcon->hide();
 #ifdef Q_WS_MAC
     delete appMenuBar;
 #endif
