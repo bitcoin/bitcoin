@@ -1311,6 +1311,9 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     BOOST_FOREACH(CTransaction& tx, vDelete)
         tx.RemoveFromMemoryPool();
 
+    printf("REORGANIZE: Disconnected %i blocks; %s..%s\n", vDisconnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexBest->GetBlockHash().ToString().substr(0,20).c_str());
+    printf("REORGANIZE: Connected %i blocks; %s..%s\n", vConnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->GetBlockHash().ToString().substr(0,20).c_str());
+
     return true;
 }
 
