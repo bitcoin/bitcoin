@@ -973,19 +973,21 @@ void ThreadMapPort2(void* parg)
     r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
     if (r == 1)
     {
-        char externalIPAddress[40];
-        r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
-        if(r != UPNPCOMMAND_SUCCESS)
-            printf("UPnP: GetExternalIPAddress() returned %d\n", r);
-        else
-        {
-            if(externalIPAddress[0])
-            {
-                printf("UPnP: ExternalIPAddress = %s\n", externalIPAddress);
-                AddLocal(CNetAddr(externalIPAddress), LOCAL_UPNP);
-            }
+        if (GetBoolArg("-discover", true)) {
+            char externalIPAddress[40];
+            r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
+            if(r != UPNPCOMMAND_SUCCESS)
+                printf("UPnP: GetExternalIPAddress() returned %d\n", r);
             else
-                printf("UPnP: GetExternalIPAddress failed.\n");
+            {
+                if(externalIPAddress[0])
+                {
+                    printf("UPnP: ExternalIPAddress = %s\n", externalIPAddress);
+                    AddLocal(CNetAddr(externalIPAddress), LOCAL_UPNP);
+                }
+                else
+                    printf("UPnP: GetExternalIPAddress failed.\n");
+            }
         }
 
         string strDesc = "Bitcoin " + FormatFullVersion();
@@ -1695,18 +1697,10 @@ bool BindListenPort(string& strError)
     return true;
 }
 
-void StartNode(void* parg)
+void static Discover()
 {
-#ifdef USE_UPNP
-#if USE_UPNP
-    fUseUPnP = GetBoolArg("-upnp", true);
-#else
-    fUseUPnP = GetBoolArg("-upnp", false);
-#endif
-#endif
-
-    if (pnodeLocalHost == NULL)
-        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), nLocalServices));
+    if (!GetBoolArg("-discover", true))
+        return;
 
 #ifdef WIN32
     // Get local host ip
@@ -1764,6 +1758,22 @@ void StartNode(void* parg)
     {
         CreateThread(ThreadGetMyExternalIP, NULL);
     }
+}
+
+void StartNode(void* parg)
+{
+#ifdef USE_UPNP
+#if USE_UPNP
+    fUseUPnP = GetBoolArg("-upnp", true);
+#else
+    fUseUPnP = GetBoolArg("-upnp", false);
+#endif
+#endif
+
+    if (pnodeLocalHost == NULL)
+        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), nLocalServices));
+
+    Discover();
 
     //
     // Start threads

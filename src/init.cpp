@@ -187,6 +187,8 @@ bool AppInit2(int argc, char* argv[])
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
             "  -seednode=<ip>   \t\t  " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n" +
+            "  -externalip=<ip> \t  "   + _("Specify your own public address") + "\n" +
+            "  -discover        \t  "   + _("Try to discover public IP address (default: 1)") + "\n" +
             "  -irc             \t  "   + _("Find peers using internet relay chat (default: 0)") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
 #ifdef QT_GUI
@@ -519,6 +521,9 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
+    if (mapArgs.count("-connect"))
+        SoftSetBoolArg("-dnsseed", false);
+ 
     bool fTor = (fUseProxy && addrProxy.GetPort() == 9050);
     if (fTor)
     {
@@ -528,6 +533,7 @@ bool AppInit2(int argc, char* argv[])
         SoftSetBoolArg("-irc", false);
         SoftSetBoolArg("-proxydns", true);
         SoftSetBoolArg("-upnp", false);
+        SoftSetBoolArg("-discover", false);
     }
 
     fNameLookup = GetBoolArg("-dns");
@@ -554,6 +560,12 @@ bool AppInit2(int argc, char* argv[])
             ThreadSafeMessageBox(strError, _("Bitcoin"), wxOK | wxMODAL);
             return false;
         }
+    }
+
+    if (mapArgs.count("-externalip"))
+    {
+        BOOST_FOREACH(string strAddr, mapMultiArgs["-externalip"])
+            AddLocal(CNetAddr(strAddr, fNameLookup), LOCAL_MANUAL);
     }
 
     if (mapArgs.count("-paytxfee"))
