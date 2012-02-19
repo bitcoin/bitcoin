@@ -2921,7 +2921,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 int static FormatHashBlocks(void* pbuffer, unsigned int len)
 {
     unsigned char* pdata = (unsigned char*)pbuffer;
-    unsigned int blocks = 1 + ((len + 8) / 64);
+    unsigned int blocks = 1 + ((len + 9) / 64);
     unsigned char* pend = pdata + 64 * blocks;
     memset(pdata + len, 0, 64 * blocks - len);
     pdata[len] = 0x80;
