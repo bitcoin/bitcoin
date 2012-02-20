@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     for (int i = 0; i < 3; i++)
     {
         CKey k;
-        k.MakeNewKey();
+        k.MakeNewKey(true);
         keys.push_back(k);
     }
     CScript s2;
