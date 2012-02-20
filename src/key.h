@@ -114,7 +114,7 @@ public:
         return fCompressedPubKey;
     }
 
-    void MakeNewKey(bool fCompressed = true)
+    void MakeNewKey(bool fCompressed)
     {
         if (!EC_KEY_generate_key(pkey))
             throw key_error("CKey::MakeNewKey() : EC_KEY_generate_key failed");

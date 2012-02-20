@@ -29,8 +29,6 @@ public:
     virtual bool HaveCScript(const uint160 &hash) const =0;
     virtual bool GetCScript(const uint160 &hash, CScript& redeemScriptOut) const =0;
 
-    // Generate a new key, and add it to the store
-    virtual std::vector<unsigned char> GenerateNewKey();
     virtual bool GetSecret(const CBitcoinAddress &address, CSecret& vchSecret, bool &fCompressed) const
     {
         CKey key;
