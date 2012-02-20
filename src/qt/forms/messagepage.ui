@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="labelExplanation">
      <property name="text">
-      <string>You can sign messages with your addresses to prove you own them. Be careful to only sign statement you agree to with full details, as phishing attacks may try to trick you into signing access to them.</string>
+      <string>You can sign messages with your addresses to prove you own them. Be careful to only sign statements you agree to with full details, as phishing attacks may try to trick you into signing access to them.</string>
      </property>
      <property name="textFormat">
       <enum>Qt::AutoText</enum>
