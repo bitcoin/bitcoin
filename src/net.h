@@ -144,6 +144,7 @@ public:
     uint256 hashContinue;
     CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
+    uint64 nNonce;
     int nStartingHeight;
 
     // flood relay
@@ -198,6 +199,7 @@ public:
         fGetAddr = false;
         vfSubscribe.assign(256, false);
         nMisbehavior = 0;
+        nNonce = 0;
 
         // Be shy and don't send version until we hear
         if (!fInbound)

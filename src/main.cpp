@@ -2120,6 +2120,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return true;
         }
 
+        // Disconnect if we connected again to an already-connected peer
+        bool fAlreadyConnected = false;
+        CRITICAL_BLOCK(cs_vNodes)
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                if (pfrom != pnode && nNonce > 1 && pnode->nNonce > 1 && pnode->nNonce == nNonce)
+                    fAlreadyConnected = true;
+        if (fAlreadyConnected)
+        {
+            printf("already connected to %s, disconnecting\n", pfrom->addr.ToString().c_str());
+            pfrom->fDisconnect = true;
+            return true;
+        }
+
+        pfrom->nNonce = nNonce;
+
+
         // Be shy and don't send version until we hear
         if (pfrom->fInbound)
             pfrom->PushVersion();
