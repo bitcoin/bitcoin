@@ -72,9 +72,9 @@ sign_multisig(CScript scriptPubKey, CKey key, CTransaction transaction)
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
 {
     CKey key1, key2, key3;
-    key1.MakeNewKey();
-    key2.MakeNewKey();
-    key3.MakeNewKey();
+    key1.MakeNewKey(true);
+    key2.MakeNewKey(false);
+    key3.MakeNewKey(true);
 
     CScript scriptPubKey12;
     scriptPubKey12 << OP_1 << key1.GetPubKey() << key2.GetPubKey() << OP_2 << OP_CHECKMULTISIG;
@@ -105,10 +105,10 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
 {
     CKey key1, key2, key3, key4;
-    key1.MakeNewKey();
-    key2.MakeNewKey();
-    key3.MakeNewKey();
-    key4.MakeNewKey();
+    key1.MakeNewKey(true);
+    key2.MakeNewKey(false);
+    key3.MakeNewKey(true);
+    key4.MakeNewKey(false);
 
     CScript scriptPubKey23;
     scriptPubKey23 << OP_2 << key1.GetPubKey() << key2.GetPubKey() << key3.GetPubKey() << OP_3 << OP_CHECKMULTISIG;
