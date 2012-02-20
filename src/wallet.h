@@ -25,6 +25,8 @@ private:
 
     CWalletDB *pwalletdbEncryption;
 
+    int nWalletVersion;
+
 public:
     mutable CCriticalSection cs_wallet;
 
@@ -33,18 +35,21 @@ public:
 
     std::set<int64> setKeyPool;
 
+
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
     CWallet()
     {
+        nWalletVersion = 0;
         fFileBacked = false;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
     }
     CWallet(std::string strWalletFileIn)
     {
+        nWalletVersion = 0;
         strWalletFile = strWalletFileIn;
         fFileBacked = true;
         nMasterKeyMaxID = 0;
@@ -61,10 +66,14 @@ public:
     std::vector<unsigned char> vchDefaultKey;
 
     // keystore implementation
+    // Generate a new key
+    std::vector<unsigned char> GenerateNewKey();
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& key);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
+
+    bool LoadMinVersion(int nVersion) { nWalletVersion = nVersion; return true; }
 
     // Adds an encrypted key to the store, and saves it to disk.
     bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
@@ -206,6 +215,8 @@ public:
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
     bool SetDefaultKey(const std::vector<unsigned char> &vchPubKey);
+
+    bool SetMinVersion(int nVersion, CWalletDB* pwalletdbIn = NULL);
 };
 
 

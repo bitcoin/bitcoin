@@ -940,6 +940,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 ssValue >> nMinVersion;
                 if (nMinVersion > CLIENT_VERSION)
                     return DB_TOO_NEW;
+                pwallet->LoadMinVersion(nMinVersion);
             }
             else if (strType == "cscript")
             {
