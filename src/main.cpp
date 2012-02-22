@@ -2103,17 +2103,23 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAddress addrFrom;
         uint64 nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
+        if (pfrom->nVersion < 209)
+        {
+            // Since Februari 20, 2012, the protocol is initiated at version 209,
+            // and earlier versions are no longer supported
+            printf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
+            pfrom->fDisconnect = true;
+            return false;
+        }
+
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
-        if (pfrom->nVersion >= 106 && !vRecv.empty())
+        if (!vRecv.empty())
             vRecv >> addrFrom >> nNonce;
-        if (pfrom->nVersion >= 106 && !vRecv.empty())
+        if (!vRecv.empty())
             vRecv >> pfrom->strSubVer;
-        if (pfrom->nVersion >= 209 && !vRecv.empty())
+        if (!vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
-
-        if (pfrom->nVersion == 0)
-            return false;
 
         // Disconnect if we connected to ourself
         if (nNonce == nLocalHostNonce && nNonce > 1)
@@ -2132,11 +2138,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         AddTimeData(pfrom->addr, nTime);
 
         // Change version
-        if (pfrom->nVersion >= 209)
-            pfrom->PushMessage("verack");
+        pfrom->PushMessage("verack");
         pfrom->vSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
-        if (pfrom->nVersion < 209)
-            pfrom->vRecv.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
 
         if (!pfrom->fInbound)
         {
@@ -2200,8 +2203,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> vAddr;
 
         // Don't want addr from older versions unless seeding
-        if (pfrom->nVersion < 209)
-            return true;
         if (pfrom->nVersion < 31402 && mapAddresses.size() > 1000)
             return true;
         if (vAddr.size() > 1000)
@@ -2663,17 +2664,14 @@ bool ProcessMessages(CNode* pfrom)
         }
 
         // Checksum
-        if (vRecv.GetVersion() >= 209)
+        uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
+        unsigned int nChecksum = 0;
+        memcpy(&nChecksum, &hash, sizeof(nChecksum));
+        if (nChecksum != hdr.nChecksum)
         {
-            uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
-            unsigned int nChecksum = 0;
-            memcpy(&nChecksum, &hash, sizeof(nChecksum));
-            if (nChecksum != hdr.nChecksum)
-            {
-                printf("ProcessMessage(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
-                       strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
-                continue;
-            }
+            printf("ProcessMessage(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
+               strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
+            continue;
         }
 
         // Copy message to its own buffer
