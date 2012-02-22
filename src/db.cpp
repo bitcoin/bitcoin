@@ -930,6 +930,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 if (strKey == "fUseProxy")          ssValue >> fUseProxy;
                 if (strKey == "addrProxy")          ssValue >> addrProxy;
                 if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
+                if (strKey == "nBalanceReserve")    ssValue >> nBalanceReserve;
             }
             else if (strType == "minversion")
             {
