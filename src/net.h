@@ -29,6 +29,7 @@ inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer"
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 10*1000); }
 static const unsigned int PUBLISH_HOPS = 5;
 
+bool RecvLine(SOCKET hSocket, std::string& strLine);
 bool GetMyExternalIP(CNetAddr& ipRet);
 bool AddAddress(CAddress addr, int64 nTimePenalty=0, CAddrDB *pAddrDB=NULL);
 void AddressCurrentlyConnected(const CService& addr);
