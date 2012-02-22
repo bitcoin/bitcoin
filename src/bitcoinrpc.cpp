@@ -155,6 +155,66 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
         entry.push_back(Pair(item.first, item.second));
 }
 
+void
+ScriptSigToJSON(const CTxIn& txin, Object& out)
+{
+    out.push_back(Pair("asm", txin.scriptSig.ToString()));
+    out.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+
+    CTransaction txprev;
+    uint256 hashTxprevBlock;
+    if (!GetTransaction(txin.prevout.hash, txprev, hashTxprevBlock))
+        return;
+
+    txnouttype type;
+    vector<CBitcoinAddress> addresses;
+    int nRequired;
+
+    if (!ExtractAddresses(txprev.vout[txin.prevout.n].scriptPubKey, type,
+                          addresses, nRequired))
+    {
+        out.push_back(Pair("type", GetTxnOutputType(TX_NONSTANDARD)));
+        return;
+    }
+
+    out.push_back(Pair("type", GetTxnOutputType(type)));
+    if (type == TX_MULTISIG)
+    {
+        // TODO: Need to handle this specially since not all input addresses are required...
+        return;
+    }
+
+    Array a;
+    BOOST_FOREACH(const CBitcoinAddress& addr, addresses)
+        a.push_back(addr.ToString());
+    out.push_back(Pair("addresses", a));
+}
+
+void
+ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
+{
+    txnouttype type;
+    vector<CBitcoinAddress> addresses;
+    int nRequired;
+
+    out.push_back(Pair("asm", scriptPubKey.ToString()));
+    out.push_back(Pair("hex", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
+
+    if (!ExtractAddresses(scriptPubKey, type, addresses, nRequired))
+    {
+        out.push_back(Pair("type", GetTxnOutputType(TX_NONSTANDARD)));
+        return;
+    }
+
+    out.push_back(Pair("reqSigs", nRequired));
+    out.push_back(Pair("type", GetTxnOutputType(type)));
+
+    Array a;
+    BOOST_FOREACH(const CBitcoinAddress& addr, addresses)
+        a.push_back(addr.ToString());
+    out.push_back(Pair("addresses", a));
+}
+
 void TxToJSON(const CTransaction &tx, Object& entry, const Object& decompositions)
 {
     entry.push_back(Pair("version", tx.nVersion));
@@ -184,6 +244,13 @@ void TxToJSON(const CTransaction &tx, Object& entry, const Object& decomposition
             case DM_ASM:
                 in.push_back(Pair("scriptSig", txin.scriptSig.ToString()));
                 break;
+            case DM_OBJ:
+            {
+                Object o;
+                ScriptSigToJSON(txin, o);
+                in.push_back(Pair("scriptSig", o));
+                break;
+            }
             default:
                 throw JSONRPCError(-18, "Invalid script decomposition");
             }
@@ -206,6 +273,13 @@ void TxToJSON(const CTransaction &tx, Object& entry, const Object& decomposition
         case DM_ASM:
             out.push_back(Pair("scriptPubKey", txout.scriptPubKey.ToString()));
             break;
+        case DM_OBJ:
+        {
+            Object o;
+            ScriptPubKeyToJSON(txout.scriptPubKey, o);
+            out.push_back(Pair("scriptPubKey", o));
+            break;
+        }
         default:
             throw JSONRPCError(-18, "Invalid script decomposition");
         }
