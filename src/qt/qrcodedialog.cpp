@@ -1,9 +1,9 @@
 #include "qrcodedialog.h"
 #include "ui_qrcodedialog.h"
+#include "guiutil.h"
+
 #include <QPixmap>
 #include <QUrl>
-#include <QFileDialog>
-#include <QDesktopServices>
 #include <QDebug>
 
 #include <qrencode.h>
@@ -34,8 +34,8 @@ QRCodeDialog::~QRCodeDialog()
     delete ui;
 }
 
-void QRCodeDialog::genCode() {
-
+void QRCodeDialog::genCode()
+{
     QString uri = getURI();
     //qDebug() << "Encoding:" << uri.toUtf8().constData();
     QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
@@ -52,7 +52,8 @@ void QRCodeDialog::genCode() {
     ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
 }
 
-QString QRCodeDialog::getURI() {
+QString QRCodeDialog::getURI()
+{
     QString ret = QString("bitcoin:%1").arg(address);
 
     int paramCount = 0;
@@ -80,21 +81,24 @@ QString QRCodeDialog::getURI() {
     return ret;
 }
 
-void QRCodeDialog::on_lnReqAmount_textChanged(const QString &) {
+void QRCodeDialog::on_lnReqAmount_textChanged(const QString &)
+{
     genCode();
 }
 
-void QRCodeDialog::on_lnLabel_textChanged(const QString &) {
+void QRCodeDialog::on_lnLabel_textChanged(const QString &)
+{
     genCode();
 }
 
-void QRCodeDialog::on_lnMessage_textChanged(const QString &) {
+void QRCodeDialog::on_lnMessage_textChanged(const QString &)
+{
     genCode();
 }
 
 void QRCodeDialog::on_btnSaveAs_clicked()
 {
-    QString fn = QFileDialog::getSaveFileName(this, "Save Image...", QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation), "Images (*.png)");
+    QString fn = GUIUtil::getSaveFileName(this, tr("Save Image..."), QString(), tr("PNG Images (*.png)"));
     if(!fn.isEmpty()) {
         myImage.scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE).save(fn);
     }
