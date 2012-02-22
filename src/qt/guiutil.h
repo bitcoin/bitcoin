@@ -46,6 +46,20 @@ public:
      */
     static void copyEntryData(QAbstractItemView *view, int column, int role=Qt::EditRole);
 
+    /** Get save file name, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
+        when no suffix is provided by the user.
+
+      @param[in] parent  Parent window (or 0)
+      @param[in] caption Window caption (or empty, for default)
+      @param[in] dir     Starting directory (or empty, to default to documents directory)
+      @param[in] filter  Filter specification such as "Comma Separated Files (*.csv)"
+      @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
+                  Can be useful when choosing the save file format based on suffix.
+     */
+    static QString getSaveFileName(QWidget *parent=0, const QString &caption=QString(),
+                                   const QString &dir=QString(), const QString &filter=QString(),
+                                   QString *selectedSuffixOut=0);
+
 };
 
 #endif // GUIUTIL_H
