@@ -120,6 +120,17 @@ Value ValueFromAmount(int64 amount)
     return (double)amount / (double)COIN;
 }
 
+std::string
+HexBits(unsigned int nBits)
+{
+    union {
+        int32_t nBits;
+        char cBits[4];
+    } uBits;
+    uBits.nBits = htonl((int32_t)nBits);
+    return HexStr(BEGIN(uBits.cBits), END(uBits.cBits));
+}
+
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
@@ -147,11 +158,13 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 {
     Object result;
     result.push_back(Pair("hash", block.GetHash().GetHex()));
-    result.push_back(Pair("blockcount", blockindex->nHeight));
+    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK)));
+    result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     result.push_back(Pair("time", (boost::int64_t)block.GetBlockTime()));
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
+    result.push_back(Pair("bits", HexBits(block.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     Array txhashes;
     BOOST_FOREACH (const CTransaction&tx, block.vtx)
@@ -159,9 +172,9 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("tx", txhashes));
 
     if (blockindex->pprev)
-        result.push_back(Pair("hashprevious", blockindex->pprev->GetBlockHash().GetHex()));
+        result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
     if (blockindex->pnext)
-        result.push_back(Pair("hashnext", blockindex->pnext->GetBlockHash().GetHex()));
+        result.push_back(Pair("nextblockhash", blockindex->pnext->GetBlockHash().GetHex()));
     return result;
 }
 
@@ -1939,13 +1952,7 @@ Value getmemorypool(const Array& params, bool fHelp)
         result.push_back(Pair("time", (int64_t)pblock->nTime));
         result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
         result.push_back(Pair("curtime", (int64_t)GetAdjustedTime()));
-
-        union {
-            int32_t nBits;
-            char cBits[4];
-        } uBits;
-        uBits.nBits = htonl((int32_t)pblock->nBits);
-        result.push_back(Pair("bits", HexStr(BEGIN(uBits.cBits), END(uBits.cBits))));
+        result.push_back(Pair("bits", HexBits(pblock->nBits)));
 
         return result;
     }
