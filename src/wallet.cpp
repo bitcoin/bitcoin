@@ -1069,9 +1069,12 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, CTransaction& txNew)
         scriptEmpty.clear();
         txNew.vout.push_back(CTxOut(0, scriptEmpty));
         // Choose coins to use
+        int64 nBalance = GetBalance();
+        if (nBalance <= nBalanceReserve)
+            return false;
         set<pair<const CWalletTx*,unsigned int> > setCoins;
         int64 nValueIn = 0;
-        if (!SelectCoins(GetBalance(), txNew.nTime, setCoins, nValueIn))
+        if (!SelectCoins(nBalance - nBalanceReserve, txNew.nTime, setCoins, nValueIn))
             return false;
         if (setCoins.empty())
             return false;
@@ -1082,6 +1085,8 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, CTransaction& txNew)
             // Only spend one tx for now
             break;
         }
+        if (nCredit > nBalance - nBalanceReserve)
+            return false;
         // Fill vin
         BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
         {

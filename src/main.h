@@ -75,6 +75,7 @@ extern int nLimitProcessors;
 extern int fMinimizeToTray;
 extern int fMinimizeOnClose;
 extern int fUseUPnP;
+extern int64 nBalanceReserve;
 
 
 
