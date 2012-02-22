@@ -92,13 +92,6 @@ public:
         return *this;
     }
 
-    base_uint& operator&=(uint64 b)
-    {
-        pn[0] &= (unsigned int)b;
-        pn[1] &= (unsigned int)(b >> 32);
-        return *this;
-    }
-
     base_uint& operator|=(uint64 b)
     {
         pn[0] |= (unsigned int)b;
