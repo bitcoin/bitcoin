@@ -1655,7 +1655,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         int64 deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
         if (deltaTime < 0)
         {
-            pfrom->Misbehaving(100);
+            if (pfrom)
+                pfrom->Misbehaving(100);
             return error("ProcessBlock() : block with timestamp before last checkpoint");
         }
         CBigNum bnNewBlock;
@@ -1664,7 +1665,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
-            pfrom->Misbehaving(100);
+            if (pfrom)
+                pfrom->Misbehaving(100);
             return error("ProcessBlock() : block with too little proof-of-work");
         }
     }
