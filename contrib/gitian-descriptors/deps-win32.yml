@@ -7,7 +7,7 @@ architectures:
 packages: 
 - "mingw32"
 - "git-core"
-- "unzip"
+- "zip"
 - "faketime"
 - "wine"
 reference_datetime: "2011-01-30 00:00:00"
@@ -17,9 +17,13 @@ files:
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
 - "zlib-1.2.6.tar.gz"
-- "libpng-1.5.8.tar.gz"
+- "libpng-1.5.9.tar.gz"
 - "qrencode-3.2.0.tar.bz2"
 script: |
+  #
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
   #
   tar xzf openssl-1.0.0e.tar.gz
   cd openssl-1.0.0e
@@ -46,16 +50,22 @@ script: |
   make -f win32/Makefile.gcc PREFIX=i586-mingw32msvc- $MAKEOPTS
   cd ..
   #
-  tar xzf libpng-1.5.8.tar.gz
-  cd libpng-1.5.8
-  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld LDFLAGS="-L../zlib-1.2.6/" CFLAGS="-I../zlib-1.2.6/"
+  tar xzf libpng-1.5.9.tar.gz
+  cd libpng-1.5.9
+  ./configure -disable-shared CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld LDFLAGS="-L../zlib-1.2.6/" CFLAGS="-I../zlib-1.2.6/"
   make $MAKEOPTS
   cd ..
   #
   tar xjf qrencode-3.2.0.tar.bz2
   cd qrencode-3.2.0
-  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld png_LIBS="../libpng-1.5.8/.libs/libpng15.a ../zlib-1.2.6/libz.a" png_CFLAGS="-I../libpng-1.5.8"
+  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld png_LIBS="../libpng-1.5.9/.libs/libpng15.a ../zlib-1.2.6/libz.a" png_CFLAGS="-I../libpng-1.5.9"
   make $MAKEOPTS
   cd ..
   #
-  tar cjvpf "$OUTDIR/bitcoin-deps-0.0.1.tbz2" "$HOME/build"
+  zip -r $OUTDIR/bitcoin-deps-0.0.3.zip \
+    $(ls qrencode-*/{qrencode.h,.libs/libqrencode.{,l}a} | sort) \
+    $(ls db-*/build_unix/{libdb_cxx.a,db.h,db_cxx.h,libdb.a,.libs/libdb_cxx-?.?.a} | sort) \
+    $(find openssl-* -name '*.a' -o -name '*.h' | sort) \
+    $(find miniupnpc -name '*.h' -o -name 'libminiupnpc.a' | sort)
+  # Kill wine processes as gitian won't figure out we are done otherwise
+  killall wineserver services.exe explorer.exe winedevice.exe
