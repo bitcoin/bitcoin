@@ -301,7 +301,7 @@ Value getgenerate(const Array& params, bool fHelp)
             "getgenerate\n"
             "Returns true or false.");
 
-    return (bool)fGenerateBitcoins;
+    return GetBoolArg("-gen");
 }
 
 
@@ -320,13 +320,11 @@ Value setgenerate(const Array& params, bool fHelp)
     if (params.size() > 1)
     {
         int nGenProcLimit = params[1].get_int();
-        fLimitProcessors = (nGenProcLimit != -1);
-        WriteSetting("fLimitProcessors", fLimitProcessors);
-        if (nGenProcLimit != -1)
-            WriteSetting("nLimitProcessors", nLimitProcessors = nGenProcLimit);
+        mapArgs["-genproclimit"] = itostr(nGenProcLimit);
         if (nGenProcLimit == 0)
             fGenerate = false;
     }
+    mapArgs["-gen"] = (fGenerate ? "1" : "0");
 
     GenerateBitcoins(fGenerate, pwalletMain);
     return Value::null;
@@ -385,8 +383,8 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("currentblocktx",(uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
-    obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
-    obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
+    obj.push_back(Pair("generate",      GetBoolArg("-gen")));
+    obj.push_back(Pair("genproclimit",  (int)GetArg("-genproclimit", -1)));
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("pooledtx",      (uint64_t)nPooledTx));
     obj.push_back(Pair("testnet",       fTestNet));
