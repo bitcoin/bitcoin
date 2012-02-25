@@ -505,7 +505,11 @@ void BitcoinGUI::setNumBlocks(int count)
     QString text;
 
     // Represent time from last generated block in human readable text
-    if(secs < 60)
+    if(secs <= 0)
+    {
+        // Fully up to date. Leave text empty.
+    }
+    else if(secs < 60)
     {
         text = tr("%n second(s) ago","",secs);
     }
@@ -525,7 +529,7 @@ void BitcoinGUI::setNumBlocks(int count)
     // Set icon state: spinning if catching up, tick otherwise
     if(secs < 30*60)
     {
-        tooltip = tr("Up to date") + QString("\n") + tooltip;
+        tooltip = tr("Up to date") + QString(".\n") + tooltip;
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
     }
     else
@@ -535,8 +539,11 @@ void BitcoinGUI::setNumBlocks(int count)
         syncIconMovie->start();
     }
 
-    tooltip += QString("\n");
-    tooltip += tr("Last received block was generated %1.").arg(text);
+    if(!text.isEmpty())
+    {
+        tooltip += QString("\n");
+        tooltip += tr("Last received block was generated %1.").arg(text);
+    }
 
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
