@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
     app.setApplicationName(QApplication::translate("main", "Bitcoin-Qt"));
 
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
-    if (GetBoolArg("-splash", true))
+    if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
     {
         splash.show();
         splash.setAutoFillBackground(true);
