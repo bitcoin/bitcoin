@@ -183,9 +183,12 @@ int main(int argc, char *argv[])
     app.setApplicationName(QApplication::translate("main", "Bitcoin-Qt"));
 
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
-    splash.show();
-    splash.setAutoFillBackground(true);
-    splashref = &splash;
+    if (GetBoolArg("-splash", true) && !GetBoolArg("-min"))
+    {
+        splash.show();
+        splash.setAutoFillBackground(true);
+        splashref = &splash;
+    }
 
     app.processEvents();
 
@@ -199,7 +202,8 @@ int main(int argc, char *argv[])
                 // Put this in a block, so that BitcoinGUI is cleaned up properly before
                 // calling Shutdown() in case of exceptions.
                 BitcoinGUI window;
-                splash.finish(&window);
+                if (splashref)
+                    splash.finish(&window);
                 OptionsModel optionsModel(pwalletMain);
                 ClientModel clientModel(&optionsModel);
                 WalletModel walletModel(pwalletMain, &optionsModel);
