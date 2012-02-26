@@ -58,8 +58,6 @@ private:
 
     QStackedWidget *centralWidget;
 
-    QWidget *dummyWidget;
-
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     AddressBookPage *addressBookPage;
@@ -134,8 +132,6 @@ public slots:
     void gotoMessagePage();
     void gotoMessagePage(QString);
 
-    void showNormal();
-
 private slots:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
@@ -169,6 +165,9 @@ private slots:
     void changePassphrase();
     /** Ask for pass phrase to unlock wallet temporarily */
     void unlockWallet();
+
+    /** Show window if hidden, unminimize when minimized */
+    void showNormalIfMinimized();
 };
 
 #endif
