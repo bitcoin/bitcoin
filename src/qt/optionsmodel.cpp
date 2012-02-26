@@ -70,7 +70,7 @@ bool OptionsModel::Upgrade()
         if (walletdb.ReadSetting("addrProxy", addrProxyAddress))
         {
             addrProxy = addrProxyAddress;
-            settings.setValue("addrProxy", addrProxy.ToStringIP().c_str());
+            settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
             walletdb.EraseSetting("addrProxy");
         }
     }
@@ -79,7 +79,7 @@ bool OptionsModel::Upgrade()
         // 0.6.0rc1 saved this as a CService, which causes failure when parsing as a CAddress
         if (walletdb.ReadSetting("addrProxy", addrProxy))
         {
-            settings.setValue("addrProxy", addrProxy.ToStringIP().c_str());
+            settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
             walletdb.EraseSetting("addrProxy");
         }
     }
@@ -165,7 +165,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (addr.IsValid())
                 {
                     addrProxy.SetIP(addr);
-                    settings.setValue("addrProxy", addrProxy.ToStringIP().c_str());
+                    settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
                 }
                 else
                 {
@@ -179,7 +179,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (nPort > 0 && nPort < std::numeric_limits<unsigned short>::max())
                 {
                     addrProxy.SetPort(nPort);
-                    settings.setValue("addrProxy", addrProxy.ToStringIP().c_str());
+                    settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
                 }
                 else
                 {
