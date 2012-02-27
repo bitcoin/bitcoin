@@ -77,13 +77,7 @@ extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 
 // Settings
-extern int fGenerateBitcoins;
 extern int64 nTransactionFee;
-extern int fLimitProcessors;
-extern int nLimitProcessors;
-extern int fMinimizeToTray;
-extern int fMinimizeOnClose;
-extern int fUseUPnP;
 
 
 
@@ -126,20 +120,6 @@ std::string GetWarnings(std::string strFor);
 
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
-
-template<typename T>
-bool WriteSetting(const std::string& strKey, const T& value)
-{
-    bool fOk = false;
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-    {
-        std::string strWalletFile;
-        if (!GetWalletFile(pwallet, strWalletFile))
-            continue;
-        fOk |= CWalletDB(strWalletFile).WriteSetting(strKey, value);
-    }
-    return fOk;
-}
 
 
 class CDiskTxPos

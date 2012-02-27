@@ -768,13 +768,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     vector<uint256> vWalletUpgrade;
     bool fIsEncrypted = false;
 
-    // Modify defaults
-#ifndef WIN32
-    // Tray icon sometimes disappears on 9.10 karmic koala 64-bit, leaving no way to access the program
-    fMinimizeToTray = false;
-    fMinimizeOnClose = false;
-#endif
-
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     CRITICAL_BLOCK(pwallet->cs_wallet)
     {
@@ -916,24 +909,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 if (nFileVersion == 10300)
                     nFileVersion = 300;
             }
-            else if (strType == "setting")
-            {
-                string strKey;
-                ssKey >> strKey;
-
-                // Options
-#ifndef QT_GUI
-                if (strKey == "fGenerateBitcoins")  ssValue >> fGenerateBitcoins;
-#endif
-                if (strKey == "nTransactionFee")    ssValue >> nTransactionFee;
-                if (strKey == "fLimitProcessors")   ssValue >> fLimitProcessors;
-                if (strKey == "nLimitProcessors")   ssValue >> nLimitProcessors;
-                if (strKey == "fMinimizeToTray")    ssValue >> fMinimizeToTray;
-                if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
-                if (strKey == "fUseProxy")          ssValue >> fUseProxy;
-                if (strKey == "addrProxy")          ssValue >> addrProxy;
-                if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
-            }
             else if (strType == "minversion")
             {
                 int nMinVersion = 0;
@@ -959,14 +934,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
         WriteTx(hash, pwallet->mapWallet[hash]);
 
     printf("nFileVersion = %d\n", nFileVersion);
-    printf("fGenerateBitcoins = %d\n", fGenerateBitcoins);
-    printf("nTransactionFee = %"PRI64d"\n", nTransactionFee);
-    printf("fMinimizeToTray = %d\n", fMinimizeToTray);
-    printf("fMinimizeOnClose = %d\n", fMinimizeOnClose);
-    printf("fUseProxy = %d\n", fUseProxy);
-    printf("addrProxy = %s\n", addrProxy.ToString().c_str());
-    if (fHaveUPnP)
-        printf("fUseUPnP = %d\n", fUseUPnP);
 
 
     // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
