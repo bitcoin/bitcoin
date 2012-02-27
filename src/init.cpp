@@ -150,27 +150,15 @@ bool AppInit2(int argc, char* argv[])
     //
     // Parameters
     //
-    // If Qt is used, parameters are parsed in qt/bitcoin.cpp's main()
+    // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
 #if !defined(QT_GUI)
     ParseParameters(argc, argv);
-#endif
-
-    if (mapArgs.count("-datadir"))
+    if (!ReadConfigFile(mapArgs, mapMultiArgs))
     {
-        if (filesystem::is_directory(filesystem::system_complete(mapArgs["-datadir"])))
-        {
-            filesystem::path pathDataDir = filesystem::system_complete(mapArgs["-datadir"]);
-            strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
-        }
-        else
-        {
-            fprintf(stderr, "Error: Specified directory does not exist\n");
-            Shutdown(NULL);
-        }
+        fprintf(stderr, "Error: Specified directory does not exist\n");
+        Shutdown(NULL);
     }
-
-
-    ReadConfigFile(mapArgs, mapMultiArgs); // Must be done after processing datadir
+#endif
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
@@ -473,8 +461,6 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
-    fGenerateBitcoins = GetBoolArg("-gen");
-
     if (mapArgs.count("-proxy"))
     {
         fUseProxy = true;
@@ -519,13 +505,6 @@ bool AppInit2(int argc, char* argv[])
         const char* pszP2SH = "NOP2SH";
         COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
     }
-
-    // Command-line args override in-wallet settings:
-#if USE_UPNP
-    fUseUPnP = GetBoolArg("-upnp", true);
-#else
-    fUseUPnP = GetBoolArg("-upnp", false);
-#endif
 
     if (!fNoListen)
     {
