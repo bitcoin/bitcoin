@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VerifyMessageDialog</class>
+ <widget class="QDialog" name="VerifyMessageDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>494</width>
+    <height>342</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Verify Signed Message</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Enter the message and signature below (be careful to correctly copy newlines, spaces, tabs, and other invisible characters), and press apply to obtain the bitcoin address used to sign the message.</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPlainTextEdit" name="edMessage"/>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="lnSig">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="placeholderText">
+      <string>Signature</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="lnAddress">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Address</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="lblStatus">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="copyToClipboard">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Copy the currently selected address to the system clipboard</string>
+       </property>
+       <property name="text">
+        <string>&amp;Copy Address</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Apply|QDialogButtonBox::Close</set>
+       </property>
+       <property name="centerButtons">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../bitcoin.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>VerifyMessageDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>VerifyMessageDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
