@@ -324,6 +324,7 @@ void AddressBookPage::on_showQRCode_clicked()
         QString address = index.data().toString(), label = index.sibling(index.row(), 0).data(Qt::EditRole).toString();
 
         QRCodeDialog *dialog = new QRCodeDialog(address, label, tab == ReceivingTab, this);
+        dialog->setAttribute(Qt::WA_DeleteOnClose);
         dialog->show();
     }
 #endif
