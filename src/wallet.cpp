@@ -869,6 +869,40 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins) const
     }
 }
 
+static void ApproximateBestSubset(vector<pair<int64, pair<const CWalletTx*,unsigned int> > >vValue, int64 nTotalLower, int64 nTargetValue,
+                                  vector<char>& vfBest, int64& nBest, int iterations = 1000)
+{
+    vector<char> vfIncluded;
+
+    vfBest.assign(vValue.size(), true);
+    nBest = nTotalLower;
+
+    for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
+    {
+        vfIncluded.assign(vValue.size(), false);
+        int64 nTotal = 0;
+        bool fReachedTarget = false;
+        for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
+            for (int i = 0; i < vValue.size(); i++)
+                if (nPass == 0 ? rand() % 2 : !vfIncluded[i])
+                {
+                    nTotal += vValue[i].first;
+                    vfIncluded[i] = true;
+                    if (nTotal >= nTargetValue)
+                    {
+                        fReachedTarget = true;
+                        if (nTotal < nBest)
+                        {
+                            nBest = nTotal;
+                            vfBest = vfIncluded;
+                        }
+                        nTotal -= vValue[i].first;
+                        vfIncluded[i] = false;
+                    }
+                }
+    }
+}
+
 bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, vector<COutput> vCoins,
                                  set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 {
@@ -911,7 +945,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
         }
     }
 
-    if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
+    if (nTotalLower == nTargetValue)
     {
         for (int i = 0; i < vValue.size(); ++i)
         {
@@ -921,7 +955,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
         return true;
     }
 
-    if (nTotalLower < nTargetValue + (coinLowestLarger.second.first ? CENT : 0))
+    if (nTotalLower < nTargetValue)
     {
         if (coinLowestLarger.second.first == NULL)
             return false;
@@ -930,46 +964,19 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
         return true;
     }
 
-    if (nTotalLower >= nTargetValue + CENT)
-        nTargetValue += CENT;
-
     // Solve subset sum by stochastic approximation
-    sort(vValue.rbegin(), vValue.rend());
-    vector<char> vfIncluded;
-    vector<char> vfBest(vValue.size(), true);
-    int64 nBest = nTotalLower;
+    sort(vValue.rbegin(), vValue.rend()); // sort into descending value order
+    vector<char> vfBest;
+    int64 nBest;
 
-    for (int nRep = 0; nRep < 1000 && nBest != nTargetValue; nRep++)
-    {
-        vfIncluded.assign(vValue.size(), false);
-        int64 nTotal = 0;
-        bool fReachedTarget = false;
-        for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
-        {
-            for (int i = 0; i < vValue.size(); i++)
-            {
-                if (nPass == 0 ? rand() % 2 : !vfIncluded[i])
-                {
-                    nTotal += vValue[i].first;
-                    vfIncluded[i] = true;
-                    if (nTotal >= nTargetValue)
-                    {
-                        fReachedTarget = true;
-                        if (nTotal < nBest)
-                        {
-                            nBest = nTotal;
-                            vfBest = vfIncluded;
-                        }
-                        nTotal -= vValue[i].first;
-                        vfIncluded[i] = false;
-                    }
-                }
-            }
-        }
-    }
+	ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest, 1000);
+	if (nBest != nTargetValue && nTotalLower >= nTargetValue + CENT)
+		ApproximateBestSubset(vValue, nTotalLower, nTargetValue + CENT, vfBest, nBest, 1000);
 
-    // If the next larger is still closer, return it
-    if (coinLowestLarger.second.first && coinLowestLarger.first - nTargetValue <= nBest - nTargetValue)
+    // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
+	//                                   or the next bigger coin is closer), return the bigger coin
+    if (coinLowestLarger.second.first &&
+		((nBest != nTargetValue && nBest < nTargetValue + CENT) || coinLowestLarger.first <= nBest))
     {
         setCoinsRet.insert(coinLowestLarger.second);
         nValueRet += coinLowestLarger.first;
