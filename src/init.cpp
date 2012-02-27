@@ -493,7 +493,7 @@ bool AppInit2(int argc, char* argv[])
         if (fTestNet)
             SoftSetArg("-paytoscripthashtime", "1329264000"); // Feb 15
         else
-            SoftSetArg("-paytoscripthashtime", "1330578000"); // Mar 1
+            SoftSetArg("-paytoscripthashtime", "1333238400"); // April 1 2012
 
         // Put "/P2SH/" in the coinbase so everybody can tell when
         // a majority of miners support it
