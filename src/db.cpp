@@ -931,7 +931,21 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 if (strKey == "fMinimizeToTray")    ssValue >> fMinimizeToTray;
                 if (strKey == "fMinimizeOnClose")   ssValue >> fMinimizeOnClose;
                 if (strKey == "fUseProxy")          ssValue >> fUseProxy;
-                if (strKey == "addrProxy")          ssValue >> addrProxy;
+                if (strKey == "addrProxy")
+                {
+                    CAddress addr; 
+                    CDataStream ssValue2 = ssValue;
+                    // 0.6.0rc1 saved this as a CService, which causes failure when parsing as a CAddress
+                    try
+                    {
+                        ssValue >> addr;
+                        addrProxy = addr;
+                    }
+                    catch (std::ios_base::failure &e)
+                    {
+                        ssValue2 >> addrProxy;
+                    }
+                }
                 if (fHaveUPnP && strKey == "fUseUPnP")           ssValue >> fUseUPnP;
             }
             else if (strType == "minversion")

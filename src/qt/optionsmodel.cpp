@@ -91,7 +91,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (addr.IsValid())
                 {
                     addrProxy.SetIP(addr);
-                    walletdb.WriteSetting("addrProxy", addrProxy);
+                    walletdb.WriteSetting("addrProxy", CAddress(addrProxy));
                 }
                 else
                 {
@@ -105,7 +105,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 if (nPort > 0 && nPort < std::numeric_limits<unsigned short>::max())
                 {
                     addrProxy.SetPort(nPort);
-                    walletdb.WriteSetting("addrProxy", addrProxy);
+                    walletdb.WriteSetting("addrProxy", CAddress(addrProxy));
                 }
                 else
                 {
