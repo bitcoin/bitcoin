@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include "mruset.h"
 #include "netbase.h"
 #include "protocol.h"
 
@@ -154,7 +155,7 @@ public:
     std::set<uint256> setKnown;
 
     // inventory based relay
-    std::set<CInv> setInventoryKnown;
+    mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64, CInv> mapAskFor;
@@ -193,6 +194,7 @@ public:
         fGetAddr = false;
         vfSubscribe.assign(256, false);
         nMisbehavior = 0;
+        setInventoryKnown.max_size(SendBufferSize() / 1000);
 
         // Be shy and don't send version until we hear
         if (!fInbound)
