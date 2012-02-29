@@ -12,6 +12,12 @@
 
 #include <stdint.h>
 
+// Tests this internal-to-main.cpp method:
+extern void AddOrphanTx(const CDataStream& vMsg);
+extern int LimitOrphanTxSize(int nMaxOrphans);
+extern std::map<uint256, CDataStream*> mapOrphanTransactions;
+extern std::multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
+
 CService ip(uint32_t i)
 {
     struct in_addr s;
@@ -121,6 +127,79 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
     // ... but OK if enough time passed for difficulty to adjust downward:
     BOOST_CHECK(CheckNBits(firstcheck.second, lastcheck.first+60*60*24*365*4, lastcheck.second, lastcheck.first));
     
+}
+
+static uint256 RandomHash()
+{
+    std::vector<unsigned char> randbytes(32);
+    RAND_bytes(&randbytes[0], 32);
+    uint256 randomhash(randbytes);
+    return randomhash;
+}
+
+CTransaction RandomOrphan()
+{
+    std::map<uint256, CDataStream*>::iterator it;
+    it = mapOrphanTransactions.lower_bound(RandomHash());
+    if (it == mapOrphanTransactions.end())
+        it = mapOrphanTransactions.begin();
+    const CDataStream* pvMsg = it->second;
+    CTransaction tx;
+    CDataStream(*pvMsg) >> tx;
+    return tx;
+}
+
+BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
+{
+    CKey key;
+    key.MakeNewKey(true);
+    CBasicKeyStore keystore;
+    keystore.AddKey(key);
+
+    // 50 orphan transactions:
+    for (int i = 0; i < 50; i++)
+    {
+        CTransaction tx;
+        tx.vin.resize(1);
+        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout.hash = RandomHash();
+        tx.vin[0].scriptSig << OP_1;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+
+        CDataStream ds;
+        ds << tx;
+        AddOrphanTx(ds);
+    }
+
+    // ... and 50 that depend on other orphans:
+    for (int i = 0; i < 50; i++)
+    {
+        CTransaction txPrev = RandomOrphan();
+
+        CTransaction tx;
+        tx.vin.resize(1);
+        tx.vin[0].prevout.n = 0;
+        tx.vin[0].prevout.hash = txPrev.GetHash();
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+        SignSignature(keystore, txPrev, tx, 0);
+
+        CDataStream ds;
+        ds << tx;
+        AddOrphanTx(ds);
+    }
+
+    // Test LimitOrphanTxSize() function:
+    LimitOrphanTxSize(40);
+    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
+    LimitOrphanTxSize(10);
+    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
+    LimitOrphanTxSize(0);
+    BOOST_CHECK(mapOrphanTransactions.empty());
+    BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
