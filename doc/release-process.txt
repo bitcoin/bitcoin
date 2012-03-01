@@ -76,11 +76,14 @@
   release; note that a patched version of macdeployqt is not needed anymore, as
   the required functionality and fixes are implemented directly in macdeployqtplus:
     http://gavintech.blogspot.com/2011/11/deploying-bitcoin-qt-on-osx.html
-  qmake USE_SSL=1 USE_UPNP=1 bitcoin-qt.pro
+  Gavin also had trouble with the macports py27-appscript package; he
+  ended up installing a version that worked with: /usr/bin/easy_install-2.7 appscript
+
+  qmake RELEASE=1 USE_SSL=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-qt.pro
   make
   export QTDIR=/opt/local/share/qt4  # needed to find translations/qt_*.qm files
   T=$(contrib/qt_translations.py $QTDIR/translations src/qt/locale)
-  contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist
+  python2.7 contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist
 
  Build output expected:
   Bitcoin-Qt.dmg
