@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin developers
-// Copyright (c) 2011 The PPCoin developers
+// Copyright (c) 2011-2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
@@ -64,7 +64,7 @@ void Shutdown(void* parg)
         delete pwalletMain;
         CreateThread(ExitTimeout, NULL);
         Sleep(50);
-        printf("Bitcoin exiting\n\n");
+        printf("PPCoin exiting\n\n");
         fExit = true;
         exit(0);
     }
@@ -173,12 +173,12 @@ bool AppInit2(int argc, char* argv[])
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
         string strUsage = string() +
-          _("Bitcoin version") + " " + FormatFullVersion() + "\n\n" +
+          _("PPCoin version") + " " + FormatFullVersion() + "\n\n" +
           _("Usage:") + "\t\t\t\t\t\t\t\t\t\t\n" +
-            "  bitcoind [options]                   \t  " + "\n" +
-            "  bitcoind [options] <command> [params]\t  " + _("Send command to -server or bitcoind\n") +
-            "  bitcoind [options] help              \t\t  " + _("List commands\n") +
-            "  bitcoind [options] help <command>    \t\t  " + _("Get help for a command\n") +
+            "  ppcoind [options]                   \t  " + "\n" +
+            "  ppcoind [options] <command> [params]\t  " + _("Send command to -server or ppcoind\n") +
+            "  ppcoind [options] help              \t\t  " + _("List commands\n") +
+            "  ppcoind [options] help <command>    \t\t  " + _("Get help for a command\n") +
           _("Options:\n") +
             "  -conf=<file>     \t\t  " + _("Specify configuration file (default: ppcoin.conf)\n") +
             "  -pid=<file>      \t\t  " + _("Specify pid file (default: ppcoind.pid)\n") +
@@ -309,7 +309,7 @@ bool AppInit2(int argc, char* argv[])
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("Bitcoin version %s\n", FormatFullVersion().c_str());
+    printf("PPCoin version %s\n", FormatFullVersion().c_str());
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
     if (GetBoolArg("-loadblockindextest"))
@@ -327,7 +327,7 @@ bool AppInit2(int argc, char* argv[])
     static boost::interprocess::file_lock lock(strLockFile.c_str());
     if (!lock.try_lock())
     {
-        wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), "Bitcoin");
+        wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  PPCoin is probably already running."), GetDataDir().c_str()), "PPCoin");
         return false;
     }
 
@@ -337,7 +337,7 @@ bool AppInit2(int argc, char* argv[])
     {
         if (!BindListenPort(strErrors))
         {
-            wxMessageBox(strErrors, "Bitcoin");
+            wxMessageBox(strErrors, "PPCoin");
             return false;
         }
     }
@@ -346,7 +346,7 @@ bool AppInit2(int argc, char* argv[])
     // Load data files
     //
     if (fDaemon)
-        fprintf(stdout, "bitcoin server starting\n");
+        fprintf(stdout, "ppcoin server starting\n");
     strErrors = "";
     int64 nStart;
 
@@ -375,11 +375,11 @@ bool AppInit2(int argc, char* argv[])
         if (nLoadWalletRet == DB_CORRUPT)
             strErrors += _("Error loading wallet.dat: Wallet corrupted      \n");
         else if (nLoadWalletRet == DB_TOO_NEW)
-            strErrors += _("Error loading wallet.dat: Wallet requires newer version of Bitcoin      \n");
+            strErrors += _("Error loading wallet.dat: Wallet requires newer version of PPCoin      \n");
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
-            strErrors += _("Wallet needed to be rewritten: restart Bitcoin to complete    \n");
-            wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+            strErrors += _("Wallet needed to be rewritten: restart PPCoin to complete    \n");
+            wxMessageBox(strErrors, "PPCoin", wxOK | wxICON_ERROR);
             return false;
         }
         else
@@ -420,7 +420,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (!strErrors.empty())
     {
-        wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
+        wxMessageBox(strErrors, "PPCoin", wxOK | wxICON_ERROR);
         return false;
     }
 
@@ -474,7 +474,7 @@ bool AppInit2(int argc, char* argv[])
         addrProxy = CAddress(mapArgs["-proxy"]);
         if (!addrProxy.IsValid())
         {
-            wxMessageBox(_("Invalid -proxy address"), "Bitcoin");
+            wxMessageBox(_("Invalid -proxy address"), "PPCoin");
             return false;
         }
     }
@@ -494,12 +494,12 @@ bool AppInit2(int argc, char* argv[])
     {
         if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee) || nTransactionFee < MIN_TX_FEE)
         {
-            wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
+            wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "PPCoin");
             return false;
         }
         nTransactionFee = (nTransactionFee / CENT) * CENT;  // round to cent
         if (nTransactionFee >= 0.25 * COIN)
-            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "PPCoin", wxOK | wxICON_EXCLAMATION);
     }
 
     if (fHaveUPnP)
@@ -522,7 +522,7 @@ bool AppInit2(int argc, char* argv[])
     RandAddSeedPerfmon();
 
     if (!CreateThread(StartNode, NULL))
-        wxMessageBox(_("Error: CreateThread(StartNode) failed"), "Bitcoin");
+        wxMessageBox(_("Error: CreateThread(StartNode) failed"), "PPCoin");
 
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
