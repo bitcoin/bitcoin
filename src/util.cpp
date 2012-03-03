@@ -643,13 +643,17 @@ string MyGetSpecialFolderPath(int nFolder, bool fCreate)
     {
         PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
             (PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
+        bool fSuccess = false;
         if (pSHGetSpecialFolderPath)
+            fSuccess =
             (*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
         FreeModule(hShell32);
+        if (fSuccess)
+            return pszPath;
     }
 
     // Backup option
-    if (pszPath[0] == '\0')
+    pszPath[0] = '\0';
     {
         if (nFolder == CSIDL_STARTUP)
         {
