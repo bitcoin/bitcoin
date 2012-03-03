@@ -72,3 +72,17 @@ bool GUIUtil::parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out)
     }
     return true;
 }
+
+bool GUIUtil::parseBitcoinURL(QString url, SendCoinsRecipient *out)
+{
+    // Convert bitcoin:// to bitcoin:
+    //
+    //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
+    //    which will lowercase it (and thus invalidate the address).
+    if(url.startsWith("bitcoin://"))
+    {
+        url.replace(0, 10, "bitcoin:");
+    }
+    QUrl urlInstance(url);
+    return parseBitcoinURL(&urlInstance, out);
+}

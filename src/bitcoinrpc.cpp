@@ -318,7 +318,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     if (pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime));
+        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
@@ -1407,7 +1407,7 @@ void ThreadTopUpKeyPool(void* parg)
 
 void ThreadCleanWalletPassphrase(void* parg)
 {
-    int64 nMyWakeTime = GetTime() + *((int*)parg);
+    int64 nMyWakeTime = GetTimeMillis() + *((int*)parg) * 1000;
 
     ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
 
@@ -1415,17 +1415,25 @@ void ThreadCleanWalletPassphrase(void* parg)
     {
         nWalletUnlockTime = nMyWakeTime;
 
-        while (GetTime() < nWalletUnlockTime)
+        do
         {
-            int64 nToSleep = GetTime() - nWalletUnlockTime;
+            if (nWalletUnlockTime==0)
+                break;
+            int64 nToSleep = nWalletUnlockTime - GetTimeMillis();
+            if (nToSleep <= 0)
+                break;
 
             LEAVE_CRITICAL_SECTION(cs_nWalletUnlockTime);
             Sleep(nToSleep);
             ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
-        }
 
-        nWalletUnlockTime = 0;
-        pwalletMain->Lock();
+        } while(1);
+
+        if (nWalletUnlockTime)
+        {
+            nWalletUnlockTime = 0;
+            pwalletMain->Lock();
+        }
     }
     else
     {
@@ -1523,9 +1531,9 @@ Value walletlock(const Array& params, bool fHelp)
     if (!pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletlock was called.");
 
-    pwalletMain->Lock();
     CRITICAL_BLOCK(cs_nWalletUnlockTime)
     {
+        pwalletMain->Lock();
         nWalletUnlockTime = 0;
     }
 

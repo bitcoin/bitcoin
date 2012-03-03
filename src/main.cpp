@@ -166,13 +166,14 @@ void static ResendWalletTransactions()
 // mapOrphanTransactions
 //
 
-void static AddOrphanTx(const CDataStream& vMsg)
+void AddOrphanTx(const CDataStream& vMsg)
 {
     CTransaction tx;
     CDataStream(vMsg) >> tx;
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
         return;
+
     CDataStream* pvMsg = mapOrphanTransactions[hash] = new CDataStream(vMsg);
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
         mapOrphanTransactionsByPrev.insert(make_pair(txin.prevout.hash, pvMsg));
@@ -200,6 +201,23 @@ void static EraseOrphanTx(uint256 hash)
     mapOrphanTransactions.erase(hash);
 }
 
+int LimitOrphanTxSize(int nMaxOrphans)
+{
+    int nEvicted = 0;
+    while (mapOrphanTransactions.size() > nMaxOrphans)
+    {
+        // Evict a random orphan:
+        std::vector<unsigned char> randbytes(32);
+        RAND_bytes(&randbytes[0], 32);
+        uint256 randomhash(randbytes);
+        map<uint256, CDataStream*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
+        if (it == mapOrphanTransactions.end())
+            it = mapOrphanTransactions.begin();
+        EraseOrphanTx(it->first);
+        ++nEvicted;
+    }
+    return nEvicted;
+}
 
 
 
@@ -839,8 +857,10 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb)
     }
 
     // Remove transaction from index
-    if (!txdb.EraseTxIndex(*this))
-        return error("DisconnectInputs() : EraseTxPos failed");
+    // This can fail if a duplicate of this transaction was in a chain that got
+    // reorganized away. This is only possible if this transaction was completely
+    // spent, so erasing it would be a no-op anway.
+    txdb.EraseTxIndex(*this);
 
     return true;
 }
@@ -1049,6 +1069,26 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock())
         return false;
+
+    // Do not allow blocks that contain transactions which 'overwrite' older transactions,
+    // unless those are already completely spent.
+    // If such overwrites are allowed, coinbases and transactions depending upon those
+    // can be duplicated to remove the ability to spend the first instance -- even after
+    // being sent to another address.
+    // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
+    // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
+    // already refuses previously-known transaction id's entirely.
+    // This rule applies to all blocks whose timestamp is after March 15, 2012, 0:00 UTC.
+    // On testnet it is enabled as of februari 20, 2012, 0:00 UTC.
+    if (pindex->nTime > 1331769600 || (fTestNet && pindex->nTime > 1329696000))
+        BOOST_FOREACH(CTransaction& tx, vtx)
+        {
+            CTxIndex txindexOld;
+            if (txdb.ReadTxIndex(tx.GetHash(), txindexOld))
+                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
+                    if (pos.IsNull())
+                        return false;
+        }
 
     //// issue here: it doesn't know the version
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - 1 + GetSizeOfCompactSize(vtx.size());
@@ -1406,7 +1446,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         int64 deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
         if (deltaTime < 0)
         {
-            pfrom->Misbehaving(100);
+            if (pfrom)
+                pfrom->Misbehaving(100);
             return error("ProcessBlock() : block with timestamp before last checkpoint");
         }
         CBigNum bnNewBlock;
@@ -1415,7 +1456,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
-            pfrom->Misbehaving(100);
+            if (pfrom)
+                pfrom->Misbehaving(100);
             return error("ProcessBlock() : block with too little proof-of-work");
         }
     }
@@ -2222,6 +2264,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             printf("storing orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
             AddOrphanTx(vMsg);
+
+            // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
+            int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
+            if (nEvicted > 0)
+                printf("mapOrphan overflow, removed %d tx\n", nEvicted);
         }
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
