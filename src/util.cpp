@@ -737,26 +737,35 @@ string MyGetSpecialFolderPath(int nFolder, bool fCreate)
     {
         PSHGETSPECIALFOLDERPATHA pSHGetSpecialFolderPath =
             (PSHGETSPECIALFOLDERPATHA)GetProcAddress(hShell32, "SHGetSpecialFolderPathA");
+        bool fSuccess = false;
         if (pSHGetSpecialFolderPath)
+            fSuccess =
             (*pSHGetSpecialFolderPath)(NULL, pszPath, nFolder, fCreate);
         FreeModule(hShell32);
+        if (fSuccess)
+            return pszPath;
     }
 
     // Backup option
-    if (pszPath[0] == '\0')
+    std::string strPath;
     {
+        const char *pszEnv;
         if (nFolder == CSIDL_STARTUP)
         {
-            strcpy(pszPath, getenv("USERPROFILE"));
-            strcat(pszPath, "\\Start Menu\\Programs\\Startup");
+            pszEnv = getenv("USERPROFILE");
+            if (pszEnv)
+                strPath = pszEnv;
+            strPath += "\\Start Menu\\Programs\\Startup";
         }
         else if (nFolder == CSIDL_APPDATA)
         {
-            strcpy(pszPath, getenv("APPDATA"));
+            pszEnv = getenv("APPDATA");
+            if (pszEnv)
+                strPath = pszEnv;
         }
     }
 
-    return pszPath;
+    return strPath;
 }
 #endif
 
