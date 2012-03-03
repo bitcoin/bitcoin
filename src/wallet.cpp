@@ -43,6 +43,10 @@ bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector
     return false;
 }
 
+// ppcoin: optional setting to create coinstake only when unlocked;
+//         serves to disable the trivial sendmoney when OS account compromised
+bool fWalletUnlockStakeOnly = false;
+
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)
 {
     if (!IsLocked())
@@ -1181,6 +1185,12 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
     if (IsLocked())
     {
         string strError = _("Error: Wallet locked, unable to create transaction  ");
+        printf("SendMoney() : %s", strError.c_str());
+        return strError;
+    }
+    if (fWalletUnlockStakeOnly)
+    {
+        string strError = _("Error: Wallet unlocked for coinstake only, unable to create transaction.");
         printf("SendMoney() : %s", strError.c_str());
         return strError;
     }

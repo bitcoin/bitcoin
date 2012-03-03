@@ -10,6 +10,8 @@
 #include "key.h"
 #include "script.h"
 
+extern bool fWalletUnlockStakeOnly;
+
 class CWalletTx;
 class CReserveKey;
 class CWalletDB;
