@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_NET_H
@@ -76,6 +77,7 @@ extern bool fClient;
 extern bool fAllowDNS;
 extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
+extern CAddress addrSeenByPeer;
 extern uint64 nLocalHostNonce;
 extern boost::array<int, 10> vnThreadsRunning;
 

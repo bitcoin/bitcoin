@@ -312,6 +312,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+    obj.push_back(Pair("ip",            addrSeenByPeer.ToStringIP()));
     obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
     obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
@@ -1447,8 +1448,8 @@ Value walletpassphrase(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 3))
         throw runtime_error(
             "walletpassphrase <passphrase> <timeout> [stakeonly]\n"
-            "Stores the wallet decryption key in memory for <timeout> seconds."
-            "stakeonly is an optional true/false allowing only stake creation.");
+            "Stores the wallet decryption key in memory for <timeout> seconds.\n"
+            "stakeonly is optional true/false allowing only stake creation.");
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
