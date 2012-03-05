@@ -953,7 +953,7 @@ void ThreadSocketHandler2(void* parg)
             }
             else if (CNode::IsBanned(addr.ip))
             {
-                printf("connetion from %s dropped (banned)\n", addr.ToString().c_str());
+                printf("connection from %s dropped (banned)\n", addr.ToString().c_str());
                 closesocket(hSocket);
             }
             else
