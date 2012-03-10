@@ -88,7 +88,9 @@ T* alignup(T* p)
 #define Beep(n1,n2)         (0)
 inline void Sleep(int64 n)
 {
-    boost::thread::sleep(boost::get_system_time() + boost::posix_time::milliseconds(n));
+    /*Boost has a year 2038 problem— if the request sleep time is past epoch+2^31 seconds the sleep returns instantly.
+      So we clamp our sleeps here to 10 years and hope that boost is fixed by 2028.*/
+    boost::thread::sleep(boost::get_system_time() + boost::posix_time::milliseconds(n>315576000000LL?315576000000LL:n));
 }
 #endif
 
