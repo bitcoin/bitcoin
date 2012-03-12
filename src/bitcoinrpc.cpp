@@ -1407,7 +1407,7 @@ void ThreadTopUpKeyPool(void* parg)
 
 void ThreadCleanWalletPassphrase(void* parg)
 {
-    int64 nMyWakeTime = GetTimeMillis() + *((int*)parg) * 1000;
+    int64 nMyWakeTime = GetTimeMillis() + *((int64*)parg) * 1000;
 
     ENTER_CRITICAL_SECTION(cs_nWalletUnlockTime);
 
@@ -1443,7 +1443,7 @@ void ThreadCleanWalletPassphrase(void* parg)
 
     LEAVE_CRITICAL_SECTION(cs_nWalletUnlockTime);
 
-    delete (int*)parg;
+    delete (int64*)parg;
 }
 
 Value walletpassphrase(const Array& params, bool fHelp)
@@ -1478,7 +1478,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
             "Stores the wallet decryption key in memory for <timeout> seconds.");
 
     CreateThread(ThreadTopUpKeyPool, NULL);
-    int* pnSleepTime = new int(params[1].get_int());
+    int64* pnSleepTime = new int64(params[1].get_int64());
     CreateThread(ThreadCleanWalletPassphrase, pnSleepTime);
 
     return Value::null;
