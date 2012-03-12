@@ -15,6 +15,10 @@ signers:
     weight: 40
     name: Devrandom
     key: devrandom
+  E463A93F5F3117EEDE6C7316BD02942421F4889F:
+    weight: 40
+    name: Luke-Jr
+    key: luke-jr
   D762373D24904A3E42F33B08B9A408E71DAAC974:
     weight: 40
     name: Sipa
