@@ -48,7 +48,8 @@ private:
         None,
         Freedesktop, // Use DBus org.freedesktop.Notifications
         QSystemTray, // Use QSystemTray::showMessage
-        Growl // Use the Growl notification system (Mac only)
+        Growl12, // Use the Growl 1.2 notification system (Mac only)
+        Growl13 // Use the Growl 1.3 notification system (Mac only)
     };
     QString programName;
     Mode mode;
