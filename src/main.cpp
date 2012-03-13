@@ -2788,9 +2788,14 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pto->nVersion == 0)
             return true;
 
-        // Keep-alive ping
-        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty())
-            pto->PushMessage("ping");
+        // Keep-alive ping. We send a nonce of zero because we don't use it anywhere 
+        // right now.
+        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty()) {
+            if (pto->nVersion > 60000)
+                pto->PushMessage("ping", 0);
+            else
+                pto->PushMessage("ping");
+        }
 
         // Resend wallet transactions that haven't gotten in a block yet
         ResendWalletTransactions();
