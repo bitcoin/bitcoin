@@ -297,6 +297,7 @@ windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 !windows:!mac {
     DEFINES += LINUX
+    LIBS += -lrt
 }
 
 macx:HEADERS += src/qt/macdockiconhandler.h
