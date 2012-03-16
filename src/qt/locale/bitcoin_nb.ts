@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="nb">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="nb" version="2.0">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
@@ -23,29 +21,13 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished">Copyright © 2009-2011 Bitcoin Developers
+        <translation>Copyright © 2009-2012 Bitcoin Utviklerne
 
 Dette er eksperimentell programvare.
 
-Distribuert under MIT/X11 programvarelisens. Se den medfølgende filen license.txt eller http://www.opensource.org/licenses/mit-license.php.
+Distribuert under MIT/X11 programvarelisensen, se medfølgende fil license.txt eller http://www.opensource.org/licenses/mit-license.php.
 
-Dette produktet inneholder programvare utviklet av OpenSSL Prosjektet for bruk i OpenSSL Toolkit (http://www.openssl.org/) og kryptografisk programvare skrevet av Eric Young (eay@cryptsoft.com) og UPnP programvare skrevet av Thomas Bernard. {2009-2012 ?} {11 ?}</translation>
-    </message>
-    <message>
-        <source>Copyright © 2009-2011 Bitcoin Developers
-
-This is experimental software.
-
-Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="obsolete">Copyright © 2009-2011 Bitcoin Developers
-
-Dette er eksperimentell programvare.
-
-Distribuert under MIT/X11 programvarelisens. Se den medfølgende filen license.txt eller http://www.opensource.org/licenses/mit-license.php.
-
-Dette produktet inneholder programvare utviklet av OpenSSL Prosjektet for bruk i OpenSSL Toolkit (http://www.openssl.org/) og kryptografisk programvare skrevet av Eric Young (eay@cryptsoft.com) og UPnP programvare skrevet av Thomas Bernard.</translation>
+Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i OpenSSL Toolkit (http://www.openssl.org/) og kryptografisk programvare skrevet av Eric Young (eay@cryptsoft.com) og UPnP programvare skrevet av Thomas Bernard.</translation>
     </message>
 </context>
 <context>
@@ -88,17 +70,17 @@ Dette produktet inneholder programvare utviklet av OpenSSL Prosjektet for bruk i
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Show &amp;QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Vis &amp;QR Kode</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="96"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>Signér en melding for å bevise at du eier denne adressen</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="99"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Signér Melding</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="110"/>
@@ -113,22 +95,22 @@ Dette produktet inneholder programvare utviklet av OpenSSL Prosjektet for bruk i
     <message>
         <location filename="../addressbookpage.cpp" line="62"/>
         <source>Copy address</source>
-        <translation type="unfinished">Kopier adresse</translation>
+        <translation>Kopier adresse</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="63"/>
         <source>Copy label</source>
-        <translation type="unfinished">Kopier merkelapp</translation>
+        <translation>Kopier merkelapp</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Rediger</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Slett</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="282"/>
@@ -258,17 +240,13 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine bitcoins fra å bli stjålet om skadevare infiserer datamaskinen.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
         <location filename="../askpassphrasedialog.cpp" line="232"/>
         <source>Warning: The Caps Lock key is on.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="obsolete">Husk at å kryptere lommeboken ikke vil beskytte dine bitcoins fullstendig fra å bli stjålet av skadevare som infiserer datamaskinen din.</translation>
+        <translation>Advarsel: Caps lock tasten er på.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
@@ -383,12 +361,12 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
         <source>Sign &amp;message</source>
-        <translation type="unfinished"></translation>
+        <translation>Signér &amp;melding</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="202"/>
         <source>Prove you control an address</source>
-        <translation type="unfinished"></translation>
+        <translation>Bevis at du kontrollerer en adresse</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="221"/>
@@ -413,12 +391,12 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="228"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>Om &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="229"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>Vis informasjon om Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
@@ -508,10 +486,7 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="440"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation>
-            <numerusform>%n aktiv forbindelse til Bitcoin-nettverket</numerusform>
-            <numerusform>%n aktive forbindelser til Bitcoin-nettverket</numerusform>
-        </translation>
+        <translation><numerusform>%n aktiv forbindelse til Bitcoin-nettverket</numerusform><numerusform>%n aktive forbindelser til Bitcoin-nettverket</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="466"/>
@@ -526,34 +501,22 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="489"/>
         <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>for %n sekund siden</numerusform>
-            <numerusform>for %n sekunder siden</numerusform>
-        </translation>
+        <translation><numerusform>for %n sekund siden</numerusform><numerusform>for %n sekunder siden</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="493"/>
         <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>for %n minutt siden</numerusform>
-            <numerusform>for %n minutter siden</numerusform>
-        </translation>
+        <translation><numerusform>for %n minutt siden</numerusform><numerusform>for %n minutter siden</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="497"/>
         <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>for %n time siden</numerusform>
-            <numerusform>for %n timer siden</numerusform>
-        </translation>
+        <translation><numerusform>for %n time siden</numerusform><numerusform>for %n timer siden</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="501"/>
         <source>%n day(s) ago</source>
-        <translation>
-            <numerusform>for %n dag siden</numerusform>
-            <numerusform>for %n dager siden</numerusform>
-        </translation>
+        <translation><numerusform>for %n dag siden</numerusform><numerusform>for %n dager siden</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="507"/>
@@ -597,24 +560,11 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished">Dato: %1
+        <translation>Dato: %1
 Beløp: %2
 Type: %3
 Adresse: %4
- {1
-?} {2
-?} {3
-?}</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4</source>
-        <translation type="obsolete">Dato: %1
-Beløp: %2
-Type: %3
-Adresse: %4</translation>
+</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="740"/>
@@ -788,7 +738,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>Valgfritt transaksjonsgebyr per kB som hjelper for å sikre at transaksjonene dine blir raskt prosessert.  De fleste transaksjoner er 1 kB.  Et gebyr på 0.01 anbefales.</translation>
+        <translation>Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert.  De fleste transaksjoner er 1 kB.  Et gebyr på 0.01 er anbefalt.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -798,7 +748,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Valgfritt transaksjonsgebyr per kB som hjelper for å sikre at transaksjonene dine blir raskt prosessert. De fleste transaksjoner er 1 kB. Et gebyr på 0.01 anbefales.</translation>
+        <translation>Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert. De fleste transaksjoner er 1 kB. Et gebyr på 0.01 er anbefalt.</translation>
     </message>
 </context>
 <context>
@@ -806,89 +756,89 @@ Adresse: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>Melding</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful to only sign statement you agree to with full details, as phishing attacks may try to trick you into signing access to them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Du kan signere meldinger med adressene dine for å bevise at de er dine.Vær forsiktig og signér kun utsagn du er enig i.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished">Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Adressen betalingen skal sendes til  (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
         <source>Choose adress from address book</source>
-        <translation type="unfinished"></translation>
+        <translation>Velg adresse fra adresseboken</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="58"/>
         <source>Alt+A</source>
-        <translation type="unfinished">Alt+A</translation>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="71"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished">Lim inn adresse fra utklippstavlen</translation>
+        <translation>Lim inn adresse fra utklippstavlen</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="81"/>
         <source>Alt+P</source>
-        <translation type="unfinished">Alt+P</translation>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="93"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"></translation>
+        <translation>Skriv inn meldingen du vil signere her</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="105"/>
         <source>Click &quot;Sign Message&quot; to get signature</source>
-        <translation type="unfinished"></translation>
+        <translation>Klikk &quot;Signér Melding&quot; for signatur</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="117"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>Signér en melding for å bevise at du eier denne adressen</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="120"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Signér Melding</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopier den valgte adressen til systemets utklippstavle</translation>
+        <translation>Kopier den valgte adressen til systemets utklippstavle</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation type="unfinished">&amp;Kopier til utklippstavle</translation>
+        <translation>&amp;Kopier til utklippstavle</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <location filename="../messagepage.cpp" line="89"/>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Error signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved signering</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <source>%1 is not a valid address.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 er ikke en gyldig adresse</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="89"/>
         <source>Private key for %1 is not available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Privat nøkkel for %1 er ikke tilgjengelig.</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Sign failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Signering feilet</translation>
     </message>
 </context>
 <context>
@@ -951,7 +901,7 @@ Adresse: %4</translation>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -985,42 +935,42 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/qrcodedialog.ui" line="14"/>
         <source>Dialog</source>
-        <translation type="unfinished">Dialog</translation>
+        <translation>Dialog</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="32"/>
         <source>QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>QR Kode</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="52"/>
         <source>Request Payment</source>
-        <translation type="unfinished"></translation>
+        <translation>Etterspør Betaling</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="67"/>
         <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <translation>Beløp:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="102"/>
         <source>BTC</source>
-        <translation type="unfinished"></translation>
+        <translation>BTC</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="118"/>
         <source>Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Merkelapp:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="141"/>
         <source>Message:</source>
-        <translation type="unfinished">Melding:</translation>
+        <translation>Melding:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="183"/>
         <source>&amp;Save As...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Lagre Som...</translation>
     </message>
 </context>
 <context>
@@ -1050,7 +1000,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Remove all transaction fields</source>
-        <translation type="unfinished"></translation>
+        <translation>Fjern alle transaksjonsfelter</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
@@ -1330,7 +1280,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="221"/>
         <source>Transaction ID:</source>
-        <translation type="unfinished"></translation>
+        <translation>Transaksjons-ID:</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
@@ -1376,10 +1326,7 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform>Åpen for %n blokk</numerusform>
-            <numerusform>Åpen for %n blokker</numerusform>
-        </translation>
+        <translation><numerusform>Åpen for %n blokk</numerusform><numerusform>Åpen for %n blokker</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="277"/>
@@ -1404,10 +1351,7 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation>
-            <numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokk</numerusform>
-            <numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokker</numerusform>
-        </translation>
+        <translation><numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokk</numerusform><numerusform>Utvunnet saldo vil bli tilgjengelig om %n blokker</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
@@ -1427,20 +1371,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="349"/>
         <source>Received from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Received from IP</source>
-        <translation type="obsolete">Mottatt fra IP</translation>
+        <translation>Mottatt fra</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="352"/>
         <source>Sent to</source>
         <translation>Sendt til</translation>
-    </message>
-    <message>
-        <source>Sent to IP</source>
-        <translation type="obsolete">Sendt til IP</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="354"/>
@@ -1569,7 +1505,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="127"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiér beløp</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="128"/>
@@ -1736,12 +1672,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"></translation>
+        <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnet: 18333)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation type="unfinished"></translation>
+        <translation>Hold maks &lt;n&gt; koblinger åpne til andre noder (standardverdi: 125)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
@@ -1761,27 +1697,27 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Don&apos;t bootstrap list of peers using DNS</source>
-        <translation type="unfinished"></translation>
+        <translation>Ikke lag initiell nodeliste ved hjelp av DNS</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"></translation>
+        <translation>Grenseverdi for å koble fra noder med dårlig oppførsel (standardverdi: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"></translation>
+        <translation>Antall sekunder noder med dårlig oppførsel hindres fra å koble til på nytt (standardverdi: 86400)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>Maksimum mottaksbuffer per tilkobling, &lt;n&gt;*1000 bytes (standardverdi: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>Maksimum sendebuffer per tilkobling, &lt;n&gt;*1000 bytes (standardverdi: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
@@ -1816,22 +1752,22 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Output extra debugging information</source>
-        <translation type="unfinished"></translation>
+        <translation>Gi ut ekstra debuginformasjon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Prepend debug output with timestamp</source>
-        <translation type="unfinished"></translation>
+        <translation>Sett tidsstempel på debugmeldinger</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"></translation>
+        <translation>Send spor/debug informasjon til konsollet istedenfor debug.log filen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
         <source>Send trace/debug info to debugger</source>
-        <translation type="unfinished"></translation>
+        <translation>Send spor/debug informasjon til debugger</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
@@ -1913,36 +1849,32 @@ SSL innstillinger: (se Bitcoin Wiki for instruksjoner om SSL oppsett)</translati
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Error loading addr.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved lasting av addr.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Error loading blkindex.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved lasting av blkindex.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved lasting av wallet.dat: Lommeboken er skadet</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"></translation>
+        <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Lommeboken måtte skrives om: start Bitcoin på nytt for å fullføre</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error loading addr.dat      </source>
-        <translation type="obsolete">Feil ved lasting av addr.dat      </translation>
+        <translation>Feil ved lasting av wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -1950,25 +1882,9 @@ SSL innstillinger: (se Bitcoin Wiki for instruksjoner om SSL oppsett)</translati
         <translation>Laster blokkindeks...</translation>
     </message>
     <message>
-        <source>Error loading blkindex.dat      </source>
-        <translation type="obsolete">Feil ved lasting av blkindex.dat      </translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Loading wallet...</source>
         <translation>Laster lommebok...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted      </source>
-        <translation type="obsolete">Feil ved lasting av wallet.dat: Skadet lommebok      </translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      </source>
-        <translation type="obsolete">Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Bitcoin      </translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat      </source>
-        <translation type="obsolete">Feil ved lasting av wallet.dat      </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="69"/>
@@ -2011,472 +1927,6 @@ SSL innstillinger: (se Bitcoin Wiki for instruksjoner om SSL oppsett)</translati
         <translation>Klarer ikke binde til port %d på denne datamaskinen.  Bitcoin kjører sannsynligvis allerede.</translation>
     </message>
     <message>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation type="obsolete">Denne transaksjonen er over maks-størrelsen.  Du kan likevel sende med et gebyr på %s, som vil bli gitt til noder som prosesserer transaksjonen din og støtter nettverket.  Vil du betale gebyret?</translation>
-    </message>
-    <message>
-        <source>Enter the current passphrase to the wallet.</source>
-        <translation type="obsolete">Skriv inn nåværende adgangsfrase for lommeboken.</translation>
-    </message>
-    <message>
-        <source>Passphrase</source>
-        <translation type="obsolete">Adgangsfrase</translation>
-    </message>
-    <message>
-        <source>Please supply the current wallet decryption passphrase.</source>
-        <translation type="obsolete">Vennligst oppgå nåværende adgangsfrase for dekryptering.</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="obsolete">Adgangsfrasen angitt for dekryptering av lommeboken var feil.</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">Status</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation type="obsolete">Dato</translation>
-    </message>
-    <message>
-        <source>Description</source>
-        <translation type="obsolete">Beskrivelse</translation>
-    </message>
-    <message>
-        <source>Debit</source>
-        <translation type="obsolete">Debet</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation type="obsolete">Kredit</translation>
-    </message>
-    <message>
-        <source>Open for %d blocks</source>
-        <translation type="obsolete">Åpen for %d blokker</translation>
-    </message>
-    <message>
-        <source>Open until %s</source>
-        <translation type="obsolete">Åpen til %s</translation>
-    </message>
-    <message>
-        <source>%d/offline?</source>
-        <translation type="obsolete">%d/frakoblet?</translation>
-    </message>
-    <message>
-        <source>%d/unconfirmed</source>
-        <translation type="obsolete">%d/ubekreftet</translation>
-    </message>
-    <message>
-        <source>%d confirmations</source>
-        <translation type="obsolete">%d bekreftelser</translation>
-    </message>
-    <message>
-        <source>Generated</source>
-        <translation type="obsolete">Generert</translation>
-    </message>
-    <message>
-        <source>Generated (%s matures in %d more blocks)</source>
-        <translation type="obsolete">Generert (%s modnes om %d blokker)</translation>
-    </message>
-    <message>
-        <source>Generated - Warning: This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="obsolete">Generert - Advarsel: Denne blokken ble ikke mottatt av noen andre noder og vil sannsynligvis ikke bli akseptert!</translation>
-    </message>
-    <message>
-        <source>Generated (not accepted)</source>
-        <translation type="obsolete">Generert (ikke akseptert)</translation>
-    </message>
-    <message>
-        <source>From: </source>
-        <translation type="obsolete">Fra: </translation>
-    </message>
-    <message>
-        <source>Received with: </source>
-        <translation type="obsolete">Mottatt med: </translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation type="obsolete">Betaling til deg selv</translation>
-    </message>
-    <message>
-        <source>To: </source>
-        <translation type="obsolete">Til: </translation>
-    </message>
-    <message>
-        <source>    Generating</source>
-        <translation type="obsolete">    Genererer</translation>
-    </message>
-    <message>
-        <source>(not connected)</source>
-        <translation type="obsolete">(ikke tilkoblet)</translation>
-    </message>
-    <message>
-        <source>     %d connections     %d blocks     %d transactions</source>
-        <translation type="obsolete">     %d forbindelser     %d blokker     %d transaksjoner</translation>
-    </message>
-    <message>
-        <source>Wallet already encrypted.</source>
-        <translation type="obsolete">Lommebok allerede kryptert.</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.
-Please use a passphrase of 10 or more random characters, or eight or more words.</source>
-        <translation type="obsolete">Skriv inn adgangsfrasen for lommeboken.
-Vennligst bruk en adgangsfrase på 10 eller flere tilfeldige tegn, eller åtte eller flere ord.</translation>
-    </message>
-    <message>
-        <source>Error: The supplied passphrase was too short.</source>
-        <translation type="obsolete">Feil: Angitt adgangsfrase var for kort.</translation>
-    </message>
-    <message>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation type="obsolete">ADVARSEL: Hvis du krypterer lommeboken din og mister adgangsfrasen vil du MISTE ALLE DINE BITCOINS!
-Er du sikker på at du vil kryptere lommeboken?</translation>
-    </message>
-    <message>
-        <source>Please re-enter your new wallet passphrase.</source>
-        <translation type="obsolete">Vennligst gjenta adgangsfrasen for lommeboken.</translation>
-    </message>
-    <message>
-        <source>Error: the supplied passphrases didn&apos;t match.</source>
-        <translation type="obsolete">Feil: de angitte adgangsfrasene er ulike.</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed.</source>
-        <translation type="obsolete">Kryptering av lommebok feilet.</translation>
-    </message>
-    <message>
-        <source>Wallet Encrypted.
-Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="obsolete">Lommebok kryptert.
-Husk at det å kryptere lommeboken ikke kan beskytte dine bitcoins fullstendig fra å bli stjålet av skadevare som infiserer datamaskinen din.</translation>
-    </message>
-    <message>
-        <source>Wallet is unencrypted, please encrypt it first.</source>
-        <translation type="obsolete">Lommeboken er ukryptert, vennligst krypter den først.</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">Skriv inn ny adgangsfrase for lommeboken.</translation>
-    </message>
-    <message>
-        <source>Re-enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">Gjenta adgangsfrasen for lommeboken.</translation>
-    </message>
-    <message>
-        <source>Wallet Passphrase Changed.</source>
-        <translation type="obsolete">Adgangsfrasen for Lommeboken er Endret.</translation>
-    </message>
-    <message>
-        <source>New Receiving Address</source>
-        <translation type="obsolete">Ny Mottaksadresse</translation>
-    </message>
-    <message>
-        <source>You should use a new address for each payment you receive.
-
-Label</source>
-        <translation type="obsolete">Du bør bruke en ny adresse for hver betaling du mottar.
-
-Merkelapp</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Status:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation type="obsolete">, har ikke blitt kringkastet uten problemer enda.</translation>
-    </message>
-    <message>
-        <source>, broadcast through %d node</source>
-        <translation type="obsolete">, kringkastet gjennom %d node</translation>
-    </message>
-    <message>
-        <source>, broadcast through %d nodes</source>
-        <translation type="obsolete">, kringkast gjennom %d noder</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Dato:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="obsolete">&lt;b&gt;Kilde:&lt;/b&gt; Generert&lt;br&gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Fra:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="obsolete">ukjent</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Til:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source> (yours, label: </source>
-        <translation type="obsolete"> (din, merkelapp: </translation>
-    </message>
-    <message>
-        <source> (yours)</source>
-        <translation type="obsolete"> (din)</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Kredit:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>(%s matures in %d more blocks)</source>
-        <translation type="obsolete">(%s modnes om %d blokker)</translation>
-    </message>
-    <message>
-        <source>(not accepted)</source>
-        <translation type="obsolete">(ikke akseptert)</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Debet:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Transaksjonsgebyr:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Nettobeløp:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation type="obsolete">Melding:</translation>
-    </message>
-    <message>
-        <source>Comment:</source>
-        <translation type="obsolete">Kommentar:</translation>
-    </message>
-    <message>
-        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="obsolete">Genererte mynter må vente 120 blokker før de kan brukes.  Da du genererte denne blokken ble den kringkastet til nettverket for å legges til i blokk-kjeden.  Hvis den ikke kommer med i kjeden vil den endres til &quot;ikke akseptert&quot; og ikke kunne brukes.  Dette vil skje noen ganger når en annen node genererer en blokk bare sekunder fra din egen i tid.</translation>
-    </message>
-    <message>
-        <source>Cannot write autostart/bitcoin.desktop file</source>
-        <translation type="obsolete">Kan ikke skrive til autostart/bitcoin.desktop filen</translation>
-    </message>
-    <message>
-        <source>Main</source>
-        <translation type="obsolete">Hoved</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on window system startup</source>
-        <translation type="obsolete">&amp;Start Bitcoin ved oppstart</translation>
-    </message>
-    <message>
-        <source>&amp;Minimize on close</source>
-        <translation type="obsolete">&amp;Minimer ved lukking</translation>
-    </message>
-    <message>
-        <source>version %s</source>
-        <translation type="obsolete">versjon %s</translation>
-    </message>
-    <message>
-        <source>Error in amount  </source>
-        <translation type="obsolete">Feil i beløp  </translation>
-    </message>
-    <message>
-        <source>Send Coins</source>
-        <translation type="obsolete">Send Bitcoins</translation>
-    </message>
-    <message>
-        <source>Amount exceeds your balance  </source>
-        <translation type="obsolete">Beløpet overstiger saldoen  </translation>
-    </message>
-    <message>
-        <source>Total exceeds your balance when the </source>
-        <translation type="obsolete">Totalbeløpet overstiger saldoen når </translation>
-    </message>
-    <message>
-        <source> transaction fee is included  </source>
-        <translation type="obsolete"> transaksjonsgebyret tas med  </translation>
-    </message>
-    <message>
-        <source>Payment sent  </source>
-        <translation type="obsolete">Betaling sendt  </translation>
-    </message>
-    <message>
-        <source>Sending...</source>
-        <translation type="obsolete">Sender...</translation>
-    </message>
-    <message>
-        <source>Invalid address  </source>
-        <translation type="obsolete">Ugyldig adresse  </translation>
-    </message>
-    <message>
-        <source>Sending %s to %s</source>
-        <translation type="obsolete">Sender %s til %s</translation>
-    </message>
-    <message>
-        <source>CANCELLED</source>
-        <translation type="obsolete">AVBRUTT</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation type="obsolete">Avbrutt</translation>
-    </message>
-    <message>
-        <source>Transfer cancelled  </source>
-        <translation type="obsolete">Overføring avbrutt  </translation>
-    </message>
-    <message>
-        <source>Error: </source>
-        <translation type="obsolete">Feil: </translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="obsolete">Utilstrekkelige midler</translation>
-    </message>
-    <message>
-        <source>Connecting...</source>
-        <translation type="obsolete">Kobler til...</translation>
-    </message>
-    <message>
-        <source>Unable to connect</source>
-        <translation type="obsolete">Kunne ikke koble til</translation>
-    </message>
-    <message>
-        <source>Requesting public key...</source>
-        <translation type="obsolete">Ber om offentlig nøkkel...</translation>
-    </message>
-    <message>
-        <source>Received public key...</source>
-        <translation type="obsolete">Mottok offentlig nøkkel...</translation>
-    </message>
-    <message>
-        <source>Recipient is not accepting transactions sent by IP address</source>
-        <translation type="obsolete">Mottaker tar ikke imot transaksjoner sendt via IP-adresse</translation>
-    </message>
-    <message>
-        <source>Transfer was not accepted</source>
-        <translation type="obsolete">Overføring ble ikke akseptert</translation>
-    </message>
-    <message>
-        <source>Invalid response received</source>
-        <translation type="obsolete">Ugyldig svar mottatt</translation>
-    </message>
-    <message>
-        <source>Creating transaction...</source>
-        <translation type="obsolete">Oppretter transaksjon...</translation>
-    </message>
-    <message>
-        <source>This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds</source>
-        <translation type="obsolete">Denne transaksjonen krever et gebyr på minst %s pga. beløpet, kompleksiteten, eller bruk av nylig mottatte midler</translation>
-    </message>
-    <message>
-        <source>Transaction creation failed</source>
-        <translation type="obsolete">Opprettelse av transaksjon feilet</translation>
-    </message>
-    <message>
-        <source>Transaction aborted</source>
-        <translation type="obsolete">Transaksjon avbrutt</translation>
-    </message>
-    <message>
-        <source>Lost connection, transaction cancelled</source>
-        <translation type="obsolete">Mistet forbindelsen, transaksjonen avbrutt</translation>
-    </message>
-    <message>
-        <source>Sending payment...</source>
-        <translation type="obsolete">Sender betaling...</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="obsolete">Transaksjonen ble avvist.  Dette kan skje hvis noen av myntene i lommeboken allerede er brukt, f.eks. hvis du kopierte wallet.dat og mynter ble brukt i kopien uten å bli markert som brukt her.</translation>
-    </message>
-    <message>
-        <source>Waiting for confirmation...</source>
-        <translation type="obsolete">Venter på bekreftelse...</translation>
-    </message>
-    <message>
-        <source>The payment was sent, but the recipient was unable to verify it.
-The transaction is recorded and will credit to the recipient,
-but the comment information will be blank.</source>
-        <translation type="obsolete">Betalingen ble sendt, men mottaker kunne ikke verifisere den.
-Transaksjonen er lagret og beløpet vil bli kreditert mottaker,
-men kommentaren vil bli blank.</translation>
-    </message>
-    <message>
-        <source>Payment was sent, but an invalid response was received</source>
-        <translation type="obsolete">Betaling ble sendt, men et ugyldig svar kom tilbake</translation>
-    </message>
-    <message>
-        <source>Payment completed</source>
-        <translation type="obsolete">Betaling fullført</translation>
-    </message>
-    <message>
-        <source>Name</source>
-        <translation type="obsolete">Navn</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation type="obsolete">Adresse</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation type="obsolete">Merkelapp</translation>
-    </message>
-    <message>
-        <source>Bitcoin Address</source>
-        <translation type="obsolete">Bitcoin-Adresse</translation>
-    </message>
-    <message>
-        <source>This is one of your own addresses for receiving payments and cannot be entered in the address book.  </source>
-        <translation type="obsolete">Dette er en av dine egne adresser for mottak av betalinger og kan ikke legges inn i adresseboken.  </translation>
-    </message>
-    <message>
-        <source>Edit Address</source>
-        <translation type="obsolete">Rediger adresse</translation>
-    </message>
-    <message>
-        <source>Edit Address Label</source>
-        <translation type="obsolete">Rediger Merkelapp</translation>
-    </message>
-    <message>
-        <source>Add Address</source>
-        <translation type="obsolete">Legg til Adresse</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation type="obsolete">Bitcoin</translation>
-    </message>
-    <message>
-        <source>Bitcoin - Generating</source>
-        <translation type="obsolete">Bitcoin - Genererer</translation>
-    </message>
-    <message>
-        <source>Bitcoin - (not connected)</source>
-        <translation type="obsolete">Bitcoin - (ikke tilkoblet)</translation>
-    </message>
-    <message>
-        <source>&amp;Open Bitcoin</source>
-        <translation type="obsolete">&amp;Åpne Bitcoin</translation>
-    </message>
-    <message>
-        <source>&amp;Send Bitcoins</source>
-        <translation type="obsolete">&amp;Send Bitcoins</translation>
-    </message>
-    <message>
-        <source>O&amp;ptions...</source>
-        <translation type="obsolete">&amp;Innstillinger...</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation type="obsolete">&amp;Avslutt</translation>
-    </message>
-    <message>
-        <source>Program has crashed and will terminate.  </source>
-        <translation type="obsolete">Programmet har kræsjet og vil avslutte.  </translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Advarsel: Vennligst sjekk at dato og klokke er riktig innstilt på datamaskinen.  Hvis klokken er feil vil ikke Bitcoin fungere ordentlig.</translation>
@@ -2490,13 +1940,9 @@ men kommentaren vil bli blank.</translation>
 <context>
     <name>main</name>
     <message>
-        <source>Bitcoin Qt</source>
-        <translation type="obsolete">Bitcoin Qt</translation>
-    </message>
-    <message>
         <location filename="../bitcoin.cpp" line="188"/>
         <source>Bitcoin-Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin-Qt</translation>
     </message>
 </context>
 </TS>

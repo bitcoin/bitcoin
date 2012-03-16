@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="pl">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="pl" version="2.0">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
@@ -23,7 +21,18 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright © 2009-2012 Bitcoin Developers
+
+Oprogramowanie eksperymentalne.
+
+Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.
+
+
+
+Pomóż w tłumaczeniu:
+www.transifex.net/projects/p/bitcoin/</translation>
     </message>
 </context>
 <context>
@@ -66,17 +75,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Show &amp;QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokaż Kod &amp;QR</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="96"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>Podpisz wiadomość aby dowieść, że ten adres jest twój</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="99"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>Podpi&amp;sz Wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="110"/>
@@ -91,22 +100,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="62"/>
         <source>Copy address</source>
-        <translation type="unfinished">Kopiuj adres</translation>
+        <translation>Kopiuj adres</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="63"/>
         <source>Copy label</source>
-        <translation type="unfinished">Kopiuj etykietę</translation>
+        <translation>Kopiuj etykietę</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Edytuj</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Usuń</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="282"/>
@@ -152,7 +161,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Dialog</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="32"/>
@@ -224,7 +233,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="102"/>
         <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
-        <translation>UWAGA: Jeśli zaszyfrujesz portfel i zgubisz hasło, wtedy &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITMONETY&lt;/b&gt;
+        <translation>OSTRZEŻENIE: Jeśli zaszyfrujesz portfel i zgubisz hasło, wtedy &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITMONETY&lt;/b&gt;
 Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     </message>
     <message>
@@ -236,13 +245,13 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
         <location filename="../askpassphrasedialog.cpp" line="232"/>
         <source>Warning: The Caps Lock key is on.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ostrzeżenie: Caps Lock jest włączony.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
@@ -357,12 +366,12 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
         <source>Sign &amp;message</source>
-        <translation type="unfinished"></translation>
+        <translation>Podpisz wiado&amp;mość</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="202"/>
         <source>Prove you control an address</source>
-        <translation type="unfinished"></translation>
+        <translation>Udowodnij, że kontrolujesz adres</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="221"/>
@@ -387,12 +396,12 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="228"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>O &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="229"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokazuje informacje o Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
@@ -407,7 +416,7 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Open &amp;Bitcoin</source>
-        <translation>twórz &amp;Bitcoin</translation>
+        <translation>Otwórz &amp;Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="235"/>
@@ -462,7 +471,7 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="284"/>
         <source>Tabs toolbar</source>
-        <translation type="unfinished"></translation>
+        <translation>Pasek zakładek</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
@@ -482,11 +491,7 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="440"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation>
-            <numerusform>%n aktywne połączenie do sieci Bitcoin</numerusform>
-            <numerusform>%n aktywne połączenia do sieci Bitcoin</numerusform>
-            <numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform>
-        </translation>
+        <translation><numerusform>%n aktywne połączenie do sieci Bitcoin</numerusform><numerusform>%n aktywne połączenia do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="466"/>
@@ -501,38 +506,22 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="489"/>
         <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>%n sekundę temu</numerusform>
-            <numerusform>%n sekundy temu</numerusform>
-            <numerusform>%n sekund temu</numerusform>
-        </translation>
+        <translation><numerusform>%n sekundę temu</numerusform><numerusform>%n sekundy temu</numerusform><numerusform>%n sekund temu</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="493"/>
         <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>%n minutę temu</numerusform>
-            <numerusform>%n minuty temu</numerusform>
-            <numerusform>%n minut temu</numerusform>
-        </translation>
+        <translation><numerusform>%n minutę temu</numerusform><numerusform>%n minuty temu</numerusform><numerusform>%n minut temu</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="497"/>
         <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>%n godzinę temu</numerusform>
-            <numerusform>%n godziny temu</numerusform>
-            <numerusform>%n godzin temu</numerusform>
-        </translation>
+        <translation><numerusform>%n godzinę temu</numerusform><numerusform>%n godziny temu</numerusform><numerusform>%n godzin temu</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="501"/>
         <source>%n day(s) ago</source>
-        <translation>
-            <numerusform>%n dzień temu</numerusform>
-            <numerusform>%n dni temu</numerusform>
-            <numerusform>%n dni temu</numerusform>
-        </translation>
+        <translation><numerusform>%n dzień temu</numerusform><numerusform>%n dni temu</numerusform><numerusform>%n dni temu</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="507"/>
@@ -552,7 +541,7 @@ Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="585"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="590"/>
@@ -576,7 +565,11 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Data: %1
+Kwota: %2
+Typ: %3
+Adres: %4
+</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="740"/>
@@ -632,7 +625,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ten adres jest skojarzony z wpisem w książce adresowej. Może być zmodyfikowany jedynie dla adresów wysyłających.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="20"/>
@@ -642,17 +635,17 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="24"/>
         <source>New sending address</source>
-        <translation type="unfinished"></translation>
+        <translation>Nowy adres wysyłania</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="27"/>
         <source>Edit receiving address</source>
-        <translation type="unfinished"></translation>
+        <translation>Edytuj adres odbioru</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="31"/>
         <source>Edit sending address</source>
-        <translation type="unfinished"></translation>
+        <translation>Edytuj adres wysyłania</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="91"/>
@@ -750,7 +743,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation type="unfinished"></translation>
+        <translation>Opcjonalna prowizja za transakcje za kB, wspomaga ona szybkość przebiegu transakcji.  Większość transakcji jest 1 kB.  Zalecana prowizja 0.01 .</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -760,7 +753,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Opcjonalna prowizja za transakcje za każdy kB, służy temu by twoje transakcje przebiegały szybko. Większość transakcji jest rozmiarów 1 kB. Prowizja zalecana 0.01.</translation>
+        <translation>Opcjonalna prowizja za transakcje za kB, wspomaga ona szybkość przebiegu transakcji. Większość transakcji jest 1 kB. Zalecana prowizja 0.01 .</translation>
     </message>
 </context>
 <context>
@@ -768,89 +761,89 @@ Address: %4
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>Wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful to only sign statement you agree to with full details, as phishing attacks may try to trick you into signing access to them.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished">Adres do wysłania należności do  (np. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Adres do wysłania należności do  (np. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
         <source>Choose adress from address book</source>
-        <translation type="unfinished"></translation>
+        <translation>Wybierz adres z książki adresowej</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="58"/>
         <source>Alt+A</source>
-        <translation type="unfinished">Alt+A</translation>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="71"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished">Wklej adres ze schowka</translation>
+        <translation>Wklej adres ze schowka</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="81"/>
         <source>Alt+P</source>
-        <translation type="unfinished">Alt+P</translation>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="93"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"></translation>
+        <translation>Wprowadź wiadomość, którą chcesz podpisać, tutaj</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="105"/>
         <source>Click &quot;Sign Message&quot; to get signature</source>
-        <translation type="unfinished"></translation>
+        <translation>Kliknij &quot;Podpisz Wiadomość&quot; żeby uzyskać podpis</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="117"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>Podpisz wiadomość aby dowieść, że ten adres jest twój</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="120"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>Podpi&amp;sz Wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Skopiuj aktualnie wybrany adres do schowka</translation>
+        <translation>Skopiuj aktualnie wybrany adres do schowka</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation type="unfinished">&amp;Kopiuj do schowka</translation>
+        <translation>&amp;Kopiuj do schowka</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <location filename="../messagepage.cpp" line="89"/>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Error signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Błąd podpisywania</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <source>%1 is not a valid address.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 nie jest poprawnym adresem.</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="89"/>
         <source>Private key for %1 is not available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Klucz prywatny dla %1 jest niedostępny.</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Sign failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Podpisywanie nie powiodło się.</translation>
     </message>
 </context>
 <context>
@@ -876,7 +869,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>Formularz</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="40"/>
@@ -913,7 +906,7 @@ Address: %4
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -947,42 +940,42 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/qrcodedialog.ui" line="14"/>
         <source>Dialog</source>
-        <translation type="unfinished"></translation>
+        <translation>Dialog</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="32"/>
         <source>QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Kod QR</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="52"/>
         <source>Request Payment</source>
-        <translation type="unfinished"></translation>
+        <translation>Prośba o płatność</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="67"/>
         <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <translation>Kwota:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="102"/>
         <source>BTC</source>
-        <translation type="unfinished"></translation>
+        <translation>BTC</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="118"/>
         <source>Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>Etykieta:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="141"/>
         <source>Message:</source>
-        <translation type="unfinished">Wiadomość:</translation>
+        <translation>Wiadomość:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="183"/>
         <source>&amp;Save As...</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapi&amp;sz jako...</translation>
     </message>
 </context>
 <context>
@@ -1002,7 +995,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"></translation>
+        <translation>Wyślij do wielu odbiorców na raz</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="67"/>
@@ -1012,7 +1005,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Remove all transaction fields</source>
-        <translation type="unfinished"></translation>
+        <translation>Wyczyść wszystkie pola transakcji</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
@@ -1037,7 +1030,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="147"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"></translation>
+        <translation>Wy&amp;syłka</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="94"/>
@@ -1092,7 +1085,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -1100,7 +1093,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>Formularz</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="29"/>
@@ -1110,7 +1103,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished"></translation>
+        <translation>Płać &amp;Do:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
@@ -1121,7 +1114,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Etykieta:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
@@ -1164,12 +1157,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="18"/>
         <source>Open for %1 blocks</source>
-        <translation type="unfinished"></translation>
+        <translation>Otwórz dla %1 bloków</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="20"/>
         <source>Open until %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Otwórz do %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="26"/>
@@ -1194,7 +1187,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="52"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"></translation>
+        <translation>, nie został jeszcze pomyślnie wyemitowany</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
@@ -1214,7 +1207,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="67"/>
         <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Źródło:&lt;/b&gt; Wygenerowano&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="73"/>
@@ -1250,12 +1243,12 @@ p, li { white-space: pre-wrap; }
         <location filename="../transactiondesc.cpp" line="190"/>
         <location filename="../transactiondesc.cpp" line="207"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Przypisy:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="133"/>
         <source>(%1 matures in %2 more blocks)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="137"/>
@@ -1267,7 +1260,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../transactiondesc.cpp" line="189"/>
         <location filename="../transactiondesc.cpp" line="204"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Debet:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="195"/>
@@ -1292,12 +1285,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="221"/>
         <source>Transaction ID:</source>
-        <translation type="unfinished"></translation>
+        <translation>ID transakcji:</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wygenerowane monety muszą zaczekać 120 bloków zanim będzie można je wydać.  Kiedy wygenerowałeś ten blok, został on wyemitowany do sieci, aby dodać go do łańcucha bloków.  Jeśli to się nie powiedzie nie zostanie on zaakceptowany i wygenerowanych monet nie będzie można wysyłać.  Może się to czasami zdarzyć jeśli inny węzeł wygeneruje blok tuż przed tobą.</translation>
     </message>
 </context>
 <context>
@@ -1310,7 +1303,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Ten panel pokazuje szczegółowy opis transakcji</translation>
     </message>
 </context>
 <context>
@@ -1338,16 +1331,12 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
+        <translation><numerusform>Otwórz dla %n bloku</numerusform><numerusform>Otwórz dla %n bloków</numerusform><numerusform>Otwórz dla %n bloków</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="277"/>
         <source>Open until %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Otwórz do %1</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="280"/>
@@ -1367,16 +1356,12 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation>
-            <numerusform>Wydobyta kwota będzie dostępna za %n blok</numerusform>
-            <numerusform>Wydobyta kwota będzie dostępna za %n bloków</numerusform>
-            <numerusform>Wydobyta kwota będzie dostępna za %n bloki</numerusform>
-        </translation>
+        <translation><numerusform>Wydobyta kwota będzie dostępna za %n blok</numerusform><numerusform>Wydobyta kwota będzie dostępna za %n bloków</numerusform><numerusform>Wydobyta kwota będzie dostępna za %n bloki</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"></translation>
+        <translation>Ten blok nie został odebrany przez jakikolwiek inny węzeł i prawdopodobnie nie zostanie zaakceptowany!</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="304"/>
@@ -1391,11 +1376,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="349"/>
         <source>Received from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Received from IP</source>
-        <translation type="obsolete">Odebrano z IP</translation>
+        <translation>Odebrano od</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="352"/>
@@ -1403,13 +1384,9 @@ p, li { white-space: pre-wrap; }
         <translation>Wysłano do</translation>
     </message>
     <message>
-        <source>Sent to IP</source>
-        <translation type="obsolete">Wysłano na IP</translation>
-    </message>
-    <message>
         <location filename="../transactiontablemodel.cpp" line="354"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"></translation>
+        <translation>Płatność do siebie</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
@@ -1419,7 +1396,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="394"/>
         <source>(n/a)</source>
-        <translation type="unfinished"></translation>
+        <translation>(brak)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="593"/>
@@ -1429,7 +1406,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="595"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"></translation>
+        <translation>Data i czas odebrania transakcji.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="597"/>
@@ -1498,7 +1475,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>To yourself</source>
-        <translation type="unfinished"></translation>
+        <translation>Do siebie</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="78"/>
@@ -1533,7 +1510,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="127"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiuj kwotę</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="128"/>
@@ -1588,7 +1565,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="285"/>
         <source>ID</source>
-        <translation type="unfinished"></translation>
+        <translation>ID</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="289"/>
@@ -1634,7 +1611,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
         <source>Send command to -server or bitcoind</source>
-        <translation type="unfinished"></translation>
+        <translation>Wyślij polecenie do -server lub bitcoind</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
@@ -1679,12 +1656,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="14"/>
         <source>Specify data directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Wskaż folder danych</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="15"/>
         <source>Specify connection timeout (in milliseconds)</source>
-        <translation type="unfinished"></translation>
+        <translation>Wskaż czas oczekiwania bezczynności połączenia (w milisekundach)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="16"/>
@@ -1694,17 +1671,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="17"/>
         <source>Allow DNS lookups for addnode and connect</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nasłuchuj połączeń na &lt;port&gt; (domyślnie: 8333 lub testnet: 18333)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation type="unfinished"></translation>
+        <translation>Utrzymuj maksymalnie &lt;n&gt; połączeń z peerami (domyślnie: 125)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
@@ -1724,27 +1701,27 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Don&apos;t bootstrap list of peers using DNS</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>Maksymalny bufor odbioru na połączenie, &lt;n&gt;*1000 bajtów (domyślnie: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>Maksymalny bufor wysyłu na połączenie, &lt;n&gt;*1000 bajtów (domyślnie: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
@@ -1759,17 +1736,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation type="unfinished"></translation>
+        <translation>Prowizja za kB dodawana do wysyłanej transakcji</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation type="unfinished"></translation>
+        <translation>Uruchom w tle jako daemon i przyjmuj polecenia</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="35"/>
@@ -1779,27 +1756,27 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Output extra debugging information</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Prepend debug output with timestamp</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
         <source>Send trace/debug info to debugger</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
         <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished"></translation>
+        <translation>Nazwa użytkownika dla połączeń JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="41"/>
@@ -1809,12 +1786,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nasłuchuj połączeń JSON-RPC na &lt;port&gt; (domyślnie: 8332)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation type="unfinished"></translation>
+        <translation>Przyjmuj połączenia JSON-RPC ze wskazanego adresu IP</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="44"/>
@@ -1824,23 +1801,24 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="45"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ustaw rozmiar puli kluczy na &lt;n&gt; (domyślnie: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation type="unfinished"></translation>
+        <translation>Przeskanuj blok łańcuchów żeby znaleźć zaginione transakcje portfela</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>
 SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"></translation>
+        <translation>
+opcje SSL: (sprawdź Bitcoin Wiki dla instrukcje konfiguracji SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation type="unfinished"></translation>
+        <translation>Użyj OpenSSL (https) do połączeń JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
@@ -1860,12 +1838,12 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="56"/>
         <source>This help message</source>
-        <translation type="unfinished"></translation>
+        <translation>Ta wiadomość pomocy</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nie można zablokować folderu danych %s.  Bitcoin prawdopodobnie już działa.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
@@ -1875,36 +1853,32 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Error loading addr.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>Błąd ładowania addr.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Error loading blkindex.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>Błąd ładownia blkindex.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>Błąd ładowania wallet.dat: Uszkodzony portfel</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"></translation>
+        <translation>Błąd ładowania wallet.dat: Portfel wymaga nowszej wersji Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation type="unfinished"></translation>
+        <translation>Portfel wymaga przepisania: zrestartuj Bitcoina żeby ukończyć</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error loading addr.dat      </source>
-        <translation type="obsolete">Błąd wczytywania addr.dat      </translation>
+        <translation>Błąd ładowania wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -1912,25 +1886,9 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Ładowanie indeksu bloku...</translation>
     </message>
     <message>
-        <source>Error loading blkindex.dat      </source>
-        <translation type="obsolete">Błąd wczytywania blkindex.dat      </translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Loading wallet...</source>
         <translation>Wczytywanie portfela...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted      </source>
-        <translation type="obsolete">Błąd wczytywania wallet.dat: Portfel został uszkodzony      </translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      </source>
-        <translation type="obsolete">Błąd wczytywania wallet.dat: Portfel wymaga nowszej wersji Bitcoina      </translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat      </source>
-        <translation type="obsolete">Błąd wczytywania wallet.dat      </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="69"/>
@@ -1950,12 +1908,12 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Nieprawidłowa kwota dla -paytxfee=&lt;amount&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ostrzeżenie: -paytxfee jest bardzo duży.  To jest prowizja za transakcje, którą płacisz, gdy wysyłasz monety.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="76"/>
@@ -1965,349 +1923,17 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Warning: Disk space is low  </source>
-        <translation>Uwaga: kończy się miejsce na dysku</translation>
+        <translation>Ostrzeżenie: kończy się miejsce na dysku</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enter the current passphrase to the wallet.</source>
-        <translation type="obsolete">Wprowadź aktualne hasło dla portfela.</translation>
-    </message>
-    <message>
-        <source>Passphrase</source>
-        <translation type="obsolete">Hasło</translation>
-    </message>
-    <message>
-        <source>Please supply the current wallet decryption passphrase.</source>
-        <translation type="obsolete">Proszę podać aktualne hasło do odszyfrowania portfela.</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="obsolete">Podane hasło do odszyfrowania portfela jest niepoprawne.</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">Status</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation type="obsolete">Data</translation>
-    </message>
-    <message>
-        <source>Description</source>
-        <translation type="obsolete">Opis</translation>
-    </message>
-    <message>
-        <source>%d/offline?</source>
-        <translation type="obsolete">%d/offline?</translation>
-    </message>
-    <message>
-        <source>%d/unconfirmed</source>
-        <translation type="obsolete">%d/niezatwierdzony</translation>
-    </message>
-    <message>
-        <source>%d confirmations</source>
-        <translation type="obsolete">%d potwierdzeń</translation>
-    </message>
-    <message>
-        <source>From: </source>
-        <translation type="obsolete">Od:</translation>
-    </message>
-    <message>
-        <source>Received with: </source>
-        <translation type="obsolete">Otrzymane przez: </translation>
-    </message>
-    <message>
-        <source>To: </source>
-        <translation type="obsolete">Do:</translation>
-    </message>
-    <message>
-        <source>(not connected)</source>
-        <translation type="obsolete">(niepołączony)</translation>
-    </message>
-    <message>
-        <source>     %d connections     %d blocks     %d transactions</source>
-        <translation type="obsolete">     %d połączeń     %d bloków     %d transakcji</translation>
-    </message>
-    <message>
-        <source>Wallet already encrypted.</source>
-        <translation type="obsolete">Portfel już zaszyfrowano.</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.
-Please use a passphrase of 10 or more random characters, or eight or more words.</source>
-        <translation type="obsolete">Wprowadź nowe hasło dla portfela.
-Proszę użyć hasło zawierające 10 bądź więcej różnych znaków lub 8 bądź więcej słów.</translation>
-    </message>
-    <message>
-        <source>Error: The supplied passphrase was too short.</source>
-        <translation type="obsolete">Błąd: Wprowadzone hasło jest za krótkie.</translation>
-    </message>
-    <message>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation type="obsolete">UWAGA: Jeśli zaszyfrujesz swój portfel i zgubisz hasło, wtedy STRACISZ WSZYSTKIE SWOJE BITMONETY!
-Czy na pewno chcesz zaszyfrować portfel?</translation>
-    </message>
-    <message>
-        <source>Please re-enter your new wallet passphrase.</source>
-        <translation type="obsolete">Proszę powtórzyć nowe hasło do portfela.</translation>
-    </message>
-    <message>
-        <source>Error: the supplied passphrases didn&apos;t match.</source>
-        <translation type="obsolete">Błąd: wprowadzone hasła nie są takie same.</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed.</source>
-        <translation type="obsolete">Zaszyfrowanie portfela nie powiodło się.</translation>
-    </message>
-    <message>
-        <source>Wallet is unencrypted, please encrypt it first.</source>
-        <translation type="obsolete">Portfel jest niezaszyfrowany, proszę pierw go zaszyfrować.</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">Podaj nowe hasło do portfela.</translation>
-    </message>
-    <message>
-        <source>Re-enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">Podaj ponownie nowe hasło do portfela.</translation>
-    </message>
-    <message>
-        <source>Wallet Passphrase Changed.</source>
-        <translation type="obsolete">Hasło Portfela Zmieniono.</translation>
-    </message>
-    <message>
-        <source>New Receiving Address</source>
-        <translation type="obsolete">Nowy adres odbiorczy</translation>
-    </message>
-    <message>
-        <source>You should use a new address for each payment you receive.
-
-Label</source>
-        <translation type="obsolete">Powinieneś użyć nowego adresu dla każdej odbieranej płatności.
-
-Etykieta</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Status:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>, broadcast through %d node</source>
-        <translation type="obsolete">, emitowany przez %d węzeł</translation>
-    </message>
-    <message>
-        <source>, broadcast through %d nodes</source>
-        <translation type="obsolete">, emitowany przez %d węzły</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Data:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Od:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="obsolete">nieznany</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Do:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source> (yours, label: </source>
-        <translation type="obsolete"> (twoje, etykieta: </translation>
-    </message>
-    <message>
-        <source> (yours)</source>
-        <translation type="obsolete"> (twoje)</translation>
-    </message>
-    <message>
-        <source>(not accepted)</source>
-        <translation type="obsolete">(niezaakceptowane)</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Prowizja za  transakcje:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;Kwota netto:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation type="obsolete">Wiadomość:</translation>
-    </message>
-    <message>
-        <source>Comment:</source>
-        <translation type="obsolete">Komentarz:</translation>
-    </message>
-    <message>
-        <source>Cannot write autostart/bitcoin.desktop file</source>
-        <translation type="obsolete">Nie można zapisać pliku autostart/bitcoin.dekstop</translation>
-    </message>
-    <message>
-        <source>Main</source>
-        <translation type="obsolete">Główny</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on window system startup</source>
-        <translation type="obsolete">Uruchom Bitcoin razem z &amp;systemem okien</translation>
-    </message>
-    <message>
-        <source>&amp;Minimize on close</source>
-        <translation type="obsolete">&amp;amp; Minimalizuj w pobliżu</translation>
-    </message>
-    <message>
-        <source>version %s</source>
-        <translation type="obsolete">wersja %s</translation>
-    </message>
-    <message>
-        <source>Error in amount  </source>
-        <translation type="obsolete">Błąd w kwocie  </translation>
-    </message>
-    <message>
-        <source>Send Coins</source>
-        <translation type="obsolete">Wyślij płatność</translation>
-    </message>
-    <message>
-        <source>Amount exceeds your balance  </source>
-        <translation type="obsolete">Kwota przekracza saldo  </translation>
-    </message>
-    <message>
-        <source>Total exceeds your balance when the </source>
-        <translation type="obsolete">Suma przekracza twoje saldo, gdy doliczymy </translation>
-    </message>
-    <message>
-        <source> transaction fee is included  </source>
-        <translation type="obsolete"> prowizji transakcyjnej  </translation>
-    </message>
-    <message>
-        <source>Payment sent  </source>
-        <translation type="obsolete">Płatność wysłano  </translation>
-    </message>
-    <message>
-        <source>Sending...</source>
-        <translation type="obsolete">Wysyłanie...</translation>
-    </message>
-    <message>
-        <source>Invalid address  </source>
-        <translation type="obsolete">Nieprawidłowy adres  </translation>
-    </message>
-    <message>
-        <source>Sending %s to %s</source>
-        <translation type="obsolete">Wysyłanie %s do %s</translation>
-    </message>
-    <message>
-        <source>CANCELLED</source>
-        <translation type="obsolete">ANULOWANO</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation type="obsolete">Anulowano</translation>
-    </message>
-    <message>
-        <source>Transfer cancelled  </source>
-        <translation type="obsolete">Transfer anulowano  </translation>
-    </message>
-    <message>
-        <source>Error: </source>
-        <translation type="obsolete">Błąd: </translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="obsolete">Niewystarczające środki</translation>
-    </message>
-    <message>
-        <source>Connecting...</source>
-        <translation type="obsolete">Łączenie...</translation>
-    </message>
-    <message>
-        <source>Requesting public key...</source>
-        <translation type="obsolete">Proszenie o klucz publiczny...</translation>
-    </message>
-    <message>
-        <source>Received public key...</source>
-        <translation type="obsolete">Otrzymano klucz publiczny...</translation>
-    </message>
-    <message>
-        <source>Transaction aborted</source>
-        <translation type="obsolete">Transakcja przerwana</translation>
-    </message>
-    <message>
-        <source>Lost connection, transaction cancelled</source>
-        <translation type="obsolete">Utracono połączenie, transakcja anulowana</translation>
-    </message>
-    <message>
-        <source>Sending payment...</source>
-        <translation type="obsolete">Wysyłanie płatności...</translation>
-    </message>
-    <message>
-        <source>Waiting for confirmation...</source>
-        <translation type="obsolete">Oczekiwanie na potwierdzenia...</translation>
-    </message>
-    <message>
-        <source>Name</source>
-        <translation type="obsolete">Nazwa</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation type="obsolete">Adres</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation type="obsolete">Etykieta</translation>
-    </message>
-    <message>
-        <source>Bitcoin Address</source>
-        <translation type="obsolete">Adres Bitcoin</translation>
-    </message>
-    <message>
-        <source>This is one of your own addresses for receiving payments and cannot be entered in the address book.  </source>
-        <translation type="obsolete">To jest jeden z twoich własnych adresów do odbioru płatności i nie można go wprowadzić do książki adresowej.  </translation>
-    </message>
-    <message>
-        <source>Edit Address</source>
-        <translation type="obsolete">Edytuj adres</translation>
-    </message>
-    <message>
-        <source>Edit Address Label</source>
-        <translation type="obsolete">Edytuj Etykietę Adresu</translation>
-    </message>
-    <message>
-        <source>Add Address</source>
-        <translation type="obsolete">Dodaj Adres</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation type="obsolete">Bitcoin</translation>
-    </message>
-    <message>
-        <source>Bitcoin - (not connected)</source>
-        <translation type="obsolete">Bitcoin - (niepołączony)</translation>
-    </message>
-    <message>
-        <source>&amp;Open Bitcoin</source>
-        <translation type="obsolete">&amp;Otwórz Bitcoin</translation>
-    </message>
-    <message>
-        <source>O&amp;ptions...</source>
-        <translation type="obsolete">O&amp;pcje...</translation>
-    </message>
-    <message>
-        <source>Program has crashed and will terminate.  </source>
-        <translation type="obsolete">Program uległ awarii i zostanie zakończony.  </translation>
+        <translation>Nie można przywiązać portu %d na tym komputerze.  Bitcoin prawdopodobnie już działa.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ostrzeżenie: Proszę sprawdzić poprawność czasu i daty na tym komputerze.  Jeśli czas jest zły Bitcoin może nie działać prawidłowo.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>
@@ -2318,13 +1944,9 @@ Etykieta</translation>
 <context>
     <name>main</name>
     <message>
-        <source>Bitcoin Qt</source>
-        <translation type="obsolete">Bitcoin Qt</translation>
-    </message>
-    <message>
         <location filename="../bitcoin.cpp" line="188"/>
         <source>Bitcoin-Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin-Qt</translation>
     </message>
 </context>
 </TS>

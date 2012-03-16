@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="zh_CN">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="zh_CN" version="2.0">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
@@ -23,29 +21,13 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished">版权所有 © 2009-2011 比特币开发团队
+        <translation>版权归比特币开发者所有  © 2009-2012
 
-本软件目前尚属测试阶段
-
-本软件遵循 MIT/X11 软件协议，详细请查阅附带的 license.txt 文件，或访问 http://www.opensource.org/licenses/mit-license.php.
-
-本软件包含 OpenSSL 项目开发的 OpenSSL Toolkit 组件(http://www.openssl.org/)， Eric Young (eay@cryptsoft.com) 开发的加密软件以及 Thomas Bernard 开发的UPnP软件 {2009-2012 ?} {11 ?}</translation>
-    </message>
-    <message>
-        <source>Copyright © 2009-2011 Bitcoin Developers
-
-This is experimental software.
+这是一个实验性软件。
 
 Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="obsolete">版权所有 © 2009-2011 比特币开发团队
-
-本软件目前尚属测试阶段
-
-本软件遵循 MIT/X11 软件协议，详细请查阅附带的 license.txt 文件，或访问 http://www.opensource.org/licenses/mit-license.php.
-
-本软件包含 OpenSSL 项目开发的 OpenSSL Toolkit 组件(http://www.openssl.org/)， Eric Young (eay@cryptsoft.com) 开发的加密软件以及 Thomas Bernard 开发的UPnP软件</translation>
+This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</translation>
     </message>
 </context>
 <context>
@@ -88,17 +70,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Show &amp;QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>显示二维码</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="96"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>发送签名消息以证明您是该比特币地址的拥有者</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="99"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;发送签名消息</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="110"/>
@@ -113,22 +95,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="62"/>
         <source>Copy address</source>
-        <translation type="unfinished">复制地址</translation>
+        <translation>复制地址</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="63"/>
         <source>Copy label</source>
-        <translation type="unfinished">复制标签</translation>
+        <translation>复制标签</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>编辑</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>删除</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="282"/>
@@ -258,17 +240,13 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>将关闭软件以完成加密过程。 请您谨记：钱包加密并不是万能的，电脑中毒，您的比特币还是有可能丢失。</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
         <location filename="../askpassphrasedialog.cpp" line="232"/>
         <source>Warning: The Caps Lock key is on.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="obsolete">请注意，当您的计算机感染恶意软件时，加密钱包并不能完全规避您的比特币被偷窃的可能。</translation>
+        <translation>警告：大写锁定键CapsLock开启</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
@@ -383,12 +361,12 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
         <source>Sign &amp;message</source>
-        <translation type="unfinished"></translation>
+        <translation>发送签名 &amp;消息</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="202"/>
         <source>Prove you control an address</source>
-        <translation type="unfinished"></translation>
+        <translation>证明您拥有某个比特币地址</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="221"/>
@@ -413,12 +391,12 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="228"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>关于 &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="229"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>显示Qt相关信息</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
@@ -508,9 +486,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="440"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation>
-            <numerusform>%n 个到比特币网络的活动连接</numerusform>
-        </translation>
+        <translation><numerusform>%n 个到比特币网络的活动连接</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="466"/>
@@ -525,30 +501,22 @@ Are you sure you wish to encrypt your wallet?</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="489"/>
         <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>%n 秒前</numerusform>
-        </translation>
+        <translation><numerusform>%n 秒前</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="493"/>
         <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>%n 分种前</numerusform>
-        </translation>
+        <translation><numerusform>%n 分种前</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="497"/>
         <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>%n 小时前</numerusform>
-        </translation>
+        <translation><numerusform>%n 小时前</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="501"/>
         <source>%n day(s) ago</source>
-        <translation>
-            <numerusform>%n 天前</numerusform>
-        </translation>
+        <translation><numerusform>%n 天前</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="507"/>
@@ -592,22 +560,7 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished">日期: %1
-金额: %2
-类别: %3
-地址: %4
-
- {1
-?} {2
-?} {3
-?}</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4</source>
-        <translation type="obsolete">日期: %1
+        <translation>日期: %1
 金额: %2
 类别: %3
 地址: %4
@@ -785,7 +738,7 @@ Address: %4</source>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>为每1 kB交易数据支付交易费将保证您的交易尽快被处理.大部分交易数据都小于1 kB. 建议支付0.01个比特币的交易费.  </translation>
+        <translation>建议支付交易费用，有助于您的交易得到尽快处理.  绝大多数交易的字节数为 1 kB. 建议支付0.01个比特币.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -795,7 +748,7 @@ Address: %4</source>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>为每1 kB交易数据支付交易费将保证您的交易尽快被处理.大部分交易数据都小于1 kB. 建议支付0.01个比特币的交易费. </translation>
+        <translation>建议支付交易费用，有助于您的交易得到尽快处理.  绝大多数交易的字节数为 1 kB. 建议支付0.01个比特币.</translation>
     </message>
 </context>
 <context>
@@ -803,89 +756,89 @@ Address: %4</source>
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>消息</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful to only sign statement you agree to with full details, as phishing attacks may try to trick you into signing access to them.</source>
-        <translation type="unfinished"></translation>
+        <translation>你可以发送签名消息以证明您是该比特币地址的拥有者. 请确保发送的签名消息代表您的真实意愿。</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished">付款地址  (例如: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>付款地址  (例如: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
         <source>Choose adress from address book</source>
-        <translation type="unfinished"></translation>
+        <translation>从地址簿选择地址</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="58"/>
         <source>Alt+A</source>
-        <translation type="unfinished">Alt+A</translation>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="71"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished">从剪贴板粘贴地址</translation>
+        <translation>从剪贴板粘贴地址</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="81"/>
         <source>Alt+P</source>
-        <translation type="unfinished">Alt+P</translation>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="93"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"></translation>
+        <translation>请输入您要发送的签名消息</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="105"/>
         <source>Click &quot;Sign Message&quot; to get signature</source>
-        <translation type="unfinished"></translation>
+        <translation>单击“发送签名消息&quot;获取签名</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="117"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>发送签名消息以证明您是该比特币地址的拥有者</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="120"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;发送签名消息</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">复制当前选中地址到系统剪贴板</translation>
+        <translation>复制当前选中地址到系统剪贴板</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation type="unfinished">&amp;复制到剪贴板</translation>
+        <translation>&amp;复制到剪贴板</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <location filename="../messagepage.cpp" line="89"/>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Error signing</source>
-        <translation type="unfinished"></translation>
+        <translation>签名错误</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <source>%1 is not a valid address.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 不是合法的比特币地址。</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="89"/>
         <source>Private key for %1 is not available.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 的秘钥不可用。</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Sign failed</source>
-        <translation type="unfinished"></translation>
+        <translation>签名失败</translation>
     </message>
 </context>
 <context>
@@ -948,7 +901,7 @@ Address: %4</source>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -982,42 +935,42 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/qrcodedialog.ui" line="14"/>
         <source>Dialog</source>
-        <translation type="unfinished">会话</translation>
+        <translation>会话</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="32"/>
         <source>QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>二维码</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="52"/>
         <source>Request Payment</source>
-        <translation type="unfinished"></translation>
+        <translation>请求付款</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="67"/>
         <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <translation>金额：</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="102"/>
         <source>BTC</source>
-        <translation type="unfinished"></translation>
+        <translation>BTC</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="118"/>
         <source>Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>标签：</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="141"/>
         <source>Message:</source>
-        <translation type="unfinished">消息：</translation>
+        <translation>消息：</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="183"/>
         <source>&amp;Save As...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;另存为</translation>
     </message>
 </context>
 <context>
@@ -1047,7 +1000,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Remove all transaction fields</source>
-        <translation type="unfinished"></translation>
+        <translation>移除所有交易项</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
@@ -1327,7 +1280,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="221"/>
         <source>Transaction ID:</source>
-        <translation type="unfinished"></translation>
+        <translation>交易ID：</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
@@ -1373,9 +1326,7 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform>开启 %n 个数据块</numerusform>
-        </translation>
+        <translation><numerusform>开启 %n 个数据块</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="277"/>
@@ -1400,9 +1351,7 @@ p, li { white-space: pre-wrap; }
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation>
-            <numerusform>挖矿所得将在  %n 个数据块之后可用</numerusform>
-        </translation>
+        <translation><numerusform>挖矿所得将在  %n 个数据块之后可用</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
@@ -1422,20 +1371,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="349"/>
         <source>Received from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Received from IP</source>
-        <translation type="obsolete">从IP接收 </translation>
+        <translation>收款来自</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="352"/>
         <source>Sent to</source>
         <translation>发送到</translation>
-    </message>
-    <message>
-        <source>Sent to IP</source>
-        <translation type="obsolete">发送到IP</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="354"/>
@@ -1564,7 +1505,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="127"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation>复制金额</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="128"/>
@@ -1743,12 +1684,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"></translation>
+        <translation>监听端口连接 &lt;port&gt; (缺省: 8333 or testnet: 18333)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation type="unfinished"></translation>
+        <translation>最大连接数 &lt;n&gt;  (缺省: 125)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
@@ -1770,27 +1711,27 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Don&apos;t bootstrap list of peers using DNS</source>
-        <translation type="unfinished"></translation>
+        <translation>不要用DNS启动</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"></translation>
+        <translation>Threshold for disconnecting misbehaving peers (缺省: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"></translation>
+        <translation>Number of seconds to keep misbehaving peers from reconnecting (缺省: 86400)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (缺省: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (缺省: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
@@ -1807,7 +1748,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation>每发送1 kB交易所需的费用</translation>
+        <translation>为付款交易支付比特币(每kb)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
@@ -1831,22 +1772,22 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Output extra debugging information</source>
-        <translation type="unfinished"></translation>
+        <translation>输出调试信息</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Prepend debug output with timestamp</source>
-        <translation type="unfinished"></translation>
+        <translation>为调试输出信息添加时间戳</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"></translation>
+        <translation>跟踪/调试信息输出到控制台，不输出到debug.log文件</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
         <source>Send trace/debug info to debugger</source>
-        <translation type="unfinished"></translation>
+        <translation>跟踪/调试信息输出到 调试器debugger</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
@@ -1940,37 +1881,32 @@ SSL 选项: (SSL 安装教程具体见比特币维基百科)
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Error loading addr.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>addr.dat文件加载错误</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Error loading blkindex.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>blkindex.dat文件加载错误</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>wallet.dat钱包文件加载错误：钱包损坏</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"></translation>
+        <translation>wallet.dat钱包文件加载错误：请升级到最新Bitcoin客户端</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation type="unfinished"></translation>
+        <translation>钱包文件需要重写：请退出并重新启动Bitcoin客户端</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error loading addr.dat      </source>
-        <translation type="obsolete">加载 addr.dat 错误
-</translation>
+        <translation>wallet.dat钱包文件加载错误</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -1978,29 +1914,9 @@ SSL 选项: (SSL 安装教程具体见比特币维基百科)
         <translation>加载区块索引...</translation>
     </message>
     <message>
-        <source>Error loading blkindex.dat      </source>
-        <translation type="obsolete">加载 blkindex.dat 失败
-</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Loading wallet...</source>
         <translation>正在加载钱包...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted      </source>
-        <translation type="obsolete">加载 wallet.dat 失败：钱包崩溃
-</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      </source>
-        <translation type="obsolete">加载 wallet.dat 失败：运行钱包需要一个更新版本的比特币软件
-</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat      </source>
-        <translation type="obsolete">加载 wallet.dat 失败
-</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="69"/>
@@ -2043,472 +1959,6 @@ SSL 选项: (SSL 安装教程具体见比特币维基百科)
         <translation>无法绑定端口 %d 到这台计算机。比特币进程可能已在运行。</translation>
     </message>
     <message>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation type="obsolete">交易超出大小限制。你可以继续以 %s 的费用发送。这笔费用将被发送到处理此次交易的节点用以帮助支持这个网络。你想要支付此笔费用吗？</translation>
-    </message>
-    <message>
-        <source>Enter the current passphrase to the wallet.</source>
-        <translation type="obsolete">输入当前钱包口令</translation>
-    </message>
-    <message>
-        <source>Passphrase</source>
-        <translation type="obsolete">口令</translation>
-    </message>
-    <message>
-        <source>Please supply the current wallet decryption passphrase.</source>
-        <translation type="obsolete">请提供当前钱包解密口令</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="obsolete">当前钱包解密口令不正确。</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">状态</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation type="obsolete">日期 </translation>
-    </message>
-    <message>
-        <source>Description</source>
-        <translation type="obsolete">描述</translation>
-    </message>
-    <message>
-        <source>Debit</source>
-        <translation type="obsolete">支出</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation type="obsolete">收入</translation>
-    </message>
-    <message>
-        <source>Open for %d blocks</source>
-        <translation type="obsolete">开启 %d 个数据块</translation>
-    </message>
-    <message>
-        <source>Open until %s</source>
-        <translation type="obsolete">至 %s 个数据块时开启</translation>
-    </message>
-    <message>
-        <source>%d/offline?</source>
-        <translation type="obsolete">%d/ 离线？</translation>
-    </message>
-    <message>
-        <source>%d/unconfirmed</source>
-        <translation type="obsolete">%d/未确认</translation>
-    </message>
-    <message>
-        <source>%d confirmations</source>
-        <translation type="obsolete">%d 确认项</translation>
-    </message>
-    <message>
-        <source>Generated</source>
-        <translation type="obsolete">生成</translation>
-    </message>
-    <message>
-        <source>Generated (%s matures in %d more blocks)</source>
-        <translation type="obsolete">(%s 成熟于 %d 以上数据块)</translation>
-    </message>
-    <message>
-        <source>Generated - Warning: This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="obsolete">已生成 - 警告：此区块未被其他接收并可能不被接受</translation>
-    </message>
-    <message>
-        <source>Generated (not accepted)</source>
-        <translation type="obsolete">已生成(未接受)</translation>
-    </message>
-    <message>
-        <source>From: </source>
-        <translation type="obsolete">从：</translation>
-    </message>
-    <message>
-        <source>Received with: </source>
-        <translation type="obsolete">接收于</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation type="obsolete">支付给自己</translation>
-    </message>
-    <message>
-        <source>To: </source>
-        <translation type="obsolete">到：</translation>
-    </message>
-    <message>
-        <source>    Generating</source>
-        <translation type="obsolete">生成中</translation>
-    </message>
-    <message>
-        <source>(not connected)</source>
-        <translation type="obsolete">(未连接)</translation>
-    </message>
-    <message>
-        <source>     %d connections     %d blocks     %d transactions</source>
-        <translation type="obsolete">     %d 个连接     %d 个数据块     %d 笔交易</translation>
-    </message>
-    <message>
-        <source>Wallet already encrypted.</source>
-        <translation type="obsolete">钱包已被加密。</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.
-Please use a passphrase of 10 or more random characters, or eight or more words.</source>
-        <translation type="obsolete">请输入新的钱包密码.
-密码须包含10个以上字符,或8个以上单词.</translation>
-    </message>
-    <message>
-        <source>Error: The supplied passphrase was too short.</source>
-        <translation type="obsolete">错误：提供的口令过短。</translation>
-    </message>
-    <message>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation type="obsolete">警告:如果您在加密钱包后忘记密码, 你将会丢失钱包中所有的比特币!
-您确定要对钱包进行加密吗?</translation>
-    </message>
-    <message>
-        <source>Please re-enter your new wallet passphrase.</source>
-        <translation type="obsolete">请重新输入您的新钱包口令</translation>
-    </message>
-    <message>
-        <source>Error: the supplied passphrases didn&apos;t match.</source>
-        <translation type="obsolete">错误：提供的口令不匹配。</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed.</source>
-        <translation type="obsolete">钱包加密失败。</translation>
-    </message>
-    <message>
-        <source>Wallet Encrypted.
-Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="obsolete">钱包加密成功.
-谨记:如果您的电脑感染病毒或木马,即使钱包已经加密,也不能保证您的比特币不被窃,请做好电脑防毒工作.</translation>
-    </message>
-    <message>
-        <source>Wallet is unencrypted, please encrypt it first.</source>
-        <translation type="obsolete">钱包未加密,请先加密.</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">为钱包输入新口令</translation>
-    </message>
-    <message>
-        <source>Re-enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">请再次输入新口令。</translation>
-    </message>
-    <message>
-        <source>Wallet Passphrase Changed.</source>
-        <translation type="obsolete">钱包口令已改变</translation>
-    </message>
-    <message>
-        <source>New Receiving Address</source>
-        <translation type="obsolete">新接收地址</translation>
-    </message>
-    <message>
-        <source>You should use a new address for each payment you receive.
-
-Label</source>
-        <translation type="obsolete">你应该为每一笔支付使用一条新地址
-
-标签</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;状态:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation type="obsolete">，还未被成功广播。</translation>
-    </message>
-    <message>
-        <source>, broadcast through %d node</source>
-        <translation type="obsolete">，通过%d个节点广播</translation>
-    </message>
-    <message>
-        <source>, broadcast through %d nodes</source>
-        <translation type="obsolete">，通过%d个节点组广播</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;日期:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="obsolete">&lt;b&gt;来源:&lt;/b&gt; 生成&lt;br&gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;从:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="obsolete">未知</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;到:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source> (yours, label: </source>
-        <translation type="obsolete">(您的，标签：</translation>
-    </message>
-    <message>
-        <source> (yours)</source>
-        <translation type="obsolete">(你的)</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;收入:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>(%s matures in %d more blocks)</source>
-        <translation type="obsolete">(%s 成熟于 %d 以上数据块)</translation>
-    </message>
-    <message>
-        <source>(not accepted)</source>
-        <translation type="obsolete">(拒绝)</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;支出:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;交易费：&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation type="obsolete">&lt;b&gt;网络金额：&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation type="obsolete">消息：</translation>
-    </message>
-    <message>
-        <source>Comment:</source>
-        <translation type="obsolete">备注：</translation>
-    </message>
-    <message>
-        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="obsolete">新生产的比特币必须等待120个数据块之后才能被使用. 当您生产出此数据块,它将被广播至比特币网络并添加至数据链. 如果添加到数据链失败, 它的状态将变成&quot;不被接受&quot;，生产的比特币将不能使用. 在您生产新数据块的几秒钟内, 如果其它节点也生产出同样的数据块，有可能会发生这种情况.</translation>
-    </message>
-    <message>
-        <source>Cannot write autostart/bitcoin.desktop file</source>
-        <translation type="obsolete">无法写入 autostart/bitcoin.desktop 文件</translation>
-    </message>
-    <message>
-        <source>Main</source>
-        <translation type="obsolete">主要的</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on window system startup</source>
-        <translation type="obsolete">&amp;系统启动时运行比特币</translation>
-    </message>
-    <message>
-        <source>&amp;Minimize on close</source>
-        <translation type="obsolete">&amp;关闭时最小化</translation>
-    </message>
-    <message>
-        <source>version %s</source>
-        <translation type="obsolete">版本 %s</translation>
-    </message>
-    <message>
-        <source>Error in amount  </source>
-        <translation type="obsolete">金额错误</translation>
-    </message>
-    <message>
-        <source>Send Coins</source>
-        <translation type="obsolete">已发送的货币</translation>
-    </message>
-    <message>
-        <source>Amount exceeds your balance  </source>
-        <translation type="obsolete">余额不足</translation>
-    </message>
-    <message>
-        <source>Total exceeds your balance when the </source>
-        <translation type="obsolete">总价超出您的余额：</translation>
-    </message>
-    <message>
-        <source> transaction fee is included  </source>
-        <translation type="obsolete">已包含交易费</translation>
-    </message>
-    <message>
-        <source>Payment sent  </source>
-        <translation type="obsolete">支付已发送</translation>
-    </message>
-    <message>
-        <source>Sending...</source>
-        <translation type="obsolete">正在发送...</translation>
-    </message>
-    <message>
-        <source>Invalid address  </source>
-        <translation type="obsolete">地址不合法  </translation>
-    </message>
-    <message>
-        <source>Sending %s to %s</source>
-        <translation type="obsolete">正在发送 %s 到 %s</translation>
-    </message>
-    <message>
-        <source>CANCELLED</source>
-        <translation type="obsolete">已取消</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation type="obsolete">已取消</translation>
-    </message>
-    <message>
-        <source>Transfer cancelled  </source>
-        <translation type="obsolete">传输已取消</translation>
-    </message>
-    <message>
-        <source>Error: </source>
-        <translation type="obsolete">错误: </translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="obsolete">金额不足</translation>
-    </message>
-    <message>
-        <source>Connecting...</source>
-        <translation type="obsolete">正在连接...</translation>
-    </message>
-    <message>
-        <source>Unable to connect</source>
-        <translation type="obsolete">无法连接</translation>
-    </message>
-    <message>
-        <source>Requesting public key...</source>
-        <translation type="obsolete">正在请求公钥...</translation>
-    </message>
-    <message>
-        <source>Received public key...</source>
-        <translation type="obsolete">公钥已接收...</translation>
-    </message>
-    <message>
-        <source>Recipient is not accepting transactions sent by IP address</source>
-        <translation type="obsolete">接收者拒绝接收该 IP 地址发送的交易</translation>
-    </message>
-    <message>
-        <source>Transfer was not accepted</source>
-        <translation type="obsolete">传输被拒绝</translation>
-    </message>
-    <message>
-        <source>Invalid response received</source>
-        <translation type="obsolete">收到非法应答</translation>
-    </message>
-    <message>
-        <source>Creating transaction...</source>
-        <translation type="obsolete">创建交易...</translation>
-    </message>
-    <message>
-        <source>This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds</source>
-        <translation type="obsolete">由于交易量、复杂度或涉及新收到的比特币的原因，您需要为该笔交易支付至少 %s 个比特币的交易费.</translation>
-    </message>
-    <message>
-        <source>Transaction creation failed</source>
-        <translation type="obsolete">交易创建失败</translation>
-    </message>
-    <message>
-        <source>Transaction aborted</source>
-        <translation type="obsolete">交易终止</translation>
-    </message>
-    <message>
-        <source>Lost connection, transaction cancelled</source>
-        <translation type="obsolete">连接丢失，交易已被取消</translation>
-    </message>
-    <message>
-        <source>Sending payment...</source>
-        <translation type="obsolete">发送支付...</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="obsolete">交易被拒绝. 有时会发生这种错误, 愿因是您钱包中的一些钱已经被花掉了. 比如说您复制了钱包文件 wallet.dat, 然后用复制的钱包花掉了钱, 您现在所用的原始钱包中却没有该笔交易记录.</translation>
-    </message>
-    <message>
-        <source>Waiting for confirmation...</source>
-        <translation type="obsolete">等待确认...</translation>
-    </message>
-    <message>
-        <source>The payment was sent, but the recipient was unable to verify it.
-The transaction is recorded and will credit to the recipient,
-but the comment information will be blank.</source>
-        <translation type="obsolete">已付款, 但是无法验证收款人.
-这笔交易已经被记录了, 金额也会被记入至收款人的账户,
-但附注信息将会是空白.</translation>
-    </message>
-    <message>
-        <source>Payment was sent, but an invalid response was received</source>
-        <translation type="obsolete">支付已发送，但收到了一个非法应答。</translation>
-    </message>
-    <message>
-        <source>Payment completed</source>
-        <translation type="obsolete">支付已完成</translation>
-    </message>
-    <message>
-        <source>Name</source>
-        <translation type="obsolete">姓名</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation type="obsolete">地址 </translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation type="obsolete">标签</translation>
-    </message>
-    <message>
-        <source>Bitcoin Address</source>
-        <translation type="obsolete">比特币地址</translation>
-    </message>
-    <message>
-        <source>This is one of your own addresses for receiving payments and cannot be entered in the address book.  </source>
-        <translation type="obsolete">这是一条您自己的用于接收支付的地址，不可以填入地址薄。</translation>
-    </message>
-    <message>
-        <source>Edit Address</source>
-        <translation type="obsolete">编辑地址</translation>
-    </message>
-    <message>
-        <source>Edit Address Label</source>
-        <translation type="obsolete">编辑地址标签</translation>
-    </message>
-    <message>
-        <source>Add Address</source>
-        <translation type="obsolete">添加地址</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation type="obsolete">比特币</translation>
-    </message>
-    <message>
-        <source>Bitcoin - Generating</source>
-        <translation type="obsolete">比特币 - 生成中</translation>
-    </message>
-    <message>
-        <source>Bitcoin - (not connected)</source>
-        <translation type="obsolete">比特币 - (未连接)</translation>
-    </message>
-    <message>
-        <source>&amp;Open Bitcoin</source>
-        <translation type="obsolete">&amp;打开比特币</translation>
-    </message>
-    <message>
-        <source>&amp;Send Bitcoins</source>
-        <translation type="obsolete">&amp;发送比特币</translation>
-    </message>
-    <message>
-        <source>O&amp;ptions...</source>
-        <translation type="obsolete">选项</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation type="obsolete">退出</translation>
-    </message>
-    <message>
-        <source>Program has crashed and will terminate.  </source>
-        <translation type="obsolete">程序崩溃，即将终止。</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
         <translation>警告：请确定您当前计算机的日期和时间是正确的。比特币将无法在错误的时间下正常工作。</translation>
@@ -2522,13 +1972,9 @@ but the comment information will be blank.</source>
 <context>
     <name>main</name>
     <message>
-        <source>Bitcoin Qt</source>
-        <translation type="obsolete">比特币 Qt</translation>
-    </message>
-    <message>
         <location filename="../bitcoin.cpp" line="188"/>
         <source>Bitcoin-Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin-Qt</translation>
     </message>
 </context>
 </TS>

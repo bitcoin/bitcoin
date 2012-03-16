@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="fa">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="fa" version="2.0">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
@@ -24,29 +22,13 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished">   بر نامه نویسان بیتکویین© حق چاپ 2011-2009
+        <translation>کپی رایت © 2012-2009 Bitcoin Developers
 
-این نرم افزار آزمایشی است 
-توزیع می شود که همراه اراییه شده استMIT/X که با مجاوز 
-http://www.opensource.org/licenses/mit-license.php. 
- نرم افزار گرافیک OpenSSL Toolkit (http://www.openssl.org/)  برای استفاده در OpenSSL این عبارتند از نرمافزار 
- و نرم افزاری نوشته شده توسط توماس برنارد (eay@cryptsoft.com) نوشته توسط اریک یانگ  {2009-2012 ?} {11 ?}</translation>
-    </message>
-    <message>
-        <source>Copyright © 2009-2011 Bitcoin Developers
+این یک نرم‌افزار آزمایشی است.
 
-This is experimental software.
+توزیع شده تحت امتیاز نرم‌افزار MIT/X11، از فایل همراه با عنوان license.txt یا http://www.opensource.org/licenses/mit-license.php دیدن کنید.
 
-Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="obsolete">   بر نامه نویسان بیتکویین© حق چاپ 2011-2009
-
-این نرم افزار آزمایشی است 
-توزیع می شود که همراه اراییه شده استMIT/X که با مجاوز 
-http://www.opensource.org/licenses/mit-license.php. 
- نرم افزار گرافیک OpenSSL Toolkit (http://www.openssl.org/)  برای استفاده در OpenSSL این عبارتند از نرمافزار 
- و نرم افزاری نوشته شده توسط توماس برنارد (eay@cryptsoft.com) نوشته توسط اریک یانگ </translation>
+این محصول از نرم‌افزار ساخته شده در OpenSSL Project برای استفاده در جعبه ابزار OpenSSL‏ (http://www.openssl.org/‎)، نرم‌افزار نهفته نوشته شده توسط اریک یانگ (eay@cryptsoft.com) و نرم‌افزار UPnP نوشته شده توسط توماس برنارد تشکیل شده است.</translation>
     </message>
 </context>
 <context>
@@ -90,17 +72,17 @@ http://www.opensource.org/licenses/mit-license.php.
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Show &amp;QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>نمایش &amp;کد QR</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="96"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>یک پیام را امضا کنید تا ثابت کنید صاحب این نشانی هستید</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="99"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;امضای پیام</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="110"/>
@@ -115,22 +97,22 @@ http://www.opensource.org/licenses/mit-license.php.
     <message>
         <location filename="../addressbookpage.cpp" line="62"/>
         <source>Copy address</source>
-        <translation type="unfinished">کپی آدرس </translation>
+        <translation>کپی آدرس </translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="63"/>
         <source>Copy label</source>
-        <translation type="unfinished">کپی بر چسب</translation>
+        <translation>کپی بر چسب</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>ویرایش</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>حذف</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="282"/>
@@ -260,18 +242,13 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Biticon هم اکنون بسته می‌شود تا فرایند رمزگذاری را تمام کند. به خاطر داشته باشید که رمزگذاری کیف پولتان نمی‌تواند به طور کامل بیتیکون‌های شما را در برابر دزدیده شدن توسط بدافزارهایی که رایانه شما را آلوده می‌کنند، محافظت نماید.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
         <location filename="../askpassphrasedialog.cpp" line="232"/>
         <source>Warning: The Caps Lock key is on.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="obsolete">والت رمز بندی شد . 
-یاد داشته باشید که پنجره رمز شده نمی تواند کلا از سرقت نرم افزارهای مخرب محافظ کند </translation>
+        <translation>هشدار: کلید حروف بزرگ روشن است.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
@@ -386,12 +363,12 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
         <source>Sign &amp;message</source>
-        <translation type="unfinished"></translation>
+        <translation>امضای &amp;پیام</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="202"/>
         <source>Prove you control an address</source>
-        <translation type="unfinished"></translation>
+        <translation>اثبات کنید که روی یک نشانی کنترل دارید</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="221"/>
@@ -416,12 +393,12 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="228"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>درباره &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="229"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>نمایش اطلاعات درباره Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
@@ -511,9 +488,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="440"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation>
-            <numerusform>در صد ارتباطات فعال بیتکویین با شبکه %n</numerusform>
-        </translation>
+        <translation><numerusform>در صد ارتباطات فعال بیتکویین با شبکه %n</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="466"/>
@@ -528,30 +503,22 @@ Are you sure you wish to encrypt your wallet?</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="489"/>
         <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>%n بعد از چند دقیقه</numerusform>
-        </translation>
+        <translation><numerusform>%n بعد از چند دقیقه</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="493"/>
         <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>%n بعد از چند دقیقه </numerusform>
-        </translation>
+        <translation><numerusform>%n بعد از چند دقیقه </numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="497"/>
         <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>%n بعد از چند دقیقه </numerusform>
-        </translation>
+        <translation><numerusform>%n بعد از چند دقیقه </numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="501"/>
         <source>%n day(s) ago</source>
-        <translation>
-            <numerusform>%n بعد از چند روزز </numerusform>
-        </translation>
+        <translation><numerusform>%n بعد از چند روزز </numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="507"/>
@@ -595,24 +562,10 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished">تاریخ 1%1 
-مبلغ 2%2 
+        <translation>تاریخ %1
+مبلغ%2
 نوع %3
-آدرس4%4
- {1
-?} {2
-?} {3
-?}</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4</source>
-        <translation type="obsolete">تاریخ 1%1 
-مبلغ 2%2 
-نوع %3
-آدرس4%4</translation>
+آدرس %4</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="740"/>
@@ -786,7 +739,7 @@ Address: %4</source>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>هنگام معامله اختیاری برای هر کیلو بیت دستمزد پیشنهاد می شود که شما متماین باشید که بسرعت انجام خواهد شد. اصولا هر معامله یک کیلو بیت می باشد و 0.01 دستمزد پیشنهاد می شود</translation>
+        <translation>نرخ اختیاری تراکنش هر کیلوبایت که به شما کمک می‌کند اطمینان پیدا کنید که تراکنش‌ها به سرعت پردازش می‌شوند.   بیشتر تراکنش‌ها ۱ کیلوبایت هستند.   نرخ 0.01 پیشنهاد می‌شود.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -796,7 +749,7 @@ Address: %4</source>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>هنگام معامله اختیاری برای هر کیلو بیت دستمزد پیشنهاد می شود که شما متماین باشید که بسرعت انجام خواهد شد. اصولا هر معامله یک کیلو بیت می باشد و 0.01 دستمزد پیشنهاد می شود</translation>
+        <translation>نرخ اختیاری تراکنش هر کیلوبایت که به شما کمک می‌کند اطمینان پیدا کنید که تراکنش‌ها به سرعت پردازش می‌شوند. بیشتر تراکنش‌ها ۱ کیلوبایت هستند. نرخ 0.01 پیشنهاد می‌شود.</translation>
     </message>
 </context>
 <context>
@@ -804,89 +757,89 @@ Address: %4</source>
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>پیام</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful to only sign statement you agree to with full details, as phishing attacks may try to trick you into signing access to them.</source>
-        <translation type="unfinished"></translation>
+        <translation>شما می‌توانید پیام‌ها را با نشانی خودتان امضا کنید تا اثبات شود که صاحب آن‌ها هستید. مراقب باشید که فقط مستنداتی را با اطلاعات کامل امضا کنید که با آن‌ها موافق هستید، چرا که ممکن است حملات فیشینگ تلاش کنند شما را فریب دهند تا با امضای خود به آن‌ها اجازه دسترسی بدهید.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished">آدرس برای ارسال پر داخت  (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>آدرس برای ارسال پر داخت  (bijvoorbeeld: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
         <source>Choose adress from address book</source>
-        <translation type="unfinished"></translation>
+        <translation>آدرس از دفتر انتخاب کنید </translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="58"/>
         <source>Alt+A</source>
-        <translation type="unfinished">Alt+A</translation>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="71"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished">آدرس از تخته رسم گیره دار پست کنید </translation>
+        <translation>آدرس از تخته رسم گیره دار پست کنید </translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="81"/>
         <source>Alt+P</source>
-        <translation type="unfinished">Alt+P</translation>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="93"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"></translation>
+        <translation>پیامی را که می‌خواهید امضا کنید در اینجا وارد کنید</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="105"/>
         <source>Click &quot;Sign Message&quot; to get signature</source>
-        <translation type="unfinished"></translation>
+        <translation>روی «امضای پیام» کلیک کنید تا امضا را دریافت نمایید</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="117"/>
         <source>Sign a message to prove you own this address</source>
-        <translation type="unfinished"></translation>
+        <translation>یک پیام را امضا کنید تا ثابت کنید صاحب این نشانی هستید</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="120"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;امضای پیام</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">آدرس انتخاب شده در سیستم تخته رسم گیره دار کپی کنید</translation>
+        <translation>آدرس انتخاب شده در سیستم تخته رسم گیره دار کپی کنید</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation type="unfinished">کپی در تخته رسم گیره دار</translation>
+        <translation>کپی در تخته رسم گیره دار</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <location filename="../messagepage.cpp" line="89"/>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Error signing</source>
-        <translation type="unfinished"></translation>
+        <translation>خطا در امضا</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
         <source>%1 is not a valid address.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 یک نشانی معتبر نیست.</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="89"/>
         <source>Private key for %1 is not available.</source>
-        <translation type="unfinished"></translation>
+        <translation>کلید خصوصی برای %1 در دسترس نیست.</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Sign failed</source>
-        <translation type="unfinished"></translation>
+        <translation>امضا موفق نبود</translation>
     </message>
 </context>
 <context>
@@ -949,7 +902,7 @@ Address: %4</source>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;⏎
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;⏎
@@ -983,42 +936,42 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../forms/qrcodedialog.ui" line="14"/>
         <source>Dialog</source>
-        <translation type="unfinished">تگفتگو</translation>
+        <translation>تگفتگو</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="32"/>
         <source>QR Code</source>
-        <translation type="unfinished"></translation>
+        <translation>کد QR</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="52"/>
         <source>Request Payment</source>
-        <translation type="unfinished"></translation>
+        <translation>درخواست پرداخت</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="67"/>
         <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <translation>مقدار:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="102"/>
         <source>BTC</source>
-        <translation type="unfinished"></translation>
+        <translation>BTC</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="118"/>
         <source>Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>برچسب:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="141"/>
         <source>Message:</source>
-        <translation type="unfinished"></translation>
+        <translation>پیام</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="183"/>
         <source>&amp;Save As...</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;ذخیره به عنوان...</translation>
     </message>
 </context>
 <context>
@@ -1048,7 +1001,7 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Remove all transaction fields</source>
-        <translation type="unfinished"></translation>
+        <translation>پاک کردن تمام ستون‌های تراکنش</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
@@ -1328,7 +1281,7 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../transactiondesc.cpp" line="221"/>
         <source>Transaction ID:</source>
-        <translation type="unfinished"></translation>
+        <translation>شماره تراکنش:</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
@@ -1374,9 +1327,7 @@ p, li { white-space: pre-wrap; }⏎
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="274"/>
         <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform>بلوک %n باز شده برای</numerusform>
-        </translation>
+        <translation><numerusform>بلوک %n باز شده برای</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="277"/>
@@ -1401,9 +1352,7 @@ p, li { white-space: pre-wrap; }⏎
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation>
-            <numerusform>و بیشتر باشند قابل قابول می شود %n تزار اصلی بعد از اینکه بلوکها</numerusform>
-        </translation>
+        <translation><numerusform>و بیشتر باشند قابل قابول می شود %n تزار اصلی بعد از اینکه بلوکها</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
@@ -1423,20 +1372,12 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../transactiontablemodel.cpp" line="349"/>
         <source>Received from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Received from IP</source>
-        <translation type="obsolete">در یافت از آی پی :</translation>
+        <translation>دریافتی از</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="352"/>
         <source>Sent to</source>
         <translation>ارسال به :</translation>
-    </message>
-    <message>
-        <source>Sent to IP</source>
-        <translation type="obsolete">ارسال به آی پی :</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="354"/>
@@ -1565,7 +1506,7 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../transactionview.cpp" line="127"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation>روگرفت مقدار</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="128"/>
@@ -1731,12 +1672,12 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"></translation>
+        <translation>برای اتصالات به &lt;port&gt; (پیش‌فرض: 8333 یا تست‌نت: 18333) گوش کنید</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation type="unfinished"></translation>
+        <translation>حداکثر &lt;n&gt; اتصال با همکاران برقرار داشته باشید (پیش‌فرض: 125)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
@@ -1756,27 +1697,27 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Don&apos;t bootstrap list of peers using DNS</source>
-        <translation type="unfinished"></translation>
+        <translation>فهرست همکاران را با استفاده از DNS خودراه‌اندازی نکنید</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"></translation>
+        <translation>آستانه برای قطع ارتباط با همکاران بدرفتار (پیش‌فرض: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"></translation>
+        <translation>مدت زمان به ثانیه برای جلوگیری از همکاران بدرفتار برای اتصال دوباره (پیش‌فرض: 86400)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>حداکثر بافر دریافتی در هر اتصال، 1000*&lt;n&gt; (پیش‌فرض: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
+        <translation>حداکثر بافر ارسالی در هر اتصال، 1000*&lt;n&gt; (پیش‌فرض: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
@@ -1791,7 +1732,7 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation>پر داجت برای هر کیلو بیت برای اضافه به معامله ارسال</translation>
+        <translation>نرخ هر کیلوبایت برای اضافه کردن به تراکنش‌هایی که می‌فرستید</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
@@ -1811,22 +1752,22 @@ p, li { white-space: pre-wrap; }⏎
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Output extra debugging information</source>
-        <translation type="unfinished"></translation>
+        <translation>اطلاعات اشکال‌زدایی اضافی خروجی</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Prepend debug output with timestamp</source>
-        <translation type="unfinished"></translation>
+        <translation>به خروجی اشکال‌زدایی برچسب زمان بزنید</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"></translation>
+        <translation>اطلاعات ردگیری/اشکال‌زدایی را به جای فایل لاگ اشکال‌زدایی به کنسول بفرستید</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
         <source>Send trace/debug info to debugger</source>
-        <translation type="unfinished"></translation>
+        <translation>اطلاعات ردگیری/اشکال‌زدایی را به اشکال‌زدا بفرستید</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
@@ -1908,36 +1849,32 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Error loading addr.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>خطا در بارگیری addr.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Error loading blkindex.dat</source>
-        <translation type="unfinished"></translation>
+        <translation>خطا در بارگیری blkindex.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>خطا در بارگیری wallet.dat: کیف پول خراب شده است</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"></translation>
+        <translation>خطا در بارگیری wallet.dat: کیف پول به ویرایش جدیدتری از Biticon نیاز دارد</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation type="unfinished"></translation>
+        <translation>سلام</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error loading addr.dat      </source>
-        <translation type="obsolete">خطای بار گیری داده های آدرس ها</translation>
+        <translation>خطا در بارگیری wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -1945,25 +1882,9 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>بار گیری شاخص بلوک</translation>
     </message>
     <message>
-        <source>Error loading blkindex.dat      </source>
-        <translation type="obsolete">خطای بار گیری شاخص بلوک</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Loading wallet...</source>
         <translation>بار گیری والت</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted      </source>
-        <translation type="obsolete">خطای بار گیری والت: والت خراب شده</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin      </source>
-        <translation type="obsolete">خطای بار گیری والت: والت نیاز نوع جدید تر بیتکویین دارد</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat      </source>
-        <translation type="obsolete">خطای بار گیری والت:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="69"/>
@@ -2006,471 +1927,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>وسل بندر به کامپیوتر امکان پذیر نیست. شاید بیتکویید در حال فعال است%d</translation>
     </message>
     <message>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %s, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation type="obsolete">این معامله از اندازه محدوده بیشتر است. شما می توانید آد را با دستمزد 1% بفرستید که شامل گره معامله شما می باشد و به شبکه های اینترنتی کمک خواهد کردو آیا شما می خواهید این پول پر داخت %sکنید؟</translation>
-    </message>
-    <message>
-        <source>Enter the current passphrase to the wallet.</source>
-        <translation type="obsolete">عبارت عبور جاری در والت وارد کنید</translation>
-    </message>
-    <message>
-        <source>Passphrase</source>
-        <translation type="obsolete">گذرواژه</translation>
-    </message>
-    <message>
-        <source>Please supply the current wallet decryption passphrase.</source>
-        <translation type="obsolete">لطفا عبارت عبور والت جاری ذخیره کنید</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="obsolete">اموفق رمز بندی پنجر</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="obsolete">وضعیت</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation type="obsolete">تاریخ </translation>
-    </message>
-    <message>
-        <source>Description</source>
-        <translation type="obsolete">توضیحات</translation>
-    </message>
-    <message>
-        <source>Debit</source>
-        <translation type="obsolete">اعتبار</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation type="obsolete">بدهی </translation>
-    </message>
-    <message>
-        <source>Open for %d blocks</source>
-        <translation type="obsolete">باز برای بلوک های در صد%d</translation>
-    </message>
-    <message>
-        <source>Open until %s</source>
-        <translation type="obsolete">%s باز تا </translation>
-    </message>
-    <message>
-        <source>%d/offline?</source>
-        <translation type="obsolete">افلایین است؟%d</translation>
-    </message>
-    <message>
-        <source>%d/unconfirmed</source>
-        <translation type="obsolete">تایید نشده است%d </translation>
-    </message>
-    <message>
-        <source>%d confirmations</source>
-        <translation type="obsolete">تایید%d</translation>
-    </message>
-    <message>
-        <source>Generated</source>
-        <translation type="obsolete">تولید شده</translation>
-    </message>
-    <message>
-        <source>Generated (%s matures in %d more blocks)</source>
-        <translation type="obsolete">تولید شده (بالغ در بلوک  )%s%d</translation>
-    </message>
-    <message>
-        <source>Generated - Warning: This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="obsolete">تولید – هشدار این بلوک از دیگر گره ها در یافت نشده بدین دلیل شاید قابل قابول نیست</translation>
-    </message>
-    <message>
-        <source>Generated (not accepted)</source>
-        <translation type="obsolete">تولید شده(ولی قبول نشده )</translation>
-    </message>
-    <message>
-        <source>From: </source>
-        <translation type="obsolete">از</translation>
-    </message>
-    <message>
-        <source>Received with: </source>
-        <translation type="obsolete">در یافت با </translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation type="obsolete">پر داخت به خودتان</translation>
-    </message>
-    <message>
-        <source>To: </source>
-        <translation type="obsolete">به</translation>
-    </message>
-    <message>
-        <source>    Generating</source>
-        <translation type="obsolete">تولید</translation>
-    </message>
-    <message>
-        <source>(not connected)</source>
-        <translation type="obsolete">وسل نشده( )</translation>
-    </message>
-    <message>
-        <source>     %d connections     %d blocks     %d transactions</source>
-        <translation type="obsolete">معاملات %d بلوک    %d   ارتباط  %d</translation>
-    </message>
-    <message>
-        <source>Wallet already encrypted.</source>
-        <translation type="obsolete">والت رمز بندی شده است</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.
-Please use a passphrase of 10 or more random characters, or eight or more words.</source>
-        <translation type="obsolete"> وارد کنید..&amp;lt;br/&amp;gt عبارت عبور نو در پنجره   
- 10 یا بیشتر کاراکتورهای تصادفی استفاده کنید &amp;lt;b&amp;gt لطفا عبارت عبور</translation>
-    </message>
-    <message>
-        <source>Error: The supplied passphrase was too short.</source>
-        <translation type="obsolete">خطا: عبارت عبور خیلی کوتاه بود</translation>
-    </message>
-    <message>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will LOSE ALL OF YOUR BITCOINS!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation type="obsolete"> هشدار اگر شما روی پنجره رمز بگذارید و عبارت عبور فراموش کنید همه بیتکویینس شما گم می کنید. متماینید کن که می خواهید رمز بگذارید</translation>
-    </message>
-    <message>
-        <source>Please re-enter your new wallet passphrase.</source>
-        <translation type="obsolete">طفا عبارت عبور مجددا وارد کنید</translation>
-    </message>
-    <message>
-        <source>Error: the supplied passphrases didn&apos;t match.</source>
-        <translation type="obsolete">خطا: عبارت عبور تطابق نبود</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed.</source>
-        <translation type="obsolete">رمز گذاری والت نا موفق بود</translation>
-    </message>
-    <message>
-        <source>Wallet Encrypted.
-Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="obsolete">والت رمز بندی شد . 
-یاد داشته باشید که پنجره رمز شده نمی تواند کلا از سرقت نرم افزارهای مخرب محافظ کند </translation>
-    </message>
-    <message>
-        <source>Wallet is unencrypted, please encrypt it first.</source>
-        <translation type="obsolete">والت رمز بندی نشده 
-لطفا اول آن را رمز بندی کنید</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">عبارت عبور جدید برای والت وارد کنید</translation>
-    </message>
-    <message>
-        <source>Re-enter the new passphrase for the wallet.</source>
-        <translation type="obsolete">عبارت عبور والت مجددا وارد کنید </translation>
-    </message>
-    <message>
-        <source>Wallet Passphrase Changed.</source>
-        <translation type="obsolete">عبارت عبور والت عوض شده</translation>
-    </message>
-    <message>
-        <source>New Receiving Address</source>
-        <translation type="obsolete">درس در یافت جدید </translation>
-    </message>
-    <message>
-        <source>You should use a new address for each payment you receive.
-
-Label</source>
-        <translation type="obsolete">برای هر پر داخت در یافت شده آدرس جدید استفاده کنید 
-بر چسب</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;وضعیت :&amp;lt;/b&amp;gt;</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation type="obsolete">هنوز با موفقیت ارسال نشده است</translation>
-    </message>
-    <message>
-        <source>, broadcast through %d node</source>
-        <translation type="obsolete">%d ارسال توسط گره</translation>
-    </message>
-    <message>
-        <source>, broadcast through %d nodes</source>
-        <translation type="obsolete">%d ارسال توسط گره های</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;تاریخ :&amp;lt;/b&amp;gt</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;وضعیت :&amp;lt;/b&amp;gt; تولید شده &amp;lt;br&amp;gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;از :&amp;lt;/b&amp;gt;</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="obsolete">مشخص نیست</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;به :&amp;lt;/b&amp;gt;</translation>
-    </message>
-    <message>
-        <source> (yours, label: </source>
-        <translation type="obsolete">مال شما ، بر چس(</translation>
-    </message>
-    <message>
-        <source> (yours)</source>
-        <translation type="obsolete">مال شما()</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;اعتبار :&amp;lt;/b&amp;gt;</translation>
-    </message>
-    <message>
-        <source>(%s matures in %d more blocks)</source>
-        <translation type="obsolete">تولید شده (بالغ در بلوک(%s%d()</translation>
-    </message>
-    <message>
-        <source>(not accepted)</source>
-        <translation type="obsolete">تولید شده(ولی قبول نشده )</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;بدهی :&amp;lt;/b&amp;gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;پر داخت معامله :&amp;lt;/b&amp;gt;</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation type="obsolete">&amp;lt;b&amp;gt;مقدار خالص:&amp;lt;/b&amp;gt;</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation type="obsolete">پیام </translation>
-    </message>
-    <message>
-        <source>Comment:</source>
-        <translation type="obsolete">نظر</translation>
-    </message>
-    <message>
-        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="obsolete">برای ارسال واحد های تولید شده باید 120 بلوک باشند. هنگامی که بلون ایجاد می شود به شبکه ارسال می شود تا در زنجیر بلوکها اضافه شود. و گر نه بلوک به غیر قابول و غیر ارسال عوض می شود. این اتفاقی می افتد وقتی که همزمان گره دیگر در بلوک ایجاد می شود</translation>
-    </message>
-    <message>
-        <source>Cannot write autostart/bitcoin.desktop file</source>
-        <translation type="obsolete">ایجاد فایل autostart/bitcoin.desktop امکان‌پذیر نیست</translation>
-    </message>
-    <message>
-        <source>Main</source>
-        <translation type="obsolete">صلی</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on window system startup</source>
-        <translation type="obsolete">شروع بیتکویین از پنجره سیستم استارت</translation>
-    </message>
-    <message>
-        <source>&amp;Minimize on close</source>
-        <translation type="obsolete">حد اقل رساندن در نزدیک</translation>
-    </message>
-    <message>
-        <source>version %s</source>
-        <translation type="obsolete">%s نسخه</translation>
-    </message>
-    <message>
-        <source>Error in amount  </source>
-        <translation type="obsolete">خطا در مبلغ</translation>
-    </message>
-    <message>
-        <source>Send Coins</source>
-        <translation type="obsolete">ارسال سکه ها</translation>
-    </message>
-    <message>
-        <source>Amount exceeds your balance  </source>
-        <translation type="obsolete">مبلغ از تزار شما بیشتر است</translation>
-    </message>
-    <message>
-        <source>Total exceeds your balance when the </source>
-        <translation type="obsolete">مجموعه از تزار شما بیشتر است</translation>
-    </message>
-    <message>
-        <source> transaction fee is included  </source>
-        <translation type="obsolete">پو داخت معامله شامل است</translation>
-    </message>
-    <message>
-        <source>Payment sent  </source>
-        <translation type="obsolete">ر داخت ارسال شد</translation>
-    </message>
-    <message>
-        <source>Sending...</source>
-        <translation type="obsolete">ارسال...</translation>
-    </message>
-    <message>
-        <source>Invalid address  </source>
-        <translation type="obsolete">آدرس نا معتبر</translation>
-    </message>
-    <message>
-        <source>Sending %s to %s</source>
-        <translation type="obsolete">%s به %s ارسال </translation>
-    </message>
-    <message>
-        <source>CANCELLED</source>
-        <translation type="obsolete">منتفی شد</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation type="obsolete">منتفی شد</translation>
-    </message>
-    <message>
-        <source>Transfer cancelled  </source>
-        <translation type="obsolete">معامله منتفی شد</translation>
-    </message>
-    <message>
-        <source>Error: </source>
-        <translation type="obsolete">خطا:</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="obsolete">بود جه نا کافی </translation>
-    </message>
-    <message>
-        <source>Connecting...</source>
-        <translation type="obsolete">وسل ..</translation>
-    </message>
-    <message>
-        <source>Unable to connect</source>
-        <translation type="obsolete">وسل امکان پذیر نیست </translation>
-    </message>
-    <message>
-        <source>Requesting public key...</source>
-        <translation type="obsolete">نیاز کلید </translation>
-    </message>
-    <message>
-        <source>Received public key...</source>
-        <translation type="obsolete">کلید عمومی در یافت شد</translation>
-    </message>
-    <message>
-        <source>Recipient is not accepting transactions sent by IP address</source>
-        <translation type="obsolete">در یافت کننده معامله ارسال شده از آدرس آی پی قبول نشده</translation>
-    </message>
-    <message>
-        <source>Transfer was not accepted</source>
-        <translation type="obsolete">معامله قبول نشده </translation>
-    </message>
-    <message>
-        <source>Invalid response received</source>
-        <translation type="obsolete">جواب نا معتبر در یافت شد</translation>
-    </message>
-    <message>
-        <source>Creating transaction...</source>
-        <translation type="obsolete">ایجاد معامله </translation>
-    </message>
-    <message>
-        <source>This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds</source>
-        <translation type="obsolete">این معامله با توجه به مقدارش و پیچیدگی اش حد اقل نیاز  پر داخت یا بودجه اخرین در یافت شده را %sدار</translation>
-    </message>
-    <message>
-        <source>Transaction creation failed</source>
-        <translation type="obsolete">ایجاد معامله نا موفق بود </translation>
-    </message>
-    <message>
-        <source>Transaction aborted</source>
-        <translation type="obsolete">معامله سقط شد</translation>
-    </message>
-    <message>
-        <source>Lost connection, transaction cancelled</source>
-        <translation type="obsolete">ارتباط گم شد معاملات منتفی شد </translation>
-    </message>
-    <message>
-        <source>Sending payment...</source>
-        <translation type="obsolete">ارسال پر داخت </translation>
-    </message>
-    <message>
-        <source>The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="obsolete"> خطا . معامله رد شد.این هنگامی که سکه ها در والت شما هنوز ارسال شده اند ولی شما کپی والت استفاده می کنید و سکه ها روی کپی فرستاده شده اند و به عنوان ارسال شنه مشخص نشده اتفاقی می افتد</translation>
-    </message>
-    <message>
-        <source>Waiting for confirmation...</source>
-        <translation type="obsolete">منتظره تایید</translation>
-    </message>
-    <message>
-        <source>The payment was sent, but the recipient was unable to verify it.
-The transaction is recorded and will credit to the recipient,
-but the comment information will be blank.</source>
-        <translation type="obsolete">پر داخت ارسال شد ولی در یافت کننده نتوادست آن را تایید کند
-&lt;/translation&gt;معامله ثبت شد و برای در یافت کننده اعتبار خواهد شد 
-ولی اطلاعات توضاحات خالی خواهد بود  </translation>
-    </message>
-    <message>
-        <source>Payment was sent, but an invalid response was received</source>
-        <translation type="obsolete">پر داخت ارسال شد ولی جواب نا معتبر رسید </translation>
-    </message>
-    <message>
-        <source>Payment completed</source>
-        <translation type="obsolete">پر داخت تکمیل شده است</translation>
-    </message>
-    <message>
-        <source>Name</source>
-        <translation type="obsolete">اسم</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation type="obsolete">ایل جدا </translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation type="obsolete">ر چسب</translation>
-    </message>
-    <message>
-        <source>Bitcoin Address</source>
-        <translation type="obsolete">آدرس بیت کویین</translation>
-    </message>
-    <message>
-        <source>This is one of your own addresses for receiving payments and cannot be entered in the address book.  </source>
-        <translation type="obsolete">این آدرس در یافت پر داخت های خود تان است و نمی شود آد را وارد دفتر آدرس ها کرد</translation>
-    </message>
-    <message>
-        <source>Edit Address</source>
-        <translation type="obsolete">اصلاح آدرس</translation>
-    </message>
-    <message>
-        <source>Edit Address Label</source>
-        <translation type="obsolete">ویرایش آدرس بر چسب</translation>
-    </message>
-    <message>
-        <source>Add Address</source>
-        <translation type="obsolete">اضافه آدرس </translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation type="obsolete">یت کویین </translation>
-    </message>
-    <message>
-        <source>Bitcoin - Generating</source>
-        <translation type="obsolete">تولید بیتکو یین</translation>
-    </message>
-    <message>
-        <source>Bitcoin - (not connected)</source>
-        <translation type="obsolete">بیتکویین وسل نشده( )</translation>
-    </message>
-    <message>
-        <source>&amp;Open Bitcoin</source>
-        <translation type="obsolete">شروع بیتکویین </translation>
-    </message>
-    <message>
-        <source>&amp;Send Bitcoins</source>
-        <translation type="obsolete">ارسال بیتک.یین ها </translation>
-    </message>
-    <message>
-        <source>O&amp;ptions...</source>
-        <translation type="obsolete">تنظیمات </translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation type="obsolete">خروج </translation>
-    </message>
-    <message>
-        <source>Program has crashed and will terminate.  </source>
-        <translation type="obsolete">بر نامه سقاط شد و خاتمه خواهد شد </translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
         <translation>هشدار: تاریخ و ساعت کامپیوتر شما چک کنید. اگر ساعت درست نیست بیتکویین مناسب نخواهد کار کرد</translation>
@@ -2484,13 +1940,9 @@ but the comment information will be blank.</source>
 <context>
     <name>main</name>
     <message>
-        <source>Bitcoin Qt</source>
-        <translation type="obsolete">Bitcoin Qt</translation>
-    </message>
-    <message>
         <location filename="../bitcoin.cpp" line="188"/>
         <source>Bitcoin-Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>‌Bitcoin-Qt</translation>
     </message>
 </context>
 </TS>
