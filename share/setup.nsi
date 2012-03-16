@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.5.0.4
+!define VERSION 0.5.0.5
 !define COMPANY "Bitcoin project"
 !define URL http://www.bitcoin.org/
 
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile bitcoin-0.5.0.4-win32-setup.exe
+OutFile bitcoin-0.5.0.5-win32-setup.exe
 InstallDir $PROGRAMFILES\Bitcoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.5.0.4
+VIProductVersion 0.5.0.5
 VIAddVersionKey ProductName Bitcoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
