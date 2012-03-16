@@ -48,6 +48,7 @@
 #include <QMovie>
 #include <QFileDialog>
 #include <QDesktopServices>
+#include <QTimer>
 
 #include <QDragEnterEvent>
 #include <QUrl>
@@ -558,29 +559,21 @@ void BitcoinGUI::error(const QString &title, const QString &message)
 
 void BitcoinGUI::changeEvent(QEvent *e)
 {
+    QMainWindow::changeEvent(e);
 #ifndef Q_WS_MAC // Ignored on Mac
     if(e->type() == QEvent::WindowStateChange)
     {
         if(clientModel && clientModel->getOptionsModel()->getMinimizeToTray())
         {
             QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
-            bool wasMinimized = wsevt->oldState() & Qt::WindowMinimized;
-            bool isMinimized = windowState() & Qt::WindowMinimized;
-            if(!wasMinimized && isMinimized)
+            if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
             {
-                // Minimized, hide the window from taskbar
-                setWindowFlags(windowFlags() | Qt::Tool);
-                return;
-            }
-            else if(wasMinimized && !isMinimized)
-            {
-                // Unminimized, show the window in taskbar
-                setWindowFlags(windowFlags() &~ Qt::Tool);
+                QTimer::singleShot(0, this, SLOT(hide()));
+                e->ignore();
             }
         }
     }
 #endif
-    QMainWindow::changeEvent(e);
 }
 
 void BitcoinGUI::closeEvent(QCloseEvent *event)
