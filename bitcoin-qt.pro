@@ -251,8 +251,8 @@ isEmpty(BOOST_INCLUDE_PATH) {
     macx:BOOST_INCLUDE_PATH = /opt/local/include
 }
 
-windows:LIBS += -lws2_32
-windows:DEFINES += WIN32
+windows:LIBS += -lmingwthrd -lws2_32
+windows:DEFINES += _MT WIN32
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 macx:HEADERS += src/qt/macdockiconhandler.h
