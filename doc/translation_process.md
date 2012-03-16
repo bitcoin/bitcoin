@@ -60,4 +60,6 @@ will help with fetching new translations from transifex.
 
 1. `tx pull -a`
 2. update `src/qt/bitcoin.qrc`
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale/\1.qm<\/file>/'`
 3. `git add` new translations from `src/qt/locale/`
+
