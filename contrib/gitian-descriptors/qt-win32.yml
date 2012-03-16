@@ -47,6 +47,7 @@ script: |
   cp -a bin $SRCDIR/
   cd $INSTDIR
   find . -name *.prl | xargs -l sed 's|/$||' -i
+  sed 's/QMAKE_LIBS_QT_ENTRY     = -lmingw32 -lqtmain/QMAKE_LIBS_QT_ENTRY     = -lqtmain/' -i mkspecs/unsupported/win32-g++-cross/qmake.conf
   #sed 's|QMAKE_PRL_LIBS.*|QMAKE_PRL_LIBS = -lQtDeclarative -lQtScript -lQtSvg -lQtSql -lQtXmlPatterns -lQtGui -lgdi32 -lcomdlg32 -loleaut32 -limm32 -lwinmm -lwinspool -lmsimg32 -lQtNetwork -lQtCore -lole32 -luuid -lws2_32 -ladvapi32 -lshell32 -luser32 -lkernel32|' -i imports/Qt/labs/particles/qmlparticlesplugin.prl
 
   # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
