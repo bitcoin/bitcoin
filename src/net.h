@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_NET_H
@@ -271,7 +271,9 @@ public:
         // Make sure not to reuse time indexes to keep things in the same order
         int64 nNow = (GetTime() - 1) * 1000000;
         static int64 nLastTime;
-        nLastTime = nNow = std::max(nNow, ++nLastTime);
+        ++nLastTime;
+        nNow = std::max(nNow, nLastTime);
+        nLastTime = nNow;
 
         // Each retry is 2 minutes after the last
         nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
@@ -282,7 +284,7 @@ public:
 
     void BeginMessage(const char* pszCommand)
     {
-        cs_vSend.Enter("cs_vSend", __FILE__, __LINE__);
+        ENTER_CRITICAL_SECTION(cs_vSend);
         if (nHeaderStart != -1)
             AbortMessage();
         nHeaderStart = vSend.size();
@@ -301,7 +303,7 @@ public:
         vSend.resize(nHeaderStart);
         nHeaderStart = -1;
         nMessageStart = -1;
-        cs_vSend.Leave();
+        LEAVE_CRITICAL_SECTION(cs_vSend);
 
         if (fDebug)
             printf("(aborted)\n");
@@ -339,7 +341,7 @@ public:
 
         nHeaderStart = -1;
         nMessageStart = -1;
-        cs_vSend.Leave();
+        LEAVE_CRITICAL_SECTION(cs_vSend);
     }
 
     void EndMessageAbortIfEmpty()
@@ -360,7 +362,7 @@ public:
         /// when NTP implemented, change to just nTime = GetAdjustedTime()
         int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
         CAddress addrYou = (fUseProxy ? CAddress("0.0.0.0") : addr);
-        CAddress addrMe = (fUseProxy ? CAddress("0.0.0.0") : addrLocalHost);
+        CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress("0.0.0.0") : addrLocalHost);
         RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
         PushMessage("version", VERSION, nLocalServices, nTime, addrYou, addrMe,
                     nLocalHostNonce, std::string(pszSubVer), nBestHeight);

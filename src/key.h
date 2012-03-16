@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_KEY_H
@@ -229,10 +229,13 @@ public:
         if (vchSecret.size() != 32)
             throw key_error("CKey::SetSecret() : secret must be 32 bytes");
         BIGNUM *bn = BN_bin2bn(&vchSecret[0],32,BN_new());
-        if (bn == NULL) 
+        if (bn == NULL)
             throw key_error("CKey::SetSecret() : BN_bin2bn failed");
         if (!EC_KEY_regenerate_key(pkey,bn))
+        {
+            BN_clear_free(bn);
             throw key_error("CKey::SetSecret() : EC_KEY_regenerate_key failed");
+        }
         BN_clear_free(bn);
         fSet = true;
         return true;
@@ -386,6 +389,17 @@ public:
     CBitcoinAddress GetAddress() const
     {
         return CBitcoinAddress(GetPubKey());
+    }
+
+    bool IsValid()
+    {
+        if (!fSet)
+            return false;
+
+        CSecret secret = GetSecret();
+        CKey key2;
+        key2.SetSecret(secret);
+        return GetPubKey() == key2.GetPubKey();
     }
 };
 

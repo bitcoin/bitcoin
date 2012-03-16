@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QLocale>
 #include <QTextDocument>
+#include <QScrollBar>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -205,6 +206,12 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
 
     // Focus the field, so that entry can start immediately
     entry->clear();
+    entry->setFocus();
+    ui->scrollAreaWidgetContents->resize(ui->scrollAreaWidgetContents->sizeHint());
+    QCoreApplication::instance()->processEvents();
+    QScrollBar* bar = ui->scrollArea->verticalScrollBar();
+    if (bar)
+        bar->setSliderPosition(bar->maximum());
     return entry;
 }
 
@@ -266,6 +273,16 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
 
 
 void SendCoinsDialog::handleURL(const QUrl *url)
+{
+    SendCoinsRecipient rv;
+    if(!GUIUtil::parseBitcoinURL(url, &rv))
+    {
+        return;
+    }
+    pasteEntry(rv);
+}
+
+void SendCoinsDialog::handleURL(const QString &url)
 {
     SendCoinsRecipient rv;
     if(!GUIUtil::parseBitcoinURL(url, &rv))

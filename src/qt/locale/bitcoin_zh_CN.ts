@@ -674,8 +674,8 @@ Address: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended.</source>
-        <translation>为每1KB交易数据支付交易费将保证您的交易尽快被处理.大部分交易数据都小于1KB. 建议支付0.01个比特币的交易费.  </translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1kB.  Fee 0.01 recommended.</source>
+        <translation>为每1kB交易数据支付交易费将保证您的交易尽快被处理.大部分交易数据都小于1kB. 建议支付0.01个比特币的交易费.  </translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -684,8 +684,8 @@ Address: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
-        <source>Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended.</source>
-        <translation>为每1KB交易数据支付交易费将保证您的交易尽快被处理.大部分交易数据都小于1KB. 建议支付0.01个比特币的交易费. </translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1kB. Fee 0.01 recommended.</source>
+        <translation>为每1kB交易数据支付交易费将保证您的交易尽快被处理.大部分交易数据都小于1kB. 建议支付0.01个比特币的交易费. </translation>
     </message>
 </context>
 <context>
@@ -1524,9 +1524,9 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
-        <source>Fee per KB to add to transactions you send
+        <source>Fee per kB to add to transactions you send
 </source>
-        <translation>每发送1KB交易所需的费用</translation>
+        <translation>每发送1kB交易所需的费用</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="24"/>

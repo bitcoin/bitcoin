@@ -24,7 +24,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "86400)\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Don't attempt to use UPnP to map the listening port\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Attempt to use UPnP to map the listening port\n"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Fee per KB to add to transactions you send\n"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Fee per kB to add to transactions you send\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept command line and JSON-RPC commands\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Run in the background as a daemon and accept commands\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Use the test network\n"),

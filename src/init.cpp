@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
@@ -20,6 +20,7 @@ Q_IMPORT_PLUGIN(qcncodecs)
 Q_IMPORT_PLUGIN(qjpcodecs)
 Q_IMPORT_PLUGIN(qtwcodecs)
 Q_IMPORT_PLUGIN(qkrcodecs)
+Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
 using namespace std;
@@ -204,11 +205,11 @@ bool AppInit2(int argc, char* argv[])
             "  -upnp            \t  "   + _("Attempt to use UPnP to map the listening port\n") +
 #endif
 #endif
-            "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
-#ifdef GUI
+            "  -paytxfee=<amt>  \t  "   + _("Fee per kB to add to transactions you send\n") +
+#ifdef QT_GUI
             "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
 #endif
-#ifndef WIN32
+#if !defined(WIN32) && !defined(QT_GUI)
             "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
 #endif
             "  -testnet         \t\t  " + _("Use the test network\n") +
@@ -240,14 +241,19 @@ bool AppInit2(int argc, char* argv[])
 
         // Remove tabs
         strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
+#if defined(QT_GUI) && defined(WIN32)
+        // On windows, show a message box, as there is no stderr
+        wxMessageBox(strUsage, "Usage");
+#else
         fprintf(stderr, "%s", strUsage.c_str());
+#endif
         return false;
     }
 
     fTestNet = GetBoolArg("-testnet");
     fDebug = GetBoolArg("-debug");
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(QT_GUI)
     fDaemon = GetBoolArg("-daemon");
 #else
     fDaemon = false;
@@ -278,7 +284,7 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(QT_GUI)
     if (fDaemon)
     {
         // Daemonize
@@ -484,16 +490,11 @@ bool AppInit2(int argc, char* argv[])
     fAllowDNS = GetBoolArg("-dns");
     fNoListen = GetBoolArg("-nolisten");
 
-    if (fHaveUPnP)
-    {
-#if USE_UPNP
-    if (GetBoolArg("-noupnp"))
-        fUseUPnP = false;
-#else
-    if (GetBoolArg("-upnp"))
-        fUseUPnP = true;
-#endif
-    }
+    // Command-line args override in-wallet settings:
+    if (mapArgs.count("-upnp"))
+        fUseUPnP = GetBoolArg("-upnp");
+    else if (mapArgs.count("-noupnp"))
+        fUseUPnP = !GetBoolArg("-noupnp");
 
     if (!fNoListen)
     {

@@ -33,6 +33,7 @@ public:
 
     void pasteEntry(const SendCoinsRecipient &rv);
     void handleURL(const QUrl *url);
+    void handleURL(const QString &url);
     void setSendFromAddress(std::string address);
 
 public slots:
