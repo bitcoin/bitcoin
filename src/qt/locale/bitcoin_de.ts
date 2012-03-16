@@ -23,9 +23,9 @@ Distributed under the MIT/X11 software license, see the accompanying file licens
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>Copyright © 2009-2012 Bitcoin Entwickler
 
-Dies ist experimentelle Software. 
+Dies ist experimentelle Software.
 
-Veröffentlicht unter der MIT/X11 Software-Lizenz, siehe beiligenden Datei license.txt oder http://www.opensource.org/licenses/mit-license.php.
+Veröffentlicht unter der MIT/X11 Software-Lizenz, siehe beiligende Datei license.txt oder http://www.opensource.org/licenses/mit-license.php.
 
 Dieses Produkt enthält Software, die vom OpenSSL Projekt zur Verwendung im OpenSSL Toolkit (http://www.openssl.org/) entwickelt wurde, sowie kryptographische Software geschrieben von Eric Young (eay@cryptsoft.com) und UPnP Software geschrieben von Thomas Bernard.</translation>
     </message>
@@ -999,7 +999,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Remove all transaction fields</source>
-        <translation>Alle Transaktionsfelder entfernen</translation>
+        <translation>Alle Überweisungsfelder zurücksetzen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
@@ -1711,22 +1711,22 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation>Maximale Grösse des Empfangspuffers pro Verbindung, &lt;n&gt;*1000 Bytes (Standard: 10000)</translation>
+        <translation>Maximale Größe des Empfangspuffers pro Verbindung, &lt;n&gt;*1000 Bytes (Standard: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation>Maximale Grösse des Sendepuffers pro Verbindung, &lt;n&gt;*1000 Bytes (Standard: 10000)</translation>
+        <translation>Maximale Größe des Sendepuffers pro Verbindung, &lt;n&gt;*1000 Bytes (Standard: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>Don&apos;t attempt to use UPnP to map the listening port</source>
-        <translation>Nicht versuchen UPnP zu verwenden, um den abhörenden Port zu verbinden</translation>
+        <translation>Nicht versuchen UPnP zu verwenden, um den abgehörten Port weiterzuleiten</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Attempt to use UPnP to map the listening port</source>
-        <translation>Versuchen UPnP zu verwenden, um den abhörenden Port auszuhandeln</translation>
+        <translation>Versuchen UPnP zu verwenden, um den abgehörten Port weiterzuleiten</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
@@ -1736,7 +1736,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>Erlaube Kommandozeile und JSON-RPC Befehle</translation>
+        <translation>Kommandozeilenbefehle und JSON-RPC Befehle annehmen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
@@ -1761,7 +1761,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Rückverfolgungs- und Debug-Informationen an die Konsole senden anstatt in die debug.log Datei</translation>
+        <translation>Rückverfolgungs- und Debug-Informationen an die Konsole senden anstatt sie in die debug.log Datei zu schreiben</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
