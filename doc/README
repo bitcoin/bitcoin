@@ -1,4 +1,4 @@
-Bitcoin 0.5.3 BETA
+Bitcoin 0.5.3.1 BETA
 
 Copyright (c) 2009-2012 Bitcoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
