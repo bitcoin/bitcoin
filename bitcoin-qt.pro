@@ -291,9 +291,20 @@ isEmpty(BOOST_INCLUDE_PATH) {
     macx:BOOST_INCLUDE_PATH = /opt/local/include
 }
 
-windows:LIBS += -lmingwthrd -lws2_32 -lshlwapi
-windows:DEFINES += _MT WIN32
+windows:LIBS += -lws2_32 -lshlwapi
+windows:DEFINES += WIN32
 windows:RC_FILE = src/qt/res/bitcoin-qt.rc
+
+windows:!contains(MINGW_THREAD_BUGFIX, 0) {
+    # At least qmake's win32-g++-cross profile is missing the -lmingwthrd
+    # thread-safety flag. GCC has -mthreads to enable this, but it doesn't
+    # work with static linking. -lmingwthrd must come BEFORE -lmingw, so
+    # it is prepended to QMAKE_LIBS_QT_ENTRY.
+    # It can be turned off with MINGW_THREAD_BUGFIX=0, just in case it causes
+    # any problems on some untested qmake profile now or in the future.
+    DEFINES += _MT
+    QMAKE_LIBS_QT_ENTRY = -lmingwthrd $$QMAKE_LIBS_QT_ENTRY
+}
 
 !windows:!mac {
     DEFINES += LINUX
