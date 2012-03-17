@@ -4,6 +4,7 @@
 #include "addresstablemodel.h"
 #include "editaddressdialog.h"
 #include "csvmodelwriter.h"
+#include "guiutil.h"
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
