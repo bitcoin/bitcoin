@@ -10,6 +10,7 @@
 #include "transactiondescdialog.h"
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
+#include "guiutil.h"
 
 #include <QScrollBar>
 #include <QComboBox>
