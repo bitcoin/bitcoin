@@ -2357,8 +2357,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         CTxDB txdb("r");
-        BOOST_FOREACH(const CInv& inv, vInv)
+        for (int nInv = 0; nInv < vInv.size(); nInv++)
         {
+            const CInv &inv = vInv[nInv];
+
             if (fShutdown)
                 return true;
             pfrom->AddInventoryKnown(inv);
@@ -2367,9 +2369,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (fDebug)
                 printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
-            if (!fAlreadyHave)
+            // Always request the last block in an inv bundle (even if we already have it), as it is the
+            // trigger for the other side to send further invs. If we are stuck on a (very long) side chain,
+            // this is necessary to connect earlier received orphan blocks to the chain again.
+            if (!fAlreadyHave || (inv.type == MSG_BLOCK && nInv==vInv.size()-1))
                 pfrom->AskFor(inv);
-            else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
+            if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
                 pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
 
             // Track requests for our stuff
