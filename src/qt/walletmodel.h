@@ -10,8 +10,9 @@ class AddressTableModel;
 class TransactionTableModel;
 class CWallet;
 
-struct SendCoinsRecipient
+class SendCoinsRecipient
 {
+public:
     QString address;
     QString label;
     qint64 amount;

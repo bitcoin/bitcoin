@@ -24,12 +24,15 @@ typedef unsigned long long  uint64;
 
 #ifdef WIN32
 #define _WIN32_WINNT 0x0501
+#define WIN32_LEAN_AND_MEAN 1
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 // This is used to attempt to keep keying material out of swap
 // Note that VirtualLock does not provide this as a guarantee on Windows,
 // but, in practice, memory that has been VirtualLock'd almost never gets written to
 // the pagefile except in rare circumstances where memory is extremely low.
-#include <windows.h>
 #define mlock(p, n) VirtualLock((p), (n));
 #define munlock(p, n) VirtualUnlock((p), (n));
 #else
