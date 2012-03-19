@@ -807,6 +807,10 @@ public:
     unsigned int nBits;
     unsigned int nNonce;
 
+    // ppcoin: block signature (not considered part of header)
+    //         signed by coin base txout[0]'s owner
+    std::vector<unsigned char> vchBlockSig;
+
     // network and disk
     std::vector<CTransaction> vtx;
 
@@ -834,9 +838,15 @@ public:
 
         // ConnectBlock depends on vtx being last so it can calculate offset
         if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
+        {
+            READWRITE(vchBlockSig);
             READWRITE(vtx);
+        }
         else if (fRead)
+        {
+            const_cast<CBlock*>(this)->vchBlockSig.clear();
             const_cast<CBlock*>(this)->vtx.clear();
+        }
     )
 
     void SetNull()
@@ -847,6 +857,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        vchBlockSig.clear();
         vtx.clear();
         vMerkleTree.clear();
         nDoS = 0;
@@ -992,12 +1003,13 @@ public:
 
     void print() const
     {
-        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%d)\n",
+        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vchBlockSig=%s, vtx=%d)\n",
             GetHash().ToString().substr(0,20).c_str(),
             nVersion,
             hashPrevBlock.ToString().substr(0,20).c_str(),
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             nTime, nBits, nNonce,
+            HexStr(vchBlockSig.begin(), vchBlockSig.end(), true).c_str(),
             vtx.size());
         for (int i = 0; i < vtx.size(); i++)
         {
@@ -1010,6 +1022,51 @@ public:
         printf("\n");
     }
 
+
+    bool SignBlock(const CKeyStore& keystore)
+    {
+        std::vector<std::pair<opcodetype, valtype> > vSolution;
+
+        if (!Solver(vtx[0].vout[0].scriptPubKey, vSolution))
+            return false;
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        {
+            if (item.first == OP_PUBKEY)
+            {
+                // Sign
+                const valtype& vchPubKey = item.second;
+                CKey key;
+                if (!keystore.GetKey(Hash160(vchPubKey), key))
+                    return false;
+                if (key.GetPubKey() != vchPubKey)
+                    return false;
+                return key.Sign(GetHash(), vchBlockSig);
+            }
+        }
+        return false;
+    }
+
+    bool CheckBlockSignature() const
+    {
+        std::vector<std::pair<opcodetype, valtype> > vSolution;
+
+        if (!Solver(vtx[0].vout[0].scriptPubKey, vSolution))
+            return false;
+        BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
+        {
+            if (item.first == OP_PUBKEY)
+            {
+                const valtype& vchPubKey = item.second;
+                CKey key;
+                if (!key.SetPubKey(vchPubKey))
+                    return false;
+                if (vchBlockSig.empty())
+                    return false;
+                return key.Verify(GetHash(), vchBlockSig);
+            }
+        }
+        return false;
+    }
 
     bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
