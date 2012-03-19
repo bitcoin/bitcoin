@@ -66,6 +66,7 @@ void SendCoinsEntry::on_payTo_textChanged(const QString &address)
 void SendCoinsEntry::setModel(WalletModel *model)
 {
     this->model = model;
+    clear();
 }
 
 void SendCoinsEntry::setRemoveEnabled(bool enabled)
