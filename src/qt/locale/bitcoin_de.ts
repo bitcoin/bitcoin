@@ -40,12 +40,12 @@ Dieses Produkt enthält Software, die vom OpenSSL Projekt zur Verwendung im Open
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
         <source>These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Dies sind Ihre Bitcoin-Adressen zum Empfangen von Zahlungen.  Es steht Ihnen frei, jedem Absender eine Andere mitzuteilen, um einen besseren Überblick über eingehende Zahlungen zu erhalten.</translation>
+        <translation>Dies sind Ihre Bitcoin-Adressen zum Empfangen von Zahlungen. Es steht Ihnen frei, jedem Absender eine andere mitzuteilen, um einen besseren Überblick über eingehende Zahlungen zu erhalten.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
         <source>Double-click to edit address or label</source>
-        <translation>Doppelklicken um die Adresse oder die Bezeichnung zu bearbeiten</translation>
+        <translation>Doppelklicken, um die Adresse oder die Bezeichnung zu bearbeiten</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -55,7 +55,7 @@ Dieses Produkt enthält Software, die vom OpenSSL Projekt zur Verwendung im Open
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New Address...</source>
-        <translation>&amp;Neue Adresse...</translation>
+        <translation>&amp;Neue Adresse</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
@@ -182,7 +182,7 @@ Dieses Produkt enthält Software, die vom OpenSSL Projekt zur Verwendung im Open
     <message>
         <location filename="../askpassphrasedialog.cpp" line="34"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Geben Sie die neue Passphrase für die Brieftasche ein.&lt;br/&gt;Bitte benutzen Sie eine Passphrase bestehend aus &lt;b&gt;zehn oder mehr zufälligen Zeichen&lt;/b&gt; oder &lt;b&gt;acht oder mehr Wörtern&lt;/b&gt;.</translation>
+        <translation>Geben Sie die neue Passphrase für die Brieftasche ein. Bitte benutzen Sie eine Passphrase bestehend aus &lt;b&gt;10 oder mehr zufälligen Zeichen&lt;/b&gt; oder &lt;b&gt;8 oder mehr Wörtern&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="35"/>
@@ -240,7 +240,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer Bitcoins durch Schadprogramme schützt, die Ihren Computer befallen haben.</translation>
+        <translation>Bitcoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer Bitcoins durch Schadsoftware schützt, die Ihren Computer befällt.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -336,7 +336,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="184"/>
         <source>Edit the list of stored addresses and labels</source>
-        <translation>Liste der gespeicherten Adressen und Bezeichnungen bearbeiten</translation>
+        <translation>Liste der gespeicherten Zahlungsadressen und Bezeichnungen bearbeiten</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="189"/>
@@ -361,7 +361,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
         <source>Sign &amp;message</source>
-        <translation>&amp;Nachricht signieren</translation>
+        <translation>&amp;Nachricht signieren...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="202"/>
@@ -401,7 +401,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Erweiterte Einstellungen...</translation>
+        <translation>&amp;Erweiterte Einstellungen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="232"/>
@@ -421,7 +421,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="236"/>
         <source>&amp;Export...</source>
-        <translation>&amp;Exportieren...</translation>
+        <translation>&amp;Exportieren nach...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
@@ -431,7 +431,7 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="238"/>
         <source>&amp;Encrypt Wallet</source>
-        <translation>Brieftasche &amp;verschlüsseln</translation>
+        <translation>Brieftasche &amp;verschlüsseln...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
@@ -536,12 +536,12 @@ Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</transl
     <message>
         <location filename="../bitcoingui.cpp" line="585"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Die Transaktion übersteigt das Größenlimit.  Sie können sie trotzdem senden, wenn Sie eine zusätzliche Transaktionsgebühr von %1 zahlen. Diese wird an die Knoten verteilt, die Ihre Transaktion bearbeiten und unterstützt damit das Bitcoin-Netzwerk.  Möchten Sie die Gebühr bezahlen?</translation>
+        <translation>Die Transaktion übersteigt das Größenlimit. Sie können sie trotzdem senden, wenn Sie eine zusätzliche Transaktionsgebühr in Höhe von %1 zahlen. Diese wird an die Knoten verteilt, die Ihre Transaktion bearbeiten und unterstützt damit das Bitcoin-Netzwerk. Möchten Sie die Gebühr bezahlen?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="590"/>
         <source>Sending...</source>
-        <translation>Überweisen...</translation>
+        <translation>Transaktionsgebühr bestätigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="617"/>
@@ -568,12 +568,12 @@ Adresse: %4</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="740"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und momentan &lt;b&gt;entsperrt&lt;/b&gt;</translation>
+        <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;entsperrt&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="748"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und momentan &lt;b&gt;gesperrt&lt;/b&gt;</translation>
+        <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;gesperrt&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -737,7 +737,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>Optionale Transaktionsgebühr pro kB, die sicherstellt, dass Ihre Transaktionen schnell bearbeitet werden.  Die meisten Transaktionen sind 1 kB groß.  Eine Gebühr von 0.01 wird empfohlen.</translation>
+        <translation>Optionale Transaktionsgebühr pro kB, die sicherstellt, dass Ihre Transaktionen schnell bearbeitet werden. Die meisten Transaktionen sind 1 kB groß. Eine Gebühr von 0.01 wird empfohlen.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -755,7 +755,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation>Nachricht</translation>
+        <translation>Nachricht signieren</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
@@ -765,7 +765,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Die Zahlungsadresse der Überweisung  (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Die Adresse mit der die Nachricht signiert wird (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
@@ -795,12 +795,12 @@ Adresse: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="105"/>
         <source>Click &quot;Sign Message&quot; to get signature</source>
-        <translation>Auf &quot;Nachricht signieren&quot; klicken, um die Signatur zu erhalten</translation>
+        <translation>Auf &quot;Nachricht signieren&quot; klicken, um die Signatur zu erhalten. Diese wird dann hier angezeigt.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="117"/>
         <source>Sign a message to prove you own this address</source>
-        <translation>Eine Nachricht signieren, um den Besitz dieser Adresse nachzuweisen</translation>
+        <translation>Die Nachricht signieren, um den Besitz der angegebenen Adresse nachzuweisen</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="120"/>
@@ -921,7 +921,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../overviewpage.cpp" line="108"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Betrag aus Transaktionen, die noch bestätigt werden müssen und der noch nicht zum aktuellen Kontostand zählt</translation>
+        <translation>Betrag aus unbestätigten Transaktionen, der noch nicht im aktuellen Kontostand enthalten ist</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="111"/>
@@ -989,12 +989,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
         <source>Send to multiple recipients at once</source>
-        <translation>An mehrere Empfänger auf einmal überweisen</translation>
+        <translation>In einer Transaktion an mehrere Empfänger auf einmal überweisen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="67"/>
         <source>&amp;Add recipient...</source>
-        <translation>&amp;Empfänger hinzufügen...</translation>
+        <translation>&amp;Empfänger hinzufügen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
@@ -1039,7 +1039,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
         <source>Are you sure you want to send %1?</source>
-        <translation>Sind Sie sich sicher, dass Sie die folgende Überweisung ausführen möchten? %1</translation>
+        <translation>Sind Sie sich sicher, dass Sie die folgende Überweisung ausführen möchten?&lt;br&gt;%1</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
@@ -1059,12 +1059,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="133"/>
         <source>Amount exceeds your balance</source>
-        <translation>Der Betrag übersteigt Ihren Kontostand</translation>
+        <translation>Der angegebene Betrag übersteigt Ihren Kontostand.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="138"/>
         <source>Total exceeds your balance when the %1 transaction fee is included</source>
-        <translation>Der Betrag übersteigt aufgrund der Transaktionsgebühr in Höhe von %1 Ihren Kontostand</translation>
+        <translation>Der angegebene Betrag übersteigt aufgrund der Transaktionsgebühr in Höhe von %1 Ihren Kontostand.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="144"/>
@@ -1074,12 +1074,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="149"/>
         <source>Error: Transaction creation failed  </source>
-        <translation>Fehler: Transaktionserstellung fehlgeschlagen </translation>
+        <translation>Fehler: Transaktionserstellung fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fehler: Die Transaktion wurde abgelehnt.  Dies kann passieren, wenn einige Bitcoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
+        <translation>Fehler: Die Transaktion wurde abgelehnt. Dies kann passieren, wenn einige Bitcoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
     </message>
 </context>
 <context>
@@ -1103,7 +1103,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
         <location filename="../sendcoinsentry.cpp" line="26"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Geben Sie hier eine Bezeichnung der Adresse ein, um sie zum Adressbuch hinzuzufügen</translation>
+        <translation>Adressbezeichnung eingeben (diese wird bei unbekannten Adressen inkl. der Adresse dem Adressbuch hinzugefügt)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
@@ -1181,17 +1181,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="52"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation>; wurde noch nicht erfolgreich gesendet</translation>
+        <translation>, wurde noch nicht erfolgreich übertragen</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
         <source>, broadcast through %1 node</source>
-        <translation>; über %1 Knoten gesendet</translation>
+        <translation>, über %1 Knoten übertragen</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>, broadcast through %1 nodes</source>
-        <translation>; über %1 Knoten gesendet</translation>
+        <translation>, über %1 Knoten übertragen</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="60"/>
@@ -1224,12 +1224,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="94"/>
         <source> (yours, label: </source>
-        <translation> (Ihre, Bezeichnung: </translation>
+        <translation> (Eigene Adresse, Bezeichnung: </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="96"/>
         <source> (yours)</source>
-        <translation> (Ihre)</translation>
+        <translation> (Eigene Adresse)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="131"/>
@@ -1242,7 +1242,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="133"/>
         <source>(%1 matures in %2 more blocks)</source>
-        <translation>(%1 reift in weiteren %2 Blöcken)</translation>
+        <translation>%1 (reift noch %2 weitere Blöcke)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="137"/>
@@ -1284,7 +1284,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Generierte Bitcoins müssen 120 Blöcke lang warten, bevor sie ausgegeben werden können.  Als Sie diesen Block generierten, wurde er an das Netzwerk gesendet, um ihn der Blockkette hinzuzufügen.  Falls dies fehlschlägt wird der Status in &quot;nicht angenommen&quot; geändert und der Betrag wird nicht verfügbar werden.  Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block zur selben Zeit wie Sie generierte.</translation>
+        <translation>Generierte Bitcoins müssen 120 Blöcke lang warten, bevor sie ausgegeben werden können. Als Sie diesen Block generierten, wurde er an das Netzwerk übertragen, um ihn der Blockkette hinzuzufügen. Falls dies fehlschlägt wird der Status in &quot;nicht angenommen&quot; geändert und der Betrag wird nicht verfügbar werden. Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block zur selben Zeit wie Sie generierte.</translation>
     </message>
 </context>
 <context>
@@ -1380,7 +1380,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="354"/>
         <source>Payment to yourself</source>
-        <translation>Zahlung an Sie selbst</translation>
+        <translation>Eigenüberweisung</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
@@ -1454,7 +1454,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>Range...</source>
-        <translation>Zeitraum...</translation>
+        <translation>Zeitraum</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="73"/>
@@ -1469,7 +1469,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>To yourself</source>
-        <translation>Zu Ihnen selbst</translation>
+        <translation>Eigenüberweisung</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="78"/>
@@ -1489,7 +1489,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Min amount</source>
-        <translation>Kleinster Betrag</translation>
+        <translation>Minimaler Betrag</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="125"/>
@@ -1514,7 +1514,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="129"/>
         <source>Show details...</source>
-        <translation>Details anzeigen...</translation>
+        <translation>Transaktionsdetails anzeigen</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="269"/>
@@ -1610,8 +1610,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
         <source>List commands</source>
-        <translation>Befehle auflisten
-</translation>
+        <translation>Befehle auflisten</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="7"/>
@@ -1636,7 +1635,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
         <source>Generate coins</source>
-        <translation>Generiere Bitcoins</translation>
+        <translation>Bitcoins generieren</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
@@ -1908,7 +1907,7 @@ SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</trans
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Warnung: -paytxfee ist auf einen sehr hohen Wert gesetzt.  Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
+        <translation>Warnung: -paytxfee ist auf einen sehr hohen Wert gesetzt. Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="76"/>
@@ -1918,12 +1917,12 @@ SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</trans
     <message>
         <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Warning: Disk space is low  </source>
-        <translation>Warnung: Festplattenplatz wird knapp </translation>
+        <translation>Warnung: Festplattenplatz wird knapp</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
-        <translation>Fehler beim registrieren des Ports %d auf diesem Computer.  Evtl. wurde Bitcoin bereits gestartet.</translation>
+        <translation>Fehler beim registrieren des Ports %d auf diesem Computer. Evtl. wurde Bitcoin bereits gestartet.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
