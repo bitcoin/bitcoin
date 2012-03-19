@@ -81,8 +81,9 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
         {
             if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
-            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey, false))
                 return false;
+            vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE); // cut off padding left by versions <0.6.0
             if (CCryptoKeyStore::Unlock(vMasterKey))
                 return true;
         }
@@ -103,8 +104,9 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         {
             if(!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
-            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey, false))
                 return false;
+            vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
             if (CCryptoKeyStore::Unlock(vMasterKey))
             {
                 int64 nStartTime = GetTimeMillis();
@@ -122,7 +124,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 
                 if (!crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                     return false;
-                if (!crypter.Encrypt(vMasterKey, pMasterKey.second.vchCryptedKey))
+                if (!crypter.Encrypt(vMasterKey, pMasterKey.second.vchCryptedKey, false))
                     return false;
                 CWalletDB(strWalletFile).WriteMasterKey(pMasterKey.first, pMasterKey.second);
                 if (fWasLocked)
@@ -207,7 +209,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod))
         return false;
-    if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey))
+    if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey, false))
         return false;
 
     CRITICAL_BLOCK(cs_wallet)
