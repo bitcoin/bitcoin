@@ -30,9 +30,6 @@ public:
     void setMapper(MonitoredDataMapper *mapper);
 private:
     QCheckBox *bitcoin_at_startup;
-#ifndef Q_WS_MAC
-    QCheckBox *minimize_to_tray;
-#endif
     QCheckBox *map_port_upnp;
 #ifndef Q_WS_MAC
     QCheckBox *minimize_on_close;
@@ -171,12 +168,6 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     bitcoin_at_startup->setToolTip(tr("Automatically start Bitcoin after the computer is turned on"));
     layout->addWidget(bitcoin_at_startup);
 
-#ifndef Q_WS_MAC
-    minimize_to_tray = new QCheckBox(tr("&Minimize to the tray instead of the taskbar"));
-    minimize_to_tray->setToolTip(tr("Show only a tray icon after minimizing the window"));
-    layout->addWidget(minimize_to_tray);
-#endif
-
     map_port_upnp = new QCheckBox(tr("Map port using &UPnP"));
     map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled."));
     layout->addWidget(map_port_upnp);
@@ -247,9 +238,6 @@ void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
     // Map model to widgets
     mapper->addMapping(bitcoin_at_startup, OptionsModel::StartAtStartup);
-#ifndef Q_WS_MAC
-    mapper->addMapping(minimize_to_tray, OptionsModel::MinimizeToTray);
-#endif
     mapper->addMapping(map_port_upnp, OptionsModel::MapPortUPnP);
 #ifndef Q_WS_MAC
     mapper->addMapping(minimize_on_close, OptionsModel::MinimizeOnClose);

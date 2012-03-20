@@ -557,32 +557,12 @@ void BitcoinGUI::error(const QString &title, const QString &message)
     notificator->notify(Notificator::Critical, title, message);
 }
 
-void BitcoinGUI::changeEvent(QEvent *e)
-{
-    QMainWindow::changeEvent(e);
-#ifndef Q_WS_MAC // Ignored on Mac
-    if(e->type() == QEvent::WindowStateChange)
-    {
-        if(clientModel && clientModel->getOptionsModel()->getMinimizeToTray())
-        {
-            QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
-            if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
-            {
-                QTimer::singleShot(0, this, SLOT(hide()));
-                e->ignore();
-            }
-        }
-    }
-#endif
-}
-
 void BitcoinGUI::closeEvent(QCloseEvent *event)
 {
     if(clientModel)
     {
 #ifndef Q_WS_MAC // Ignored on Mac
-        if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
-           !clientModel->getOptionsModel()->getMinimizeOnClose())
+        if(!clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             qApp->quit();
         }

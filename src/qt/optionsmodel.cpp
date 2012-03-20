@@ -18,7 +18,6 @@ void OptionsModel::Init()
     // These are QT-only settings:
     nDisplayUnit = settings.value("nDisplayUnit", BitcoinUnits::BTC).toInt();
     bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
-    fMinimizeToTray = settings.value("fMinimizeToTray", false).toBool();
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
 
@@ -103,8 +102,6 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         {
         case StartAtStartup:
             return QVariant(GetStartOnSystemStartup());
-        case MinimizeToTray:
-            return QVariant(fMinimizeToTray);
         case MapPortUPnP:
             return settings.value("fUseUPnP", GetBoolArg("-upnp", true));
         case MinimizeOnClose:
@@ -138,10 +135,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         {
         case StartAtStartup:
             successful = SetStartOnSystemStartup(value.toBool());
-            break;
-        case MinimizeToTray:
-            fMinimizeToTray = value.toBool();
-            settings.setValue("fMinimizeToTray", fMinimizeToTray);
             break;
         case MapPortUPnP:
             {
@@ -214,11 +207,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 qint64 OptionsModel::getTransactionFee()
 {
     return nTransactionFee;
-}
-
-bool OptionsModel::getMinimizeToTray()
-{
-    return fMinimizeToTray;
 }
 
 bool OptionsModel::getMinimizeOnClose()
