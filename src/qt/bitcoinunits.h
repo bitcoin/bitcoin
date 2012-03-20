@@ -19,7 +19,10 @@ public:
     {
         BTC,
         mBTC,
-        uBTC
+        uBTC,
+        bTBC,
+        sTBC,
+        TBC,
     };
 
     //! @name Static API
@@ -38,8 +41,14 @@ public:
     static qint64 factor(int unit);
     //! Number of amount digits (to represent max number of coins)
     static int amountDigits(int unit);
-    //! Number of decimals left
+    //! Number of fractional places
     static int decimals(int unit);
+    //! Minimum number of fractional places to show
+    static int minPlaces(int unit);
+    //! Radix
+    static int radix(int unit);
+    //! Number system
+    static int numsys(int unit);
     //! Format as string
     static QString format(int unit, qint64 amount, bool plussign=false);
     //! Format as string (with unit)
