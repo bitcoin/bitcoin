@@ -1457,10 +1457,9 @@ runCommand(std::string strCommand)
         printf("runCommand error: system(%s) returned %d\n", strCommand.c_str(), nErr);
 }
 
+// Called from inside SetBestChain: attaches a block to the new best chain being built
 bool CBlock::SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew)
 {
-    assert(pindexNew->pprev == pindexBest);
-
     uint256 hash = GetHash();
 
     // Adding to current best branch
