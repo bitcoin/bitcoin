@@ -580,18 +580,113 @@ bool CTxDB::LoadBlockIndex()
     ReadBestInvalidWork(bnBestInvalidWork);
 
     // Verify blocks in the best chain
+    int nCheckLevel = GetArg("-checklevel", 1);
+    int nCheckDepth = GetArg( "-checkblocks", 2500);
+    if (nCheckDepth == 0)
+        nCheckDepth = 1000000000; // suffices until the year 19000
+    if (nCheckDepth > nBestHeight)
+        nCheckDepth = nBestHeight;
+    printf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
     CBlockIndex* pindexFork = NULL;
+    map<pair<unsigned int, unsigned int>, CBlockIndex*> mapBlockPos;
     for (CBlockIndex* pindex = pindexBest; pindex && pindex->pprev; pindex = pindex->pprev)
     {
-        if (pindex->nHeight < nBestHeight-2500 && !mapArgs.count("-checkblocks"))
+        if (pindex->nHeight < nBestHeight-nCheckDepth)
             break;
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
-        if (!block.CheckBlock())
+        // check level 1: verify block validity
+        if (nCheckLevel>0 && !block.CheckBlock())
         {
             printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
             pindexFork = pindex->pprev;
+        }
+        // check level 2: verify transaction index validity
+        if (nCheckLevel>1)
+        {
+            pair<unsigned int, unsigned int> pos = make_pair(pindex->nFile, pindex->nBlockPos);
+            mapBlockPos[pos] = pindex;
+            BOOST_FOREACH(const CTransaction &tx, block.vtx)
+            {
+                uint256 hashTx = tx.GetHash();
+                CTxIndex txindex;
+                if (ReadTxIndex(hashTx, txindex))
+                {
+                    // check level 3: checker transaction hashes
+                    if (nCheckLevel>2 || pindex->nFile != txindex.pos.nFile || pindex->nBlockPos != txindex.pos.nBlockPos)
+                    {
+                        // either an error or a duplicate transaction
+                        CTransaction txFound;
+                        if (!txFound.ReadFromDisk(txindex.pos))
+                        {
+                            printf("LoadBlockIndex() : *** cannot read mislocated transaction %s\n", hashTx.ToString().c_str());
+                            pindexFork = pindex->pprev;
+                        }
+                        else
+                            if (txFound.GetHash() != hashTx) // not a duplicate tx
+                            {
+                                printf("LoadBlockIndex(): *** invalid tx position for %s\n", hashTx.ToString().c_str());
+                                pindexFork = pindex->pprev;
+                            }
+                    }
+                    // check level 4: check whether spent txouts were spent within the main chain
+                    int nOutput = 0;
+                    if (nCheckLevel>3)
+                        BOOST_FOREACH(const CDiskTxPos &txpos, txindex.vSpent)
+                        {
+                            if (!txpos.IsNull())
+                            {
+                                pair<unsigned int, unsigned int> posFind = make_pair(txpos.nFile, txpos.nBlockPos);
+                                if (!mapBlockPos.count(posFind))
+                                {
+                                    printf("LoadBlockIndex(): *** found bad spend at %d, hashBlock=%s, hashTx=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str(), hashTx.ToString().c_str());
+                                    pindexFork = pindex->pprev;
+                                }
+                                // check level 6: check whether spent txouts were spent by a valid transaction that consume them
+                                if (nCheckLevel>5)
+                                {
+                                    CTransaction txSpend;
+                                    if (!txSpend.ReadFromDisk(txpos))
+                                    {
+                                        printf("LoadBlockIndex(): *** cannot read spending transaction of %s:%i from disk\n", hashTx.ToString().c_str(), nOutput);
+                                        pindexFork = pindex->pprev;
+                                    }
+                                    else if (!txSpend.CheckTransaction())
+                                    {
+                                        printf("LoadBlockIndex(): *** spending transaction of %s:%i is invalid\n", hashTx.ToString().c_str(), nOutput);
+                                        pindexFork = pindex->pprev;
+                                    }
+                                    else
+                                    {
+                                        bool fFound = false;
+                                        BOOST_FOREACH(const CTxIn &txin, txSpend.vin)
+                                            if (txin.prevout.hash == hashTx && txin.prevout.n == nOutput)
+                                                fFound = true;
+                                        if (!fFound)
+                                        {
+                                            printf("LoadBlockIndex(): *** spending transaction of %s:%i does not spend it\n", hashTx.ToString().c_str(), nOutput);
+                                            pindexFork = pindex->pprev;
+                                        }
+                                    }
+                                }
+                            }
+                            nOutput++;
+                        }
+                }
+                // check level 5: check whether all prevouts are marked spent
+                if (nCheckLevel>4)
+                     BOOST_FOREACH(const CTxIn &txin, tx.vin)
+                     {
+                          CTxIndex txindex;
+                          if (ReadTxIndex(txin.prevout.hash, txindex))
+                              if (txindex.vSpent.size()-1 < txin.prevout.n || txindex.vSpent[txin.prevout.n].IsNull())
+                              {
+                                  printf("LoadBlockIndex(): *** found unspent prevout %s:%i in %s\n", txin.prevout.hash.ToString().c_str(), txin.prevout.n, hashTx.ToString().c_str());
+                                  pindexFork = pindex->pprev;
+                              }
+                     }
+            }
         }
     }
     if (pindexFork)
