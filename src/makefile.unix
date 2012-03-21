@@ -85,7 +85,7 @@ LIBS+= \
 
 DEBUGFLAGS=-g
 CXXFLAGS=-O2
-xCXXFLAGS=-pthread -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-offsetof -Wformat-security \
+xCXXFLAGS=-pthread -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-offsetof -Wformat -Wformat-security \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 OBJS= \
