@@ -370,12 +370,14 @@ bool AppInit2(int argc, char* argv[])
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
             strErrors += _("Wallet needed to be rewritten: restart Bitcoin to complete    \n");
+            printf("%s", strErrors.c_str());
             wxMessageBox(strErrors, "Bitcoin", wxOK | wxICON_ERROR);
             return false;
         }
         else
             strErrors += _("Error loading wallet.dat      \n");
     }
+    printf("%s", strErrors.c_str());
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     RegisterWallet(pwalletMain);
