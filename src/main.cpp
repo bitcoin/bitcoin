@@ -1278,12 +1278,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
                         return false;
         }
 
-    // To avoid being on the short end of a block-chain split,
-    // don't do secondary validation of pay-to-script-hash transactions
-    // until blocks with timestamps after paytoscripthashtime (see init.cpp for default).
-    // This code can be removed once a super-majority of the network has upgraded.
-    int64 nEvalSwitchTime = GetArg("-paytoscripthashtime", std::numeric_limits<int64_t>::max());
-    bool fStrictPayToScriptHash = (pindex->nTime >= nEvalSwitchTime);
+    // BIP16 didn't become active until Apr 1 2012 (Feb 15 on testnet)
+    int64 nBIP16SwitchTime = fTestNet ? 1329264000 : 1333238400;
+    bool fStrictPayToScriptHash = (pindex->nTime >= nBIP16SwitchTime);
 
     //// issue here: it doesn't know the version
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - 1 + GetSizeOfCompactSize(vtx.size());
