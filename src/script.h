@@ -574,6 +574,14 @@ public:
         return true;
     }
 
+    // Encode/decode small integers:
+    static int DecodeOP_N(opcodetype opcode)
+    {
+        if (opcode == OP_0)
+            return 0;
+        assert(opcode >= OP_1 && opcode <= OP_16);
+        return (int)opcode - (int)(OP_1 - 1);
+    }
 
     void FindAndDelete(const CScript& b)
     {
@@ -588,25 +596,28 @@ public:
         }
         while (GetOp(pc, opcode));
     }
-
-
-    int GetSigOpCount() const
+    int Find(opcodetype op) const
     {
-        int n = 0;
-        const_iterator pc = begin();
-        while (pc < end())
-        {
-            opcodetype opcode;
-            if (!GetOp(pc, opcode))
-                break;
-            if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
-                n++;
-            else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-                n += 20;
-        }
-        return n;
+        int nFound = 0;
+        opcodetype opcode;
+        for (const_iterator pc = begin(); pc != end() && GetOp(pc, opcode);)
+            if (opcode == op)
+                ++nFound;
+        return nFound;
     }
 
+    // Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
+    // as 20 sigops. With pay-to-script-hash, that changed:
+    // CHECKMULTISIGs serialized in scriptSigs are
+    // counted more accurately, assuming they are of the form
+    //  ... OP_N CHECKMULTISIG ...
+    int GetSigOpCount(bool fAccurate=false) const;
+
+    // Accurately count sigOps, including sigOps in
+    // pay-to-script-hash transactions:
+    int GetSigOpCount(const CScript& scriptSig) const;
+
+    bool IsPayToScriptHash() const;
 
     bool IsPushOnly() const
     {
@@ -698,6 +709,6 @@ bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* pkeystore, CBitcoinAddress& addressRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript());
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType=0);
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType);
 
 #endif

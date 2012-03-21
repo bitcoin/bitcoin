@@ -1147,16 +1147,40 @@ bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* keystore, CBit
 }
 
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, int nHashType)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+                  bool fValidatePayToScriptHash, int nHashType)
 {
-    vector<vector<unsigned char> > stack;
+    vector<vector<unsigned char> > stack, stackCopy;
     if (!EvalScript(stack, scriptSig, txTo, nIn, nHashType))
         return false;
+    if (fValidatePayToScriptHash)
+        stackCopy = stack;
     if (!EvalScript(stack, scriptPubKey, txTo, nIn, nHashType))
         return false;
     if (stack.empty())
         return false;
-    return CastToBool(stack.back());
+
+    if (CastToBool(stack.back()) == false)
+        return false;
+
+    // Additional validation for spend-to-script-hash transactions:
+    if (fValidatePayToScriptHash && scriptPubKey.IsPayToScriptHash())
+    {
+        if (!scriptSig.IsPushOnly()) // scriptSig must be literals-only
+            return false;            // or validation fails
+
+        const valtype& pubKeySerialized = stackCopy.back();
+        CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
+        popstack(stackCopy);
+
+        if (!EvalScript(stackCopy, pubKey2, txTo, nIn, nHashType))
+            return false;
+        if (stackCopy.empty())
+            return false;
+        return CastToBool(stackCopy.back());
+    }
+
+    return true;
 }
 
 
@@ -1178,14 +1202,14 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTrans
 
     // Test solution
     if (scriptPrereq.empty())
-        if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, 0))
+        if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, true, 0))
             return false;
 
     return true;
 }
 
 
-bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType)
+bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType)
 {
     assert(nIn < txTo.vin.size());
     const CTxIn& txin = txTo.vin[nIn];
@@ -1196,8 +1220,65 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
 
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, nHashType))
+    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, nHashType))
         return false;
 
     return true;
+}
+
+int CScript::GetSigOpCount(bool fAccurate) const
+{
+    int n = 0;
+    const_iterator pc = begin();
+    opcodetype lastOpcode = OP_INVALIDOPCODE;
+    while (pc < end())
+    {
+        opcodetype opcode;
+        if (!GetOp(pc, opcode))
+            break;
+        if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
+            n++;
+        else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
+        {
+            if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)
+                n += DecodeOP_N(lastOpcode);
+            else
+                n += 20;
+        }
+        lastOpcode = opcode;
+    }
+    return n;
+}
+
+int CScript::GetSigOpCount(const CScript& scriptSig) const
+{
+    if (!IsPayToScriptHash())
+        return GetSigOpCount(true);
+
+    // This is a pay-to-script-hash scriptPubKey;
+    // get the last item that the scriptSig
+    // pushes onto the stack:
+    const_iterator pc = scriptSig.begin();
+    vector<unsigned char> data;
+    while (pc < scriptSig.end())
+    {
+        opcodetype opcode;
+        if (!scriptSig.GetOp(pc, opcode, data))
+            return 0;
+        if (opcode > OP_16)
+            return 0;
+    }
+
+    /// ... and return it's opcount:
+    CScript subscript(data.begin(), data.end());
+    return subscript.GetSigOpCount(true);
+}
+
+bool CScript::IsPayToScriptHash() const
+{
+    // Extra-fast test for pay-to-script-hash CScripts:
+    return (this->size() == 23 &&
+            this->at(0) == OP_HASH160 &&
+            this->at(1) == 0x14 &&
+            this->at(22) == OP_EQUAL);
 }
