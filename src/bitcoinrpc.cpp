@@ -54,24 +54,6 @@ Object JSONRPCError(int code, const string& message)
     return error;
 }
 
-
-void PrintConsole(const std::string &format, ...)
-{
-    char buffer[50000];
-    int limit = sizeof(buffer);
-    va_list arg_ptr;
-    va_start(arg_ptr, format);
-    int ret = _vsnprintf(buffer, limit, format.c_str(), arg_ptr);
-    va_end(arg_ptr);
-    if (ret < 0 || ret >= limit)
-    {
-        ret = limit - 1;
-        buffer[limit-1] = 0;
-    }
-    printf("%s", buffer);
-    fprintf(stdout, "%s", buffer);
-}
-
 double GetDifficulty(const CBlockIndex* blockindex = NULL)
 {
     // Floating point number that is a multiple of the minimum difficulty,
@@ -2388,8 +2370,8 @@ void ThreadRPCServer2(void* parg)
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
         else if (mapArgs.count("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
-        PrintConsole(
-            _("Error: %s, you must set a rpcpassword in the configuration file:\n %s\n"
+        ::error(
+            _("%s, you must set a rpcpassword in the configuration file:\n %s\n"
               "It is recommended you use the following random password:\n"
               "rpcuser=bitcoinrpc\n"
               "rpcpassword=%s\n"
