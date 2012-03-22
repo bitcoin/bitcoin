@@ -221,6 +221,7 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcallowip=<ip> \t\t  " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
             "  -blocknotify=<cmd> "     + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
+            "  -coinbaser=<cmd> \t  "   + _("Execute <cmd> to calculate coinbase payees") + "\n" +
             "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)") + "\n" +
             "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions") + "\n";
 
@@ -500,12 +501,14 @@ bool AppInit2(int argc, char* argv[])
         // Put "/P2SH/" in the coinbase so everybody can tell when
         // a majority of miners support it
         const char* pszP2SH = "/P2SH/";
-        COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+        std::vector<unsigned char> vchData(pszP2SH, pszP2SH+strlen(pszP2SH));
+        mapAuxCoinbases["P2SH"] = CScript(vchData);
     }
     else
     {
         const char* pszP2SH = "NOP2SH";
-        COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+        std::vector<unsigned char> vchData(pszP2SH, pszP2SH+strlen(pszP2SH));
+        mapAuxCoinbases["P2SH"] = CScript(vchData);
     }
 
     if (!fNoListen)

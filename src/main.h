@@ -50,7 +50,6 @@ static const int fHaveUPnP = false;
 #endif
 
 
-extern CScript COINBASE_FLAGS;
 
 
 
@@ -99,7 +98,9 @@ void PrintBlockTree();
 bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
-CBlock* CreateNewBlock(CReserveKey& reservekey);
+CBlock* CreateNewBlock(CReserveKey& reservekey, bool fUseCoinbaser=true);
+extern std::map<std::string, CScript> mapAuxCoinbases;
+CScript BuildCoinbaseScriptSig(uint64 nTime, unsigned int nExtraNonce, bool *pfOverflow = NULL);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);

@@ -1756,6 +1756,35 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+
+Value setworkaux(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setworkaux <id> [data]\n"
+            "If [data] is not specified, deletes aux.\n"
+        );
+
+    std::string strId = params[0].get_str();
+    if (params.size() > 1)
+    {
+        std::string strData = params[1].get_str();
+        std::vector<unsigned char> vchData = ParseHex(strData);
+        if (vchData.size() * 2 != strData.size())
+            throw JSONRPCError(-8, "Failed to parse data as hexadecimal");
+        CScript scriptBackup = mapAuxCoinbases[strId];
+        mapAuxCoinbases[strId] = CScript(vchData);
+        bool fOverflow;
+        BuildCoinbaseScriptSig(0, std::numeric_limits<unsigned int>::max(), &fOverflow);
+        if (fOverflow)
+            throw JSONRPCError(-7, "Change would overflow coinbase script");
+    }
+    else
+        mapAuxCoinbases.erase(strId);
+
+    return true;
+}
+
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -1870,8 +1899,8 @@ Value getmemorypool(const Array& params, bool fHelp)
             "  \"version\" : block version\n"
             "  \"previousblockhash\" : hash of current highest block\n"
             "  \"transactions\" : contents of non-coinbase transactions that should be included in the next block\n"
+            "  \"coinbaseaux\" : data that should be included in coinbase\n"
             "  \"coinbasevalue\" : maximum allowable input to coinbase transaction, including the generation award and transaction fees\n"
-            "  \"coinbaseflags\" : data that should be included in coinbase so support for new features can be judged\n"
             "  \"time\" : timestamp appropriate for next block\n"
             "  \"mintime\" : minimum timestamp appropriate for next block\n"
             "  \"curtime\" : current timestamp\n"
@@ -1903,7 +1932,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             // Create new block
             if(pblock)
                 delete pblock;
-            pblock = CreateNewBlock(reservekey);
+            pblock = CreateNewBlock(reservekey, false);
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
         }
@@ -1923,12 +1952,20 @@ Value getmemorypool(const Array& params, bool fHelp)
             transactions.push_back(HexStr(ssTx.begin(), ssTx.end()));
         }
 
+        Object aux;
+        map<std::string, CScript>::iterator it;
+        for (it = mapAuxCoinbases.begin() ; it != mapAuxCoinbases.end(); ++it)
+        {
+            std::vector<unsigned char> &vchData = (*it).second;
+            aux.push_back(Pair((*it).first, HexStr(vchData.begin(), vchData.end())));
+        }
+
         Object result;
         result.push_back(Pair("version", pblock->nVersion));
         result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
         result.push_back(Pair("transactions", transactions));
+        result.push_back(Pair("coinbaseaux", aux));
         result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
-        result.push_back(Pair("coinbaseflags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
         result.push_back(Pair("time", (int64_t)pblock->nTime));
         result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
         result.push_back(Pair("curtime", (int64_t)GetAdjustedTime()));
@@ -2040,6 +2077,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listtransactions",       &listtransactions),
     make_pair("signmessage",            &signmessage),
     make_pair("verifymessage",          &verifymessage),
+    make_pair("setworkaux",             &setworkaux),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
