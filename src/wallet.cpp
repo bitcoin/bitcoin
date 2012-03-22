@@ -1510,6 +1510,48 @@ bool CWallet::CheckSpentCoins(int& nMismatchFound, int64& nBalanceInQuestion)
     return (nMismatchFound == 0);
 }
 
+// ppcoin: fix wallet spent state according to txindex
+void CWallet::FixSpentCoins(int& nMismatchFound, int64& nBalanceInQuestion)
+{
+    nMismatchFound = 0;
+    nBalanceInQuestion = 0;
+    CRITICAL_BLOCK(cs_wallet)
+    {
+       vector<CWalletTx*> vCoins;
+       vCoins.reserve(mapWallet.size());
+       for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+           vCoins.push_back(&(*it).second);
+
+       CTxDB txdb("r");
+       BOOST_FOREACH(CWalletTx* pcoin, vCoins)
+       {
+           // Find the corresponding transaction index
+           CTxIndex txindex;
+           if (!txdb.ReadTxIndex(pcoin->GetHash(), txindex))
+               continue;
+           for (int n=0; n < pcoin->vout.size(); n++)
+           {
+               if (pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))
+               {
+                   printf("FixSpentCoins found lost coin %sppc %s[%d]\n", FormatMoney(pcoin->GetCredit()).c_str(), pcoin->GetHash().ToString().c_str(), n);
+                   nMismatchFound++;
+                   nBalanceInQuestion += pcoin->vout[n].nValue;
+                   pcoin->MarkUnspent(n);
+                   pcoin->WriteToDisk();
+               }
+               else if (!pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
+               {
+                   printf("FixSpentCoins found spent coin %sppc %s[%d]\n", FormatMoney(pcoin->GetCredit()).c_str(), pcoin->GetHash().ToString().c_str(), n);
+                   nMismatchFound++;
+                   nBalanceInQuestion += pcoin->vout[n].nValue;
+                   pcoin->MarkSpent(n);
+                   pcoin->WriteToDisk();
+               }
+           }
+       }
+    }
+}
+
 vector<unsigned char> CReserveKey::GetReservedKey()
 {
     if (nIndex == -1)
