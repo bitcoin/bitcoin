@@ -16,6 +16,7 @@
 class CAccount;
 class CAccountingEntry;
 class CAddress;
+class CAddrMan;
 class CBlockLocator;
 class CDiskBlockIndex;
 class CDiskTxPos;
@@ -307,7 +308,8 @@ private:
 public:
     bool WriteAddress(const CAddress& addr);
     bool EraseAddress(const CAddress& addr);
-    bool LoadAddresses();
+    bool WriteAddrman(const CAddrMan& addr);
+    bool LoadAddresses(bool &fUpdate);
 };
 
 bool LoadAddresses();

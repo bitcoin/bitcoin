@@ -17,6 +17,7 @@
 #include "mruset.h"
 #include "netbase.h"
 #include "protocol.h"
+#include "addrman.h"
 
 class CAddrDB;
 class CRequestTracker;
@@ -32,7 +33,6 @@ static const unsigned int PUBLISH_HOPS = 5;
 
 bool RecvLine(SOCKET hSocket, std::string& strLine);
 bool GetMyExternalIP(CNetAddr& ipRet);
-bool AddAddress(CAddress addr, int64 nTimePenalty=0, CAddrDB *pAddrDB=NULL);
 void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CService& ip);
@@ -80,6 +80,7 @@ enum threadId
     THREAD_UPNP,
     THREAD_DNSSEED,
     THREAD_ADDEDCONNECTIONS,
+    THREAD_DUMPADDRESS,
 
     THREAD_MAX
 };
@@ -90,11 +91,10 @@ extern uint64 nLocalServices;
 extern CAddress addrLocalHost;
 extern uint64 nLocalHostNonce;
 extern boost::array<int, THREAD_MAX> vnThreadsRunning;
+extern CAddrMan addrman;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
-extern std::map<std::vector<unsigned char>, CAddress> mapAddresses;
-extern CCriticalSection cs_mapAddresses;
 extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
