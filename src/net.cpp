@@ -24,7 +24,8 @@
 using namespace std;
 using namespace boost;
 
-static const int MAX_OUTBOUND_CONNECTIONS = 8;
+static const int MAX_OUTBOUND_CONNECTIONS = 125;
+static const int MIN_OUTBOUND_CONNECTIONS = 1;
 
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
@@ -806,7 +807,7 @@ void ThreadSocketHandler2(void* parg)
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
                     printf("socket error accept failed: %d\n", WSAGetLastError());
             }
-            else if (nInbound >= GetArg("-maxconnections", 125) - MAX_OUTBOUND_CONNECTIONS)
+            else if (nInbound >= max(min((int)GetArg("-maxconnections", 125), MAX_OUTBOUND_CONNECTIONS), MIN_OUTBOUND_CONNECTIONS))
             {
                 CRITICAL_BLOCK(cs_setservAddNodeAddresses)
                     if (!setservAddNodeAddresses.count(addr))
@@ -1341,8 +1342,7 @@ void ThreadOpenConnections2(void* parg)
                 BOOST_FOREACH(CNode* pnode, vNodes)
                     if (!pnode->fInbound)
                         nOutbound++;
-            int nMaxOutboundConnections = MAX_OUTBOUND_CONNECTIONS;
-            nMaxOutboundConnections = min(nMaxOutboundConnections, (int)GetArg("-maxconnections", 125));
+            int nMaxOutboundConnections = max(min((int)GetArg("-maxconnections", 125), MAX_OUTBOUND_CONNECTIONS), MIN_OUTBOUND_CONNECTIONS);
             if (nOutbound < nMaxOutboundConnections)
                 break;
             vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
