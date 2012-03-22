@@ -3,9 +3,11 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "headers.h"
 
@@ -58,7 +60,7 @@ void ipcInit()
     size_t nSize;
     unsigned int nPriority;
     try {
-        mq = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "BitcoinURL", 2, 256);
+        mq = new boost::interprocess::message_queue(boost::interprocess::create_only, "BitcoinURL", 2, 256);
 
         // Make sure we don't lose any bitcoin: URIs
         for (int i = 0; i < 2; i++)
@@ -74,7 +76,7 @@ void ipcInit()
 
         // Make sure only one bitcoin instance is listening
         boost::interprocess::message_queue::remove("BitcoinURL");
-        mq = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "BitcoinURL", 2, 256);
+        mq = new boost::interprocess::message_queue(boost::interprocess::create_only, "BitcoinURL", 2, 256);
     }
     catch (interprocess_exception &ex) {
         printf("ipcInit - boost::interprocess exeption: %s\n", ex.what());
