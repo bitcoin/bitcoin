@@ -79,6 +79,7 @@ void ipcInit()
         mq = new message_queue(open_or_create, "BitcoinURL", 2, 256);
     }
     catch (interprocess_exception &ex) {
+        printf("ipcInit - boost::interprocess exeption: %s\n", ex.what());
         return;
     }
     if (!CreateThread(ipcThread, mq))
