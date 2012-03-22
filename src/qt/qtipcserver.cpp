@@ -9,25 +9,23 @@
 
 #include "headers.h"
 
-using namespace boost::interprocess;
-using namespace boost::posix_time;
 using namespace boost;
 using namespace std;
 
 void ipcShutdown()
 {
-    message_queue::remove("BitcoinURL");
+    boost::interprocess::message_queue::remove("BitcoinURL");
 }
 
 void ipcThread(void* parg)
 {
-    message_queue* mq = (message_queue*)parg;
+    boost::interprocess::message_queue* mq = (boost::interprocess::message_queue*)parg;
     char strBuf[257];
     size_t nSize;
     unsigned int nPriority;
     loop
     {
-        ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(100);
+        boost::posix_time::ptime d = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::millisec(100);
         if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
         {
             ThreadSafeHandleURL(std::string(strBuf, nSize));
@@ -55,17 +53,17 @@ void ipcInit()
     return;
 #endif
 
-    message_queue* mq;
+    boost::interprocess::message_queue* mq;
     char strBuf[257];
     size_t nSize;
     unsigned int nPriority;
     try {
-        mq = new message_queue(open_or_create, "BitcoinURL", 2, 256);
+        mq = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "BitcoinURL", 2, 256);
 
         // Make sure we don't lose any bitcoin: URIs
         for (int i = 0; i < 2; i++)
         {
-            ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(1);
+            boost::posix_time::ptime d = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::millisec(1);
             if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
             {
                 ThreadSafeHandleURL(std::string(strBuf, nSize));
@@ -75,8 +73,8 @@ void ipcInit()
         }
 
         // Make sure only one bitcoin instance is listening
-        message_queue::remove("BitcoinURL");
-        mq = new message_queue(open_or_create, "BitcoinURL", 2, 256);
+        boost::interprocess::message_queue::remove("BitcoinURL");
+        mq = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "BitcoinURL", 2, 256);
     }
     catch (interprocess_exception &ex) {
         printf("ipcInit - boost::interprocess exeption: %s\n", ex.what());
