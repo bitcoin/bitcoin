@@ -78,7 +78,7 @@ void ipcInit()
         boost::interprocess::message_queue::remove("BitcoinURL");
         mq = new boost::interprocess::message_queue(boost::interprocess::create_only, "BitcoinURL", 2, 256);
     }
-    catch (interprocess_exception &ex) {
+    catch (boost::interprocess::interprocess_exception &ex) {
         printf("ipcInit - boost::interprocess exeption: %s\n", ex.what());
         return;
     }
