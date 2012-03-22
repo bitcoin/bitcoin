@@ -19,6 +19,25 @@ void ipcShutdown()
     boost::interprocess::message_queue::remove("BitcoinURL");
 }
 
+void ipcRecover(const char *Filename)
+{
+    std::string strIpcDir;
+    // get path to stale ipc message queue file
+    boost::interprocess::ipcdetail::tmp_filename(Filename, strIpcDir);
+
+    filesystem::path pathMessageQueue(strIpcDir);
+    pathMessageQueue.make_preferred();
+
+    // if the message queue file yet exists, try to remove it
+    if(exists(pathMessageQueue))
+    {
+        string strLogMessage = ("ipcRecover - old message queue found, trying to remove: " + pathMessageQueue.string() + " ...");
+        (remove(pathMessageQueue)) ? strLogMessage += "success\n" : strLogMessage += "failed\n";
+
+        printf(strLogMessage.c_str());
+    }
+}
+
 void ipcThread(void* parg)
 {
     boost::interprocess::message_queue* mq = (boost::interprocess::message_queue*)parg;
@@ -80,6 +99,8 @@ void ipcInit()
     }
     catch (boost::interprocess::interprocess_exception &ex) {
         printf("ipcInit - boost::interprocess exeption: %s\n", ex.what());
+        // try a recovery to fix #956 and pass our message queue name
+        ipcRecover("BitcoinURL");
         return;
     }
     if (!CreateThread(ipcThread, mq))
