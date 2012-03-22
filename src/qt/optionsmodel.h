@@ -26,6 +26,7 @@ public:
         Fee, // qint64
         DisplayUnit, // BitcoinUnits::Unit
         DisplayAddresses, // bool
+        CoinControlFeatures, // bool
         OptionIDRowCount
     };
 
@@ -44,13 +45,16 @@ public:
     bool getMinimizeOnClose();
     int getDisplayUnit();
     bool getDisplayAddresses();
+    bool getCoinControlFeatures();
 private:
     int nDisplayUnit;
     bool bDisplayAddresses;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
+    bool bCoinControlFeatures;
 signals:
     void displayUnitChanged(int unit);
+    void coinControlFeaturesChanged(bool);
 
 public slots:
 

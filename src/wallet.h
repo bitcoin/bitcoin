@@ -65,6 +65,12 @@ public:
 
     std::vector<unsigned char> vchDefaultKey;
 
+    std::set<std::string> sendFromAddressRestriction;
+
+    void setSendFromAddressRestriction(std::string addresses);
+    void setSendFromAddressRestriction(std::set<std::string> addresses);
+    void clearSendFromAddressRestriction();
+
     // keystore implementation
     // Generate a new key
     std::vector<unsigned char> GenerateNewKey();
@@ -112,6 +118,10 @@ public:
     bool GetKeyFromPool(std::vector<unsigned char> &key, bool fAllowReuse=true);
     int64 GetOldestKeyPoolTime();
     void GetAllReserveAddresses(std::set<CBitcoinAddress>& setAddress);
+
+    void ExpandGrouping(std::map< std::string, std::set<std::string> > &groupings, std::string address, std::set<std::string> &expanded);
+    std::set< std::set<std::string> > GetAddressGroupings();
+    std::map<std::string, int64> GetAddressBalances();
 
     bool IsMine(const CTxIn& txin) const;
     int64 GetDebit(const CTxIn& txin) const;
@@ -537,6 +547,12 @@ public:
             }
         }
         return true;
+    }
+
+    std::string GetAddressOfTxOut(int n) {
+        CBitcoinAddress addr;
+        ExtractAddress(vout[n].scriptPubKey, addr);
+        return addr.ToString();
     }
 
     bool WriteToDisk();
