@@ -12,6 +12,7 @@
 #include <QLocale>
 #include <QTextDocument>
 #include <QScrollBar>
+#include <QLineEdit>
 
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
@@ -26,12 +27,24 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->sendButton->setIcon(QIcon());
 #endif
 
+#if QT_VERSION >= 0x040700
+    /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+    ui->sendFrom->setPlaceholderText(tr("Restrict the client to only send from these Bitcoin addresses"));
+#endif
+
     addEntry();
 
     connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addEntry()));
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
     fNewRecipientAllowed = true;
+
+    ui->sendFrom->setFont(GUIUtil::bitcoinAddressFont());
+}
+
+void SendCoinsDialog::setSendFromAddress(std::string address)
+{
+    ui->sendFrom->setText(QString::fromStdString(address));
 }
 
 void SendCoinsDialog::setModel(WalletModel *model)
@@ -51,12 +64,22 @@ void SendCoinsDialog::setModel(WalletModel *model)
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(toggleSendFrom(bool)));
+        toggleSendFrom(model->getOptionsModel()->getCoinControlFeatures());
     }
 }
 
 SendCoinsDialog::~SendCoinsDialog()
 {
     delete ui;
+}
+
+void SendCoinsDialog::toggleSendFrom(bool show)
+{
+    ui->labelSendFrom->setVisible(show);
+    ui->sendFrom->setVisible(show);
+    if (!show)
+        ui->sendFrom->clear();
 }
 
 void SendCoinsDialog::on_sendButton_clicked()
@@ -116,6 +139,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
+    model->setSendFromAddressRestriction(((QString)ui->sendFrom->text()).toStdString());
     WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients);
     switch(sendstatus.status)
     {
@@ -175,6 +199,7 @@ void SendCoinsDialog::clear()
 
     updateRemoveEnabled();
 
+    ui->sendFrom->clear();
     ui->sendButton->setDefault(true);
 }
 

@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_H
 #define BITCOIN_WALLET_H
 
+#include "base58.h"
 #include "main.h"
 #include "key.h"
 #include "keystore.h"
@@ -109,6 +110,12 @@ public:
 
     CPubKey vchDefaultKey;
 
+    std::set<std::string> sendFromAddressRestriction;
+
+    void setSendFromAddressRestriction(std::string addresses);
+    void setSendFromAddressRestriction(std::set<std::string> addresses);
+    void clearSendFromAddressRestriction();
+
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
 
@@ -163,6 +170,9 @@ public:
     bool GetKeyFromPool(CPubKey &key, bool fAllowReuse=true);
     int64 GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress);
+
+    std::set< std::set<std::string> > GetAddressGroupings();
+    std::map<std::string, int64> GetAddressBalances();
 
     bool IsMine(const CTxIn& txin) const;
     int64 GetDebit(const CTxIn& txin) const;
@@ -590,6 +600,13 @@ public:
         return true;
     }
 
+    std::string GetAddressOfTxOut(int n)
+    {
+        CTxDestination addr;
+        ExtractDestination(vout[n].scriptPubKey, addr);
+        return CBitcoinAddress(addr).ToString();
+    }
+
     bool WriteToDisk();
 
     int64 GetTxTime() const;
@@ -733,5 +750,29 @@ public:
 };
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
+
+
+template<typename T>
+class CScopedSendFromAddressRestriction
+{
+private:
+    CWallet &_wallet;
+
+public:
+    CScopedSendFromAddressRestriction(CWallet& wallet, T addresses)
+    : _wallet(wallet)
+    {
+        if (addresses.empty())
+            return;
+
+        _wallet.setSendFromAddressRestriction(addresses);
+    }
+
+    ~CScopedSendFromAddressRestriction()
+    {
+        _wallet.clearSendFromAddressRestriction();
+    }
+};
+
 
 #endif
