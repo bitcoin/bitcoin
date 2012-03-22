@@ -213,6 +213,8 @@ public:
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
     bool SetDefaultKey(const std::vector<unsigned char> &vchPubKey);
+
+    bool CheckSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion);
 };
 
 
