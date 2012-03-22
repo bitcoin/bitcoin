@@ -17,7 +17,7 @@ using namespace std;
 
 std::vector<unsigned char> CWallet::GenerateNewKey()
 {
-    bool fCompressed = true; // default to compressed public keys
+    bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
 
     RandAddSeedPerfmon();
     CKey key;
@@ -25,7 +25,7 @@ std::vector<unsigned char> CWallet::GenerateNewKey()
 
     // Compressed public keys were introduced in version 0.6.0
     if (fCompressed)
-        SetMinVersion(59900);
+        SetMinVersion(FEATURE_COMPRPUBKEY);
 
     if (!AddKey(key))
         throw std::runtime_error("CWallet::GenerateNewKey() : AddKey failed");
@@ -148,12 +148,19 @@ public:
     )
 };
 
-bool CWallet::SetMinVersion(int nVersion, CWalletDB* pwalletdbIn)
+bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn, bool fExplicit)
 {
     if (nWalletVersion >= nVersion)
         return true;
 
+    // when doing an explicit upgrade, if we pass the max version permitted, upgrade all the way
+    if (fExplicit && nVersion > nWalletMaxVersion)
+            nVersion = FEATURE_LATEST;
+
     nWalletVersion = nVersion;
+
+    if (nVersion > nWalletMaxVersion)
+        nWalletMaxVersion = nVersion;
 
     if (fFileBacked)
     {
@@ -170,6 +177,17 @@ bool CWallet::SetMinVersion(int nVersion, CWalletDB* pwalletdbIn)
         if (!pwalletdbIn)
             delete pwalletdb;
     }
+
+    return true;
+}
+
+bool CWallet::SetMaxVersion(int nVersion)
+{
+    // cannot downgrade below current version
+    if (nWalletVersion > nVersion)
+        return false;
+
+    nWalletMaxVersion = nVersion;
 
     return true;
 }
@@ -228,7 +246,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
 
         // Encryption was introduced in version 0.4.0
-        SetMinVersion(40000, pwalletdbEncryption);
+        SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption, true);
 
         if (fFileBacked)
         {
@@ -1252,19 +1270,6 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
     fFirstRunRet = vchDefaultKey.empty();
-
-    if (!HaveKey(Hash160(vchDefaultKey)))
-    {
-        // Create new keyUser and set as default key
-        RandAddSeedPerfmon();
-
-        std::vector<unsigned char> newDefaultKey;
-        if (!GetKeyFromPool(newDefaultKey, false))
-            return DB_LOAD_FAIL;
-        SetDefaultKey(newDefaultKey);
-        if (!SetAddressBookName(CBitcoinAddress(vchDefaultKey), ""))
-            return DB_LOAD_FAIL;
-    }
 
     CreateThread(ThreadFlushWalletDB, &strWalletFile);
     return DB_LOAD_OK;
