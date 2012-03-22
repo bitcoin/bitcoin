@@ -799,6 +799,14 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     CRITICAL_BLOCK(pwallet->cs_wallet)
     {
+        int nMinVersion = 0;
+        if (Read((string)"minversion", nMinVersion))
+        {
+            if (nMinVersion > CLIENT_VERSION)
+                return DB_TOO_NEW;
+            pwallet->LoadMinVersion(nMinVersion);
+        }
+
         // Get cursor
         Dbc* pcursor = GetCursor();
         if (!pcursor)
@@ -967,14 +975,6 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 ssValue >> nFileVersion;
                 if (nFileVersion == 10300)
                     nFileVersion = 300;
-            }
-            else if (strType == "minversion")
-            {
-                int nMinVersion = 0;
-                ssValue >> nMinVersion;
-                if (nMinVersion > CLIENT_VERSION)
-                    return DB_TOO_NEW;
-                pwallet->LoadMinVersion(nMinVersion);
             }
             else if (strType == "cscript")
             {
