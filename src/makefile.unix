@@ -91,6 +91,7 @@ xCXXFLAGS=-pthread -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-o
 OBJS= \
     obj/checkpoints.o \
     obj/netbase.o \
+    obj/addrman.o \
     obj/crypter.o \
     obj/key.o \
     obj/db.o \

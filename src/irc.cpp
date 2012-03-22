@@ -341,7 +341,7 @@ void ThreadIRCSeed2(void* parg)
                 if (DecodeAddress(pszName, addr))
                 {
                     addr.nTime = GetAdjustedTime();
-                    if (AddAddress(addr, 51 * 60))
+                    if (addrman.Add(addr, addrConnect, 51 * 60))
                         printf("IRC got new address: %s\n", addr.ToString().c_str());
                     nGotIRCAddresses++;
                 }
