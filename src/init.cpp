@@ -223,7 +223,9 @@ bool AppInit2(int argc, char* argv[])
             "  -rpcconnect=<ip> \t  "   + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
             "  -blocknotify=<cmd> "     + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
             "  -keypool=<n>     \t  "   + _("Set key pool size to <n> (default: 100)") + "\n" +
-            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions") + "\n";
+            "  -rescan          \t  "   + _("Rescan the block chain for missing wallet transactions") + "\n" +
+            "  -checkblocks=<n> \t\t  " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
+            "  -checklevel=<n>  \t\t  " + _("How thorough the block verification is (0-6, default: 1)") + "\n";
 
 #ifdef USE_SSL
         strUsage += string() +
