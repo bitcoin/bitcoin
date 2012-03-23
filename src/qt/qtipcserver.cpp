@@ -19,7 +19,7 @@ void ipcShutdown()
     interprocess::message_queue::remove("BitcoinURL");
 }
 
-bool ipcRecover(const char *Filename)
+bool ipcRecover(const char* Filename)
 {
     std::string strIpcDir;
     // get path to stale ipc message queue file
@@ -29,13 +29,13 @@ bool ipcRecover(const char *Filename)
     pathMessageQueue.make_preferred();
 
     // verify that the message queue file really exists and remove it
-    if(exists(pathMessageQueue))
+    if (exists(pathMessageQueue))
     {
         string strLogMessage = ("ipcRecover - old message queue found, trying to remove " + pathMessageQueue.string());
         system::error_code ec;
 
         // try removal, but take care of further errors
-        if(remove(pathMessageQueue, ec))
+        if (remove(pathMessageQueue, ec))
         {
             printf("%s ...success\n", strLogMessage.c_str());
             return true;
@@ -59,7 +59,7 @@ void ipcThread(void* parg)
     loop
     {
         posix_time::ptime d = posix_time::microsec_clock::universal_time() + posix_time::millisec(100);
-        if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
+        if (mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
         {
             ThreadSafeHandleURL(std::string(strBuf, nSize));
             Sleep(1000);
@@ -97,7 +97,7 @@ void ipcInit()
         for (int i = 0; i < 2; i++)
         {
             posix_time::ptime d = posix_time::microsec_clock::universal_time() + posix_time::millisec(1);
-            if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
+            if (mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
             {
                 ThreadSafeHandleURL(std::string(strBuf, nSize));
             }
@@ -113,7 +113,7 @@ void ipcInit()
         printf("ipcInit - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
 
         // check if the exception is a "file already exists" error
-        if(ex.get_error_code() == interprocess::already_exists_error)
+        if (ex.get_error_code() == interprocess::already_exists_error)
         {
             // try a recovery to fix #956 and pass our message queue name
             ipcRecover("BitcoinURL");
