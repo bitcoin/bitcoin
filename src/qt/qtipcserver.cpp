@@ -116,7 +116,9 @@ void ipcInit()
         if (ex.get_error_code() == interprocess::already_exists_error)
         {
             // try a recovery to fix #956 and pass our message queue name
-            ipcRecover("BitcoinURL");
+            if (ipcRecover("BitcoinURL"))
+                // if that worked try init once more
+                ipcInit();
         }
         return;
     }
