@@ -110,7 +110,7 @@ void ipcInit()
         mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
     }
     catch (interprocess::interprocess_exception &ex) {
-        printf("ipcInit - interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+        printf("ipcInit - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
 
         // check if the exception is a "file already exists" error
         if(ex.get_error_code() == interprocess::already_exists_error)

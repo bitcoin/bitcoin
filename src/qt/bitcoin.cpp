@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
                     break;
             }
             catch (boost::interprocess::interprocess_exception &ex) {
-                printf("boost::interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+                printf("boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
                 break;
             }
         }
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
                             mq.try_send(strURL, strlen(strURL), 0);
                         }
                         catch (boost::interprocess::interprocess_exception &ex) {
-                            printf("boost::interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+                            printf("boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
 							break;
                         }
                     }
