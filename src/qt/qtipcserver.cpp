@@ -31,21 +31,18 @@ bool ipcRecover(const char *Filename)
     // verify that the message queue file really exists and remove it
     if(exists(pathMessageQueue))
     {
-        string strLogMessage = ("ipcRecover - old message queue found, trying to remove: " + pathMessageQueue.string());
+        string strLogMessage = ("ipcRecover - old message queue found, trying to remove " + pathMessageQueue.string());
         system::error_code ec;
 
         // try removal, but take care of further errors
         if(remove(pathMessageQueue, ec))
         {
-            strLogMessage += " ...success\n";
-            printf(strLogMessage.c_str());
+            printf("%s ...success\n", strLogMessage.c_str());
             return true;
         }
         else
         {
-            strLogMessage += " ...failed\n";
-            printf(strLogMessage.c_str());
-            printf("ipcRecover - removal of old message queue failed with error #%d: %s\n", ec.value(), ec.message().c_str());
+            printf("%s ...failed\nipcRecover - removal of old message queue failed with error #%d: %s\n", strLogMessage.c_str(), ec.value(), ec.message().c_str());
             return false;
         }
     }
