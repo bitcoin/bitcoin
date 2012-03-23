@@ -1,4 +1,4 @@
 void ipcShutdown();
-bool ipcRecover(const char*);
-void ipcThread(void*);
+bool ipcRecover(const char* pszFilename);
+void ipcThread(void* pArg);
 void ipcInit();
