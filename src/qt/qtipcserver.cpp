@@ -28,11 +28,11 @@ void ipcRecover(const char *Filename)
     filesystem::path pathMessageQueue(strIpcDir);
     pathMessageQueue.make_preferred();
 
-    // if the message queue file yet exists, try to remove it
+    // verify that the message queue file really exists and remove it
     if(exists(pathMessageQueue))
     {
-        string strLogMessage = ("ipcRecover - old message queue found, trying to remove: " + pathMessageQueue.string() + " ...");
-        (remove(pathMessageQueue)) ? strLogMessage += "success\n" : strLogMessage += "failed\n";
+        string strLogMessage = ("ipcRecover - old message queue found, trying to remove: " + pathMessageQueue.string());
+        (remove(pathMessageQueue)) ? strLogMessage += " ...success\n" : strLogMessage += " ...failed\n";
 
         printf(strLogMessage.c_str());
     }
@@ -98,9 +98,14 @@ void ipcInit()
         mq = new boost::interprocess::message_queue(boost::interprocess::create_only, "BitcoinURL", 2, 256);
     }
     catch (boost::interprocess::interprocess_exception &ex) {
-        printf("ipcInit - boost::interprocess exception: %s\n", ex.what());
-        // try a recovery to fix #956 and pass our message queue name
-        ipcRecover("BitcoinURL");
+        printf("ipcInit - boost::interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+
+        // check if the exception is a "file already exists" error
+        if(ex.get_error_code() == boost::interprocess::already_exists_error)
+        {
+            // try a recovery to fix #956 and pass our message queue name
+            ipcRecover("BitcoinURL");
+        }
         return;
     }
     if (!CreateThread(ipcThread, mq))
