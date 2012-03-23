@@ -14,6 +14,9 @@
 using namespace boost;
 using namespace std;
 
+// Global state
+bool fInitCalledAfterRecovery = false;
+
 void ipcShutdown()
 {
     interprocess::message_queue::remove("BitcoinURL");
@@ -116,8 +119,10 @@ void ipcInit()
         if (exIPCException.get_error_code() == interprocess::already_exists_error)
         {
             // try a recovery to fix #956 and pass our message queue name
-            if (ipcRecover("BitcoinURL"))
-                // if that worked try init once more
+            if (ipcRecover("BitcoinURL") && !fInitCalledAfterRecovery)
+                // set fInitCalledAfterRecovery to true, to avoid an infinite recursion
+                fInitCalledAfterRecovery = true;
+                // try init once more
                 ipcInit();
         }
         return;
