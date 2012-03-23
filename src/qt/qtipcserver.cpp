@@ -19,7 +19,7 @@ void ipcShutdown()
     boost::interprocess::message_queue::remove("BitcoinURL");
 }
 
-void ipcRecover(const char *Filename)
+bool ipcRecover(const char *Filename)
 {
     std::string strIpcDir;
     // get path to stale ipc message queue file
@@ -32,10 +32,25 @@ void ipcRecover(const char *Filename)
     if(exists(pathMessageQueue))
     {
         string strLogMessage = ("ipcRecover - old message queue found, trying to remove: " + pathMessageQueue.string());
-        (remove(pathMessageQueue)) ? strLogMessage += " ...success\n" : strLogMessage += " ...failed\n";
+        system::error_code ec;
 
-        printf(strLogMessage.c_str());
+        // try removal, but take care of further errors
+        if(remove(pathMessageQueue, ec))
+        {
+            strLogMessage += " ...success\n";
+            printf(strLogMessage.c_str());
+            return true;
+        }
+        else
+        {
+            strLogMessage += " ...failed\n";
+            printf(strLogMessage.c_str());
+            printf("ipcRecover - removal of old message queue failed with error #%d: %s\n", ec.value(), ec.message().c_str());
+            return false;
+        }
     }
+    else
+        return false;
 }
 
 void ipcThread(void* parg)
