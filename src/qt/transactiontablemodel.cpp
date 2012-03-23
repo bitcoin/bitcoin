@@ -65,9 +65,7 @@ struct TransactionTablePriv
      */
     void refreshWallet()
     {
-#ifdef WALLET_UPDATE_DEBUG
-        qDebug() << "refreshWallet";
-#endif
+        printf("refreshWallet\n");
         cachedWallet.clear();
         CRITICAL_BLOCK(wallet->cs_wallet)
         {
@@ -86,9 +84,7 @@ struct TransactionTablePriv
     void updateWallet(const QList<uint256> &updated)
     {
         // Walk through updated transactions, update model as needed.
-#ifdef WALLET_UPDATE_DEBUG
-        qDebug() << "updateWallet";
-#endif
+        printf("updateWallet\n");
         // Sort update list, and iterate through it in reverse, so that model updates
         //  can be emitted from end to beginning (so that earlier updates will not influence
         // the indices of latter ones).
@@ -118,10 +114,10 @@ struct TransactionTablePriv
                     inModel = true;
                 }
 
-#ifdef WALLET_UPDATE_DEBUG
-                qDebug() << "  " << QString::fromStdString(hash.ToString()) << inWallet << " " << inModel
-                        << lowerIndex << "-" << upperIndex;
-#endif
+                {
+                    std::string strHash = hash.ToString();
+                    printf("  %s inWallet=%d inModel=%d %d-%d\n", strHash.c_str(), (int)inWallet, (int)inModel, lowerIndex, upperIndex);
+                }
 
                 if(inWallet && !inModel)
                 {
