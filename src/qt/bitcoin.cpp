@@ -5,6 +5,7 @@
 #include "clientmodel.h"
 #include "walletmodel.h"
 #include "optionsmodel.h"
+#include "guiutil.h"
 
 #include "headers.h"
 #include "init.h"
@@ -12,7 +13,6 @@
 
 #include <QApplication>
 #include <QMessageBox>
-#include <QThread>
 #include <QTextCodec>
 #include <QLocale>
 #include <QTranslator>
@@ -70,15 +70,7 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindo
         return true;
     bool payFee = false;
 
-    // Call slot on GUI thread.
-    // If called from another thread, use a blocking QueuedConnection.
-    Qt::ConnectionType connectionType = Qt::DirectConnection;
-    if(QThread::currentThread() != QCoreApplication::instance()->thread())
-    {
-        connectionType = Qt::BlockingQueuedConnection;
-    }
-
-    QMetaObject::invokeMethod(guiref, "askFee", connectionType,
+    QMetaObject::invokeMethod(guiref, "askFee", GUIUtil::blockingGUIThreadConnection(),
                                Q_ARG(qint64, nFeeRequired),
                                Q_ARG(bool*, &payFee));
 
@@ -90,14 +82,7 @@ void ThreadSafeHandleURL(const std::string& strURL)
     if(!guiref)
         return;
 
-    // Call slot on GUI thread.
-    // If called from another thread, use a blocking QueuedConnection.
-    Qt::ConnectionType connectionType = Qt::DirectConnection;
-    if(QThread::currentThread() != QCoreApplication::instance()->thread())
-    {
-        connectionType = Qt::BlockingQueuedConnection;
-    }
-    QMetaObject::invokeMethod(guiref, "handleURL", connectionType,
+    QMetaObject::invokeMethod(guiref, "handleURL", GUIUtil::blockingGUIThreadConnection(),
                                Q_ARG(QString, QString::fromStdString(strURL)));
 }
 
