@@ -155,7 +155,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/askpassphrasedialog.h \
     src/protocol.h \
     src/qt/notificator.h \
-    src/qt/qtipcserver.h
+    src/qt/qtipcserver.h \
+    src/allocators.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
