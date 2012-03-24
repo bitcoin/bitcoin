@@ -1443,6 +1443,10 @@ bool CBlock::CheckBlock() const
     if (hashMerkleRoot != BuildMerkleTree())
         return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
+    // Check block signature
+    if (!CheckBlockSignature())
+        return DoS(100, error("CheckBlock() : bad block signature"));
+
     return true;
 }
 
@@ -1710,6 +1714,7 @@ bool LoadBlockIndex(bool fAllowNew)
         assert(block.hashMerkleRoot == uint256("0xc7311b56de266580cca65be108ae53d7100b5c3b17da8b1106044103abd7a521"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
+        assert(block.CheckBlock());
 
         // Start new block file
         unsigned int nFile;
@@ -3218,6 +3223,8 @@ void static BitcoinMiner(CWallet *pwallet)
                     // Found a solution
                     pblock->nNonce = ByteReverse(nNonceFound);
                     assert(hash == pblock->GetHash());
+                    // should be able to sign block - assert here for now
+                    assert(pblock->SignBlock(*pwalletMain));
 
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock.get(), *pwalletMain, reservekey);
