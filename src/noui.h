@@ -6,7 +6,6 @@
 #define BITCOIN_NOUI_H
 
 #include <string>
-#include <boost/function.hpp>
 #include "wallet.h"
 
 typedef void wxWindow;
@@ -53,14 +52,6 @@ inline int ThreadSafeMessageBox(const std::string& message, const std::string& c
 inline bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
 {
     return true;
-}
-
-inline void CalledSetStatusBar(const std::string& strText, int nField)
-{
-}
-
-inline void UIThreadCall(boost::function0<void> fn)
-{
 }
 
 inline void MainFrameRepaint()
