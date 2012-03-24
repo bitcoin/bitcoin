@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include "util.h"
+#include "allocators.h" /* for SecureString */
 
 class OptionsModel;
 class AddressTableModel;
