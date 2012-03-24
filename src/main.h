@@ -1009,7 +1009,7 @@ public:
             hashPrevBlock.ToString().substr(0,20).c_str(),
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             nTime, nBits, nNonce,
-            HexStr(vchBlockSig.begin(), vchBlockSig.end(), true).c_str(),
+            HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str(),
             vtx.size());
         for (int i = 0; i < vtx.size(); i++)
         {
