@@ -88,16 +88,6 @@ void ThreadSafeHandleURL(const std::string& strURL)
                                Q_ARG(QString, QString::fromStdString(strURL)));
 }
 
-void CalledSetStatusBar(const std::string& strText, int nField)
-{
-    // Only used for built-in mining, which is disabled, simple ignore
-}
-
-void UIThreadCall(boost::function0<void> fn)
-{
-    // Only used for built-in mining, which is disabled, simple ignore
-}
-
 void MainFrameRepaint()
 {
     if(clientmodel)
