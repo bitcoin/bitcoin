@@ -1552,6 +1552,29 @@ void CWallet::FixSpentCoins(int& nMismatchFound, int64& nBalanceInQuestion)
     }
 }
 
+// ppcoin: disable transaction (only for coinstake)
+void CWallet::DisableTransaction(const CTransaction &tx)
+{
+    if (!tx.IsCoinStake() || !IsFromMe(tx))
+        return; // only disconnecting coinstake requires marking input unspent
+    CRITICAL_BLOCK(cs_wallet)
+    {
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            map<uint256, CWalletTx>::iterator mi = mapWallet.find(txin.prevout.hash);
+            if (mi != mapWallet.end())
+            {
+                CWalletTx& prev = (*mi).second;
+                if (txin.prevout.n < prev.vout.size() && IsMine(prev.vout[txin.prevout.n]))
+                {
+                    prev.MarkUnspent(txin.prevout.n);
+                    prev.WriteToDisk();
+                }
+            }
+        }
+    }
+}
+
 vector<unsigned char> CReserveKey::GetReservedKey()
 {
     if (nIndex == -1)

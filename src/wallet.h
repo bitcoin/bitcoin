@@ -216,6 +216,7 @@ public:
 
     bool CheckSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion);
     void FixSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion);
+    void DisableTransaction(const CTransaction &tx);
 };
 
 
