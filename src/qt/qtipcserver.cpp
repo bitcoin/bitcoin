@@ -31,7 +31,7 @@ bool ipcRecover(const char* pszFilename)
     // verify that the message queue file really exists and remove it
     if (exists(pathMessageQueue))
     {
-        string strLogMessage = ("ipcRecover - old message queue found, trying to remove " + pathMessageQueue.string());
+        string strLogMessage = ("ipcRecover - possible stale message queue found, trying to remove " + pathMessageQueue.string());
         system::error_code ecErrorCode;
 
         // try removal, but take care of further errors
@@ -39,6 +39,15 @@ bool ipcRecover(const char* pszFilename)
         {
             printf("%s ...success\n", strLogMessage.c_str());
             return true;
+        }
+        // this happens, if the file is locked, which is NOT the case after a hard crash,
+        // but if another Bitcoin-Qt instance is running
+        else if (ecErrorCode.value() == system::errc::broken_pipe)
+        {
+            // make clear in debug.log, that we have no "bad" situation
+            printf("%s ...unneeded\n", strLogMessage.c_str());
+            // return false, to not re-try init again
+            return false;
         }
         else
         {
@@ -110,7 +119,7 @@ void ipcInit(bool fInitCalledAfterRecovery)
         mqMessageQueue = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
     }
     catch (interprocess::interprocess_exception &exIPCException) {
-        printf("ipcInit - boost interprocess exception #%d: %s\n", exIPCException.get_error_code(), exIPCException.what());
+        printf("ipcInit    - boost interprocess exception #%d: %s\n", exIPCException.get_error_code(), exIPCException.what());
 
         // check if the exception is a "file already exists" error
         if (exIPCException.get_error_code() == interprocess::already_exists_error)
