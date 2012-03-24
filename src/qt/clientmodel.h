@@ -43,6 +43,7 @@ private:
 
     int cachedNumConnections;
     int cachedNumBlocks;
+    QString cachedStatusBar;
 
     int numBlocksAtStartup;
 

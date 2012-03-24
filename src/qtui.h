@@ -44,6 +44,7 @@ extern void ThreadSafeHandleURL(const std::string& strURL);
 extern void CalledSetStatusBar(const std::string& strText, int nField);
 extern void UIThreadCall(boost::function0<void> fn);
 extern void MainFrameRepaint();
+extern void AddressBookRepaint();
 extern void InitMessage(const std::string &message);
 extern std::string _(const char* psz);
 

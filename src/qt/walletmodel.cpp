@@ -7,7 +7,6 @@
 #include "headers.h"
 #include "db.h" // for BackupWallet
 
-#include <QTimer>
 #include <QSet>
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
@@ -16,12 +15,6 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0),
     cachedEncryptionStatus(Unencrypted)
 {
-    // Until signal notifications is built into the bitcoin core,
-    //  simply update everything after polling using a timer.
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start(MODEL_UPDATE_DELAY);
-
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 }
@@ -66,6 +59,11 @@ void WalletModel::update()
     cachedUnconfirmedBalance = newUnconfirmedBalance;
     cachedNumTransactions = newNumTransactions;
 
+    addressTableModel->update();
+}
+
+void WalletModel::updateAddressList()
+{
     addressTableModel->update();
 }
 
@@ -163,9 +161,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
                 wallet->SetAddressBookName(strAddress, rcp.label.toStdString());
         }
     }
-
-    // Update our model of the address table
-    addressTableModel->updateList();
 
     return SendCoinsReturn(OK, 0, hex);
 }
