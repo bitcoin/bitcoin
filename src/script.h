@@ -13,6 +13,8 @@
 
 #include <boost/foreach.hpp>
 
+typedef std::vector<unsigned char> valtype;
+
 class CTransaction;
 
 enum
@@ -699,5 +701,7 @@ bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 bool ExtractAddress(const CScript& scriptPubKey, const CKeyStore* pkeystore, CBitcoinAddress& addressRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript());
 bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, int nHashType=0);
+bool Solver(const CScript& scriptPubKey, std::vector<std::pair<opcodetype, valtype> >& vSolutionRet);
+
 
 #endif
