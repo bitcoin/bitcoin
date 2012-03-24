@@ -66,4 +66,9 @@ inline void InitMessage(const std::string &message)
 {
 }
 
+inline const char* _(const char* psz)
+{
+    return psz;
+}
+
 #endif

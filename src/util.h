@@ -95,13 +95,6 @@ inline void Sleep(int64 n)
 }
 #endif
 
-#if !defined(QT_GUI)
-inline const char* _(const char* psz)
-{
-    return psz;
-}
-#endif
-
 
 
 
