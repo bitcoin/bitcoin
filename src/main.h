@@ -1048,6 +1048,9 @@ public:
 
     bool CheckBlockSignature() const
     {
+        if (GetHash() == hashGenesisBlock)
+            return vchBlockSig.empty();
+
         std::vector<std::pair<opcodetype, valtype> > vSolution;
 
         if (!Solver(vtx[0].vout[0].scriptPubKey, vSolution))
