@@ -1885,6 +1885,52 @@ Value reservebalance(const Array& params, bool fHelp)
 }
 
 
+// ppcoin: check wallet integrity
+Value checkwallet(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "checkwallet\n"
+            "Check wallet for integrity.\n");
+
+    int nMismatchSpent;
+    int64 nBalanceInQuestion;
+    if (!pwalletMain->CheckSpentCoins(nMismatchSpent, nBalanceInQuestion))
+    {
+        Object result;
+        result.push_back(Pair("mismatched spent coins", nMismatchSpent));
+        result.push_back(Pair("amount in question", ValueFromAmount(nBalanceInQuestion)));
+        return result;
+    }
+    return Value::null;
+}
+
+
+// ppcoin: repair wallet
+Value repairwallet(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "repairwallet\n"
+            "Repair wallet if checkwallet reports any problem.\n");
+
+    int nMismatchSpent;
+    int64 nBalanceInQuestion;
+    pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion);
+    Object result;
+    if (nMismatchSpent == 0)
+    {
+        result.push_back(Pair("wallet check passed", true));
+    }
+    else
+    {
+        result.push_back(Pair("mismatched spent coins", nMismatchSpent));
+        result.push_back(Pair("amount affected by repair", ValueFromAmount(nBalanceInQuestion)));
+    }
+    return result;
+}
+
+
 
 
 
@@ -1938,6 +1984,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("resetcheckpoint",        &resetcheckpoint),
     make_pair("getbranchpoint",         &getbranchpoint),
     make_pair("reservebalance",         &reservebalance),
+    make_pair("checkwallet",            &checkwallet),
+    make_pair("repairwallet",           &repairwallet),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 

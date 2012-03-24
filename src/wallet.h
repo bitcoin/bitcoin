@@ -213,6 +213,10 @@ public:
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
     bool SetDefaultKey(const std::vector<unsigned char> &vchPubKey);
+
+    bool CheckSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion);
+    void FixSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion);
+    void DisableTransaction(const CTransaction &tx);
 };
 
 
@@ -402,6 +406,18 @@ public:
         if (!vfSpent[nOut])
         {
             vfSpent[nOut] = true;
+            fAvailableCreditCached = false;
+        }
+    }
+
+    void MarkUnspent(unsigned int nOut)
+    {
+        if (nOut >= vout.size())
+            throw std::runtime_error("CWalletTx::MarkUnspent() : nOut out of range");
+        vfSpent.resize(vout.size());
+        if (vfSpent[nOut])
+        {
+            vfSpent[nOut] = false;
             fAvailableCreditCached = false;
         }
     }
