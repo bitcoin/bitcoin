@@ -14,9 +14,6 @@
 using namespace boost;
 using namespace std;
 
-// Global state
-bool fInitCalledAfterRecovery = false;
-
 void ipcShutdown()
 {
     interprocess::message_queue::remove("BitcoinURL");
@@ -76,7 +73,7 @@ void ipcThread(void* pArg)
     ipcShutdown();
 }
 
-void ipcInit()
+void ipcInit(bool fInitCalledAfterRecovery)
 {
 #ifdef MAC_OSX
     // TODO: implement bitcoin: URI handling the Mac Way
@@ -120,10 +117,8 @@ void ipcInit()
         {
             // try a recovery to fix #956 and pass our message queue name
             if (ipcRecover("BitcoinURL") && !fInitCalledAfterRecovery)
-                // set fInitCalledAfterRecovery to true, to avoid an infinite recursion
-                fInitCalledAfterRecovery = true;
-                // try init once more
-                ipcInit();
+                // try init once more and pass true, to avoid an infinite recursion
+                ipcInit(true);
         }
         return;
     }
