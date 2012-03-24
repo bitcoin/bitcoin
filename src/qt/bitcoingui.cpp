@@ -538,19 +538,6 @@ void BitcoinGUI::setNumBlocks(int count)
     progressBar->setToolTip(tooltip);
 }
 
-void BitcoinGUI::refreshStatusBar()
-{
-    /* Might display multiple times in the case of multiple alerts
-    static QString prevStatusBar;
-    QString newStatusBar = clientModel->getStatusBarWarnings();
-    if (prevStatusBar != newStatusBar)
-    {
-        prevStatusBar = newStatusBar;
-        error(tr("Network Alert"), newStatusBar);
-    }*/
-    setNumBlocks(clientModel->getNumBlocks());
-}
-
 void BitcoinGUI::error(const QString &title, const QString &message)
 {
     // Report errors from network/worker thread

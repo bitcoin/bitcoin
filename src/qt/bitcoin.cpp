@@ -33,8 +33,10 @@ Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
 // Need a global reference for the notifications to find the GUI
-BitcoinGUI *guiref;
-QSplashScreen *splashref;
+static BitcoinGUI *guiref;
+static QSplashScreen *splashref;
+static WalletModel *walletmodel;
+static ClientModel *clientmodel;
 
 int MyMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
 {
@@ -98,8 +100,16 @@ void UIThreadCall(boost::function0<void> fn)
 
 void MainFrameRepaint()
 {
-    if(guiref)
-        QMetaObject::invokeMethod(guiref, "refreshStatusBar", Qt::QueuedConnection);
+    if(clientmodel)
+        QMetaObject::invokeMethod(clientmodel, "update", Qt::QueuedConnection);
+    if(walletmodel)
+        QMetaObject::invokeMethod(walletmodel, "update", Qt::QueuedConnection);
+}
+
+void AddressBookRepaint()
+{
+    if(walletmodel)
+        QMetaObject::invokeMethod(walletmodel, "updateAddressList", Qt::QueuedConnection);
 }
 
 void InitMessage(const std::string &message)
@@ -230,7 +240,9 @@ int main(int argc, char *argv[])
                     splash.finish(&window);
 
                 ClientModel clientModel(&optionsModel);
+                clientmodel = &clientModel;
                 WalletModel walletModel(pwalletMain, &optionsModel);
+                walletmodel = &walletModel;
 
                 guiref = &window;
                 window.setClientModel(&clientModel);
@@ -270,6 +282,8 @@ int main(int argc, char *argv[])
                 app.exec();
 
                 guiref = 0;
+                clientmodel = 0;
+                walletmodel = 0;
             }
             Shutdown(NULL);
         }

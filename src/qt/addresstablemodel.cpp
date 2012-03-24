@@ -231,7 +231,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & pa
     }
 }
 
-void AddressTableModel::updateList()
+void AddressTableModel::update()
 {
     // Update address book model from Bitcoin core
     beginResetModel();
@@ -285,10 +285,9 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     {
         return QString();
     }
-    // Add entry and update list
+    // Add entry
     CRITICAL_BLOCK(wallet->cs_wallet)
         wallet->SetAddressBookName(strAddress, strLabel);
-    updateList();
     return QString::fromStdString(strAddress);
 }
 
@@ -306,13 +305,7 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex & paren
     {
         wallet->DelAddressBookName(rec->address.toStdString());
     }
-    updateList();
     return true;
-}
-
-void AddressTableModel::update()
-{
-
 }
 
 /* Look up label for address in address book, if not found return empty string.

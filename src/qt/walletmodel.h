@@ -138,9 +138,8 @@ signals:
     void error(const QString &title, const QString &message);
 
 public slots:
-
-private slots:
     void update();
+    void updateAddressList();
 };
 
 

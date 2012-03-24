@@ -67,6 +67,10 @@ inline void MainFrameRepaint()
 {
 }
 
+inline void AddressBookRepaint()
+{
+}
+
 inline void InitMessage(const std::string &message)
 {
 }
