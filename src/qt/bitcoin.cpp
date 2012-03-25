@@ -38,23 +38,18 @@ static QSplashScreen *splashref;
 static WalletModel *walletmodel;
 static ClientModel *clientmodel;
 
-int MyMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
-{
-    // Message from AppInit2(), always in main thread before main window is constructed
-    QMessageBox::critical(0, QString::fromStdString(caption),
-        QString::fromStdString(message),
-        QMessageBox::Ok, QMessageBox::Ok);
-    return 4;
-}
-
-int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
+int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
 {
     // Message from network thread
     if(guiref)
     {
-        QMetaObject::invokeMethod(guiref, "error", Qt::QueuedConnection,
+        bool modal = (style & wxMODAL);
+        // in case of modal message, use blocking connection to wait for user to click OK
+        QMetaObject::invokeMethod(guiref, "error",
+                                   modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
                                    Q_ARG(QString, QString::fromStdString(caption)),
-                                   Q_ARG(QString, QString::fromStdString(message)));
+                                   Q_ARG(QString, QString::fromStdString(message)),
+                                   Q_ARG(bool, modal));
     }
     else
     {
@@ -64,7 +59,7 @@ int ThreadSafeMessageBox(const std::string& message, const std::string& caption,
     return 4;
 }
 
-bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
+bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
 {
     if(!guiref)
         return false;
@@ -222,15 +217,16 @@ int main(int argc, char *argv[])
 
     try
     {
+        BitcoinGUI window;
+        guiref = &window;
         if(AppInit2(argc, argv))
         {
             {
-                // Put this in a block, so that BitcoinGUI is cleaned up properly before
-                // calling Shutdown() in case of exceptions.
+                // Put this in a block, so that the Model objects are cleaned up before
+                // calling Shutdown().
 
                 optionsModel.Upgrade(); // Must be done after AppInit2
 
-                BitcoinGUI window;
                 if (splashref)
                     splash.finish(&window);
 
@@ -239,7 +235,6 @@ int main(int argc, char *argv[])
                 WalletModel walletModel(pwalletMain, &optionsModel);
                 walletmodel = &walletModel;
 
-                guiref = &window;
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);
 
@@ -276,6 +271,8 @@ int main(int argc, char *argv[])
 #endif
                 app.exec();
 
+                window.setClientModel(0);
+                window.setWalletModel(0);
                 guiref = 0;
                 clientmodel = 0;
                 walletmodel = 0;
