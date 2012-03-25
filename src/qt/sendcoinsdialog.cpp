@@ -265,10 +265,10 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
 }
 
 
-void SendCoinsDialog::handleURL(const QString &url)
+void SendCoinsDialog::handleURI(const QString &uri)
 {
     SendCoinsRecipient rv;
-    if(!GUIUtil::parseBitcoinURL(url, &rv))
+    if(!GUIUtil::parseBitcoinURI(uri, &rv))
     {
         return;
     }
