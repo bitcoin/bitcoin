@@ -17,6 +17,32 @@ script: |
   mkdir -p $TMPDIR/bin/$GBUILD_BITS $TMPDIR/include
   tar xjf boost_1_47_0.tar.bz2
   cd boost_1_47_0
+  echo "--- win32_api.orig.hpp	2012-03-25 16:08:28.932377422 -0400
++++ win32_api.hpp	2012-03-25 16:08:30.312377422 -0400
+@@ -1572,14 +1572,21 @@
+    return ret;
+ }
+ 
++static std::string strLastBootupTimeCache;
+ inline bool get_last_bootup_time( std::string& str )
+ {
++   if (strLastBootupTimeCache.size() > 0) {
++      str = strLastBootupTimeCache;
++      return true;
++   }
+    std::wstring wstr;
+    bool ret = get_last_bootup_time(wstr);
+    str.resize(wstr.size());
+    for(std::size_t i = 0, max = str.size(); i != max; ++i){
+       str[i] = '0' + (wstr[i]-L'0');
+    }
++   if (ret)
++      strLastBootupTimeCache = str;
+    return ret;
+ }
+ 
+" > fixbootuptime.patch
+  patch boost/interprocess/detail/win32_api.hpp fixbootuptime.patch
   echo "using gcc : 4.4 : i586-mingw32msvc-g++
         :
         <rc>i586-mingw32msvc-windres
@@ -34,5 +60,5 @@ script: |
   cd $TMPDIR
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r boost-win32-1.47.0-gitian.zip *
-  cp boost-win32-1.47.0-gitian.zip $OUTDIR
+  zip -r boost-win32-1.47.0-gitian2.zip *
+  cp boost-win32-1.47.0-gitian2.zip $OUTDIR
