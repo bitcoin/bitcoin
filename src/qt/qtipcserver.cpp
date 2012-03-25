@@ -22,8 +22,8 @@ void ipcShutdown()
 bool ipcRecover(const char* pszFilename)
 {
     std::string strIpcDir;
-    // get path to stale ipc message queue file
-    interprocess::ipcdetail::tmp_filename(pszFilename, strIpcDir);
+    // get path to stale ipc message queue file (hint: ::detail changes to ::ipcdetail when switching to boost 1.49)
+    interprocess::detail::tmp_filename(pszFilename, strIpcDir);
 
     filesystem::path pathMessageQueue(strIpcDir);
     pathMessageQueue.make_preferred();
