@@ -715,7 +715,7 @@ void BitcoinGUI::gotoMessagePage(QString addr)
 
 void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
 {
-    // Accept only URLs
+    // Accept only URIs
     if(event->mimeData()->hasUrls())
         event->acceptProposedAction();
 }
@@ -725,20 +725,20 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
     if(event->mimeData()->hasUrls())
     {
         gotoSendCoinsPage();
-        QList<QUrl> urls = event->mimeData()->urls();
-        foreach(const QUrl &url, urls)
+        QList<QUrl> uris = event->mimeData()->urls();
+        foreach(const QUrl &uri, uris)
         {
-            sendCoinsPage->handleURL(url.toString());
+            sendCoinsPage->handleURI(uri.toString());
         }
     }
 
     event->acceptProposedAction();
 }
 
-void BitcoinGUI::handleURL(QString strURL)
+void BitcoinGUI::handleURI(QString strURI)
 {
     gotoSendCoinsPage();
-    sendCoinsPage->handleURL(strURL);
+    sendCoinsPage->handleURI(strURI);
 
     if(!isActiveWindow())
         activateWindow();
