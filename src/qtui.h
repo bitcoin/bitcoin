@@ -42,6 +42,7 @@ extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, 
 extern void ThreadSafeHandleURL(const std::string& strURL);
 extern void MainFrameRepaint();
 extern void AddressBookRepaint();
+extern void QueueShutdown();
 extern void InitMessage(const std::string &message);
 extern std::string _(const char* psz);
 

@@ -221,13 +221,9 @@ Value stop(const Array& params, bool fHelp)
         throw runtime_error(
             "stop\n"
             "Stop bitcoin server.");
-#ifndef QT_GUI
     // Shutdown will take long enough that the response should get back
-    CreateThread(Shutdown, NULL);
+    QueueShutdown();
     return "bitcoin server stopping";
-#else
-    throw runtime_error("NYI: cannot shut down GUI with RPC command");
-#endif
 }
 
 
@@ -1676,11 +1672,6 @@ Value encryptwallet(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an encrypted wallet, but encryptwallet was called.");
 
-#ifdef QT_GUI
-    // shutting down via RPC while the GUI is running does not work (yet):
-    throw runtime_error("Not Yet Implemented: use GUI to encrypt wallet, not RPC command");
-#endif
-
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
     // Alternately, find a way to make params[0] mlock()'d to begin with.
     SecureString strWalletPass;
@@ -1698,7 +1689,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    CreateThread(Shutdown, NULL);
+    QueueShutdown();
     return "wallet encrypted; bitcoin server stopping, restart to run with encrypted wallet";
 }
 
@@ -2381,9 +2372,7 @@ void ThreadRPCServer2(void* parg)
                 strWhatAmI.c_str(),
                 GetConfigFile().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str());
-#ifndef QT_GUI
-        CreateThread(Shutdown, NULL);
-#endif
+        QueueShutdown();
         return;
     }
 

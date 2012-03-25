@@ -1812,7 +1812,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
         ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
-        CreateThread(Shutdown, NULL);
+        QueueShutdown();
         return false;
     }
     return true;
