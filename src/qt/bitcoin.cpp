@@ -111,6 +111,11 @@ void InitMessage(const std::string &message)
     }
 }
 
+void QueueShutdown()
+{
+    QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+}
+
 /*
    Translate string to current locale using Qt.
  */

@@ -7,6 +7,7 @@
 
 #include <string>
 #include "wallet.h"
+#include "init.h"
 
 typedef void wxWindow;
 #define wxYES                   0x00000002
@@ -69,6 +70,12 @@ inline void InitMessage(const std::string &message)
 inline const char* _(const char* psz)
 {
     return psz;
+}
+
+inline void QueueShutdown()
+{
+    // Without UI, Shutdown can simply be started in a new thread
+    CreateThread(Shutdown, NULL);
 }
 
 #endif
