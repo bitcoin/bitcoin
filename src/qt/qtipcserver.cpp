@@ -62,6 +62,23 @@ bool ipcRecover(const char* pszFilename)
         return false;
 }
 
+bool ipcRecover2(const char* pszFilename)
+{
+    string strLogMessage = ("ipcRecover2 - possible stale message queue detected, trying to remove");
+
+    // try to remove the possible stale message queue
+    if (interprocess::message_queue::remove("BitcoinURL"))
+    {
+        printf("%s %s ...success\n", strLogMessage.c_str(), pszFilename);
+        return true;
+    }
+    else
+    {
+        printf("%s %s ...failed (no error, if another Bitcoin-Qt instance is running)\n", strLogMessage.c_str(), pszFilename);
+        return false;
+    }
+}
+
 void ipcThread(void* pArg)
 {
     interprocess::message_queue* mq = (interprocess::message_queue*)pArg;
@@ -85,7 +102,7 @@ void ipcThread(void* pArg)
     ipcShutdown();
 }
 
-void ipcInit(bool fInitCalledAfterRecovery)
+void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
 {
 #ifdef MAC_OSX
     // TODO: implement bitcoin: URI handling the Mac Way
@@ -103,7 +120,10 @@ void ipcInit(bool fInitCalledAfterRecovery)
     size_t nSize;
     unsigned int nPriority;
     try {
-        mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+        if (fUseMQModeCreateOnly)
+            mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+        else
+            mq = new interprocess::message_queue(interprocess::open_or_create, "BitcoinURL", 2, 256);
 
         // Make sure we don't lose any bitcoin: URIs
         for (int i = 0; i < 2; i++)
@@ -119,7 +139,10 @@ void ipcInit(bool fInitCalledAfterRecovery)
 
         // Make sure only one bitcoin instance is listening
         interprocess::message_queue::remove("BitcoinURL");
-        mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+        if (fUseMQModeCreateOnly)
+            mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+        else
+            mq = new interprocess::message_queue(interprocess::open_or_create, "BitcoinURL", 2, 256);
     }
     catch (interprocess::interprocess_exception &ex) {
 // we currently only handle the Windows-specific case from #956
@@ -130,9 +153,14 @@ void ipcInit(bool fInitCalledAfterRecovery)
         if (ex.get_error_code() == interprocess::already_exists_error)
         {
             // try a recovery to fix #956 and pass our message queue name
-            if (ipcRecover("BitcoinURL") && !fInitCalledAfterRecovery)
-                // try init once more and pass true, to avoid an infinite recursion
-                ipcInit(true);
+            if (ipcRecover2("BitcoinURL") && !fInitCalledAfterRecovery)
+                // try init once more (true - create_only mode / true - avoid an infinite recursion)
+                // create_only: stale message queue removed, create a new message queue
+                ipcInit(true, true);
+            else
+                // try init once more (false - open_or_create mode / true - avoid an infinite recursion)
+                // open_or_create: message queue not removed, perhaps we can open it for usage
+                ipcInit(false, true);
         }
 #endif
         return;
