@@ -9,7 +9,6 @@
 #include "wallet.h"
 #include "init.h"
 
-typedef void wxWindow;
 #define wxYES                   0x00000002
 #define wxOK                    0x00000004
 #define wxNO                    0x00000008
@@ -36,21 +35,17 @@ typedef void wxWindow;
 #define wxHELP                  0x00008000
 #define wxMORE                  0x00010000
 #define wxSETUP                 0x00020000
+// Force blocking, modal message box dialog (not just notification)
+#define wxMODAL                 0x00040000
 
-inline int MyMessageBox(const std::string& message, const std::string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
+inline int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK)
 {
     printf("%s: %s\n", caption.c_str(), message.c_str());
     fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
     return 4;
 }
-#define wxMessageBox  MyMessageBox
 
-inline int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
-{
-    return MyMessageBox(message, caption, style, parent, x, y);
-}
-
-inline bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
+inline bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
 {
     return true;
 }

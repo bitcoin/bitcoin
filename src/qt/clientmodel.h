@@ -52,7 +52,7 @@ signals:
     void numBlocksChanged(int count);
 
     //! Asynchronous error notification
-    void error(const QString &title, const QString &message);
+    void error(const QString &title, const QString &message, bool modal);
 
 public slots:
 
