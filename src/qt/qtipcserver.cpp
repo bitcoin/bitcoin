@@ -22,26 +22,29 @@ void ipcShutdown()
 bool ipcRecover(const char* pszFilename)
 {
     std::string strIpcDir;
-    // get path to stale ipc message queue file (hint: ::detail changes to ::ipcdetail when switching to boost 1.49)
+    // get path to possible stale ipc message queue file
+#if BOOST_VERSION <= 104700
     interprocess::detail::tmp_filename(pszFilename, strIpcDir);
+#elif BOOST_VERSION >= 104800
+    interprocess::ipcdetail::tmp_filename(pszFilename, strIpcDir);
+#endif
 
     filesystem::path pathMessageQueue(strIpcDir);
     pathMessageQueue.make_preferred();
 
-    // verify that the message queue file really exists and remove it
+    // verify that the message queue file exists and try to remove it
     if (exists(pathMessageQueue))
     {
-        string strLogMessage = ("ipcRecover - possible stale message queue found, trying to remove " + pathMessageQueue.string());
+        string strLogMessage = ("ipcRecover - possible stale message queue detected, trying to remove " + pathMessageQueue.string());
         system::error_code ecErrorCode;
 
-        // try removal, but take care of further errors
+        // try removal
         if (remove(pathMessageQueue, ecErrorCode))
         {
             printf("%s ...success\n", strLogMessage.c_str());
             return true;
         }
-        // this happens, if the file is locked, which is NOT the case after a hard crash,
-        // but if another Bitcoin-Qt instance is running
+        // if the file is locked (which is NOT the case after a hard crash, but if another Bitcoin-Qt instance is running)
         else if (ecErrorCode.value() == system::errc::broken_pipe)
         {
             // make clear in debug.log, that we have no "bad" situation
@@ -119,6 +122,8 @@ void ipcInit(bool fInitCalledAfterRecovery)
         mqMessageQueue = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
     }
     catch (interprocess::interprocess_exception &exIPCException) {
+// we currently only handle the Windows-specific case from #956
+#ifdef WIN32
         printf("ipcInit    - boost interprocess exception #%d: %s\n", exIPCException.get_error_code(), exIPCException.what());
 
         // check if the exception is a "file already exists" error
@@ -129,6 +134,7 @@ void ipcInit(bool fInitCalledAfterRecovery)
                 // try init once more and pass true, to avoid an infinite recursion
                 ipcInit(true);
         }
+#endif
         return;
     }
     if (!CreateThread(ipcThread, mqMessageQueue))
