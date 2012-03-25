@@ -64,14 +64,14 @@ bool ipcRecover(const char* pszFilename)
 
 void ipcThread(void* pArg)
 {
-    interprocess::message_queue* mqMessageQueue = (interprocess::message_queue*)pArg;
+    interprocess::message_queue* mq = (interprocess::message_queue*)pArg;
     char strBuf[257];
     size_t nSize;
     unsigned int nPriority;
     loop
     {
         posix_time::ptime d = posix_time::microsec_clock::universal_time() + posix_time::millisec(100);
-        if (mqMessageQueue->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
+        if (mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
         {
             ThreadSafeHandleURL(std::string(strBuf, nSize));
             Sleep(1000);
@@ -98,18 +98,18 @@ void ipcInit(bool fInitCalledAfterRecovery)
     return;
 #endif
 
-    interprocess::message_queue* mqMessageQueue;
+    interprocess::message_queue* mq;
     char strBuf[257];
     size_t nSize;
     unsigned int nPriority;
     try {
-        mqMessageQueue = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+        mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
 
         // Make sure we don't lose any bitcoin: URIs
         for (int i = 0; i < 2; i++)
         {
             posix_time::ptime d = posix_time::microsec_clock::universal_time() + posix_time::millisec(1);
-            if (mqMessageQueue->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
+            if (mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
             {
                 ThreadSafeHandleURL(std::string(strBuf, nSize));
             }
@@ -119,15 +119,15 @@ void ipcInit(bool fInitCalledAfterRecovery)
 
         // Make sure only one bitcoin instance is listening
         interprocess::message_queue::remove("BitcoinURL");
-        mqMessageQueue = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+        mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
     }
-    catch (interprocess::interprocess_exception &exIPCException) {
+    catch (interprocess::interprocess_exception &ex) {
 // we currently only handle the Windows-specific case from #956
 #ifdef WIN32
-        printf("ipcInit    - boost interprocess exception #%d: %s\n", exIPCException.get_error_code(), exIPCException.what());
+        printf("ipcInit    - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
 
         // check if the exception is a "file already exists" error
-        if (exIPCException.get_error_code() == interprocess::already_exists_error)
+        if (ex.get_error_code() == interprocess::already_exists_error)
         {
             // try a recovery to fix #956 and pass our message queue name
             if (ipcRecover("BitcoinURL") && !fInitCalledAfterRecovery)
@@ -137,8 +137,8 @@ void ipcInit(bool fInitCalledAfterRecovery)
 #endif
         return;
     }
-    if (!CreateThread(ipcThread, mqMessageQueue))
+    if (!CreateThread(ipcThread, mq))
     {
-        delete mqMessageQueue;
+        delete mq;
     }
 }
