@@ -231,8 +231,8 @@ FORMS += src/qt/forms/qrcodedialog.ui
 
 contains(BITCOIN_QT_TEST, 1) {
 SOURCES += src/qt/test/test_main.cpp \
-    src/qt/test/urltests.cpp
-HEADERS += src/qt/test/urltests.h
+    src/qt/test/uritests.cpp
+HEADERS += src/qt/test/uritests.h
 DEPENDPATH += src/qt/test
 QT += testlib
 TARGET = bitcoin-qt_test

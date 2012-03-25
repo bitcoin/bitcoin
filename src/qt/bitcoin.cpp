@@ -81,7 +81,7 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindo
     return payFee;
 }
 
-void ThreadSafeHandleURL(const std::string& strURL)
+void ThreadSafeHandleURI(const std::string& strURI)
 {
     if(!guiref)
         return;
@@ -93,8 +93,8 @@ void ThreadSafeHandleURL(const std::string& strURL)
     {
         connectionType = Qt::BlockingQueuedConnection;
     }
-    QMetaObject::invokeMethod(guiref, "handleURL", connectionType,
-                               Q_ARG(QString, QString::fromStdString(strURL)));
+    QMetaObject::invokeMethod(guiref, "handleURI", connectionType,
+                               Q_ARG(QString, QString::fromStdString(strURI)));
 }
 
 void CalledSetStatusBar(const std::string& strText, int nField)
@@ -141,10 +141,10 @@ int main(int argc, char *argv[])
     {
         if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
         {
-            const char *strURL = argv[i];
+            const char *strURI = argv[i];
             try {
-                boost::interprocess::message_queue mq(boost::interprocess::open_only, "BitcoinURL");
-                if(mq.try_send(strURL, strlen(strURL), 0))
+                boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
+                if(mq.try_send(strURI, strlen(strURI), 0))
                     exit(0);
                 else
                     break;
@@ -254,21 +254,21 @@ int main(int argc, char *argv[])
                     window.show();
                 }
 
-                // Place this here as guiref has to be defined if we dont want to lose URLs
+                // Place this here as guiref has to be defined if we dont want to lose URIs
                 ipcInit();
 
 #if !defined(MAC_OSX) && !defined(WIN32)
 // TODO: implement qtipcserver.cpp for Mac and Windows
 
-                // Check for URL in argv
+                // Check for URI in argv
                 for (int i = 1; i < argc; i++)
                 {
                     if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
                     {
-                        const char *strURL = argv[i];
+                        const char *strURI = argv[i];
                         try {
-                            boost::interprocess::message_queue mq(boost::interprocess::open_only, "BitcoinURL");
-                            mq.try_send(strURL, strlen(strURL), 0);
+                            boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
+                            mq.try_send(strURI, strlen(strURI), 0);
                         }
                         catch (boost::interprocess::interprocess_exception &ex) {
                         }
