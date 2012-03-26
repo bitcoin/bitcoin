@@ -8,7 +8,7 @@
 #include "crypter.h"
 #include "script.h"
 
-// A virtual base class for key stores
+/** A virtual base class for key stores */
 class CKeyStore
 {
 protected:
@@ -42,7 +42,7 @@ public:
 typedef std::map<CBitcoinAddress, std::pair<CSecret, bool> > KeyMap;
 typedef std::map<uint160, CScript > ScriptMap;
 
-// Basic key store, that keeps keys in an address->secret map
+/** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
 {
 protected:
@@ -92,8 +92,9 @@ public:
 
 typedef std::map<CBitcoinAddress, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;
 
-// Keystore which keeps the private keys encrypted
-// It derives from the basic key store, which is used if no encryption is active.
+/** Keystore which keeps the private keys encrypted.
+ * It derives from the basic key store, which is used if no encryption is active.
+ */
 class CCryptoKeyStore : public CBasicKeyStore
 {
 private:

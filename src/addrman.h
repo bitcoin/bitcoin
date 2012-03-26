@@ -15,7 +15,7 @@
 #include <openssl/rand.h>
 
 
-// Extended statistics about a CAddress
+/** Extended statistics about a CAddress */
 class CAddrInfo : public CAddress
 {
 private:
@@ -160,6 +160,7 @@ public:
 // the maximum number of nodes to return in a getaddr call
 #define ADDRMAN_GETADDR_MAX 2500
 
+/** Stochastical (IP) address manager */
 class CAddrMan
 {
 private:

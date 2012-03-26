@@ -11,6 +11,7 @@
 
 #include "util.h"
 
+/** Errors thrown by the bignum class */
 class bignum_error : public std::runtime_error
 {
 public:
@@ -18,7 +19,7 @@ public:
 };
 
 
-
+/** RAII encapsulated BN_CTX (OpenSSL bignum context) */
 class CAutoBN_CTX
 {
 protected:
@@ -46,7 +47,7 @@ public:
 };
 
 
-
+/** C++ wrapper for BIGNUM (OpenSSl bignum) */
 class CBigNum : public BIGNUM
 {
 public:
