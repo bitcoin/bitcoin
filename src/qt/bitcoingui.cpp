@@ -733,6 +733,11 @@ void BitcoinGUI::handleURL(QString strURL)
 {
     gotoSendCoinsPage();
     sendCoinsPage->handleURL(strURL);
+
+    if(!isActiveWindow())
+        activateWindow();
+
+    showNormalIfMinimized();
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)
