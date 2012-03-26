@@ -69,7 +69,7 @@ public:
 };
 
 
-
+/** Thread types */
 enum threadId
 {
     THREAD_SOCKETHANDLER,
@@ -105,7 +105,7 @@ extern std::map<CInv, int64> mapAlreadyAskedFor;
 
 
 
-
+/** Information about a peer */
 class CNode
 {
 public:
