@@ -12,6 +12,7 @@ class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
 class MessagePage;
+class CoinControlPage;
 class Notificator;
 
 QT_BEGIN_NAMESPACE
@@ -64,6 +65,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     MessagePage *messagePage;
+    CoinControlPage *coinControlPage;
 
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
@@ -87,6 +89,7 @@ private:
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *aboutQtAction;
+    QAction *coinControlAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
@@ -104,6 +107,9 @@ private:
     void createTrayIcon();
 
 public slots:
+    /** Switch to send coins page */
+    void gotoSendCoinsPage();
+
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
@@ -141,8 +147,8 @@ private slots:
     void gotoAddressBookPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
-    /** Switch to send coins page */
-    void gotoSendCoinsPage();
+    /** Switch to coin control page */
+    void gotoCoinControlPage();
 
     /** Show configuration dialog */
     void optionsClicked();
@@ -168,6 +174,7 @@ private slots:
 
     /** Show window if hidden, unminimize when minimized */
     void showNormalIfMinimized();
+    void toggleCoinControlTab(bool);
 };
 
 #endif
