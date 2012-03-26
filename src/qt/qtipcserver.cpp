@@ -48,6 +48,12 @@ void ipcInit()
     // TODO: implement bitcoin: URI handling the Mac Way
     return;
 #endif
+#ifdef WIN32
+    // TODO: THOROUGHLY test boost::interprocess fix,
+    // and make sure there are no Windows argument-handling exploitable
+    // problems.
+    return;
+#endif
 
     message_queue* mq;
     char strBuf[257];
