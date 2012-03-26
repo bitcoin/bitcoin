@@ -70,6 +70,8 @@ extern unsigned char pchMessageStart[4];
 
 // Settings
 extern int64 nTransactionFee;
+extern int64 nMinFeeBase;
+extern int64 nMinFeePer;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
@@ -581,6 +583,14 @@ public:
 
         if (!MoneyRange(nMinFee))
             nMinFee = MAX_MONEY;
+
+        if (mode == GMF_BLOCK)
+        {
+            int64 nAltMinFee = (1 + ((int64)nBytes / nMinFeePer)) * nMinFeeBase;
+            if (nAltMinFee > nMinFee)
+                nMinFee = nAltMinFee;
+        }
+
         return nMinFee;
     }
 

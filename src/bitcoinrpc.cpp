@@ -568,6 +568,8 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("genproclimit",  (int)GetArg("-genproclimit", -1)));
     obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
     obj.push_back(Pair("pooledtx",      (uint64_t)mempool.size()));
+    obj.push_back(Pair("minfee",        ValueFromAmount(nMinFeeBase)));
+    obj.push_back(Pair("minfeeper",     (uint64_t)nMinFeePer));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
 }
@@ -2000,6 +2002,32 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+Value setminfee(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setminfee <amount> [per-bytes]\n"
+            "Sets the minimum transaction fee required to accept into mined blocks.\n"
+            "<amount> is a real and is rounded to the nearest 0.00000001\n"
+            "[per-bytes] is the number of bytes allowed before <amount> is added again\n");
+
+    // Amount
+    int64 nAmount = 0;
+    if (params[0].get_real() != 0.0)
+        nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
+
+    if (params.size() > 1)
+    {
+        int64 nPer = params[1].get_int64();
+        if (nPer < 1)
+            throw JSONRPCError(-3, "Minimum transaction fee per bytes must be positive");
+        nMinFeePer = nPer;
+    }
+
+    nMinFeeBase = nAmount;
+    return true;
+}
+
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -2320,6 +2348,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listtransactions",       &listtransactions,       false },
     { "signmessage",            &signmessage,            false },
     { "verifymessage",          &verifymessage,          false },
+    { "setminfee",              &setminfee,              true },
     { "getwork",                &getwork,                true },
     { "listaccounts",           &listaccounts,           false },
     { "settxfee",               &settxfee,               false },
@@ -2968,6 +2997,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     //
     if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "setminfee"              && n > 0) ConvertTo<double>(params[0]);
+    if (strMethod == "setminfee"              && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
     if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
