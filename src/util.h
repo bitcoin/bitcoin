@@ -179,7 +179,7 @@ void AddTimeData(const CNetAddr& ip, int64 nTime);
 
 
 
-// Wrapper to automatically initialize mutex
+/** Wrapper to automatically initialize mutex. */
 class CCriticalSection
 {
 protected:
@@ -192,7 +192,7 @@ public:
     bool TryEnter(const char* pszName, const char* pszFile, int nLine);
 };
 
-// Automatically leave critical section when leaving block, needed for exception safety
+/** RAII object that acquires mutex. Needed for exception safety. */
 class CCriticalBlock
 {
 protected:
@@ -225,6 +225,7 @@ public:
 #define LEAVE_CRITICAL_SECTION(cs) \
     (cs).Leave()
 
+/** RAII object that tries to acquire mutex. Needed for exception safety. */
 class CTryCriticalBlock
 {
 protected:
@@ -523,8 +524,9 @@ inline uint160 Hash160(const std::vector<unsigned char>& vch)
 }
 
 
-// Median filter over a stream of values
-// Returns the median of the last N numbers
+/** Median filter over a stream of values. 
+ * Returns the median of the last N numbers
+ */
 template <typename T> class CMedianFilter
 {
 private:

@@ -30,7 +30,7 @@
 extern int nConnectTimeout;
 
 
-// IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96))
+/** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
 {
     protected:
@@ -81,6 +81,7 @@ class CNetAddr
             )
 };
 
+/** A combnation of a network address (CNetAddr) and a (TCP) port */
 class CService : public CNetAddr
 {
     protected:

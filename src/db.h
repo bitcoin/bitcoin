@@ -34,7 +34,7 @@ void ThreadFlushWalletDB(void* parg);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 
 
-
+/** RAII class that provides access to a Berkeley database */
 class CDB
 {
 protected:
@@ -266,7 +266,7 @@ public:
 
 
 
-
+/** Access to the transaction database (blkindex.dat) */
 class CTxDB : public CDB
 {
 public:
@@ -297,7 +297,7 @@ public:
 
 
 
-
+/** Access to the (IP) address database (addr.dat) */
 class CAddrDB : public CDB
 {
 public:
@@ -315,7 +315,7 @@ public:
 bool LoadAddresses();
 
 
-
+/** A key pool entry */
 class CKeyPool
 {
 public:
@@ -344,7 +344,7 @@ public:
 
 
 
-
+/** Error statuses for the wallet database */
 enum DBErrors
 {
     DB_LOAD_OK,
@@ -354,6 +354,7 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
+/** Access to the wallet database (wallet.dat) */
 class CWalletDB : public CDB
 {
 public:

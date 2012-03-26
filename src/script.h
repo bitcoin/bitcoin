@@ -15,6 +15,7 @@
 class CTransaction;
 class CKeyStore;
 
+/** Signature hash types/flags */
 enum
 {
     SIGHASH_ALL = 1,
@@ -36,6 +37,7 @@ enum txnouttype
 
 const char* GetTxnOutputType(txnouttype t);
 
+/** Script opcodes */
 enum opcodetype
 {
     // push value
@@ -212,7 +214,7 @@ inline std::string StackString(const std::vector<std::vector<unsigned char> >& v
 
 
 
-
+/** Serialized script, used inside transaction inputs and outputs */
 class CScript : public std::vector<unsigned char>
 {
 protected:

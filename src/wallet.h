@@ -14,6 +14,7 @@ class CWalletTx;
 class CReserveKey;
 class CWalletDB;
 
+/** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
     FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
@@ -24,9 +25,9 @@ enum WalletFeature
     FEATURE_LATEST = 60000
 };
 
-// A CWallet is an extension of a keystore, which also maintains a set of
-// transactions and balances, and provides the ability to create new
-// transactions
+/** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
+ * and provides the ability to create new transactions.
+ */
 class CWallet : public CCryptoKeyStore
 {
 private:
@@ -245,7 +246,7 @@ public:
     int GetVersion() { return nWalletVersion; }
 };
 
-
+/** A key allocated from the key pool. */
 class CReserveKey
 {
 protected:
@@ -271,11 +272,9 @@ public:
 };
 
 
-//
-// A transaction with a bunch of additional info that only the owner cares
-// about.  It includes any unrecorded transactions needed to link it back
-// to the block chain.
-//
+/** A transaction with a bunch of additional info that only the owner cares about. 
+ * It includes any unrecorded transactions needed to link it back to the block chain.
+ */
 class CWalletTx : public CMerkleTx
 {
 private:
@@ -580,9 +579,7 @@ public:
 };
 
 
-//
-// Private key that includes an expiration date in case it never gets used.
-//
+/** Private key that includes an expiration date in case it never gets used. */
 class CWalletKey
 {
 public:
@@ -615,10 +612,9 @@ public:
 
 
 
-//
-// Account information.
-// Stored in wallet with key "acc"+string account name
-//
+/** Account information.
+ * Stored in wallet with key "acc"+string account name.
+ */
 class CAccount
 {
 public:
@@ -644,10 +640,9 @@ public:
 
 
 
-//
-// Internal transfers.
-// Database key is acentry<account><counter>
-//
+/** Internal transfers.
+ * Database key is acentry<account><counter>.
+ */
 class CAccountingEntry
 {
 public:
