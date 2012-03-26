@@ -767,17 +767,6 @@ void PrintException(std::exception* pex, const char* pszThread)
     throw;
 }
 
-void ThreadOneMessageBox(string strMessage)
-{
-    // Skip message boxes if one is already open
-    static bool fMessageBoxOpen;
-    if (fMessageBoxOpen)
-        return;
-    fMessageBoxOpen = true;
-    ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
-    fMessageBoxOpen = false;
-}
-
 void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 {
     char pszMessage[10000];
