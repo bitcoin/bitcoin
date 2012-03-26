@@ -10,10 +10,9 @@
 class uint256;
 class CBlockIndex;
 
-//
-// Block-chain checkpoints are compiled-in sanity checks.
-// They are updated every release or three.
-//
+/** Block-chain checkpoints are compiled-in sanity checks.
+ * They are updated every release or three.
+ */
 namespace Checkpoints
 {
     // Returns true if block passes checkpoint checks
