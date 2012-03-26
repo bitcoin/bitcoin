@@ -306,10 +306,8 @@ private:
     CAddrDB(const CAddrDB&);
     void operator=(const CAddrDB&);
 public:
-    bool WriteAddress(const CAddress& addr);
-    bool EraseAddress(const CAddress& addr);
     bool WriteAddrman(const CAddrMan& addr);
-    bool LoadAddresses(bool &fUpdate);
+    bool LoadAddresses();
 };
 
 bool LoadAddresses();
