@@ -845,7 +845,32 @@ int64 CWallet::GetUnconfirmedBalance() const
     return nTotal;
 }
 
-bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
+// populate vCoins with vector of spendable (age, (value, (transaction, output_number))) outputs
+void CWallet::AvailableCoins(vector<COutput>& vCoins) const
+{
+    vCoins.clear();
+
+    CRITICAL_BLOCK(cs_wallet)
+    {
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
+
+            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+                continue;
+
+            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+                continue;
+
+            for (int i = 0; i < pcoin->vout.size(); i++)
+                if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0)
+                    vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
+        }
+    }
+}
+
+bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, vector<COutput> vCoins,
+                                 set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -857,54 +882,32 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
     vector<pair<int64, pair<const CWalletTx*,unsigned int> > > vValue;
     int64 nTotalLower = 0;
 
-    CRITICAL_BLOCK(cs_wallet)
+    BOOST_FOREACH(COutput output, vCoins)
     {
-       vector<const CWalletTx*> vCoins;
-       vCoins.reserve(mapWallet.size());
-       for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-           vCoins.push_back(&(*it).second);
-       random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+        const CWalletTx *pcoin = output.tx;
 
-       BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
-       {
-            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
-                continue;
+        if (output.nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
+            continue;
 
-            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
-                continue;
+        int i = output.i;
+        int64 n = pcoin->vout[i].nValue;
 
-            int nDepth = pcoin->GetDepthInMainChain();
-            if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
-                continue;
+        pair<int64,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
 
-            for (int i = 0; i < pcoin->vout.size(); i++)
-            {
-                if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
-                    continue;
-
-                int64 n = pcoin->vout[i].nValue;
-
-                if (n <= 0)
-                    continue;
-
-                pair<int64,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin,i));
-
-                if (n == nTargetValue)
-                {
-                    setCoinsRet.insert(coin.second);
-                    nValueRet += coin.first;
-                    return true;
-                }
-                else if (n < nTargetValue + CENT)
-                {
-                    vValue.push_back(coin);
-                    nTotalLower += n;
-                }
-                else if (n < coinLowestLarger.first)
-                {
-                    coinLowestLarger = coin;
-                }
-            }
+        if (n == nTargetValue)
+        {
+            setCoinsRet.insert(coin.second);
+            nValueRet += coin.first;
+            return true;
+        }
+        else if (n < nTargetValue + CENT)
+        {
+            vValue.push_back(coin);
+            nTotalLower += n;
+        }
+        else if (n < coinLowestLarger.first)
+        {
+            coinLowestLarger = coin;
         }
     }
 
@@ -979,12 +982,14 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
                 nValueRet += vValue[i].first;
             }
 
+#ifdef DEBUG
         //// debug print
         printf("SelectCoins() best subset: ");
         for (int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
                 printf("%s ", FormatMoney(vValue[i].first).c_str());
         printf("total %s\n", FormatMoney(nBest).c_str());
+#endif
     }
 
     return true;
@@ -992,9 +997,12 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
 
 bool CWallet::SelectCoins(int64 nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 {
-    return (SelectCoinsMinConf(nTargetValue, 1, 6, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue, 1, 1, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue, 0, 1, setCoinsRet, nValueRet));
+    vector<COutput> vCoins;
+    AvailableCoins(vCoins);
+
+    return (SelectCoinsMinConf(nTargetValue, 1, 6, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue, 1, 1, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet));
 }
 
 

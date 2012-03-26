@@ -13,6 +13,7 @@
 class CWalletTx;
 class CReserveKey;
 class CWalletDB;
+class COutput;
 
 // A CWallet is an extension of a keystore, which also maintains a set of
 // transactions and balances, and provides the ability to create new
@@ -20,7 +21,7 @@ class CWalletDB;
 class CWallet : public CCryptoKeyStore
 {
 private:
-    bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
+    void AvailableCoins(std::vector<COutput>& vCoins) const;
     bool SelectCoins(int64 nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     CWalletDB *pwalletdbEncryption;
@@ -64,6 +65,8 @@ public:
     std::map<CBitcoinAddress, std::string> mapAddressBook;
 
     std::vector<unsigned char> vchDefaultKey;
+
+    bool SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     // keystore implementation
     // Generate a new key
@@ -552,6 +555,34 @@ public:
     void RelayWalletTransaction(CTxDB& txdb);
     void RelayWalletTransaction();
 };
+
+
+
+
+class COutput
+{
+public:
+    const CWalletTx *tx;
+    int i;
+    int nDepth;
+
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn)
+    {
+        tx = txIn; i = iIn; nDepth = nDepthIn;
+    }
+
+    std::string ToString() const
+    {
+        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString().substr(0,10).c_str(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
 
 
 //
