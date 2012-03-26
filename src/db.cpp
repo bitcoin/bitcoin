@@ -714,22 +714,12 @@ bool CTxDB::LoadBlockIndex()
 // CAddrDB
 //
 
-bool CAddrDB::WriteAddress(const CAddress& addr)
-{
-    return Write(make_pair(string("addr"), addr.GetKey()), addr);
-}
-
 bool CAddrDB::WriteAddrman(const CAddrMan& addrman)
 {
     return Write(string("addrman"), addrman);
 }
 
-bool CAddrDB::EraseAddress(const CAddress& addr)
-{
-    return Erase(make_pair(string("addr"), addr.GetKey()));
-}
-
-bool CAddrDB::LoadAddresses(bool &fUpdate)
+bool CAddrDB::LoadAddresses()
 {
     bool fAddrMan = false;
     if (Read(string("addrman"), addrman))
@@ -739,6 +729,7 @@ bool CAddrDB::LoadAddresses(bool &fUpdate)
     }
 
     vector<CAddress> vAddr;
+    vector<vector<unsigned char> > vDelete;
 
     // Get cursor
     Dbc* pcursor = GetCursor();
@@ -762,7 +753,11 @@ bool CAddrDB::LoadAddresses(bool &fUpdate)
         if (strType == "addr")
         {
             if (fAddrMan)
-                fUpdate = true;
+            {
+                vector<unsigned char> vchKey;
+                ssKey >> vchKey;
+                vDelete.push_back(vchKey);
+            }
             else
             {
                 CAddress addr;
@@ -773,6 +768,9 @@ bool CAddrDB::LoadAddresses(bool &fUpdate)
         }
     }
     pcursor->close();
+
+    BOOST_FOREACH(const vector<unsigned char> &vchKey, vDelete)
+        Erase(make_pair(string("addr"), vchKey));
 
     if (!fAddrMan)
     {
@@ -785,11 +783,7 @@ bool CAddrDB::LoadAddresses(bool &fUpdate)
 
 bool LoadAddresses()
 {
-    bool fUpdate = false;
-    bool fRet = CAddrDB("cr+").LoadAddresses(fUpdate);
-    if (fUpdate)
-        CDB::Rewrite("addr.dat", "\004addr");
-    return fRet;
+    return CAddrDB("cr+").LoadAddresses();
 }
 
 
