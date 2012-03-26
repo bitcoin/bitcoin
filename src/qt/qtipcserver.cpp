@@ -17,7 +17,7 @@ using namespace std;
 
 void ipcShutdown()
 {
-    interprocess::message_queue::remove("BitcoinURL");
+    interprocess::message_queue::remove(BCQT_MESSAGE_QUEUE_NAME);
 }
 
 bool ipcRecover(const char* pszFilename)
@@ -25,7 +25,7 @@ bool ipcRecover(const char* pszFilename)
     string strLogMessage = ("ipcRecover - possible stale message queue detected, trying to remove");
 
     // try to remove the possible stale message queue
-    if (interprocess::message_queue::remove("BitcoinURL"))
+    if (interprocess::message_queue::remove(BCQT_MESSAGE_QUEUE_NAME))
     {
         printf("%s %s ...success\n", strLogMessage.c_str(), pszFilename);
         return true;
@@ -79,9 +79,9 @@ void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
     unsigned int nPriority;
     try {
         if (fUseMQModeCreateOnly)
-            mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+            mq = new interprocess::message_queue(interprocess::create_only, BCQT_MESSAGE_QUEUE_NAME, 2, 256);
         else
-            mq = new interprocess::message_queue(interprocess::open_or_create, "BitcoinURL", 2, 256);
+            mq = new interprocess::message_queue(interprocess::open_or_create, BCQT_MESSAGE_QUEUE_NAME, 2, 256);
 
         // Make sure we don't lose any bitcoin: URIs
         for (int i = 0; i < 2; i++)
@@ -96,11 +96,11 @@ void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
         }
 
         // Make sure only one bitcoin instance is listening
-        interprocess::message_queue::remove("BitcoinURL");
+        interprocess::message_queue::remove(BCQT_MESSAGE_QUEUE_NAME);
         if (fUseMQModeCreateOnly)
-            mq = new interprocess::message_queue(interprocess::create_only, "BitcoinURL", 2, 256);
+            mq = new interprocess::message_queue(interprocess::create_only, BCQT_MESSAGE_QUEUE_NAME, 2, 256);
         else
-            mq = new interprocess::message_queue(interprocess::open_or_create, "BitcoinURL", 2, 256);
+            mq = new interprocess::message_queue(interprocess::open_or_create, BCQT_MESSAGE_QUEUE_NAME, 2, 256);
     }
     catch (interprocess::interprocess_exception &ex) {
 // we currently only handle stale message queue files on Windows
@@ -111,7 +111,7 @@ void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
         if (ex.get_error_code() == interprocess::already_exists_error)
         {
             // try a recovery and pass our message queue name
-            if (ipcRecover("BitcoinURL") && !fInitCalledAfterRecovery)
+            if (ipcRecover(BCQT_MESSAGE_QUEUE_NAME) && !fInitCalledAfterRecovery)
                 // try init once more (true - create_only mode / true - avoid an infinite recursion)
                 // create_only: stale message queue removed, create a new message queue
                 ipcInit(true, true);

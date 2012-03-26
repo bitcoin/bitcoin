@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
         {
             const char *strURL = argv[i];
             try {
-                interprocess::message_queue mq(interprocess::open_only, "BitcoinURL");
+                interprocess::message_queue mq(interprocess::open_only, BCQT_MESSAGE_QUEUE_NAME);
                 if(mq.try_send(strURL, strlen(strURL), 0))
                     exit(0);
                 else
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
                     {
                         const char *strURL = argv[i];
                         try {
-                            interprocess::message_queue mq(interprocess::open_only, "BitcoinURL");
+                            interprocess::message_queue mq(interprocess::open_only, BCQT_MESSAGE_QUEUE_NAME);
                             mq.try_send(strURL, strlen(strURL), 0);
                         }
                         catch (interprocess::interprocess_exception &ex) {
