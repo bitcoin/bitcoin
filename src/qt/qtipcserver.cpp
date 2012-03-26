@@ -10,6 +10,7 @@
 #include <boost/tokenizer.hpp>
 
 #include "headers.h"
+#include "qtipcserver.h"
 
 using namespace boost;
 using namespace std;
@@ -21,50 +22,7 @@ void ipcShutdown()
 
 bool ipcRecover(const char* pszFilename)
 {
-    std::string strIpcDir;
-    // get path to possible stale ipc message queue file
-#if BOOST_VERSION <= 104700
-    interprocess::detail::tmp_filename(pszFilename, strIpcDir);
-#elif BOOST_VERSION >= 104800
-    interprocess::ipcdetail::tmp_filename(pszFilename, strIpcDir);
-#endif
-
-    filesystem::path pathMessageQueue(strIpcDir);
-    pathMessageQueue.make_preferred();
-
-    // verify that the message queue file exists and try to remove it
-    if (exists(pathMessageQueue))
-    {
-        string strLogMessage = ("ipcRecover - possible stale message queue detected, trying to remove " + pathMessageQueue.string());
-        system::error_code ecErrorCode;
-
-        // try removal
-        if (remove(pathMessageQueue, ecErrorCode))
-        {
-            printf("%s ...success\n", strLogMessage.c_str());
-            return true;
-        }
-        // if the file is locked (which is NOT the case after a hard crash, but if another Bitcoin-Qt instance is running)
-        else if (ecErrorCode.value() == system::errc::broken_pipe)
-        {
-            // make clear in debug.log, that we have no "bad" situation
-            printf("%s ...unneeded\n", strLogMessage.c_str());
-            // return false, to not re-try init again
-            return false;
-        }
-        else
-        {
-            printf("%s ...failed\nipcRecover - removal of old message queue failed with error #%d: %s\n", strLogMessage.c_str(), ecErrorCode.value(), ecErrorCode.message().c_str());
-            return false;
-        }
-    }
-    else
-        return false;
-}
-
-bool ipcRecover2(const char* pszFilename)
-{
-    string strLogMessage = ("ipcRecover2 - possible stale message queue detected, trying to remove");
+    string strLogMessage = ("ipcRecover - possible stale message queue detected, trying to remove");
 
     // try to remove the possible stale message queue
     if (interprocess::message_queue::remove("BitcoinURL"))
@@ -145,15 +103,15 @@ void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
             mq = new interprocess::message_queue(interprocess::open_or_create, "BitcoinURL", 2, 256);
     }
     catch (interprocess::interprocess_exception &ex) {
-// we currently only handle the Windows-specific case from #956
+// we currently only handle stale message queue files on Windows
 #ifdef WIN32
         printf("ipcInit    - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
 
         // check if the exception is a "file already exists" error
         if (ex.get_error_code() == interprocess::already_exists_error)
         {
-            // try a recovery to fix #956 and pass our message queue name
-            if (ipcRecover2("BitcoinURL") && !fInitCalledAfterRecovery)
+            // try a recovery and pass our message queue name
+            if (ipcRecover("BitcoinURL") && !fInitCalledAfterRecovery)
                 // try init once more (true - create_only mode / true - avoid an infinite recursion)
                 // create_only: stale message queue removed, create a new message queue
                 ipcInit(true, true);
