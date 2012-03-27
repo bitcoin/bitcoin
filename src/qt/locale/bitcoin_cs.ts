@@ -93,42 +93,42 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <translation>S&amp;maž</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="62"/>
+        <location filename="../addressbookpage.cpp" line="61"/>
         <source>Copy address</source>
         <translation>Kopíruj adresu</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="63"/>
+        <location filename="../addressbookpage.cpp" line="62"/>
         <source>Copy label</source>
         <translation>Kopíruj označení</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="64"/>
+        <location filename="../addressbookpage.cpp" line="63"/>
         <source>Edit</source>
         <translation>Uprav</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="65"/>
+        <location filename="../addressbookpage.cpp" line="64"/>
         <source>Delete</source>
         <translation>Smaž</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="282"/>
+        <location filename="../addressbookpage.cpp" line="281"/>
         <source>Export Address Book Data</source>
         <translation>Exportuj data adresáře</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="284"/>
+        <location filename="../addressbookpage.cpp" line="282"/>
         <source>Comma separated file (*.csv)</source>
         <translation>CSV formát (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="297"/>
+        <location filename="../addressbookpage.cpp" line="295"/>
         <source>Error exporting</source>
         <translation>Chyba při exportu</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="297"/>
+        <location filename="../addressbookpage.cpp" line="295"/>
         <source>Could not write to file %1.</source>
         <translation>Nemohu zapisovat do souboru %1.</translation>
     </message>
@@ -293,268 +293,278 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="66"/>
+        <location filename="../bitcoingui.cpp" line="69"/>
         <source>Bitcoin Wallet</source>
         <translation>Bitcoinová peněženka</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="139"/>
-        <location filename="../bitcoingui.cpp" line="455"/>
+        <location filename="../bitcoingui.cpp" line="142"/>
+        <location filename="../bitcoingui.cpp" line="464"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizuji se sítí...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="142"/>
+        <location filename="../bitcoingui.cpp" line="145"/>
         <source>Block chain synchronization in progress</source>
         <translation>Provádí se synchronizace řetězce bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="171"/>
+        <location filename="../bitcoingui.cpp" line="176"/>
         <source>&amp;Overview</source>
         <translation>&amp;Přehled</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="172"/>
+        <location filename="../bitcoingui.cpp" line="177"/>
         <source>Show general overview of wallet</source>
         <translation>Zobraz celkový přehled peněženky</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="177"/>
+        <location filename="../bitcoingui.cpp" line="182"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Transakce</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="178"/>
+        <location filename="../bitcoingui.cpp" line="183"/>
         <source>Browse transaction history</source>
         <translation>Procházet historii transakcí</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="183"/>
+        <location filename="../bitcoingui.cpp" line="188"/>
         <source>&amp;Address Book</source>
         <translation>&amp;Adresář</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="184"/>
+        <location filename="../bitcoingui.cpp" line="189"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Uprav seznam uložených adres a jejich označení</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="189"/>
+        <location filename="../bitcoingui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
         <translation>Pří&amp;jem mincí</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="190"/>
+        <location filename="../bitcoingui.cpp" line="195"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Zobraz seznam adres pro příjem plateb</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="195"/>
+        <location filename="../bitcoingui.cpp" line="200"/>
         <source>&amp;Send coins</source>
         <translation>P&amp;oslání mincí</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="196"/>
+        <location filename="../bitcoingui.cpp" line="201"/>
         <source>Send coins to a bitcoin address</source>
         <translation>Pošli mince na Bitcoinovou adresu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="201"/>
+        <location filename="../bitcoingui.cpp" line="206"/>
         <source>Sign &amp;message</source>
-        <translation>Podepiš &amp;zprávu</translation>
+        <translation>Po&amp;depiš zprávu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="202"/>
+        <location filename="../bitcoingui.cpp" line="207"/>
         <source>Prove you control an address</source>
         <translation>Prokaž vlastnictví adresy</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="221"/>
+        <location filename="../bitcoingui.cpp" line="226"/>
         <source>E&amp;xit</source>
         <translation>&amp;Konec</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="222"/>
+        <location filename="../bitcoingui.cpp" line="227"/>
         <source>Quit application</source>
         <translation>Ukončit aplikaci</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="225"/>
+        <location filename="../bitcoingui.cpp" line="230"/>
         <source>&amp;About %1</source>
         <translation>&amp;O %1</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="226"/>
+        <location filename="../bitcoingui.cpp" line="231"/>
         <source>Show information about Bitcoin</source>
         <translation>Zobraz informace o Bitcoinu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="228"/>
+        <location filename="../bitcoingui.cpp" line="233"/>
         <source>About &amp;Qt</source>
         <translation>O &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="229"/>
+        <location filename="../bitcoingui.cpp" line="234"/>
         <source>Show information about Qt</source>
         <translation>Zobraz informace o Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="231"/>
+        <location filename="../bitcoingui.cpp" line="236"/>
         <source>&amp;Options...</source>
         <translation>&amp;Možnosti...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="232"/>
+        <location filename="../bitcoingui.cpp" line="237"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Uprav nastavení Bitcoinu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="239"/>
         <source>Open &amp;Bitcoin</source>
         <translation>Otevři &amp;Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="235"/>
+        <location filename="../bitcoingui.cpp" line="240"/>
         <source>Show the Bitcoin window</source>
         <translation>Zobraz okno Bitcoinu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
+        <location filename="../bitcoingui.cpp" line="241"/>
         <source>&amp;Export...</source>
         <translation>&amp;Export...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Export the current view to a file</source>
-        <translation>Exportovat aktuální pohled do souboru</translation>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportovat data z tohoto panelu do souboru</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="238"/>
+        <location filename="../bitcoingui.cpp" line="243"/>
         <source>&amp;Encrypt Wallet</source>
         <translation>Zaši&amp;fruj peněženku</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
+        <location filename="../bitcoingui.cpp" line="244"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Zašifruj nebo dešifruj peněženku</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
+        <location filename="../bitcoingui.cpp" line="246"/>
+        <source>&amp;Backup Wallet</source>
+        <translation>&amp;Zazálohovat peněženku</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="247"/>
+        <source>Backup wallet to another location</source>
+        <translation>Zazálohuj peněženku na jiné místo</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="248"/>
         <source>&amp;Change Passphrase</source>
         <translation>Změň &amp;heslo</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
+        <location filename="../bitcoingui.cpp" line="249"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Změň heslo k šifrování peněženky</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="264"/>
+        <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;File</source>
         <translation>&amp;Soubor</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="271"/>
+        <location filename="../bitcoingui.cpp" line="281"/>
         <source>&amp;Settings</source>
         <translation>&amp;Nastavení</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="277"/>
+        <location filename="../bitcoingui.cpp" line="287"/>
         <source>&amp;Help</source>
         <translation>Ná&amp;pověda</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="284"/>
+        <location filename="../bitcoingui.cpp" line="294"/>
         <source>Tabs toolbar</source>
         <translation>Panel s listy</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="295"/>
+        <location filename="../bitcoingui.cpp" line="305"/>
         <source>Actions toolbar</source>
         <translation>Panel akcí</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="307"/>
+        <location filename="../bitcoingui.cpp" line="317"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="397"/>
+        <location filename="../bitcoingui.cpp" line="407"/>
         <source>bitcoin-qt</source>
         <translation>bitcoin-qt</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="440"/>
+        <location filename="../bitcoingui.cpp" line="449"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n aktivní spojení do Bitcoinové sítě</numerusform><numerusform>%n aktivní spojení do Bitcoinové sítě</numerusform><numerusform>%n aktivních spojení do Bitcoinové sítě</numerusform></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="466"/>
+        <location filename="../bitcoingui.cpp" line="475"/>
         <source>Downloaded %1 of %2 blocks of transaction history.</source>
         <translation>Staženo %1 z %2 bloků transakční historie.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="478"/>
+        <location filename="../bitcoingui.cpp" line="487"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Staženo %1 bloků transakční historie.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="489"/>
+        <location filename="../bitcoingui.cpp" line="502"/>
         <source>%n second(s) ago</source>
         <translation><numerusform>před vteřinou</numerusform><numerusform>před %n vteřinami</numerusform><numerusform>před %n vteřinami</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="493"/>
+        <location filename="../bitcoingui.cpp" line="506"/>
         <source>%n minute(s) ago</source>
         <translation><numerusform>před minutou</numerusform><numerusform>před %n minutami</numerusform><numerusform>před %n minutami</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="497"/>
+        <location filename="../bitcoingui.cpp" line="510"/>
         <source>%n hour(s) ago</source>
         <translation><numerusform>před hodinou</numerusform><numerusform>před %n hodinami</numerusform><numerusform>před %n hodinami</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="501"/>
+        <location filename="../bitcoingui.cpp" line="514"/>
         <source>%n day(s) ago</source>
         <translation><numerusform>včera</numerusform><numerusform>před %n dny</numerusform><numerusform>před %n dny</numerusform></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="507"/>
+        <location filename="../bitcoingui.cpp" line="520"/>
         <source>Up to date</source>
         <translation>aktuální</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="512"/>
+        <location filename="../bitcoingui.cpp" line="525"/>
         <source>Catching up...</source>
         <translation>Stahuji...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="518"/>
+        <location filename="../bitcoingui.cpp" line="533"/>
         <source>Last received block was generated %1.</source>
         <translation>Poslední stažený blok byl vygenerován %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="585"/>
+        <location filename="../bitcoingui.cpp" line="597"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Tahle transakce přesahuje velikostní limit.  I tak ji ale můžeš poslat, pokud za ni zaplatíš poplatek %1, který půjde uzlům, které tvou transakci zpracují, a navíc tak podpoříš síť.  Chceš zaplatit poplatek?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="590"/>
+        <location filename="../bitcoingui.cpp" line="602"/>
         <source>Sending...</source>
         <translation>Posílám...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="617"/>
+        <location filename="../bitcoingui.cpp" line="629"/>
         <source>Sent transaction</source>
         <translation>Odeslané transakce</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="618"/>
+        <location filename="../bitcoingui.cpp" line="630"/>
         <source>Incoming transaction</source>
         <translation>Příchozí transakce</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="619"/>
+        <location filename="../bitcoingui.cpp" line="631"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -567,14 +577,34 @@ Adresa: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="740"/>
+        <location filename="../bitcoingui.cpp" line="751"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Peněženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálně &lt;b&gt;odemčená&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="748"/>
+        <location filename="../bitcoingui.cpp" line="759"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Peněženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálně &lt;b&gt;zamčená&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="782"/>
+        <source>Backup Wallet</source>
+        <translation>Záloha peněženky</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="782"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation>Data peněženky (*.dat)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="785"/>
+        <source>Backup Failed</source>
+        <translation>Zálohování selhalo</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="785"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation>Při ukládání peněženky na nové místo se přihodila nějaká chyba.</translation>
     </message>
 </context>
 <context>
@@ -760,7 +790,7 @@ Adresa: %4
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
-        <source>You can sign messages with your addresses to prove you own them. Be careful to only sign statement you agree to with full details, as phishing attacks may try to trick you into signing access to them.</source>
+        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Podepsáním zprávy svými adresami můžeš prokázat, že je skutečně vlastníš. Buď opatrný a nepodepisuj nic vágního; například při phishingových útocích můžeš být lákán, abys něco takového podepsal. Podepisuj pouze zcela úplná a detailní prohlášení, se kterými souhlasíš.</translation>
     </message>
     <message>
@@ -971,6 +1001,16 @@ p, li { white-space: pre-wrap; }
         <location filename="../forms/qrcodedialog.ui" line="183"/>
         <source>&amp;Save As...</source>
         <translation>&amp;Ulož jako...</translation>
+    </message>
+    <message>
+        <location filename="../qrcodedialog.cpp" line="101"/>
+        <source>Save Image...</source>
+        <translation>Ulož obrázek...</translation>
+    </message>
+    <message>
+        <location filename="../qrcodedialog.cpp" line="101"/>
+        <source>PNG Images (*.png)</source>
+        <translation>PNG obrázky (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1422,163 +1462,163 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="56"/>
-        <location filename="../transactionview.cpp" line="72"/>
+        <location filename="../transactionview.cpp" line="55"/>
+        <location filename="../transactionview.cpp" line="71"/>
         <source>All</source>
         <translation>Vše</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="57"/>
+        <location filename="../transactionview.cpp" line="56"/>
         <source>Today</source>
         <translation>Dnes</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="58"/>
+        <location filename="../transactionview.cpp" line="57"/>
         <source>This week</source>
         <translation>Tento týden</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="59"/>
+        <location filename="../transactionview.cpp" line="58"/>
         <source>This month</source>
         <translation>Tento měsíc</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="60"/>
+        <location filename="../transactionview.cpp" line="59"/>
         <source>Last month</source>
         <translation>Minulý měsíc</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="61"/>
+        <location filename="../transactionview.cpp" line="60"/>
         <source>This year</source>
         <translation>Letos</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="62"/>
+        <location filename="../transactionview.cpp" line="61"/>
         <source>Range...</source>
         <translation>Rozsah...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="73"/>
+        <location filename="../transactionview.cpp" line="72"/>
         <source>Received with</source>
         <translation>Přijato</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="75"/>
+        <location filename="../transactionview.cpp" line="74"/>
         <source>Sent to</source>
         <translation>Posláno</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="77"/>
+        <location filename="../transactionview.cpp" line="76"/>
         <source>To yourself</source>
         <translation>Sám sobě</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="78"/>
+        <location filename="../transactionview.cpp" line="77"/>
         <source>Mined</source>
         <translation>Vytěženo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="79"/>
+        <location filename="../transactionview.cpp" line="78"/>
         <source>Other</source>
         <translation>Ostatní</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Enter address or label to search</source>
         <translation>Zadej adresu nebo označení pro její vyhledání</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="90"/>
         <source>Min amount</source>
         <translation>Minimální částka</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="125"/>
+        <location filename="../transactionview.cpp" line="124"/>
         <source>Copy address</source>
         <translation>Kopíruj adresu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="126"/>
+        <location filename="../transactionview.cpp" line="125"/>
         <source>Copy label</source>
         <translation>Kopíruj její označení</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="127"/>
+        <location filename="../transactionview.cpp" line="126"/>
         <source>Copy amount</source>
         <translation>Kopíruj částku</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="128"/>
+        <location filename="../transactionview.cpp" line="127"/>
         <source>Edit label</source>
         <translation>Uprav označení</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="129"/>
+        <location filename="../transactionview.cpp" line="128"/>
         <source>Show details...</source>
         <translation>Zobraz detaily....</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="269"/>
+        <location filename="../transactionview.cpp" line="268"/>
         <source>Export Transaction Data</source>
         <translation>Exportuj transakční data</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="271"/>
+        <location filename="../transactionview.cpp" line="269"/>
         <source>Comma separated file (*.csv)</source>
         <translation>CSV formát (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="279"/>
+        <location filename="../transactionview.cpp" line="277"/>
         <source>Confirmed</source>
         <translation>Potvrzeno</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
+        <location filename="../transactionview.cpp" line="278"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="281"/>
+        <location filename="../transactionview.cpp" line="279"/>
         <source>Type</source>
         <translation>Typ</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="282"/>
+        <location filename="../transactionview.cpp" line="280"/>
         <source>Label</source>
         <translation>Označení</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="283"/>
+        <location filename="../transactionview.cpp" line="281"/>
         <source>Address</source>
         <translation>Adresa</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="284"/>
+        <location filename="../transactionview.cpp" line="282"/>
         <source>Amount</source>
         <translation>Částka</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="285"/>
+        <location filename="../transactionview.cpp" line="283"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="289"/>
+        <location filename="../transactionview.cpp" line="287"/>
         <source>Error exporting</source>
         <translation>Chyba při exportu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="289"/>
+        <location filename="../transactionview.cpp" line="287"/>
         <source>Could not write to file %1.</source>
         <translation>Nemohu zapisovat do souboru %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="384"/>
+        <location filename="../transactionview.cpp" line="382"/>
         <source>Range:</source>
         <translation>Rozsah:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="392"/>
+        <location filename="../transactionview.cpp" line="390"/>
         <source>to</source>
         <translation>až</translation>
     </message>
@@ -1586,7 +1626,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="144"/>
+        <location filename="../walletmodel.cpp" line="145"/>
         <source>Sending...</source>
         <translation>Posílám...</translation>
     </message>
@@ -1934,14 +1974,6 @@ Možnosti SSL: (viz instrukce nastavení SSL v Bitcoin Wiki)</translation>
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>beta</source>
         <translation>beta</translation>
-    </message>
-</context>
-<context>
-    <name>main</name>
-    <message>
-        <location filename="../bitcoin.cpp" line="188"/>
-        <source>Bitcoin-Qt</source>
-        <translation>Bitcoin-Qt</translation>
     </message>
 </context>
 </TS>

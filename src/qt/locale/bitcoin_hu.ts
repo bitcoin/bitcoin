@@ -87,42 +87,42 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Törlés</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="62"/>
+        <location filename="../addressbookpage.cpp" line="61"/>
         <source>Copy address</source>
         <translation>Cím másolása</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="63"/>
+        <location filename="../addressbookpage.cpp" line="62"/>
         <source>Copy label</source>
         <translation>Címke másolása</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="64"/>
+        <location filename="../addressbookpage.cpp" line="63"/>
         <source>Edit</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="65"/>
+        <location filename="../addressbookpage.cpp" line="64"/>
         <source>Delete</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="282"/>
+        <location filename="../addressbookpage.cpp" line="281"/>
         <source>Export Address Book Data</source>
         <translation>Címjegyzék adatainak exportálása</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="284"/>
+        <location filename="../addressbookpage.cpp" line="282"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Vesszővel elválasztott fájl (*. csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="297"/>
+        <location filename="../addressbookpage.cpp" line="295"/>
         <source>Error exporting</source>
         <translation>Hiba exportálás közben</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="297"/>
+        <location filename="../addressbookpage.cpp" line="295"/>
         <source>Could not write to file %1.</source>
         <translation>%1 nevű fájl nem írható.</translation>
     </message>
@@ -287,268 +287,278 @@ Biztosan kódolni akarod a tárcát?</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="66"/>
+        <location filename="../bitcoingui.cpp" line="69"/>
         <source>Bitcoin Wallet</source>
         <translation>Bitcoin-tárca</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="139"/>
-        <location filename="../bitcoingui.cpp" line="455"/>
+        <location filename="../bitcoingui.cpp" line="142"/>
+        <location filename="../bitcoingui.cpp" line="464"/>
         <source>Synchronizing with network...</source>
         <translation>Szinkronizálás a hálózattal...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="142"/>
+        <location filename="../bitcoingui.cpp" line="145"/>
         <source>Block chain synchronization in progress</source>
         <translation>Blokklánc-szinkronizálás folyamatban</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="171"/>
+        <location filename="../bitcoingui.cpp" line="176"/>
         <source>&amp;Overview</source>
         <translation>&amp;Áttekintés</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="172"/>
+        <location filename="../bitcoingui.cpp" line="177"/>
         <source>Show general overview of wallet</source>
         <translation>Tárca általános áttekintése</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="177"/>
+        <location filename="../bitcoingui.cpp" line="182"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Tranzakciók</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="178"/>
+        <location filename="../bitcoingui.cpp" line="183"/>
         <source>Browse transaction history</source>
         <translation>Tranzakciótörténet megtekintése</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="183"/>
+        <location filename="../bitcoingui.cpp" line="188"/>
         <source>&amp;Address Book</source>
         <translation>Cím&amp;jegyzék</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="184"/>
+        <location filename="../bitcoingui.cpp" line="189"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Tárolt címek és címkék listájának szerkesztése</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="189"/>
+        <location filename="../bitcoingui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
         <translation>Érmék &amp;fogadása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="190"/>
+        <location filename="../bitcoingui.cpp" line="195"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Kiizetést fogadó címek listája</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="195"/>
+        <location filename="../bitcoingui.cpp" line="200"/>
         <source>&amp;Send coins</source>
         <translation>Érmék &amp;küldése</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="196"/>
+        <location filename="../bitcoingui.cpp" line="201"/>
         <source>Send coins to a bitcoin address</source>
         <translation>Érmék küldése megadott címre</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="201"/>
+        <location filename="../bitcoingui.cpp" line="206"/>
         <source>Sign &amp;message</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="202"/>
+        <location filename="../bitcoingui.cpp" line="207"/>
         <source>Prove you control an address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="221"/>
+        <location filename="../bitcoingui.cpp" line="226"/>
         <source>E&amp;xit</source>
         <translation>&amp;Kilépés</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="222"/>
+        <location filename="../bitcoingui.cpp" line="227"/>
         <source>Quit application</source>
         <translation>Kilépés</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="225"/>
+        <location filename="../bitcoingui.cpp" line="230"/>
         <source>&amp;About %1</source>
         <translation>&amp;A %1-ról</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="226"/>
+        <location filename="../bitcoingui.cpp" line="231"/>
         <source>Show information about Bitcoin</source>
         <translation>Információk a Bitcoinról</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="228"/>
+        <location filename="../bitcoingui.cpp" line="233"/>
         <source>About &amp;Qt</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="229"/>
+        <location filename="../bitcoingui.cpp" line="234"/>
         <source>Show information about Qt</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="231"/>
+        <location filename="../bitcoingui.cpp" line="236"/>
         <source>&amp;Options...</source>
         <translation>&amp;Opciók...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="232"/>
+        <location filename="../bitcoingui.cpp" line="237"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Bitcoin konfigurációs opciók</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="239"/>
         <source>Open &amp;Bitcoin</source>
         <translation>A &amp;Bitcoin megnyitása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="235"/>
+        <location filename="../bitcoingui.cpp" line="240"/>
         <source>Show the Bitcoin window</source>
         <translation>A Bitcoin-ablak mutatása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
+        <location filename="../bitcoingui.cpp" line="241"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportálás...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Export the current view to a file</source>
-        <translation>Jelenlegi nézet exportálása fájlba</translation>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="238"/>
+        <location filename="../bitcoingui.cpp" line="243"/>
         <source>&amp;Encrypt Wallet</source>
         <translation>Tárca &amp;kódolása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
+        <location filename="../bitcoingui.cpp" line="244"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Tárca kódolása vagy dekódolása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
+        <location filename="../bitcoingui.cpp" line="246"/>
+        <source>&amp;Backup Wallet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="247"/>
+        <source>Backup wallet to another location</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="248"/>
         <source>&amp;Change Passphrase</source>
         <translation>Jelszó &amp;megváltoztatása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
+        <location filename="../bitcoingui.cpp" line="249"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Tárcakódoló jelszó megváltoztatása</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="264"/>
+        <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;File</source>
         <translation>&amp;Fájl</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="271"/>
+        <location filename="../bitcoingui.cpp" line="281"/>
         <source>&amp;Settings</source>
         <translation>&amp;Beállítások</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="277"/>
+        <location filename="../bitcoingui.cpp" line="287"/>
         <source>&amp;Help</source>
         <translation>&amp;Súgó</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="284"/>
+        <location filename="../bitcoingui.cpp" line="294"/>
         <source>Tabs toolbar</source>
         <translation>Fül eszköztár</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="295"/>
+        <location filename="../bitcoingui.cpp" line="305"/>
         <source>Actions toolbar</source>
         <translation>Parancsok eszköztár</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="307"/>
+        <location filename="../bitcoingui.cpp" line="317"/>
         <source>[testnet]</source>
         <translation>[teszthálózat]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="397"/>
+        <location filename="../bitcoingui.cpp" line="407"/>
         <source>bitcoin-qt</source>
         <translation>bitcoin-qt</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="440"/>
+        <location filename="../bitcoingui.cpp" line="449"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n aktív kapcsolat a Bitcoin-hálózattal</numerusform><numerusform>%n aktív kapcsolat a Bitcoin-hálózattal</numerusform></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="466"/>
+        <location filename="../bitcoingui.cpp" line="475"/>
         <source>Downloaded %1 of %2 blocks of transaction history.</source>
         <translation>%1 blokk letöltve a tranzakciótörténet %2 blokkjából.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="478"/>
+        <location filename="../bitcoingui.cpp" line="487"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>%1 blokk letöltve a tranzakciótörténetből.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="489"/>
+        <location filename="../bitcoingui.cpp" line="502"/>
         <source>%n second(s) ago</source>
         <translation><numerusform>%n másodperccel ezelőtt</numerusform><numerusform>%n másodperccel ezelőtt</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="493"/>
+        <location filename="../bitcoingui.cpp" line="506"/>
         <source>%n minute(s) ago</source>
         <translation><numerusform>%n perccel ezelőtt</numerusform><numerusform>%n perccel ezelőtt</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="497"/>
+        <location filename="../bitcoingui.cpp" line="510"/>
         <source>%n hour(s) ago</source>
         <translation><numerusform>%n órával ezelőtt</numerusform><numerusform>%n órával ezelőtt</numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="501"/>
+        <location filename="../bitcoingui.cpp" line="514"/>
         <source>%n day(s) ago</source>
         <translation><numerusform>%n nappal ezelőtt</numerusform><numerusform>%n nappal ezelőtt</numerusform></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="507"/>
+        <location filename="../bitcoingui.cpp" line="520"/>
         <source>Up to date</source>
         <translation>Naprakész</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="512"/>
+        <location filename="../bitcoingui.cpp" line="525"/>
         <source>Catching up...</source>
         <translation>Frissítés...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="518"/>
+        <location filename="../bitcoingui.cpp" line="533"/>
         <source>Last received block was generated %1.</source>
         <translation>Az utolsóként kapott blokk generálva: %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="585"/>
+        <location filename="../bitcoingui.cpp" line="597"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Ez a tranzakció túllépi a mérethatárt,  de %1 tranzakciós díj ellenében így is elküldheted. Ezt a plusz összeget a tranzakcióidat feldolgozó csomópontok kapják,  így magát a hálózatot támogatod vele. Hajlandó vagy megfizetni a díjat?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="590"/>
+        <location filename="../bitcoingui.cpp" line="602"/>
         <source>Sending...</source>
         <translation>Küldés...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="617"/>
+        <location filename="../bitcoingui.cpp" line="629"/>
         <source>Sent transaction</source>
         <translation>Tranzakció elküldve.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="618"/>
+        <location filename="../bitcoingui.cpp" line="630"/>
         <source>Incoming transaction</source>
         <translation>Beérkező tranzakció</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="619"/>
+        <location filename="../bitcoingui.cpp" line="631"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -561,14 +571,34 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="740"/>
+        <location filename="../bitcoingui.cpp" line="751"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;nyitva&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="748"/>
+        <location filename="../bitcoingui.cpp" line="759"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;zárva&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="782"/>
+        <source>Backup Wallet</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="782"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="785"/>
+        <source>Backup Failed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="785"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -754,7 +784,7 @@ Cím: %4
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
-        <source>You can sign messages with your addresses to prove you own them. Be careful to only sign statement you agree to with full details, as phishing attacks may try to trick you into signing access to them.</source>
+        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -964,6 +994,16 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/qrcodedialog.ui" line="183"/>
         <source>&amp;Save As...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../qrcodedialog.cpp" line="101"/>
+        <source>Save Image...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../qrcodedialog.cpp" line="101"/>
+        <source>PNG Images (*.png)</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -1417,163 +1457,163 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="56"/>
-        <location filename="../transactionview.cpp" line="72"/>
+        <location filename="../transactionview.cpp" line="55"/>
+        <location filename="../transactionview.cpp" line="71"/>
         <source>All</source>
         <translation>Mind</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="57"/>
+        <location filename="../transactionview.cpp" line="56"/>
         <source>Today</source>
         <translation>Mai</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="58"/>
+        <location filename="../transactionview.cpp" line="57"/>
         <source>This week</source>
         <translation>Ezen a héten</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="59"/>
+        <location filename="../transactionview.cpp" line="58"/>
         <source>This month</source>
         <translation>Ebben a hónapban</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="60"/>
+        <location filename="../transactionview.cpp" line="59"/>
         <source>Last month</source>
         <translation>Múlt hónapban</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="61"/>
+        <location filename="../transactionview.cpp" line="60"/>
         <source>This year</source>
         <translation>Ebben az évben</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="62"/>
+        <location filename="../transactionview.cpp" line="61"/>
         <source>Range...</source>
         <translation>Tartomány ...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="73"/>
+        <location filename="../transactionview.cpp" line="72"/>
         <source>Received with</source>
         <translation>Erre a címre</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="75"/>
+        <location filename="../transactionview.cpp" line="74"/>
         <source>Sent to</source>
         <translation>Erre a címre</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="77"/>
+        <location filename="../transactionview.cpp" line="76"/>
         <source>To yourself</source>
         <translation>Magadnak</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="78"/>
+        <location filename="../transactionview.cpp" line="77"/>
         <source>Mined</source>
         <translation>Kibányászva</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="79"/>
+        <location filename="../transactionview.cpp" line="78"/>
         <source>Other</source>
         <translation>Más</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Enter address or label to search</source>
         <translation>Írd be a keresendő címet vagy címkét</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="90"/>
         <source>Min amount</source>
         <translation>Minimális összeg</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="125"/>
+        <location filename="../transactionview.cpp" line="124"/>
         <source>Copy address</source>
         <translation>Cím másolása</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="126"/>
+        <location filename="../transactionview.cpp" line="125"/>
         <source>Copy label</source>
         <translation>Címke másolása</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="127"/>
+        <location filename="../transactionview.cpp" line="126"/>
         <source>Copy amount</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="128"/>
+        <location filename="../transactionview.cpp" line="127"/>
         <source>Edit label</source>
         <translation>Címke szerkesztése</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="129"/>
+        <location filename="../transactionview.cpp" line="128"/>
         <source>Show details...</source>
         <translation>Részletek...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="269"/>
+        <location filename="../transactionview.cpp" line="268"/>
         <source>Export Transaction Data</source>
         <translation>Tranzakció adatainak exportálása</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="271"/>
+        <location filename="../transactionview.cpp" line="269"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Vesszővel elválasztott fájl (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="279"/>
+        <location filename="../transactionview.cpp" line="277"/>
         <source>Confirmed</source>
         <translation>Megerősítve</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
+        <location filename="../transactionview.cpp" line="278"/>
         <source>Date</source>
         <translation>Dátum</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="281"/>
+        <location filename="../transactionview.cpp" line="279"/>
         <source>Type</source>
         <translation>Típus</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="282"/>
+        <location filename="../transactionview.cpp" line="280"/>
         <source>Label</source>
         <translation>Címke</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="283"/>
+        <location filename="../transactionview.cpp" line="281"/>
         <source>Address</source>
         <translation>Cím</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="284"/>
+        <location filename="../transactionview.cpp" line="282"/>
         <source>Amount</source>
         <translation>Összeg</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="285"/>
+        <location filename="../transactionview.cpp" line="283"/>
         <source>ID</source>
         <translation>Azonosító</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="289"/>
+        <location filename="../transactionview.cpp" line="287"/>
         <source>Error exporting</source>
         <translation>Hiba lépett fel exportálás közben</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="289"/>
+        <location filename="../transactionview.cpp" line="287"/>
         <source>Could not write to file %1.</source>
         <translation>%1 fájlba való kiírás sikertelen.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="384"/>
+        <location filename="../transactionview.cpp" line="382"/>
         <source>Range:</source>
         <translation>Tartomány:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="392"/>
+        <location filename="../transactionview.cpp" line="390"/>
         <source>to</source>
         <translation>meddig</translation>
     </message>
@@ -1581,7 +1621,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="144"/>
+        <location filename="../walletmodel.cpp" line="145"/>
         <source>Sending...</source>
         <translation>Küldés ...</translation>
     </message>
@@ -1963,14 +2003,6 @@ SSL-opciók: (lásd a Bitcoin Wiki SSL-beállítási instrukcióit)
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>beta</source>
         <translation>béta</translation>
-    </message>
-</context>
-<context>
-    <name>main</name>
-    <message>
-        <location filename="../bitcoin.cpp" line="188"/>
-        <source>Bitcoin-Qt</source>
-        <translation type="unfinished"/>
     </message>
 </context>
 </TS>
