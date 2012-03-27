@@ -716,6 +716,7 @@ void CNode::CloseSocketDisconnect()
         printf("disconnecting node %s\n", addr.ToString().c_str());
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
+        vRecv.clear();
     }
 }
 
