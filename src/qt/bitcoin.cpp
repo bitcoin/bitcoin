@@ -128,8 +128,8 @@ std::string _(const char* psz)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
+#if !defined(MAC_OSX)
+// TODO: implement qtipcserver.cpp for Mac
 
     // Do this early as we don't want to bother initializing if we are just calling IPC
     for (int i = 1; i < argc; i++)
@@ -253,8 +253,8 @@ int main(int argc, char *argv[])
                 // Place this here as guiref has to be defined if we dont want to lose URLs
                 ipcInit();
 
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
+#if !defined(MAC_OSX)
+// TODO: implement qtipcserver.cpp for Mac
 
                 // Check for URL in argv
                 for (int i = 1; i < argc; i++)

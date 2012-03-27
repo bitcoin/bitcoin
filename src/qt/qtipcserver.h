@@ -1,4 +1,4 @@
-// define Bitcoin-Qt message queue name
+/** define Bitcoin-Qt message queue name */
 #define BCQT_MESSAGE_QUEUE_NAME "BitcoinURL"
 
 void ipcShutdown();

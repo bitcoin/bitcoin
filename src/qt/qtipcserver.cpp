@@ -24,7 +24,7 @@ bool ipcRecover(const char* pszFilename)
 {
     string strLogMessage = ("ipcRecover - possible stale message queue detected, trying to remove");
 
-    // try to remove the possible stale message queue
+    /** try to remove the possible stale message queue */
     if (interprocess::message_queue::remove(BCQT_MESSAGE_QUEUE_NAME))
     {
         printf("%s %s ...success\n", strLogMessage.c_str(), pszFilename);
@@ -63,13 +63,7 @@ void ipcThread(void* pArg)
 void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
 {
 #ifdef MAC_OSX
-    // TODO: implement bitcoin: URI handling the Mac Way
-    return;
-#endif
-#ifdef WIN32
-    // TODO: THOROUGHLY test boost::interprocess fix,
-    // and make sure there are no Windows argument-handling exploitable
-    // problems.
+    /** TODO: implement bitcoin: URI handling the Mac Way */
     return;
 #endif
 
@@ -83,7 +77,7 @@ void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
         else
             mq = new interprocess::message_queue(interprocess::open_or_create, BCQT_MESSAGE_QUEUE_NAME, 2, 256);
 
-        // Make sure we don't lose any bitcoin: URIs
+        /** Make sure we don't lose any bitcoin: URIs */
         for (int i = 0; i < 2; i++)
         {
             posix_time::ptime d = posix_time::microsec_clock::universal_time() + posix_time::millisec(1);
@@ -95,7 +89,7 @@ void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
                 break;
         }
 
-        // Make sure only one bitcoin instance is listening
+        /** Make sure only one bitcoin instance is listening */
         interprocess::message_queue::remove(BCQT_MESSAGE_QUEUE_NAME);
         if (fUseMQModeCreateOnly)
             mq = new interprocess::message_queue(interprocess::create_only, BCQT_MESSAGE_QUEUE_NAME, 2, 256);
@@ -103,21 +97,23 @@ void ipcInit(bool fUseMQModeCreateOnly, bool fInitCalledAfterRecovery)
             mq = new interprocess::message_queue(interprocess::open_or_create, BCQT_MESSAGE_QUEUE_NAME, 2, 256);
     }
     catch (interprocess::interprocess_exception &ex) {
-// we currently only handle stale message queue files on Windows
+/** we currently only handle stale message queue files on Windows */
 #ifdef WIN32
         printf("ipcInit    - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
 
-        // check if the exception is a "file already exists" error
+        /** check if the exception is a "file already exists" error */
         if (ex.get_error_code() == interprocess::already_exists_error)
         {
-            // try a recovery and pass our message queue name
+            /** try a recovery and pass our message queue name */
             if (ipcRecover(BCQT_MESSAGE_QUEUE_NAME) && !fInitCalledAfterRecovery)
-                // try init once more (true - create_only mode / true - avoid an infinite recursion)
-                // create_only: stale message queue removed, create a new message queue
+                /** try init once more (true - create_only mode / true - avoid an infinite recursion)
+                 * create_only: stale message queue removed, create a new message queue
+				 */
                 ipcInit(true, true);
             else
-                // try init once more (false - open_or_create mode / true - avoid an infinite recursion)
-                // open_or_create: message queue not removed, perhaps we can open it for usage
+                /** try init once more (false - open_or_create mode / true - avoid an infinite recursion)
+                 * open_or_create: message queue not removed, perhaps we can open it for usage
+				 */
                 ipcInit(false, true);
         }
 #endif
