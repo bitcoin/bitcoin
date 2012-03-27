@@ -288,20 +288,19 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
     }
     if(wtx->type == TransactionRecord::Generated)
     {
-        status += "\n";
         switch(wtx->status.maturity)
         {
         case TransactionStatus::Immature:
-            status += tr("Mined balance will be available in %n more blocks", "",
+            status += "\n" + tr("Mined balance will be available in %n more blocks", "",
                            wtx->status.matures_in);
             break;
         case TransactionStatus::Mature:
             break;
         case TransactionStatus::MaturesWarning:
-            status += tr("This block was not received by any other nodes and will probably not be accepted!");
+            status += "\n" + tr("This block was not received by any other nodes and will probably not be accepted!");
             break;
         case TransactionStatus::NotAccepted:
-            status += tr("Generated but not accepted");
+            status += "\n" + tr("Generated but not accepted");
             break;
         }
     }
