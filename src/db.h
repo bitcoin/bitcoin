@@ -26,7 +26,11 @@ class CTxIndex;
 class CWallet;
 class CWalletTx;
 
-static const u_int32_t DB_MAX_LOG_SIZE = 100*1024*1024;
+// the size of the in-memory log buffer, in bytes
+static const u_int32_t DB_LOG_BUFFER_SIZE = 10 * 1024*1024;
+
+// the maximum size of a single file in the log, in bytes
+static const u_int32_t DB_MAX_LOG_SIZE = 10 * DB_LOG_BUFFER_SIZE;
 
 extern unsigned int nWalletDBUpdated;
 extern DbEnv dbenv;
