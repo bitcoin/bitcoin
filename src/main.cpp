@@ -1804,8 +1804,8 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
     uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
 
-    // Check for 15MB because database could create another 10MB log file at any time
-    if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
+    // Check for 110MB because database could create another 100MB log file at any time
+    if (nFreeBytesAvailable < (uint64)115343360 + nAdditionalBytes)
     {
         fShutdown = true;
         string strMessage = _("Warning: Disk space is low  ");
