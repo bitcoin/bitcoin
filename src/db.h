@@ -26,6 +26,8 @@ class CTxIndex;
 class CWallet;
 class CWalletTx;
 
+static const u_int32_t DB_MAX_LOG_SIZE = 100*1024*1024;
+
 extern unsigned int nWalletDBUpdated;
 extern DbEnv dbenv;
 
