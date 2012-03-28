@@ -169,6 +169,11 @@ protected:
     EC_KEY* pkey;
     bool fSet;
 
+    void SetCompressedPubKey()
+    {
+        EC_KEY_set_conv_form(pkey, POINT_CONVERSION_COMPRESSED);
+    }
+
 public:
     CKey()
     {
@@ -346,7 +351,8 @@ public:
     {
         if (vchSig.size() != 65)
             return false;
-        if (vchSig[0]<27 || vchSig[0]>=31)
+        int nV = vchSig[0];
+        if (nV<27 || nV>=35)
             return false;
         ECDSA_SIG *sig = ECDSA_SIG_new();
         BN_bin2bn(&vchSig[1],32,sig->r);
@@ -354,7 +360,12 @@ public:
 
         EC_KEY_free(pkey);
         pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
-        if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), vchSig[0] - 27, 0) == 1)
+        if (nV >= 31)
+        {
+            SetCompressedPubKey();
+            nV -= 4;
+        }
+        if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) == 1)
         {
             fSet = true;
             ECDSA_SIG_free(sig);
