@@ -160,8 +160,11 @@ void CDB::Close()
         nMinutes = 1;
     if (strFile == "addr.dat")
         nMinutes = 2;
-    if (strFile == "blkindex.dat" && IsInitialBlockDownload() && nBestHeight % 5000 != 0)
-        nMinutes = 1;
+    if (strFile == "blkindex.dat")
+        if (nBestHeight % 5000 == 0)
+            dbenv.log_archive(NULL, DB_ARCH_REMOVE); // remove log files that are no longer needed
+        else if (IsInitialBlockDownload())
+            nMinutes = 1;
     dbenv.txn_checkpoint(0, nMinutes, 0);
 
     CRITICAL_BLOCK(cs_db)
