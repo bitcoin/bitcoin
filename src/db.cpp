@@ -722,12 +722,13 @@ bool CAddrDB::WriteAddrman(const CAddrMan& addrman)
 
 bool CAddrDB::LoadAddresses()
 {
-    bool fAddrMan = false;
     if (Read(string("addrman"), addrman))
     {
         printf("Loaded %i addresses\n", addrman.size());
-        fAddrMan = true;
+        return true;
     }
+    
+    // Read pre-0.6 addr records
 
     vector<CAddress> vAddr;
     vector<vector<unsigned char> > vDelete;
@@ -753,31 +754,19 @@ bool CAddrDB::LoadAddresses()
         ssKey >> strType;
         if (strType == "addr")
         {
-            if (fAddrMan)
-            {
-                vector<unsigned char> vchKey;
-                ssKey >> vchKey;
-                vDelete.push_back(vchKey);
-            }
-            else
-            {
-                CAddress addr;
-                ssValue >> addr;
-                vAddr.push_back(addr);
-            }
-
+            CAddress addr;
+            ssValue >> addr;
+            vAddr.push_back(addr);
         }
     }
     pcursor->close();
 
-    BOOST_FOREACH(const vector<unsigned char> &vchKey, vDelete)
-        Erase(make_pair(string("addr"), vchKey));
+    addrman.Add(vAddr, CNetAddr("0.0.0.0"));
+    printf("Loaded %i addresses\n", addrman.size());
 
-    if (!fAddrMan)
-    {
-        addrman.Add(vAddr, CNetAddr("0.0.0.0"));
-        printf("Loaded %i addresses\n", addrman.size());
-    }
+    // Note: old records left; we ran into hangs-on-startup
+    // bugs for some users who (we think) were running after
+    // an unclean shutdown.
 
     return true;
 }
