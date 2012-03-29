@@ -21,6 +21,8 @@
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 
+using namespace boost;
+
 // Need a global reference for the notifications to find the GUI
 BitcoinGUI *guiref;
 QSplashScreen *splashref;
@@ -126,8 +128,8 @@ std::string _(const char* psz)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
+#if !defined(MAC_OSX)
+// TODO: implement qtipcserver.cpp for Mac
 
     // Do this early as we don't want to bother initializing if we are just calling IPC
     for (int i = 1; i < argc; i++)
@@ -136,13 +138,14 @@ int main(int argc, char *argv[])
         {
             const char *strURL = argv[i];
             try {
-                boost::interprocess::message_queue mq(boost::interprocess::open_only, "BitcoinURL");
+                interprocess::message_queue mq(interprocess::open_only, BCQT_MESSAGE_QUEUE_NAME);
                 if(mq.try_send(strURL, strlen(strURL), 0))
                     exit(0);
                 else
                     break;
             }
-            catch (boost::interprocess::interprocess_exception &ex) {
+            catch (interprocess::interprocess_exception &ex) {
+                printf("boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
                 break;
             }
         }
@@ -250,8 +253,8 @@ int main(int argc, char *argv[])
                 // Place this here as guiref has to be defined if we dont want to lose URLs
                 ipcInit();
 
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
+#if !defined(MAC_OSX)
+// TODO: implement qtipcserver.cpp for Mac
 
                 // Check for URL in argv
                 for (int i = 1; i < argc; i++)
@@ -260,10 +263,12 @@ int main(int argc, char *argv[])
                     {
                         const char *strURL = argv[i];
                         try {
-                            boost::interprocess::message_queue mq(boost::interprocess::open_only, "BitcoinURL");
+                            interprocess::message_queue mq(interprocess::open_only, BCQT_MESSAGE_QUEUE_NAME);
                             mq.try_send(strURL, strlen(strURL), 0);
                         }
-                        catch (boost::interprocess::interprocess_exception &ex) {
+                        catch (interprocess::interprocess_exception &ex) {
+                            printf("boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+                            break;
                         }
                     }
                 }
