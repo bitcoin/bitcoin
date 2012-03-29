@@ -87,8 +87,8 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
             int nDbCache = GetArg("-dbcache", 25);
             dbenv.set_lg_dir(strLogDir.c_str());
             dbenv.set_cachesize(nDbCache / 1024, (nDbCache % 1024)*1048576, 1);
-            dbenv.set_lg_bsize(10485760);
-            dbenv.set_lg_max(104857600);
+            dbenv.set_lg_bsize(DB_LOG_BUFFER_SIZE);
+            dbenv.set_lg_max(DB_MAX_LOG_SIZE);
             dbenv.set_lk_max_locks(10000);
             dbenv.set_lk_max_objects(10000);
             dbenv.set_errfile(fopen(strErrorFile.c_str(), "a")); /// debug
