@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_SERIALIZE_H
@@ -186,8 +187,14 @@ template<typename Stream> inline void Unserialize(Stream& s, bool& a, int, int=0
 
 
 
-
-
+#ifndef THROW_WITH_STACKTRACE
+#define THROW_WITH_STACKTRACE(exception)  \
+{                                         \
+    LogStackTrace();                      \
+    throw (exception);                    \
+}
+void LogStackTrace();
+#endif
 
 //
 // Compact size
@@ -265,7 +272,7 @@ uint64 ReadCompactSize(Stream& is)
         nSizeRet = xSize;
     }
     if (nSizeRet > (uint64)MAX_SIZE)
-        throw std::ios_base::failure("ReadCompactSize() : size too large");
+        THROW_WITH_STACKTRACE(std::ios_base::failure("ReadCompactSize() : size too large"));
     return nSizeRet;
 }
 
