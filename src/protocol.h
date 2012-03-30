@@ -60,7 +60,7 @@ class CMessageHeader
 /** nServices flags */
 enum
 {
-    NODE_NETWORK = (1 << 0),
+    NODE_NETWORK = (1 << 0)
 };
 
 /** A CService with information about it as peer */

@@ -382,7 +382,7 @@ enum GetMinFee_mode
 {
     GMF_BLOCK,
     GMF_RELAY,
-    GMF_SEND,
+    GMF_SEND
 };
 
 typedef std::map<uint256, std::pair<CTxIndex, CTransaction> > MapPrevTx;
