@@ -266,7 +266,7 @@ public:
         PUBKEY_ADDRESS = 0,
         SCRIPT_ADDRESS = 5,
         PUBKEY_ADDRESS_TEST = 111,
-        SCRIPT_ADDRESS_TEST = 196,
+        SCRIPT_ADDRESS_TEST = 196
     };
 
     bool SetHash160(const uint160& hash160)
