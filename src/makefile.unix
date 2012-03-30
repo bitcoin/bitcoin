@@ -138,7 +138,7 @@ obj/nogui/%.o: %.cpp
 	  rm -f $(@:%.o=%.d)
 
 ppcoind: $(OBJS:obj/%=obj/nogui/%)
-	$(CXX) $(xCXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+	$(CXX) $(xCXXFLAGS) -rdynamic -o $@ $^ $(LDFLAGS) $(LIBS)
 
 obj/test/%.o: test/%.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<

@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 The Bitcoin developers
-// Copyright (c) 2011 The PPCoin developers
+// Copyright (c) 2011-2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 #include "headers.h"
@@ -12,6 +12,10 @@
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/foreach.hpp>
+
+#ifndef WIN32
+#include <execinfo.h>
+#endif
 
 using namespace std;
 using namespace boost;
@@ -154,7 +158,7 @@ int GetRandInt(int nMax)
 
 
 
-
+static FILE* fileout = NULL;
 
 inline int OutputDebugStringF(const char* pszFormat, ...)
 {
@@ -170,8 +174,6 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
     else
     {
         // print to debug.log
-        static FILE* fileout = NULL;
-
         if (!fileout)
         {
             char pszFile[MAX_PATH+100];
@@ -679,6 +681,19 @@ void PrintException(std::exception* pex, const char* pszThread)
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
     strMiscWarning = pszMessage;
     throw;
+}
+
+void LogStackTrace() {
+    printf("\n\n******* exception encountered *******\n");
+    if (fileout)
+    {
+#ifndef WIN32
+        void* pszBuffer[32];
+        size_t size;
+        size = backtrace(pszBuffer, 32);
+        backtrace_symbols_fd(pszBuffer, size, fileno(fileout));
+#endif
+    }
 }
 
 void ThreadOneMessageBox(string strMessage)
