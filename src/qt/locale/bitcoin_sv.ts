@@ -59,12 +59,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation>&amp;amp; Kopiera till Urklipp</translation>
+        <translation>&amp; Kopiera till Urklipp</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Show &amp;QR Code</source>
-        <translation type="unfinished"/>
+        <translation>Visa &amp;QR-kod</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="96"/>
@@ -84,7 +84,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="113"/>
         <source>&amp;Delete</source>
-        <translation>&amp;amp; Radera</translation>
+        <translation>&amp; Radera</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="61"/>
@@ -99,7 +99,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="63"/>
         <source>Edit</source>
-        <translation>Editera</translation>
+        <translation>Ändra</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
@@ -304,7 +304,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="176"/>
         <source>&amp;Overview</source>
-        <translation>&amp;amp; Översikt</translation>
+        <translation>&amp; Översikt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="177"/>
@@ -334,7 +334,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
-        <translation>&amp;amp; Ta emot bitcoins</translation>
+        <translation>&amp; Ta emot bitcoins</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="195"/>
@@ -344,7 +344,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>&amp;Send coins</source>
-        <translation>&amp;amp; Skicka bitcoins</translation>
+        <translation>&amp; Skicka bitcoins</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
@@ -394,7 +394,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="236"/>
         <source>&amp;Options...</source>
-        <translation>&amp;amp; Alternativ ...</translation>
+        <translation>&amp; Alternativ ...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
@@ -404,7 +404,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
         <source>Open &amp;Bitcoin</source>
-        <translation>Öppna &amp;amp;Bitcoin</translation>
+        <translation>Öppna &amp;Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -414,7 +414,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>&amp;Export...</source>
-        <translation>&amp;amp;Exportera ...</translation>
+        <translation>&amp;Exportera ...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="242"/>
@@ -424,7 +424,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="243"/>
         <source>&amp;Encrypt Wallet</source>
-        <translation>&amp;amp;Kryptera plånbok</translation>
+        <translation>&amp;Kryptera plånbok</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="244"/>
@@ -434,7 +434,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="246"/>
         <source>&amp;Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Säkerhetskopiera plånbok</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -444,7 +444,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>&amp;Change Passphrase</source>
-        <translation>&amp;amp;Byt lösenfras</translation>
+        <translation>&amp;Byt lösenfras</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="249"/>
@@ -765,12 +765,12 @@ Adress:%4
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation type="unfinished"/>
+        <translation>Valfri överföringsavgift per kB som gör att din överföring behandlas snabbare. De flesta överföringar är 1 kB. Avgift 0.01 rekommenderas.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>Betala överförings &amp;avgift</translation>
+        <translation>Betala överförings&amp;avgift</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="226"/>
@@ -788,7 +788,7 @@ Adress:%4
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation>Du kan signera meddelanden med dina adresser för att bevisa att du äger dem. Var försiktig med vad du signerar eftersom phising-attacker kan försöka få dig att skriva över din identitet till någon annan. Signera bara väldetaljerade påståenden du kan gå i god för.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
@@ -843,7 +843,7 @@ Adress:%4
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation>&amp;amp; Kopiera till Urklipp</translation>
+        <translation>&amp; Kopiera till Urklipp</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
@@ -1135,7 +1135,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
         <source>Pay &amp;To:</source>
-        <translation>Betala &amp; Till:</translation>
+        <translation>Betala &amp;Till:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
@@ -1542,7 +1542,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactionview.cpp" line="126"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Kopiera belopp</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="127"/>
