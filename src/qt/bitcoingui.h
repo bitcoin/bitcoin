@@ -100,7 +100,7 @@ public slots:
     /** Set the status bar text if there are any warnings (removes sync progress bar if applicable) */
     void refreshStatusBar();
 
-    void error(const QString &title, const QString &message);
+    void error(const QString &title, const QString &message, bool modal = false);
     /* It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so use an indirected pointer.
        http://bugreports.qt.nokia.com/browse/QTBUG-10440
