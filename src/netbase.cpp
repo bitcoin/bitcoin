@@ -305,20 +305,43 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
 {
     hSocketRet = INVALID_SOCKET;
 
-    SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    struct sockaddr_storage sockaddr;
+    int nFamily = 0;
+    size_t nSockAddrLen = 0;
+
+    if (addrConnect.IsIPv4())
+    {
+        // Use IPv4 stack to connect to IPv4 addresses
+        struct sockaddr_in sockaddr4;
+        if (!addrConnect.GetSockAddr(&sockaddr4))
+            return false;
+        memcpy(&sockaddr, &sockaddr4, sizeof(sockaddr4));
+        nSockAddrLen = sizeof(sockaddr4);
+        nFamily = AF_INET;
+    }
+#ifdef USE_IPV6
+    else if (addrConnect.IsIPv6())
+    {
+        struct sockaddr_in6 sockaddr6;
+        if (!addrConnect.GetSockAddr6(&sockaddr6))
+            return false;
+        memcpy(&sockaddr, &sockaddr6, sizeof(sockaddr6));
+        nSockAddrLen = sizeof(sockaddr6);
+        nFamily = AF_INET6;
+    }
+#endif
+    else {
+        printf("Cannot connect to %s: unsupported network\n", addrConnect.ToString().c_str());
+        return false;
+    }
+
+    SOCKET hSocket = socket(nFamily, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
 #ifdef SO_NOSIGPIPE
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
-
-    struct sockaddr_in sockaddr;
-    if (!addrConnect.GetSockAddr(&sockaddr))
-    {
-        closesocket(hSocket);
-        return false;
-    }
 
 #ifdef WIN32
     u_long fNonblock = 1;
@@ -332,7 +355,7 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
         return false;
     }
 
-    if (connect(hSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
+    if (connect(hSocket, (struct sockaddr*)&sockaddr, nSockAddrLen) == SOCKET_ERROR)
     {
         // WSAEINVAL is here because some legacy version of winsock uses it
         if (WSAGetLastError() == WSAEINPROGRESS || WSAGetLastError() == WSAEWOULDBLOCK || WSAGetLastError() == WSAEINVAL)
@@ -529,6 +552,11 @@ int CNetAddr::GetByte(int n) const
 bool CNetAddr::IsIPv4() const
 {
     return (memcmp(ip, pchIPv4, sizeof(pchIPv4)) == 0);
+}
+
+bool CNetAddr::IsIPv6() const
+{
+    return (!IsIPv4());
 }
 
 bool CNetAddr::IsRFC1918() const
@@ -919,12 +947,16 @@ std::vector<unsigned char> CService::GetKey() const
 
 std::string CService::ToStringPort() const
 {
-    return strprintf(":%i", port);
+    return strprintf("%i", port);
 }
 
 std::string CService::ToStringIPPort() const
 {
-    return ToStringIP() + ToStringPort();
+    if (IsIPv4()) {
+        return ToStringIP() + ":" + ToStringPort();
+    } else {
+        return "[" + ToStringIP() + "]:" + ToStringPort();
+    }
 }
 
 std::string CService::ToString() const
