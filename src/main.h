@@ -807,12 +807,11 @@ public:
     unsigned int nBits;
     unsigned int nNonce;
 
-    // ppcoin: block signature (not considered part of header)
-    //         signed by coin base txout[0]'s owner
-    std::vector<unsigned char> vchBlockSig;
-
     // network and disk
     std::vector<CTransaction> vtx;
+
+    // ppcoin: block signature - signed by coin base txout[0]'s owner
+    std::vector<unsigned char> vchBlockSig;
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
@@ -836,16 +835,16 @@ public:
         READWRITE(nBits);
         READWRITE(nNonce);
 
-        // ConnectBlock depends on vtx being last so it can calculate offset
+        // ConnectBlock depends on vtx following header to generate CDiskTxPos
         if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
         {
-            READWRITE(vchBlockSig);
             READWRITE(vtx);
+            READWRITE(vchBlockSig);
         }
         else if (fRead)
         {
-            const_cast<CBlock*>(this)->vchBlockSig.clear();
             const_cast<CBlock*>(this)->vtx.clear();
+            const_cast<CBlock*>(this)->vchBlockSig.clear();
         }
     )
 
@@ -857,8 +856,8 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
-        vchBlockSig.clear();
         vtx.clear();
+        vchBlockSig.clear();
         vMerkleTree.clear();
         nDoS = 0;
     }
@@ -1003,14 +1002,14 @@ public:
 
     void print() const
     {
-        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vchBlockSig=%s, vtx=%d)\n",
+        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%d, vchBlockSig=%s)\n",
             GetHash().ToString().substr(0,20).c_str(),
             nVersion,
             hashPrevBlock.ToString().substr(0,20).c_str(),
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             nTime, nBits, nNonce,
-            HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str(),
-            vtx.size());
+            vtx.size(),
+            HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str());
         for (int i = 0; i < vtx.size(); i++)
         {
             printf("  ");
