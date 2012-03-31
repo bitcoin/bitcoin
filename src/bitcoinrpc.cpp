@@ -2362,16 +2362,17 @@ void ThreadRPCServer2(void* parg)
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
         else if (mapArgs.count("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
-        std::string strMessage = _("%s, you must set a rpcpassword in the configuration file:\n %s\n"
-                                          "It is recommended you use the following random password:\n"
-                                          "rpcuser=bitcoinrpc\n"
-                                          "rpcpassword=%s\n"
-                                          "(you do not need to remember this password)\n"
-                                          "If the file does not exist, create it with owner-readable-only file permissions.\n");
-        fprintf(stderr, strMessage.c_str(),
+        ThreadSafeMessageBox(strprintf(
+            _("%s, you must set a rpcpassword in the configuration file:\n %s\n"
+              "It is recommended you use the following random password:\n"
+              "rpcuser=bitcoinrpc\n"
+              "rpcpassword=%s\n"
+              "(you do not need to remember this password)\n"
+              "If the file does not exist, create it with owner-readable-only file permissions.\n"),
                 strWhatAmI.c_str(),
                 GetConfigFile().c_str(),
-                EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str());
+                EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
+            _("Error"), wxOK | wxMODAL);
         QueueShutdown();
         return;
     }
