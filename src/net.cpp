@@ -733,7 +733,11 @@ void ThreadSocketHandler2(void* parg)
         //
         if (hListenSocket != INVALID_SOCKET && FD_ISSET(hListenSocket, &fdsetRecv))
         {
+#ifdef USE_IPV6
+            struct sockaddr_in6 sockaddr;
+#else
             struct sockaddr_in sockaddr;
+#endif
             socklen_t len = sizeof(sockaddr);
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
             CAddress addr;
@@ -1390,7 +1394,7 @@ void ThreadOpenConnections2(void* parg)
             CAddress addr = addrman.Select(10 + min(nOutbound,8)*10);
 
             // if we selected an invalid address, restart
-            if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
+            if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
                 break;
 
             nTries++;
@@ -1620,6 +1624,7 @@ void ThreadMessageHandler2(void* parg)
 
 bool BindListenPort(string& strError)
 {
+    unsigned short nPort = GetListenPort();
     strError = "";
     int nOne = 1;
 
@@ -1636,7 +1641,12 @@ bool BindListenPort(string& strError)
 #endif
 
     // Create socket for listening for incoming connections
-    hListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+#ifdef USE_IPV6
+    int nFamily = AF_INET6;
+#else
+    int nFamily = AF_INET;
+#endif
+    hListenSocket = socket(nFamily, SOCK_STREAM, IPPROTO_TCP);
     if (hListenSocket == INVALID_SOCKET)
     {
         strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %d)", WSAGetLastError());
@@ -1669,22 +1679,36 @@ bool BindListenPort(string& strError)
 
     // The sockaddr_in structure specifies the address family,
     // IP address, and port for the socket that is being bound
-    struct sockaddr_in sockaddr;
+#ifdef USE_IPV6
+    struct sockaddr_in6 sockaddr = sockaddr_in6();
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    sockaddr.sin6_family = AF_INET6;
+    sockaddr.sin6_addr = in6addr_any;   // bind to all IPs on this computer
+    sockaddr.sin6_port = htons(nPort);
+#  ifdef WIN32
+    int nProtLevel = 10 /* PROTECTION_LEVEL_UNRESTRICTED */;
+    int nParameterId = 23 /* IPV6_PROTECTION_LEVEl */;
+    // this call is allowed to fail
+    setsockopt(hListenSocket, IPPROTO_IPV6, nParameterId, (const char*)&nProtLevel, sizeof(int));
+#  endif
+#else
+    struct sockaddr_in sockaddr = sockaddr_in();
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
-    sockaddr.sin_port = htons(GetListenPort());
+    sockaddr.sin_port = htons(nPort);
+#endif
     if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to port %d on this computer.  Bitcoin is probably already running."), ntohs(sockaddr.sin_port));
+            strError = strprintf(_("Unable to bind to port %d on this computer.  Bitcoin is probably already running."), nPort);
         else
-            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d)", ntohs(sockaddr.sin_port), nErr);
+            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d, %s)", nPort, nErr, strerror(nErr));
         printf("%s\n", strError.c_str());
         return false;
     }
-    printf("Bound to port %d\n", ntohs(sockaddr.sin_port));
+    printf("Bound to port %d\n", (int)nPort);
 
     // Listen for incoming connections
     if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
@@ -1727,28 +1751,22 @@ void static Discover()
             if ((ifa->ifa_flags & IFF_UP) == 0) continue;
             if (strcmp(ifa->ifa_name, "lo") == 0) continue;
             if (strcmp(ifa->ifa_name, "lo0") == 0) continue;
-            char pszIP[100];
             if (ifa->ifa_addr->sa_family == AF_INET)
             {
                 struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
-                if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s4->sin_addr), pszIP, sizeof(pszIP)) != NULL)
-                    printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
-
-                // Take the first IP that isn't loopback 127.x.x.x
                 CNetAddr addr(s4->sin_addr);
-                AddLocal(addr, LOCAL_IF);
+                if (AddLocal(addr, LOCAL_IF))
+                    printf("ipv4 %s: %s\n", ifa->ifa_name, addr.ToString().c_str());
             }
+#ifdef USE_IPV6
             else if (ifa->ifa_addr->sa_family == AF_INET6)
             {
                 struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
-                if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s6->sin6_addr), pszIP, sizeof(pszIP)) != NULL)
-                    printf("ipv6 %s: %s\n", ifa->ifa_name, pszIP);
-
-#ifdef USE_IPV6
                 CNetAddr addr(s6->sin6_addr);
-                AddLocal(addr, LOCAL_IF);
-#endif
+                if (AddLocal(addr, LOCAL_IF))
+                    printf("ipv6 %s: %s\n", ifa->ifa_name, addr.ToString().c_str());
             }
+#endif
         }
         freeifaddrs(myaddrs);
     }

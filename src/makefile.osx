@@ -53,7 +53,7 @@ LIBS += \
 TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
-DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_IPV6
 
 ifdef RELEASE
 # Compile for maximum compatibility and smallest size.
