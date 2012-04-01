@@ -61,7 +61,8 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
-    obj/noui.o
+    obj/noui.o \
+    obj/blockstore.o
 
 
 all: bitcoind.exe

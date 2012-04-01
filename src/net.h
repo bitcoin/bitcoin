@@ -21,9 +21,8 @@
 
 class CAddrDB;
 class CRequestTracker;
-class CNode;
 class CBlockIndex;
-extern int nBestHeight;
+class CTransaction;
 
 
 
@@ -41,6 +40,7 @@ void MapPort(bool fMapPort);
 bool BindListenPort(std::string& strError=REF(std::string()));
 void StartNode(void* parg);
 bool StopNode();
+void HandleCommitTransactionToMemoryPool(const CTransaction& tx);
 
 enum
 {
@@ -101,8 +101,6 @@ enum threadId
     THREAD_MAX
 };
 
-extern bool fClient;
-extern uint64 nLocalServices;
 extern uint64 nLocalHostNonce;
 extern boost::array<int, THREAD_MAX> vnThreadsRunning;
 extern CAddrMan addrman;
@@ -112,6 +110,7 @@ extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
+extern CCriticalSection cs_mapAlreadyAskedFor;
 extern std::map<CInv, int64> mapAlreadyAskedFor;
 
 
@@ -161,7 +160,7 @@ public:
     std::map<uint256, CRequestTracker> mapRequests;
     CCriticalSection cs_mapRequests;
     uint256 hashContinue;
-    CBlockIndex* pindexLastGetBlocksBegin;
+    const CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
     int nStartingHeight;
 
@@ -284,6 +283,7 @@ public:
     {
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
+        LOCK(cs_mapAlreadyAskedFor);
         int64& nRequestTime = mapAlreadyAskedFor[inv];
         printf("askfor %s   %"PRI64d"\n", inv.ToString().c_str(), nRequestTime);
 
@@ -581,7 +581,7 @@ public:
 
 
 
-    void PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd);
+    void PushGetBlocks(const CBlockIndex* pindexBegin, uint256 hashEnd);
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);

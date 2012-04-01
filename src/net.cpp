@@ -3,6 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#include "checkpoints.h"
 #include "irc.h"
 #include "db.h"
 #include "net.h"
@@ -42,9 +43,8 @@ bool OpenNetworkConnection(const CAddress& addrConnect, const char *strDest = NU
 //
 // Global state variables
 //
-bool fClient = false;
 static bool fUseUPnP = false;
-uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
+uint64 nLocalServices;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, int> mapLocalHost;
 static CNode* pnodeLocalHost = NULL;
@@ -58,6 +58,7 @@ CCriticalSection cs_vNodes;
 map<CInv, CDataStream> mapRelay;
 deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
+CCriticalSection cs_mapAlreadyAskedFor;
 map<CInv, int64> mapAlreadyAskedFor;
 
 static deque<string> vOneShots;
@@ -77,12 +78,67 @@ void AddOneShot(string strDest)
     vOneShots.push_back(strDest);
 }
 
+
+
+
+void HandleCommitTransactionToMemoryPool(const CTransaction& tx)
+{
+    CInv inv(MSG_TX, tx.GetHash());
+    RelayMessage(inv, tx);
+
+    LOCK(cs_mapAlreadyAskedFor);
+    mapAlreadyAskedFor.erase(inv);
+}
+
+void HandleCommitBlock(const CBlock& block)
+{
+    // Relay inventory, but don't relay old inventory during initial block download
+    int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
+    const CBlockIndex* index = pblockstore->GetBestBlockIndex();
+    if (*(index->phashBlock) == block.GetHash())
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            if (index->nHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
+                pnode->PushInventory(CInv(MSG_BLOCK, *(index->phashBlock)));
+    }
+}
+
+
+
+
+
 unsigned short GetListenPort()
 {
     return (unsigned short)(GetArg("-port", GetDefaultPort()));
 }
 
-void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
+void AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
+{
+    CInv inv(MSG_BLOCK, hashOriginator);
+    CNode* pnodeToAsk = NULL;
+    {
+        LOCK(cs_vNodes);
+        if (hashOriginator != 0)
+        {
+            BOOST_FOREACH(CNode* pnode, vNodes)
+            {
+                if (pnode->setInventoryKnown.count(inv))
+                {
+                    pnodeToAsk = pnode;
+                    break;
+                }
+            }
+        }
+        if (pnodeToAsk == NULL)
+            pnodeToAsk = vNodes.front();
+        pnodeToAsk->AddRef();
+    }
+    pnodeToAsk->PushGetBlocks(pblockstore->GetBestBlockIndex(), hashEnd);
+    pnodeToAsk->Release();
+}
+
+void CNode::PushGetBlocks(const CBlockIndex* pindexBegin, uint256 hashEnd)
 {
     // Filter out duplicate requests
     if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
@@ -504,7 +560,7 @@ void CNode::PushVersion()
     CAddress addrMe = GetLocalAddress(&addr);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight);
+                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), pblockstore->GetBestBlockIndex()->nHeight);
 }
 
 
@@ -1762,6 +1818,12 @@ void static Discover()
 
 void StartNode(void* parg)
 {
+    pblockstore->RegisterCommitTransactionToMemoryPool(&HandleCommitTransactionToMemoryPool);
+    pblockstore->RegisterCommitBlock(&HandleCommitBlock);
+    pblockstore->RegisterAskForBlocks(&AskForBlocks);
+
+    nLocalServices = pblockstore->HasFullBlocks() ? NODE_NETWORK : 0;
+
 #ifdef USE_UPNP
 #if USE_UPNP
     fUseUPnP = GetBoolArg("-upnp", true);
@@ -1874,3 +1936,4 @@ public:
     }
 }
 instance_of_cnetcleanup;
+
