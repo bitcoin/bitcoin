@@ -15,6 +15,8 @@
 #include <string>
 #include "uint256.h"
 
+class CNode;
+
 extern bool fTestNet;
 static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 {
@@ -125,5 +127,9 @@ class CInv
         int type;
         uint256 hash;
 };
+
+bool ProcessMessages(CNode* pfrom);
+bool SendMessages(CNode* pto, bool fSendTrickle);
+int GetNumBlocksOfPeers();
 
 #endif // __INCLUDED_PROTOCOL_H__

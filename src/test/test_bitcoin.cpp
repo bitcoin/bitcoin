@@ -11,7 +11,10 @@ struct TestingSetup {
     TestingSetup() {
         fPrintToConsole = true; // don't want to write to debug.log file
         pwalletMain = new CWallet();
-        RegisterWallet(pwalletMain);
+        //pblockstore = new CBlockStore();
+        //if (!CreateThread(ProcessCallbacks, pblockstore))
+        //    wxMessageBox(_("Error: CreateThread(ProcessCallbacks) failed"), "Bitcoin");
+        //pwalletMain->RegisterWithBlockStore(pblockstore);
     }
     ~TestingSetup()
     {

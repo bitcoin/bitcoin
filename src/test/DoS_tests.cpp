@@ -13,10 +13,10 @@
 #include <stdint.h>
 
 // Tests this internal-to-main.cpp method:
-extern void AddOrphanTx(const CDataStream& vMsg);
+extern void AddOrphanTx(const CTransaction& tx);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-extern std::map<uint256, CDataStream*> mapOrphanTransactions;
-extern std::multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
+extern std::map<uint256, CTransaction*> mapOrphanTransactions;
+extern std::multimap<uint256, CTransaction*> mapOrphanTransactionsByPrev;
 
 CService ip(uint32_t i)
 {
@@ -139,13 +139,12 @@ static uint256 RandomHash()
 
 CTransaction RandomOrphan()
 {
-    std::map<uint256, CDataStream*>::iterator it;
+    std::map<uint256, CTransaction*>::iterator it;
     it = mapOrphanTransactions.lower_bound(RandomHash());
     if (it == mapOrphanTransactions.end())
         it = mapOrphanTransactions.begin();
-    const CDataStream* pvMsg = it->second;
-    CTransaction tx;
-    CDataStream(*pvMsg) >> tx;
+    const CTransaction* pTx = it->second;
+    CTransaction tx(*pTx);
     return tx;
 }
 
@@ -168,9 +167,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
 
-        CDataStream ds(SER_DISK, CLIENT_VERSION);
-        ds << tx;
-        AddOrphanTx(ds);
+        AddOrphanTx(tx);
     }
 
     // ... and 50 that depend on other orphans:
@@ -187,9 +184,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
         SignSignature(keystore, txPrev, tx, 0);
 
-        CDataStream ds(SER_DISK, CLIENT_VERSION);
-        ds << tx;
-        AddOrphanTx(ds);
+        AddOrphanTx(tx);
     }
 
     // Test LimitOrphanTxSize() function:

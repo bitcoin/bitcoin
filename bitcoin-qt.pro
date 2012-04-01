@@ -161,7 +161,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/allocators.h \
     src/ui_interface.h \
     src/qt/rpcconsole.h \
-    src/qt/verifymessagedialog.h
+    src/qt/verifymessagedialog.h \
+    src/blockstore.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -218,7 +219,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/notificator.cpp \
     src/qt/qtipcserver.cpp \
     src/qt/rpcconsole.cpp \
-    src/qt/verifymessagedialog.cpp
+    src/qt/verifymessagedialog.cpp \
+    src/blockstore.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

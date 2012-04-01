@@ -115,7 +115,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     }
 
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK(wallet->cs_wallet);
 
         // Sendmany
         std::vector<std::pair<CScript, int64> > vecSend;
