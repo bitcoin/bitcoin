@@ -43,15 +43,19 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
         ui->tableView->setFocus();
         break;
     case ForEditing:
-        ui->buttonBox->hide();
+        ui->buttonBox->setVisible(false);
         break;
     }
     switch(tab)
     {
     case SendingTab:
-        ui->labelExplanation->hide();
+        ui->labelExplanation->setVisible(false);
+        ui->deleteButton->setVisible(true);
+        ui->signMessage->setVisible(false);
         break;
     case ReceivingTab:
+        ui->deleteButton->setVisible(false);
+        ui->signMessage->setVisible(true);
         break;
     }
     ui->tableView->setTabKeyNavigation(false);
@@ -133,6 +137,7 @@ void AddressBookPage::on_copyToClipboard_clicked()
 {
     GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Address);
 }
+
 void AddressBookPage::onCopyLabelAction()
 {
     GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Label);
@@ -224,14 +229,18 @@ void AddressBookPage::selectionChanged()
         case SendingTab:
             // In sending tab, allow deletion of selection
             ui->deleteButton->setEnabled(true);
+            ui->deleteButton->setVisible(true);
             deleteAction->setEnabled(true);
             ui->signMessage->setEnabled(false);
+            ui->signMessage->setVisible(false);
             break;
         case ReceivingTab:
             // Deleting receiving addresses, however, is not allowed
             ui->deleteButton->setEnabled(false);
+            ui->deleteButton->setVisible(false);
             deleteAction->setEnabled(false);
             ui->signMessage->setEnabled(true);
+            ui->signMessage->setVisible(true);
             break;
         }
         ui->copyToClipboard->setEnabled(true);
