@@ -148,10 +148,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
 
-    // define progress bar format
-    progressBar->setFormat(tr("~%m blocks remaining"));
     // define OS independent progress bar style (has to be after addWidget(), otherwise we crash)
-    progressBar->setStyleSheet("QProgressBar { background-color: transparent; border: 1px solid grey; border-radius: 5px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); margin: 0px; }");
+    progressBar->setStyleSheet("QProgressBar { background-color: transparent; border: 1px solid grey; border-radius: 2px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); margin: 0px; }");
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
@@ -464,21 +462,21 @@ void BitcoinGUI::setNumBlocks(int count)
         return;
     }
 
-    int nTotal = clientModel->getNumBlocksOfPeers();
+    int nTotalBlocks = clientModel->getNumBlocksOfPeers();
     QString tooltip;
 
-    if(count < nTotal)
+    if(count < nTotalBlocks)
     {
-        int nCurMax = nTotal - count;
-        int nOnePercentCurMax = nCurMax / 100;
-        int nPercentageDone = (count / (nTotal / 100));
+        int nRemainingBlocks = nTotalBlocks - count;
+        int nPercentageDone = (count / ((nTotalBlocks / 100) + 0.5f));
 
         if (clientModel->getStatusBarWarnings() == "")
         {
             progressBarLabel->setText(tr("Synchronizing with network..."));
             progressBarLabel->setVisible(true);
-            progressBar->setMaximum(nCurMax);
-            progressBar->setValue(nOnePercentCurMax * nPercentageDone);
+            progressBar->setFormat("~" + QString::number(nRemainingBlocks)+ tr(" blocks remaining"));
+            progressBar->setMaximum(nTotalBlocks);
+            progressBar->setValue(count);
             progressBar->setVisible(true);
         }
         else
@@ -487,7 +485,7 @@ void BitcoinGUI::setNumBlocks(int count)
             progressBarLabel->setVisible(true);
             progressBar->setVisible(false);
         }
-        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotal).arg(nPercentageDone);
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone);
     }
     else
     {
