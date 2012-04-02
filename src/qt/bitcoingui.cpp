@@ -332,8 +332,12 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         setNumConnections(clientModel->getNumConnections());
         connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
-        setNumBlocks(clientModel->getNumBlocks());
-        connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
+        // don't display the sync. message, if we are not connected to the network
+        if (clientModel->getNumConnections() > 0)
+        {
+            setNumBlocks(clientModel->getNumBlocks());
+            connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
+        }
 
         // Report errors from network/worker thread
         connect(clientModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
@@ -453,18 +457,33 @@ void BitcoinGUI::setNumBlocks(int count)
 {
     if(!clientModel)
         return;
-    int total = clientModel->getNumBlocksOfPeers();
+    int nTotal = clientModel->getNumBlocksOfPeers();
+    int nInitTotal = clientModel->getNumBlocksAtStartup();
+    int nPercentageLeft = 100 - (count / (nTotal / 100));
     QString tooltip;
 
-    if(count < total)
+    if(count < nTotal)
     {
         if (clientModel->getStatusBarWarnings() == "")
         {
             progressBarLabel->setVisible(true);
-            progressBarLabel->setText(tr("Synchronizing with network..."));
             progressBar->setVisible(true);
-            progressBar->setMaximum(total);
-            progressBar->setValue(count);
+            progressBar->setFormat(tr("%v of %m blocks (%p%)"));
+            progressBar->setAlignment(Qt::AlignCenter);
+            // display absolute bar if the difference between count and nTotal is > 10%
+            if (nPercentageLeft > 10)
+            {
+                progressBarLabel->setText(tr("Synchronizing with network... (abs. display)"));
+                progressBar->setMaximum(nTotal);
+                progressBar->setValue(count);
+            }
+            else
+            {
+                progressBarLabel->setText(tr("Synchronizing with network... (rel. display)"));
+                progressBar->setMaximum(nTotal - nInitTotal);
+                progressBar->setValue(count - nInitTotal);
+            }
+
         }
         else
         {
@@ -472,7 +491,7 @@ void BitcoinGUI::setNumBlocks(int count)
             progressBarLabel->setVisible(true);
             progressBar->setVisible(false);
         }
-        tooltip = tr("Downloaded %1 of %2 blocks of transaction history.").arg(count).arg(total);
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% left).").arg(count).arg(nTotal).arg(nPercentageLeft);
     }
     else
     {
