@@ -20,6 +20,9 @@ typedef int pid_t; /* define for windows compatiblity */
 
 #include <boost/thread.hpp>
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/interprocess_condition.hpp>
+#include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
@@ -180,82 +183,134 @@ void AddTimeData(const CNetAddr& ip, int64 nTime);
 
 
 
+/** Wrapped boost mutex: supports recursive locking, but no waiting  */
+typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
 
-/** Wrapper to automatically initialize mutex. */
-class CCriticalSection
+/** Wrapped boost mutex: supports waiting but not recursive locking */
+typedef boost::interprocess::interprocess_mutex CWaitableCriticalSection;
+
+#ifdef DEBUG_LOCKORDER
+void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs);
+void LeaveCritical();
+#else
+void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs) {}
+void static inline LeaveCritical() {}
+#endif
+
+/** Wrapper around boost::interprocess::scoped_lock */
+template<typename Mutex>
+class CMutexLock
 {
-protected:
-    boost::interprocess::interprocess_recursive_mutex mutex;
+private:
+    boost::interprocess::scoped_lock<Mutex> lock;
 public:
-    explicit CCriticalSection() { }
-    ~CCriticalSection() { }
-    void Enter(const char* pszName, const char* pszFile, int nLine);
-    void Leave();
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine);
-};
 
-/** RAII object that acquires mutex. Needed for exception safety. */
-class CCriticalBlock
-{
-protected:
-    CCriticalSection* pcs;
-
-public:
-    CCriticalBlock(CCriticalSection& csIn, const char* pszName, const char* pszFile, int nLine)
+    void Enter(const char* pszName, const char* pszFile, int nLine)
     {
-        pcs = &csIn;
-        pcs->Enter(pszName, pszFile, nLine);
-    }
-
-    operator bool() const
-    {
-        return true;
-    }
-
-    ~CCriticalBlock()
-    {
-        pcs->Leave();
-    }
-};
-
-#define CRITICAL_BLOCK(cs)     \
-    if (CCriticalBlock criticalblock = CCriticalBlock(cs, #cs, __FILE__, __LINE__))
-
-#define ENTER_CRITICAL_SECTION(cs) \
-    (cs).Enter(#cs, __FILE__, __LINE__)
-
-#define LEAVE_CRITICAL_SECTION(cs) \
-    (cs).Leave()
-
-/** RAII object that tries to acquire mutex. Needed for exception safety. */
-class CTryCriticalBlock
-{
-protected:
-    CCriticalSection* pcs;
-
-public:
-    CTryCriticalBlock(CCriticalSection& csIn, const char* pszName, const char* pszFile, int nLine)
-    {
-        pcs = (csIn.TryEnter(pszName, pszFile, nLine) ? &csIn : NULL);
-    }
-
-    operator bool() const
-    {
-        return Entered();
-    }
-
-    ~CTryCriticalBlock()
-    {
-        if (pcs)
+        if (!lock.owns())
         {
-            pcs->Leave();
+            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()));
+#ifdef DEBUG_LOCKCONTENTION
+            if (!lock.try_lock())
+            {
+                printf("LOCKCONTENTION: %s\n", pszName);
+                printf("Locker: %s:%d\n", pszFile, nLine);
+            }
+#endif
+            lock.lock();
         }
     }
-    bool Entered() const { return pcs != NULL; }
+
+    void Leave()
+    {
+        if (lock.owns())
+        {
+            lock.unlock();
+            LeaveCritical();
+        }
+    }
+
+    bool TryEnter(const char* pszName, const char* pszFile, int nLine)
+    {
+        if (!lock.owns())
+        {
+            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()));
+            lock.try_lock();
+            if (!lock.owns())
+                LeaveCritical();
+        }
+        return lock.owns();
+    }
+
+    CMutexLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) : lock(mutexIn, boost::interprocess::defer_lock)
+    {
+        if (fTry)
+            TryEnter(pszName, pszFile, nLine);
+        else
+            Enter(pszName, pszFile, nLine);
+    }
+
+    ~CMutexLock()
+    {
+        if (lock.owns())
+            LeaveCritical();
+    }
+
+    operator bool()
+    {
+        return lock.owns();
+    }
+
+    boost::interprocess::scoped_lock<Mutex> &GetLock()
+    {
+        return lock;
+    }
 };
 
+typedef CMutexLock<CCriticalSection> CCriticalBlock;
+typedef CMutexLock<CWaitableCriticalSection> CWaitableCriticalBlock;
+typedef boost::interprocess::interprocess_condition CConditionVariable;
+
+/** Wait for a given condition inside a WAITABLE_CRITICAL_BLOCK */
+#define WAIT(name,condition) \
+   do { while(!(condition)) { (name).wait(waitablecriticalblock.GetLock()); } } while(0)
+
+/** Notify waiting threads that a condition may hold now */
+#define NOTIFY(name) \
+   do { (name).notify_one(); } while(0)
+
+#define NOTIFY_ALL(name) \
+   do { (name).notify_all(); } while(0)
+
+#define CRITICAL_BLOCK(cs)     \
+    for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by CRITICAL_BLOCK!" && !fcriticalblockonce)), fcriticalblockonce=false) \
+        for (CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__); fcriticalblockonce; fcriticalblockonce=false)
+
+#define WAITABLE_CRITICAL_BLOCK(cs)     \
+    for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by WAITABLE_CRITICAL_BLOCK!" && !fcriticalblockonce)), fcriticalblockonce=false) \
+        for (CWaitableCriticalBlock waitablecriticalblock(cs, #cs, __FILE__, __LINE__); fcriticalblockonce; fcriticalblockonce=false)
+
+#define ENTER_CRITICAL_SECTION(cs) \
+    { \
+        EnterCritical(#cs, __FILE__, __LINE__, (void*)(&cs)); \
+        (cs).lock(); \
+    }
+
+#define LEAVE_CRITICAL_SECTION(cs) \
+    { \
+        (cs).unlock(); \
+        LeaveCritical(); \
+    }
+
 #define TRY_CRITICAL_BLOCK(cs)     \
-    if (CTryCriticalBlock criticalblock = CTryCriticalBlock(cs, #cs, __FILE__, __LINE__))
+    for (bool fcriticalblockonce=true; fcriticalblockonce; assert(("break caught by TRY_CRITICAL_BLOCK!" && !fcriticalblockonce)), fcriticalblockonce=false) \
+        for (CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__, true); fcriticalblockonce && (fcriticalblockonce = criticalblock); fcriticalblockonce=false)
+
+
+// This is exactly like std::string, but with a custom allocator.
+// (secure_allocator<> is defined in serialize.h)
+typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
+
 
 
 
