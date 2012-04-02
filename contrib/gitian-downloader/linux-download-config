@@ -17,7 +17,7 @@ signers:
     key: devrandom
   D762373D24904A3E42F33B08B9A408E71DAAC974:
     weight: 40
-    name: Sipa
+    name: "Pieter Wuille"
     key: sipa
   77E72E69DA7EE0A148C06B21B34821D4944DE5F7:
     weight: 40
