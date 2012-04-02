@@ -138,16 +138,20 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     frameBlocksLayout->addWidget(labelBlocksIcon);
     frameBlocksLayout->addStretch();
 
-    // Progress bar for blocks download
-    progressBarLabel = new QLabel(tr("Synchronizing with network..."));
+    // Progress bar and label for blocks download
+    progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
     progressBar = new QProgressBar();
-    progressBar->setToolTip(tr("Block chain synchronization in progress"));
     progressBar->setVisible(false);
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
+
+    // define progress bar format
+    progressBar->setFormat(tr("~%m blocks remaining"));
+    // define OS independent progress bar style (has to be after addWidget(), otherwise we crash)
+    progressBar->setStyleSheet("QProgressBar { background-color: transparent; border: 1px solid grey; border-radius: 5px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 transparent, stop: 1 orange); margin: 0px; }");
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
@@ -471,13 +475,11 @@ void BitcoinGUI::setNumBlocks(int count)
 
         if (clientModel->getStatusBarWarnings() == "")
         {
-            progressBarLabel->setVisible(true);
             progressBarLabel->setText(tr("Synchronizing with network..."));
-            progressBar->setVisible(true);
-            progressBar->setFormat(tr("~%m blocks remaining"));
-            progressBar->setAlignment(Qt::AlignCenter);
+            progressBarLabel->setVisible(true);
             progressBar->setMaximum(nCurMax);
             progressBar->setValue(nOnePercentCurMax * nPercentageDone);
+            progressBar->setVisible(true);
         }
         else
         {
