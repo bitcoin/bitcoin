@@ -332,12 +332,8 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         setNumConnections(clientModel->getNumConnections());
         connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
-        // don't display the sync. message, if we are not connected to the network
-        if (clientModel->getNumConnections() > 0)
-        {
-            setNumBlocks(clientModel->getNumBlocks());
-            connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
-        }
+        setNumBlocks(clientModel->getNumBlocks());
+        connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
         // Report errors from network/worker thread
         connect(clientModel, SIGNAL(error(QString,QString)), this, SLOT(error(QString,QString)));
@@ -455,10 +451,16 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count)
 {
-    if(!clientModel)
+    // don't show / hide progressBar and it's label if we have no connection(s) to the network
+    if (!clientModel || clientModel->getNumConnections() == 0)
+    {
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+
         return;
+    }
+
     int nTotal = clientModel->getNumBlocksOfPeers();
-    int nInitTotal = clientModel->getNumBlocksAtStartup();
     int nPercentageLeft = 100 - (count / (nTotal / 100));
     QString tooltip;
 
@@ -467,23 +469,12 @@ void BitcoinGUI::setNumBlocks(int count)
         if (clientModel->getStatusBarWarnings() == "")
         {
             progressBarLabel->setVisible(true);
+            progressBarLabel->setText(tr("Synchronizing with network..."));
             progressBar->setVisible(true);
             progressBar->setFormat(tr("%v of %m blocks (%p%)"));
             progressBar->setAlignment(Qt::AlignCenter);
-            // display absolute bar if the difference between count and nTotal is > 10%
-            if (nPercentageLeft > 10)
-            {
-                progressBarLabel->setText(tr("Synchronizing with network... (abs. display)"));
-                progressBar->setMaximum(nTotal);
-                progressBar->setValue(count);
-            }
-            else
-            {
-                progressBarLabel->setText(tr("Synchronizing with network... (rel. display)"));
-                progressBar->setMaximum(nTotal - nInitTotal);
-                progressBar->setValue(count - nInitTotal);
-            }
-
+            progressBar->setMaximum(nTotal);
+            progressBar->setValue(count);
         }
         else
         {
