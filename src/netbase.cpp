@@ -615,6 +615,18 @@ bool CNetAddr::IsRFC4843() const
     return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10);
 }
 
+bool CNetAddr::IsOnionCat() const
+{
+    static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
+    return (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
+}
+
+bool CNetAddr::IsGarliCat() const
+{
+    static const unsigned char pchGarliCat[] = {0xFD,0x60,0xDB,0x4D,0xDD,0xB5};
+    return (memcmp(ip, pchGarliCat, sizeof(pchGarliCat)) == 0);
+}
+
 bool CNetAddr::IsLocal() const
 {
     // IPv4 loopback
@@ -673,7 +685,7 @@ bool CNetAddr::IsValid() const
 
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || IsRFC4193() || IsRFC4843() || IsLocal());
+    return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || (IsRFC4193() && !IsOnionCat() && !IsGarliCat()) || IsRFC4843() || IsLocal());
 }
 
 std::string CNetAddr::ToStringIP() const
