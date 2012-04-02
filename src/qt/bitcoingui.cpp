@@ -151,7 +151,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // define progress bar format
     progressBar->setFormat(tr("~%m blocks remaining"));
     // define OS independent progress bar style (has to be after addWidget(), otherwise we crash)
-    progressBar->setStyleSheet("QProgressBar { background-color: transparent; border: 1px solid grey; border-radius: 5px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 transparent, stop: 1 orange); margin: 0px; }");
+    progressBar->setStyleSheet("QProgressBar { background-color: transparent; border: 1px solid grey; border-radius: 5px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); margin: 0px; }");
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
