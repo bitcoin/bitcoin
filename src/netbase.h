@@ -81,7 +81,7 @@ class CNetAddr
             )
 };
 
-/** A combnation of a network address (CNetAddr) and a (TCP) port */
+/** A combination of a network address (CNetAddr) and a (TCP) port */
 class CService : public CNetAddr
 {
     protected:
