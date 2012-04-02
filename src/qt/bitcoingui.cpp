@@ -461,20 +461,23 @@ void BitcoinGUI::setNumBlocks(int count)
     }
 
     int nTotal = clientModel->getNumBlocksOfPeers();
-    int nPercentageLeft = 100 - (count / (nTotal / 100));
     QString tooltip;
 
     if(count < nTotal)
     {
+        int nCurMax = nTotal - count;
+        int nOnePercentCurMax = nCurMax / 100;
+        int nPercentageDone = (count / (nTotal / 100));
+
         if (clientModel->getStatusBarWarnings() == "")
         {
             progressBarLabel->setVisible(true);
             progressBarLabel->setText(tr("Synchronizing with network..."));
             progressBar->setVisible(true);
-            progressBar->setFormat(tr("%v of %m blocks (%p%)"));
+            progressBar->setFormat(tr("~%m blocks remaining"));
             progressBar->setAlignment(Qt::AlignCenter);
-            progressBar->setMaximum(nTotal);
-            progressBar->setValue(count);
+            progressBar->setMaximum(nCurMax);
+            progressBar->setValue(nOnePercentCurMax * nPercentageDone);
         }
         else
         {
@@ -482,7 +485,7 @@ void BitcoinGUI::setNumBlocks(int count)
             progressBarLabel->setVisible(true);
             progressBar->setVisible(false);
         }
-        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% left).").arg(count).arg(nTotal).arg(nPercentageLeft);
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotal).arg(nPercentageDone);
     }
     else
     {
