@@ -47,7 +47,7 @@ public:
 };
 
 
-/** C++ wrapper for BIGNUM (OpenSSl bignum) */
+/** C++ wrapper for BIGNUM (OpenSSL bignum) */
 class CBigNum : public BIGNUM
 {
 public:
