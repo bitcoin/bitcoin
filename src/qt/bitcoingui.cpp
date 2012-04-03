@@ -465,6 +465,7 @@ void BitcoinGUI::setNumBlocks(int count)
             progressBar->setVisible(true);
             progressBar->setMaximum(total);
             progressBar->setValue(count);
+            progressBar->setFormat(tr("%1 block(s) remaining").arg(total-count));
         }
         else
         {
