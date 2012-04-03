@@ -123,6 +123,9 @@ std::string _(const char* psz)
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
 }
 
+#ifdef WIN32
+#define strncasecmp strnicmp
+#endif
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
