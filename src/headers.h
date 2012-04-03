@@ -18,7 +18,9 @@
 #endif
 #define _WIN32_IE 0x0400
 #define WIN32_LEAN_AND_MEAN 1
-
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 // Include boost/foreach here as it defines __STDC_LIMIT_MACROS on some systems.
 #include <boost/foreach.hpp>
 
