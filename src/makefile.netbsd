@@ -1,13 +1,22 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
+# Modified for NetBSD by Pierre Pronchery <khorben@defora.org>
 
 USE_UPNP:=0
 
 DEFS=-DNOPCH
 
+BDB_INCLUDE_PATH ?= /usr/pkg/include/db4
+BDB_LIB_PATH ?= /usr/pkg/lib
+BDB_LIB_SUFFIX ?= 4
+BOOST_INCLUDE_PATH ?= /usr/pkg/include
+BOOST_LIB_PATH ?= /usr/pkg/lib
+
+comma := ,
 DEFS += $(addprefix -I,$(CURDIR) $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
 LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
+LIBS += $(addprefix -Wl$(comma)-rpath$(comma),$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
 
 LMODE = dynamic
 LMODE2 = dynamic
