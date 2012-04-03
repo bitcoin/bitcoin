@@ -24,6 +24,10 @@ Q_IMPORT_PLUGIN(qkrcodecs)
 Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
+#ifdef WIN32
+#define strncasecmp strnicmp
+#endif
+
 using namespace std;
 using namespace boost;
 
