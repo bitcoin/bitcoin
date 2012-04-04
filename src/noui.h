@@ -36,6 +36,8 @@ typedef void wxWindow;
 #define wxHELP                  0x00008000
 #define wxMORE                  0x00010000
 #define wxSETUP                 0x00020000
+// Force blocking, modal message box dialog (not just notification)
+#define wxMODAL                 0x00040000
 
 inline int MyMessageBox(const std::string& message, const std::string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
 {
