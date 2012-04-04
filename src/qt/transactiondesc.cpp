@@ -4,7 +4,7 @@
 #include "bitcoinunits.h"
 
 #include "headers.h"
-#include "qtui.h"
+#include "ui_interface.h"
 
 #include <QString>
 

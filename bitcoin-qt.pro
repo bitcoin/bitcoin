@@ -115,7 +115,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/key.h \
     src/db.h \
     src/script.h \
-    src/noui.h \
     src/init.h \
     src/headers.h \
     src/irc.h \
@@ -135,7 +134,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/guiconstants.h \
     src/qt/optionsmodel.h \
     src/qt/monitoreddatamapper.h \
-    src/qtui.h \
     src/qt/transactiondesc.h \
     src/qt/transactiondescdialog.h \
     src/qt/bitcoinamountfield.h \
@@ -156,7 +154,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/protocol.h \
     src/qt/notificator.h \
     src/qt/qtipcserver.h \
-    src/allocators.h
+    src/allocators.h \
+    src/ui_interface.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
