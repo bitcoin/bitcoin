@@ -64,6 +64,9 @@ map<CInv, int64> mapAlreadyAskedFor;
 set<CNetAddr> setservAddNodeAddresses;
 CCriticalSection cs_setservAddNodeAddresses;
 
+static CWaitableCriticalSection csOutbound;
+static int nOutbound = 0;
+static CConditionVariable condOutbound;
 
 
 unsigned short GetListenPort()
@@ -460,6 +463,8 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
             pnode->AddRef();
         CRITICAL_BLOCK(cs_vNodes)
             vNodes.push_back(pnode);
+        WAITABLE_CRITICAL_BLOCK(csOutbound)
+            nOutbound++;
 
         pnode->nTimeConnected = GetTime();
         return pnode;
@@ -609,6 +614,15 @@ void ThreadSocketHandler2(void* parg)
                 {
                     // remove from vNodes
                     vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
+
+                    if (!pnode->fInbound)
+                        WAITABLE_CRITICAL_BLOCK(csOutbound)
+                        {
+                            nOutbound--;
+
+                            // Connection slot(s) were removed, notify connection creator(s)
+                            NOTIFY(condOutbound);
+                        }
 
                     // close socket and cleanup
                     pnode->CloseSocketDisconnect();
@@ -1278,8 +1292,6 @@ void ThreadOpenConnections2(void* parg)
     int64 nStart = GetTime();
     loop
     {
-        int nOutbound = 0;
-
         vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
         Sleep(500);
         vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
@@ -1287,23 +1299,13 @@ void ThreadOpenConnections2(void* parg)
             return;
 
         // Limit outbound connections
-        loop
-        {
-            nOutbound = 0;
-            CRITICAL_BLOCK(cs_vNodes)
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    if (!pnode->fInbound)
-                        nOutbound++;
-            int nMaxOutboundConnections = MAX_OUTBOUND_CONNECTIONS;
-            nMaxOutboundConnections = min(nMaxOutboundConnections, (int)GetArg("-maxconnections", 125));
-            if (nOutbound < nMaxOutboundConnections)
-                break;
-            vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
-            Sleep(2000);
-            vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
-            if (fShutdown)
-                return;
-        }
+        int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));
+        vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
+        WAITABLE_CRITICAL_BLOCK(csOutbound)
+            WAIT(condOutbound, fShutdown || nOutbound < nMaxOutbound);
+        vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
+        if (fShutdown)
+            return;
 
         bool fAddSeeds = false;
 
@@ -1752,6 +1754,7 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
+    NOTIFY_ALL(condOutbound);
     do
     {
         int nThreadsRunning = 0;
