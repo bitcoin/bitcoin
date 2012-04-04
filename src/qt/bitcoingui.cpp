@@ -138,16 +138,19 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     frameBlocksLayout->addWidget(labelBlocksIcon);
     frameBlocksLayout->addStretch();
 
-    // Progress bar for blocks download
-    progressBarLabel = new QLabel(tr("Synchronizing with network..."));
+    // Progress bar and label for blocks download
+    progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
     progressBar = new QProgressBar();
-    progressBar->setToolTip(tr("Block chain synchronization in progress"));
     progressBar->setVisible(false);
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
+
+    // define OS independent progress bar style (has to be placed after addWidget(), otherwise we crash)
+    // we did this, because with some OSes default style, text on the progress bar is unreadable
+    progressBar->setStyleSheet("QProgressBar { background-color: transparent; border: 1px solid grey; border-radius: 2px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); margin: 0px; }");
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
@@ -451,20 +454,31 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count)
 {
-    if(!clientModel)
+    // don't show / hide progressBar and it's label if we have no connection(s) to the network
+    if (!clientModel || clientModel->getNumConnections() == 0)
+    {
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+
         return;
-    int total = clientModel->getNumBlocksOfPeers();
+    }
+
+    int nTotalBlocks = clientModel->getNumBlocksOfPeers();
     QString tooltip;
 
-    if(count < total)
+    if(count < nTotalBlocks)
     {
+        int nRemainingBlocks = nTotalBlocks - count;
+        float nPercentageDone = count / (nTotalBlocks * 0.01f);
+
         if (clientModel->getStatusBarWarnings() == "")
         {
-            progressBarLabel->setVisible(true);
             progressBarLabel->setText(tr("Synchronizing with network..."));
-            progressBar->setVisible(true);
-            progressBar->setMaximum(total);
+            progressBarLabel->setVisible(true);
+            progressBar->setFormat(tr("~%n block(s) remaining", "", nRemainingBlocks));
+            progressBar->setMaximum(nTotalBlocks);
             progressBar->setValue(count);
+            progressBar->setVisible(true);
         }
         else
         {
@@ -472,7 +486,7 @@ void BitcoinGUI::setNumBlocks(int count)
             progressBarLabel->setVisible(true);
             progressBar->setVisible(false);
         }
-        tooltip = tr("Downloaded %1 of %2 blocks of transaction history.").arg(count).arg(total);
+        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
     }
     else
     {
