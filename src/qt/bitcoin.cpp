@@ -36,12 +36,19 @@ int MyMessageBox(const std::string& message, const std::string& caption, int sty
 
 int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
 {
+    bool modal = style & wxMODAL;
+
+    if (modal)
+        while (!guiref)
+            sleep(1);
+
     // Message from network thread
     if(guiref)
     {
         QMetaObject::invokeMethod(guiref, "error", Qt::QueuedConnection,
                                    Q_ARG(QString, QString::fromStdString(caption)),
-                                   Q_ARG(QString, QString::fromStdString(message)));
+                                   Q_ARG(QString, QString::fromStdString(message)),
+                                   Q_ARG(bool, modal));
     }
     else
     {
