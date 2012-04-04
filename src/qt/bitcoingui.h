@@ -117,7 +117,7 @@ public slots:
     void refreshStatusBar();
 
     /** Notify the user of an error in the network or transaction handling code. */
-    void error(const QString &title, const QString &message);
+    void error(const QString &title, const QString &message, bool modal = false);
     /** Asks the user whether to pay the transaction fee or to cancel the transaction.
        It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so an indirected pointer is used.
