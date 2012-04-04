@@ -1,15 +1,12 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_NOUI_H
-#define BITCOIN_NOUI_H
+#ifndef BITCOIN_UI_INTERFACE_H
+#define BITCOIN_UI_INTERFACE_H
 
 #include <string>
-#include <boost/function.hpp>
-#include "wallet.h"
+#include "util.h" // for int64
 
-typedef void wxWindow;
 #define wxYES                   0x00000002
 #define wxOK                    0x00000004
 #define wxNO                    0x00000008
@@ -36,39 +33,18 @@ typedef void wxWindow;
 #define wxHELP                  0x00008000
 #define wxMORE                  0x00010000
 #define wxSETUP                 0x00020000
+// Force blocking, modal message box dialog (not just notification)
+#define wxMODAL                 0x00040000
 
-inline int MyMessageBox(const std::string& message, const std::string& caption="Message", int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
-{
-    printf("%s: %s\n", caption.c_str(), message.c_str());
-    fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
-    return 4;
-}
-#define wxMessageBox  MyMessageBox
+/* These UI communication functions are implemented in bitcoin.cpp (for ui) and noui.cpp (no ui) */
 
-inline int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK, wxWindow* parent=NULL, int x=-1, int y=-1)
-{
-    return MyMessageBox(message, caption, style, parent, x, y);
-}
-
-inline bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
-{
-    return true;
-}
-
-inline void CalledSetStatusBar(const std::string& strText, int nField)
-{
-}
-
-inline void UIThreadCall(boost::function0<void> fn)
-{
-}
-
-inline void MainFrameRepaint()
-{
-}
-
-inline void InitMessage(const std::string &message)
-{
-}
+extern int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK);
+extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);
+extern void ThreadSafeHandleURL(const std::string& strURL);
+extern void MainFrameRepaint();
+extern void AddressBookRepaint();
+extern void QueueShutdown();
+extern void InitMessage(const std::string &message);
+extern std::string _(const char* psz);
 
 #endif

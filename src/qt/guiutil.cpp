@@ -17,6 +17,7 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include <QDesktopServices>
+#include <QThread>
 
 QString GUIUtil::dateTimeStr(qint64 nTime)
 {
@@ -184,3 +185,14 @@ QString GUIUtil::getSaveFileName(QWidget *parent, const QString &caption,
     return result;
 }
 
+Qt::ConnectionType GUIUtil::blockingGUIThreadConnection()
+{
+    if(QThread::currentThread() != QCoreApplication::instance()->thread())
+    {
+        return Qt::BlockingQueuedConnection;
+    }
+    else
+    {
+        return Qt::DirectConnection;
+    }
+}

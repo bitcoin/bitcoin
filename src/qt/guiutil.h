@@ -60,6 +60,14 @@ public:
                                    const QString &dir=QString(), const QString &filter=QString(),
                                    QString *selectedSuffixOut=0);
 
+
+    /** Get connection type to call object slot in GUI thread with invokeMethod. The call will be blocking.
+
+       @returns If called from the GUI thread, return a Qt::DirectConnection.
+                If called from another thread, return a Qt::BlockingQueuedConnection.
+    */
+    static Qt::ConnectionType blockingGUIThreadConnection();
+
 };
 
 #endif // GUIUTIL_H

@@ -1811,8 +1811,8 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low  ");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION);
-        CreateThread(Shutdown, NULL);
+        ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION | wxMODAL);
+        QueueShutdown();
         return false;
     }
     return true;
@@ -3450,8 +3450,6 @@ void static BitcoinMiner(CWallet *pwallet)
                         dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
                         nHPSTimerStart = GetTimeMillis();
                         nHashCounter = 0;
-                        string strStatus = strprintf("    %.0f khash/s", dHashesPerSec/1000.0);
-                        UIThreadCall(boost::bind(CalledSetStatusBar, strStatus, 0));
                         static int64 nLogTime;
                         if (GetTime() - nLogTime > 30 * 60)
                         {
@@ -3508,7 +3506,6 @@ void static ThreadBitcoinMiner(void* parg)
         vnThreadsRunning[THREAD_MINER]--;
         PrintException(NULL, "ThreadBitcoinMiner()");
     }
-    UIThreadCall(boost::bind(CalledSetStatusBar, "", 0));
     nHPSTimerStart = 0;
     if (vnThreadsRunning[THREAD_MINER] == 0)
         dHashesPerSec = 0;

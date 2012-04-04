@@ -113,11 +113,9 @@ public slots:
        @see WalletModel::EncryptionStatus
     */
     void setEncryptionStatus(int status);
-    /** Set the status bar text if there are any warnings (removes sync progress bar if applicable) */
-    void refreshStatusBar();
 
     /** Notify the user of an error in the network or transaction handling code. */
-    void error(const QString &title, const QString &message);
+    void error(const QString &title, const QString &message, bool modal);
     /** Asks the user whether to pay the transaction fee or to cancel the transaction.
        It is currently not possible to pass a return value to another thread through
        BlockingQueuedConnection, so an indirected pointer is used.
