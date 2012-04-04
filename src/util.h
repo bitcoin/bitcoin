@@ -95,13 +95,6 @@ inline void Sleep(int64 n)
 }
 #endif
 
-#if !defined(QT_GUI)
-inline const char* _(const char* psz)
-{
-    return psz;
-}
-#endif
-
 
 
 
@@ -263,16 +256,6 @@ public:
 
 #define TRY_CRITICAL_BLOCK(cs)     \
     if (CTryCriticalBlock criticalblock = CTryCriticalBlock(cs, #cs, __FILE__, __LINE__))
-
-
-
-
-
-
-// This is exactly like std::string, but with a custom allocator.
-// (secure_allocator<> is defined in serialize.h)
-typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
-
 
 
 

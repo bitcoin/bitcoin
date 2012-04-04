@@ -1219,7 +1219,7 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
         return strError;
     }
 
-    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending..."), NULL))
+    if (fAskFee && !ThreadSafeAskFee(nFeeRequired, _("Sending...")))
         return "ABORTED";
 
     if (!CommitTransaction(wtxNew, reservekey))
@@ -1279,6 +1279,7 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
 bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& strName)
 {
     mapAddressBook[address] = strName;
+    AddressBookRepaint();
     if (!fFileBacked)
         return false;
     return CWalletDB(strWalletFile).WriteName(address.ToString(), strName);
@@ -1287,6 +1288,7 @@ bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& s
 bool CWallet::DelAddressBookName(const CBitcoinAddress& address)
 {
     mapAddressBook.erase(address);
+    AddressBookRepaint();
     if (!fFileBacked)
         return false;
     return CWalletDB(strWalletFile).EraseName(address.ToString());

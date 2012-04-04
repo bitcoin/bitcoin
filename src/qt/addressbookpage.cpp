@@ -94,8 +94,6 @@ void AddressBookPage::setModel(AddressTableModel *model)
     this->model = model;
     if(!model)
         return;
-    // Refresh list from core
-    model->updateList();
 
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);

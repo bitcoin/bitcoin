@@ -13,17 +13,6 @@
 #include <boost/filesystem/convenience.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 
-#if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
-#define _BITCOIN_QT_PLUGINS_INCLUDED
-#define __INSURE__
-#include <QtPlugin>
-Q_IMPORT_PLUGIN(qcncodecs)
-Q_IMPORT_PLUGIN(qjpcodecs)
-Q_IMPORT_PLUGIN(qtwcodecs)
-Q_IMPORT_PLUGIN(qkrcodecs)
-Q_IMPORT_PLUGIN(qtaccessiblewidgets)
-#endif
-
 #ifdef WIN32
 #define strncasecmp strnicmp
 #endif
@@ -248,7 +237,7 @@ bool AppInit2(int argc, char* argv[])
         strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
 #if defined(QT_GUI) && defined(WIN32)
         // On windows, show a message box, as there is no stderr
-        wxMessageBox(strUsage, "Usage");
+        ThreadSafeMessageBox(strUsage, _("Usage"), wxOK | wxMODAL);
 #else
         fprintf(stderr, "%s", strUsage.c_str());
 #endif
@@ -337,7 +326,7 @@ bool AppInit2(int argc, char* argv[])
     static boost::interprocess::file_lock lock(strLockFile.c_str());
     if (!lock.try_lock())
     {
-        wxMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), "Bitcoin");
+        ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), _("Bitcoin"), wxOK|wxMODAL);
         return false;
     }
 
@@ -379,7 +368,7 @@ bool AppInit2(int argc, char* argv[])
         {
             strErrors << _("Wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
             printf("%s", strErrors.str().c_str());
-            wxMessageBox(strErrors.str(), "Bitcoin", wxOK | wxICON_ERROR);
+            ThreadSafeMessageBox(strErrors.str(), _("Bitcoin"), wxOK | wxICON_ERROR | wxMODAL);
             return false;
         }
         else
@@ -451,7 +440,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (!strErrors.str().empty())
     {
-        wxMessageBox(strErrors.str(), "Bitcoin", wxOK | wxICON_ERROR);
+        ThreadSafeMessageBox(strErrors.str(), _("Bitcoin"), wxOK | wxICON_ERROR | wxMODAL);
         return false;
     }
 
@@ -507,7 +496,7 @@ bool AppInit2(int argc, char* argv[])
         addrProxy = CService(mapArgs["-proxy"], 9050);
         if (!addrProxy.IsValid())
         {
-            wxMessageBox(_("Invalid -proxy address"), "Bitcoin");
+            ThreadSafeMessageBox(_("Invalid -proxy address"), _("Bitcoin"), wxOK | wxMODAL);
             return false;
         }
     }
@@ -538,7 +527,7 @@ bool AppInit2(int argc, char* argv[])
         std::string strError;
         if (!BindListenPort(strError))
         {
-            wxMessageBox(strError, "Bitcoin");
+            ThreadSafeMessageBox(strError, _("Bitcoin"), wxOK | wxMODAL);
             return false;
         }
     }
@@ -558,11 +547,11 @@ bool AppInit2(int argc, char* argv[])
     {
         if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
         {
-            wxMessageBox(_("Invalid amount for -paytxfee=<amount>"), "Bitcoin");
+            ThreadSafeMessageBox(_("Invalid amount for -paytxfee=<amount>"), _("Bitcoin"), wxOK | wxMODAL);
             return false;
         }
         if (nTransactionFee > 0.25 * COIN)
-            wxMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), "Bitcoin", wxOK | wxICON_EXCLAMATION);
+            ThreadSafeMessageBox(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."), _("Bitcoin"), wxOK | wxICON_EXCLAMATION | wxMODAL);
     }
 
     //
@@ -574,7 +563,7 @@ bool AppInit2(int argc, char* argv[])
     RandAddSeedPerfmon();
 
     if (!CreateThread(StartNode, NULL))
-        wxMessageBox(_("Error: CreateThread(StartNode) failed"), "Bitcoin");
+        ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("Bitcoin"), wxOK | wxMODAL);
 
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
