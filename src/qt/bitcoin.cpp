@@ -5,6 +5,7 @@
 #include "clientmodel.h"
 #include "walletmodel.h"
 #include "optionsmodel.h"
+#include "guiutil.h"
 
 #include "headers.h"
 #include "init.h"
@@ -12,7 +13,6 @@
 
 #include <QApplication>
 #include <QMessageBox>
-#include <QThread>
 #include <QTextCodec>
 #include <QLocale>
 #include <QTranslator>
@@ -21,27 +21,35 @@
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 
+#if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
+#define _BITCOIN_QT_PLUGINS_INCLUDED
+#define __INSURE__
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(qcncodecs)
+Q_IMPORT_PLUGIN(qjpcodecs)
+Q_IMPORT_PLUGIN(qtwcodecs)
+Q_IMPORT_PLUGIN(qkrcodecs)
+Q_IMPORT_PLUGIN(qtaccessiblewidgets)
+#endif
+
 // Need a global reference for the notifications to find the GUI
-BitcoinGUI *guiref;
-QSplashScreen *splashref;
+static BitcoinGUI *guiref;
+static QSplashScreen *splashref;
+static WalletModel *walletmodel;
+static ClientModel *clientmodel;
 
-int MyMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
-{
-    // Message from AppInit2(), always in main thread before main window is constructed
-    QMessageBox::critical(0, QString::fromStdString(caption),
-        QString::fromStdString(message),
-        QMessageBox::Ok, QMessageBox::Ok);
-    return 4;
-}
-
-int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style, wxWindow* parent, int x, int y)
+int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
 {
     // Message from network thread
     if(guiref)
     {
-        QMetaObject::invokeMethod(guiref, "error", Qt::QueuedConnection,
+        bool modal = (style & wxMODAL);
+        // in case of modal message, use blocking connection to wait for user to click OK
+        QMetaObject::invokeMethod(guiref, "error",
+                                   modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
                                    Q_ARG(QString, QString::fromStdString(caption)),
-                                   Q_ARG(QString, QString::fromStdString(message)));
+                                   Q_ARG(QString, QString::fromStdString(message)),
+                                   Q_ARG(bool, modal));
     }
     else
     {
@@ -51,7 +59,7 @@ int ThreadSafeMessageBox(const std::string& message, const std::string& caption,
     return 4;
 }
 
-bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindow* parent)
+bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
 {
     if(!guiref)
         return false;
@@ -59,15 +67,7 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption, wxWindo
         return true;
     bool payFee = false;
 
-    // Call slot on GUI thread.
-    // If called from another thread, use a blocking QueuedConnection.
-    Qt::ConnectionType connectionType = Qt::DirectConnection;
-    if(QThread::currentThread() != QCoreApplication::instance()->thread())
-    {
-        connectionType = Qt::BlockingQueuedConnection;
-    }
-
-    QMetaObject::invokeMethod(guiref, "askFee", connectionType,
+    QMetaObject::invokeMethod(guiref, "askFee", GUIUtil::blockingGUIThreadConnection(),
                                Q_ARG(qint64, nFeeRequired),
                                Q_ARG(bool*, &payFee));
 
@@ -79,31 +79,22 @@ void ThreadSafeHandleURL(const std::string& strURL)
     if(!guiref)
         return;
 
-    // Call slot on GUI thread.
-    // If called from another thread, use a blocking QueuedConnection.
-    Qt::ConnectionType connectionType = Qt::DirectConnection;
-    if(QThread::currentThread() != QCoreApplication::instance()->thread())
-    {
-        connectionType = Qt::BlockingQueuedConnection;
-    }
-    QMetaObject::invokeMethod(guiref, "handleURL", connectionType,
+    QMetaObject::invokeMethod(guiref, "handleURL", GUIUtil::blockingGUIThreadConnection(),
                                Q_ARG(QString, QString::fromStdString(strURL)));
-}
-
-void CalledSetStatusBar(const std::string& strText, int nField)
-{
-    // Only used for built-in mining, which is disabled, simple ignore
-}
-
-void UIThreadCall(boost::function0<void> fn)
-{
-    // Only used for built-in mining, which is disabled, simple ignore
 }
 
 void MainFrameRepaint()
 {
-    if(guiref)
-        QMetaObject::invokeMethod(guiref, "refreshStatusBar", Qt::QueuedConnection);
+    if(clientmodel)
+        QMetaObject::invokeMethod(clientmodel, "update", Qt::QueuedConnection);
+    if(walletmodel)
+        QMetaObject::invokeMethod(walletmodel, "update", Qt::QueuedConnection);
+}
+
+void AddressBookRepaint()
+{
+    if(walletmodel)
+        QMetaObject::invokeMethod(walletmodel, "updateAddressList", Qt::QueuedConnection);
 }
 
 void InitMessage(const std::string &message)
@@ -113,6 +104,11 @@ void InitMessage(const std::string &message)
         splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(255,255,200));
         QApplication::instance()->processEvents();
     }
+}
+
+void QueueShutdown()
+{
+    QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 }
 
 /*
@@ -221,22 +217,24 @@ int main(int argc, char *argv[])
 
     try
     {
+        BitcoinGUI window;
+        guiref = &window;
         if(AppInit2(argc, argv))
         {
             {
-                // Put this in a block, so that BitcoinGUI is cleaned up properly before
-                // calling Shutdown() in case of exceptions.
+                // Put this in a block, so that the Model objects are cleaned up before
+                // calling Shutdown().
 
                 optionsModel.Upgrade(); // Must be done after AppInit2
 
-                BitcoinGUI window;
                 if (splashref)
                     splash.finish(&window);
 
                 ClientModel clientModel(&optionsModel);
+                clientmodel = &clientModel;
                 WalletModel walletModel(pwalletMain, &optionsModel);
+                walletmodel = &walletModel;
 
-                guiref = &window;
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);
 
@@ -273,7 +271,11 @@ int main(int argc, char *argv[])
 #endif
                 app.exec();
 
+                window.setClientModel(0);
+                window.setWalletModel(0);
                 guiref = 0;
+                clientmodel = 0;
+                walletmodel = 0;
             }
             Shutdown(NULL);
         }

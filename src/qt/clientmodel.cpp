@@ -6,19 +6,12 @@
 
 #include "headers.h"
 
-#include <QTimer>
 #include <QDateTime>
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), optionsModel(optionsModel),
     cachedNumConnections(0), cachedNumBlocks(0)
 {
-    // Until signal notifications is built into the bitcoin core,
-    //  simply update everything after polling using a timer.
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start(MODEL_UPDATE_DELAY);
-
     numBlocksAtStartup = -1;
 }
 
@@ -47,14 +40,23 @@ void ClientModel::update()
 {
     int newNumConnections = getNumConnections();
     int newNumBlocks = getNumBlocks();
+    QString newStatusBar = getStatusBarWarnings();
 
     if(cachedNumConnections != newNumConnections)
         emit numConnectionsChanged(newNumConnections);
-    if(cachedNumBlocks != newNumBlocks)
+    if(cachedNumBlocks != newNumBlocks || cachedStatusBar != newStatusBar)
+    {
+        // Simply emit a numBlocksChanged for now in case the status message changes,
+        // so that the view updates the status bar.
+        // TODO: It should send a notification.
+        //    (However, this might generate looped notifications and needs to be thought through and tested carefully)
+        //    error(tr("Network Alert"), newStatusBar);
         emit numBlocksChanged(newNumBlocks);
+    }
 
     cachedNumConnections = newNumConnections;
     cachedNumBlocks = newNumBlocks;
+    cachedStatusBar = newStatusBar;
 }
 
 bool ClientModel::isTestNet() const
