@@ -62,12 +62,6 @@ contains(USE_DBUS, 1) {
     QT += dbus
 }
 
-# use: qmake "USE_SSL=1"
-contains(USE_SSL, 1) {
-    message(Building with SSL support for RPC)
-    DEFINES += USE_SSL
-}
-
 # use: qmake "FIRST_CLASS_MESSAGING=1"
 contains(FIRST_CLASS_MESSAGING, 1) {
     message(Building with first-class messaging)

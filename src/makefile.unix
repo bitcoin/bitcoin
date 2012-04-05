@@ -39,10 +39,6 @@ ifneq (${USE_UPNP}, -)
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 endif
 
-ifneq (${USE_SSL}, 0)
-	DEFS += -DUSE_SSL
-endif
-
 LIBS+= \
  -Wl,-B$(LMODE2) \
    -l z \

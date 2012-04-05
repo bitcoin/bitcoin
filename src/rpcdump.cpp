@@ -6,15 +6,8 @@
 #include "init.h" // for pwalletMain
 #include "bitcoinrpc.h"
 
-// #include <boost/asio.hpp>
-// #include <boost/iostreams/concepts.hpp>
-// #include <boost/iostreams/stream.hpp>
 #include <boost/lexical_cast.hpp>
-// #ifdef USE_SSL
-// #include <boost/asio/ssl.hpp> 
-// typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
-// #endif
-// #include <boost/xpressive/xpressive_dynamic.hpp>
+
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
