@@ -51,10 +51,17 @@ endif
 
 DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_SSL
 
-DEBUGFLAGS=-g
+ifdef RELEASE
+# Compile for maximum compatibility and smallest size.
+# This requires that dependencies are compiled
+# the same way.
+CFLAGS = -mmacosx-version-min=10.5 -arch i386 -O3
+else
+CFLAGS = -g
+endif
+
 # ppc doesn't work because we don't support big-endian
-CFLAGS=-mmacosx-version-min=10.5 -arch i386 -O3 \
-    -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-offsetof -Wformat-security \
+CFLAGS += -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-offsetof -Wformat-security \
     $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 OBJS= \
