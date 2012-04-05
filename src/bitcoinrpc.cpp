@@ -2161,6 +2161,10 @@ void ThreadRPCServer(void* parg)
     printf("ThreadRPCServer exiting\n");
 }
 
+#ifdef QT_GUI
+extern bool HACK_SHUTDOWN;
+#endif
+
 void ThreadRPCServer2(void* parg)
 {
     printf("ThreadRPCServer started\n");
@@ -2196,9 +2200,27 @@ void ThreadRPCServer2(void* parg)
 
     asio::io_service io_service;
     ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
+#ifndef QT_GUI
     ip::tcp::acceptor acceptor(io_service, endpoint);
 
     acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+#else
+    ip::tcp::acceptor acceptor(io_service);
+    try
+    {
+        acceptor.open(endpoint.protocol());
+        acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+        acceptor.bind(endpoint);
+        acceptor.listen(socket_base::max_connections);
+    }
+    catch(system::system_error &e)
+    {
+        HACK_SHUTDOWN = true;
+        ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
+                             _("Error"), wxOK | wxMODAL);
+        return;
+    }
+#endif
 
 #ifdef USE_SSL
     ssl::context context(io_service, ssl::context::sslv23);
