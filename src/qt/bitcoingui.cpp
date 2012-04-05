@@ -516,12 +516,16 @@ void BitcoinGUI::refreshStatusBar()
     setNumBlocks(clientModel->getNumBlocks());
 }
 
+bool HACK_SHUTDOWN = false;
+
 void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
 {
     // Report errors from network/worker thread
     if (modal)
     {
         QMessageBox::critical(this, title, message, QMessageBox::Ok, QMessageBox::Ok);
+        if (HACK_SHUTDOWN)
+            QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
     } else {
         notificator->notify(Notificator::Critical, title, message);
     }
