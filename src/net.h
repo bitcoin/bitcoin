@@ -29,7 +29,6 @@ extern int nBestHeight;
 
 inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 10*1000); }
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 10*1000); }
-static const unsigned int PUBLISH_HOPS = 5;
 
 bool RecvLine(SOCKET hSocket, std::string& strLine);
 bool GetMyExternalIP(CNetAddr& ipRet);
@@ -37,8 +36,6 @@ void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout=0);
-void AbandonRequests(void (*fn)(void*, CDataStream&), void* param1);
-bool AnySubscribed(unsigned int nChannel);
 void MapPort(bool fMapPort);
 bool BindListenPort(std::string& strError=REF(std::string()));
 void StartNode(void* parg);
@@ -160,9 +157,6 @@ public:
     CCriticalSection cs_inventory;
     std::multimap<int64, CInv> mapAskFor;
 
-    // publish and subscription
-    std::vector<char> vfSubscribe;
-
     CNode(SOCKET hSocketIn, CAddress addrIn, bool fInboundIn=false)
     {
         nServices = 0;
@@ -192,7 +186,6 @@ public:
         hashLastGetBlocksEnd = 0;
         nStartingHeight = -1;
         fGetAddr = false;
-        vfSubscribe.assign(256, false);
         nMisbehavior = 0;
         setInventoryKnown.max_size(SendBufferSize() / 1000);
 
@@ -633,59 +626,5 @@ inline void RelayMessage<>(const CInv& inv, const CDataStream& ss)
     RelayInventory(inv);
 }
 
-
-
-
-
-
-
-
-//
-// Templates for the publish and subscription system.
-// The object being published as T& obj needs to have:
-//   a set<unsigned int> setSources member
-//   specializations of AdvertInsert and AdvertErase
-// Currently implemented for CTable and CProduct.
-//
-
-template<typename T>
-void AdvertStartPublish(CNode* pfrom, unsigned int nChannel, unsigned int nHops, T& obj)
-{
-    // Add to sources
-    obj.setSources.insert(pfrom->addr.ip);
-
-    if (!AdvertInsert(obj))
-        return;
-
-    // Relay
-    CRITICAL_BLOCK(cs_vNodes)
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if (pnode != pfrom && (nHops < PUBLISH_HOPS || pnode->IsSubscribed(nChannel)))
-                pnode->PushMessage("publish", nChannel, nHops, obj);
-}
-
-template<typename T>
-void AdvertStopPublish(CNode* pfrom, unsigned int nChannel, unsigned int nHops, T& obj)
-{
-    uint256 hash = obj.GetHash();
-
-    CRITICAL_BLOCK(cs_vNodes)
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if (pnode != pfrom && (nHops < PUBLISH_HOPS || pnode->IsSubscribed(nChannel)))
-                pnode->PushMessage("pub-cancel", nChannel, nHops, hash);
-
-    AdvertErase(obj);
-}
-
-template<typename T>
-void AdvertRemoveSource(CNode* pfrom, unsigned int nChannel, unsigned int nHops, T& obj)
-{
-    // Remove a source
-    obj.setSources.erase(pfrom->addr.ip);
-
-    // If no longer supported by any sources, cancel it
-    if (obj.setSources.empty())
-        AdvertStopPublish(pfrom, nChannel, nHops, obj);
-}
 
 #endif
