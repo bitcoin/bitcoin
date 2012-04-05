@@ -84,6 +84,8 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
             CSecret vchSecret;
             if(!DecryptSecret(vMasterKeyIn, vchCryptedSecret, Hash(vchPubKey.begin(), vchPubKey.end()), vchSecret))
                 return false;
+            if (vchSecret.size() != 32)
+                return false;
             CKey key;
             key.SetPubKey(vchPubKey);
             key.SetSecret(vchSecret);
@@ -145,6 +147,8 @@ bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
             const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
             CSecret vchSecret;
             if (!DecryptSecret(vMasterKey, vchCryptedSecret, Hash(vchPubKey.begin(), vchPubKey.end()), vchSecret))
+                return false;
+            if (vchSecret.size() != 32)
                 return false;
             keyOut.SetPubKey(vchPubKey);
             keyOut.SetSecret(vchSecret);
