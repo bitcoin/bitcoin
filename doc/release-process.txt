@@ -79,7 +79,7 @@
   Gavin also had trouble with the macports py27-appscript package; he
   ended up installing a version that worked with: /usr/bin/easy_install-2.7 appscript
 
-  qmake RELEASE=1 USE_SSL=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-qt.pro
+  qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-qt.pro
   make
   export QTDIR=/opt/local/share/qt4  # needed to find translations/qt_*.qm files
   T=$(contrib/qt_translations.py $QTDIR/translations src/qt/locale)
