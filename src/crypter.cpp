@@ -60,7 +60,7 @@ bool CCrypter::SetKey(const CKeyingMaterial& chNewKey, const std::vector<unsigne
     return true;
 }
 
-bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext)
+bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext, bool fPad)
 {
     if (!fKeySet)
         return false;
@@ -75,6 +75,7 @@ bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned
 
     EVP_CIPHER_CTX_init(&ctx);
     EVP_EncryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
+    EVP_CIPHER_CTX_set_padding(&ctx, fPad);
 
     EVP_EncryptUpdate(&ctx, &vchCiphertext[0], &nCLen, &vchPlaintext[0], nLen);
     EVP_EncryptFinal_ex(&ctx, (&vchCiphertext[0])+nCLen, &nFLen);
@@ -85,7 +86,7 @@ bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned
     return true;
 }
 
-bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext)
+bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext, bool fPad)
 {
     if (!fKeySet)
         return false;
@@ -100,6 +101,7 @@ bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingM
 
     EVP_CIPHER_CTX_init(&ctx);
     EVP_DecryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
+    EVP_CIPHER_CTX_set_padding(&ctx, fPad);
 
     EVP_DecryptUpdate(&ctx, &vchPlaintext[0], &nPLen, &vchCiphertext[0], nLen);
     EVP_DecryptFinal_ex(&ctx, (&vchPlaintext[0])+nPLen, &nFLen);
@@ -118,7 +120,7 @@ bool EncryptSecret(CKeyingMaterial& vMasterKey, const CSecret &vchPlaintext, con
     memcpy(&chIV[0], &nIV, WALLET_CRYPTO_KEY_SIZE);
     if(!cKeyCrypter.SetKey(vMasterKey, chIV))
         return false;
-    return cKeyCrypter.Encrypt((CKeyingMaterial)vchPlaintext, vchCiphertext);
+    return cKeyCrypter.Encrypt((CKeyingMaterial)vchPlaintext, vchCiphertext, false);
 }
 
 bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CSecret& vchPlaintext)
@@ -128,5 +130,8 @@ bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned
     memcpy(&chIV[0], &nIV, WALLET_CRYPTO_KEY_SIZE);
     if(!cKeyCrypter.SetKey(vMasterKey, chIV))
         return false;
-    return cKeyCrypter.Decrypt(vchCiphertext, *((CKeyingMaterial*)&vchPlaintext));
+    if (!cKeyCrypter.Decrypt(vchCiphertext, *((CKeyingMaterial*)&vchPlaintext), false))
+        return false;
+    vchPlaintext.resize(WALLET_CRYPTO_KEY_SIZE); // cut off padding left by versions <0.6.0
+    return true;
 }
