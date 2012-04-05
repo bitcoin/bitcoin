@@ -14,12 +14,11 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#ifdef USE_SSL
 #include <boost/asio/ssl.hpp> 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
-#endif
+
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
@@ -2273,7 +2272,6 @@ bool ClientAllowed(const string& strAddress)
     return false;
 }
 
-#ifdef USE_SSL
 //
 // IOStream device that speaks SSL but can also speak non-SSL
 //
@@ -2325,7 +2323,6 @@ private:
     bool fUseSSL;
     SSLStream& stream;
 };
-#endif
 
 void ThreadRPCServer(void* parg)
 {
@@ -2384,7 +2381,6 @@ void ThreadRPCServer2(void* parg)
 
     acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
 
-#ifdef USE_SSL
     ssl::context context(io_service, ssl::context::sslv23);
     if (fUseSSL)
     {
@@ -2402,29 +2398,17 @@ void ThreadRPCServer2(void* parg)
                                          "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
         SSL_CTX_set_cipher_list(context.impl(), ciphers.c_str());
     }
-#else
-    if (fUseSSL)
-        throw runtime_error("-rpcssl=1, but bitcoin compiled without full openssl libraries.");
-#endif
 
     loop
     {
         // Accept connection
-#ifdef USE_SSL
         SSLStream sslStream(io_service, context);
         SSLIOStreamDevice d(sslStream, fUseSSL);
         iostreams::stream<SSLIOStreamDevice> stream(d);
-#else
-        ip::tcp::iostream stream;
-#endif
 
         ip::tcp::endpoint peer;
         vnThreadsRunning[THREAD_RPCSERVER]--;
-#ifdef USE_SSL
         acceptor.accept(sslStream.lowest_layer(), peer);
-#else
-        acceptor.accept(*stream.rdbuf(), peer);
-#endif
         vnThreadsRunning[4]++;
         if (fShutdown)
             return;
@@ -2551,7 +2535,6 @@ Object CallRPC(const string& strMethod, const Array& params)
 
     // Connect to localhost
     bool fUseSSL = GetBoolArg("-rpcssl");
-#ifdef USE_SSL
     asio::io_service io_service;
     ssl::context context(io_service, ssl::context::sslv23);
     context.set_options(ssl::context::no_sslv2);
@@ -2560,15 +2543,6 @@ Object CallRPC(const string& strMethod, const Array& params)
     iostreams::stream<SSLIOStreamDevice> stream(d);
     if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", "8332")))
         throw runtime_error("couldn't connect to server");
-#else
-    if (fUseSSL)
-        throw runtime_error("-rpcssl=1, but bitcoin compiled without full openssl libraries.");
-
-    ip::tcp::iostream stream(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", "8332"));
-    if (stream.fail())
-        throw runtime_error("couldn't connect to server");
-#endif
-
 
     // HTTP basic authentication
     string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
