@@ -2377,9 +2377,21 @@ void ThreadRPCServer2(void* parg)
 
     asio::io_service io_service;
     ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
-    ip::tcp::acceptor acceptor(io_service, endpoint);
-
-    acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    ip::tcp::acceptor acceptor(io_service);
+    try
+    {
+        acceptor.open(endpoint.protocol());
+        acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+        acceptor.bind(endpoint);
+        acceptor.listen(socket_base::max_connections);
+    }
+    catch(system::system_error &e)
+    {
+        ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
+                             _("Error"), wxOK | wxMODAL);
+        QueueShutdown();
+        return;
+    }
 
     ssl::context context(io_service, ssl::context::sslv23);
     if (fUseSSL)
