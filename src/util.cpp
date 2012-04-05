@@ -33,16 +33,6 @@ bool fNoListen = false;
 bool fLogTimestamps = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
 
-
-
-// Workaround for "multiple definition of `_tls_used'"
-// http://svn.boost.org/trac/boost/ticket/4258
-extern "C" void tss_cleanup_implemented() { }
-
-
-
-
-
 // Init openssl library multithreading support
 static boost::interprocess::interprocess_mutex** ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line)
