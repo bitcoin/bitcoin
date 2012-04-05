@@ -49,7 +49,7 @@ LIBS += \
 TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
-DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_SSL
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0
 
 DEBUGFLAGS=-g
 # ppc doesn't work because we don't support big-endian
