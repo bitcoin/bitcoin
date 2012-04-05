@@ -49,7 +49,7 @@ LIBS += \
 TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
-DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DUSE_SSL
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0
 
 ifdef RELEASE
 # Compile for maximum compatibility and smallest size.
