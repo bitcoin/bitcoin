@@ -28,7 +28,6 @@ static bool fDbEnvInit = false;
 DbEnv dbenv(0);
 static map<string, int> mapFileUseCount;
 static map<string, Db*> mapDb;
-static int64 nTxn = 0;
 
 static void EnvShutdown()
 {
@@ -164,13 +163,7 @@ void CDB::Close()
     if (strFile == "blkindex.dat" && IsInitialBlockDownload())
         nMinutes = 5;
 
-    if (nMinutes == 0 || nTxn > 200000)
-    {
-        nTxn = 0;
-        nMinutes = 0;
-    }
-
-    dbenv.txn_checkpoint(0, nMinutes, 0);
+    dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
 
     CRITICAL_BLOCK(cs_db)
         --mapFileUseCount[strFile];
@@ -344,7 +337,6 @@ bool CTxDB::ReadTxIndex(uint256 hash, CTxIndex& txindex)
 bool CTxDB::UpdateTxIndex(uint256 hash, const CTxIndex& txindex)
 {
     assert(!fClient);
-    nTxn++;
     return Write(make_pair(string("tx"), hash), txindex);
 }
 
@@ -355,7 +347,6 @@ bool CTxDB::AddTxIndex(const CTransaction& tx, const CDiskTxPos& pos, int nHeigh
     // Add to tx index
     uint256 hash = tx.GetHash();
     CTxIndex txindex(pos, tx.vout.size());
-    nTxn++;
     return Write(make_pair(string("tx"), hash), txindex);
 }
 
