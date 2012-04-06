@@ -1183,62 +1183,14 @@ static void pop_lock()
     dd_mutex.unlock();
 }
 
-void CCriticalSection::Enter(const char* pszName, const char* pszFile, int nLine)
+void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
-    push_lock(this, CLockLocation(pszName, pszFile, nLine));
-#ifdef DEBUG_LOCKCONTENTION
-    bool result = mutex.try_lock();
-    if (!result)
-    {
-        printf("LOCKCONTENTION: %s\n", pszName);
-        printf("Locker: %s:%d\n", pszFile, nLine);
-        mutex.lock();
-        printf("Locked\n");
-    }
-#else
-    mutex.lock();
-#endif
+    push_lock(cs, CLockLocation(pszName, pszFile, nLine));
 }
-void CCriticalSection::Leave()
+
+void LeaveCritical()
 {
-    mutex.unlock();
     pop_lock();
-}
-bool CCriticalSection::TryEnter(const char* pszName, const char* pszFile, int nLine)
-{
-    push_lock(this, CLockLocation(pszName, pszFile, nLine));
-    bool result = mutex.try_lock();
-    if (!result) pop_lock();
-    return result;
-}
-
-#else
-
-void CCriticalSection::Enter(const char* pszName, const char* pszFile, int nLine)
-{
-#ifdef DEBUG_LOCKCONTENTION
-    bool result = mutex.try_lock();
-    if (!result)
-    {
-        printf("LOCKCONTENTION: %s\n", pszName);
-        printf("Locker: %s:%d\n", pszFile, nLine);
-        mutex.lock();
-    }
-#else
-    mutex.lock();
-#endif
-}
-
-void CCriticalSection::Leave()
-{
-    mutex.unlock();
-}
-
-bool CCriticalSection::TryEnter(const char*, const char*, int)
-{
-    bool result = mutex.try_lock();
-    return result;
 }
 
 #endif /* DEBUG_LOCKORDER */
-
