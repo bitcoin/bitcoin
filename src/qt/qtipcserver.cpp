@@ -8,6 +8,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "headers.h"
+#include "qtipcserver.h"
 
 using namespace boost::interprocess;
 using namespace boost::posix_time;
@@ -16,7 +17,7 @@ using namespace std;
 
 void ipcShutdown()
 {
-    message_queue::remove("BitcoinURL");
+    message_queue::remove(BITCOINURI_QUEUE_NAME);
 }
 
 void ipcThread(void* parg)
@@ -30,7 +31,7 @@ void ipcThread(void* parg)
         ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(100);
         if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
         {
-            ThreadSafeHandleURL(std::string(strBuf, nSize));
+            ThreadSafeHandleURI(std::string(strBuf, nSize));
             Sleep(1000);
         }
         if (fShutdown)
@@ -60,7 +61,7 @@ void ipcInit()
     size_t nSize;
     unsigned int nPriority;
     try {
-        mq = new message_queue(open_or_create, "BitcoinURL", 2, 256);
+        mq = new message_queue(open_or_create, BITCOINURI_QUEUE_NAME, 2, 256);
 
         // Make sure we don't lose any bitcoin: URIs
         for (int i = 0; i < 2; i++)
@@ -68,15 +69,15 @@ void ipcInit()
             ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(1);
             if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))
             {
-                ThreadSafeHandleURL(std::string(strBuf, nSize));
+                ThreadSafeHandleURI(std::string(strBuf, nSize));
             }
             else
                 break;
         }
 
         // Make sure only one bitcoin instance is listening
-        message_queue::remove("BitcoinURL");
-        mq = new message_queue(open_or_create, "BitcoinURL", 2, 256);
+        message_queue::remove(BITCOINURI_QUEUE_NAME);
+        mq = new message_queue(open_or_create, BITCOINURI_QUEUE_NAME, 2, 256);
     }
     catch (interprocess_exception &ex) {
         return;

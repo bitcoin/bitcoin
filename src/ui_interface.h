@@ -40,7 +40,7 @@
 
 extern int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK);
 extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);
-extern void ThreadSafeHandleURL(const std::string& strURL);
+extern void ThreadSafeHandleURI(const std::string& strURI);
 extern void MainFrameRepaint();
 extern void AddressBookRepaint();
 extern void QueueShutdown();
