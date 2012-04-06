@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
 #include "headers.h"
 #include "strlcpy.h"
 #include <boost/algorithm/string/join.hpp>
@@ -858,10 +859,11 @@ string GetDataDir()
 string GetConfigFile()
 {
     namespace fs = boost::filesystem;
-    fs::path pathConfig(GetArg("-conf", "bitcoin.conf"));
-    if (!pathConfig.is_complete())
-        pathConfig = fs::path(GetDataDir()) / pathConfig;
-    return pathConfig.string();
+
+    fs::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+    if (!pathConfigFile.is_complete()) pathConfigFile = fs::path(GetDataDir()) / pathConfigFile;
+    pathConfigFile.make_preferred();
+    return pathConfigFile.string();
 }
 
 bool ReadConfigFile(map<string, string>& mapSettingsRet,
@@ -874,7 +876,9 @@ bool ReadConfigFile(map<string, string>& mapSettingsRet,
     {
         if (fs::is_directory(fs::system_complete(mapSettingsRet["-datadir"])))
         {
-            fs::path pathDataDir = fs::system_complete(mapSettingsRet["-datadir"]);
+            fs::path pathDataDir(fs::system_complete(mapSettingsRet["-datadir"]));
+            pathDataDir.make_preferred();
+
             strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
         }
         else
@@ -908,10 +912,11 @@ bool ReadConfigFile(map<string, string>& mapSettingsRet,
 string GetPidFile()
 {
     namespace fs = boost::filesystem;
-    fs::path pathConfig(GetArg("-pid", "bitcoind.pid"));
-    if (!pathConfig.is_complete())
-        pathConfig = fs::path(GetDataDir()) / pathConfig;
-    return pathConfig.string();
+
+    fs::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
+    if (!pathPidFile.is_complete()) pathPidFile = fs::path(GetDataDir()) / pathPidFile;
+    pathPidFile.make_preferred();
+    return pathPidFile.string();
 }
 
 void CreatePidFile(string pidFile, pid_t pid)

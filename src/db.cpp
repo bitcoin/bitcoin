@@ -79,19 +79,21 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
             if (fShutdown)
                 return;
             string strDataDir = GetDataDir();
-            string strLogDir = strDataDir + "/database";
-            filesystem::create_directory(strLogDir.c_str());
-            string strErrorFile = strDataDir + "/db.log";
-            printf("dbenv.open strLogDir=%s strErrorFile=%s\n", strLogDir.c_str(), strErrorFile.c_str());
+            filesystem::path pathLogDir(strDataDir + "/database");
+            pathLogDir.make_preferred();
+            filesystem::create_directory(pathLogDir);
+            filesystem::path pathErrorFile(strDataDir + "/db.log");
+            pathErrorFile.make_preferred();
+            printf("dbenv.open LogDir=%s ErrorFile=%s\n", pathLogDir.string().c_str(), pathErrorFile.string().c_str());
 
             int nDbCache = GetArg("-dbcache", 25);
-            dbenv.set_lg_dir(strLogDir.c_str());
+            dbenv.set_lg_dir(pathLogDir.string().c_str());
             dbenv.set_cachesize(nDbCache / 1024, (nDbCache % 1024)*1048576, 1);
             dbenv.set_lg_bsize(1048576);
             dbenv.set_lg_max(10485760);
             dbenv.set_lk_max_locks(10000);
             dbenv.set_lk_max_objects(10000);
-            dbenv.set_errfile(fopen(strErrorFile.c_str(), "a")); /// debug
+            dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
             dbenv.set_flags(DB_AUTO_COMMIT, 1);
             dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
             ret = dbenv.open(strDataDir.c_str(),
@@ -1172,7 +1174,9 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
 
                 // Copy wallet.dat
                 filesystem::path pathSrc(GetDataDir() + "/" + wallet.strWalletFile);
+                pathSrc.make_preferred();
                 filesystem::path pathDest(strDest);
+                pathDest.make_preferred();
                 if (filesystem::is_directory(pathDest))
                     pathDest = pathDest / wallet.strWalletFile;
 
