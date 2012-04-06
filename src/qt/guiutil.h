@@ -28,10 +28,10 @@ public:
     static void setupAddressWidget(QLineEdit *widget, QWidget *parent);
     static void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
-    // Parse "bitcoin:" URL into recipient object, return true on succesful parsing
-    // See Bitcoin URL definition discussion here: https://bitcointalk.org/index.php?topic=33490.0
-    static bool parseBitcoinURL(const QUrl *url, SendCoinsRecipient *out);
-    static bool parseBitcoinURL(QString url, SendCoinsRecipient *out);
+    // Parse "bitcoin:" URI into recipient object, return true on succesful parsing
+    // See Bitcoin URI definition discussion here: https://bitcointalk.org/index.php?topic=33490.0
+    static bool parseBitcoinURI(const QUrl *, SendCoinsRecipient *out);
+    static bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
 
     /** Get save file name, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
         when no suffix is provided by the user.
