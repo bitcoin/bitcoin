@@ -2388,13 +2388,13 @@ void ThreadRPCServer2(void* parg)
         filesystem::path pathCertFile(GetArg("-rpcsslcertificatechainfile", "server.cert"));
         if (!pathCertFile.is_complete()) pathCertFile = filesystem::path(GetDataDir()) / pathCertFile;
         pathCertFile.make_preferred();
-        if (filesystem::exists(pathCertFile)) context.use_certificate_chain_file(certfile.string().c_str());
+        if (filesystem::exists(pathCertFile)) context.use_certificate_chain_file(pathCertFile.string().c_str());
         else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", pathCertFile.string().c_str());
 
         filesystem::path pathPKFile(GetArg("-rpcsslprivatekeyfile", "server.pem"));
         if (!pathPKFile.is_complete()) pathPKFile = filesystem::path(GetDataDir()) / pathPKFile;
         pathPKFile.make_preferred();
-        if (filesystem::exists(pathPKFile)) context.use_private_key_file(pkfile.string().c_str(), ssl::context::pem);
+        if (filesystem::exists(pathPKFile)) context.use_private_key_file(pathPKFile.string().c_str(), ssl::context::pem);
         else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string().c_str());
 
         string strCiphers = GetArg("-rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
