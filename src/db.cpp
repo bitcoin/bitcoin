@@ -72,8 +72,8 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
     if (fCreate)
         nFlags |= DB_CREATE;
 
-    CRITICAL_BLOCK(cs_db)
     {
+        LOCK(cs_db);
         if (!fDbEnvInit)
         {
             if (fShutdown)
@@ -126,8 +126,10 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
             {
                 delete pdb;
                 pdb = NULL;
-                CRITICAL_BLOCK(cs_db)
+                {
+                     LOCK(cs_db);
                     --mapFileUseCount[strFile];
+                }
                 strFile = "";
                 throw runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
             }
@@ -165,14 +167,16 @@ void CDB::Close()
 
     dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
 
-    CRITICAL_BLOCK(cs_db)
+    {
+        LOCK(cs_db);
         --mapFileUseCount[strFile];
+    }
 }
 
 void static CloseDb(const string& strFile)
 {
-    CRITICAL_BLOCK(cs_db)
     {
+        LOCK(cs_db);
         if (mapDb[strFile] != NULL)
         {
             // Close the database handle
@@ -188,8 +192,8 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 {
     while (!fShutdown)
     {
-        CRITICAL_BLOCK(cs_db)
         {
+            LOCK(cs_db);
             if (!mapFileUseCount.count(strFile) || mapFileUseCount[strFile] == 0)
             {
                 // Flush log data to the dat file
@@ -286,8 +290,8 @@ void DBFlush(bool fShutdown)
     printf("DBFlush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
     if (!fDbEnvInit)
         return;
-    CRITICAL_BLOCK(cs_db)
     {
+        LOCK(cs_db);
         map<string, int>::iterator mi = mapFileUseCount.begin();
         while (mi != mapFileUseCount.end())
         {
@@ -877,8 +881,8 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     bool fIsEncrypted = false;
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
-    CRITICAL_BLOCK(pwallet->cs_wallet)
     {
+        LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
@@ -1119,7 +1123,8 @@ void ThreadFlushWalletDB(void* parg)
 
         if (nLastFlushed != nWalletDBUpdated && GetTime() - nLastWalletUpdate >= 2)
         {
-            TRY_CRITICAL_BLOCK(cs_db)
+            TRY_LOCK(cs_db,lockDb);
+            if (lockDb)
             {
                 // Don't do this if any databases are in use
                 int nRefCount = 0;
@@ -1160,8 +1165,8 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
         return false;
     while (!fShutdown)
     {
-        CRITICAL_BLOCK(cs_db)
         {
+            LOCK(cs_db);
             if (!mapFileUseCount.count(wallet.strWalletFile) || mapFileUseCount[wallet.strWalletFile] == 0)
             {
                 // Flush log data to the dat file

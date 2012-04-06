@@ -266,8 +266,8 @@ public:
         //
         // This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
         // changes to the ADDRMAN_ parameters without breaking the on-disk structure.
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             unsigned char nVersion = 0;
             READWRITE(nVersion);
             READWRITE(nKey);
@@ -398,8 +398,8 @@ public:
     void Check()
     {
 #ifdef DEBUG_ADDRMAN
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             int err;
             if ((err=Check_()))
                 printf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
@@ -411,8 +411,8 @@ public:
     bool Add(const CAddress &addr, const CNetAddr& source, int64 nTimePenalty = 0)
     {
         bool fRet = false;
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             Check();
             fRet |= Add_(addr, source, nTimePenalty);
             Check();
@@ -426,8 +426,8 @@ public:
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64 nTimePenalty = 0)
     {
         int nAdd = 0;
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             Check();
             for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
                 nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
@@ -441,8 +441,8 @@ public:
     // Mark an entry as accessible.
     void Good(const CService &addr, int64 nTime = GetAdjustedTime())
     {
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             Check();
             Good_(addr, nTime);
             Check();
@@ -452,8 +452,8 @@ public:
     // Mark an entry as connection attempted to.
     void Attempt(const CService &addr, int64 nTime = GetAdjustedTime())
     {
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             Check();
             Attempt_(addr, nTime);
             Check();
@@ -465,8 +465,8 @@ public:
     CAddress Select(int nUnkBias = 50)
     {
         CAddress addrRet;
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             Check();
             addrRet = Select_(nUnkBias);
             Check();
@@ -479,8 +479,10 @@ public:
     {
         Check();
         std::vector<CAddress> vAddr;
-        CRITICAL_BLOCK(cs)
+        {
+            LOCK(cs);
             GetAddr_(vAddr);
+        }
         Check();
         return vAddr;
     }
@@ -488,8 +490,8 @@ public:
     // Mark an entry as currently-connected-to.
     void Connected(const CService &addr, int64 nTime = GetAdjustedTime())
     {
-        CRITICAL_BLOCK(cs)
         {
+            LOCK(cs);
             Check();
             Connected_(addr, nTime);
             Check();

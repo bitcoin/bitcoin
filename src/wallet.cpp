@@ -49,8 +49,8 @@ bool CWallet::AddCryptedKey(const vector<unsigned char> &vchPubKey, const vector
         return false;
     if (!fFileBacked)
         return true;
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         if (pwalletdbEncryption)
             return pwalletdbEncryption->WriteCryptedKey(vchPubKey, vchCryptedSecret);
         else
@@ -76,7 +76,8 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
     CCrypter crypter;
     CKeyingMaterial vMasterKey;
 
-    CRITICAL_BLOCK(cs_wallet)
+    {
+        LOCK(cs_wallet);
         BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
         {
             if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
@@ -86,6 +87,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
             if (CCryptoKeyStore::Unlock(vMasterKey))
                 return true;
         }
+    }
     return false;
 }
 
@@ -93,8 +95,8 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 {
     bool fWasLocked = IsLocked();
 
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         Lock();
 
         CCrypter crypter;
@@ -228,8 +230,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey))
         return false;
 
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
         if (fFileBacked)
         {
@@ -275,8 +277,8 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
     // Anytime a signature is successfully verified, it's proof the outpoint is spent.
     // Update the wallet spent flag if it doesn't know due to wallet.dat being
     // restored from backup or the user making copies of wallet.dat.
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         BOOST_FOREACH(const CTxIn& txin, tx.vin)
         {
             map<uint256, CWalletTx>::iterator mi = mapWallet.find(txin.prevout.hash);
@@ -297,8 +299,8 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
 
 void CWallet::MarkDirty()
 {
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
             item.second.MarkDirty();
     }
@@ -307,8 +309,8 @@ void CWallet::MarkDirty()
 bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 {
     uint256 hash = wtxIn.GetHash();
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         // Inserts only if not already there, returns tx inserted or tx found
         pair<map<uint256, CWalletTx>::iterator, bool> ret = mapWallet.insert(make_pair(hash, wtxIn));
         CWalletTx& wtx = (*ret.first).second;
@@ -382,8 +384,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate, bool fFindBlock)
 {
     uint256 hash = tx.GetHash();
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         bool fExisted = mapWallet.count(hash);
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
@@ -404,8 +406,8 @@ bool CWallet::EraseFromWallet(uint256 hash)
 {
     if (!fFileBacked)
         return false;
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         if (mapWallet.erase(hash))
             CWalletDB(strWalletFile).EraseTx(hash);
     }
@@ -415,8 +417,8 @@ bool CWallet::EraseFromWallet(uint256 hash)
 
 bool CWallet::IsMine(const CTxIn &txin) const
 {
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
         if (mi != mapWallet.end())
         {
@@ -431,8 +433,8 @@ bool CWallet::IsMine(const CTxIn &txin) const
 
 int64 CWallet::GetDebit(const CTxIn &txin) const
 {
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
         if (mi != mapWallet.end())
         {
@@ -457,9 +459,11 @@ bool CWallet::IsChange(const CTxOut& txout) const
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
     if (ExtractAddress(txout.scriptPubKey, address) && HaveKey(address))
-        CRITICAL_BLOCK(cs_wallet)
-            if (!mapAddressBook.count(address))
-                return true;
+    {
+        LOCK(cs_wallet);
+        if (!mapAddressBook.count(address))
+            return true;
+    }
     return false;
 }
 
@@ -472,8 +476,8 @@ int CWalletTx::GetRequestCount() const
 {
     // Returns -1 if it wasn't being tracked
     int nRequests = -1;
-    CRITICAL_BLOCK(pwallet->cs_wallet)
     {
+        LOCK(pwallet->cs_wallet);
         if (IsCoinBase())
         {
             // Generated block
@@ -577,8 +581,8 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64& nGenerated, i
             nSent += s.second;
         nFee = allFee;
     }
-    CRITICAL_BLOCK(pwallet->cs_wallet)
     {
+        LOCK(pwallet->cs_wallet);
         BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64)& r, listReceived)
         {
             if (pwallet->mapAddressBook.count(r.first))
@@ -607,8 +611,8 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
             vWorkQueue.push_back(txin.prevout.hash);
 
         // This critsect is OK because txdb is already open
-        CRITICAL_BLOCK(pwallet->cs_wallet)
         {
+            LOCK(pwallet->cs_wallet);
             map<uint256, const CMerkleTx*> mapWalletPrev;
             set<uint256> setAlreadyDone;
             for (int i = 0; i < vWorkQueue.size(); i++)
@@ -666,8 +670,8 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
     int ret = 0;
 
     CBlockIndex* pindex = pindexStart;
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         while (pindex)
         {
             CBlock block;
@@ -696,8 +700,9 @@ void CWallet::ReacceptWalletTransactions()
 {
     CTxDB txdb("r");
     bool fRepeat = true;
-    while (fRepeat) CRITICAL_BLOCK(cs_wallet)
+    while (fRepeat)
     {
+        LOCK(cs_wallet);
         fRepeat = false;
         vector<CDiskTxPos> vMissingTx;
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
@@ -799,8 +804,8 @@ void CWallet::ResendWalletTransactions()
     // Rebroadcast any of our txes that aren't in a block yet
     printf("ResendWalletTransactions()\n");
     CTxDB txdb("r");
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         // Sort them in chronological order
         multimap<unsigned int, CWalletTx*> mapSorted;
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
@@ -833,8 +838,8 @@ void CWallet::ResendWalletTransactions()
 int64 CWallet::GetBalance() const
 {
     int64 nTotal = 0;
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
@@ -850,8 +855,8 @@ int64 CWallet::GetBalance() const
 int64 CWallet::GetUnconfirmedBalance() const
 {
     int64 nTotal = 0;
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
@@ -875,8 +880,8 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
     vector<pair<int64, pair<const CWalletTx*,unsigned int> > > vValue;
     int64 nTotalLower = 0;
 
-    CRITICAL_BLOCK(cs_wallet)
     {
+       LOCK(cs_wallet);
        vector<const CWalletTx*> vCoins;
        vCoins.reserve(mapWallet.size());
        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
@@ -1032,9 +1037,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
 
     wtxNew.BindWallet(this);
 
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK2(cs_main, cs_wallet);
         // txdb must be opened before the mapWallet lock
         CTxDB txdb("r");
         {
@@ -1146,9 +1150,8 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 // Call after CreateTransaction unless you want to abort
 bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 {
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK2(cs_main, cs_wallet);
         printf("CommitTransaction:\n%s", wtxNew.ToString().c_str());
         {
             // This is only to keep the database open to defeat the auto-flush for the
@@ -1297,8 +1300,8 @@ bool CWallet::DelAddressBookName(const CBitcoinAddress& address)
 
 void CWallet::PrintWallet(const CBlock& block)
 {
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         if (mapWallet.count(block.vtx[0].GetHash()))
         {
             CWalletTx& wtx = mapWallet[block.vtx[0].GetHash()];
@@ -1310,8 +1313,8 @@ void CWallet::PrintWallet(const CBlock& block)
 
 bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
 {
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         map<uint256, CWalletTx>::iterator mi = mapWallet.find(hashTx);
         if (mi != mapWallet.end())
         {
@@ -1347,8 +1350,8 @@ bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)
 //
 bool CWallet::NewKeyPool()
 {
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         CWalletDB walletdb(strWalletFile);
         BOOST_FOREACH(int64 nIndex, setKeyPool)
             walletdb.ErasePool(nIndex);
@@ -1371,8 +1374,9 @@ bool CWallet::NewKeyPool()
 
 bool CWallet::TopUpKeyPool()
 {
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
+
         if (IsLocked())
             return false;
 
@@ -1398,8 +1402,9 @@ void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
 {
     nIndex = -1;
     keypool.vchPubKey.clear();
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
+
         if (!IsLocked())
             TopUpKeyPool();
 
@@ -1422,9 +1427,8 @@ void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
 
 int64 CWallet::AddReserveKey(const CKeyPool& keypool)
 {
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK2(cs_main, cs_wallet);
         CWalletDB walletdb(strWalletFile);
 
         int64 nIndex = 1 + *(--setKeyPool.end());
@@ -1450,8 +1454,10 @@ void CWallet::KeepKey(int64 nIndex)
 void CWallet::ReturnKey(int64 nIndex)
 {
     // Return to key pool
-    CRITICAL_BLOCK(cs_wallet)
+    {
+        LOCK(cs_wallet);
         setKeyPool.insert(nIndex);
+    }
     printf("keypool return %"PRI64d"\n", nIndex);
 }
 
@@ -1459,8 +1465,8 @@ bool CWallet::GetKeyFromPool(vector<unsigned char>& result, bool fAllowReuse)
 {
     int64 nIndex = 0;
     CKeyPool keypool;
-    CRITICAL_BLOCK(cs_wallet)
     {
+        LOCK(cs_wallet);
         ReserveKeyFromKeyPool(nIndex, keypool);
         if (nIndex == -1)
         {
@@ -1530,8 +1536,7 @@ void CWallet::GetAllReserveAddresses(set<CBitcoinAddress>& setAddress)
 
     CWalletDB walletdb(strWalletFile);
 
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(cs_wallet)
+    LOCK2(cs_main, cs_wallet);
     BOOST_FOREACH(const int64& id, setKeyPool)
     {
         CKeyPool keypool;
