@@ -52,10 +52,13 @@ Notificator::Notificator(const QString &programName, QSystemTrayIcon *trayicon, 
     OSStatus status = LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFSTR("growlTicket"), kLSRolesAll, 0, &cfurl);
     if (status != kLSApplicationNotFoundErr) {
         CFBundleRef bundle = CFBundleCreate(0, cfurl);
-        CFRelease(cfurl);
         if (CFStringCompare(CFBundleGetIdentifier(bundle), CFSTR("com.Growl.GrowlHelperApp"), kCFCompareCaseInsensitive | kCFCompareBackwards) == kCFCompareEqualTo) {
-            mode = Growl;
+            if (CFStringHasSuffix(CFURLGetString(cfurl), CFSTR("/Growl.app/")))
+                mode = Growl13;
+            else
+                mode = Growl12;
         }
+        CFRelease(cfurl);
         CFRelease(bundle);
     }
 #endif
@@ -226,7 +229,7 @@ void Notificator::notifySystray(Class cls, const QString &title, const QString &
 void Notificator::notifyGrowl(Class cls, const QString &title, const QString &text, const QIcon &icon)
 {
     const QString script(
-        "tell application \"GrowlHelperApp\"\n"
+        "tell application \"%5\"\n"
         "  set the allNotificationsList to {\"Notification\"}\n" // -- Make a list of all the notification types (all)
         "  set the enabledNotificationsList to {\"Notification\"}\n" // -- Make a list of the notifications (enabled)
         "  register as application \"%1\" all notifications allNotificationsList default notifications enabledNotificationsList\n" // -- Register our script with Growl
@@ -265,7 +268,8 @@ void Notificator::notifyGrowl(Class cls, const QString &title, const QString &te
     QString quotedTitle(title), quotedText(text);
     quotedTitle.replace("\\", "\\\\").replace("\"", "\\");
     quotedText.replace("\\", "\\\\").replace("\"", "\\");
-    qt_mac_execute_apple_script(script.arg(notificationApp, quotedTitle, quotedText, notificationIcon), 0);
+    QString growlApp(this->mode == Notificator::Growl13 ? "Growl" : "GrowlHelperApp");
+    qt_mac_execute_apple_script(script.arg(notificationApp, quotedTitle, quotedText, notificationIcon, growlApp), 0);
 }
 #endif
 
@@ -282,7 +286,8 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
         notifySystray(cls, title, text, icon, millisTimeout);
         break;
 #ifdef Q_WS_MAC
-    case Growl:
+    case Growl12:
+    case Growl13:
         notifyGrowl(cls, title, text, icon);
         break;
 #endif
