@@ -8,6 +8,7 @@
 
 #include "headers.h"
 #include "init.h"
+#include "util.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -45,7 +46,7 @@ int ThreadSafeMessageBox(const std::string& message, const std::string& caption,
 
     if (modal)
         while (!guiref)
-            sleep(1);
+            Sleep(1000);
 
     // Message from network thread
     if(guiref)
