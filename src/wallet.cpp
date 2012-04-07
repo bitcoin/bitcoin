@@ -17,6 +17,15 @@ using namespace std;
 // mapWallet
 //
 
+struct CompareValueOnly
+{
+    bool operator()(const pair<int64, pair<const CWalletTx*, unsigned int> >& t1,
+                    const pair<int64, pair<const CWalletTx*, unsigned int> >& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
+
 CPubKey CWallet::GenerateNewKey()
 {
     bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
@@ -980,7 +989,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
         nTargetValue += CENT;
 
     // Solve subset sum by stochastic approximation
-    sort(vValue.rbegin(), vValue.rend());
+    sort(vValue.rbegin(), vValue.rend(), CompareValueOnly());
     vector<char> vfIncluded;
     vector<char> vfBest(vValue.size(), true);
     int64 nBest = nTotalLower;
