@@ -9,7 +9,13 @@
 // enables tests which currently fail, due to code which tries too hard to avoid sub-cent change
 // #define STRICT
 
+// some tests fail 1% of the time due to bad luck.
+// we repeat those tests this many times and only complain if all iterations of the test fail
+#define RANDOM_REPEATS 5
+
 using namespace std;
+
+typedef set<pair<const CWalletTx*,unsigned int> > CoinSet;
 
 BOOST_AUTO_TEST_SUITE(wallet_tests)
 
@@ -44,9 +50,15 @@ static void empty_wallet(void)
     vCoins.clear();
 }
 
+static bool equal_sets(CoinSet a, CoinSet b)
+{
+    pair<CoinSet::iterator, CoinSet::iterator> ret = mismatch(a.begin(), a.end(), b.begin());
+    return ret.first == a.end() && ret.second == b.end();
+}
+
 BOOST_AUTO_TEST_CASE(coin_selection_tests)
 {
-    static set<pair<const CWalletTx*,unsigned int> > setCoinsRet;
+    static CoinSet setCoinsRet, setCoinsRet2;
     static int64 nValueRet;
 
     // test multiple times to allow for differences in the shuffle order
@@ -250,6 +262,64 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         BOOST_CHECK_EQUAL(nValueRet, 1111 * CENT); // but since value of smaller coins < target+cent, we get the bigger coin again
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1);
 #endif
+
+        // test avoiding sub-cent change
+        empty_wallet();
+        add_coin(0.0005 * COIN);
+        add_coin(0.01 * COIN);
+        add_coin(1 * COIN);
+
+        // trying to make 1.0001 from these three coins
+        BOOST_CHECK( wallet.SelectCoinsMinConf(1.0001 * COIN, 1, 1, vCoins, setCoinsRet, nValueRet));
+        BOOST_CHECK_EQUAL(nValueRet, 1.0105 * COIN);   // we should get all coins
+        BOOST_CHECK_EQUAL(setCoinsRet.size(), 3);
+
+        // but if we try to make 0.999, we should take the bigger of the two small coins to avoid sub-cent change
+        BOOST_CHECK( wallet.SelectCoinsMinConf(0.999 * COIN, 1, 1, vCoins, setCoinsRet, nValueRet));
+        BOOST_CHECK_EQUAL(nValueRet, 1.01 * COIN);   // we should get 1 + 0.01
+        BOOST_CHECK_EQUAL(setCoinsRet.size(), 2);
+
+        // test randomness
+        {
+            empty_wallet();
+            for (int i2 = 0; i2 < 100; i2++)
+                add_coin(COIN);
+
+            // picking 50 from 100 coins doesn't depend on the shuffle,
+            // but does depend on randomness in the stochastic approximation code
+            BOOST_CHECK(wallet.SelectCoinsMinConf(50 * COIN, 1, 6, vCoins, setCoinsRet , nValueRet));
+            BOOST_CHECK(wallet.SelectCoinsMinConf(50 * COIN, 1, 6, vCoins, setCoinsRet2, nValueRet));
+            BOOST_CHECK(!equal_sets(setCoinsRet, setCoinsRet2));
+
+            int fails = 0;
+            for (int i = 0; i < RANDOM_REPEATS; i++)
+            {
+                // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
+                // run the test RANDOM_REPEATS times and only complain if all of them fail
+                BOOST_CHECK(wallet.SelectCoinsMinConf(COIN, 1, 6, vCoins, setCoinsRet , nValueRet));
+                BOOST_CHECK(wallet.SelectCoinsMinConf(COIN, 1, 6, vCoins, setCoinsRet2, nValueRet));
+                if (equal_sets(setCoinsRet, setCoinsRet2))
+                    fails++;
+            }
+            BOOST_CHECK_NE(fails, RANDOM_REPEATS);
+
+            // add 75 cents in small change.  not enough to make 90 cents,
+            // then try making 90 cents.  there are multiple competing "smallest bigger" coins,
+            // one of which should be picked at random
+            add_coin( 5*CENT); add_coin(10*CENT); add_coin(15*CENT); add_coin(20*CENT); add_coin(25*CENT);
+
+            fails = 0;
+            for (int i = 0; i < RANDOM_REPEATS; i++)
+            {
+                // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
+                // run the test RANDOM_REPEATS times and only complain if all of them fail
+                BOOST_CHECK(wallet.SelectCoinsMinConf(90*CENT, 1, 6, vCoins, setCoinsRet , nValueRet));
+                BOOST_CHECK(wallet.SelectCoinsMinConf(90*CENT, 1, 6, vCoins, setCoinsRet2, nValueRet));
+                if (equal_sets(setCoinsRet, setCoinsRet2))
+                    fails++;
+            }
+            BOOST_CHECK_NE(fails, RANDOM_REPEATS);
+        }
     }
 }
 
