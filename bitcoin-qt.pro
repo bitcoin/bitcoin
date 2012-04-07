@@ -80,6 +80,15 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     # do not enable this on windows, as it will result in a non-working executable!
 }
 
+# regenerate src/build.h
+!windows || contains(USE_BUILD_INFO, 1) {
+    genbuild.commands = share/genbuild.sh src/build.h
+    genbuild.target = src/build.h
+    "src/version.cpp".depends += src/build.h
+    QMAKE_EXTRA_TARGETS += genbuild
+    DEFINES += HAVE_BUILD_INFO
+}
+
 # disable quite some warnings because bitcoin core "sins" a lot
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-strict-aliasing -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch
 
@@ -161,6 +170,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/aboutdialog.cpp \
     src/qt/editaddressdialog.cpp \
     src/qt/bitcoinaddressvalidator.cpp \
+    src/version.cpp \
     src/util.cpp \
     src/netbase.cpp \
     src/key.cpp \

@@ -37,6 +37,7 @@ public:
     QString getStatusBarWarnings() const;
 
     QString formatFullVersion() const;
+    QString formatBuildDate() const;
 
 private:
     OptionsModel *optionsModel;
