@@ -190,10 +190,10 @@ typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
 typedef boost::interprocess::interprocess_mutex CWaitableCriticalSection;
 
 #ifdef DEBUG_LOCKORDER
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs);
+void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
 void LeaveCritical();
 #else
-void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs) {}
+void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
 void static inline LeaveCritical() {}
 #endif
 
@@ -234,7 +234,7 @@ public:
     {
         if (!lock.owns())
         {
-            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()));
+            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()), true);
             lock.try_lock();
             if (!lock.owns())
                 LeaveCritical();
