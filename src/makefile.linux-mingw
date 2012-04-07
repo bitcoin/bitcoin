@@ -43,6 +43,7 @@ LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l w
 HEADERS = $(wildcard *.h)
 
 OBJS= \
+    obj/version.o \
     obj/checkpoints.o \
     obj/netbase.o \
     obj/addrman.o \
@@ -64,10 +65,14 @@ OBJS= \
 
 all: bitcoind.exe
 
+build.h: FORCE
+	@../share/genbuild.sh build.h
+DEFS += -DHAVE_BUILD_INFO
+
 obj/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/%)
+bitcoind.exe: build.h $(OBJS:obj/%=obj/%)
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 
@@ -85,3 +90,6 @@ clean:
 	-rm -f headers.h.gch
 	-rm -f bitcoind.exe
 	-rm -f test_bitcoin.exe
+	-rm -f src/build.h
+
+FORCE:

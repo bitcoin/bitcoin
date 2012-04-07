@@ -1,6 +1,7 @@
 src/*.exe
 src/bitcoin
 src/bitcoind
+src/build.h
 .*.swp
 *.*~*
 *.bak

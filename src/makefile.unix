@@ -85,6 +85,7 @@ xCXXFLAGS=-pthread -Wextra -Wno-sign-compare -Wno-char-subscripts -Wno-invalid-o
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 OBJS= \
+    obj/version.o \
     obj/checkpoints.o \
     obj/netbase.o \
     obj/addrman.o \
@@ -111,6 +112,10 @@ all: bitcoind
 -include obj/*.P
 -include obj-test/*.P
 
+build.h: FORCE
+	@../share/genbuild.sh build.h
+DEFS += -DHAVE_BUILD_INFO
+
 obj/%.o: %.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
@@ -118,7 +123,7 @@ obj/%.o: %.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-bitcoind: $(OBJS:obj/%=obj/%)
+bitcoind: build.h $(OBJS:obj/%=obj/%)
 	$(CXX) $(xCXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
@@ -139,3 +144,6 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P
 	-rm -f obj-test/*.P
+	-rm -f src/build.h
+
+FORCE:

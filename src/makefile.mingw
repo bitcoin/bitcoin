@@ -41,6 +41,7 @@ LIBS += -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell
 HEADERS = $(wildcard *.h)
 
 OBJS= \
+    obj/version.o \
     obj/checkpoints.o \
     obj/netbase.o \
     obj/addrman.o \
@@ -82,3 +83,4 @@ clean:
 	-del /Q obj\test\*
 	-del /Q test\*.o
 	-del /Q headers.h.gch
+	-del /Q build.h
