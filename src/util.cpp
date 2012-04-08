@@ -196,23 +196,24 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         {
             LOCK(cs_OutputDebugStringF);
             static char pszBuffer[50000];
+            static char staticBuffer[50000];
             static char* pend;
             if (pend == NULL)
-                pend = pszBuffer;
+                pend = staticBuffer;
             va_list arg_ptr;
             va_start(arg_ptr, pszFormat);
-            int limit = END(pszBuffer) - pend - 2;
+            int limit = END(staticBuffer) - pend - 2;
             int ret = _vsnprintf(pend, limit, pszFormat, arg_ptr);
             va_end(arg_ptr);
             if (ret < 0 || ret >= limit)
             {
-                pend = END(pszBuffer) - 2;
+                pend = END(staticBuffer) - 2;
                 *pend++ = '\n';
             }
             else
                 pend += ret;
             *pend = '\0';
-            char* p1 = pszBuffer;
+            char* p1 = staticBuffer;
             char* p2;
             while (p2 = strchr(p1, '\n'))
             {
@@ -223,9 +224,9 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
                 *p2 = c;
                 p1 = p2;
             }
-            if (p1 != pszBuffer)
-                memmove(pszBuffer, p1, pend - p1 + 1);
-            pend -= (p1 - pszBuffer);
+            if (p1 != staticBuffer)
+                memmove(staticBuffer, p1, pend - p1 + 1);
+            pend -= (p1 - staticBuffer);
         }
     }
 #endif
@@ -255,7 +256,7 @@ int my_snprintf(char* buffer, size_t limit, const char* format, ...)
 
 string real_strprintf(const std::string &format, int dummy, ...)
 {
-    char buffer[50000];
+    char buffer[50000]; // no init, to not slowdown the client
     char* p = buffer;
     int limit = sizeof(buffer);
     int ret;
@@ -282,7 +283,7 @@ string real_strprintf(const std::string &format, int dummy, ...)
 
 bool error(const char *format, ...)
 {
-    char buffer[50000];
+    char buffer[50000] = "";
     int limit = sizeof(buffer);
     va_list arg_ptr;
     va_start(arg_ptr, format);
@@ -457,30 +458,30 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
     }
 }
 
-void ParseParameters(int argc, const char*const argv[])
+void ParseParameters(int argc, const char* const argv[])
 {
     mapArgs.clear();
     mapMultiArgs.clear();
     for (int i = 1; i < argc; i++)
     {
-        char psz[10000];
-        strlcpy(psz, argv[i], sizeof(psz));
+        char buffer[10000] = "";
+        strlcpy(buffer, argv[i], sizeof(buffer));
         char* pszValue = (char*)"";
-        if (strchr(psz, '='))
+        if (strchr(buffer, '='))
         {
-            pszValue = strchr(psz, '=');
+            pszValue = strchr(buffer, '=');
             *pszValue++ = '\0';
         }
         #ifdef WIN32
-        _strlwr(psz);
-        if (psz[0] == '/')
-            psz[0] = '-';
+        _strlwr(buffer);
+        if (buffer[0] == '/')
+            buffer[0] = '-';
         #endif
-        if (psz[0] != '-')
+        if (buffer[0] != '-')
             break;
 
-        mapArgs[psz] = pszValue;
-        mapMultiArgs[psz].push_back(pszValue);
+        mapArgs[buffer] = pszValue;
+        mapMultiArgs[buffer].push_back(pszValue);
     }
 
     // New 0.6 features:
@@ -724,85 +725,76 @@ bool WildcardMatch(const string& str, const string& mask)
 void FormatException(char* pszMessage, std::exception* pex, const char* pszThread)
 {
 #ifdef WIN32
-    char pszModule[MAX_PATH];
-    pszModule[0] = '\0';
-    GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
+    char module[MAX_PATH] = "";
+    GetModuleFileNameA(NULL, module, sizeof(module));
 #else
-    const char* pszModule = "bitcoin";
+    const char* module = "bitcoin";
 #endif
     if (pex)
         snprintf(pszMessage, 1000,
-            "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
+            "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), module, pszThread);
     else
         snprintf(pszMessage, 1000,
-            "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
+            "UNKNOWN EXCEPTION       \n%s in %s       \n", module, pszThread);
 }
 
 void LogException(std::exception* pex, const char* pszThread)
 {
-    char pszMessage[10000];
-    FormatException(pszMessage, pex, pszThread);
-    printf("\n%s", pszMessage);
+    char message[10000] = "";
+    FormatException(message, pex, pszThread);
+    printf("\n%s", message);
 }
 
 void PrintException(std::exception* pex, const char* pszThread)
 {
-    char pszMessage[10000];
-    FormatException(pszMessage, pex, pszThread);
-    printf("\n\n************************\n%s\n", pszMessage);
-    fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
-    strMiscWarning = pszMessage;
+    char message[10000] = "";
+    FormatException(message, pex, pszThread);
+    printf("\n\n************************\n%s\n", message);
+    fprintf(stderr, "\n\n************************\n%s\n", message);
+    strMiscWarning = message;
     throw;
 }
 
 void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 {
-    char pszMessage[10000];
-    FormatException(pszMessage, pex, pszThread);
-    printf("\n\n************************\n%s\n", pszMessage);
-    fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
-    strMiscWarning = pszMessage;
+    char message[10000] = "";
+    FormatException(message, pex, pszThread);
+    printf("\n\n************************\n%s\n", message);
+    fprintf(stderr, "\n\n************************\n%s\n", message);
+    strMiscWarning = message;
 }
 
 #ifdef WIN32
-boost::filesystem::path MyGetSpecialFolderPath(int nFolder, bool fCreate)
+filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate)
 {
-    namespace fs = boost::filesystem;
+    char path[MAX_PATH] = "";
 
-    char pszPath[MAX_PATH] = "";
-    if(SHGetSpecialFolderPathA(NULL, pszPath, nFolder, fCreate))
+    if(SHGetSpecialFolderPathA(NULL, path, nFolder, fCreate))
     {
-        return fs::path(pszPath);
+        return filesystem::path(path);
     }
-    else if (nFolder == CSIDL_STARTUP)
-    {
-        return fs::path(getenv("USERPROFILE")) / "Start Menu" / "Programs" / "Startup";
-    }
-    else if (nFolder == CSIDL_APPDATA)
-    {
-        return fs::path(getenv("APPDATA"));
-    }
-    return fs::path("");
+
+    printf("SHGetSpecialFolderPathA() failed, could not obtain requested path.\n");
+    return filesystem::path("");
 }
 #endif
 
-boost::filesystem::path GetDefaultDataDir()
+filesystem::path GetDefaultDataDir()
 {
-    namespace fs = boost::filesystem;
-
-    // Windows: C:\Documents and Settings\username\Application Data\Bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
     // Mac: ~/Library/Application Support/Bitcoin
     // Unix: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return MyGetSpecialFolderPath(CSIDL_APPDATA, true) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
 #else
-    fs::path pathRet;
+    filesystem::path pathRet;
     char* pszHome = getenv("HOME");
     if (pszHome == NULL || strlen(pszHome) == 0)
-        pathRet = fs::path("/");
+        pathRet = filesystem::path("/");
     else
-        pathRet = fs::path(pszHome);
+        pathRet = filesystem::path(pszHome);
 #ifdef MAC_OSX
     // Mac
     pathRet /= "Library/Application Support";
@@ -815,15 +807,13 @@ boost::filesystem::path GetDefaultDataDir()
 #endif
 }
 
-const boost::filesystem::path &GetDataDir(bool fNetSpecific)
+const filesystem::path &GetDataDir(bool fNetSpecific)
 {
-    namespace fs = boost::filesystem;
-
-    static fs::path pathCached[2];
+    static filesystem::path pathCached[2];
     static CCriticalSection csPathCached;
     static bool cachedPath[2] = {false, false};
 
-    fs::path &path = pathCached[fNetSpecific];
+    filesystem::path &path = pathCached[fNetSpecific];
 
     // This can be called during exceptions by printf, so we cache the
     // value so we don't have to do memory allocations after that.
@@ -832,25 +822,26 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     LOCK(csPathCached);
 
-    if (mapArgs.count("-datadir")) {
+    if (mapArgs.count("-datadir"))
+    {
         path = mapArgs["-datadir"];
-    } else {
+    }
+    else
+    {
         path = GetDefaultDataDir();
         if (fNetSpecific && GetBoolArg("-testnet", false))
             path /= "testnet";
     }
 
-    fs::create_directory(path);
+    filesystem::create_directory(path);
 
     cachedPath[fNetSpecific]=true;
     return path;
 }
 
-boost::filesystem::path GetConfigFile()
+filesystem::path GetConfigFile()
 {
-    namespace fs = boost::filesystem;
-
-    fs::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+    filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }
@@ -858,24 +849,21 @@ boost::filesystem::path GetConfigFile()
 bool ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
-    namespace fs = boost::filesystem;
-    namespace pod = boost::program_options::detail;
-
-    fs::ifstream streamConfig(GetConfigFile());
+    filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
         return true; // No bitcoin.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
 
-    for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
+    for (program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
         // Don't overwrite existing settings so command line settings override bitcoin.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
             mapSettingsRet[strKey] = it->value[0];
-            //  interpret nofoo=1 as foo=0 (and nofoo=0 as foo=1) as long as foo not set)
+            // interpret nofoo=1 as foo=0 (and nofoo=0 as foo=1) as long as foo not set)
             InterpretNegativeSetting(strKey, mapSettingsRet);
         }
         mapMultiSettingsRet[strKey].push_back(it->value[0]);
@@ -883,16 +871,14 @@ bool ReadConfigFile(map<string, string>& mapSettingsRet,
     return true;
 }
 
-boost::filesystem::path GetPidFile()
+filesystem::path GetPidFile()
 {
-    namespace fs = boost::filesystem;
-
-    fs::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
+    filesystem::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
 
-void CreatePidFile(const boost::filesystem::path &path, pid_t pid)
+void CreatePidFile(const filesystem::path &path, pid_t pid)
 {
     FILE* file = fopen(path.string().c_str(), "w");
     if (file)
@@ -915,20 +901,20 @@ int GetFilesize(FILE* file)
 void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
-    boost::filesystem::path pathLog = GetDataDir() / "debug.log";
+    filesystem::path pathLog = GetDataDir() / "debug.log";
     FILE* file = fopen(pathLog.string().c_str(), "r");
     if (file && GetFilesize(file) > 10 * 1000000)
     {
         // Restart the file with some of the end
-        char pch[200000];
-        fseek(file, -sizeof(pch), SEEK_END);
-        int nBytes = fread(pch, 1, sizeof(pch), file);
+        char buffer[200000] = "";
+        fseek(file, -sizeof(buffer), SEEK_END);
+        int nBytes = fread(buffer, 1, sizeof(buffer), file);
         fclose(file);
 
         file = fopen(pathLog.string().c_str(), "w");
         if (file)
         {
-            fwrite(pch, 1, nBytes, file);
+            fwrite(buffer, 1, nBytes, file);
             fclose(file);
         }
     }
@@ -1146,7 +1132,7 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 
 static void pop_lock()
 {
-    if (fDebug) 
+    if (fDebug)
     {
         const CLockLocation& locklocation = (*lockstack).rbegin()->second;
         printf("Unlocked: %s\n", locklocation.ToString().c_str());
