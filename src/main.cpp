@@ -1443,6 +1443,13 @@ bool CBlock::CheckBlock() const
     if (hashMerkleRoot != BuildMerkleTree())
         return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
 
+    // Coin base vout[0] scriptPubKey must be the same as coin stake vout[1]
+    // scriptPubKey
+    if (vtx.size() > 1 && vtx[1].IsCoinStake() &&
+        vtx[0].vout[0].scriptPubKey != vtx[1].vout[1].scriptPubKey)
+        return DoS(100, error("CheckBlock() : block key mismatch"));
+        
+
     // Check block signature
     if (!CheckBlockSignature())
         return DoS(100, error("CheckBlock() : bad block signature"));
