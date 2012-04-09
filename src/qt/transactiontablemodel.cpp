@@ -69,8 +69,8 @@ struct TransactionTablePriv
         qDebug() << "refreshWallet";
 #endif
         cachedWallet.clear();
-        CRITICAL_BLOCK(wallet->cs_wallet)
         {
+            LOCK(wallet->cs_wallet);
             for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
                 cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
@@ -95,8 +95,8 @@ struct TransactionTablePriv
         QList<uint256> updated_sorted = updated;
         qSort(updated_sorted);
 
-        CRITICAL_BLOCK(wallet->cs_wallet)
         {
+            LOCK(wallet->cs_wallet);
             for(int update_idx = updated_sorted.size()-1; update_idx >= 0; --update_idx)
             {
                 const uint256 &hash = updated_sorted.at(update_idx);
@@ -171,8 +171,8 @@ struct TransactionTablePriv
             // simply re-use the cached status.
             if(rec->statusUpdateNeeded())
             {
-                CRITICAL_BLOCK(wallet->cs_wallet)
                 {
+                    LOCK(wallet->cs_wallet);
                     std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
 
                     if(mi != wallet->mapWallet.end())
@@ -191,8 +191,8 @@ struct TransactionTablePriv
 
     QString describe(TransactionRecord *rec)
     {
-        CRITICAL_BLOCK(wallet->cs_wallet)
         {
+            LOCK(wallet->cs_wallet);
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
@@ -229,9 +229,9 @@ void TransactionTableModel::update()
     QList<uint256> updated;
 
     // Check if there are changes to wallet map
-    TRY_CRITICAL_BLOCK(wallet->cs_wallet)
     {
-        if(!wallet->vWalletUpdated.empty())
+        TRY_LOCK(wallet->cs_wallet, lockWallet);
+        if (lockWallet && !wallet->vWalletUpdated.empty())
         {
             BOOST_FOREACH(uint256 hash, wallet->vWalletUpdated)
             {

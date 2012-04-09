@@ -1647,8 +1647,8 @@ Value walletlock(const Array& params, bool fHelp)
     if (!pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletlock was called.");
 
-    CRITICAL_BLOCK(cs_nWalletUnlockTime)
     {
+        LOCK(cs_nWalletUnlockTime);
         pwalletMain->Lock();
         nWalletUnlockTime = 0;
     }
@@ -2500,9 +2500,10 @@ void ThreadRPCServer2(void* parg)
             {
                 // Execute
                 Value result;
-                CRITICAL_BLOCK(cs_main)
-                CRITICAL_BLOCK(pwalletMain->cs_wallet)
+                {
+                    LOCK2(cs_main, pwalletMain->cs_wallet);
                     result = (*(*mi).second)(params, false);
+                }
 
                 // Send reply
                 string strReply = JSONRPCReply(result, Value::null, id);

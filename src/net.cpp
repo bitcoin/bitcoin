@@ -272,9 +272,11 @@ void ThreadGetMyExternalIP(void* parg)
             // setAddrKnown automatically filters any duplicate sends.
             CAddress addr(addrLocalHost);
             addr.nTime = GetAdjustedTime();
-            CRITICAL_BLOCK(cs_vNodes)
+            {
+                LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
                     pnode->PushAddress(addr);
+            }
         }
     }
 }
@@ -296,8 +298,8 @@ void AddressCurrentlyConnected(const CService& addr)
 
 CNode* FindNode(const CNetAddr& ip)
 {
-    CRITICAL_BLOCK(cs_vNodes)
     {
+        LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
             if ((CNetAddr)pnode->addr == ip)
                 return (pnode);
@@ -307,8 +309,8 @@ CNode* FindNode(const CNetAddr& ip)
 
 CNode* FindNode(const CService& addr)
 {
-    CRITICAL_BLOCK(cs_vNodes)
     {
+        LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
             if ((CService)pnode->addr == addr)
                 return (pnode);
@@ -362,10 +364,14 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
             pnode->AddRef(nTimeout);
         else
             pnode->AddRef();
-        CRITICAL_BLOCK(cs_vNodes)
+        {
+            LOCK(cs_vNodes);
             vNodes.push_back(pnode);
-        WAITABLE_CRITICAL_BLOCK(csOutbound)
+        }
+        {
+            WAITABLE_LOCK(csOutbound);
             nOutbound++;
+        }
 
         pnode->nTimeConnected = GetTime();
         return pnode;
@@ -421,8 +427,8 @@ void CNode::ClearBanned()
 bool CNode::IsBanned(CNetAddr ip)
 {
     bool fResult = false;
-    CRITICAL_BLOCK(cs_setBanned)
     {
+        LOCK(cs_setBanned);
         std::map<CNetAddr, int64>::iterator i = setBanned.find(ip);
         if (i != setBanned.end())
         {
@@ -446,9 +452,11 @@ bool CNode::Misbehaving(int howmuch)
     if (nMisbehavior >= GetArg("-banscore", 100))
     {
         int64 banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
-        CRITICAL_BLOCK(cs_setBanned)
+        {
+            LOCK(cs_setBanned);
             if (setBanned[addr] < banTime)
                 setBanned[addr] = banTime;
+        }
         CloseSocketDisconnect();
         printf("Disconnected %s for misbehavior (score=%d)\n", addr.ToString().c_str(), nMisbehavior);
         return true;
@@ -497,8 +505,8 @@ void ThreadSocketHandler2(void* parg)
         //
         // Disconnect nodes
         //
-        CRITICAL_BLOCK(cs_vNodes)
         {
+            LOCK(cs_vNodes);
             // Disconnect unused nodes
             vector<CNode*> vNodesCopy = vNodes;
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
@@ -510,8 +518,8 @@ void ThreadSocketHandler2(void* parg)
                     vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
 
                     if (!pnode->fInbound)
-                        WAITABLE_CRITICAL_BLOCK(csOutbound)
                         {
+                            WAITABLE_LOCK(csOutbound);
                             nOutbound--;
 
                             // Connection slot(s) were removed, notify connection creator(s)
@@ -538,11 +546,23 @@ void ThreadSocketHandler2(void* parg)
                 if (pnode->GetRefCount() <= 0)
                 {
                     bool fDelete = false;
-                    TRY_CRITICAL_BLOCK(pnode->cs_vSend)
-                     TRY_CRITICAL_BLOCK(pnode->cs_vRecv)
-                      TRY_CRITICAL_BLOCK(pnode->cs_mapRequests)
-                       TRY_CRITICAL_BLOCK(pnode->cs_inventory)
-                        fDelete = true;
+                    {
+                        TRY_LOCK(pnode->cs_vSend, lockSend);
+                        if (lockSend)
+                        {
+                            TRY_LOCK(pnode->cs_vRecv, lockRecv);
+                            if (lockRecv)
+                            {
+                                TRY_LOCK(pnode->cs_mapRequests, lockReq);
+                                if (lockReq)
+                                {
+                                    TRY_LOCK(pnode->cs_inventory, lockInv);
+                                    if (lockInv)
+                                        fDelete = true;
+                                }
+                            }
+                        }
+                    }
                     if (fDelete)
                     {
                         vNodesDisconnected.remove(pnode);
@@ -576,8 +596,8 @@ void ThreadSocketHandler2(void* parg)
         if(hListenSocket != INVALID_SOCKET)
             FD_SET(hListenSocket, &fdsetRecv);
         hSocketMax = max(hSocketMax, hListenSocket);
-        CRITICAL_BLOCK(cs_vNodes)
         {
+            LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
             {
                 if (pnode->hSocket == INVALID_SOCKET)
@@ -585,9 +605,11 @@ void ThreadSocketHandler2(void* parg)
                 FD_SET(pnode->hSocket, &fdsetRecv);
                 FD_SET(pnode->hSocket, &fdsetError);
                 hSocketMax = max(hSocketMax, pnode->hSocket);
-                TRY_CRITICAL_BLOCK(pnode->cs_vSend)
-                    if (!pnode->vSend.empty())
+                {
+                    TRY_LOCK(pnode->cs_vSend, lockSend);
+                    if (lockSend && !pnode->vSend.empty())
                         FD_SET(pnode->hSocket, &fdsetSend);
+                }
             }
         }
 
@@ -625,10 +647,12 @@ void ThreadSocketHandler2(void* parg)
             if (hSocket != INVALID_SOCKET)
                 addr = CAddress(sockaddr);
 
-            CRITICAL_BLOCK(cs_vNodes)
+            {
+                LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
-                if (pnode->fInbound)
-                    nInbound++;
+                    if (pnode->fInbound)
+                        nInbound++;
+            }
 
             if (hSocket == INVALID_SOCKET)
             {
@@ -637,9 +661,11 @@ void ThreadSocketHandler2(void* parg)
             }
             else if (nInbound >= GetArg("-maxconnections", 125) - MAX_OUTBOUND_CONNECTIONS)
             {
-                CRITICAL_BLOCK(cs_setservAddNodeAddresses)
+                {
+                    LOCK(cs_setservAddNodeAddresses);
                     if (!setservAddNodeAddresses.count(addr))
                         closesocket(hSocket);
+                }
             }
             else if (CNode::IsBanned(addr))
             {
@@ -651,8 +677,10 @@ void ThreadSocketHandler2(void* parg)
                 printf("accepted connection %s\n", addr.ToString().c_str());
                 CNode* pnode = new CNode(hSocket, addr, true);
                 pnode->AddRef();
-                CRITICAL_BLOCK(cs_vNodes)
+                {
+                    LOCK(cs_vNodes);
                     vNodes.push_back(pnode);
+                }
             }
         }
 
@@ -661,8 +689,8 @@ void ThreadSocketHandler2(void* parg)
         // Service each socket
         //
         vector<CNode*> vNodesCopy;
-        CRITICAL_BLOCK(cs_vNodes)
         {
+            LOCK(cs_vNodes);
             vNodesCopy = vNodes;
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
                 pnode->AddRef();
@@ -679,7 +707,8 @@ void ThreadSocketHandler2(void* parg)
                 continue;
             if (FD_ISSET(pnode->hSocket, &fdsetRecv) || FD_ISSET(pnode->hSocket, &fdsetError))
             {
-                TRY_CRITICAL_BLOCK(pnode->cs_vRecv)
+                TRY_LOCK(pnode->cs_vRecv, lockRecv);
+                if (lockRecv)
                 {
                     CDataStream& vRecv = pnode->vRecv;
                     unsigned int nPos = vRecv.size();
@@ -728,7 +757,8 @@ void ThreadSocketHandler2(void* parg)
                 continue;
             if (FD_ISSET(pnode->hSocket, &fdsetSend))
             {
-                TRY_CRITICAL_BLOCK(pnode->cs_vSend)
+                TRY_LOCK(pnode->cs_vSend, lockSend);
+                if (lockSend)
                 {
                     CDataStream& vSend = pnode->vSend;
                     if (!vSend.empty())
@@ -782,8 +812,8 @@ void ThreadSocketHandler2(void* parg)
                 }
             }
         }
-        CRITICAL_BLOCK(cs_vNodes)
         {
+            LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
                 pnode->Release();
         }
@@ -1195,8 +1225,10 @@ void ThreadOpenConnections2(void* parg)
         // Limit outbound connections
         int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));
         vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
-        WAITABLE_CRITICAL_BLOCK(csOutbound)
+        {
+            WAITABLE_LOCK(csOutbound);
             WAIT(condOutbound, fShutdown || nOutbound < nMaxOutbound);
+        }
         vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
         if (fShutdown)
             return;
@@ -1233,9 +1265,11 @@ void ThreadOpenConnections2(void* parg)
         // Only connect to one address per a.b.?.? range.
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
         set<vector<unsigned char> > setConnected;
-        CRITICAL_BLOCK(cs_vNodes)
+        {
+            LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
                 setConnected.insert(pnode->addr.GetGroup());
+        }
 
         int64 nANow = GetAdjustedTime();
 
@@ -1301,9 +1335,11 @@ void ThreadOpenAddedConnections2(void* parg)
         if(Lookup(strAddNode.c_str(), vservNode, GetDefaultPort(), fAllowDNS, 0))
         {
             vservAddressesToAdd.push_back(vservNode);
-            CRITICAL_BLOCK(cs_setservAddNodeAddresses)
+            {
+                LOCK(cs_setservAddNodeAddresses);
                 BOOST_FOREACH(CService& serv, vservNode)
                     setservAddNodeAddresses.insert(serv);
+            }
         }
     }
     loop
@@ -1311,7 +1347,8 @@ void ThreadOpenAddedConnections2(void* parg)
         vector<vector<CService> > vservConnectAddresses = vservAddressesToAdd;
         // Attempt to connect to each IP for each addnode entry until at least one is successful per addnode entry
         // (keeping in mind that addnode entries can have many IPs if fAllowDNS)
-        CRITICAL_BLOCK(cs_vNodes)
+        {
+            LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
                 for (vector<vector<CService> >::iterator it = vservConnectAddresses.begin(); it != vservConnectAddresses.end(); it++)
                     BOOST_FOREACH(CService& addrNode, *(it))
@@ -1321,6 +1358,7 @@ void ThreadOpenAddedConnections2(void* parg)
                             it--;
                             break;
                         }
+        }
         BOOST_FOREACH(vector<CService>& vserv, vservConnectAddresses)
         {
             OpenNetworkConnection(CAddress(*(vserv.begin())));
@@ -1394,8 +1432,8 @@ void ThreadMessageHandler2(void* parg)
     while (!fShutdown)
     {
         vector<CNode*> vNodesCopy;
-        CRITICAL_BLOCK(cs_vNodes)
         {
+            LOCK(cs_vNodes);
             vNodesCopy = vNodes;
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
                 pnode->AddRef();
@@ -1408,20 +1446,26 @@ void ThreadMessageHandler2(void* parg)
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
             // Receive messages
-            TRY_CRITICAL_BLOCK(pnode->cs_vRecv)
-                ProcessMessages(pnode);
+            {
+                TRY_LOCK(pnode->cs_vRecv, lockRecv);
+                if (lockRecv)
+                    ProcessMessages(pnode);
+            }
             if (fShutdown)
                 return;
 
             // Send messages
-            TRY_CRITICAL_BLOCK(pnode->cs_vSend)
-                SendMessages(pnode, pnode == pnodeTrickle);
+            {
+                TRY_LOCK(pnode->cs_vSend, lockSend);
+                if (lockSend)
+                    SendMessages(pnode, pnode == pnodeTrickle);
+            }
             if (fShutdown)
                 return;
         }
 
-        CRITICAL_BLOCK(cs_vNodes)
         {
+            LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
                 pnode->Release();
         }

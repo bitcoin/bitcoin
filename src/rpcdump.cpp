@@ -60,9 +60,9 @@ Value importprivkey(const Array& params, bool fHelp)
     key.SetSecret(secret, fCompressed);
     CBitcoinAddress vchAddress = CBitcoinAddress(key.GetPubKey());
 
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(pwalletMain->cs_wallet)
     {
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+
         pwalletMain->MarkDirty();
         pwalletMain->SetAddressBookName(vchAddress, strLabel);
 

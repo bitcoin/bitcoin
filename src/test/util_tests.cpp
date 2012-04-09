@@ -15,14 +15,15 @@ BOOST_AUTO_TEST_CASE(util_criticalsection)
     CCriticalSection cs;
 
     do {
-        CRITICAL_BLOCK(cs)
-            break;
+        LOCK(cs);
+        break;
 
         BOOST_ERROR("break was swallowed!");
     } while(0);
 
     do {
-        TRY_CRITICAL_BLOCK(cs)
+        TRY_LOCK(cs, lockTest);
+        if (lockTest)
             break;
 
         BOOST_ERROR("break was swallowed!");

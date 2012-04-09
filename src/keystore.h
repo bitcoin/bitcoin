@@ -54,15 +54,17 @@ public:
     bool HaveKey(const CBitcoinAddress &address) const
     {
         bool result;
-        CRITICAL_BLOCK(cs_KeyStore)
+        {
+            LOCK(cs_KeyStore);
             result = (mapKeys.count(address) > 0);
+        }
         return result;
     }
     void GetKeys(std::set<CBitcoinAddress> &setAddress) const
     {
         setAddress.clear();
-        CRITICAL_BLOCK(cs_KeyStore)
         {
+            LOCK(cs_KeyStore);
             KeyMap::const_iterator mi = mapKeys.begin();
             while (mi != mapKeys.end())
             {
@@ -73,8 +75,8 @@ public:
     }
     bool GetKey(const CBitcoinAddress &address, CKey &keyOut) const
     {
-        CRITICAL_BLOCK(cs_KeyStore)
         {
+            LOCK(cs_KeyStore);
             KeyMap::const_iterator mi = mapKeys.find(address);
             if (mi != mapKeys.end())
             {
@@ -129,8 +131,10 @@ public:
         if (!IsCrypted())
             return false;
         bool result;
-        CRITICAL_BLOCK(cs_KeyStore)
+        {
+            LOCK(cs_KeyStore);
             result = vMasterKey.empty();
+        }
         return result;
     }
 
@@ -139,8 +143,10 @@ public:
         if (!SetCrypted())
             return false;
 
-        CRITICAL_BLOCK(cs_KeyStore)
+        {
+            LOCK(cs_KeyStore);
             vMasterKey.clear();
+        }
 
         return true;
     }
@@ -149,8 +155,8 @@ public:
     bool AddKey(const CKey& key);
     bool HaveKey(const CBitcoinAddress &address) const
     {
-        CRITICAL_BLOCK(cs_KeyStore)
         {
+            LOCK(cs_KeyStore);
             if (!IsCrypted())
                 return CBasicKeyStore::HaveKey(address);
             return mapCryptedKeys.count(address) > 0;
