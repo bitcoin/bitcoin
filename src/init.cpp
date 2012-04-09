@@ -307,11 +307,11 @@ bool AppInit2(int argc, char* argv[])
     }
 #endif
 
-    if (!fDebug && !pszSetDataDir[0])
+    if (!fDebug)
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
-    printf("Default data directory %s\n", GetDefaultDataDir().c_str());
+    printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
 
     if (GetBoolArg("-loadblockindextest"))
     {
@@ -322,13 +322,13 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Make sure only a single bitcoin process is using the data directory.
-    string strLockFile = GetDataDir() + "/.lock";
-    FILE* file = fopen(strLockFile.c_str(), "a"); // empty lock file; created if it doesn't exist.
+    boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
+    FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
-    static boost::interprocess::file_lock lock(strLockFile.c_str());
+    static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
     {
-        ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().c_str()), _("Bitcoin"), wxOK|wxMODAL);
+        ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().string().c_str()), _("Bitcoin"), wxOK|wxMODAL);
         return false;
     }
 
@@ -584,20 +584,20 @@ bool AppInit2(int argc, char* argv[])
 }
 
 #ifdef WIN32
-string StartupShortcutPath()
+boost::filesystem::path StartupShortcutPath()
 {
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) + "\\Bitcoin.lnk";
+    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "Bitcoin.lnk";
 }
 
 bool GetStartOnSystemStartup()
 {
-    return filesystem::exists(StartupShortcutPath().c_str());
+    return filesystem::exists(StartupShortcutPath());
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     // If the shortcut exists already, remove it for updating
-    remove(StartupShortcutPath().c_str());
+    boost::filesystem::remove(StartupShortcutPath());
 
     if (fAutoStart)
     {
@@ -633,7 +633,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
             {
                 WCHAR pwsz[MAX_PATH];
                 // Ensure that the string is ANSI.
-                MultiByteToWideChar(CP_ACP, 0, StartupShortcutPath().c_str(), -1, pwsz, MAX_PATH);
+                MultiByteToWideChar(CP_ACP, 0, StartupShortcutPath().string().c_str(), -1, pwsz, MAX_PATH);
                 // Save the link by calling IPersistFile::Save.
                 hres = ppf->Save(pwsz, TRUE);
                 ppf->Release();
@@ -659,15 +659,15 @@ boost::filesystem::path GetAutostartDir()
     namespace fs = boost::filesystem;
 
     char* pszConfigHome = getenv("XDG_CONFIG_HOME");
-    if (pszConfigHome) return fs::path(pszConfigHome) / fs::path("autostart");
+    if (pszConfigHome) return fs::path(pszConfigHome) / "autostart";
     char* pszHome = getenv("HOME");
-    if (pszHome) return fs::path(pszHome) / fs::path(".config/autostart");
+    if (pszHome) return fs::path(pszHome) / ".config" / "autostart";
     return fs::path();
 }
 
 boost::filesystem::path GetAutostartFilePath()
 {
-    return GetAutostartDir() / boost::filesystem::path("bitcoin.desktop");
+    return GetAutostartDir() / "bitcoin.desktop";
 }
 
 bool GetStartOnSystemStartup()
@@ -692,13 +692,7 @@ bool GetStartOnSystemStartup()
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     if (!fAutoStart)
-    {
-#if defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3
-        unlink(GetAutostartFilePath().string().c_str());
-#else
-        unlink(GetAutostartFilePath().native_file_string().c_str());
-#endif
-    }
+        boost::filesystem::remove(GetAutostartFilePath());
     else
     {
         char pszExePath[MAX_PATH+1];
