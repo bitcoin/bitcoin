@@ -22,7 +22,6 @@ map<string, vector<string> > mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
-char pszSetDataDir[MAX_PATH] = "";
 bool fRequestShutdown = false;
 bool fShutdown = false;
 bool fDaemon = false;
@@ -165,10 +164,8 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
 
         if (!fileout)
         {
-            char pszFile[MAX_PATH+100];
-            GetDataDir(pszFile);
-            strlcat(pszFile, "/debug.log", sizeof(pszFile));
-            fileout = fopen(pszFile, "a");
+            boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+            fileout = fopen(pathDebug.string().c_str(), "a");
             if (fileout) setbuf(fileout, NULL); // unbuffered
         }
         if (fileout)
@@ -768,101 +765,94 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 }
 
 #ifdef WIN32
-string MyGetSpecialFolderPath(int nFolder, bool fCreate)
+boost::filesystem::path MyGetSpecialFolderPath(int nFolder, bool fCreate)
 {
+    namespace fs = boost::filesystem;
+
     char pszPath[MAX_PATH] = "";
     if(SHGetSpecialFolderPathA(NULL, pszPath, nFolder, fCreate))
     {
-        return pszPath;
+        return fs::path(pszPath);
     }
     else if (nFolder == CSIDL_STARTUP)
     {
-        return string(getenv("USERPROFILE")) + "\\Start Menu\\Programs\\Startup";
+        return fs::path(getenv("USERPROFILE")) / "Start Menu" / "Programs" / "Startup";
     }
     else if (nFolder == CSIDL_APPDATA)
     {
-        return getenv("APPDATA");
+        return fs::path(getenv("APPDATA"));
     }
-    return "";
+    return fs::path("");
 }
 #endif
 
-string GetDefaultDataDir()
+boost::filesystem::path GetDefaultDataDir()
 {
+    namespace fs = boost::filesystem;
+
     // Windows: C:\Documents and Settings\username\Application Data\Bitcoin
     // Mac: ~/Library/Application Support/Bitcoin
     // Unix: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return MyGetSpecialFolderPath(CSIDL_APPDATA, true) + "\\Bitcoin";
+    return MyGetSpecialFolderPath(CSIDL_APPDATA, true) / "Bitcoin";
 #else
+    fs::path pathRet;
     char* pszHome = getenv("HOME");
     if (pszHome == NULL || strlen(pszHome) == 0)
-        pszHome = (char*)"/";
-    string strHome = pszHome;
-    if (strHome[strHome.size()-1] != '/')
-        strHome += '/';
+        pathRet = fs::path("/");
+    else
+        pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    strHome += "Library/Application Support/";
-    filesystem::create_directory(strHome.c_str());
-    return strHome + "Bitcoin";
+    pathRet /= "Library" / "Application Support";
+    filesystem::create_directory(pathRet);
+    return pathRet / "Bitcoin";
 #else
     // Unix
-    return strHome + ".bitcoin";
+    return pathRet / ".bitcoin";
 #endif
 #endif
 }
 
-void GetDataDir(char* pszDir)
+const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 {
-    // pszDir must be at least MAX_PATH length.
-    int nVariation;
-    if (pszSetDataDir[0] != 0)
-    {
-        strlcpy(pszDir, pszSetDataDir, MAX_PATH);
-        nVariation = 0;
+    namespace fs = boost::filesystem;
+
+    static fs::path pathCached[2];
+    static CCriticalSection csPathCached;
+    static bool cachedPath[2] = {false, false};
+
+    fs::path &path = pathCached[fNetSpecific];
+
+    // This can be called during exceptions by printf, so we cache the
+    // value so we don't have to do memory allocations after that.
+    if (cachedPath[fNetSpecific])
+        return path;
+
+    LOCK(csPathCached);
+
+    if (mapArgs.count("-datadir")) {
+        path = mapArgs["-datadir"];
+    } else {
+        path = GetDefaultDataDir();
+        if (fNetSpecific && GetBoolArg("-testnet", false))
+            path /= "testnet";
     }
-    else
-    {
-        // This can be called during exceptions by printf, so we cache the
-        // value so we don't have to do memory allocations after that.
-        static char pszCachedDir[MAX_PATH];
-        if (pszCachedDir[0] == 0)
-            strlcpy(pszCachedDir, GetDefaultDataDir().c_str(), sizeof(pszCachedDir));
-        strlcpy(pszDir, pszCachedDir, MAX_PATH);
-        nVariation = 1;
-    }
-    if (fTestNet)
-    {
-        char* p = pszDir + strlen(pszDir);
-        if (p > pszDir && p[-1] != '/' && p[-1] != '\\')
-            *p++ = '/';
-        strcpy(p, "testnet");
-        nVariation += 2;
-    }
-    static bool pfMkdir[4];
-    if (!pfMkdir[nVariation])
-    {
-        pfMkdir[nVariation] = true;
-        boost::filesystem::create_directory(pszDir);
-    }
+
+    fs::create_directory(path);
+
+    cachedPath[fNetSpecific]=true;
+    return path;
 }
 
-string GetDataDir()
-{
-    char pszDir[MAX_PATH];
-    GetDataDir(pszDir);
-    return pszDir;
-}
-
-string GetConfigFile()
+boost::filesystem::path GetConfigFile()
 {
     namespace fs = boost::filesystem;
 
     fs::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
-    if (!pathConfigFile.is_complete()) pathConfigFile = fs::path(GetDataDir()) / pathConfigFile;
-    return pathConfigFile.string();
+    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
+    return pathConfigFile;
 }
 
 bool ReadConfigFile(map<string, string>& mapSettingsRet,
@@ -871,27 +861,13 @@ bool ReadConfigFile(map<string, string>& mapSettingsRet,
     namespace fs = boost::filesystem;
     namespace pod = boost::program_options::detail;
 
-    if (mapSettingsRet.count("-datadir"))
-    {
-        if (fs::is_directory(fs::system_complete(mapSettingsRet["-datadir"])))
-        {
-            fs::path pathDataDir(fs::system_complete(mapSettingsRet["-datadir"]));
-
-            strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
-        }
-        else
-        {
-            return false;
-        }
-    }
-
     fs::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
         return true; // No bitcoin.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
-    
+
     for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
         // Don't overwrite existing settings so command line settings override bitcoin.conf
@@ -907,18 +883,18 @@ bool ReadConfigFile(map<string, string>& mapSettingsRet,
     return true;
 }
 
-string GetPidFile()
+boost::filesystem::path GetPidFile()
 {
     namespace fs = boost::filesystem;
 
     fs::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
-    if (!pathPidFile.is_complete()) pathPidFile = fs::path(GetDataDir()) / pathPidFile;
-    return pathPidFile.string();
+    if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
+    return pathPidFile;
 }
 
-void CreatePidFile(string pidFile, pid_t pid)
+void CreatePidFile(const boost::filesystem::path &path, pid_t pid)
 {
-    FILE* file = fopen(pidFile.c_str(), "w");
+    FILE* file = fopen(path.string().c_str(), "w");
     if (file)
     {
         fprintf(file, "%d\n", pid);
@@ -939,8 +915,8 @@ int GetFilesize(FILE* file)
 void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
-    string strFile = GetDataDir() + "/debug.log";
-    FILE* file = fopen(strFile.c_str(), "r");
+    boost::filesystem::path pathLog = GetDataDir() / "debug.log";
+    FILE* file = fopen(pathLog.string().c_str(), "r");
     if (file && GetFilesize(file) > 10 * 1000000)
     {
         // Restart the file with some of the end
@@ -949,7 +925,7 @@ void ShrinkDebugFile()
         int nBytes = fread(pch, 1, sizeof(pch), file);
         fclose(file);
 
-        file = fopen(strFile.c_str(), "w");
+        file = fopen(pathLog.string().c_str(), "w");
         if (file)
         {
             fwrite(pch, 1, nBytes, file);

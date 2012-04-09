@@ -2364,7 +2364,7 @@ void ThreadRPCServer2(void* parg)
               "(you do not need to remember this password)\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"),
                 strWhatAmI.c_str(),
-                GetConfigFile().c_str(),
+                GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
             _("Error"), wxOK | wxMODAL);
         QueueShutdown();
@@ -2399,12 +2399,12 @@ void ThreadRPCServer2(void* parg)
 
         filesystem::path pathCertFile(GetArg("-rpcsslcertificatechainfile", "server.cert"));
         if (!pathCertFile.is_complete()) pathCertFile = filesystem::path(GetDataDir()) / pathCertFile;
-        if (filesystem::exists(pathCertFile)) context.use_certificate_chain_file(pathCertFile.string().c_str());
+        if (filesystem::exists(pathCertFile)) context.use_certificate_chain_file(pathCertFile.string());
         else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", pathCertFile.string().c_str());
 
         filesystem::path pathPKFile(GetArg("-rpcsslprivatekeyfile", "server.pem"));
         if (!pathPKFile.is_complete()) pathPKFile = filesystem::path(GetDataDir()) / pathPKFile;
-        if (filesystem::exists(pathPKFile)) context.use_private_key_file(pathPKFile.string().c_str(), ssl::context::pem);
+        if (filesystem::exists(pathPKFile)) context.use_private_key_file(pathPKFile.string(), ssl::context::pem);
         else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string().c_str());
 
         string strCiphers = GetArg("-rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
@@ -2544,7 +2544,7 @@ Object CallRPC(const string& strMethod, const Array& params)
         throw runtime_error(strprintf(
             _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
               "If the file does not exist, create it with owner-readable-only file permissions."),
-                GetConfigFile().c_str()));
+                GetConfigFile().string().c_str()));
 
     // Connect to localhost
     bool fUseSSL = GetBoolArg("-rpcssl");
