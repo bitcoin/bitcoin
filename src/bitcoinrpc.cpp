@@ -15,7 +15,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/asio/ssl.hpp> 
-#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 
@@ -2385,18 +2384,21 @@ void ThreadRPCServer2(void* parg)
     if (fUseSSL)
     {
         context.set_options(ssl::context::no_sslv2);
-        filesystem::path certfile = GetArg("-rpcsslcertificatechainfile", "server.cert");
-        if (!certfile.is_complete()) certfile = filesystem::path(GetDataDir()) / certfile;
-        if (filesystem::exists(certfile)) context.use_certificate_chain_file(certfile.string().c_str());
-        else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", certfile.string().c_str());
-        filesystem::path pkfile = GetArg("-rpcsslprivatekeyfile", "server.pem");
-        if (!pkfile.is_complete()) pkfile = filesystem::path(GetDataDir()) / pkfile;
-        if (filesystem::exists(pkfile)) context.use_private_key_file(pkfile.string().c_str(), ssl::context::pem);
-        else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pkfile.string().c_str());
 
-        string ciphers = GetArg("-rpcsslciphers",
-                                         "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
-        SSL_CTX_set_cipher_list(context.impl(), ciphers.c_str());
+        filesystem::path pathCertFile(GetArg("-rpcsslcertificatechainfile", "server.cert"));
+        if (!pathCertFile.is_complete()) pathCertFile = filesystem::path(GetDataDir()) / pathCertFile;
+        pathCertFile.make_preferred();
+        if (filesystem::exists(pathCertFile)) context.use_certificate_chain_file(pathCertFile.string().c_str());
+        else printf("ThreadRPCServer ERROR: missing server certificate file %s\n", pathCertFile.string().c_str());
+
+        filesystem::path pathPKFile(GetArg("-rpcsslprivatekeyfile", "server.pem"));
+        if (!pathPKFile.is_complete()) pathPKFile = filesystem::path(GetDataDir()) / pathPKFile;
+        pathPKFile.make_preferred();
+        if (filesystem::exists(pathPKFile)) context.use_private_key_file(pathPKFile.string().c_str(), ssl::context::pem);
+        else printf("ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string().c_str());
+
+        string strCiphers = GetArg("-rpcsslciphers", "TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH");
+        SSL_CTX_set_cipher_list(context.impl(), strCiphers.c_str());
     }
 
     loop
