@@ -3,16 +3,40 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "netbase.h"
-#include "util.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 
-#ifndef WIN32
+#ifdef WIN32
+#define _WIN32_WINNT 0x0501
+#include <winsock2.h>
+#include <mswsock.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/fcntl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <net/if.h>
+#include <ifaddrs.h>
 #endif
 
-#include "strlcpy.h"
+#include <vector>
+#include <string>
 
-using namespace std;
+#include "compat.h"
+#include "netbase.h"
+#include "strlcpy.h"
+#include "util.h"
+
 
 // Settings
 int fUseProxy = false;

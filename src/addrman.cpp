@@ -2,9 +2,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "addrman.h"
+#include <stdio.h>
+#include <math.h>
 
-using namespace std;
+#include <algorithm>
+#include <map>
+#include <set>
+#include <vector>
+
+#include "addrman.h"
+#include "util.h"
+
 
 int CAddrInfo::GetTriedBucket(const std::vector<unsigned char> &nKey) const
 {
@@ -306,7 +314,7 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePen
         bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
         int64 nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
         if (addr.nTime && (!pinfo->nTime || pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty))
-            pinfo->nTime = max((int64)0, addr.nTime - nTimePenalty);
+            pinfo->nTime = std::max((int64)0, addr.nTime - nTimePenalty);
 
         // add services
         pinfo->nServices |= addr.nServices;
@@ -331,7 +339,7 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePen
             return false;
     } else {
         pinfo = Create(addr, source, &nId);
-        pinfo->nTime = max((int64)0, (int64)pinfo->nTime - nTimePenalty);
+        pinfo->nTime = std::max((int64)0, (int64)pinfo->nTime - nTimePenalty);
 //        printf("Added %s [nTime=%fhr]\n", pinfo->ToString().c_str(), (GetAdjustedTime() - pinfo->nTime) / 3600.0);
         nNew++;
         fNew = true;
