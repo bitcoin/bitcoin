@@ -40,10 +40,13 @@ void Shutdown(void* parg)
     static CCriticalSection cs_Shutdown;
     static bool fTaken;
     bool fFirstThread = false;
-    TRY_CRITICAL_BLOCK(cs_Shutdown)
     {
-        fFirstThread = !fTaken;
-        fTaken = true;
+        TRY_LOCK(cs_Shutdown, lockShutdown);
+        if (lockShutdown)
+        {
+            fFirstThread = !fTaken;
+            fTaken = true;
+        }
     }
     static bool fExit;
     if (fFirstThread)
