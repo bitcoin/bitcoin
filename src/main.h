@@ -10,6 +10,7 @@
 #include "key.h"
 #include "script.h"
 #include "db.h"
+#include "version.h"
 
 #ifdef WIN32
 #include <io.h> /* for _commit */
@@ -29,10 +30,6 @@ class CAddress;
 class CInv;
 class CRequestTracker;
 class CNode;
-
-static const int CLIENT_VERSION = 60099;
-static const bool VERSION_IS_BETA = true;
-extern const std::string CLIENT_NAME;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
