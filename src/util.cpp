@@ -1066,12 +1066,7 @@ string FormatVersion(int nVersion)
 
 string FormatFullVersion()
 {
-    string s = FormatVersion(CLIENT_VERSION);
-    if (VERSION_IS_BETA) {
-        s += "-";
-        s += _("beta");
-    }
-    return s;
+    return CLIENT_BUILD;
 }
 
 // Format the subversion field according to BIP 14 spec (https://en.bitcoin.it/wiki/BIP_0014)
