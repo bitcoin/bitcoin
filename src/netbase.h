@@ -17,6 +17,19 @@ extern int nConnectTimeout;
 #undef SetPort
 #endif
 
+enum Network
+{
+    NET_UNROUTABLE,
+    NET_IPV4,
+    NET_IPV6,
+    NET_TOR,
+    NET_I2P,
+
+    NET_MAX
+};
+
+enum Network ParseNetwork(std::string net);
+
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
 {
@@ -48,6 +61,7 @@ class CNetAddr
         bool IsRoutable() const;
         bool IsValid() const;
         bool IsMulticast() const;
+        enum Network GetNetwork() const;
         std::string ToString() const;
         std::string ToStringIP() const;
         int GetByte(int n) const;
