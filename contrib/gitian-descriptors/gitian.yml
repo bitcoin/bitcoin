@@ -42,13 +42,11 @@ script: |
   #
   cd bitcoin
   mkdir -p $OUTDIR/src
-  cp -a . $OUTDIR/src
-  rm -rf $OUTDIR/src/.git
+  git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README $OUTDIR
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
-  sed 's/$(DEBUGFLAGS)//' -i makefile.unix
-  make -f makefile.unix STATIC=1 OPENSSL_INCLUDE_PATH="$INSTDIR/include" OPENSSL_LIB_PATH="$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0
+  make -f makefile.unix STATIC=1 OPENSSL_INCLUDE_PATH="$INSTDIR/include" OPENSSL_LIB_PATH="$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0 DEBUGFLAGS=
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s bitcoind $OUTDIR/bin/$GBUILD_BITS
   cd ..
