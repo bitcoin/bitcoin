@@ -45,8 +45,9 @@ bool OpenNetworkConnection(const CAddress& addrConnect, const char *strDest = NU
 bool fClient = false;
 static bool fUseUPnP = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
-CCriticalSection cs_mapLocalHost;
-map<CNetAddr, int> mapLocalHost;
+static CCriticalSection cs_mapLocalHost;
+static map<CNetAddr, int> mapLocalHost;
+static bool vfReachable[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 array<int, THREAD_MAX> vnThreadsRunning;
@@ -214,6 +215,9 @@ bool AddLocal(const CNetAddr& addr, int nScore)
     {
         LOCK(cs_mapLocalHost);
         mapLocalHost[addr] = std::max(nScore, mapLocalHost[addr]) + (mapLocalHost.count(addr) ? 1 : 0);
+        enum Network net = addr.GetNetwork();
+        vfReachable[net] = true;
+        if (net == NET_IPV6) vfReachable[NET_IPV4] = true;
     }
 
     AdvertizeLocal();
@@ -243,6 +247,12 @@ bool IsLocal(const CNetAddr& addr)
     return mapLocalHost.count(addr) > 0;
 }
 
+// check whether a given address is in a network we can probably connect to
+bool IsReachable(const CNetAddr& addr)
+{
+    LOCK(cs_mapLocalHost);
+    return vfReachable[addr.GetNetwork()];
+}
 
 bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const char* pszKeyword, CNetAddr& ipRet)
 {

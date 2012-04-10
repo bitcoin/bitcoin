@@ -58,7 +58,9 @@ bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 bool SeenLocal(const CNetAddr& addr);
 bool IsLocal(const CNetAddr& addr);
 bool GetLocal(CNetAddr &addr, const CNetAddr *paddrPeer = NULL);
+bool IsReachable(const CNetAddr &addr);
 CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
+
 
 enum
 {

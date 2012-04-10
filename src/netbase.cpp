@@ -25,6 +25,14 @@ int nConnectTimeout = 5000;
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 
+enum Network ParseNetwork(std::string net) {
+    if (net == "ipv4") return NET_IPV4;
+    if (net == "ipv6") return NET_IPV6;
+    if (net == "tor")  return NET_TOR;
+    if (net == "i2p")  return NET_I2P;
+    return NET_UNROUTABLE;
+}
+
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
@@ -686,6 +694,23 @@ bool CNetAddr::IsValid() const
 bool CNetAddr::IsRoutable() const
 {
     return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || (IsRFC4193() && !IsOnionCat() && !IsGarliCat()) || IsRFC4843() || IsLocal());
+}
+
+enum Network CNetAddr::GetNetwork() const
+{
+    if (!IsRoutable())
+        return NET_UNROUTABLE;
+
+    if (IsIPv4())
+        return NET_IPV4;
+
+    if (IsOnionCat())
+        return NET_TOR;
+
+    if (IsGarliCat())
+        return NET_I2P;
+
+    return NET_IPV6;
 }
 
 std::string CNetAddr::ToStringIP() const
