@@ -310,16 +310,14 @@ void AddressBookPage::on_showQRCode_clicked()
     QTableView *table = ui->tableView;
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
-
-    QRCodeDialog *d;
     foreach (QModelIndex index, indexes)
     {
         QString address = index.data().toString(),
             label = index.sibling(index.row(), 0).data().toString(),
-            title = QString("%1 << %2 >>").arg(label).arg(address);
+            title = QString("<< %1 >>").arg(address);
 
-        QRCodeDialog *d = new QRCodeDialog(title, address, label, tab == ReceivingTab, this);
-        d->show();
+        QRCodeDialog *dialog = new QRCodeDialog(title, address, label, tab == ReceivingTab, this);
+        dialog->show();
     }
 #endif
 }
