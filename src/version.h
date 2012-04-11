@@ -11,4 +11,7 @@ extern const std::string CLIENT_BUILD;
 extern const std::string CLIENT_DATE;
 extern const int         CLIENT_VERSION;
 
+// BIP 0031, pong message, is enabled for all versions AFTER this one
+const int BIP0031_VERSION = 60000;
+
 #endif
