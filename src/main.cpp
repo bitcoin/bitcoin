@@ -2652,6 +2652,23 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "ping")
     {
+        if (pfrom->nVersion > BIP0031_VERSION)
+        {
+            uint64 nonce = 0;
+            vRecv >> nonce;
+            // Echo the message back with the nonce. This allows for two useful features:
+            //
+            // 1) A remote node can quickly check if the connection is operational
+            // 2) Remote nodes can measure the latency of the network thread. If this node
+            //    is overloaded it won't respond to pings quickly and the remote node can
+            //    avoid sending us more work, like chain download requests.
+            //
+            // The nonce stops the remote getting confused between different pings: without
+            // it, if the remote node sends a ping once per second and this node takes 5
+            // seconds to respond to each, the 5th ping the remote sends would appear to
+            // return very quickly.
+            pfrom->PushMessage("pong", nonce);
+        }
     }
 
 
@@ -2814,9 +2831,14 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pto->nVersion == 0)
             return true;
 
-        // Keep-alive ping
-        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty())
-            pto->PushMessage("ping");
+        // Keep-alive ping. We send a nonce of zero because we don't use it anywhere 
+        // right now.
+        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty()) {
+            if (pto->nVersion > BIP0031_VERSION)
+                pto->PushMessage("ping", 0);
+            else
+                pto->PushMessage("ping");
+        }
 
         // Resend wallet transactions that haven't gotten in a block yet
         ResendWalletTransactions();
