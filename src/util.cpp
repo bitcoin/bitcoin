@@ -862,7 +862,6 @@ string GetConfigFile()
 
     fs::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = fs::path(GetDataDir()) / pathConfigFile;
-    pathConfigFile.make_preferred();
     return pathConfigFile.string();
 }
 
@@ -877,7 +876,6 @@ bool ReadConfigFile(map<string, string>& mapSettingsRet,
         if (fs::is_directory(fs::system_complete(mapSettingsRet["-datadir"])))
         {
             fs::path pathDataDir(fs::system_complete(mapSettingsRet["-datadir"]));
-            pathDataDir.make_preferred();
 
             strlcpy(pszSetDataDir, pathDataDir.string().c_str(), sizeof(pszSetDataDir));
         }
@@ -915,7 +913,6 @@ string GetPidFile()
 
     fs::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = fs::path(GetDataDir()) / pathPidFile;
-    pathPidFile.make_preferred();
     return pathPidFile.string();
 }
 

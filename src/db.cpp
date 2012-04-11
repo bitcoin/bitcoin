@@ -80,10 +80,8 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
                 return;
             string strDataDir = GetDataDir();
             filesystem::path pathLogDir(strDataDir + "/database");
-            pathLogDir.make_preferred();
             filesystem::create_directory(pathLogDir);
             filesystem::path pathErrorFile(strDataDir + "/db.log");
-            pathErrorFile.make_preferred();
             printf("dbenv.open LogDir=%s ErrorFile=%s\n", pathLogDir.string().c_str(), pathErrorFile.string().c_str());
 
             int nDbCache = GetArg("-dbcache", 25);
@@ -1179,9 +1177,7 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
 
                 // Copy wallet.dat
                 filesystem::path pathSrc(GetDataDir() + "/" + wallet.strWalletFile);
-                pathSrc.make_preferred();
                 filesystem::path pathDest(strDest);
-                pathDest.make_preferred();
                 if (filesystem::is_directory(pathDest))
                     pathDest = pathDest / wallet.strWalletFile;
 
