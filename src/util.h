@@ -19,6 +19,8 @@ typedef int pid_t; /* define for windows compatiblity */
 #include <string>
 
 #include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>
@@ -111,7 +113,6 @@ extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugger;
-extern char pszSetDataDir[MAX_PATH];
 extern bool fRequestShutdown;
 extern bool fShutdown;
 extern bool fDaemon;
@@ -153,16 +154,15 @@ void ParseParameters(int argc, const char*const argv[]);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const std::string& str, const std::string& mask);
 int GetFilesize(FILE* file);
-void GetDataDir(char* pszDirRet);
-std::string GetConfigFile();
-std::string GetPidFile();
-void CreatePidFile(std::string pidFile, pid_t pid);
+boost::filesystem::path GetDefaultDataDir();
+const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+boost::filesystem::path GetConfigFile();
+boost::filesystem::path GetPidFile();
+void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 bool ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef WIN32
-std::string MyGetSpecialFolderPath(int nFolder, bool fCreate);
+boost::filesystem::path MyGetSpecialFolderPath(int nFolder, bool fCreate);
 #endif
-std::string GetDefaultDataDir();
-std::string GetDataDir();
 void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
