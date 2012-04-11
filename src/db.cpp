@@ -43,7 +43,7 @@ static void EnvShutdown()
     {
         printf("EnvShutdown exception: %s (%d)\n", e.what(), e.get_errno());
     }
-    DbEnv(0).remove(GetDataDir().c_str(), 0);
+    DbEnv(0).remove(GetDataDir().string().c_str(), 0);
 }
 
 class CDBInit
@@ -60,7 +60,7 @@ public:
 instance_of_cdbinit;
 
 
-CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
+CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
 {
     int ret;
     if (pszFile == NULL)
@@ -78,10 +78,10 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
         {
             if (fShutdown)
                 return;
-            string strDataDir = GetDataDir();
-            filesystem::path pathLogDir(strDataDir + "/database");
+            filesystem::path pathDataDir = GetDataDir();
+            filesystem::path pathLogDir = pathDataDir / "database";
             filesystem::create_directory(pathLogDir);
-            filesystem::path pathErrorFile(strDataDir + "/db.log");
+            filesystem::path pathErrorFile = pathDataDir / "db.log";
             printf("dbenv.open LogDir=%s ErrorFile=%s\n", pathLogDir.string().c_str(), pathErrorFile.string().c_str());
 
             int nDbCache = GetArg("-dbcache", 25);
@@ -94,7 +94,7 @@ CDB::CDB(const char* pszFile, const char* pszMode) : pdb(NULL)
             dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
             dbenv.set_flags(DB_AUTO_COMMIT, 1);
             dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
-            ret = dbenv.open(strDataDir.c_str(),
+            ret = dbenv.open(pathDataDir.string().c_str(),
                              DB_CREATE     |
                              DB_INIT_LOCK  |
                              DB_INIT_LOG   |
@@ -1087,13 +1087,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
         return DB_NEED_REWRITE;
 
     if (nFileVersion < CLIENT_VERSION) // Update
-    {
-        // Get rid of old debug.log file in current directory
-        if (nFileVersion <= 105 && !pszSetDataDir[0])
-            unlink("debug.log");
-
         WriteVersion(CLIENT_VERSION);
-    }
 
     return DB_LOAD_OK;
 }
@@ -1176,10 +1170,10 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
                 mapFileUseCount.erase(wallet.strWalletFile);
 
                 // Copy wallet.dat
-                filesystem::path pathSrc(GetDataDir() + "/" + wallet.strWalletFile);
+                filesystem::path pathSrc = GetDataDir() / wallet.strWalletFile;
                 filesystem::path pathDest(strDest);
                 if (filesystem::is_directory(pathDest))
-                    pathDest = pathDest / wallet.strWalletFile;
+                    pathDest /= wallet.strWalletFile;
 
                 try {
 #if BOOST_VERSION >= 104000
