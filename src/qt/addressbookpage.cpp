@@ -308,8 +308,8 @@ void AddressBookPage::on_showQRCode_clicked()
     foreach (QModelIndex index, indexes)
     {
         QString address = index.data().toString(),
-            label = index.sibling(index.row(), 0).data().toString(),
-            title = QString("%1 << %2 >>").arg(label).arg(address);
+            label = index.sibling(index.row(), 0).data(Qt::EditRole).toString(),
+            title = QString("%1%2<< %3 >>").arg(label).arg(label.isEmpty() ? "" : " ").arg(address);
 
         QRCodeDialog *d = new QRCodeDialog(title, address, label, tab == ReceivingTab, this);
         d->show();
