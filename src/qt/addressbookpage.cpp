@@ -312,11 +312,9 @@ void AddressBookPage::on_showQRCode_clicked()
 
     foreach (QModelIndex index, indexes)
     {
-        QString address = index.data().toString(),
-            label = index.sibling(index.row(), 0).data().toString(),
-            title = QString("<< %1 >>").arg(address);
+        QString address = index.data().toString(), label = index.sibling(index.row(), 0).data(Qt::EditRole).toString();
 
-        QRCodeDialog *dialog = new QRCodeDialog(title, address, label, tab == ReceivingTab, this);
+        QRCodeDialog *dialog = new QRCodeDialog(address, label, tab == ReceivingTab, this);
         dialog->show();
     }
 #endif

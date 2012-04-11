@@ -13,7 +13,7 @@ class QRCodeDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit QRCodeDialog(const QString &title, const QString &address, const QString &label, bool allowReq, QWidget *parent = 0);
+    explicit QRCodeDialog(const QString &addr, const QString &label, bool enableReq, QWidget *parent = 0);
     ~QRCodeDialog();
 
 private slots:
@@ -22,7 +22,7 @@ private slots:
     void on_lnMessage_textChanged(const QString &arg1);
     void on_btnSaveAs_clicked();
 
-    void on_chkReq_toggled(bool checked);
+    void on_chkReqPayment_toggled(bool checked);
 
 private:
     Ui::QRCodeDialog *ui;
