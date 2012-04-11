@@ -83,9 +83,9 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 # regenerate src/build.h
 !windows || contains(USE_BUILD_INFO, 1) {
     genbuild.depends = FORCE
-    genbuild.commands = share/genbuild.sh src/build.h
-    genbuild.target = src/build.h
-    "src/version.cpp".depends += src/build.h
+    genbuild.commands = cd $$PWD; share/genbuild.sh $$OUT_PWD/build/build.h
+    genbuild.target = genbuildhook
+    PRE_TARGETDEPS += genbuildhook
     QMAKE_EXTRA_TARGETS += genbuild
     DEFINES += HAVE_BUILD_INFO
 }
