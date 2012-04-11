@@ -10,23 +10,19 @@
 
 #define EXPORT_IMAGE_SIZE 256
 
-QRCodeDialog::QRCodeDialog(const QString &title, const QString &addr, const QString &label, bool enableReq, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::QRCodeDialog),
-    address(addr)
+QRCodeDialog::QRCodeDialog(const QString &addr, const QString &label, bool enableReq, QWidget *parent) :
+    QDialog(parent), ui(new Ui::QRCodeDialog), address(addr)
 {
     ui->setupUi(this);
-    setWindowTitle(title);
+    setWindowTitle(QString("%1").arg(address));
     setAttribute(Qt::WA_DeleteOnClose);
 
-    ui->chkReq->setVisible(enableReq);
+    ui->chkReqPayment->setVisible(enableReq);
     ui->lnReqAmount->setVisible(enableReq);
-    ui->lblAm1->setVisible(enableReq);
-    ui->lblAm2->setVisible(enableReq);
+    ui->lblAmount->setVisible(enableReq);
+    ui->lblBTC->setVisible(enableReq);
 
-    // don't display "(no label)" if there IS no label, as this is confusing in the QR dialog
-    if(label != tr("(no label)"))
-        ui->lnLabel->setText(label);
+    ui->lnLabel->setText(label);
 
     genCode();
 }
@@ -60,7 +56,7 @@ QString QRCodeDialog::getURI()
     QString ret = QString("bitcoin:%1").arg(address);
 
     int paramCount = 0;
-    if (ui->chkReq->isChecked() && !ui->lnReqAmount->text().isEmpty())
+    if (ui->chkReqPayment->isChecked() && !ui->lnReqAmount->text().isEmpty())
     {
         bool ok = false;
         ui->lnReqAmount->text().toDouble(&ok);
@@ -88,17 +84,17 @@ QString QRCodeDialog::getURI()
     return ret;
 }
 
-void QRCodeDialog::on_lnReqAmount_textChanged(const QString &)
+void QRCodeDialog::on_lnReqAmount_textChanged(const QString &arg1)
 {
     genCode();
 }
 
-void QRCodeDialog::on_lnLabel_textChanged(const QString &)
+void QRCodeDialog::on_lnLabel_textChanged(const QString &arg1)
 {
     genCode();
 }
 
-void QRCodeDialog::on_lnMessage_textChanged(const QString &)
+void QRCodeDialog::on_lnMessage_textChanged(const QString &arg1)
 {
     genCode();
 }
@@ -110,7 +106,7 @@ void QRCodeDialog::on_btnSaveAs_clicked()
         myImage.scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE).save(fn);
 }
 
-void QRCodeDialog::on_chkReq_toggled(bool)
+void QRCodeDialog::on_chkReqPayment_toggled(bool)
 {
     genCode();
 }
