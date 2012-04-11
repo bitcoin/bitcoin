@@ -17,7 +17,6 @@ public:
 
     enum OptionID {
         StartAtStartup, // bool
-        MinimizeToTray, // bool
         MapPortUPnP, // bool
         MinimizeOnClose, // bool
         ConnectSOCKS4, // bool
@@ -47,7 +46,6 @@ public:
 private:
     int nDisplayUnit;
     bool bDisplayAddresses;
-    bool fMinimizeToTray;
     bool fMinimizeOnClose;
 signals:
     void displayUnitChanged(int unit);

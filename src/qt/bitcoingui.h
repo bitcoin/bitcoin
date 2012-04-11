@@ -47,7 +47,6 @@ public:
     void setWalletModel(WalletModel *walletModel);
     
 protected:
-    void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
