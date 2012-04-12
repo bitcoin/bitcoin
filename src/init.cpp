@@ -584,18 +584,24 @@ bool AppInit2(int argc, char* argv[])
 }
 
 #ifdef WIN32
-filesystem::path StartupShortcutPath()
+filesystem::path StartupShortcutPath(bool fLegacy = false)
 {
-    return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+    if (fLegacy)
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+    else
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin-Qt.lnk";
 }
 
 bool GetStartOnSystemStartup()
 {
-    return filesystem::exists(StartupShortcutPath());
+    // check for Bitcoin.lnk (legacy) or Bitcoin-Qt.lnk (new)
+    return (filesystem::exists(StartupShortcutPath(true)) || filesystem::exists(StartupShortcutPath()));
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
+    // ensure the legacy shortcut gets removed
+    filesystem::remove(StartupShortcutPath(true));
     // If the shortcut exists already, remove it for updating
     filesystem::remove(StartupShortcutPath());
 
