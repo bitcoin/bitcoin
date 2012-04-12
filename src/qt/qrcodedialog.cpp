@@ -35,20 +35,28 @@ QRCodeDialog::~QRCodeDialog()
 void QRCodeDialog::genCode()
 {
     QString uri = getURI();
-    QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
-    myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-    myImage.fill(0xffffff);
-    unsigned char *p = code->data;
-    for (int y = 0; y < code->width; y++)
+
+    if (uri != "")
     {
-        for (int x = 0; x < code->width; x++)
+        ui->lblQRCode->setText("");
+
+        QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
+        myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
+        myImage.fill(0xffffff);
+        unsigned char *p = code->data;
+        for (int y = 0; y < code->width; y++)
         {
-            myImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
-            p++;
+            for (int x = 0; x < code->width; x++)
+            {
+                myImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+                p++;
+            }
         }
+        QRcode_free(code);
+        ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
     }
-    QRcode_free(code);
-    ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
+    else
+        ui->lblQRCode->setText(tr("Resulting URI too long, try to reduce the text for label / message."));
 }
 
 QString QRCodeDialog::getURI()
@@ -81,7 +89,11 @@ QString QRCodeDialog::getURI()
         paramCount++;
     }
 
-    return ret;
+    // limit URI length to 255 chars, to prevent a DoS of the QR-Code dialog
+    if (ret.length() < 256)
+        return ret;
+    else
+        return QString("");
 }
 
 void QRCodeDialog::on_lnReqAmount_textChanged(const QString &arg1)
