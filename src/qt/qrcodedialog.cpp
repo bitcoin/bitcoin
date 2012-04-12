@@ -89,7 +89,7 @@ QString QRCodeDialog::getURI()
         paramCount++;
     }
 
-    // limit URI length to 255 chars, to prevent a DoS of the QR-Code dialog
+    // limit URI length to 255 chars, to prevent a DoS against the QR-Code dialog
     if (ret.length() < 256)
         return ret;
     else
