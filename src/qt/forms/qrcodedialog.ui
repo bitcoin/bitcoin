@@ -34,6 +34,9 @@
      <property name="alignment">
       <set>Qt::AlignCenter</set>
      </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>
@@ -44,7 +47,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QCheckBox" name="chkReq">
+           <widget class="QCheckBox" name="chkReqPayment">
             <property name="enabled">
              <bool>true</bool>
             </property>
@@ -56,7 +59,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QLabel" name="lblAm1">
+             <widget class="QLabel" name="lblAmount">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                 <horstretch>0</horstretch>
@@ -91,7 +94,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="lblAm2">
+             <widget class="QLabel" name="lblBTC">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                 <horstretch>0</horstretch>
@@ -113,7 +116,7 @@
         <item>
          <layout class="QGridLayout" name="gridLayout">
           <item row="0" column="0">
-           <widget class="QLabel" name="label_3">
+           <widget class="QLabel" name="lblLabel">
             <property name="text">
              <string>Label:</string>
             </property>
@@ -136,7 +139,7 @@
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="label_4">
+           <widget class="QLabel" name="lblMessage">
             <property name="text">
              <string>Message:</string>
             </property>
@@ -194,7 +197,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>chkReq</sender>
+   <sender>chkReqPayment</sender>
    <signal>clicked(bool)</signal>
    <receiver>lnReqAmount</receiver>
    <slot>setEnabled(bool)</slot>
