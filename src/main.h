@@ -667,6 +667,7 @@ protected:
 public:
     bool RemoveFromMemoryPool();
     bool GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const;  // ppcoin: get transaction coin age
+    bool CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const;
 };
 
 
@@ -875,6 +876,17 @@ public:
     int64 GetBlockTime() const
     {
         return (int64)nTime;
+    }
+
+    // ppcoin: two types of block: proof-of-work or proof-of-stake
+    bool IsProofOfStake() const
+    {
+        return (vtx.size() > 1 && vtx[1].IsCoinStake());
+    }
+
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
     }
 
     // ppcoin: get max transaction timestamp
