@@ -1061,6 +1061,10 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     if (!CheckBlock())
         return false;
 
+    // ppcoin: coin stake tx must meet target protocol
+    if (IsProofOfStake() && !vtx[1].CheckProofOfStake(txdb, nBits))
+        return error("ConnectBlock() : Block %s unable to meet hash target for coinstake", GetHash().ToString().c_str());
+
     //// issue here: it doesn't know the version
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
 
@@ -1264,6 +1268,49 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 }
 
 
+// ppcoin: coinstake must meet hash target according to the protocol:
+// at least one input must meet the formula
+//     hash(txin.prevout.hash + nTime) < bnTarget * nCoinDay
+// this ensures that the chance of getting a coinstake is proportional to the
+//  amount of coin age one owns.
+//
+bool CTransaction::CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const
+{
+    CBigNum bnTargetPerCoinDay;
+    bnTargetPerCoinDay.SetCompact(nBits);
+ 
+    if (!IsCoinStake())
+        return true;
+
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        // First try finding the previous transaction in database
+        CTransaction txPrev;
+        CTxIndex txindex;
+        if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
+            continue;  // previous transaction not in main chain
+        if (nTime < txPrev.nTime)
+            return false;  // Transaction timestamp violation
+
+        // Read block header
+        CBlock block;
+        if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+            return false; // unable to read block of previous transaction
+        if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > nTime)
+            continue; // only count coins from at least one week ago
+
+        int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
+        CBigNum bnCoinDay = CBigNum(nValueIn) * (nTime-txPrev.nTime) / COIN / (24 * 60 * 60);
+        // Calculate hash
+        CDataStream ss(SER_GETHASH, VERSION);
+        ss << txin.prevout.hash << nTime;
+        if (CBigNum(Hash(ss.begin(), ss.end())) < bnCoinDay * bnTargetPerCoinDay)
+            return true;
+    }
+
+    return false;
+}
+
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
 // Only those coins last spent at least a week ago count. As those
 // transactions not in main chain are not currently indexed so we
@@ -1402,7 +1449,7 @@ bool CBlock::CheckBlock() const
         return DoS(100, error("CheckBlock() : size limits failed"));
 
     // Check proof of work matches claimed amount
-    if (!CheckProofOfWork(GetHash(), nBits))
+    if (IsProofOfWork() && !CheckProofOfWork(GetHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
