@@ -195,9 +195,10 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         // accumulate a line at a time
         {
             LOCK(cs_OutputDebugStringF);
-            static char pszBuffer[50000];
+
             static char staticBuffer[50000];
             static char* pend;
+
             if (pend == NULL)
                 pend = staticBuffer;
             va_list arg_ptr;
