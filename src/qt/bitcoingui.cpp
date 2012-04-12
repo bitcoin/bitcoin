@@ -388,7 +388,7 @@ void BitcoinGUI::createTrayIcon()
 #else
     // Note: On Mac, the dock icon is used to provide the tray's functionality.
     MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-    connect(dockIconHandler, SIGNAL(dockIconClicked()), openBitcoinAction, SLOT(trigger()));
+    connect(dockIconHandler, SIGNAL(dockIconClicked()), toggleHideAction, SLOT(trigger()));
     trayIconMenu = dockIconHandler->dockMenu();
 #endif
 

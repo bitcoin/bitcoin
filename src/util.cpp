@@ -805,7 +805,7 @@ boost::filesystem::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    pathRet /= "Library" / "Application Support";
+    pathRet /= "Library/Application Support";
     filesystem::create_directory(pathRet);
     return pathRet / "Bitcoin";
 #else
