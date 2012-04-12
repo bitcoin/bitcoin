@@ -15,6 +15,34 @@ using namespace std;
 // mapWallet
 //
 
+struct CompareValueOnly
+{
+    bool operator()(const pair<int64, pair<const CWalletTx*, unsigned int> >& t1,
+                    const pair<int64, pair<const CWalletTx*, unsigned int> >& t2) const
+    { 
+        return t1.first < t2.first; 
+    }
+};
+
+void CWallet::setSendFromAddressRestriction(string addresses)
+{
+    boost::trim(addresses);
+    if (addresses.empty())
+        this->sendFromAddressRestriction.clear();
+    else
+        boost::split(sendFromAddressRestriction, addresses, boost::is_any_of(";,"));
+}
+
+void CWallet::setSendFromAddressRestriction(set<string> addresses)
+{
+    sendFromAddressRestriction = addresses;
+}
+
+void CWallet::clearSendFromAddressRestriction()
+{
+    sendFromAddressRestriction.clear();
+}
+
 std::vector<unsigned char> CWallet::GenerateNewKey()
 {
     bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
@@ -868,106 +896,49 @@ int64 CWallet::GetUnconfirmedBalance() const
     return nTotal;
 }
 
-bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
+// populate vCoins with vector of spendable COutputs
+void CWallet::AvailableCoins(vector<COutput>& vCoins) const
 {
-    setCoinsRet.clear();
-    nValueRet = 0;
-
-    // List of values less than target
-    pair<int64, pair<const CWalletTx*,unsigned int> > coinLowestLarger;
-    coinLowestLarger.first = std::numeric_limits<int64>::max();
-    coinLowestLarger.second.first = NULL;
-    vector<pair<int64, pair<const CWalletTx*,unsigned int> > > vValue;
-    int64 nTotalLower = 0;
+    vCoins.clear();
 
     {
-       LOCK(cs_wallet);
-       vector<const CWalletTx*> vCoins;
-       vCoins.reserve(mapWallet.size());
-       for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-           vCoins.push_back(&(*it).second);
-       random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
 
-       BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
-       {
             if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
                 continue;
 
             if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
-            int nDepth = pcoin->GetDepthInMainChain();
-            if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
-                continue;
-
             for (int i = 0; i < pcoin->vout.size(); i++)
             {
-                if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
+                if (!this->sendFromAddressRestriction.empty() && !this->sendFromAddressRestriction.count(((CWalletTx *)pcoin)->GetAddressOfTxOut(i)))
                     continue;
 
-                int64 n = pcoin->vout[i].nValue;
-
-                if (n <= 0)
-                    continue;
-
-                pair<int64,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin,i));
-
-                if (n == nTargetValue)
-                {
-                    setCoinsRet.insert(coin.second);
-                    nValueRet += coin.first;
-                    return true;
-                }
-                else if (n < nTargetValue + CENT)
-                {
-                    vValue.push_back(coin);
-                    nTotalLower += n;
-                }
-                else if (n < coinLowestLarger.first)
-                {
-                    coinLowestLarger = coin;
-                }
+                if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue > 0)
+                    vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
             }
         }
     }
+}
 
-    if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
-    {
-        for (int i = 0; i < vValue.size(); ++i)
-        {
-            setCoinsRet.insert(vValue[i].second);
-            nValueRet += vValue[i].first;
-        }
-        return true;
-    }
-
-    if (nTotalLower < nTargetValue + (coinLowestLarger.second.first ? CENT : 0))
-    {
-        if (coinLowestLarger.second.first == NULL)
-            return false;
-        setCoinsRet.insert(coinLowestLarger.second);
-        nValueRet += coinLowestLarger.first;
-        return true;
-    }
-
-    if (nTotalLower >= nTargetValue + CENT)
-        nTargetValue += CENT;
-
-    // Solve subset sum by stochastic approximation
-    sort(vValue.rbegin(), vValue.rend());
+static void ApproximateBestSubset(vector<pair<int64, pair<const CWalletTx*,unsigned int> > >vValue, int64 nTotalLower, int64 nTargetValue,
+                                  vector<char>& vfBest, int64& nBest, int iterations = 1000)
+{
     vector<char> vfIncluded;
-    vector<char> vfBest(vValue.size(), true);
-    int64 nBest = nTotalLower;
 
-    for (int nRep = 0; nRep < 1000 && nBest != nTargetValue; nRep++)
+    vfBest.assign(vValue.size(), true);
+    nBest = nTotalLower;
+
+    for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
     {
         vfIncluded.assign(vValue.size(), false);
         int64 nTotal = 0;
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
-        {
             for (int i = 0; i < vValue.size(); i++)
-            {
                 if (nPass == 0 ? rand() % 2 : !vfIncluded[i])
                 {
                     nTotal += vValue[i].first;
@@ -984,12 +955,85 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
                         vfIncluded[i] = false;
                     }
                 }
-            }
+    }
+}
+
+bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfTheirs, vector<COutput> vCoins,
+                                 set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
+{
+    setCoinsRet.clear();
+    nValueRet = 0;
+
+    // List of values less than target
+    pair<int64, pair<const CWalletTx*,unsigned int> > coinLowestLarger;
+    coinLowestLarger.first = std::numeric_limits<int64>::max();
+    coinLowestLarger.second.first = NULL;
+    vector<pair<int64, pair<const CWalletTx*,unsigned int> > > vValue;
+    int64 nTotalLower = 0;
+
+    random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+
+    BOOST_FOREACH(COutput output, vCoins)
+    {
+        const CWalletTx *pcoin = output.tx;
+
+        if (output.nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
+            continue;
+
+        int i = output.i;
+        int64 n = pcoin->vout[i].nValue;
+
+        pair<int64,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
+
+        if (n == nTargetValue)
+        {
+            setCoinsRet.insert(coin.second);
+            nValueRet += coin.first;
+            return true;
+        }
+        else if (n < nTargetValue + CENT)
+        {
+            vValue.push_back(coin);
+            nTotalLower += n;
+        }
+        else if (n < coinLowestLarger.first)
+        {
+            coinLowestLarger = coin;
         }
     }
 
-    // If the next larger is still closer, return it
-    if (coinLowestLarger.second.first && coinLowestLarger.first - nTargetValue <= nBest - nTargetValue)
+    if (nTotalLower == nTargetValue)
+    {
+        for (int i = 0; i < vValue.size(); ++i)
+        {
+            setCoinsRet.insert(vValue[i].second);
+            nValueRet += vValue[i].first;
+        }
+        return true;
+    }
+
+    if (nTotalLower < nTargetValue)
+    {
+        if (coinLowestLarger.second.first == NULL)
+            return false;
+        setCoinsRet.insert(coinLowestLarger.second);
+        nValueRet += coinLowestLarger.first;
+        return true;
+    }
+
+    // Solve subset sum by stochastic approximation
+    sort(vValue.rbegin(), vValue.rend(), CompareValueOnly());
+    vector<char> vfBest;
+    int64 nBest;
+
+    ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest, 1000);
+    if (nBest != nTargetValue && nTotalLower >= nTargetValue + CENT)
+        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + CENT, vfBest, nBest, 1000);
+
+    // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
+    //                                   or the next bigger coin is closer), return the bigger coin
+    if (coinLowestLarger.second.first &&
+        ((nBest != nTargetValue && nBest < nTargetValue + CENT) || coinLowestLarger.first <= nBest))
     {
         setCoinsRet.insert(coinLowestLarger.second);
         nValueRet += coinLowestLarger.first;
@@ -1002,12 +1046,14 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
                 nValueRet += vValue[i].first;
             }
 
+#ifdef DEBUG
         //// debug print
         printf("SelectCoins() best subset: ");
         for (int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
                 printf("%s ", FormatMoney(vValue[i].first).c_str());
         printf("total %s\n", FormatMoney(nBest).c_str());
+#endif
     }
 
     return true;
@@ -1015,9 +1061,12 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
 
 bool CWallet::SelectCoins(int64 nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 {
-    return (SelectCoinsMinConf(nTargetValue, 1, 6, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue, 1, 1, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue, 0, 1, setCoinsRet, nValueRet));
+    vector<COutput> vCoins;
+    AvailableCoins(vCoins);
+
+    return (SelectCoinsMinConf(nTargetValue, 1, 6, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue, 1, 1, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet));
 }
 
 
@@ -1494,6 +1543,129 @@ int64 CWallet::GetOldestKeyPoolTime()
         return GetTime();
     ReturnKey(nIndex);
     return keypool.nTime;
+}
+
+std::map<std::string, int64> CWallet::GetAddressBalances()
+{
+    map<string, int64> balances;
+
+    {
+        LOCK(cs_wallet);
+        BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, mapWallet)
+        {
+            CWalletTx *pcoin = &walletEntry.second;
+
+            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+                continue;
+
+            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+                continue;
+
+            int nDepth = pcoin->GetDepthInMainChain();
+            if (nDepth < (pcoin->IsFromMe() ? 0 : 1))
+                continue;
+
+            for (int i = 0; i < pcoin->vout.size(); i++)
+            {
+                if (!IsMine(pcoin->vout[i]))
+                    continue;
+
+                int64 n = pcoin->IsSpent(i) ? 0 : pcoin->vout[i].nValue;
+
+                string addr = pcoin->GetAddressOfTxOut(i);
+                if (!balances.count(addr))
+                    balances[addr] = 0;
+                balances[addr] += n;
+            }
+        }
+    }
+
+    return balances;
+}
+
+set< set<string> > CWallet::GetAddressGroupings()
+{
+    set< set<string> > groupings;
+    set<string> grouping;
+
+    BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, mapWallet)
+    {
+        CWalletTx *pcoin = &walletEntry.second;
+
+        if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
+            continue;
+
+        if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+            continue;
+
+        int nDepth = pcoin->GetDepthInMainChain();
+        if (nDepth < (pcoin->IsFromMe() ? 0 : 1))
+            continue;
+
+        if (pcoin->vin.size() > 0 && IsMine(pcoin->vin[0]))
+        {
+            // group all input addresses with each other
+            BOOST_FOREACH(CTxIn txin, pcoin->vin)
+                grouping.insert(mapWallet[txin.prevout.hash].GetAddressOfTxOut(txin.prevout.n));
+
+            // group change with input addresses
+            BOOST_FOREACH(CTxOut txout, pcoin->vout)
+                if (IsChange(txout))
+                {
+                    CWalletTx tx = mapWallet[pcoin->vin[0].prevout.hash];
+                    string addr = tx.GetAddressOfTxOut(pcoin->vin[0].prevout.n);
+                    CBitcoinAddress txoutAddr;
+                    ExtractAddress(txout.scriptPubKey, txoutAddr);
+                    grouping.insert(txoutAddr.ToString());
+                }
+            groupings.insert(grouping);
+            grouping.clear();
+        }
+
+        // group lone addrs by themselves
+        for (int i = 0; i < pcoin->vout.size(); i++)
+            if (IsMine(pcoin->vout[i]))
+            {
+                grouping.insert(pcoin->GetAddressOfTxOut(i));
+                groupings.insert(grouping);
+                grouping.clear();
+            }
+    }
+
+    set< set<string>* > uniqueGroupings; // a set of pointers to groups of addresses
+    map< string, set<string>* > setmap;  // map addresses to the unique group containing it
+    BOOST_FOREACH(set<string> grouping, groupings)
+    {
+        // make a set of all the groups hit by this new group
+        set< set<string>* > hits;
+        map< string, set<string>* >::iterator it;
+        BOOST_FOREACH(string address, grouping)
+            if ((it = setmap.find(address)) != setmap.end())
+                hits.insert((*it).second);
+
+        // merge all hit groups into a new single group and delete old groups
+        set<string>* merged = new set<string>(grouping);
+        BOOST_FOREACH(set<string>* hit, hits)
+        {
+            merged->insert(hit->begin(), hit->end());
+            uniqueGroupings.erase(hit);
+            delete hit;
+        }
+        uniqueGroupings.insert(merged);
+
+        // update setmap
+        BOOST_FOREACH(string element, *merged)
+            setmap[element] = merged;
+    }
+
+    set< set<string> > ret;
+    BOOST_FOREACH(set<string>* uniqueGrouping, uniqueGroupings)
+    {
+        ret.insert(*uniqueGrouping);
+        delete uniqueGrouping;
+    }
+
+    return ret;
 }
 
 vector<unsigned char> CReserveKey::GetReservedKey()
