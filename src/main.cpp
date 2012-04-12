@@ -3361,8 +3361,6 @@ void static BitcoinMiner(CWallet *pwallet)
 
     while (fGenerateBitcoins)
     {
-        if (AffinityBugWorkaround(ThreadBitcoinMiner))
-            return;
         if (fShutdown)
             return;
         while (vNodes.empty() || IsInitialBlockDownload())
