@@ -177,12 +177,12 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     layout->addWidget(minimize_to_tray);
 
     minimize_on_close = new QCheckBox(tr("M&inimize on close"));
-    minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu."));
+    minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed.\nWhen this option is enabled, the application will be closed only after selecting Quit in the menu."));
     layout->addWidget(minimize_on_close);
 #endif
 
     map_port_upnp = new QCheckBox(tr("Map port using &UPnP"));
-    map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled."));
+    map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router.\nThis only works when your router supports UPnP and it is enabled."));
     layout->addWidget(map_port_upnp);
 
     connect_socks4 = new QCheckBox(tr("&Connect through SOCKS4 proxy:"));
@@ -221,7 +221,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     QLabel *fee_label = new QLabel(tr("Pay transaction &fee"));
     fee_hbox->addWidget(fee_label);
     fee_edit = new BitcoinAmountField();
-    fee_edit->setToolTip(tr("Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended."));
+    fee_edit->setToolTip(tr("Optional transaction fee per kB that helps make sure your transactions are processed quickly.\nMost transactions are 1 kB. Fee 0.01 recommended."));
 
     fee_label->setBuddy(fee_edit);
     fee_hbox->addWidget(fee_edit);
