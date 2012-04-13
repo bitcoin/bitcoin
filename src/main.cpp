@@ -702,7 +702,7 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
             if (!tx.IsCoinBase())
             {
                 uint256 hash = tx.GetHash();
-                if (!mempool.mapTx.count(hash) && !txdb.ContainsTx(hash))
+                if (!mempool.exists(hash) && !txdb.ContainsTx(hash))
                     tx.AcceptToMemoryPool(txdb, fCheckInputs);
             }
         }
@@ -1018,9 +1018,9 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
             // Get prev tx from single transactions in memory
             {
                 LOCK(mempool.cs);
-                if (!mempool.mapTx.count(prevout.hash))
-                    return error("FetchInputs() : %s mempool.mapTx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
-                txPrev = mempool.mapTx[prevout.hash];
+                if (!mempool.exists(prevout.hash))
+                    return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+                txPrev = mempool.lookup(prevout.hash);
             }
             if (!fFound)
                 txindex.vSpent.resize(txPrev.vout.size());
@@ -1189,9 +1189,9 @@ bool CTransaction::ClientConnectInputs()
         {
             // Get prev tx from single transactions in memory
             COutPoint prevout = vin[i].prevout;
-            if (!mempool.mapTx.count(prevout.hash))
+            if (!mempool.exists(prevout.hash))
                 return false;
-            CTransaction& txPrev = mempool.mapTx[prevout.hash];
+            CTransaction& txPrev = mempool.lookup(prevout.hash);
 
             if (prevout.n >= txPrev.vout.size())
                 return false;
@@ -2136,8 +2136,16 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
-    case MSG_TX:    return mempool.mapTx.count(inv.hash) || mapOrphanTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
-    case MSG_BLOCK: return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
+    case MSG_TX:
+	{
+        LOCK(mempool.cs);
+        return mempool.exists(inv.hash) ||
+               mapOrphanTransactions.count(inv.hash) ||
+               txdb.ContainsTx(inv.hash);
+	}
+
+    case MSG_BLOCK:
+        return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;

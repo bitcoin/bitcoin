@@ -1621,6 +1621,16 @@ public:
         LOCK(cs);
         return mapTx.size();
     }
+
+    bool exists(uint256 hash)
+    {
+        return (mapTx.count(hash) != 0);
+    }
+
+    CTransaction& lookup(uint256 hash)
+    {
+        return mapTx[hash];
+    }
 };
 
 extern CTxMemPool mempool;
