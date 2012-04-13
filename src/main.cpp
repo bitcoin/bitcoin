@@ -1953,7 +1953,14 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
-    case MSG_TX:    return mapTransactions.count(inv.hash) || mapOrphanTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
+    case MSG_TX:
+        CRITICAL_BLOCK(cs_mapTransactions)
+        {
+            return mapTransactions.count(inv.hash) ||
+                   mapOrphanTransactions.count(inv.hash) ||
+                   txdb.ContainsTx(inv.hash);
+        }
+
     case MSG_BLOCK: return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
