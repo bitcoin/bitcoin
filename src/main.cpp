@@ -592,12 +592,6 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(bool fCheckInputs, bool* pfMissingInputs)
-{
-    CTxDB txdb("r");
-    return AcceptToMemoryPool(txdb, fCheckInputs, pfMissingInputs);
-}
-
 uint64 nPooledTx = 0;
 
 bool CTransaction::AddToMemoryPoolUnchecked()
@@ -2522,6 +2516,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<uint256> vWorkQueue;
         CDataStream vMsg(vRecv);
+        CTxDB txdb("r");
         CTransaction tx;
         vRecv >> tx;
 
@@ -2529,7 +2524,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         bool fMissingInputs = false;
-        if (tx.AcceptToMemoryPool(true, &fMissingInputs))
+        if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs))
         {
             SyncWithWallets(tx, NULL, true);
             RelayMessage(inv, vMsg);
@@ -2549,7 +2544,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     CDataStream(vMsg) >> tx;
                     CInv inv(MSG_TX, tx.GetHash());
 
-                    if (tx.AcceptToMemoryPool(true))
+                    if (tx.AcceptToMemoryPool(txdb, true))
                     {
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
                         SyncWithWallets(tx, NULL, true);
