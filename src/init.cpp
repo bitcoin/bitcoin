@@ -56,7 +56,7 @@ void Shutdown(void* parg)
         DBFlush(false);
         StopNode();
         DBFlush(true);
-        boost::filesystem::remove(GetPidFile());
+        filesystem::remove(GetPidFile());
         UnregisterWallet(pwalletMain);
         delete pwalletMain;
         CreateThread(ExitTimeout, NULL);
@@ -322,7 +322,7 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Make sure only a single bitcoin process is using the data directory.
-    boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
+    filesystem::path pathLockFile = GetDataDir() / ".lock";
     FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
@@ -584,20 +584,26 @@ bool AppInit2(int argc, char* argv[])
 }
 
 #ifdef WIN32
-boost::filesystem::path StartupShortcutPath()
+filesystem::path StartupShortcutPath(bool fLegacy = false)
 {
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "Bitcoin.lnk";
+    if (fLegacy)
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+    else
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin-Qt.lnk";
 }
 
 bool GetStartOnSystemStartup()
 {
-    return filesystem::exists(StartupShortcutPath());
+    // check for Bitcoin.lnk (legacy) or Bitcoin-Qt.lnk (new)
+    return (filesystem::exists(StartupShortcutPath(true)) || filesystem::exists(StartupShortcutPath()));
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
+    // ensure the legacy shortcut gets removed
+    filesystem::remove(StartupShortcutPath(true));
     // If the shortcut exists already, remove it for updating
-    boost::filesystem::remove(StartupShortcutPath());
+    filesystem::remove(StartupShortcutPath());
 
     if (fAutoStart)
     {
@@ -654,25 +660,24 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 // Follow the Desktop Application Autostart Spec:
 //  http://standards.freedesktop.org/autostart-spec/autostart-spec-latest.html
 
-boost::filesystem::path GetAutostartDir()
+filesystem::path GetAutostartDir()
 {
-    namespace fs = boost::filesystem;
-
     char* pszConfigHome = getenv("XDG_CONFIG_HOME");
-    if (pszConfigHome) return fs::path(pszConfigHome) / "autostart";
+    if (pszConfigHome) return filesystem::path(pszConfigHome) / "autostart";
     char* pszHome = getenv("HOME");
-    if (pszHome) return fs::path(pszHome) / ".config" / "autostart";
-    return fs::path();
+    if (pszHome) return filesystem::path(pszHome) / ".config" / "autostart";
+
+    return filesystem::path("");
 }
 
-boost::filesystem::path GetAutostartFilePath()
+filesystem::path GetAutostartFilePath()
 {
     return GetAutostartDir() / "bitcoin.desktop";
 }
 
 bool GetStartOnSystemStartup()
 {
-    boost::filesystem::ifstream optionFile(GetAutostartFilePath());
+    filesystem::ifstream optionFile(GetAutostartFilePath());
     if (!optionFile.good())
         return false;
     // Scan through file for "Hidden=true":
@@ -692,7 +697,7 @@ bool GetStartOnSystemStartup()
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     if (!fAutoStart)
-        boost::filesystem::remove(GetAutostartFilePath());
+        filesystem::remove(GetAutostartFilePath());
     else
     {
         char pszExePath[MAX_PATH+1];
@@ -700,9 +705,9 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         if (readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1) == -1)
             return false;
 
-        boost::filesystem::create_directories(GetAutostartDir());
+        filesystem::create_directories(GetAutostartDir());
 
-        boost::filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
+        filesystem::ofstream optionFile(GetAutostartFilePath(), ios_base::out|ios_base::trunc);
         if (!optionFile.good())
             return false;
         // Write a bitcoin.desktop file to the autostart directory:
