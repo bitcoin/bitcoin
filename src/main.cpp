@@ -23,10 +23,8 @@ set<CWallet*> setpwalletRegistered;
 
 CCriticalSection cs_main;
 
-static map<uint256, CTransaction> mapTransactions;
-CCriticalSection cs_mapTransactions;
+static CTxMemPool mempool;
 unsigned int nTransactionsUpdated = 0;
-map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
@@ -474,8 +472,8 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     // Do we already have it?
     uint256 hash = GetHash();
     {
-        LOCK(cs_mapTransactions);
-        if (mapTransactions.count(hash))
+        LOCK(mempool.cs);
+        if (mempool.mapTx.count(hash))
             return false;
     }
     if (fCheckInputs)
@@ -487,7 +485,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     for (int i = 0; i < vin.size(); i++)
     {
         COutPoint outpoint = vin[i].prevout;
-        if (mapNextTx.count(outpoint))
+        if (mempool.mapNextTx.count(outpoint))
         {
             // Disable replacement feature for now
             return false;
@@ -495,7 +493,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
             // Allow replacing with a newer version of the same transaction
             if (i != 0)
                 return false;
-            ptxOld = mapNextTx[outpoint].ptx;
+            ptxOld = mempool.mapNextTx[outpoint].ptx;
             if (ptxOld->IsFinal())
                 return false;
             if (!IsNewerThan(*ptxOld))
@@ -503,7 +501,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
             for (int i = 0; i < vin.size(); i++)
             {
                 COutPoint outpoint = vin[i].prevout;
-                if (!mapNextTx.count(outpoint) || mapNextTx[outpoint].ptx != ptxOld)
+                if (!mempool.mapNextTx.count(outpoint) || mempool.mapNextTx[outpoint].ptx != ptxOld)
                     return false;
             }
             break;
@@ -574,7 +572,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
 
     // Store transaction in memory
     {
-        LOCK(cs_mapTransactions);
+        LOCK(mempool.cs);
         if (ptxOld)
         {
             printf("AcceptToMemoryPool() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
@@ -596,15 +594,15 @@ uint64 nPooledTx = 0;
 
 bool CTransaction::AddToMemoryPoolUnchecked()
 {
-    printf("AcceptToMemoryPoolUnchecked(): size %lu\n",  mapTransactions.size());
+    printf("AcceptToMemoryPoolUnchecked(): size %lu\n",  mempool.mapTx.size());
     // Add to memory pool without checking anything.  Don't call this directly,
     // call AcceptToMemoryPool to properly check the transaction first.
     {
-        LOCK(cs_mapTransactions);
+        LOCK(mempool.cs);
         uint256 hash = GetHash();
-        mapTransactions[hash] = *this;
+        mempool.mapTx[hash] = *this;
         for (int i = 0; i < vin.size(); i++)
-            mapNextTx[vin[i].prevout] = CInPoint(&mapTransactions[hash], i);
+            mempool.mapNextTx[vin[i].prevout] = CInPoint(&mempool.mapTx[hash], i);
         nTransactionsUpdated++;
         ++nPooledTx;
     }
@@ -616,13 +614,13 @@ bool CTransaction::RemoveFromMemoryPool()
 {
     // Remove transaction from memory pool
     {
-        LOCK(cs_mapTransactions);
+        LOCK(mempool.cs);
         uint256 hash = GetHash();
-        if (mapTransactions.count(hash))
+        if (mempool.mapTx.count(hash))
         {
             BOOST_FOREACH(const CTxIn& txin, vin)
-                mapNextTx.erase(txin.prevout);
-            mapTransactions.erase(hash);
+                mempool.mapNextTx.erase(txin.prevout);
+            mempool.mapTx.erase(hash);
             nTransactionsUpdated++;
             --nPooledTx;
         }
@@ -695,14 +693,14 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
 {
 
     {
-        LOCK(cs_mapTransactions);
+        LOCK(mempool.cs);
         // Add previous supporting transactions first
         BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
         {
             if (!tx.IsCoinBase())
             {
                 uint256 hash = tx.GetHash();
-                if (!mapTransactions.count(hash) && !txdb.ContainsTx(hash))
+                if (!mempool.mapTx.count(hash) && !txdb.ContainsTx(hash))
                     tx.AcceptToMemoryPool(txdb, fCheckInputs);
             }
         }
@@ -1017,10 +1015,10 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
         {
             // Get prev tx from single transactions in memory
             {
-                LOCK(cs_mapTransactions);
-                if (!mapTransactions.count(prevout.hash))
-                    return error("FetchInputs() : %s mapTransactions prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
-                txPrev = mapTransactions[prevout.hash];
+                LOCK(mempool.cs);
+                if (!mempool.mapTx.count(prevout.hash))
+                    return error("FetchInputs() : %s mempool.mapTx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+                txPrev = mempool.mapTx[prevout.hash];
             }
             if (!fFound)
                 txindex.vSpent.resize(txPrev.vout.size());
@@ -1183,15 +1181,15 @@ bool CTransaction::ClientConnectInputs()
 
     // Take over previous transactions' spent pointers
     {
-        LOCK(cs_mapTransactions);
+        LOCK(mempool.cs);
         int64 nValueIn = 0;
         for (int i = 0; i < vin.size(); i++)
         {
             // Get prev tx from single transactions in memory
             COutPoint prevout = vin[i].prevout;
-            if (!mapTransactions.count(prevout.hash))
+            if (!mempool.mapTx.count(prevout.hash))
                 return false;
-            CTransaction& txPrev = mapTransactions[prevout.hash];
+            CTransaction& txPrev = mempool.mapTx[prevout.hash];
 
             if (prevout.n >= txPrev.vout.size())
                 return false;
@@ -1200,7 +1198,8 @@ bool CTransaction::ClientConnectInputs()
             if (!VerifySignature(txPrev, *this, i, true, 0))
                 return error("ConnectInputs() : VerifySignature failed");
 
-            ///// this is redundant with the mapNextTx stuff, not sure which I want to get rid of
+            ///// this is redundant with the mempool.mapNextTx stuff,
+            ///// not sure which I want to get rid of
             ///// this has to go away now that posNext is gone
             // // Check for conflicts
             // if (!txPrev.vout[prevout.n].posNext.IsNull())
@@ -2135,7 +2134,7 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
-    case MSG_TX:    return mapTransactions.count(inv.hash) || mapOrphanTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
+    case MSG_TX:    return mempool.mapTx.count(inv.hash) || mapOrphanTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
     case MSG_BLOCK: return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
@@ -3093,14 +3092,14 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     // Collect memory pool transactions into the block
     int64 nFees = 0;
     {
-        LOCK2(cs_main, cs_mapTransactions);
+        LOCK2(cs_main, mempool.cs);
         CTxDB txdb("r");
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
         map<uint256, vector<COrphan*> > mapDependers;
         multimap<double, CTransaction*> mapPriority;
-        for (map<uint256, CTransaction>::iterator mi = mapTransactions.begin(); mi != mapTransactions.end(); ++mi)
+        for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
         {
             CTransaction& tx = (*mi).second;
             if (tx.IsCoinBase() || !tx.IsFinal())
