@@ -1608,4 +1608,12 @@ public:
     bool ProcessAlert();
 };
 
+class CTxMemPool
+{
+public:
+    mutable CCriticalSection cs;
+    std::map<uint256, CTransaction> mapTx;
+    std::map<COutPoint, CInPoint> mapNextTx;
+};
+
 #endif
