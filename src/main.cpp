@@ -23,7 +23,7 @@ set<CWallet*> setpwalletRegistered;
 
 CCriticalSection cs_main;
 
-static CTxMemPool mempool;
+CTxMemPool mempool;
 unsigned int nTransactionsUpdated = 0;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
@@ -576,9 +576,9 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         if (ptxOld)
         {
             printf("AcceptToMemoryPool() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
-            ptxOld->RemoveFromMemoryPool();
+            mempool.remove(*ptxOld);
         }
-        AddToMemoryPoolUnchecked();
+        mempool.addUnchecked(*this);
     }
 
     ///// are we sure this is ok when loading transactions or restoring block txes
@@ -590,39 +590,35 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     return true;
 }
 
-uint64 nPooledTx = 0;
-
-bool CTransaction::AddToMemoryPoolUnchecked()
+bool CTxMemPool::addUnchecked(CTransaction &tx)
 {
-    printf("AcceptToMemoryPoolUnchecked(): size %lu\n",  mempool.mapTx.size());
+    printf("AcceptToMemoryPoolUnchecked(): size %lu\n",  mapTx.size());
     // Add to memory pool without checking anything.  Don't call this directly,
     // call AcceptToMemoryPool to properly check the transaction first.
     {
-        LOCK(mempool.cs);
-        uint256 hash = GetHash();
-        mempool.mapTx[hash] = *this;
-        for (int i = 0; i < vin.size(); i++)
-            mempool.mapNextTx[vin[i].prevout] = CInPoint(&mempool.mapTx[hash], i);
+        LOCK(cs);
+        uint256 hash = tx.GetHash();
+        mapTx[hash] = tx;
+        for (int i = 0; i < tx.vin.size(); i++)
+            mapNextTx[tx.vin[i].prevout] = CInPoint(&mapTx[hash], i);
         nTransactionsUpdated++;
-        ++nPooledTx;
     }
     return true;
 }
 
 
-bool CTransaction::RemoveFromMemoryPool()
+bool CTxMemPool::remove(CTransaction &tx)
 {
     // Remove transaction from memory pool
     {
-        LOCK(mempool.cs);
-        uint256 hash = GetHash();
-        if (mempool.mapTx.count(hash))
+        LOCK(cs);
+        uint256 hash = tx.GetHash();
+        if (mapTx.count(hash))
         {
-            BOOST_FOREACH(const CTxIn& txin, vin)
-                mempool.mapNextTx.erase(txin.prevout);
-            mempool.mapTx.erase(hash);
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+                mapNextTx.erase(txin.prevout);
+            mapTx.erase(hash);
             nTransactionsUpdated++;
-            --nPooledTx;
         }
     }
     return true;
@@ -1435,7 +1431,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete)
-        tx.RemoveFromMemoryPool();
+        mempool.remove(tx);
 
     printf("REORGANIZE: done\n");
 
@@ -1471,7 +1467,7 @@ bool CBlock::SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew)
 
     // Delete redundant memory transactions
     BOOST_FOREACH(CTransaction& tx, vtx)
-        tx.RemoveFromMemoryPool();
+        mempool.remove(tx);
 
     return true;
 }
