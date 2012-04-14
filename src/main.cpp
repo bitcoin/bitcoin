@@ -1270,9 +1270,17 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 
 // ppcoin: coinstake must meet hash target according to the protocol:
 // at least one input must meet the formula
-//     hash(txin.prevout.hash + nTime) < bnTarget * nCoinDay
+//     hash(nBits + txPrev.block.nTime + txPrev.nTime + nTime) < bnTarget * nCoinDay
 // this ensures that the chance of getting a coinstake is proportional to the
-//  amount of coin age one owns.
+// amount of coin age one owns.
+// The reason this hash is chosen is the following:
+//   nBits: encodes all past block timestamps, prevents computing hash in advance
+//   txPrev.block.nTime: prevent nodes from guessing a good timestamp to generate
+//       transaction for future advantage
+//   txPrev.nTime: prevent nodes from meeting target simultaneously
+//   block/tx hash should not be used here as they can be generated in vast quatities
+//       so as to generate blocks faster, degrading the system back into a proof-of-work
+//       situation.
 //
 bool CTransaction::CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const
 {
@@ -1303,8 +1311,8 @@ bool CTransaction::CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const
         CBigNum bnCoinDay = CBigNum(nValueIn) * (nTime-txPrev.nTime) / COIN / (24 * 60 * 60);
         // Calculate hash
         CDataStream ss(SER_GETHASH, VERSION);
-        ss << txin.prevout.hash << nTime;
-        if (CBigNum(Hash(ss.begin(), ss.end())) < bnCoinDay * bnTargetPerCoinDay)
+        ss << nBits << block.nTime << txPrev.nTime << nTime;
+        if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
             return true;
     }
 
