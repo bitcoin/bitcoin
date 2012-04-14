@@ -241,7 +241,7 @@ void BitcoinGUI::createActions()
     optionsAction->setToolTip(tr("Modify configuration options for bitcoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("Show/Hide &Bitcoin"), this);
-    toggleHideAction->setToolTip(tr("Show or Hide the Bitcoin window"));
+    toggleHideAction->setToolTip(tr("Show or hide the Bitcoin window"));
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
     exportAction->setToolTip(tr("Export the data in the current tab to a file"));
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet"), this);
