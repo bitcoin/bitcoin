@@ -38,7 +38,16 @@ using namespace json_spirit;
 
 void ThreadRPCServer2(void* parg);
 typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
-extern map<string, rpcfn_type> mapCallTable;
+
+class CRPCCommand
+{
+public:
+    string name;
+    rpcfn_type actor;
+    bool okSafeMode;
+};
+
+extern map<string, CRPCCommand*> mapCommands;
 
 static std::string strRPCUserColonPass;
 
@@ -182,9 +191,10 @@ Value help(const Array& params, bool fHelp)
 
     string strRet;
     set<rpcfn_type> setDone;
-    for (map<string, rpcfn_type>::iterator mi = mapCallTable.begin(); mi != mapCallTable.end(); ++mi)
+    for (map<string, CRPCCommand*>::iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
     {
-        string strMethod = (*mi).first;
+        CRPCCommand *pcmd = mi->second;
+        string strMethod = mi->first;
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod == "getamountreceived" ||
             strMethod == "getallreceived" ||
@@ -196,7 +206,7 @@ Value help(const Array& params, bool fHelp)
         try
         {
             Array params;
-            rpcfn_type pfn = (*mi).second;
+            rpcfn_type pfn = pcmd->actor;
             if (setDone.insert(pfn).second)
                 (*pfn)(params, true);
         }
@@ -2003,85 +2013,76 @@ Value getblock(const Array& params, bool fHelp)
 // Call Table
 //
 
-pair<string, rpcfn_type> pCallTable[] =
-{
-    make_pair("help",                   &help),
-    make_pair("stop",                   &stop),
-    make_pair("getblockcount",          &getblockcount),
-    make_pair("getblocknumber",         &getblocknumber),
-    make_pair("getconnectioncount",     &getconnectioncount),
-    make_pair("getdifficulty",          &getdifficulty),
-    make_pair("getgenerate",            &getgenerate),
-    make_pair("setgenerate",            &setgenerate),
-    make_pair("gethashespersec",        &gethashespersec),
-    make_pair("getinfo",                &getinfo),
-    make_pair("getmininginfo",          &getmininginfo),
-    make_pair("getnewaddress",          &getnewaddress),
-    make_pair("getaccountaddress",      &getaccountaddress),
-    make_pair("setaccount",             &setaccount),
-    make_pair("getaccount",             &getaccount),
-    make_pair("getaddressesbyaccount",  &getaddressesbyaccount),
-    make_pair("sendtoaddress",          &sendtoaddress),
-    make_pair("getreceivedbyaddress",   &getreceivedbyaddress),
-    make_pair("getreceivedbyaccount",   &getreceivedbyaccount),
-    make_pair("listreceivedbyaddress",  &listreceivedbyaddress),
-    make_pair("listreceivedbyaccount",  &listreceivedbyaccount),
-    make_pair("backupwallet",           &backupwallet),
-    make_pair("keypoolrefill",          &keypoolrefill),
-    make_pair("walletpassphrase",       &walletpassphrase),
-    make_pair("walletpassphrasechange", &walletpassphrasechange),
-    make_pair("walletlock",             &walletlock),
-    make_pair("encryptwallet",          &encryptwallet),
-    make_pair("validateaddress",        &validateaddress),
-    make_pair("getbalance",             &getbalance),
-    make_pair("move",                   &movecmd),
-    make_pair("sendfrom",               &sendfrom),
-    make_pair("sendmany",               &sendmany),
-    make_pair("addmultisigaddress",     &addmultisigaddress),
-    make_pair("getblock",               &getblock),
-    make_pair("getblockhash",           &getblockhash),
-    make_pair("gettransaction",         &gettransaction),
-    make_pair("listtransactions",       &listtransactions),
-    make_pair("signmessage",            &signmessage),
-    make_pair("verifymessage",          &verifymessage),
-    make_pair("getwork",                &getwork),
-    make_pair("listaccounts",           &listaccounts),
-    make_pair("settxfee",               &settxfee),
-    make_pair("getmemorypool",          &getmemorypool),
-    make_pair("listsinceblock",         &listsinceblock),
-    make_pair("dumpprivkey",            &dumpprivkey),
-    make_pair("importprivkey",          &importprivkey)
+
+static CRPCCommand vRPCCommands[] =
+{ //  name                      function                 safe mode?
+  //  ------------------------  -----------------------  ----------
+    { "help",                   &help,                   true },
+    { "stop",                   &stop,                   true },
+    { "getblockcount",          &getblockcount,          true },
+    { "getblocknumber",         &getblocknumber,         true },
+    { "getconnectioncount",     &getconnectioncount,     true },
+    { "getdifficulty",          &getdifficulty,          true },
+    { "getgenerate",            &getgenerate,            true },
+    { "setgenerate",            &setgenerate,            true },
+    { "gethashespersec",        &gethashespersec,        true },
+    { "getinfo",                &getinfo,                true },
+    { "getmininginfo",          &getmininginfo,          true },
+    { "getnewaddress",          &getnewaddress,          true },
+    { "getaccountaddress",      &getaccountaddress,      true },
+    { "setaccount",             &setaccount,             true },
+    { "getaccount",             &getaccount,             false },
+    { "getaddressesbyaccount",  &getaddressesbyaccount,  true },
+    { "sendtoaddress",          &sendtoaddress,          false },
+    { "getreceivedbyaddress",   &getreceivedbyaddress,   false },
+    { "getreceivedbyaccount",   &getreceivedbyaccount,   false },
+    { "listreceivedbyaddress",  &listreceivedbyaddress,  false },
+    { "listreceivedbyaccount",  &listreceivedbyaccount,  false },
+    { "backupwallet",           &backupwallet,           true },
+    { "keypoolrefill",          &keypoolrefill,          true },
+    { "walletpassphrase",       &walletpassphrase,       true },
+    { "walletpassphrasechange", &walletpassphrasechange, false },
+    { "walletlock",             &walletlock,             true },
+    { "encryptwallet",          &encryptwallet,          false },
+    { "validateaddress",        &validateaddress,        true },
+    { "getbalance",             &getbalance,             false },
+    { "move",                   &movecmd,                false },
+    { "sendfrom",               &sendfrom,               false },
+    { "sendmany",               &sendmany,               false },
+    { "addmultisigaddress",     &addmultisigaddress,     false },
+    { "getblock",               &getblock,               false },
+    { "getblockhash",           &getblockhash,           false },
+    { "gettransaction",         &gettransaction,         false },
+    { "listtransactions",       &listtransactions,       false },
+    { "signmessage",            &signmessage,            false },
+    { "verifymessage",          &verifymessage,          false },
+    { "getwork",                &getwork,                true },
+    { "listaccounts",           &listaccounts,           false },
+    { "settxfee",               &settxfee,               false },
+    { "getmemorypool",          &getmemorypool,          true },
+    { "listsinceblock",         &listsinceblock,         false },
+    { "dumpprivkey",            &dumpprivkey,            false },
+    { "importprivkey",          &importprivkey,          false },
 };
-map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
-string pAllowInSafeMode[] =
+map<string, CRPCCommand*> mapCommands;
+
+static void RegisterRPCCommands()
 {
-    "help",
-    "stop",
-    "getblockcount",
-    "getblocknumber",  // deprecated
-    "getconnectioncount",
-    "getdifficulty",
-    "getgenerate",
-    "setgenerate",
-    "gethashespersec",
-    "getinfo",
-    "getmininginfo",
-    "getnewaddress",
-    "getaccountaddress",
-    "getaccount",
-    "getaddressesbyaccount",
-    "backupwallet",
-    "keypoolrefill",
-    "walletpassphrase",
-    "walletlock",
-    "validateaddress",
-    "getwork",
-    "getmemorypool",
-};
-set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
+    static bool registered = false;
+    if (registered)
+        return;
+    registered = true;
 
+    unsigned int vcidx;
+    for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
+    {
+        CRPCCommand *pcmd;
 
+        pcmd = &vRPCCommands[vcidx];
+        mapCommands[pcmd->name] = pcmd;
+    }
+}
 
 
 //
@@ -2362,6 +2363,8 @@ void ThreadRPCServer2(void* parg)
 {
     printf("ThreadRPCServer started\n");
 
+    RegisterRPCCommands();
+
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     if (mapArgs["-rpcpassword"] == "")
     {
@@ -2513,13 +2516,15 @@ void ThreadRPCServer2(void* parg)
                 throw JSONRPCError(-32600, "Params must be an array");
 
             // Find method
-            map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
-            if (mi == mapCallTable.end())
+            if (!mapCommands.count(strMethod))
                 throw JSONRPCError(-32601, "Method not found");
+
+            CRPCCommand *pcmd = mapCommands[strMethod];
 
             // Observe safe mode
             string strWarning = GetWarnings("rpc");
-            if (strWarning != "" && !GetBoolArg("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+            if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
+                !pcmd->okSafeMode)
                 throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
 
             try
@@ -2528,7 +2533,7 @@ void ThreadRPCServer2(void* parg)
                 Value result;
                 {
                     LOCK2(cs_main, pwalletMain->cs_wallet);
-                    result = (*(*mi).second)(params, false);
+                    result = pcmd->actor(params, false);
                 }
 
                 // Send reply
