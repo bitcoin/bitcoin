@@ -9,6 +9,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "script.h"
+#include "walletdb.h"
 
 class CWalletTx;
 class CReserveKey;

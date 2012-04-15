@@ -5,8 +5,10 @@
 #include "ui_interface.h"
 
 #include <string>
-#include "headers.h"
+#include "main.h"
+#include "wallet.h"
 #include "init.h"
+#include "ui_interface.h"
 
 int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
 {
