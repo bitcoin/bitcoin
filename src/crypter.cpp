@@ -6,7 +6,6 @@
 #include <openssl/evp.h>
 #include <vector>
 #include <string>
-#include "headers.h"
 #ifdef WIN32
 #include <windows.h>
 #endif

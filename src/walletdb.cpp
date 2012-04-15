@@ -3,8 +3,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "headers.h"
+#include "main.h"
 #include "db.h"
+#include "wallet.h"
 #include <boost/filesystem.hpp>
 
 using namespace std;

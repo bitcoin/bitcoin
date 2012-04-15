@@ -3,13 +3,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "headers.h"
+#include <fcntl.h>
+#include "main.h"
 #include "irc.h"
 #include "db.h"
 #include "net.h"
 #include "init.h"
 #include "strlcpy.h"
 #include "addrman.h"
+#include "ui_interface.h"
 
 #ifdef WIN32
 #include <string.h>
