@@ -545,8 +545,10 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
                 vtxPrev.push_back(tx);
 
                 if (nDepth < COPY_DEPTH)
+                {
                     BOOST_FOREACH(const CTxIn& txin, tx.vin)
                         vWorkQueue.push_back(txin.prevout.hash);
+                }
             }
         }
     }
