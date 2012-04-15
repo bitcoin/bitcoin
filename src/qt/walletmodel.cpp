@@ -5,7 +5,7 @@
 #include "transactiontablemodel.h"
 
 #include "wallet.h"
-#include "db.h" // for BackupWallet
+#include "walletdb.h" // for BackupWallet
 
 #include <QSet>
 
