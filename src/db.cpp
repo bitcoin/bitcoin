@@ -647,6 +647,7 @@ bool CTxDB::LoadBlockIndex()
                     // check level 4: check whether spent txouts were spent within the main chain
                     int nOutput = 0;
                     if (nCheckLevel>3)
+                    {
                         BOOST_FOREACH(const CDiskTxPos &txpos, txindex.vSpent)
                         {
                             if (!txpos.IsNull())
@@ -687,9 +688,11 @@ bool CTxDB::LoadBlockIndex()
                             }
                             nOutput++;
                         }
+                    }
                 }
                 // check level 5: check whether all prevouts are marked spent
                 if (nCheckLevel>4)
+                {
                      BOOST_FOREACH(const CTxIn &txin, tx.vin)
                      {
                           CTxIndex txindex;
@@ -700,6 +703,7 @@ bool CTxDB::LoadBlockIndex()
                                   pindexFork = pindex->pprev;
                               }
                      }
+                }
             }
         }
     }
