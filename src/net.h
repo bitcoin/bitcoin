@@ -111,7 +111,7 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
-    unsigned int nHeaderStart;
+    signed int nHeaderStart;
     unsigned int nMessageStart;
     CAddress addr;
     int nVersion;
