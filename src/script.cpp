@@ -2,10 +2,16 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
-#include "headers.h"
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;
+
+#include "script.h"
+#include "keystore.h"
+#include "bignum.h"
+#include "key.h"
+#include "main.h"
 
 bool CheckSig(vector<unsigned char> vchSig, vector<unsigned char> vchPubKey, CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 

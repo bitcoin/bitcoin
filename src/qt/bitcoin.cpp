@@ -7,7 +7,6 @@
 #include "optionsmodel.h"
 #include "guiutil.h"
 
-#include "headers.h"
 #include "init.h"
 #include "qtipcserver.h"
 

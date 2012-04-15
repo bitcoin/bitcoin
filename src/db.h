@@ -6,6 +6,8 @@
 #define BITCOIN_DB_H
 
 #include "key.h"
+#include "main.h"
+#include "wallet.h"
 
 #include <map>
 #include <string>
@@ -311,34 +313,6 @@ public:
 };
 
 bool LoadAddresses();
-
-
-/** A key pool entry */
-class CKeyPool
-{
-public:
-    int64 nTime;
-    std::vector<unsigned char> vchPubKey;
-
-    CKeyPool()
-    {
-        nTime = GetTime();
-    }
-
-    CKeyPool(const std::vector<unsigned char>& vchPubKeyIn)
-    {
-        nTime = GetTime();
-        vchPubKey = vchPubKeyIn;
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(nTime);
-        READWRITE(vchPubKey);
-    )
-};
 
 
 

@@ -7,27 +7,6 @@
 #include <string>
 #include <vector>
 
-#ifdef WIN32
-#define _WIN32_WINNT 0x0501
-#define WIN32_LEAN_AND_MEAN 1
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <winsock2.h>
-#include <mswsock.h>
-#include <ws2tcpip.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <net/if.h>
-#include <ifaddrs.h>
-#endif
-#ifdef BSD
-#include <netinet/in.h>
-#endif
-
 #include "serialize.h"
 #include "compat.h"
 
