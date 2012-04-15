@@ -3,7 +3,9 @@
 #include "guiutil.h"
 #include "bitcoinunits.h"
 
-#include "headers.h"
+#include "main.h"
+#include "wallet.h"
+#include "db.h"
 #include "ui_interface.h"
 
 #include <QString>

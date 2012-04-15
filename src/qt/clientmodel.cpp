@@ -4,7 +4,7 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
-#include "headers.h"
+#include "main.h"
 
 #include <QDateTime>
 

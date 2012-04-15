@@ -2,8 +2,8 @@
 #include "bitcoinunits.h"
 #include <QSettings>
 
-#include "headers.h"
 #include "init.h"
+#include "db.h"
 
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)

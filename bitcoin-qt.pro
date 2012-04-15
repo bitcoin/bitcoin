@@ -119,7 +119,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/db.h \
     src/script.h \
     src/init.h \
-    src/headers.h \
     src/irc.h \
     src/mruset.h \
     src/json/json_spirit_writer_template.h \

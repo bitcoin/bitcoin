@@ -3,10 +3,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "headers.h"
+#include "main.h"
+#include "wallet.h"
 #include "db.h"
 #include "net.h"
 #include "init.h"
+#include "ui_interface.h"
+
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/filesystem.hpp>
