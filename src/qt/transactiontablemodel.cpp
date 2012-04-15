@@ -8,7 +8,7 @@
 #include "addresstablemodel.h"
 #include "bitcoinunits.h"
 
-#include "headers.h"
+#include "wallet.h"
 
 #include <QLocale>
 #include <QList>

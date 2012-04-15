@@ -31,10 +31,14 @@ typedef int pid_t; /* define for windows compatiblity */
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
 
-#include "netbase.h"
+#include "netbase.h" // for AddTimeData
+#include "ui_interface.h"
 
 typedef long long  int64;
 typedef unsigned long long  uint64;
+
+static const int64 COIN = 100000000;
+static const int64 CENT = 1000000;
 
 #define loop                for (;;)
 #define BEGIN(a)            ((char*)&(a))
@@ -160,9 +164,8 @@ boost::filesystem::path GetConfigFile();
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 bool ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
-#ifdef WIN32
-boost::filesystem::path MyGetSpecialFolderPath(int nFolder, bool fCreate);
-#endif
+bool GetStartOnSystemStartup();
+bool SetStartOnSystemStartup(bool fAutoStart);
 void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);

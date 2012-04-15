@@ -5,7 +5,6 @@
 #include "ui_interface.h"
 
 #include <string>
-#include "headers.h"
 #include "init.h"
 
 int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
