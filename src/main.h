@@ -26,7 +26,7 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int CLIENT_VERSION = 60006;
+static const int CLIENT_VERSION = 60007;
 static const bool VERSION_IS_BETA = true;
 extern const std::string CLIENT_NAME;
 
