@@ -2958,6 +2958,8 @@ CBlock* CreateNewBlock(CWallet* pwallet)
     if (!pblock.get())
         return NULL;
 
+    pblock->nBits = GetNextWorkRequired(pindexPrev);
+
     // Create coinbase tx
     CTransaction txNew;
     txNew.vin.resize(1);
@@ -2970,7 +2972,7 @@ CBlock* CreateNewBlock(CWallet* pwallet)
 
     // ppcoin: if coinstake available add coinstake tx
     CTransaction txCoinStake;
-    if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, txCoinStake))
+    if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, pblock->nBits, txCoinStake))
         pblock->vtx.push_back(txCoinStake);
 
     // Collect memory pool transactions into the block
@@ -3092,7 +3094,6 @@ CBlock* CreateNewBlock(CWallet* pwallet)
             }
         }
     }
-    pblock->nBits          = GetNextWorkRequired(pindexPrev);
     pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
 
     // Fill in header

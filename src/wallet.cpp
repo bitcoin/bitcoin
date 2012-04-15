@@ -7,6 +7,7 @@
 #include "headers.h"
 #include "db.h"
 #include "crypter.h"
+#include "checkpoints.h"
 
 using namespace std;
 
@@ -1061,8 +1062,11 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 }
 
 // ppcoin: create coin stake transaction
-bool CWallet::CreateCoinStake(CScript scriptPubKey, CTransaction& txNew)
+bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransaction& txNew)
 {
+    CBigNum bnTargetPerCoinDay;
+    bnTargetPerCoinDay.SetCompact(nBits);
+
     CRITICAL_BLOCK(cs_main)
     CRITICAL_BLOCK(cs_wallet)
     {
@@ -1085,19 +1089,33 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, CTransaction& txNew)
         int64 nCredit = 0;
         BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
         {
-            nCredit += pcoin.first->vout[pcoin.second].nValue;
-            // Only spend one tx for now
-            break;
+            CTxDB txdb("r");
+            CTxIndex txindex;
+            if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
+                continue;
+
+            // Read block header
+            CBlock block;
+            if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+                continue;
+            if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > txNew.nTime)
+                continue; // only count coins from at least one week ago
+
+            int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
+            CBigNum bnCoinDay = CBigNum(nValueIn) * (txNew.nTime-pcoin.first->nTime) / COIN / (24 * 60 * 60);
+            // Calculate hash
+            CDataStream ss(SER_GETHASH, VERSION);
+            ss << nBits << block.nTime << pcoin.first->nTime << txNew.nTime;
+            if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
+            {
+                txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
+                nCredit += pcoin.first->vout[pcoin.second].nValue;
+                // Only spend one tx for now
+                break;
+            }
         }
         if (nCredit > nBalance - nBalanceReserve)
             return false;
-        // Fill vin
-        BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-        {
-            txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
-            // Only spend one tx for now
-            break;
-        }
         // Calculate coin age reward
         {
             uint64 nCoinAge;

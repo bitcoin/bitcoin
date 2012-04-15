@@ -89,7 +89,7 @@ public:
     int64 GetStake() const;
     bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
     bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet);
-    bool CreateCoinStake(CScript scriptPubKey, CTransaction& txNew);
+    bool CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransaction& txNew);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     bool BroadcastTransaction(CWalletTx& wtxNew);
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
