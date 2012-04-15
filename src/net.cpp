@@ -1305,8 +1305,6 @@ void ThreadOpenConnections2(void* parg)
                 return;
         }
 
-        bool fAddSeeds = false;
-
         // Add seed nodes if IRC isn't working
         bool fTOR = (fUseProxy && addrProxy.GetPort() == 9050);
         if (addrman.size()==0 && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
@@ -1332,7 +1330,6 @@ void ThreadOpenConnections2(void* parg)
         // Choose an address to connect to based on most recently seen
         //
         CAddress addrConnect;
-        int64 nBest = std::numeric_limits<int64>::min();
 
         // Only connect to one address per a.b.?.? range.
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
