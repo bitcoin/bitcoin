@@ -134,10 +134,10 @@ class CService : public CNetAddr
             )
 };
 
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, int nMaxSolutions = 0, bool fAllowLookup = true);
-bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, int nMaxSolutions = 0);
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
+bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0);
 bool Lookup(const char *pszName, CService& addr, int portDefault = 0, bool fAllowLookup = true);
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault = 0, bool fAllowLookup = true, int nMaxSolutions = 0);
+bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault = 0, bool fAllowLookup = true, unsigned int nMaxSolutions = 0);
 bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout = nConnectTimeout);
 
