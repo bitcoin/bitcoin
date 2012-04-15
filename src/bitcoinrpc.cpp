@@ -1000,7 +1000,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
                       "(got %d, need at least %d)", keys.size(), nRequired));
     std::vector<CKey> pubkeys;
     pubkeys.resize(keys.size());
-    for (int i = 0; i < keys.size(); i++)
+    for (unsigned int i = 0; i < keys.size(); i++)
     {
         const std::string& ks = keys[i].get_str();
 
