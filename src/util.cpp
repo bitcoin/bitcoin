@@ -636,7 +636,7 @@ vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
 
     while (1)
     {
-         int dec = decode64_table[*p];
+         int dec = decode64_table[(unsigned char)*p];
          if (dec == -1) break;
          p++;
          switch (mode)
@@ -676,12 +676,12 @@ vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
                 break;
 
             case 2: // 4n+2 base64 characters processed: require '=='
-                if (left || p[0] != '=' || p[1] != '=' || decode64_table[p[2]] != -1)
+                if (left || p[0] != '=' || p[1] != '=' || decode64_table[(unsigned char)p[2]] != -1)
                     *pfInvalid = true;
                 break;
 
             case 3: // 4n+3 base64 characters processed: require '='
-                if (left || p[0] != '=' || decode64_table[p[1]] != -1)
+                if (left || p[0] != '=' || decode64_table[(unsigned char)p[1]] != -1)
                     *pfInvalid = true;
                 break;
         }
