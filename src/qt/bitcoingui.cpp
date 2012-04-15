@@ -4,6 +4,9 @@
  * W.J. van der Laan 2011
  * The Bitcoin Developers 2011
  */
+
+#include "checkpoints.h"
+
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
@@ -480,7 +483,7 @@ void BitcoinGUI::setNumBlocks(int count)
     }
 
     // Set icon state: spinning if catching up, tick otherwise
-    if(secs < 90*60 && count >= nTotalBlocks)
+    if(secs < 90*60 && count >= Checkpoints::GetTotalBlocksEstimate())
     {
         tooltip = tr("Up to date") + QString(".\n") + tooltip;
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
