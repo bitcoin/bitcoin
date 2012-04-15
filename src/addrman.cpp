@@ -124,7 +124,7 @@ int CAddrMan::SelectTried(int nKBucket)
     // random shuffle the first few elements (using the entire list)
     // find the least recently tried among them
     int64 nOldest = -1;
-    for (int i=0; i<ADDRMAN_TRIED_ENTRIES_INSPECT_ON_EVICT && i<vTried.size(); i++)
+    for (unsigned int i = 0; i < ADDRMAN_TRIED_ENTRIES_INSPECT_ON_EVICT && i < vTried.size(); i++)
     {
         int nPos = GetRandInt(vTried.size() - i) + i;
         int nTemp = vTried[nPos];
@@ -270,7 +270,7 @@ void CAddrMan::Good_(const CService &addr, int64 nTime)
     // find a bucket it is in now
     int nRnd = GetRandInt(vvNew.size());
     int nUBucket = -1;
-    for (int n = 0; n < vvNew.size(); n++)
+    for (unsigned int n = 0; n < vvNew.size(); n++)
     {
         int nB = (n+nRnd) % vvNew.size();
         std::set<int> &vNew = vvNew[nB];
