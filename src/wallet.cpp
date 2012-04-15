@@ -512,7 +512,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
         {
             map<uint256, const CMerkleTx*> mapWalletPrev;
             set<uint256> setAlreadyDone;
-            for (int i = 0; i < vWorkQueue.size(); i++)
+            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
             {
                 uint256 hash = vWorkQueue[i];
                 if (setAlreadyDone.count(hash))
@@ -607,7 +607,7 @@ void CWallet::ReacceptWalletTransactions()
                     printf("ERROR: ReacceptWalletTransactions() : txindex.vSpent.size() %d != wtx.vout.size() %d\n", txindex.vSpent.size(), wtx.vout.size());
                     continue;
                 }
-                for (int i = 0; i < txindex.vSpent.size(); i++)
+                for (unsigned int i = 0; i < txindex.vSpent.size(); i++)
                 {
                     if (wtx.IsSpent(i))
                         continue;
@@ -771,7 +771,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
             if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
                 continue;
 
-            for (int i = 0; i < pcoin->vout.size(); i++)
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             {
                 if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
                     continue;
@@ -804,7 +804,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
 
     if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
     {
-        for (int i = 0; i < vValue.size(); ++i)
+        for (unsigned int i = 0; i < vValue.size(); ++i)
         {
             setCoinsRet.insert(vValue[i].second);
             nValueRet += vValue[i].first;
@@ -837,7 +837,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
-            for (int i = 0; i < vValue.size(); i++)
+            for (unsigned int i = 0; i < vValue.size(); i++)
             {
                 if (nPass == 0 ? rand() % 2 : !vfIncluded[i])
                 {
@@ -866,7 +866,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
         nValueRet += coinLowestLarger.first;
     }
     else {
-        for (int i = 0; i < vValue.size(); i++)
+        for (unsigned int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
             {
                 setCoinsRet.insert(vValue[i].second);
@@ -875,7 +875,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
 
         //// debug print
         printf("SelectCoins() best subset: ");
-        for (int i = 0; i < vValue.size(); i++)
+        for (unsigned int i = 0; i < vValue.size(); i++)
             if (vfBest[i])
                 printf("%s ", FormatMoney(vValue[i].first).c_str());
         printf("total %s\n", FormatMoney(nBest).c_str());
