@@ -5,11 +5,12 @@
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
 
-#include "serialize.h"
-
 #include <limits.h>
+#include <string.h>
 #include <string>
 #include <vector>
+
+#include "version.h"
 
 typedef long long  int64;
 typedef unsigned long long  uint64;
