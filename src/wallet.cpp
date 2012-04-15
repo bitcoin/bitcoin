@@ -3,7 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "db.h"
+#include "wallet.h"
+#include "walletdb.h"
 #include "crypter.h"
 
 using namespace std;

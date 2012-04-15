@@ -17,13 +17,11 @@
 
 #include <list>
 
+class CWallet;
 class CBlock;
 class CBlockIndex;
-class CWalletTx;
-class CWallet;
 class CKeyItem;
 class CReserveKey;
-class CWalletDB;
 
 class CAddress;
 class CInv;

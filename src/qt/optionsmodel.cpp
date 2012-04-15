@@ -3,7 +3,7 @@
 #include <QSettings>
 
 #include "init.h"
-#include "db.h"
+#include "walletdb.h"
 
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)
