@@ -201,7 +201,7 @@ Value help(const Array& params, bool fHelp)
             // Help text is returned in an exception
             string strHelp = string(e.what());
             if (strCommand == "")
-                if (strHelp.find('\n') != -1)
+                if (strHelp.find('\n') != string::npos)
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
             strRet += strHelp + "\n";
         }
