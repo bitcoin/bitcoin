@@ -1190,7 +1190,7 @@ public:
     void ReadVersion()           { *this >> nVersion; }
     void WriteVersion()          { *this << nVersion; }
 
-    CAutoFile& read(char* pch, int nSize)
+    CAutoFile& read(char* pch, size_t nSize)
     {
         if (!file)
             throw std::ios_base::failure("CAutoFile::read : file handle is NULL");
@@ -1199,7 +1199,7 @@ public:
         return (*this);
     }
 
-    CAutoFile& write(const char* pch, int nSize)
+    CAutoFile& write(const char* pch, size_t nSize)
     {
         if (!file)
             throw std::ios_base::failure("CAutoFile::write : file handle is NULL");
