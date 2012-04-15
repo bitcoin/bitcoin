@@ -45,8 +45,9 @@ struct TxLessThan
 };
 
 // Private implementation
-struct TransactionTablePriv
+class TransactionTablePriv
 {
+public:
     TransactionTablePriv(CWallet *wallet, TransactionTableModel *parent):
             wallet(wallet),
             parent(parent)
