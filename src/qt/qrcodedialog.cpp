@@ -38,12 +38,16 @@ void QRCodeDialog::genCode()
 {
     QString uri = getURI();
     //qDebug() << "Encoding:" << uri.toUtf8().constData();
-    QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
-    if (code)
+
     {
         ui->lblQRCode->setText("");
 
         QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
+        if (!code)
+        {
+            ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
+            return;
+        }
         myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
         myImage.fill(0xffffff);
         unsigned char *p = code->data;
@@ -58,8 +62,6 @@ void QRCodeDialog::genCode()
         QRcode_free(code);
         ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
     }
-    else
-        ui->lblQRCode->setText(tr("Error encoding URI into QR Code; try to reduce the text for label / message."));
 }
 
 QString QRCodeDialog::getURI()
