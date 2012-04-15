@@ -1443,7 +1443,6 @@ bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, vector<C
     if (typeRet == TX_MULTISIG)
     {
         nRequiredRet = vSolutions.front()[0];
-        int n = vSolutions.back()[0];
         for (int i = 1; i < vSolutions.size()-1; i++)
         {
             CBitcoinAddress address;

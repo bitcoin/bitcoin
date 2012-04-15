@@ -312,7 +312,7 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePen
         pinfo->nServices |= addr.nServices;
 
         // do not update if no new information is present
-        if (!addr.nTime || pinfo->nTime && addr.nTime <= pinfo->nTime)
+        if (!addr.nTime || (pinfo->nTime && addr.nTime <= pinfo->nTime))
             return false;
 
         // do not update if the entry was already in the "tried" table

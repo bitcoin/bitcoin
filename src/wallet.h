@@ -553,8 +553,10 @@ public:
                 return false;
 
             if (mapPrev.empty())
+            {
                 BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
                     mapPrev[tx.GetHash()] = &tx;
+            }
 
             BOOST_FOREACH(const CTxIn& txin, ptx->vin)
             {
