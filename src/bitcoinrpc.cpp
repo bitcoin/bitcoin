@@ -34,7 +34,6 @@ using namespace json_spirit;
 
 void ThreadRPCServer2(void* parg);
 typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
-extern map<string, rpcfn_type> mapCallTable;
 
 static std::string strRPCUserColonPass;
 
@@ -165,7 +164,345 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 ///
 
 
-Value help(const Array& params, bool fHelp)
+class CRPCCommand
+{
+public:
+    string name;
+    bool okSafeMode;
+    virtual Value actor(const Array& params, bool fHelp) = 0;
+};
+
+class CRPChelp : public CRPCCommand
+{
+public:
+    CRPChelp() { name = "help"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCstop : public CRPCCommand
+{
+public:
+    CRPCstop() { name = "stop"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetblockcount : public CRPCCommand
+{
+public:
+    CRPCgetblockcount() { name = "getblockcount"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetblocknumber : public CRPCCommand
+{
+public:
+    CRPCgetblocknumber() { name = "getblocknumber"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetconnectioncount : public CRPCCommand
+{
+public:
+    CRPCgetconnectioncount() { name = "getconnectioncount"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetdifficulty : public CRPCCommand
+{
+public:
+    CRPCgetdifficulty() { name = "getdifficulty"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetgenerate : public CRPCCommand
+{
+public:
+    CRPCgetgenerate() { name = "getgenerate"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCsetgenerate : public CRPCCommand
+{
+public:
+    CRPCsetgenerate() { name = "setgenerate"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgethashespersec : public CRPCCommand
+{
+public:
+    CRPCgethashespersec() { name = "gethashespersec"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetinfo : public CRPCCommand
+{
+public:
+    CRPCgetinfo() { name = "getinfo"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetmininginfo : public CRPCCommand
+{
+public:
+    CRPCgetmininginfo() { name = "getmininginfo"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetnewaddress : public CRPCCommand
+{
+public:
+    CRPCgetnewaddress() { name = "getnewaddress"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetaccountaddress : public CRPCCommand
+{
+public:
+    CRPCgetaccountaddress() { name = "getaccountaddress"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCsetaccount : public CRPCCommand
+{
+public:
+    CRPCsetaccount() { name = "setaccount"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetaccount : public CRPCCommand
+{
+public:
+    CRPCgetaccount() { name = "getaccount"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetaddressesbyaccount : public CRPCCommand
+{
+public:
+    CRPCgetaddressesbyaccount() { name = "getaddressesbyaccount"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCsendtoaddress : public CRPCCommand
+{
+public:
+    CRPCsendtoaddress() { name = "sendtoaddress"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetreceivedbyaddress : public CRPCCommand
+{
+public:
+    CRPCgetreceivedbyaddress() { name = "getreceivedbyaddress"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetreceivedbyaccount : public CRPCCommand
+{
+public:
+    CRPCgetreceivedbyaccount() { name = "getreceivedbyaccount"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPClistreceivedbyaddress : public CRPCCommand
+{
+public:
+    CRPClistreceivedbyaddress() { name = "listreceivedbyaddress"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPClistreceivedbyaccount : public CRPCCommand
+{
+public:
+    CRPClistreceivedbyaccount() { name = "listreceivedbyaccount"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCbackupwallet : public CRPCCommand
+{
+public:
+    CRPCbackupwallet() { name = "backupwallet"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCkeypoolrefill : public CRPCCommand
+{
+public:
+    CRPCkeypoolrefill() { name = "keypoolrefill"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCwalletpassphrase : public CRPCCommand
+{
+public:
+    CRPCwalletpassphrase() { name = "walletpassphrase"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCwalletpassphrasechange : public CRPCCommand
+{
+public:
+    CRPCwalletpassphrasechange() { name = "walletpassphrasechange"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCwalletlock : public CRPCCommand
+{
+public:
+    CRPCwalletlock() { name = "walletlock"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCencryptwallet : public CRPCCommand
+{
+public:
+    CRPCencryptwallet() { name = "encryptwallet"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCvalidateaddress : public CRPCCommand
+{
+public:
+    CRPCvalidateaddress() { name = "validateaddress"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetbalance : public CRPCCommand
+{
+public:
+    CRPCgetbalance() { name = "getbalance"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCmove : public CRPCCommand
+{
+public:
+    CRPCmove() { name = "move"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCsendfrom : public CRPCCommand
+{
+public:
+    CRPCsendfrom() { name = "sendfrom"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCsendmany : public CRPCCommand
+{
+public:
+    CRPCsendmany() { name = "sendmany"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCaddmultisigaddress : public CRPCCommand
+{
+public:
+    CRPCaddmultisigaddress() { name = "addmultisigaddress"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetblock : public CRPCCommand
+{
+public:
+    CRPCgetblock() { name = "getblock"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetblockhash : public CRPCCommand
+{
+public:
+    CRPCgetblockhash() { name = "getblockhash"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgettransaction : public CRPCCommand
+{
+public:
+    CRPCgettransaction() { name = "gettransaction"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPClisttransactions : public CRPCCommand
+{
+public:
+    CRPClisttransactions() { name = "listtransactions"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCsignmessage : public CRPCCommand
+{
+public:
+    CRPCsignmessage() { name = "signmessage"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCverifymessage : public CRPCCommand
+{
+public:
+    CRPCverifymessage() { name = "verifymessage"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetwork : public CRPCCommand
+{
+public:
+    CRPCgetwork() { name = "getwork"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPClistaccounts : public CRPCCommand
+{
+public:
+    CRPClistaccounts() { name = "listaccounts"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCsettxfee : public CRPCCommand
+{
+public:
+    CRPCsettxfee() { name = "settxfee"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCgetmemorypool : public CRPCCommand
+{
+public:
+    CRPCgetmemorypool() { name = "getmemorypool"; okSafeMode = true; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPClistsinceblock : public CRPCCommand
+{
+public:
+    CRPClistsinceblock() { name = "listsinceblock"; }
+    Value actor(const Array& params, bool fHelp);
+};
+
+class CRPCdumpprivkey : public CRPCCommand
+{
+public:
+    CRPCdumpprivkey() { name = "dumpprivkey"; }
+    Value actor(const Array& params, bool fHelp)
+    {
+        return dumpprivkey(params, fHelp);
+    }
+};
+
+class CRPCimportprivkey : public CRPCCommand
+{
+public:
+    CRPCimportprivkey() { name = "importprivkey"; }
+    Value actor(const Array& params, bool fHelp)
+    {
+        return importprivkey(params, fHelp);
+    }
+};
+
+extern map<string, CRPCCommand*> mapCommands;
+
+Value CRPChelp::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -177,8 +514,7 @@ Value help(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     string strRet;
-    set<rpcfn_type> setDone;
-    for (map<string, rpcfn_type>::iterator mi = mapCallTable.begin(); mi != mapCallTable.end(); ++mi)
+    for (map<string, CRPCCommand*>::iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
     {
         string strMethod = (*mi).first;
         // We already filter duplicates, but these deprecated screw up the sort order
@@ -192,9 +528,8 @@ Value help(const Array& params, bool fHelp)
         try
         {
             Array params;
-            rpcfn_type pfn = (*mi).second;
-            if (setDone.insert(pfn).second)
-                (*pfn)(params, true);
+            CRPCCommand *pcmd = mi->second;
+            pcmd->actor(params, true);
         }
         catch (std::exception& e)
         {
@@ -213,7 +548,7 @@ Value help(const Array& params, bool fHelp)
 }
 
 
-Value stop(const Array& params, bool fHelp)
+Value CRPCstop::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -225,7 +560,7 @@ Value stop(const Array& params, bool fHelp)
 }
 
 
-Value getblockcount(const Array& params, bool fHelp)
+Value CRPCgetblockcount::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -237,7 +572,7 @@ Value getblockcount(const Array& params, bool fHelp)
 
 
 // deprecated
-Value getblocknumber(const Array& params, bool fHelp)
+Value CRPCgetblocknumber::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -248,7 +583,7 @@ Value getblocknumber(const Array& params, bool fHelp)
 }
 
 
-Value getconnectioncount(const Array& params, bool fHelp)
+Value CRPCgetconnectioncount::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -259,7 +594,7 @@ Value getconnectioncount(const Array& params, bool fHelp)
 }
 
 
-Value getdifficulty(const Array& params, bool fHelp)
+Value CRPCgetdifficulty::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -270,7 +605,7 @@ Value getdifficulty(const Array& params, bool fHelp)
 }
 
 
-Value getgenerate(const Array& params, bool fHelp)
+Value CRPCgetgenerate::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -281,7 +616,7 @@ Value getgenerate(const Array& params, bool fHelp)
 }
 
 
-Value setgenerate(const Array& params, bool fHelp)
+Value CRPCsetgenerate::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -307,7 +642,7 @@ Value setgenerate(const Array& params, bool fHelp)
 }
 
 
-Value gethashespersec(const Array& params, bool fHelp)
+Value CRPCgethashespersec::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -320,7 +655,7 @@ Value gethashespersec(const Array& params, bool fHelp)
 }
 
 
-Value getinfo(const Array& params, bool fHelp)
+Value CRPCgetinfo::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -347,7 +682,7 @@ Value getinfo(const Array& params, bool fHelp)
 }
 
 
-Value getmininginfo(const Array& params, bool fHelp)
+Value CRPCgetmininginfo::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -362,14 +697,18 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     obj.push_back(Pair("generate",      GetBoolArg("-gen")));
     obj.push_back(Pair("genproclimit",  (int)GetArg("-genproclimit", -1)));
-    obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
+
+    Array params2;
+    CRPCCommand *pcmd = mapCommands["gethashespersec"];
+    obj.push_back(Pair("hashespersec",  pcmd->actor(params2, false)));
+
     obj.push_back(Pair("pooledtx",      (uint64_t)nPooledTx));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
 }
 
 
-Value getnewaddress(const Array& params, bool fHelp)
+Value CRPCgetnewaddress::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -436,7 +775,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     return CBitcoinAddress(account.vchPubKey);
 }
 
-Value getaccountaddress(const Array& params, bool fHelp)
+Value CRPCgetaccountaddress::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -455,7 +794,7 @@ Value getaccountaddress(const Array& params, bool fHelp)
 
 
 
-Value setaccount(const Array& params, bool fHelp)
+Value CRPCsetaccount::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -485,7 +824,7 @@ Value setaccount(const Array& params, bool fHelp)
 }
 
 
-Value getaccount(const Array& params, bool fHelp)
+Value CRPCgetaccount::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -504,7 +843,7 @@ Value getaccount(const Array& params, bool fHelp)
 }
 
 
-Value getaddressesbyaccount(const Array& params, bool fHelp)
+Value CRPCgetaddressesbyaccount::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -525,7 +864,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
     return ret;
 }
 
-Value settxfee(const Array& params, bool fHelp)
+Value CRPCsettxfee::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
@@ -541,7 +880,7 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
-Value sendtoaddress(const Array& params, bool fHelp)
+Value CRPCsendtoaddress::actor(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
@@ -577,7 +916,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-Value signmessage(const Array& params, bool fHelp)
+Value CRPCsignmessage::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -609,7 +948,7 @@ Value signmessage(const Array& params, bool fHelp)
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
-Value verifymessage(const Array& params, bool fHelp)
+Value CRPCverifymessage::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
@@ -642,7 +981,7 @@ Value verifymessage(const Array& params, bool fHelp)
 }
 
 
-Value getreceivedbyaddress(const Array& params, bool fHelp)
+Value CRPCgetreceivedbyaddress::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -693,7 +1032,7 @@ void GetAccountAddresses(string strAccount, set<CBitcoinAddress>& setAddress)
 }
 
 
-Value getreceivedbyaccount(const Array& params, bool fHelp)
+Value CRPCgetreceivedbyaccount::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -763,7 +1102,7 @@ int64 GetAccountBalance(const string& strAccount, int nMinDepth)
 }
 
 
-Value getbalance(const Array& params, bool fHelp)
+Value CRPCgetbalance::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -814,7 +1153,7 @@ Value getbalance(const Array& params, bool fHelp)
 }
 
 
-Value movecmd(const Array& params, bool fHelp)
+Value CRPCmove::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
@@ -860,7 +1199,7 @@ Value movecmd(const Array& params, bool fHelp)
 }
 
 
-Value sendfrom(const Array& params, bool fHelp)
+Value CRPCsendfrom::actor(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 3 || params.size() > 6))
         throw runtime_error(
@@ -905,7 +1244,7 @@ Value sendfrom(const Array& params, bool fHelp)
 }
 
 
-Value sendmany(const Array& params, bool fHelp)
+Value CRPCsendmany::actor(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
         throw runtime_error(
@@ -974,7 +1313,7 @@ Value sendmany(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-Value addmultisigaddress(const Array& params, bool fHelp)
+Value CRPCaddmultisigaddress::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
     {
@@ -1147,7 +1486,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     return ret;
 }
 
-Value listreceivedbyaddress(const Array& params, bool fHelp)
+Value CRPClistreceivedbyaddress::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -1163,7 +1502,7 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
     return ListReceived(params, false);
 }
 
-Value listreceivedbyaccount(const Array& params, bool fHelp)
+Value CRPClistreceivedbyaccount::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -1264,7 +1603,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
     }
 }
 
-Value listtransactions(const Array& params, bool fHelp)
+Value CRPClisttransactions::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 3)
         throw runtime_error(
@@ -1337,7 +1676,7 @@ Value listtransactions(const Array& params, bool fHelp)
     return ret;
 }
 
-Value listaccounts(const Array& params, bool fHelp)
+Value CRPClistaccounts::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -1388,7 +1727,7 @@ Value listaccounts(const Array& params, bool fHelp)
     return ret;
 }
 
-Value listsinceblock(const Array& params, bool fHelp)
+Value CRPClistsinceblock::actor(const Array& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
@@ -1452,7 +1791,7 @@ Value listsinceblock(const Array& params, bool fHelp)
     return ret;
 }
 
-Value gettransaction(const Array& params, bool fHelp)
+Value CRPCgettransaction::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1487,7 +1826,7 @@ Value gettransaction(const Array& params, bool fHelp)
 }
 
 
-Value backupwallet(const Array& params, bool fHelp)
+Value CRPCbackupwallet::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1501,7 +1840,7 @@ Value backupwallet(const Array& params, bool fHelp)
 }
 
 
-Value keypoolrefill(const Array& params, bool fHelp)
+Value CRPCkeypoolrefill::actor(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() > 0))
         throw runtime_error(
@@ -1570,7 +1909,7 @@ void ThreadCleanWalletPassphrase(void* parg)
     delete (int64*)parg;
 }
 
-Value walletpassphrase(const Array& params, bool fHelp)
+Value CRPCwalletpassphrase::actor(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
@@ -1609,7 +1948,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
 }
 
 
-Value walletpassphrasechange(const Array& params, bool fHelp)
+Value CRPCwalletpassphrasechange::actor(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
@@ -1642,7 +1981,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 }
 
 
-Value walletlock(const Array& params, bool fHelp)
+Value CRPCwalletlock::actor(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
         throw runtime_error(
@@ -1665,7 +2004,7 @@ Value walletlock(const Array& params, bool fHelp)
 }
 
 
-Value encryptwallet(const Array& params, bool fHelp)
+Value CRPCencryptwallet::actor(const Array& params, bool fHelp)
 {
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
         throw runtime_error(
@@ -1698,7 +2037,7 @@ Value encryptwallet(const Array& params, bool fHelp)
 }
 
 
-Value validateaddress(const Array& params, bool fHelp)
+Value CRPCvalidateaddress::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1752,7 +2091,7 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
-Value getwork(const Array& params, bool fHelp)
+Value CRPCgetwork::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -1857,7 +2196,7 @@ Value getwork(const Array& params, bool fHelp)
 }
 
 
-Value getmemorypool(const Array& params, bool fHelp)
+Value CRPCgetmemorypool::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -1943,7 +2282,7 @@ Value getmemorypool(const Array& params, bool fHelp)
     }
 }
 
-Value getblockhash(const Array& params, bool fHelp)
+Value CRPCgetblockhash::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1961,7 +2300,7 @@ Value getblockhash(const Array& params, bool fHelp)
     return pblockindex->phashBlock->GetHex();
 }
 
-Value getblock(const Array& params, bool fHelp)
+Value CRPCgetblock::actor(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -1995,83 +2334,111 @@ Value getblock(const Array& params, bool fHelp)
 // Call Table
 //
 
-pair<string, rpcfn_type> pCallTable[] =
-{
-    make_pair("help",                   &help),
-    make_pair("stop",                   &stop),
-    make_pair("getblockcount",          &getblockcount),
-    make_pair("getblocknumber",         &getblocknumber),
-    make_pair("getconnectioncount",     &getconnectioncount),
-    make_pair("getdifficulty",          &getdifficulty),
-    make_pair("getgenerate",            &getgenerate),
-    make_pair("setgenerate",            &setgenerate),
-    make_pair("gethashespersec",        &gethashespersec),
-    make_pair("getinfo",                &getinfo),
-    make_pair("getmininginfo",          &getmininginfo),
-    make_pair("getnewaddress",          &getnewaddress),
-    make_pair("getaccountaddress",      &getaccountaddress),
-    make_pair("setaccount",             &setaccount),
-    make_pair("getaccount",             &getaccount),
-    make_pair("getaddressesbyaccount",  &getaddressesbyaccount),
-    make_pair("sendtoaddress",          &sendtoaddress),
-    make_pair("getreceivedbyaddress",   &getreceivedbyaddress),
-    make_pair("getreceivedbyaccount",   &getreceivedbyaccount),
-    make_pair("listreceivedbyaddress",  &listreceivedbyaddress),
-    make_pair("listreceivedbyaccount",  &listreceivedbyaccount),
-    make_pair("backupwallet",           &backupwallet),
-    make_pair("keypoolrefill",          &keypoolrefill),
-    make_pair("walletpassphrase",       &walletpassphrase),
-    make_pair("walletpassphrasechange", &walletpassphrasechange),
-    make_pair("walletlock",             &walletlock),
-    make_pair("encryptwallet",          &encryptwallet),
-    make_pair("validateaddress",        &validateaddress),
-    make_pair("getbalance",             &getbalance),
-    make_pair("move",                   &movecmd),
-    make_pair("sendfrom",               &sendfrom),
-    make_pair("sendmany",               &sendmany),
-    make_pair("addmultisigaddress",     &addmultisigaddress),
-    make_pair("getblock",               &getblock),
-    make_pair("getblockhash",           &getblockhash),
-    make_pair("gettransaction",         &gettransaction),
-    make_pair("listtransactions",       &listtransactions),
-    make_pair("signmessage",            &signmessage),
-    make_pair("verifymessage",          &verifymessage),
-    make_pair("getwork",                &getwork),
-    make_pair("listaccounts",           &listaccounts),
-    make_pair("settxfee",               &settxfee),
-    make_pair("getmemorypool",          &getmemorypool),
-    make_pair("listsinceblock",         &listsinceblock),
-    make_pair("dumpprivkey",            &dumpprivkey),
-    make_pair("importprivkey",          &importprivkey)
-};
-map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
+map<string, CRPCCommand*> mapCommands;
 
-string pAllowInSafeMode[] =
+static void RegisterRPCCommands(void)
 {
-    "help",
-    "stop",
-    "getblockcount",
-    "getblocknumber",  // deprecated
-    "getconnectioncount",
-    "getdifficulty",
-    "getgenerate",
-    "setgenerate",
-    "gethashespersec",
-    "getinfo",
-    "getmininginfo",
-    "getnewaddress",
-    "getaccountaddress",
-    "getaccount",
-    "getaddressesbyaccount",
-    "backupwallet",
-    "keypoolrefill",
-    "walletpassphrase",
-    "walletlock",
-    "validateaddress",
-    "getwork",
-    "getmemorypool",
-};
-set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
+    CRPChelp *phelp = new CRPChelp();
+    mapCommands[phelp->name] = phelp;
+    CRPCstop *pstop = new CRPCstop();
+    mapCommands[pstop->name] = pstop;
+    CRPCgetblockcount *pgetblockcount = new CRPCgetblockcount();
+    mapCommands[pgetblockcount->name] = pgetblockcount;
+    CRPCgetblocknumber *pgetblocknumber = new CRPCgetblocknumber();
+    mapCommands[pgetblocknumber->name] = pgetblocknumber;
+    CRPCgetconnectioncount *pgetconnectioncount = new
+    CRPCgetconnectioncount();
+    mapCommands[pgetconnectioncount->name] = pgetconnectioncount;
+    CRPCgetdifficulty *pgetdifficulty = new CRPCgetdifficulty();
+    mapCommands[pgetdifficulty->name] = pgetdifficulty;
+    CRPCgetgenerate *pgetgenerate = new CRPCgetgenerate();
+    mapCommands[pgetgenerate->name] = pgetgenerate;
+    CRPCsetgenerate *psetgenerate = new CRPCsetgenerate();
+    mapCommands[psetgenerate->name] = psetgenerate;
+    CRPCgethashespersec *pgethashespersec = new CRPCgethashespersec();
+    mapCommands[pgethashespersec->name] = pgethashespersec;
+    CRPCgetinfo *pgetinfo = new CRPCgetinfo();
+    mapCommands[pgetinfo->name] = pgetinfo;
+    CRPCgetmininginfo *pgetmininginfo = new CRPCgetmininginfo();
+    mapCommands[pgetmininginfo->name] = pgetmininginfo;
+    CRPCgetnewaddress *pgetnewaddress = new CRPCgetnewaddress();
+    mapCommands[pgetnewaddress->name] = pgetnewaddress;
+    CRPCgetaccountaddress *pgetaccountaddress = new CRPCgetaccountaddress();
+    mapCommands[pgetaccountaddress->name] = pgetaccountaddress;
+    CRPCsetaccount *psetaccount = new CRPCsetaccount();
+    mapCommands[psetaccount->name] = psetaccount;
+    CRPCgetaccount *pgetaccount = new CRPCgetaccount();
+    mapCommands[pgetaccount->name] = pgetaccount;
+    CRPCgetaddressesbyaccount *pgetaddressesbyaccount = new
+    CRPCgetaddressesbyaccount();
+    mapCommands[pgetaddressesbyaccount->name] = pgetaddressesbyaccount;
+    CRPCsendtoaddress *psendtoaddress = new CRPCsendtoaddress();
+    mapCommands[psendtoaddress->name] = psendtoaddress;
+    CRPCgetreceivedbyaddress *pgetreceivedbyaddress = new
+    CRPCgetreceivedbyaddress();
+    mapCommands[pgetreceivedbyaddress->name] = pgetreceivedbyaddress;
+    CRPCgetreceivedbyaccount *pgetreceivedbyaccount = new
+    CRPCgetreceivedbyaccount();
+    mapCommands[pgetreceivedbyaccount->name] = pgetreceivedbyaccount;
+    CRPClistreceivedbyaddress *plistreceivedbyaddress = new
+    CRPClistreceivedbyaddress();
+    mapCommands[plistreceivedbyaddress->name] = plistreceivedbyaddress;
+    CRPClistreceivedbyaccount *plistreceivedbyaccount = new
+    CRPClistreceivedbyaccount();
+    mapCommands[plistreceivedbyaccount->name] = plistreceivedbyaccount;
+    CRPCbackupwallet *pbackupwallet = new CRPCbackupwallet();
+    mapCommands[pbackupwallet->name] = pbackupwallet;
+    CRPCkeypoolrefill *pkeypoolrefill = new CRPCkeypoolrefill();
+    mapCommands[pkeypoolrefill->name] = pkeypoolrefill;
+    CRPCwalletpassphrase *pwalletpassphrase = new CRPCwalletpassphrase();
+    mapCommands[pwalletpassphrase->name] = pwalletpassphrase;
+    CRPCwalletpassphrasechange *pwalletpassphrasechange = new
+    CRPCwalletpassphrasechange();
+    mapCommands[pwalletpassphrasechange->name] = pwalletpassphrasechange;
+    CRPCwalletlock *pwalletlock = new CRPCwalletlock();
+    mapCommands[pwalletlock->name] = pwalletlock;
+    CRPCencryptwallet *pencryptwallet = new CRPCencryptwallet();
+    mapCommands[pencryptwallet->name] = pencryptwallet;
+    CRPCvalidateaddress *pvalidateaddress = new CRPCvalidateaddress();
+    mapCommands[pvalidateaddress->name] = pvalidateaddress;
+    CRPCgetbalance *pgetbalance = new CRPCgetbalance();
+    mapCommands[pgetbalance->name] = pgetbalance;
+    CRPCmove *pmove = new CRPCmove();
+    mapCommands[pmove->name] = pmove;
+    CRPCsendfrom *psendfrom = new CRPCsendfrom();
+    mapCommands[psendfrom->name] = psendfrom;
+    CRPCsendmany *psendmany = new CRPCsendmany();
+    mapCommands[psendmany->name] = psendmany;
+    CRPCaddmultisigaddress *paddmultisigaddress = new
+    CRPCaddmultisigaddress();
+    mapCommands[paddmultisigaddress->name] = paddmultisigaddress;
+    CRPCgetblock *pgetblock = new CRPCgetblock();
+    mapCommands[pgetblock->name] = pgetblock;
+    CRPCgetblockhash *pgetblockhash = new CRPCgetblockhash();
+    mapCommands[pgetblockhash->name] = pgetblockhash;
+    CRPCgettransaction *pgettransaction = new CRPCgettransaction();
+    mapCommands[pgettransaction->name] = pgettransaction;
+    CRPClisttransactions *plisttransactions = new CRPClisttransactions();
+    mapCommands[plisttransactions->name] = plisttransactions;
+    CRPCsignmessage *psignmessage = new CRPCsignmessage();
+    mapCommands[psignmessage->name] = psignmessage;
+    CRPCverifymessage *pverifymessage = new CRPCverifymessage();
+    mapCommands[pverifymessage->name] = pverifymessage;
+    CRPCgetwork *pgetwork = new CRPCgetwork();
+    mapCommands[pgetwork->name] = pgetwork;
+    CRPClistaccounts *plistaccounts = new CRPClistaccounts();
+    mapCommands[plistaccounts->name] = plistaccounts;
+    CRPCsettxfee *psettxfee = new CRPCsettxfee();
+    mapCommands[psettxfee->name] = psettxfee;
+    CRPCgetmemorypool *pgetmemorypool = new CRPCgetmemorypool();
+    mapCommands[pgetmemorypool->name] = pgetmemorypool;
+    CRPClistsinceblock *plistsinceblock = new CRPClistsinceblock();
+    mapCommands[plistsinceblock->name] = plistsinceblock;
+    CRPCdumpprivkey *pdumpprivkey = new CRPCdumpprivkey();
+    mapCommands[pdumpprivkey->name] = pdumpprivkey;
+    CRPCimportprivkey *pimportprivkey = new CRPCimportprivkey();
+    mapCommands[pimportprivkey->name] = pimportprivkey;
+}
 
 
 
@@ -2354,6 +2721,8 @@ void ThreadRPCServer2(void* parg)
 {
     printf("ThreadRPCServer started\n");
 
+    RegisterRPCCommands();
+
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     if (mapArgs["-rpcpassword"] == "")
     {
@@ -2505,13 +2874,15 @@ void ThreadRPCServer2(void* parg)
                 throw JSONRPCError(-32600, "Params must be an array");
 
             // Find method
-            map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
-            if (mi == mapCallTable.end())
+            if (!mapCommands.count(strMethod))
                 throw JSONRPCError(-32601, "Method not found");
+
+            CRPCCommand *pcmd = mapCommands[strMethod];
 
             // Observe safe mode
             string strWarning = GetWarnings("rpc");
-            if (strWarning != "" && !GetBoolArg("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+            if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
+                !pcmd->okSafeMode)
                 throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
 
             try
@@ -2520,7 +2891,7 @@ void ThreadRPCServer2(void* parg)
                 Value result;
                 {
                     LOCK2(cs_main, pwalletMain->cs_wallet);
-                    result = (*(*mi).second)(params, false);
+                    result = pcmd->actor(params, false);
                 }
 
                 // Send reply
