@@ -13,6 +13,8 @@ protected:
     mutable CCriticalSection cs_KeyStore;
 
 public:
+    virtual ~CKeyStore() {}
+
     virtual bool AddKey(const CKey& key) =0;
     virtual bool HaveKey(const CBitcoinAddress &address) const =0;
     virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
