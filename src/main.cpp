@@ -1169,14 +1169,18 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     // This rule applies to all blocks whose timestamp is after March 15, 2012, 0:00 UTC.
     // On testnet it is enabled as of februari 20, 2012, 0:00 UTC.
     if (pindex->nTime > 1331769600 || (fTestNet && pindex->nTime > 1329696000))
+    {
         BOOST_FOREACH(CTransaction& tx, vtx)
         {
             CTxIndex txindexOld;
             if (txdb.ReadTxIndex(tx.GetHash(), txindexOld))
+            {
                 BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
                     if (pos.IsNull())
                         return false;
+            }
         }
+    }
 
     // P2SH didn't become active until Apr 1 2012 (Feb 15 on testnet)
     int64 nEvalSwitchTime = fTestNet ? 1329264000 : 1333238400;
