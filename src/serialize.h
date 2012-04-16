@@ -276,48 +276,6 @@ public:
     }
 };
 
-
-
-/** string stored as a fixed length field */
-template<std::size_t LEN>
-class CFixedFieldString
-{
-protected:
-    const std::string* pcstr;
-    std::string* pstr;
-public:
-    explicit CFixedFieldString(const std::string& str) : pcstr(&str), pstr(NULL) { }
-    explicit CFixedFieldString(std::string& str) : pcstr(&str), pstr(&str) { }
-
-    unsigned int GetSerializeSize(int, int=0) const
-    {
-        return LEN;
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s, int, int=0) const
-    {
-        char pszBuf[LEN];
-        strncpy(pszBuf, pcstr->c_str(), LEN);
-        s.write(pszBuf, LEN);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s, int, int=0)
-    {
-        if (pstr == NULL)
-            throw std::ios_base::failure("CFixedFieldString::Unserialize : trying to unserialize to const string");
-        char pszBuf[LEN+1];
-        s.read(pszBuf, LEN);
-        pszBuf[LEN] = '\0';
-        *pstr = pszBuf;
-    }
-};
-
-
-
-
-
 //
 // Forward declarations
 //
@@ -479,10 +437,6 @@ inline void Serialize(Stream& os, const std::vector<T, A>& v, int nType, int nVe
 template<typename Stream, typename T, typename A>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion, const boost::true_type&)
 {
-    //unsigned int nSize = ReadCompactSize(is);
-    //v.resize(nSize);
-    //is.read((char*)&v[0], nSize * sizeof(T));
-
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
     unsigned int nSize = ReadCompactSize(is);
@@ -499,11 +453,6 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion,
 template<typename Stream, typename T, typename A>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion, const boost::false_type&)
 {
-    //unsigned int nSize = ReadCompactSize(is);
-    //v.resize(nSize);
-    //for (std::vector<T, A>::iterator vi = v.begin(); vi != v.end(); ++vi)
-    //    Unserialize(is, (*vi), nType, nVersion);
-
     v.clear();
     unsigned int nSize = ReadCompactSize(is);
     unsigned int i = 0;
