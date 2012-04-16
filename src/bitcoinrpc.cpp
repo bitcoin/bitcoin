@@ -749,8 +749,10 @@ Value getbalance(const Array& params, bool fHelp)
             list<pair<CBitcoinAddress, int64> > listSent;
             wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
+            {
                 BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64)& r, listReceived)
                     nBalance += r.second;
+            }
             BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
@@ -1108,6 +1110,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+    {
         BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64)& r, listReceived)
         {
             string account;
@@ -1125,6 +1128,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 ret.push_back(entry);
             }
         }
+    }
 }
 
 void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Array& ret)
@@ -1161,14 +1165,21 @@ Value listtransactions(const Array& params, bool fHelp)
     if (params.size() > 2)
         nFrom = params[2].get_int();
 
+    if (nCount < 0)
+        throw JSONRPCError(-8, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(-8, "Negative from");
+
     Array ret;
     CWalletDB walletdb(pwalletMain->strWalletFile);
 
-    // Firs: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap:
+    // First: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap.
     typedef pair<CWalletTx*, CAccountingEntry*> TxPair;
     typedef multimap<int64, TxPair > TxItems;
     TxItems txByTime;
 
+    // Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
+    // would make this much faster for applications that do this a lot.
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         CWalletTx* wtx = &((*it).second);
@@ -1181,10 +1192,8 @@ Value listtransactions(const Array& params, bool fHelp)
         txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
     }
 
-    // Now: iterate backwards until we have nCount items to return:
-    TxItems::reverse_iterator it = txByTime.rbegin();
-    if (txByTime.size() > nFrom) std::advance(it, nFrom);
-    for (; it != txByTime.rend(); ++it)
+    // iterate backwards until we have nCount items to return:
+    for (TxItems::reverse_iterator it = txByTime.rbegin(); it != txByTime.rend(); ++it)
     {
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
@@ -1193,18 +1202,21 @@ Value listtransactions(const Array& params, bool fHelp)
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, ret);
 
-        if (ret.size() >= nCount) break;
+        if (ret.size() >= (nCount+nFrom)) break;
     }
-    // ret is now newest to oldest
+    // ret is newest to oldest
     
-    // Make sure we return only last nCount items (sends-to-self might give us an extra):
-    if (ret.size() > nCount)
-    {
-        Array::iterator last = ret.begin();
-        std::advance(last, nCount);
-        ret.erase(last, ret.end());
-    }
-    std::reverse(ret.begin(), ret.end()); // oldest to newest
+    if (nFrom > ret.size()) nFrom = ret.size();
+    if (nFrom+nCount > ret.size()) nCount = ret.size()-nFrom;
+    Array::iterator first = ret.begin();
+    std::advance(first, nFrom);
+    Array::iterator last = ret.begin();
+    std::advance(last, nFrom+nCount);
+
+    if (last != ret.end()) ret.erase(last, ret.end());
+    if (first != ret.begin()) ret.erase(ret.begin(), first);
+
+    std::reverse(ret.begin(), ret.end()); // Return oldest to newest
 
     return ret;
 }
