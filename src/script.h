@@ -268,7 +268,8 @@ public:
     }
 
 
-    explicit CScript(char b)           { operator<<(b); }
+    //explicit CScript(char b) is not portable.  Use 'signed char' or 'unsigned char'.
+    explicit CScript(signed char b)    { operator<<(b); }
     explicit CScript(short b)          { operator<<(b); }
     explicit CScript(int b)            { operator<<(b); }
     explicit CScript(long b)           { operator<<(b); }
@@ -285,7 +286,8 @@ public:
     explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
 
 
-    CScript& operator<<(char b)           { return push_int64(b); }
+    //CScript& operator<<(char b) is not portable.  Use 'signed char' or 'unsigned char'.
+    CScript& operator<<(signed char b)    { return push_int64(b); }
     CScript& operator<<(short b)          { return push_int64(b); }
     CScript& operator<<(int b)            { return push_int64(b); }
     CScript& operator<<(long b)           { return push_int64(b); }
