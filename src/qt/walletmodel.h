@@ -34,8 +34,7 @@ public:
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
-        Aborted,
-        MiscError
+        Aborted
     };
 
     enum EncryptionStatus

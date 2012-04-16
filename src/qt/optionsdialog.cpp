@@ -278,7 +278,8 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
 
     layout->addLayout(unit_hbox);
 
-    display_addresses = new QCheckBox(tr("Display addresses in transaction list"), this);
+    display_addresses = new QCheckBox(tr("&Display addresses in transaction list"), this);
+    display_addresses->setToolTip(tr("Whether to show Bitcoin addresses in the transaction list"));
     layout->addWidget(display_addresses);
 
     layout->addStretch();

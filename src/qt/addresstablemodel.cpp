@@ -27,8 +27,9 @@ struct AddressTableEntry
 };
 
 // Private implementation
-struct AddressTablePriv
+class AddressTablePriv
 {
+public:
     CWallet *wallet;
     QList<AddressTableEntry> cachedAddressTable;
 
