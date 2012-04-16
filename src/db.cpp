@@ -6,7 +6,6 @@
 #include "db.h"
 #include "util.h"
 #include "main.h"
-#include "wallet.h"
 #include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -229,8 +228,8 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                     if (pcursor)
                         while (fSuccess)
                         {
-                            CDataStream ssKey;
-                            CDataStream ssValue;
+                            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+                            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
                             int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
                             if (ret == DB_NOTFOUND)
                             {
@@ -386,10 +385,10 @@ bool CTxDB::ReadOwnerTxes(uint160 hash160, int nMinHeight, vector<CTransaction>&
     loop
     {
         // Read next record
-        CDataStream ssKey;
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         if (fFlags == DB_SET_RANGE)
             ssKey << string("owner") << hash160 << CDiskTxPos(0, 0, 0);
-        CDataStream ssValue;
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
         if (ret == DB_NOTFOUND)
@@ -514,10 +513,10 @@ bool CTxDB::LoadBlockIndex()
     loop
     {
         // Read next record
-        CDataStream ssKey;
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         if (fFlags == DB_SET_RANGE)
             ssKey << make_pair(string("blockindex"), uint256(0));
-        CDataStream ssValue;
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
         if (ret == DB_NOTFOUND)
@@ -754,8 +753,8 @@ bool CAddrDB::LoadAddresses()
     loop
     {
         // Read next record
-        CDataStream ssKey;
-        CDataStream ssValue;
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue);
         if (ret == DB_NOTFOUND)
             break;

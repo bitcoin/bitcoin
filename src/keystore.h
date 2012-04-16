@@ -6,7 +6,10 @@
 #define BITCOIN_KEYSTORE_H
 
 #include "crypter.h"
-#include "script.h"
+#include "util.h"
+#include "base58.h"
+
+class CScript;
 
 /** A virtual base class for key stores */
 class CKeyStore

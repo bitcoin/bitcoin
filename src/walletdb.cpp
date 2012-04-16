@@ -74,10 +74,10 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
     loop
     {
         // Read next record
-        CDataStream ssKey;
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         if (fFlags == DB_SET_RANGE)
             ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64(0));
-        CDataStream ssValue;
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
         if (ret == DB_NOTFOUND)
@@ -135,8 +135,8 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
         loop
         {
             // Read next record
-            CDataStream ssKey;
-            CDataStream ssValue;
+            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue);
             if (ret == DB_NOTFOUND)
                 break;

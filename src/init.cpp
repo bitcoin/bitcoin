@@ -7,7 +7,6 @@
 #include "bitcoinrpc.h"
 #include "net.h"
 #include "init.h"
-#include "strlcpy.h"
 #include "util.h"
 #include "ui_interface.h"
 #include <boost/filesystem.hpp>

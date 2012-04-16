@@ -6,6 +6,7 @@
 #include "util.h"
 #include "strlcpy.h"
 #include "version.h"
+#include "ui_interface.h"
 #include <boost/algorithm/string/join.hpp>
 
 // Work around clang compilation problem in Boost 1.46:

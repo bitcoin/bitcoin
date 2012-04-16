@@ -32,7 +32,6 @@ typedef int pid_t; /* define for windows compatiblity */
 #include <openssl/ripemd.h>
 
 #include "netbase.h" // for AddTimeData
-#include "ui_interface.h"
 
 typedef long long  int64;
 typedef unsigned long long  uint64;

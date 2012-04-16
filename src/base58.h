@@ -19,7 +19,6 @@
 #include <vector>
 #include "bignum.h"
 #include "key.h"
-#include "util.h"
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 

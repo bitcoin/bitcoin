@@ -157,14 +157,10 @@ public:
     CCriticalSection cs_inventory;
     std::multimap<int64, CInv> mapAskFor;
 
-    CNode(SOCKET hSocketIn, CAddress addrIn, bool fInboundIn=false)
+    CNode(SOCKET hSocketIn, CAddress addrIn, bool fInboundIn=false) : vSend(SER_NETWORK, MIN_PROTO_VERSION), vRecv(SER_NETWORK, MIN_PROTO_VERSION)
     {
         nServices = 0;
         hSocket = hSocketIn;
-        vSend.SetType(SER_NETWORK);
-        vRecv.SetType(SER_NETWORK);
-        vSend.SetVersion(MIN_PROTO_VERSION);
-        vRecv.SetVersion(MIN_PROTO_VERSION);
         nLastSend = 0;
         nLastRecv = 0;
         nLastSendEmpty = GetTime();
@@ -612,7 +608,7 @@ inline void RelayInventory(const CInv& inv)
 template<typename T>
 void RelayMessage(const CInv& inv, const T& a)
 {
-    CDataStream ss(SER_NETWORK);
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss.reserve(10000);
     ss << a;
     RelayMessage(inv, ss);
@@ -631,7 +627,7 @@ inline void RelayMessage<>(const CInv& inv, const CDataStream& ss)
         }
 
         // Save original serialized message so newer versions are preserved
-        mapRelay[inv] = ss;
+        mapRelay.insert(std::make_pair(inv, ss));
         vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv));
     }
 

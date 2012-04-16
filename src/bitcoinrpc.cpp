@@ -142,7 +142,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 {
     Object result;
     result.push_back(Pair("hash", block.GetHash().GetHex()));
-    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK)));
+    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
@@ -602,7 +602,7 @@ Value signmessage(const Array& params, bool fHelp)
     if (!pwalletMain->GetKey(addr, key))
         throw JSONRPCError(-4, "Private key not available");
 
-    CDataStream ss(SER_GETHASH);
+    CDataStream ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << strMessage;
 
@@ -634,7 +634,7 @@ Value verifymessage(const Array& params, bool fHelp)
     if (fInvalid)
         throw JSONRPCError(-5, "Malformed base64 encoding");
 
-    CDataStream ss(SER_GETHASH);
+    CDataStream ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << strMessage;
 
@@ -1921,7 +1921,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             if(tx.IsCoinBase())
                 continue;
 
-            CDataStream ssTx;
+            CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
             ssTx << tx;
 
             transactions.push_back(HexStr(ssTx.begin(), ssTx.end()));
@@ -1943,7 +1943,7 @@ Value getmemorypool(const Array& params, bool fHelp)
     else
     {
         // Parse parameters
-        CDataStream ssBlock(ParseHex(params[0].get_str()));
+        CDataStream ssBlock(ParseHex(params[0].get_str()), SER_NETWORK, PROTOCOL_VERSION);
         CBlock pblock;
         ssBlock >> pblock;
 
