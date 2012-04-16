@@ -1092,7 +1092,7 @@ uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int
     }
 
     // Serialize and hash
-    CDataStream ss(SER_GETHASH);
+    CDataStream ss(SER_GETHASH, 0);
     ss.reserve(10000);
     ss << txTmp << nHashType;
     return Hash(ss.begin(), ss.end());

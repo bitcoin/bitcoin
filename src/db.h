@@ -5,7 +5,6 @@
 #ifndef BITCOIN_DB_H
 #define BITCOIN_DB_H
 
-#include "key.h"
 #include "main.h"
 
 #include <map>
@@ -58,7 +57,7 @@ protected:
             return false;
 
         // Key
-        CDataStream ssKey(SER_DISK);
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -72,7 +71,7 @@ protected:
             return false;
 
         // Unserialize value
-        CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK);
+        CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, CLIENT_VERSION);
         ssValue >> value;
 
         // Clear and free memory
@@ -90,13 +89,13 @@ protected:
             assert(!"Write called on database in read-only mode");
 
         // Key
-        CDataStream ssKey(SER_DISK);
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
 
         // Value
-        CDataStream ssValue(SER_DISK);
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(10000);
         ssValue << value;
         Dbt datValue(&ssValue[0], ssValue.size());
@@ -119,7 +118,7 @@ protected:
             assert(!"Erase called on database in read-only mode");
 
         // Key
-        CDataStream ssKey(SER_DISK);
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -139,7 +138,7 @@ protected:
             return false;
 
         // Key
-        CDataStream ssKey(SER_DISK);
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());

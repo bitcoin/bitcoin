@@ -4,7 +4,6 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "keystore.h"
-#include "crypter.h"
 #include "script.h"
 
 bool CKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const

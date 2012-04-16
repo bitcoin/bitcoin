@@ -6,7 +6,6 @@
 #define BITCOIN_WALLET_H
 
 #include "main.h"
-#include "bignum.h"
 #include "key.h"
 #include "keystore.h"
 #include "script.h"

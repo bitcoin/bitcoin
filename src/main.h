@@ -7,9 +7,7 @@
 
 #include "bignum.h"
 #include "net.h"
-#include "key.h"
 #include "script.h"
-#include "version.h"
 
 #ifdef WIN32
 #include <io.h> /* for _commit */
@@ -545,7 +543,7 @@ public:
         // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
         int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 
-        unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK);
+        unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
         unsigned int nNewBlockSize = nBlockSize + nBytes;
         int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
@@ -590,7 +588,7 @@ public:
 
     bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
     {
-        CAutoFile filein = OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb");
+        CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, CLIENT_VERSION);
         if (!filein)
             return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
 
@@ -941,7 +939,7 @@ public:
     bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
     {
         // Open history file to append
-        CAutoFile fileout = AppendBlockFile(nFileRet);
+        CAutoFile fileout = CAutoFile(AppendBlockFile(nFileRet), SER_DISK, CLIENT_VERSION);
         if (!fileout)
             return error("CBlock::WriteToDisk() : AppendBlockFile failed");
 
@@ -974,7 +972,7 @@ public:
         SetNull();
 
         // Open history file to read
-        CAutoFile filein = OpenBlockFile(nFile, nBlockPos, "rb");
+        CAutoFile filein = CAutoFile(OpenBlockFile(nFile, nBlockPos, "rb"), SER_DISK, CLIENT_VERSION);
         if (!filein)
             return error("CBlock::ReadFromDisk() : OpenBlockFile failed");
         if (!fReadTransactions)
@@ -1135,7 +1133,7 @@ public:
     bool EraseBlockFromDisk()
     {
         // Open history file
-        CAutoFile fileout = OpenBlockFile(nFile, nBlockPos, "rb+");
+        CAutoFile fileout = CAutoFile(OpenBlockFile(nFile, nBlockPos, "rb+"), SER_DISK, CLIENT_VERSION);
         if (!fileout)
             return false;
 
@@ -1595,7 +1593,7 @@ public:
             return error("CAlert::CheckSignature() : verify signature failed");
 
         // Now unserialize the data
-        CDataStream sMsg(vchMsg);
+        CDataStream sMsg(vchMsg, SER_NETWORK, PROTOCOL_VERSION);
         sMsg >> *(CUnsignedAlert*)this;
         return true;
     }

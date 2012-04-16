@@ -411,7 +411,7 @@ bool CTransaction::CheckTransaction() const
     if (vout.empty())
         return DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
     // Size limits
-    if (::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
+    if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
 
     // Check for negative or overflow output values
@@ -533,7 +533,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         // reasonable number of ECDSA signature verifications.
 
         int64 nFees = GetValueIn(mapInputs)-GetValueOut();
-        unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK);
+        unsigned int nSize = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
 
         // Don't accept it if it can't get into a block
         if (nFees < GetMinFee(1000, true, GMF_RELAY))
@@ -1279,7 +1279,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     bool fStrictPayToScriptHash = (pindex->nTime >= nBIP16SwitchTime);
 
     //// issue here: it doesn't know the version
-    unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - 1 + GetSizeOfCompactSize(vtx.size());
+    unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - 1 + GetSizeOfCompactSize(vtx.size());
 
     map<uint256, CTxIndex> mapQueuedChanges;
     int64 nFees = 0;
@@ -1291,7 +1291,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             return DoS(100, error("ConnectBlock() : too many sigops"));
 
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
-        nTxPos += ::GetSerializeSize(tx, SER_DISK);
+        nTxPos += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 
         MapPrevTx mapInputs;
         if (!tx.IsCoinBase())
@@ -1621,7 +1621,7 @@ bool CBlock::CheckBlock() const
     // that can be verified before saving an orphan block.
 
     // Size limits
-    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK) > MAX_BLOCK_SIZE)
+    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CheckBlock() : size limits failed"));
 
     // Check proof of work matches claimed amount
@@ -1691,7 +1691,7 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight));
 
     // Write block to history file
-    if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))
+    if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
         return error("AcceptBlock() : out of disk space");
     unsigned int nFile = -1;
     unsigned int nBlockPos = 0;
@@ -2481,7 +2481,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
             CBlock block;
             block.ReadFromDisk(pindex, true);
-            nBytes += block.GetSerializeSize(SER_NETWORK);
+            nBytes += block.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
             if (--nLimit <= 0 || nBytes >= SendBufferSize()/2)
             {
                 // When this block is requested, we'll send an inv that'll make them
@@ -3174,7 +3174,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             }
 
             // Priority is sum(valuein * age) / txsize
-            dPriority /= ::GetSerializeSize(tx, SER_NETWORK);
+            dPriority /= ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
             if (porphan)
                 porphan->dPriority = dPriority;
@@ -3203,7 +3203,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             mapPriority.erase(mapPriority.begin());
 
             // Size limits
-            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK);
+            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
             if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE_GEN)
                 continue;
 
