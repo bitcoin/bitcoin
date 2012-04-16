@@ -163,8 +163,8 @@ public:
         hSocket = hSocketIn;
         vSend.SetType(SER_NETWORK);
         vRecv.SetType(SER_NETWORK);
-        vSend.SetVersion(209);
-        vRecv.SetVersion(209);
+        vSend.SetVersion(MIN_PROTO_VERSION);
+        vRecv.SetVersion(MIN_PROTO_VERSION);
         nLastSend = 0;
         nLastRecv = 0;
         nLastSendEmpty = GetTime();
