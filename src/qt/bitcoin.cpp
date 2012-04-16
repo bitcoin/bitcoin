@@ -120,6 +120,15 @@ std::string _(const char* psz)
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
 }
 
+/* Handle runaway exceptions. Shows a message box with the problem and quits the program.
+ */
+static void handleRunawayException(std::exception *e)
+{
+    PrintExceptionContinue(e, "Runaway exception");
+    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occured. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + QString::fromStdString(strMiscWarning));
+    exit(1);
+}
+
 int main(int argc, char *argv[])
 {
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -205,9 +214,9 @@ int main(int argc, char *argv[])
             return 1;
         }
     } catch (std::exception& e) {
-        PrintException(&e, "Runaway exception");
+        handleRunawayException(&e);
     } catch (...) {
-        PrintException(NULL, "Runaway exception");
+        handleRunawayException(NULL);
     }
     return 0;
 }
