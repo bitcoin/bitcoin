@@ -5,7 +5,6 @@
 #define  BITCOIN_CHECKPOINT_H
 
 #include <map>
-#include "util.h"
 
 class uint256;
 class CBlockIndex;

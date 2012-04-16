@@ -6,9 +6,20 @@
 
 #include <string>
 
+//
+// client versioning
+//
+
 extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
 extern const std::string CLIENT_DATE;
 extern const int         CLIENT_VERSION;
+
+
+//
+// network protocol versioning
+//
+
+static const int PROTOCOL_VERSION = 60000;
 
 #endif

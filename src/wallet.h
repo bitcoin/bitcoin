@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_H
 #define BITCOIN_WALLET_H
 
+#include "main.h"
 #include "bignum.h"
 #include "key.h"
 #include "keystore.h"
@@ -23,6 +24,34 @@ enum WalletFeature
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
 
     FEATURE_LATEST = 60000
+};
+
+
+/** A key pool entry */
+class CKeyPool
+{
+public:
+    int64 nTime;
+    std::vector<unsigned char> vchPubKey;
+
+    CKeyPool()
+    {
+        nTime = GetTime();
+    }
+
+    CKeyPool(const std::vector<unsigned char>& vchPubKeyIn)
+    {
+        nTime = GetTime();
+        vchPubKey = vchPubKeyIn;
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+        READWRITE(nTime);
+        READWRITE(vchPubKey);
+    )
 };
 
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
@@ -196,11 +225,7 @@ public:
         }
         return nChange;
     }
-    void SetBestChain(const CBlockLocator& loc)
-    {
-        CWalletDB walletdb(strWalletFile);
-        walletdb.WriteBestBlock(loc);
-    }
+    void SetBestChain(const CBlockLocator& loc);
 
     int LoadWallet(bool& fFirstRunRet);
 //    bool BackupWallet(const std::string& strDest);

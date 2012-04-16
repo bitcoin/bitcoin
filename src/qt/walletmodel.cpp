@@ -4,8 +4,8 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
-#include "headers.h"
-#include "db.h" // for BackupWallet
+#include "wallet.h"
+#include "walletdb.h" // for BackupWallet
 
 #include <QSet>
 
