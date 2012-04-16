@@ -731,13 +731,27 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     return bnResult.GetCompact();
 }
 
-unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast)
+// ppcoin: find last block index up to pindex
+const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
+{
+    while (pindex && (pindex->IsProofOfStake() != fProofOfStake))
+        pindex = pindex->pprev;
+    return pindex;
+}
+
+unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
     // Genesis block and first block
     if (pindexLast == NULL || pindexLast->pprev == NULL)
         return bnProofOfWorkLimit.GetCompact();
 
-    int64 nActualSpacing = pindexLast->GetBlockTime() - pindexLast->pprev->GetBlockTime();
+    const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
+    if (pindexPrev == NULL) 
+        return bnProofOfWorkLimit.GetCompact();
+    const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
+    if (pindexPrevPrev == NULL)
+        return bnProofOfWorkLimit.GetCompact();
+    int64 nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
 
     // ppcoin: target change every block
     // ppcoin: retarget with exponential moving toward target spacing
@@ -1527,8 +1541,8 @@ bool CBlock::AcceptBlock()
     int nHeight = pindexPrev->nHeight+1;
 
     // Check proof of work
-    if (nBits != GetNextWorkRequired(pindexPrev))
-        return DoS(100, error("AcceptBlock() : incorrect proof of work"));
+    if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
+        return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
@@ -2958,8 +2972,6 @@ CBlock* CreateNewBlock(CWallet* pwallet)
     if (!pblock.get())
         return NULL;
 
-    pblock->nBits = GetNextWorkRequired(pindexPrev);
-
     // Create coinbase tx
     CTransaction txNew;
     txNew.vin.resize(1);
@@ -2971,9 +2983,12 @@ CBlock* CreateNewBlock(CWallet* pwallet)
     pblock->vtx.push_back(txNew);
 
     // ppcoin: if coinstake available add coinstake tx
+    pblock->nBits = GetNextTargetRequired(pindexPrev, true);
     CTransaction txCoinStake;
     if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, pblock->nBits, txCoinStake))
         pblock->vtx.push_back(txCoinStake);
+    else
+        pblock->nBits = GetNextTargetRequired(pindexPrev, false);
 
     // Collect memory pool transactions into the block
     int64 nFees = 0;

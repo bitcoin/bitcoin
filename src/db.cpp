@@ -540,6 +540,8 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->nBlockPos      = diskindex.nBlockPos;
             pindexNew->nChainTrust    = diskindex.nChainTrust;
             pindexNew->nHeight        = diskindex.nHeight;
+            pindexNew->nCheckpoint    = diskindex.nCheckpoint;
+            pindexNew->fProofOfStake  = diskindex.fProofOfStake;
             pindexNew->nVersion       = diskindex.nVersion;
             pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
             pindexNew->nTime          = diskindex.nTime;
