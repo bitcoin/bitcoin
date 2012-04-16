@@ -78,7 +78,8 @@ public:
         BN_clear_free(this);
     }
 
-    CBigNum(char n)             { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
+    //CBigNum(char n) is not portable.  Use 'signed char' or 'unsigned char'.
+    CBigNum(signed char n)      { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
     CBigNum(short n)            { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
     CBigNum(int n)              { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
     CBigNum(long n)             { BN_init(this); if (n >= 0) setulong(n); else setint64(n); }
@@ -296,7 +297,7 @@ public:
             psz++;
 
         // hex string to bignum
-        static char phexdigit[256] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0 };
+        static signed char phexdigit[256] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0 };
         *this = 0;
         while (isxdigit(*psz))
         {
