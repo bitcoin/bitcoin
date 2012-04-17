@@ -2,7 +2,7 @@
 #include "guiutil.h"
 #include "walletmodel.h"
 
-#include "headers.h"
+#include "wallet.h"
 
 #include <QFont>
 #include <QColor>

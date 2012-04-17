@@ -3,9 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "headers.h"
-#include "crypter.h"
-#include "db.h"
+#include "keystore.h"
 #include "script.h"
 
 bool CKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const

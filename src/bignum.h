@@ -9,7 +9,7 @@
 #include <vector>
 #include <openssl/bn.h>
 
-#include "util.h"
+#include "util.h" // for uint64
 
 /** Errors thrown by the bignum class */
 class bignum_error : public std::runtime_error
