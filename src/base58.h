@@ -288,7 +288,7 @@ public:
 
     bool IsValid() const
     {
-        int nExpectedSize = 20;
+        unsigned int nExpectedSize = 20;
         bool fExpectTestNet = false;
         switch(nVersion)
         {
