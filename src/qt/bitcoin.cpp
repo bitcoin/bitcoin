@@ -7,8 +7,8 @@
 #include "optionsmodel.h"
 #include "guiutil.h"
 
-#include "headers.h"
 #include "init.h"
+#include "ui_interface.h"
 #include "qtipcserver.h"
 
 #include <QApplication>
