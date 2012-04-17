@@ -345,7 +345,7 @@ public:
     void Unserialize(Stream& s, int, int=0)
     {
         if (pstr == NULL)
-            throw std::ios_base::failure("CFixedFieldString::Unserialize : trying to unserialize to const string");
+            THROW_WITH_STACKTRACE(std::ios_base::failure("CFixedFieldString::Unserialize : trying to unserialize to const string"));
         char pszBuf[LEN+1];
         s.read(pszBuf, LEN);
         pszBuf[LEN] = '\0';
@@ -1039,7 +1039,7 @@ public:
     {
         state |= bits;
         if (state & exceptmask)
-            throw std::ios_base::failure(psz);
+            THROW_WITH_STACKTRACE(std::ios_base::failure(psz));
     }
 
     bool eof() const             { return size() == 0; }
@@ -1256,7 +1256,7 @@ public:
     {
         state |= bits;
         if (state & exceptmask)
-            throw std::ios_base::failure(psz);
+            THROW_WITH_STACKTRACE(std::ios_base::failure(psz));
     }
 
     bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
