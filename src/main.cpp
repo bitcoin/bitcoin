@@ -2137,11 +2137,11 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
     {
     case MSG_TX:
         {
-	bool txInMap = false;
-	    {
+        bool txInMap = false;
+            {
             LOCK(cs_mapTransactions);
-	    txInMap = (mapTransactions.count(inv.hash) != 0);
-	    }
+            txInMap = (mapTransactions.count(inv.hash) != 0);
+            }
         return txInMap ||
                mapOrphanTransactions.count(inv.hash) ||
                txdb.ContainsTx(inv.hash);
@@ -2264,7 +2264,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         static int nAskedForBlocks = 0;
         if (!pfrom->fClient &&
             (pfrom->nVersion < NOBLKS_VERSION_START ||
-	     pfrom->nVersion >= NOBLKS_VERSION_END) &&
+             pfrom->nVersion >= NOBLKS_VERSION_END) &&
              (nAskedForBlocks < 1 || vNodes.size() <= 1))
         {
             nAskedForBlocks++;
