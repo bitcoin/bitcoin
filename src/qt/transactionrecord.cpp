@@ -146,12 +146,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 //
                 // Mixed debit transaction, can't break down payees
                 //
-                bool fAllMine = true;
-                BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                    fAllMine = fAllMine && wallet->IsMine(txout);
-                BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                    fAllMine = fAllMine && wallet->IsMine(txin);
-
                 parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
             }
         }
