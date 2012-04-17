@@ -20,6 +20,7 @@
 #include <boost/tuple/tuple_io.hpp>
 
 #include "allocators.h"
+#include "version.h"
 
 typedef long long  int64;
 typedef unsigned long long  uint64;
@@ -28,8 +29,6 @@ class CScript;
 class CDataStream;
 class CAutoFile;
 static const unsigned int MAX_SIZE = 0x02000000;
-
-static const int PROTOCOL_VERSION = 60000;
 
 // Used to bypass the rule against non-const reference to temporary
 // where it makes sense with wrappers such as CFlatData or CTxDB
