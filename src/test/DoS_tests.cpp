@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
 
-        CDataStream ds;
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
         ds << tx;
         AddOrphanTx(ds);
     }
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
         SignSignature(keystore, txPrev, tx, 0);
 
-        CDataStream ds;
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
         ds << tx;
         AddOrphanTx(ds);
     }
