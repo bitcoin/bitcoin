@@ -117,7 +117,7 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
-    unsigned int nHeaderStart;
+    int nHeaderStart;
     unsigned int nMessageStart;
     CAddress addr;
     int nVersion;
@@ -299,7 +299,7 @@ public:
 
     void AbortMessage()
     {
-        if (nHeaderStart == -1)
+        if (nHeaderStart < 0)
             return;
         vSend.resize(nHeaderStart);
         nHeaderStart = -1;
@@ -319,7 +319,7 @@ public:
             return;
         }
 
-        if (nHeaderStart == -1)
+        if (nHeaderStart < 0)
             return;
 
         // Set the size
@@ -344,7 +344,7 @@ public:
 
     void EndMessageAbortIfEmpty()
     {
-        if (nHeaderStart == -1)
+        if (nHeaderStart < 0)
             return;
         int nSize = vSend.size() - nMessageStart;
         if (nSize > 0)

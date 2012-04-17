@@ -201,7 +201,7 @@ Value help(const Array& params, bool fHelp)
             // Help text is returned in an exception
             string strHelp = string(e.what());
             if (strCommand == "")
-                if (strHelp.find('\n') != -1)
+                if (strHelp.find('\n') != string::npos)
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
             strRet += strHelp + "\n";
         }
@@ -1000,7 +1000,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
                       "(got %d, need at least %d)", keys.size(), nRequired));
     std::vector<CKey> pubkeys;
     pubkeys.resize(keys.size());
-    for (int i = 0; i < keys.size(); i++)
+    for (unsigned int i = 0; i < keys.size(); i++)
     {
         const std::string& ks = keys[i].get_str();
 
