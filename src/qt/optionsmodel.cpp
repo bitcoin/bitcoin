@@ -123,10 +123,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             walletdb.WriteSetting("nDisplayUnit", nDisplayUnit);
             emit displayUnitChanged(unit);
             }
+            break;
         case DisplayAddresses: {
             bDisplayAddresses = value.toBool();
             walletdb.WriteSetting("bDisplayAddresses", bDisplayAddresses);
             }
+            break;
         default:
             break;
         }
