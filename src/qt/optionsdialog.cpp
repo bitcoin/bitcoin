@@ -38,6 +38,7 @@ private:
     QCheckBox *minimize_on_close;
 #endif
     QCheckBox *connect_socks4;
+    QCheckBox *detach_database;
     QLineEdit *proxy_ip;
     QLineEdit *proxy_port;
     BitcoinAmountField *fee_edit;
@@ -229,6 +230,10 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 
     layout->addLayout(fee_hbox);
 
+    detach_database = new QCheckBox(tr("Detach databases at shutdown"));
+    detach_database->setToolTip(tr("Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached."));
+    layout->addWidget(detach_database);
+
     layout->addStretch(1); // Extra space at bottom
 
     setLayout(layout);
@@ -256,6 +261,7 @@ void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
     mapper->addMapping(proxy_ip, OptionsModel::ProxyIP);
     mapper->addMapping(proxy_port, OptionsModel::ProxyPort);
     mapper->addMapping(fee_edit, OptionsModel::Fee);
+    mapper->addMapping(detach_database, OptionsModel::DetachDatabases);
 }
 
 DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):

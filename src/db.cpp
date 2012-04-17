@@ -28,6 +28,7 @@ unsigned int nWalletDBUpdated;
 
 CCriticalSection cs_db;
 static bool fDbEnvInit = false;
+bool fDetachDB = false;
 DbEnv dbenv(0);
 map<string, int> mapFileUseCount;
 static map<string, Db*> mapDb;
@@ -307,9 +308,13 @@ void DBFlush(bool fShutdown)
             {
                 // Move log data to the dat file
                 CloseDb(strFile);
+                printf("%s checkpoint\n", strFile.c_str());
                 dbenv.txn_checkpoint(0, 0, 0);
-                printf("%s flush\n", strFile.c_str());
-                dbenv.lsn_reset(strFile.c_str(), 0);
+                if ((strFile != "blkindex.dat" && strFile != "addr.dat") || fDetachDB) {
+                    printf("%s detach\n", strFile.c_str());
+                    dbenv.lsn_reset(strFile.c_str(), 0);
+                }
+                printf("%s closed\n", strFile.c_str());
                 mapFileUseCount.erase(mi++);
             }
             else

@@ -25,6 +25,7 @@ class CWallet;
 class CWalletTx;
 
 extern unsigned int nWalletDBUpdated;
+extern bool fDetachDB;
 extern DbEnv dbenv;
 
 extern void DBFlush(bool fShutdown);
