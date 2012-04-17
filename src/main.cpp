@@ -2652,7 +2652,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "ping")
     {
-        if (pfrom->nVersion >= BIP0031_VERSION)
+        if (pfrom->nVersion >= BIP0031_VERSION && !vRecv.empty())
         {
             uint64 nonce = 0;
             vRecv >> nonce;
