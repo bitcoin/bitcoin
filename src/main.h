@@ -60,7 +60,6 @@ extern CBigNum bnBestChainWork;
 extern CBigNum bnBestInvalidWork;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
-extern uint64 nPooledTx;
 extern unsigned int nTransactionsUpdated;
 extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
@@ -682,9 +681,6 @@ public:
 
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
-    bool AddToMemoryPoolUnchecked();
-public:
-    bool RemoveFromMemoryPool();
 };
 
 
@@ -1600,5 +1596,36 @@ public:
 
     bool ProcessAlert();
 };
+
+class CTxMemPool
+{
+public:
+    mutable CCriticalSection cs;
+    std::map<uint256, CTransaction> mapTx;
+    std::map<COutPoint, CInPoint> mapNextTx;
+
+    bool accept(CTxDB& txdb, CTransaction &tx,
+                bool fCheckInputs, bool* pfMissingInputs);
+    bool addUnchecked(CTransaction &tx);
+    bool remove(CTransaction &tx);
+
+    unsigned long size()
+    {
+        LOCK(cs);
+        return mapTx.size();
+    }
+
+    bool exists(uint256 hash)
+    {
+        return (mapTx.count(hash) != 0);
+    }
+
+    CTransaction& lookup(uint256 hash)
+    {
+        return mapTx[hash];
+    }
+};
+
+extern CTxMemPool mempool;
 
 #endif
