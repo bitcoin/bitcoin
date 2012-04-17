@@ -1954,11 +1954,15 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
     switch (inv.type)
     {
     case MSG_TX:
+        {
+        bool txInMap = false;
         CRITICAL_BLOCK(cs_mapTransactions)
         {
-            return mapTransactions.count(inv.hash) ||
-                   mapOrphanTransactions.count(inv.hash) ||
-                   txdb.ContainsTx(inv.hash);
+            txInMap = (mapTransactions.count(inv.hash) != 0);
+        }
+        return txInMap ||
+               mapOrphanTransactions.count(inv.hash) ||
+               txdb.ContainsTx(inv.hash);
         }
 
     case MSG_BLOCK: return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
