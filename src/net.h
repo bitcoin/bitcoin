@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <boost/array.hpp>
+#include <boost/detail/atomic_count.hpp>
 #include <boost/foreach.hpp>
 #include <openssl/rand.h>
 
@@ -73,11 +74,12 @@ enum threadId
     THREAD_OPENCONNECTIONS,
     THREAD_MESSAGEHANDLER,
     THREAD_MINER,
-    THREAD_RPCSERVER,
+    THREAD_RPCLISTENER,
     THREAD_UPNP,
     THREAD_DNSSEED,
     THREAD_ADDEDCONNECTIONS,
     THREAD_DUMPADDRESS,
+    THREAD_RPCHANDLER,
 
     THREAD_MAX
 };
