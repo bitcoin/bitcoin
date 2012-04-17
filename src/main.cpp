@@ -2838,8 +2838,8 @@ bool ProcessMessages(CNode* pfrom)
 
 bool SendMessages(CNode* pto, bool fSendTrickle)
 {
-    {
-        LOCK(cs_main);
+    TRY_LOCK(cs_main, lockMain);
+    if (lockMain) {
         // Don't send anything until we get their version message
         if (pto->nVersion == 0)
             return true;
