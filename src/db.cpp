@@ -162,6 +162,8 @@ void CDB::Close()
         nMinutes = 1;
     if (strFile == "addr.dat")
         nMinutes = 2;
+    if (strFile == "blkindex.dat")
+        nMinutes = 2;
     if (strFile == "blkindex.dat" && IsInitialBlockDownload())
         nMinutes = 5;
 
