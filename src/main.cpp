@@ -2652,7 +2652,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "ping")
     {
-        if (pfrom->nVersion > BIP0031_VERSION)
+        if (pfrom->nVersion >= BIP0031_VERSION)
         {
             uint64 nonce = 0;
             vRecv >> nonce;
@@ -2834,7 +2834,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Keep-alive ping. We send a nonce of zero because we don't use it anywhere 
         // right now.
         if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty()) {
-            if (pto->nVersion > BIP0031_VERSION)
+            if (pto->nVersion >= BIP0031_VERSION)
                 pto->PushMessage("ping", 0);
             else
                 pto->PushMessage("ping");
