@@ -80,6 +80,9 @@ public:
     // Wallet backup
     bool backupWallet(const QString &filename);
 
+    // Only allow client to send from specific address(es)
+    void setSendFromAddressRestriction(std::string addresses);
+
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
     {

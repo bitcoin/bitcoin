@@ -53,6 +53,9 @@
 #include <deque>
 #include <map>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/lambda/lambda.hpp>
+
 #ifdef WIN32
 #include <windows.h>
 #include <winsock2.h>
