@@ -12,7 +12,7 @@
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
 
-// #include "serialize.h"
+#include "allocators.h"
 #include "uint256.h"
 
 // secp160k1

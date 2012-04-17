@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "uint256.h"
+#include "util.h"
 
 extern void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 
@@ -11,7 +12,7 @@ BOOST_AUTO_TEST_CASE(sha256transform_equality)
     unsigned int pSHA256InitState[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
 
-    unsigned char pstate[32];
+    // unsigned char pstate[32];
     unsigned char pinput[64];
 
     int i;
