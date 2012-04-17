@@ -22,7 +22,7 @@ int nConnectTimeout = 5000;
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 
-bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, int nMaxSolutions, bool fAllowLookup)
+bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
     struct addrinfo aiHint;
@@ -77,7 +77,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, int nM
     return (vIP.size() > 0);
 }
 
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, int nMaxSolutions, bool fAllowLookup)
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     if (pszName[0] == 0)
         return false;
@@ -93,12 +93,12 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, int nMaxSolutio
     return LookupIntern(pszHost, vIP, nMaxSolutions, fAllowLookup);
 }
 
-bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, int nMaxSolutions)
+bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions)
 {
     return LookupHost(pszName, vIP, nMaxSolutions, false);
 }
 
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, int nMaxSolutions)
+bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
 {
     if (pszName[0] == 0)
         return false;
@@ -136,7 +136,7 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
     if (!fRet)
         return false;
     vAddr.resize(vIP.size());
-    for (int i = 0; i < vIP.size(); i++)
+    for (unsigned int i = 0; i < vIP.size(); i++)
         vAddr[i] = CService(vIP[i], port);
     return true;
 }
