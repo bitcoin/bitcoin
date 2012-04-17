@@ -91,7 +91,7 @@ void MessagePage::on_signMessage_clicked()
         return;
     }
 
-    CDataStream ss(SER_GETHASH);
+    CDataStream ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << ui->message->document()->toPlainText().toStdString();
 

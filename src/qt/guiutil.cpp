@@ -3,8 +3,6 @@
 #include "walletmodel.h"
 #include "bitcoinunits.h"
 
-#include "headers.h"
-
 #include <QString>
 #include <QDateTime>
 #include <QDoubleValidator>

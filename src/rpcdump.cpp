@@ -2,9 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "headers.h"
 #include "init.h" // for pwalletMain
 #include "bitcoinrpc.h"
+#include "ui_interface.h"
 
 #include <boost/lexical_cast.hpp>
 

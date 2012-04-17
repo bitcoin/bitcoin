@@ -84,6 +84,7 @@ OBJS= \
     obj/script.o \
     obj/util.o \
     obj/wallet.o \
+    obj/walletdb.o \
     obj/noui.o
 
 ifdef USE_UPNP

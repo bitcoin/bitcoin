@@ -7,7 +7,8 @@
 #include <boost/tokenizer.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "headers.h"
+#include "ui_interface.h"
+#include "util.h"
 #include "qtipcserver.h"
 
 using namespace boost::interprocess;
