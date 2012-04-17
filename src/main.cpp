@@ -2137,8 +2137,12 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
     {
     case MSG_TX:
         {
-        LOCK(cs_mapTransactions);
-        return mapTransactions.count(inv.hash) ||
+	bool txInMap = false;
+	    {
+            LOCK(cs_mapTransactions);
+	    txInMap = (mapTransactions.count(inv.hash) != 0);
+	    }
+        return txInMap ||
                mapOrphanTransactions.count(inv.hash) ||
                txdb.ContainsTx(inv.hash);
         }
