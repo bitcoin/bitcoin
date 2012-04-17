@@ -2983,11 +2983,24 @@ CBlock* CreateNewBlock(CWallet* pwallet)
     pblock->vtx.push_back(txNew);
 
     // ppcoin: if coinstake available add coinstake tx
+    static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift;  // only initialized at startup
     pblock->nBits = GetNextTargetRequired(pindexPrev, true);
-    CTransaction txCoinStake;
-    if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, pblock->nBits, txCoinStake))
-        pblock->vtx.push_back(txCoinStake);
-    else
+    while (nLastCoinStakeCheckTime < GetAdjustedTime())
+    {
+        static CCriticalSection cs;
+        CTransaction txCoinStake;
+        CRITICAL_BLOCK(cs)
+        {
+            nLastCoinStakeCheckTime++;
+            txCoinStake.nTime = nLastCoinStakeCheckTime;
+        }
+        if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, pblock->nBits, txCoinStake))
+        {
+            pblock->vtx.push_back(txCoinStake);
+            break;
+        }
+    }
+    if (pblock->IsProofOfWork())
         pblock->nBits = GetNextTargetRequired(pindexPrev, false);
 
     // Collect memory pool transactions into the block
@@ -3189,12 +3202,12 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     uint256 hash = pblock->GetHash();
     uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
 
-    if (hash > hashTarget)
-        return false;
+    if (hash > hashTarget && pblock->IsProofOfWork())
+        return error("BitcoinMiner : proof-of-work not meeting target");
 
     //// debug print
     printf("BitcoinMiner:\n");
-    printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
+    printf("new block found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
     printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
@@ -3256,6 +3269,19 @@ void static BitcoinMiner(CWallet *pwallet)
         auto_ptr<CBlock> pblock(CreateNewBlock(pwallet));
         if (!pblock.get())
             return;
+
+        // ppcoin: if proof-of-stake block found then process block
+        if (pblock->IsProofOfStake())
+        {
+            // should be able to sign block - assert here for now
+            assert(pblock->SignBlock(*pwalletMain));
+            printf("BitcoinMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
+            SetThreadPriority(THREAD_PRIORITY_NORMAL);
+            CheckWork(pblock.get(), *pwalletMain, reservekey);
+            SetThreadPriority(THREAD_PRIORITY_LOWEST);
+            continue;
+        }
+
         IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
 
         printf("Running BitcoinMiner with %d transactions in block\n", pblock->vtx.size());
