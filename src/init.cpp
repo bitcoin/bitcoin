@@ -353,6 +353,15 @@ bool AppInit2(int argc, char* argv[])
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
         strErrors << _("Error loading blkindex.dat") << "\n";
+
+    // as LoadBlockIndex can take several minutes, it's possible the user
+    // requested to kill bitcoin-qt during the last operation. If so, exit.
+    // As the program has not fully started yet, Shutdown() is possibly overkill.
+    if (fRequestShutdown)
+    {
+        printf("Shutdown requested. Exiting.\n");
+        return false;
+    }
     printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     InitMessage(_("Loading wallet..."));
