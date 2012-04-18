@@ -47,7 +47,17 @@ public:
     bool okSafeMode;
 };
 
-extern map<string, CRPCCommand*> mapCommands;
+class CRPCTable
+{
+private:
+    map<string, const CRPCCommand*> mapCommands;
+public:
+    CRPCTable();
+    const CRPCCommand* operator[](string name) const;
+    string help(string name) const;
+};
+
+const CRPCTable tableRPC;
 
 static std::string strRPCUserColonPass;
 
@@ -177,23 +187,13 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 /// Note: This interface may still be subject to change.
 ///
 
-
-Value help(const Array& params, bool fHelp)
+string CRPCTable::help(string strCommand) const
 {
-    if (fHelp || params.size() > 1)
-        throw runtime_error(
-            "help [command]\n"
-            "List commands, or get help for a command.");
-
-    string strCommand;
-    if (params.size() > 0)
-        strCommand = params[0].get_str();
-
     string strRet;
     set<rpcfn_type> setDone;
-    for (map<string, CRPCCommand*>::iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
+    for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
     {
-        CRPCCommand *pcmd = mi->second;
+        const CRPCCommand *pcmd = mi->second;
         string strMethod = mi->first;
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod == "getamountreceived" ||
@@ -224,6 +224,20 @@ Value help(const Array& params, bool fHelp)
         strRet = strprintf("help: unknown command: %s\n", strCommand.c_str());
     strRet = strRet.substr(0,strRet.size()-1);
     return strRet;
+}
+
+Value help(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "help [command]\n"
+            "List commands, or get help for a command.");
+
+    string strCommand;
+    if (params.size() > 0)
+        strCommand = params[0].get_str();
+
+    return tableRPC.help(strCommand);
 }
 
 
@@ -2065,15 +2079,8 @@ static CRPCCommand vRPCCommands[] =
     { "importprivkey",          &importprivkey,          false },
 };
 
-map<string, CRPCCommand*> mapCommands;
-
-static void RegisterRPCCommands()
+CRPCTable::CRPCTable()
 {
-    static bool registered = false;
-    if (registered)
-        return;
-    registered = true;
-
     unsigned int vcidx;
     for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
     {
@@ -2084,6 +2091,13 @@ static void RegisterRPCCommands()
     }
 }
 
+const CRPCCommand *CRPCTable::operator[](string name) const
+{
+    map<string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
+    if (it == mapCommands.end())
+        return NULL;
+    return (*it).second;
+}
 
 //
 // HTTP protocol
@@ -2363,8 +2377,6 @@ void ThreadRPCServer2(void* parg)
 {
     printf("ThreadRPCServer started\n");
 
-    RegisterRPCCommands();
-
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     if (mapArgs["-rpcpassword"] == "")
     {
@@ -2516,10 +2528,9 @@ void ThreadRPCServer2(void* parg)
                 throw JSONRPCError(-32600, "Params must be an array");
 
             // Find method
-            if (!mapCommands.count(strMethod))
+            const CRPCCommand *pcmd = tableRPC[strMethod];
+            if (!pcmd)
                 throw JSONRPCError(-32601, "Method not found");
-
-            CRPCCommand *pcmd = mapCommands[strMethod];
 
             // Observe safe mode
             string strWarning = GetWarnings("rpc");
