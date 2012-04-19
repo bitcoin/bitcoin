@@ -195,9 +195,14 @@ bool static Socks4(const CService &addrDest, SOCKET& hSocket)
     return true;
 }
 
-bool static Socks5(const CService &addrDest, SOCKET& hSocket)
+bool static Socks5(string strDest, int port, SOCKET& hSocket)
 {
-    printf("SOCKS5 connecting %s\n", addrDest.ToString().c_str());
+    printf("SOCKS5 connecting %s\n", strDest.c_str());
+    if (strDest.size() > 255)
+    {
+        closesocket(hSocket);
+        return error("Hostname too long");
+    }
     char pszSocks5Init[] = "\5\1\0";
     char *pszSocks5 = pszSocks5Init;
     int nSize = sizeof(pszSocks5Init);
@@ -221,11 +226,10 @@ bool static Socks5(const CService &addrDest, SOCKET& hSocket)
     }
     string strSocks5("\5\1");
     strSocks5 += '\000'; strSocks5 += '\003';
-    string strDest = addrDest.ToStringIP();
     strSocks5 += static_cast<char>(std::min((int)strDest.size(), 255));
-    strSocks5 += strDest;
-    strSocks5 += static_cast<char>((addrDest.GetPort() >> 8) & 0xFF);
-    strSocks5 += static_cast<char>((addrDest.GetPort() >> 0) & 0xFF);
+    strSocks5 += strDest; 
+    strSocks5 += static_cast<char>((port >> 8) & 0xFF);
+    strSocks5 += static_cast<char>((port >> 0) & 0xFF);
     ret = send(hSocket, strSocks5.c_str(), strSocks5.size(), MSG_NOSIGNAL);
     if (ret != strSocks5.size())
     {
@@ -290,11 +294,11 @@ bool static Socks5(const CService &addrDest, SOCKET& hSocket)
         closesocket(hSocket);
         return error("Error reading from proxy");
     }
-    printf("SOCKS5 connected %s\n", addrDest.ToString().c_str());
+    printf("SOCKS5 connected %s\n", strDest.c_str());
     return true;
 }
 
-bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
+bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout)
 {
     hSocketRet = INVALID_SOCKET;
 
@@ -396,6 +400,18 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
         return false;
     }
 
+    hSocketRet = hSocket;
+    return true;
+}
+
+bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
+{
+    SOCKET hSocket = INVALID_SOCKET;
+    bool fProxy = (fUseProxy && addrDest.IsRoutable());
+
+    if (!ConnectSocketDirectly(fProxy ? addrProxy : addrDest, hSocket, nTimeout))
+        return false;
+
     if (fProxy)
     {
         switch(GetArg("-socks", 5))
@@ -407,7 +423,7 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
 
             case 5:
             default:
-                if (!Socks5(addrDest, hSocket))
+                if (!Socks5(addrDest.ToStringIP(), addrDest.GetPort(), hSocket))
                     return false;
                 break;
         } 
