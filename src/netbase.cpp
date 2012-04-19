@@ -15,7 +15,10 @@
 using namespace std;
 
 // Settings
+int nSocksVersion = 5;
 int fUseProxy = false;
+bool fProxyNameLookup = false;
+bool fNameLookup = false;
 CService addrProxy("127.0.0.1",9050);
 int nConnectTimeout = 5000;
 
@@ -310,12 +313,12 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
 
-    bool fProxy = (fUseProxy && addrDest.IsRoutable());
     struct sockaddr_in sockaddr;
-    if (fProxy)
-        addrProxy.GetSockAddr(&sockaddr);
-    else
-        addrDest.GetSockAddr(&sockaddr);
+    if (!addrConnect.GetSockAddr(&sockaddr))
+    {
+        closesocket(hSocket);
+        return false;
+    }
 
 #ifdef WIN32
     u_long fNonblock = 1;
@@ -328,7 +331,6 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
         closesocket(hSocket);
         return false;
     }
-
 
     if (connect(hSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
     {
@@ -414,7 +416,7 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
 
     if (fProxy)
     {
-        switch(GetArg("-socks", 5))
+        switch(nSocksVersion)
         {
             case 4:
                 if (!Socks4(addrDest, hSocket))
@@ -428,6 +430,48 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
                 break;
         } 
     }
+
+    hSocketRet = hSocket;
+    return true;
+}
+
+bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout)
+{
+    string strDest(pszDest);
+    int port = portDefault;
+
+    size_t colon = strDest.find_last_of(':');
+    char *endp = NULL;
+    int n = strtol(pszDest + colon + 1, &endp, 10);
+    if (endp && *endp == 0 && n >= 0) {
+        strDest = strDest.substr(0, colon);
+        if (n > 0 && n < 0x10000)
+            port = n;
+    }
+    if (strDest[0] == '[' && strDest[strDest.size()-1] == ']')
+        strDest = strDest.substr(1, strDest.size()-2);
+
+    SOCKET hSocket = INVALID_SOCKET;
+    CService addrResolved(CNetAddr(strDest, fNameLookup && !fProxyNameLookup), port);
+    if (addrResolved.IsValid()) {
+        addr = addrResolved;
+        return ConnectSocket(addr, hSocketRet, nTimeout);
+    }
+    addr = CService("0.0.0.0:0");
+    if (!fNameLookup)
+        return false;
+    if (!ConnectSocketDirectly(addrProxy, hSocket, nTimeout))
+        return false;
+
+    switch(nSocksVersion)
+        {
+            case 4: return false;
+            case 5:
+            default:
+                if (!Socks5(strDest, port, hSocket))
+                    return false;
+                break;
+        }
 
     hSocketRet = hSocket;
     return true;

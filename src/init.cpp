@@ -181,6 +181,7 @@ bool AppInit2(int argc, char* argv[])
             "  -proxy=<ip:port> \t  "   + _("Connect through socks proxy") + "\n" +
             "  -socks=<n>       \t  "   + _("Select the version of socks proxy to use (4 or 5, 5 is default)") + "\n" +
             "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect") + "\n" +
+            "  -proxydns        \t  "   + _("Pass DNS requests to (SOCKS5) proxy") + "\n" +
             "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n" +
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
@@ -524,13 +525,16 @@ bool AppInit2(int argc, char* argv[])
         // Note: the GetBoolArg() calls for all of these must happen later.
         SoftSetBoolArg("-listen", false);
         SoftSetBoolArg("-irc", false);
-        SoftSetBoolArg("-dnsseed", false);
+        SoftSetBoolArg("-proxydns", true);
         SoftSetBoolArg("-upnp", false);
-        SoftSetBoolArg("-dns", false);
     }
 
-    fAllowDNS = GetBoolArg("-dns");
+    fNameLookup = GetBoolArg("-dns");
+    fProxyNameLookup = GetBoolArg("-proxydns");
+    if (fProxyNameLookup)
+        fNameLookup = true;
     fNoListen = !GetBoolArg("-listen", true);
+    nSocksVersion = GetArg("-socks", 5);
 
     // Continue to put "/P2SH/" in the coinbase to monitor
     // BIP16 support.
@@ -545,17 +549,6 @@ bool AppInit2(int argc, char* argv[])
         {
             ThreadSafeMessageBox(strError, _("Bitcoin"), wxOK | wxMODAL);
             return false;
-        }
-    }
-
-    if (mapArgs.count("-addnode"))
-    {
-        BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
-        {
-            CAddress addr(CService(strAddr, GetDefaultPort(), fAllowDNS));
-            addr.nTime = 0; // so it won't relay unless successfully connected
-            if (addr.IsValid())
-                addrman.Add(addr, CNetAddr("127.0.0.1"));
         }
     }
 
