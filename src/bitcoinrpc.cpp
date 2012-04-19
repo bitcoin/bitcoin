@@ -1930,10 +1930,74 @@ Value repairwallet(const Array& params, bool fHelp)
     return result;
 }
 
+extern CCriticalSection cs_mapAlerts;
+extern map<uint256, CAlert> mapAlerts;
 
+// ppcoin: send alert
+Value sendalert(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 5)
+	throw runtime_error(
+            "sendalert <message> <privatekey> <minver> <maxver> <id> [cancelupto]\n"
+            "<message> is the alert text message\n"
+            "<privatekey> is hex string of alert master private key\n"
+            "<minver> is the minimum applicable client version\n"
+            "<maxver> is the maximum applicable client version\n"
+            "<id> is the alert id\n"
+            "[cancelupto] cancels all alert id's up to this number\n"
+            "Returns true or false.");    
 
+    CAlert alert;
+    CKey key;
 
+    alert.strStatusBar = params[0].get_str();
+    alert.nMinVer = params[2].get_int();
+    alert.nMaxVer = params[3].get_int();
+    alert.nID = params[4].get_int();
+    if (params.size() > 5)
+        alert.nCancel = params[5].get_int();
+    alert.nVersion = VERSION;
+    alert.nRelayUntil = GetAdjustedTime() + 365*24*60*60;
+    alert.nExpiration = GetAdjustedTime() + 365*24*60*60;
+    alert.nPriority = 1;
 
+    CDataStream sMsg;
+    sMsg << (CUnsignedAlert)alert;
+    alert.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
+    
+    vector<unsigned char> vchPrivKey = ParseHex(params[1].get_str());
+    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+    if (!key.Sign(Hash(alert.vchMsg.begin(), alert.vchMsg.end()), alert.vchSig))
+        throw runtime_error(
+            "Unable to sign alert, check private key?\n");  
+    alert.ProcessAlert();
+    // Relay alert
+    CRITICAL_BLOCK(cs_vNodes)
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            alert.RelayTo(pnode);
+
+    Object result;
+    result.push_back(Pair("strStatusBar", alert.strStatusBar));
+    result.push_back(Pair("nVersion", alert.nVersion));
+    result.push_back(Pair("nMinVer", alert.nMinVer));
+    result.push_back(Pair("nMaxVer", alert.nMaxVer));
+    result.push_back(Pair("nID", alert.nID));
+    if (alert.nCancel > 0)
+        result.push_back(Pair("nCancel", alert.nCancel));
+    return result;
+}
+
+Value makekeypair(const Array& params, bool fHelp)
+{
+    CKey key;
+    key.MakeNewKey();
+    CPrivKey vchPrivKey = key.GetPrivKey();
+
+    Object result;
+    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
+    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey())));
+    return result;
+}
 
 //
 // Call Table
@@ -1986,6 +2050,8 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("reservebalance",         &reservebalance),
     make_pair("checkwallet",            &checkwallet),
     make_pair("repairwallet",           &repairwallet),
+    make_pair("sendalert",              &sendalert),
+    make_pair("makekeypair",            &makekeypair),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
@@ -2612,6 +2678,10 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
         if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
+        if (strMethod == "sendalert"              && n > 2) ConvertTo<boost::int64_t>(params[2]);
+        if (strMethod == "sendalert"              && n > 3) ConvertTo<boost::int64_t>(params[3]);
+        if (strMethod == "sendalert"              && n > 4) ConvertTo<boost::int64_t>(params[4]);
+        if (strMethod == "sendalert"              && n > 5) ConvertTo<boost::int64_t>(params[5]);
         if (strMethod == "sendmany"               && n > 1)
         {
             string s = params[1].get_str();
