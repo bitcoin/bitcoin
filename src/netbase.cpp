@@ -219,32 +219,15 @@ bool static Socks5(const CService &addrDest, SOCKET& hSocket)
         closesocket(hSocket);
         return error("Proxy failed to initialize");
     }
-    char pszSocks5IPv4[] = "\5\1\0\1\0\0\0\0\0\0";
-    char pszSocks5IPv6[] = "\5\1\0\4\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-    if (addrDest.IsIPv4())
-    {
-        struct sockaddr_in addr;
-        addrDest.GetSockAddr(&addr);
-        memcpy(pszSocks5IPv4 + 4, &addr.sin_addr, 4);
-        memcpy(pszSocks5IPv4 + 8, &addr.sin_port, 2);
-        pszSocks5 = pszSocks5IPv4;
-        nSize = sizeof(pszSocks5IPv4);
-    }
-    else
-    {
-#ifdef USE_IPV6
-        struct sockaddr_in6 addr;
-        addrDest.GetSockAddr6(&addr);
-        memcpy(pszSocks5IPv6 + 4, &addr.sin6_addr, 16);
-        memcpy(pszSocks5IPv6 + 20, &addr.sin6_port, 2);
-        pszSocks5 = pszSocks5IPv6;
-        nSize = sizeof(pszSocks5IPv6);
-#else
-        return error("IPv6 support is not compiled in");
-#endif
-    }
-    ret = send(hSocket, pszSocks5, nSize, MSG_NOSIGNAL);
-    if (ret != nSize)
+    string strSocks5("\5\1");
+    strSocks5 += '\000'; strSocks5 += '\003';
+    string strDest = addrDest.ToStringIP();
+    strSocks5 += static_cast<char>(std::min((int)strDest.size(), 255));
+    strSocks5 += strDest;
+    strSocks5 += static_cast<char>((addrDest.GetPort() >> 8) & 0xFF);
+    strSocks5 += static_cast<char>((addrDest.GetPort() >> 0) & 0xFF);
+    ret = send(hSocket, strSocks5.c_str(), strSocks5.size(), MSG_NOSIGNAL);
+    if (ret != strSocks5.size())
     {
         closesocket(hSocket);
         return error("Error sending to proxy");
