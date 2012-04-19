@@ -42,7 +42,7 @@ static const int CADDR_TIME_VERSION = 31402;
 static const int NOBLKS_VERSION_START = 32000;
 static const int NOBLKS_VERSION_END = 32400;
 
-// BIP 0031, pong message, is enabled for all versions AFTER this one
-static const int BIP0031_VERSION = 60000;
+// BIP 0031, pong message, is enabled for all versions starting with this one
+static const int BIP0031_VERSION = 60001;
 
 #endif
