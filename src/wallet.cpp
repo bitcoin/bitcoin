@@ -1114,7 +1114,7 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
                 break;
             }
         }
-        if (nCredit > nBalance - nBalanceReserve)
+        if (nCredit == 0 || nCredit > nBalance - nBalanceReserve)
             return false;
         // Calculate coin age reward
         {
