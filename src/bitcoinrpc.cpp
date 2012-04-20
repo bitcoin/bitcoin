@@ -10,6 +10,7 @@
 #include "net.h"
 #include "init.h"
 #include "ui_interface.h"
+#include "bitcoinrpc.h"
 
 #undef printf
 #include <boost/asio.hpp>
@@ -22,9 +23,6 @@
 #include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
-#include "json/json_spirit_utils.h"
 #define printf OutputDebugStringF
 // MinGW 3.4.5 gets "fatal error: had to relocate PCH" if the json headers are
 // precompiled in headers.h.  The problem might be when the pch file goes over
@@ -37,27 +35,6 @@ using namespace boost::asio;
 using namespace json_spirit;
 
 void ThreadRPCServer2(void* parg);
-typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
-
-class CRPCCommand
-{
-public:
-    string name;
-    rpcfn_type actor;
-    bool okSafeMode;
-};
-
-class CRPCTable
-{
-private:
-    map<string, const CRPCCommand*> mapCommands;
-public:
-    CRPCTable();
-    const CRPCCommand* operator[](string name) const;
-    string help(string name) const;
-};
-
-const CRPCTable tableRPC;
 
 static std::string strRPCUserColonPass;
 
@@ -2028,7 +2005,7 @@ Value getblock(const Array& params, bool fHelp)
 //
 
 
-static CRPCCommand vRPCCommands[] =
+static const CRPCCommand vRPCCommands[] =
 { //  name                      function                 safe mode?
   //  ------------------------  -----------------------  ----------
     { "help",                   &help,                   true },
@@ -2084,7 +2061,7 @@ CRPCTable::CRPCTable()
     unsigned int vcidx;
     for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
     {
-        CRPCCommand *pcmd;
+        const CRPCCommand *pcmd;
 
         pcmd = &vRPCCommands[vcidx];
         mapCommands[pcmd->name] = pcmd;
@@ -2785,3 +2762,5 @@ int main(int argc, char *argv[])
     return 0;
 }
 #endif
+
+const CRPCTable tableRPC;
