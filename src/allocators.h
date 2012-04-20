@@ -5,6 +5,7 @@
 #ifndef BITCOIN_ALLOCATORS_H
 #define BITCOIN_ALLOCATORS_H
 
+#include <string.h>
 #include <string>
 
 #ifdef WIN32
