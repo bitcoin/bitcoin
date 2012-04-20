@@ -1933,7 +1933,10 @@ Value repairwallet(const Array& params, bool fHelp)
 extern CCriticalSection cs_mapAlerts;
 extern map<uint256, CAlert> mapAlerts;
 
-// ppcoin: send alert
+// ppcoin: send alert.  
+// There is a known deadlock situation with ThreadMessageHandler
+// ThreadMessageHandler: holds cs_vSend and acquiring cs_main in SendMessages()
+// ThreadRPCServer: holds cs_main and acquiring cs_vSend in alert.RelayTo()/PushMessage()/BeginMessage()
 Value sendalert(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 5)
@@ -1970,7 +1973,9 @@ Value sendalert(const Array& params, bool fHelp)
     if (!key.Sign(Hash(alert.vchMsg.begin(), alert.vchMsg.end()), alert.vchSig))
         throw runtime_error(
             "Unable to sign alert, check private key?\n");  
-    alert.ProcessAlert();
+    if(!alert.ProcessAlert()) 
+        throw runtime_error(
+            "Failed to process alert.\n");
     // Relay alert
     CRITICAL_BLOCK(cs_vNodes)
         BOOST_FOREACH(CNode* pnode, vNodes)
