@@ -1,0 +1,25 @@
+[
+["", ""],
+["", "NOP"],
+["NOP", ""],
+["NOP","NOP"],
+["0 1","EQUAL"],
+["1 1 ADD", "0 EQUAL"],
+["11 1 ADD 12 SUB", "11 EQUAL"],
+
+["2147483648 0 ADD", "NOP", "arithmetic operands must be in range [-2^31...2^31] "],
+["-2147483648 0 ADD", "NOP", "arithmetic operands must be in range [-2^31...2^31] "],
+["2147483647 DUP ADD", "4294967294 NUMEQUAL", "NUMEQUAL must be in numeric range"],
+["0xaabbccddeeff NOT", "0 EQUAL", "NOT is an arithmetic operand"],
+
+["2 DUP MUL", "4 EQUAL", "disabled"],
+["2 DUP DIV", "1 EQUAL", "disabled"],
+["2 2MUL", "4 EQUAL", "disabled"],
+["2 2DIV", "1 EQUAL", "disabled"],
+["7 3 MOD", "1 EQUAL", "disabled"],
+["2 2 LSHIFT", "8 EQUAL", "disabled"],
+["2 1 RSHIFT", "1 EQUAL", "disabled"],
+
+
+["NOP1","NOP10"]
+]
