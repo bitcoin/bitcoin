@@ -1760,17 +1760,30 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+
+Value accepttxn(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "accepttxn <txid>\n"
+            "Accepts the transaction into mined blocks without a fee");
+
+    return AcceptTransaction(params[0].get_str());
+}
+
+
 Value getwork(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "getwork [data]\n"
+            "getwork [data] [txid]\n"
             "If [data] is not specified, returns formatted hash data to work on:\n"
             "  \"midstate\" : precomputed hash state after hashing the first half of the data (DEPRECATED)\n" // deprecated
             "  \"data\" : block data\n"
             "  \"hash1\" : formatted hash buffer for second hash (DEPRECATED)\n" // deprecated
             "  \"target\" : little endian hash target\n"
-            "If [data] is specified, tries to solve the block and returns true if it was successful.");
+            "If [data] is specified, tries to solve the block and returns true if it was successful.\n"
+            "If [txid] is specified, silently tries to accept the transaction without a fee.");
 
     if (vNodes.empty())
         throw JSONRPCError(-9, "Bitcoin is not connected!");
@@ -1782,6 +1795,9 @@ Value getwork(const Array& params, bool fHelp)
     static mapNewBlock_t mapNewBlock;
     static vector<CBlock*> vNewBlock;
     static CReserveKey reservekey(pwalletMain);
+
+    if (params.size() > 1)
+        AcceptTransaction(params[1].get_str());
 
     if (params.size() == 0)
     {
@@ -2044,6 +2060,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("listtransactions",       &listtransactions),
     make_pair("signmessage",            &signmessage),
     make_pair("verifymessage",          &verifymessage),
+    make_pair("accepttxn",              &accepttxn),
     make_pair("getwork",                &getwork),
     make_pair("listaccounts",           &listaccounts),
     make_pair("settxfee",               &settxfee),
@@ -2076,6 +2093,7 @@ string pAllowInSafeMode[] =
     "walletpassphrase",
     "walletlock",
     "validateaddress",
+    "accepttxn",
     "getwork",
     "getmemorypool",
 };
