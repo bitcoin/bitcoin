@@ -513,6 +513,14 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
+    if (mapArgs.count("-connect"))
+    {
+        SoftSetBoolArg("-listen", false);
+        SoftSetBoolArg("-irc", false);
+        SoftSetBoolArg("-dnsseed", false);
+        SoftSetBoolArg("-upnp", false);
+    }
+
     bool fTor = (fUseProxy && addrProxy.GetPort() == 9050);
     if (fTor)
     {
