@@ -10,6 +10,7 @@
 #include "net.h"
 #include "init.h"
 #include "ui_interface.h"
+#include "bitcoinrpc.h"
 
 #undef printf
 #include <boost/asio.hpp>
@@ -22,9 +23,6 @@
 #include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
-#include "json/json_spirit_utils.h"
 #define printf OutputDebugStringF
 // MinGW 3.4.5 gets "fatal error: had to relocate PCH" if the json headers are
 // precompiled in headers.h.  The problem might be when the pch file goes over
@@ -37,8 +35,6 @@ using namespace boost::asio;
 using namespace json_spirit;
 
 void ThreadRPCServer2(void* parg);
-typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
-extern map<string, rpcfn_type> mapCallTable;
 
 static std::string strRPCUserColonPass;
 
@@ -168,23 +164,14 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 /// Note: This interface may still be subject to change.
 ///
 
-
-Value help(const Array& params, bool fHelp)
+string CRPCTable::help(string strCommand) const
 {
-    if (fHelp || params.size() > 1)
-        throw runtime_error(
-            "help [command]\n"
-            "List commands, or get help for a command.");
-
-    string strCommand;
-    if (params.size() > 0)
-        strCommand = params[0].get_str();
-
     string strRet;
     set<rpcfn_type> setDone;
-    for (map<string, rpcfn_type>::iterator mi = mapCallTable.begin(); mi != mapCallTable.end(); ++mi)
+    for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
     {
-        string strMethod = (*mi).first;
+        const CRPCCommand *pcmd = mi->second;
+        string strMethod = mi->first;
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod == "getamountreceived" ||
             strMethod == "getallreceived" ||
@@ -196,7 +183,7 @@ Value help(const Array& params, bool fHelp)
         try
         {
             Array params;
-            rpcfn_type pfn = (*mi).second;
+            rpcfn_type pfn = pcmd->actor;
             if (setDone.insert(pfn).second)
                 (*pfn)(params, true);
         }
@@ -214,6 +201,20 @@ Value help(const Array& params, bool fHelp)
         strRet = strprintf("help: unknown command: %s\n", strCommand.c_str());
     strRet = strRet.substr(0,strRet.size()-1);
     return strRet;
+}
+
+Value help(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "help [command]\n"
+            "List commands, or get help for a command.");
+
+    string strCommand;
+    if (params.size() > 0)
+        strCommand = params[0].get_str();
+
+    return tableRPC.help(strCommand);
 }
 
 
@@ -2003,86 +2004,77 @@ Value getblock(const Array& params, bool fHelp)
 // Call Table
 //
 
-pair<string, rpcfn_type> pCallTable[] =
-{
-    make_pair("help",                   &help),
-    make_pair("stop",                   &stop),
-    make_pair("getblockcount",          &getblockcount),
-    make_pair("getblocknumber",         &getblocknumber),
-    make_pair("getconnectioncount",     &getconnectioncount),
-    make_pair("getdifficulty",          &getdifficulty),
-    make_pair("getgenerate",            &getgenerate),
-    make_pair("setgenerate",            &setgenerate),
-    make_pair("gethashespersec",        &gethashespersec),
-    make_pair("getinfo",                &getinfo),
-    make_pair("getmininginfo",          &getmininginfo),
-    make_pair("getnewaddress",          &getnewaddress),
-    make_pair("getaccountaddress",      &getaccountaddress),
-    make_pair("setaccount",             &setaccount),
-    make_pair("getaccount",             &getaccount),
-    make_pair("getaddressesbyaccount",  &getaddressesbyaccount),
-    make_pair("sendtoaddress",          &sendtoaddress),
-    make_pair("getreceivedbyaddress",   &getreceivedbyaddress),
-    make_pair("getreceivedbyaccount",   &getreceivedbyaccount),
-    make_pair("listreceivedbyaddress",  &listreceivedbyaddress),
-    make_pair("listreceivedbyaccount",  &listreceivedbyaccount),
-    make_pair("backupwallet",           &backupwallet),
-    make_pair("keypoolrefill",          &keypoolrefill),
-    make_pair("walletpassphrase",       &walletpassphrase),
-    make_pair("walletpassphrasechange", &walletpassphrasechange),
-    make_pair("walletlock",             &walletlock),
-    make_pair("encryptwallet",          &encryptwallet),
-    make_pair("validateaddress",        &validateaddress),
-    make_pair("getbalance",             &getbalance),
-    make_pair("move",                   &movecmd),
-    make_pair("sendfrom",               &sendfrom),
-    make_pair("sendmany",               &sendmany),
-    make_pair("addmultisigaddress",     &addmultisigaddress),
-    make_pair("getblock",               &getblock),
-    make_pair("getblockhash",           &getblockhash),
-    make_pair("gettransaction",         &gettransaction),
-    make_pair("listtransactions",       &listtransactions),
-    make_pair("signmessage",            &signmessage),
-    make_pair("verifymessage",          &verifymessage),
-    make_pair("getwork",                &getwork),
-    make_pair("listaccounts",           &listaccounts),
-    make_pair("settxfee",               &settxfee),
-    make_pair("getmemorypool",          &getmemorypool),
-    make_pair("listsinceblock",         &listsinceblock),
-    make_pair("dumpprivkey",            &dumpprivkey),
-    make_pair("importprivkey",          &importprivkey)
+
+static const CRPCCommand vRPCCommands[] =
+{ //  name                      function                 safe mode?
+  //  ------------------------  -----------------------  ----------
+    { "help",                   &help,                   true },
+    { "stop",                   &stop,                   true },
+    { "getblockcount",          &getblockcount,          true },
+    { "getblocknumber",         &getblocknumber,         true },
+    { "getconnectioncount",     &getconnectioncount,     true },
+    { "getdifficulty",          &getdifficulty,          true },
+    { "getgenerate",            &getgenerate,            true },
+    { "setgenerate",            &setgenerate,            true },
+    { "gethashespersec",        &gethashespersec,        true },
+    { "getinfo",                &getinfo,                true },
+    { "getmininginfo",          &getmininginfo,          true },
+    { "getnewaddress",          &getnewaddress,          true },
+    { "getaccountaddress",      &getaccountaddress,      true },
+    { "setaccount",             &setaccount,             true },
+    { "getaccount",             &getaccount,             false },
+    { "getaddressesbyaccount",  &getaddressesbyaccount,  true },
+    { "sendtoaddress",          &sendtoaddress,          false },
+    { "getreceivedbyaddress",   &getreceivedbyaddress,   false },
+    { "getreceivedbyaccount",   &getreceivedbyaccount,   false },
+    { "listreceivedbyaddress",  &listreceivedbyaddress,  false },
+    { "listreceivedbyaccount",  &listreceivedbyaccount,  false },
+    { "backupwallet",           &backupwallet,           true },
+    { "keypoolrefill",          &keypoolrefill,          true },
+    { "walletpassphrase",       &walletpassphrase,       true },
+    { "walletpassphrasechange", &walletpassphrasechange, false },
+    { "walletlock",             &walletlock,             true },
+    { "encryptwallet",          &encryptwallet,          false },
+    { "validateaddress",        &validateaddress,        true },
+    { "getbalance",             &getbalance,             false },
+    { "move",                   &movecmd,                false },
+    { "sendfrom",               &sendfrom,               false },
+    { "sendmany",               &sendmany,               false },
+    { "addmultisigaddress",     &addmultisigaddress,     false },
+    { "getblock",               &getblock,               false },
+    { "getblockhash",           &getblockhash,           false },
+    { "gettransaction",         &gettransaction,         false },
+    { "listtransactions",       &listtransactions,       false },
+    { "signmessage",            &signmessage,            false },
+    { "verifymessage",          &verifymessage,          false },
+    { "getwork",                &getwork,                true },
+    { "listaccounts",           &listaccounts,           false },
+    { "settxfee",               &settxfee,               false },
+    { "getmemorypool",          &getmemorypool,          true },
+    { "listsinceblock",         &listsinceblock,         false },
+    { "dumpprivkey",            &dumpprivkey,            false },
+    { "importprivkey",          &importprivkey,          false },
 };
-map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
-string pAllowInSafeMode[] =
+CRPCTable::CRPCTable()
 {
-    "help",
-    "stop",
-    "getblockcount",
-    "getblocknumber",  // deprecated
-    "getconnectioncount",
-    "getdifficulty",
-    "getgenerate",
-    "setgenerate",
-    "gethashespersec",
-    "getinfo",
-    "getmininginfo",
-    "getnewaddress",
-    "getaccountaddress",
-    "getaccount",
-    "getaddressesbyaccount",
-    "backupwallet",
-    "keypoolrefill",
-    "walletpassphrase",
-    "walletlock",
-    "validateaddress",
-    "getwork",
-    "getmemorypool",
-};
-set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
+    unsigned int vcidx;
+    for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
+    {
+        const CRPCCommand *pcmd;
 
+        pcmd = &vRPCCommands[vcidx];
+        mapCommands[pcmd->name] = pcmd;
+    }
+}
 
-
+const CRPCCommand *CRPCTable::operator[](string name) const
+{
+    map<string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
+    if (it == mapCommands.end())
+        return NULL;
+    return (*it).second;
+}
 
 //
 // HTTP protocol
@@ -2513,13 +2505,14 @@ void ThreadRPCServer2(void* parg)
                 throw JSONRPCError(-32600, "Params must be an array");
 
             // Find method
-            map<string, rpcfn_type>::iterator mi = mapCallTable.find(strMethod);
-            if (mi == mapCallTable.end())
+            const CRPCCommand *pcmd = tableRPC[strMethod];
+            if (!pcmd)
                 throw JSONRPCError(-32601, "Method not found");
 
             // Observe safe mode
             string strWarning = GetWarnings("rpc");
-            if (strWarning != "" && !GetBoolArg("-disablesafemode") && !setAllowInSafeMode.count(strMethod))
+            if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
+                !pcmd->okSafeMode)
                 throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
 
             try
@@ -2528,7 +2521,7 @@ void ThreadRPCServer2(void* parg)
                 Value result;
                 {
                     LOCK2(cs_main, pwalletMain->cs_wallet);
-                    result = (*(*mi).second)(params, false);
+                    result = pcmd->actor(params, false);
                 }
 
                 // Send reply
@@ -2769,3 +2762,5 @@ int main(int argc, char *argv[])
     return 0;
 }
 #endif
+
+const CRPCTable tableRPC;
