@@ -317,10 +317,10 @@ public:
     std::vector<char> vfSpent; // which outputs are already spent
 
     // memory only
-    mutable char fDebitCached;
-    mutable char fCreditCached;
-    mutable char fAvailableCreditCached;
-    mutable char fChangeCached;
+    mutable bool fDebitCached;
+    mutable bool fCreditCached;
+    mutable bool fAvailableCreditCached;
+    mutable bool fChangeCached;
     mutable int64 nDebitCached;
     mutable int64 nCreditCached;
     mutable int64 nAvailableCreditCached;
