@@ -326,11 +326,6 @@ public:
     mutable int64 nAvailableCreditCached;
     mutable int64 nChangeCached;
 
-    // memory only UI hints
-    mutable unsigned int nTimeDisplayed;
-    mutable int nLinesDisplayed;
-    mutable char fConfirmedDisplayed;
-
     CWalletTx()
     {
         Init(NULL);
@@ -370,9 +365,6 @@ public:
         nCreditCached = 0;
         nAvailableCreditCached = 0;
         nChangeCached = 0;
-        nTimeDisplayed = 0;
-        nLinesDisplayed = 0;
-        fConfirmedDisplayed = false;
     }
 
     IMPLEMENT_SERIALIZE
