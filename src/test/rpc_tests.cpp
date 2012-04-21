@@ -3,15 +3,10 @@
 
 #include "base58.h"
 #include "util.h"
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
-#include "json/json_spirit_utils.h"
+#include "bitcoinrpc.h"
 
 using namespace std;
 using namespace json_spirit;
-
-typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
-extern map<string, rpcfn_type> mapCallTable;
 
 BOOST_AUTO_TEST_SUITE(rpc_tests)
 
@@ -36,7 +31,7 @@ struct TestNetFixture
 
 BOOST_FIXTURE_TEST_CASE(rpc_addmultisig, TestNetFixture)
 {
-    rpcfn_type addmultisig = mapCallTable["addmultisigaddress"];
+    rpcfn_type addmultisig = tableRPC["addmultisigaddress"]->actor;
 
     // old, 65-byte-long:
     const char* address1Hex = "0434e3e09f49ea168c5bbf53f877ff4206923858aab7c7e1df25bc263978107c95e35065a27ef6f1b27222db0ec97e0e895eaca603d3ee0d4c060ce3d8a00286c8";
