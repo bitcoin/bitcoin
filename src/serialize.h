@@ -1083,7 +1083,6 @@ public:
     int nType;
     int nVersion;
 
-    typedef FILE element_type;
 
     CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn)
     {
