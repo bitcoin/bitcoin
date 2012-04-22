@@ -1540,7 +1540,16 @@ bool CBlock::AcceptBlock()
     CBlockIndex* pindexPrev = (*mi).second;
     int nHeight = pindexPrev->nHeight+1;
 
-    // Check proof of work
+    // ppcoin: check for coinstake duplicate
+    if (IsProofOfStake())
+    {   // check if coinstake is already connected; that would imply the owner
+        // of the coinstake sent multiple blocks with the same coinstake
+        CTxIndex txindex;
+        if (CTxDB("r").ReadTxIndex(vtx[1].GetHash(), txindex))
+            return error("AcceptBlock() : block %s has duplicate coinstake %s", hash.ToString().c_str(), vtx[1].GetHash().ToString().c_str());
+    }
+
+    // Check proof-of-work or proof-of-stake
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
         return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 
@@ -1608,7 +1617,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         bnNewBlock.SetCompact(pblock->nBits);
         CBigNum bnRequired;
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        if (bnNewBlock > bnRequired)
+        if (pblock->IsProofOfWork() && bnNewBlock > bnRequired)
         {
             pfrom->Misbehaving(100);
             return error("ProcessBlock() : block with too little proof-of-work");
