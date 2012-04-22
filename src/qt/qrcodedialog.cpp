@@ -49,12 +49,12 @@ void QRCodeDialog::genCode()
         myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
         myImage.fill(0xffffff);
         unsigned char *p = code->data;
-        for (int y = 0; y < code->width; y++)
+        for (int y = 0; y < code->width; ++y)
         {
-            for (int x = 0; x < code->width; x++)
+            for (int x = 0; x < code->width; ++x)
             {
                 myImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
-                p++;
+                ++p;
             }
         }
         QRcode_free(code);
@@ -76,7 +76,7 @@ QString QRCodeDialog::getURI()
         if (ok)
         {
             ret += QString("?amount=%1").arg(ui->lnReqAmount->text());
-            paramCount++;
+            ++paramCount;
         }
     }
 
@@ -84,14 +84,14 @@ QString QRCodeDialog::getURI()
     {
         QString lbl(QUrl::toPercentEncoding(ui->lnLabel->text()));
         ret += QString("%1label=%2").arg(paramCount == 0 ? "?" : "&").arg(lbl);
-        paramCount++;
+        ++paramCount;
     }
 
     if (!ui->lnMessage->text().isEmpty())
     {
         QString msg(QUrl::toPercentEncoding(ui->lnMessage->text()));
         ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
-        paramCount++;
+        ++paramCount;
     }
 
     // limit URI length to 255 chars, to prevent a DoS against the QR-Code dialog

@@ -449,13 +449,13 @@ public:
     {
         if (vin.size() != old.vin.size())
             return false;
-        for (unsigned int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); ++i)
             if (vin[i].prevout != old.vin[i].prevout)
                 return false;
 
         bool fNewer = false;
         unsigned int nLowest = std::numeric_limits<unsigned int>::max();
-        for (unsigned int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); ++i)
         {
             if (vin[i].nSequence != old.vin[i].nSequence)
             {
@@ -629,9 +629,9 @@ public:
             vin.size(),
             vout.size(),
             nLockTime);
-        for (unsigned int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); ++i)
             str += "    " + vin[i].ToString() + "\n";
-        for (unsigned int i = 0; i < vout.size(); i++)
+        for (unsigned int i = 0; i < vout.size(); ++i)
             str += "    " + vout[i].ToString() + "\n";
         return str;
     }
@@ -995,13 +995,13 @@ public:
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             nTime, nBits, nNonce,
             vtx.size());
-        for (unsigned int i = 0; i < vtx.size(); i++)
+        for (unsigned int i = 0; i < vtx.size(); ++i)
         {
             printf("  ");
             vtx[i].print();
         }
         printf("  vMerkleTree: ");
-        for (unsigned int i = 0; i < vMerkleTree.size(); i++)
+        for (unsigned int i = 0; i < vMerkleTree.size(); ++i)
             printf("%s ", vMerkleTree[i].ToString().substr(0,10).c_str());
         printf("\n");
     }
@@ -1150,7 +1150,7 @@ public:
         int64* pend = &pmedian[nMedianTimeSpan];
 
         const CBlockIndex* pindex = this;
-        for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
+        for (int i = 0; i < nMedianTimeSpan && pindex; ++i, pindex = pindex->pprev)
             *(--pbegin) = pindex->GetBlockTime();
 
         std::sort(pbegin, pend);
@@ -1160,7 +1160,7 @@ public:
     int64 GetMedianTime() const
     {
         const CBlockIndex* pindex = this;
-        for (int i = 0; i < nMedianTimeSpan/2; i++)
+        for (int i = 0; i < nMedianTimeSpan/2; ++i)
         {
             if (!pindex->pnext)
                 return GetBlockTime();
@@ -1319,7 +1319,7 @@ public:
             vHave.push_back(pindex->GetBlockHash());
 
             // Exponentially larger steps back
-            for (int i = 0; pindex && i < nStep; i++)
+            for (int i = 0; pindex && i < nStep; ++i)
                 pindex = pindex->pprev;
             if (vHave.size() > 10)
                 nStep *= 2;

@@ -27,7 +27,7 @@ void dumpKeyInfo(uint256 privkey)
     memcpy(&sec[0], &secret[0], 32);
     printf("  * secret (hex): %s\n", HexStr(sec).c_str());
 
-    for (int nCompressed=0; nCompressed<2; nCompressed++)
+    for (int nCompressed=0; nCompressed<2; ++nCompressed)
     {
         bool fCompressed = nCompressed == 1;
         printf("  * %s:\n", fCompressed ? "compressed" : "uncompressed");
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(CBitcoinAddress(key1C.GetPubKey()).ToString() == "1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
     BOOST_CHECK(CBitcoinAddress(key2C.GetPubKey()).ToString() == "1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
 
-    for (int n=0; n<16; n++)
+    for (int n=0; n<16; ++n)
     {
         string strMsg = strprintf("Very secret message %i: 11", n);
         uint256 hashMsg = Hash(strMsg.begin(), strMsg.end());

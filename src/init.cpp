@@ -53,7 +53,7 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
-        nTransactionsUpdated++;
+        ++nTransactionsUpdated;
         DBFlush(false);
         StopNode();
         DBFlush(true);
@@ -275,7 +275,7 @@ bool AppInit2(int argc, char* argv[])
     fLogTimestamps = GetBoolArg("-logtimestamps");
 
 #ifndef QT_GUI
-    for (int i = 1; i < argc; i++)
+    for (int i = 1; i < argc; ++i)
         if (!IsSwitchChar(argv[i][0]) && !(strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0))
             fCommandLine = true;
 
@@ -494,7 +494,7 @@ bool AppInit2(int argc, char* argv[])
                 block.BuildMerkleTree();
                 block.print();
                 printf("\n");
-                nFound++;
+                ++nFound;
             }
         }
         if (nFound == 0)

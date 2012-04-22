@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(sign)
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
     CBasicKeyStore keystore;
     CKey key[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(sign)
     standardScripts[2] << key[1].GetPubKey() << OP_CHECKSIG;
     standardScripts[3].SetBitcoinAddress(key[2].GetPubKey());
     CScript evalScripts[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         keystore.AddCScript(standardScripts[i]);
         evalScripts[i].SetPayToScriptHash(standardScripts[i]);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(sign)
 
     CTransaction txFrom;  // Funding transaction:
     txFrom.vout.resize(8);
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         txFrom.vout[i].scriptPubKey = evalScripts[i];
         txFrom.vout[i+4].scriptPubKey = standardScripts[i];
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(sign)
     BOOST_CHECK(txFrom.IsStandard());
 
     CTransaction txTo[8]; // Spending transactions
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; ++i)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
@@ -94,14 +94,14 @@ BOOST_AUTO_TEST_CASE(sign)
         txTo[i].vout[0].nValue = 1;
         BOOST_CHECK_MESSAGE(IsMine(keystore, txFrom.vout[i].scriptPubKey), strprintf("IsMine %d", i));
     }
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; ++i)
     {
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
     }
     // All of the above should be OK, and the txTos have valid signatures
     // Check to make sure signature verification fails if we use the wrong ScriptSig:
-    for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
+    for (int i = 0; i < 8; ++i)
+        for (int j = 0; j < 8; ++j)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(set)
     CBasicKeyStore keystore;
     CKey key[4];
     std::vector<CKey> keys;
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(set)
     inner[3].SetMultisig(2, std::vector<CKey>(keys.begin(), keys.begin()+3));
 
     CScript outer[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         outer[i].SetPayToScriptHash(inner[i]);
         keystore.AddCScript(inner[i]);
@@ -168,14 +168,14 @@ BOOST_AUTO_TEST_CASE(set)
 
     CTransaction txFrom;  // Funding transaction:
     txFrom.vout.resize(4);
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         txFrom.vout[i].scriptPubKey = outer[i];
     }
     BOOST_CHECK(txFrom.IsStandard());
 
     CTransaction txTo[4]; // Spending transactions
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(set)
         txTo[i].vout[0].scriptPubKey = inner[i];
         BOOST_CHECK_MESSAGE(IsMine(keystore, txFrom.vout[i].scriptPubKey), strprintf("IsMine %d", i));
     }
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
         BOOST_CHECK_MESSAGE(txTo[i].IsStandard(), strprintf("txTo[%d].IsStandard", i));
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     CBasicKeyStore keystore;
     CKey key[3];
     vector<CKey> keys;
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; ++i)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout[4].scriptPubKey << OP_HASH160 << Hash160(empty) << OP_EQUAL;
     CScript oneOfEleven;
     oneOfEleven << OP_1;
-    for (int i = 0; i < 11; i++)
+    for (int i = 0; i < 11; ++i)
         oneOfEleven << key[0].GetPubKey();
     oneOfEleven << OP_11 << OP_CHECKMULTISIG;
     txFrom.vout[5].scriptPubKey.SetPayToScriptHash(oneOfEleven);
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK_EQUAL(txTo.GetP2SHSigOpCount(mapInputs), 1);
 
     // Make sure adding crap to the scriptSigs makes them non-standard:
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; ++i)
     {
         CScript t = txTo.vin[i].scriptSig;
         txTo.vin[i].scriptSig = (CScript() << 11) + t;

@@ -23,7 +23,7 @@ extern void CloseDb(const string& strFile);
 
 bool CWalletDB::WriteName(const string& strAddress, const string& strName)
 {
-    nWalletDBUpdated++;
+    ++nWalletDBUpdated;
     return Write(make_pair(string("name"), strAddress), strName);
 }
 
@@ -31,7 +31,7 @@ bool CWalletDB::EraseName(const string& strAddress)
 {
     // This should only be used for sending addresses, never for receiving addresses,
     // receiving addresses must always have an address book entry if they're not change return.
-    nWalletDBUpdated++;
+    ++nWalletDBUpdated;
     return Erase(make_pair(string("name"), strAddress));
 }
 
@@ -359,7 +359,7 @@ void ThreadFlushWalletDB(void* parg)
                 while (mi != mapFileUseCount.end())
                 {
                     nRefCount += (*mi).second;
-                    mi++;
+                    ++mi;
                 }
 
                 if (nRefCount == 0 && !fShutdown)

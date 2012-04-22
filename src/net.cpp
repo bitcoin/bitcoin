@@ -196,8 +196,8 @@ bool GetMyExternalIP(CNetAddr& ipRet)
     if (fNoListen||fUseProxy)
         return false;
 
-    for (int nLookup = 0; nLookup <= 1; nLookup++)
-    for (int nHost = 1; nHost <= 2; nHost++)
+    for (int nLookup = 0; nLookup <= 1; ++nLookup)
+    for (int nHost = 1; nHost <= 2; ++nHost)
     {
         // We should be phasing out our use of sites like these.  If we need
         // replacements, we should ask for volunteers to put this simple
@@ -254,7 +254,7 @@ void ThreadGetMyExternalIP(void* parg)
     // Wait for IRC to get it first
     if (GetBoolArg("-irc", false))
     {
-        for (int i = 0; i < 2 * 60; i++)
+        for (int i = 0; i < 2 * 60; ++i)
         {
             Sleep(1000);
             if (fGotExternalIP || fShutdown)
@@ -370,7 +370,7 @@ CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
         }
         {
             WAITABLE_LOCK(csOutbound);
-            nOutbound++;
+            ++nOutbound;
         }
 
         pnode->nTimeConnected = GetTime();
@@ -480,15 +480,15 @@ void ThreadSocketHandler(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadSocketHandler(parg));
     try
     {
-        vnThreadsRunning[THREAD_SOCKETHANDLER]++;
+        ++vnThreadsRunning[THREAD_SOCKETHANDLER];
         ThreadSocketHandler2(parg);
-        vnThreadsRunning[THREAD_SOCKETHANDLER]--;
+        --vnThreadsRunning[THREAD_SOCKETHANDLER];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_SOCKETHANDLER]--;
+        --vnThreadsRunning[THREAD_SOCKETHANDLER];
         PrintException(&e, "ThreadSocketHandler()");
     } catch (...) {
-        vnThreadsRunning[THREAD_SOCKETHANDLER]--;
+        --vnThreadsRunning[THREAD_SOCKETHANDLER];
         throw; // support pthread_cancel()
     }
     printf("ThreadSocketHandler exiting\n");
@@ -520,7 +520,7 @@ void ThreadSocketHandler2(void* parg)
                     if (!pnode->fInbound)
                         {
                             WAITABLE_LOCK(csOutbound);
-                            nOutbound--;
+                            --nOutbound;
 
                             // Connection slot(s) were removed, notify connection creator(s)
                             NOTIFY(condOutbound);
@@ -613,9 +613,9 @@ void ThreadSocketHandler2(void* parg)
             }
         }
 
-        vnThreadsRunning[THREAD_SOCKETHANDLER]--;
+        --vnThreadsRunning[THREAD_SOCKETHANDLER];
         int nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-        vnThreadsRunning[THREAD_SOCKETHANDLER]++;
+        ++vnThreadsRunning[THREAD_SOCKETHANDLER];
         if (fShutdown)
             return;
         if (nSelect == SOCKET_ERROR)
@@ -624,7 +624,7 @@ void ThreadSocketHandler2(void* parg)
             if (hSocketMax > -1)
             {
                 printf("socket select error %d\n", nErr);
-                for (unsigned int i = 0; i <= hSocketMax; i++)
+                for (unsigned int i = 0; i <= hSocketMax; ++i)
                     FD_SET(i, &fdsetRecv);
             }
             FD_ZERO(&fdsetSend);
@@ -651,7 +651,7 @@ void ThreadSocketHandler2(void* parg)
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
                     if (pnode->fInbound)
-                        nInbound++;
+                        ++nInbound;
             }
 
             if (hSocket == INVALID_SOCKET)
@@ -836,15 +836,15 @@ void ThreadMapPort(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadMapPort(parg));
     try
     {
-        vnThreadsRunning[THREAD_UPNP]++;
+        ++vnThreadsRunning[THREAD_UPNP];
         ThreadMapPort2(parg);
-        vnThreadsRunning[THREAD_UPNP]--;
+        --vnThreadsRunning[THREAD_UPNP];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_UPNP]--;
+        --vnThreadsRunning[THREAD_UPNP];
         PrintException(&e, "ThreadMapPort()");
     } catch (...) {
-        vnThreadsRunning[THREAD_UPNP]--;
+        --vnThreadsRunning[THREAD_UPNP];
         PrintException(NULL, "ThreadMapPort()");
     }
     printf("ThreadMapPort exiting\n");
@@ -943,7 +943,7 @@ void ThreadMapPort2(void* parg)
                     printf("UPnP Port Mapping successful.\n");;
             }
             Sleep(2000);
-            i++;
+            ++i;
         }
     } else {
         printf("No valid UPnP IGDs found\n");
@@ -1001,15 +1001,15 @@ void ThreadDNSAddressSeed(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadDNSAddressSeed(parg));
     try
     {
-        vnThreadsRunning[THREAD_DNSSEED]++;
+        ++vnThreadsRunning[THREAD_DNSSEED];
         ThreadDNSAddressSeed2(parg);
-        vnThreadsRunning[THREAD_DNSSEED]--;
+        --vnThreadsRunning[THREAD_DNSSEED];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_DNSSEED]--;
+        --vnThreadsRunning[THREAD_DNSSEED];
         PrintException(&e, "ThreadDNSAddressSeed()");
     } catch (...) {
-        vnThreadsRunning[THREAD_DNSSEED]--;
+        --vnThreadsRunning[THREAD_DNSSEED];
         throw; // support pthread_cancel()
     }
     printf("ThreadDNSAddressSeed exiting\n");
@@ -1024,7 +1024,7 @@ void ThreadDNSAddressSeed2(void* parg)
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
 
-        for (unsigned int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
+        for (unsigned int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); ++seed_idx) {
             vector<CNetAddr> vaddr;
             vector<CAddress> vAdd;
             if (LookupHost(strDNSSeed[seed_idx][1], vaddr))
@@ -1035,7 +1035,7 @@ void ThreadDNSAddressSeed2(void* parg)
                     CAddress addr = CAddress(CService(ip, GetDefaultPort()));
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
-                    found++;
+                    ++found;
                 }
             }
             addrman.Add(vAdd, CNetAddr(strDNSSeed[seed_idx][0], true));
@@ -1145,15 +1145,15 @@ void DumpAddresses()
 
 void ThreadDumpAddress2(void* parg)
 {
-    vnThreadsRunning[THREAD_DUMPADDRESS]++;
+    ++vnThreadsRunning[THREAD_DUMPADDRESS];
     while (!fShutdown)
     {
         DumpAddresses();
-        vnThreadsRunning[THREAD_DUMPADDRESS]--;
+        --vnThreadsRunning[THREAD_DUMPADDRESS];
         Sleep(100000);
-        vnThreadsRunning[THREAD_DUMPADDRESS]++;
+        ++vnThreadsRunning[THREAD_DUMPADDRESS];
     }
-    vnThreadsRunning[THREAD_DUMPADDRESS]--;
+    --vnThreadsRunning[THREAD_DUMPADDRESS];
 }
 
 void ThreadDumpAddress(void* parg)
@@ -1174,15 +1174,15 @@ void ThreadOpenConnections(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadOpenConnections(parg));
     try
     {
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
+        ++vnThreadsRunning[THREAD_OPENCONNECTIONS];
         ThreadOpenConnections2(parg);
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_OPENCONNECTIONS];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_OPENCONNECTIONS];
         PrintException(&e, "ThreadOpenConnections()");
     } catch (...) {
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_OPENCONNECTIONS];
         PrintException(NULL, "ThreadOpenConnections()");
     }
     printf("ThreadOpenConnections exiting\n");
@@ -1195,14 +1195,14 @@ void ThreadOpenConnections2(void* parg)
     // Connect to specific addresses
     if (mapArgs.count("-connect"))
     {
-        for (int64 nLoop = 0;; nLoop++)
+        for (int64 nLoop = 0;; ++nLoop)
         {
             BOOST_FOREACH(string strAddr, mapMultiArgs["-connect"])
             {
                 CAddress addr(CService(strAddr, GetDefaultPort(), fAllowDNS));
                 if (addr.IsValid())
                     OpenNetworkConnection(addr);
-                for (int i = 0; i < 10 && i < nLoop; i++)
+                for (int i = 0; i < 10 && i < nLoop; ++i)
                 {
                     Sleep(500);
                     if (fShutdown)
@@ -1216,20 +1216,20 @@ void ThreadOpenConnections2(void* parg)
     int64 nStart = GetTime();
     loop
     {
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_OPENCONNECTIONS];
         Sleep(500);
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
+        ++vnThreadsRunning[THREAD_OPENCONNECTIONS];
         if (fShutdown)
             return;
 
         // Limit outbound connections
         int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_OPENCONNECTIONS];
         {
             WAITABLE_LOCK(csOutbound);
             WAIT(condOutbound, fShutdown || nOutbound < nMaxOutbound);
         }
-        vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
+        ++vnThreadsRunning[THREAD_OPENCONNECTIONS];
         if (fShutdown)
             return;
 
@@ -1238,7 +1238,7 @@ void ThreadOpenConnections2(void* parg)
         if (addrman.size()==0 && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
         {
             std::vector<CAddress> vAdd;
-            for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
+            for (unsigned int i = 0; i < ARRAYLEN(pnSeed); ++i)
             {
                 // It'll only connect to one or two seed nodes because once it connects,
                 // it'll get a pile of addresses with newer timestamps.
@@ -1280,7 +1280,7 @@ void ThreadOpenConnections2(void* parg)
             if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.GetGroup()) || addr == addrLocalHost)
                 break;
 
-            nTries++;
+            ++nTries;
 
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr.nLastTry < 600 && nTries < 30)
@@ -1304,15 +1304,15 @@ void ThreadOpenAddedConnections(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadOpenAddedConnections(parg));
     try
     {
-        vnThreadsRunning[THREAD_ADDEDCONNECTIONS]++;
+        ++vnThreadsRunning[THREAD_ADDEDCONNECTIONS];
         ThreadOpenAddedConnections2(parg);
-        vnThreadsRunning[THREAD_ADDEDCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_ADDEDCONNECTIONS];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_ADDEDCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_ADDEDCONNECTIONS];
         PrintException(&e, "ThreadOpenAddedConnections()");
     } catch (...) {
-        vnThreadsRunning[THREAD_ADDEDCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_ADDEDCONNECTIONS];
         PrintException(NULL, "ThreadOpenAddedConnections()");
     }
     printf("ThreadOpenAddedConnections exiting\n");
@@ -1347,12 +1347,12 @@ void ThreadOpenAddedConnections2(void* parg)
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
-                for (vector<vector<CService> >::iterator it = vservConnectAddresses.begin(); it != vservConnectAddresses.end(); it++)
+                for (vector<vector<CService> >::iterator it = vservConnectAddresses.begin(); it != vservConnectAddresses.end(); ++it)
                     BOOST_FOREACH(CService& addrNode, *(it))
                         if (pnode->addr == addrNode)
                         {
                             it = vservConnectAddresses.erase(it);
-                            it--;
+                            --it;
                             break;
                         }
         }
@@ -1365,9 +1365,9 @@ void ThreadOpenAddedConnections2(void* parg)
         }
         if (fShutdown)
             return;
-        vnThreadsRunning[THREAD_ADDEDCONNECTIONS]--;
+        --vnThreadsRunning[THREAD_ADDEDCONNECTIONS];
         Sleep(120000); // Retry every 2 minutes
-        vnThreadsRunning[THREAD_ADDEDCONNECTIONS]++;
+        ++vnThreadsRunning[THREAD_ADDEDCONNECTIONS];
         if (fShutdown)
             return;
     }
@@ -1384,9 +1384,9 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
         FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect))
         return false;
 
-    vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
+    --vnThreadsRunning[THREAD_OPENCONNECTIONS];
     CNode* pnode = ConnectNode(addrConnect);
-    vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
+    ++vnThreadsRunning[THREAD_OPENCONNECTIONS];
     if (fShutdown)
         return false;
     if (!pnode)
@@ -1408,15 +1408,15 @@ void ThreadMessageHandler(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadMessageHandler(parg));
     try
     {
-        vnThreadsRunning[THREAD_MESSAGEHANDLER]++;
+        ++vnThreadsRunning[THREAD_MESSAGEHANDLER];
         ThreadMessageHandler2(parg);
-        vnThreadsRunning[THREAD_MESSAGEHANDLER]--;
+        --vnThreadsRunning[THREAD_MESSAGEHANDLER];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_MESSAGEHANDLER]--;
+        --vnThreadsRunning[THREAD_MESSAGEHANDLER];
         PrintException(&e, "ThreadMessageHandler()");
     } catch (...) {
-        vnThreadsRunning[THREAD_MESSAGEHANDLER]--;
+        --vnThreadsRunning[THREAD_MESSAGEHANDLER];
         PrintException(NULL, "ThreadMessageHandler()");
     }
     printf("ThreadMessageHandler exiting\n");
@@ -1470,11 +1470,11 @@ void ThreadMessageHandler2(void* parg)
         // Wait and allow messages to bunch up.
         // Reduce vnThreadsRunning so StopNode has permission to exit while
         // we're sleeping, but we must always check fShutdown after doing this.
-        vnThreadsRunning[THREAD_MESSAGEHANDLER]--;
+        --vnThreadsRunning[THREAD_MESSAGEHANDLER];
         Sleep(100);
         if (fRequestShutdown)
             Shutdown(NULL);
-        vnThreadsRunning[THREAD_MESSAGEHANDLER]++;
+        ++vnThreadsRunning[THREAD_MESSAGEHANDLER];
         if (fShutdown)
             return;
     }
@@ -1687,13 +1687,13 @@ bool StopNode()
 {
     printf("StopNode()\n");
     fShutdown = true;
-    nTransactionsUpdated++;
+    ++nTransactionsUpdated;
     int64 nStart = GetTime();
     NOTIFY_ALL(condOutbound);
     do
     {
         int nThreadsRunning = 0;
-        for (int n = 0; n < THREAD_MAX; n++)
+        for (int n = 0; n < THREAD_MAX; ++n)
             nThreadsRunning += vnThreadsRunning[n];
         if (nThreadsRunning == 0)
             break;

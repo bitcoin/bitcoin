@@ -215,13 +215,13 @@ public:
         if (nTimeout != 0)
             nReleaseTime = std::max(nReleaseTime, GetTime() + nTimeout);
         else
-            nRefCount++;
+            ++nRefCount;
         return this;
     }
 
     void Release()
     {
-        nRefCount--;
+        --nRefCount;
     }
 
 

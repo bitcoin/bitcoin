@@ -65,7 +65,7 @@ void ipcInit()
         mq = new message_queue(open_or_create, BITCOINURI_QUEUE_NAME, 2, 256);
 
         // Make sure we don't lose any bitcoin: URIs
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 2; ++i)
         {
             ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(1);
             if(mq->timed_receive(&strBuf, sizeof(strBuf), nSize, nPriority, d))

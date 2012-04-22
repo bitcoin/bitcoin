@@ -50,12 +50,12 @@ bool CMessageHeader::IsValid() const
         return false;
 
     // Check the command string for errors
-    for (const char* p1 = pchCommand; p1 < pchCommand + COMMAND_SIZE; p1++)
+    for (const char* p1 = pchCommand; p1 < pchCommand + COMMAND_SIZE; ++p1)
     {
         if (*p1 == 0)
         {
             // Must be all zeros after the first zero
-            for (; p1 < pchCommand + COMMAND_SIZE; p1++)
+            for (; p1 < pchCommand + COMMAND_SIZE; ++p1)
                 if (*p1 != 0)
                     return false;
         }
@@ -108,7 +108,7 @@ CInv::CInv(int typeIn, const uint256& hashIn)
 CInv::CInv(const std::string& strType, const uint256& hashIn)
 {
     unsigned int i;
-    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
+    for (i = 1; i < ARRAYLEN(ppszTypeName); ++i)
     {
         if (strType == ppszTypeName[i])
         {

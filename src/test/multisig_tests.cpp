@@ -45,7 +45,7 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
 BOOST_AUTO_TEST_CASE(multisig_verify)
 {
     CKey key[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
         key[i].MakeNewKey(true);
 
     CScript a_and_b;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     txFrom.vout[2].scriptPubKey = escrow;
 
     CTransaction txTo[3]; // Spending transaction
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; ++i)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     s = sign_multisig(a_and_b, keys, txTo[0], 0);
     BOOST_CHECK(VerifyScript(s, a_and_b, txTo[0], 0, true, 0));
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         keys.clear();
         keys += key[i];
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     }
 
     // Test a OR b:
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         keys.clear();
         keys += key[i];
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     BOOST_CHECK(!VerifyScript(s, a_or_b, txTo[1], 0, true, 0));
 
 
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
         {
             keys.clear();
             keys += key[i],key[j];
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 {
     CKey key[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
         key[i].MakeNewKey(true);
 
     CScript a_and_b;
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
     malformed[4] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_CHECKMULTISIG;
     malformed[5] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey();
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 6; ++i)
         BOOST_CHECK(!::IsStandard(malformed[i]));
 }
 
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     CBasicKeyStore keystore, emptykeystore, partialkeystore;
     CKey key[3];
     CBitcoinAddress keyaddr[3];
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; ++i)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
     CBasicKeyStore keystore;
     CKey key[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         key[i].MakeNewKey(true);
         keystore.AddKey(key[i]);
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     txFrom.vout[2].scriptPubKey = escrow;
 
     CTransaction txTo[3]; // Spending transaction
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; ++i)
     {
         txTo[i].vin.resize(1);
         txTo[i].vout.resize(1);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
         txTo[i].vout[0].nValue = 1;
     }
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; ++i)
     {
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
     }
