@@ -579,9 +579,9 @@ template <typename T> class CMedianFilter
 private:
     std::vector<T> vValues;
     std::vector<T> vSorted;
-    int nSize;
+    unsigned int nSize;
 public:
-    CMedianFilter(int size, T initial_value):
+    CMedianFilter(unsigned int size, T initial_value):
         nSize(size)
     {
         vValues.reserve(size);
