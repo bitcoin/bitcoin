@@ -316,14 +316,14 @@ bool GetMyExternalIP2(const CAddress& addrConnect, const char* pszGet, const cha
                 }
                 if (pszKeyword == NULL)
                     break;
-                if (strLine.find(pszKeyword) != -1)
+                if (strLine.find(pszKeyword) != string::npos)
                 {
                     strLine = strLine.substr(strLine.find(pszKeyword) + strlen(pszKeyword));
                     break;
                 }
             }
             closesocket(hSocket);
-            if (strLine.find("<") != -1)
+            if (strLine.find("<") != string::npos)
                 strLine = strLine.substr(0, strLine.find("<"));
             strLine = strLine.substr(strspn(strLine.c_str(), " \t\n\r"));
             while (strLine.size() > 0 && isspace(strLine[strLine.size()-1]))
@@ -915,7 +915,7 @@ void ThreadSocketHandler2(void* parg)
             if (hSocketMax > -1)
             {
                 printf("socket select error %d\n", nErr);
-                for (int i = 0; i <= hSocketMax; i++)
+                for (unsigned int i = 0; i <= hSocketMax; i++)
                     FD_SET(i, &fdsetRecv);
             }
             FD_ZERO(&fdsetSend);
@@ -1303,7 +1303,7 @@ void ThreadDNSAddressSeed2(void* parg)
     {
         printf("Loading addresses from DNS seeds (could take a while)\n");
 
-        for (int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
+        for (unsigned int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
             vector<CAddress> vaddr;
             if (Lookup(strDNSSeed[seed_idx], vaddr, NODE_NETWORK, -1, true))
             {
@@ -1520,7 +1520,7 @@ void ThreadOpenConnections2(void* parg)
 
         if (fAddSeeds)
         {
-            for (int i = 0; i < ARRAYLEN(pnSeed); i++)
+            for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
             {
                 // It'll only connect to one or two seed nodes because once it connects,
                 // it'll get a pile of addresses with newer timestamps.

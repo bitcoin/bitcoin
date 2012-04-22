@@ -412,14 +412,14 @@ bool ParseMoney(const char* pszIn, int64& nRet)
 
 vector<unsigned char> ParseHex(const char* psz)
 {
-    static char phexdigit[256] =
+    static signed char phexdigit[256] =
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,
       -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1
+      -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -436,12 +436,12 @@ vector<unsigned char> ParseHex(const char* psz)
     {
         while (isspace(*psz))
             psz++;
-        char c = phexdigit[(unsigned char)*psz++];
-        if (c == (char)-1)
+        signed char c = phexdigit[(unsigned char)*psz++];
+        if (c == (signed char)-1)
             break;
         unsigned char n = (c << 4);
         c = phexdigit[(unsigned char)*psz++];
-        if (c == (char)-1)
+        if (c == (signed char)-1)
             break;
         n |= c;
         vch.push_back(n);

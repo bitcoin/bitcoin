@@ -396,7 +396,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
 
     // Check for conflicts with in-memory transactions
     CTransaction* ptxOld = NULL;
-    for (int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); i++)
     {
         COutPoint outpoint = vin[i].prevout;
         if (mapNextTx.count(outpoint))
@@ -412,7 +412,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
                 return false;
             if (!IsNewerThan(*ptxOld))
                 return false;
-            for (int i = 0; i < vin.size(); i++)
+            for (unsigned int i = 0; i < vin.size(); i++)
             {
                 COutPoint outpoint = vin[i].prevout;
                 if (!mapNextTx.count(outpoint) || mapNextTx[outpoint].ptx != ptxOld)
@@ -518,7 +518,7 @@ bool CTransaction::AddToMemoryPoolUnchecked()
     {
         uint256 hash = GetHash();
         mapTransactions[hash] = *this;
-        for (int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); i++)
             mapNextTx[vin[i].prevout] = CInPoint(&mapTransactions[hash], i);
         nTransactionsUpdated++;
     }
@@ -897,7 +897,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
     if (IsCoinBase())
         return true; // Coinbase transactions have no inputs to fetch.
 
-    for (int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); i++)
     {
         COutPoint prevout = vin[i].prevout;
         if (inputsRet.count(prevout.hash))
@@ -942,7 +942,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
     }
 
     // Make sure all prevout.n's are valid:
-    for (int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); i++)
     {
         const COutPoint prevout = vin[i].prevout;
         assert(inputsRet.count(prevout.hash) != 0);
@@ -979,7 +979,7 @@ int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
         return 0;
 
     int64 nResult = 0;
-    for (int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); i++)
     {
         nResult += GetOutputFor(vin[i], inputs).nValue;
     }
@@ -993,7 +993,7 @@ int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
         return 0;
 
     int nSigOps = 0;
-    for (int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); i++)
     {
         const CTxOut& prevout = GetOutputFor(vin[i], inputs);
         if (prevout.scriptPubKey.IsPayToScriptHash())
@@ -1014,7 +1014,7 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
     {
         int64 nValueIn = 0;
         int64 nFees = 0;
-        for (int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); i++)
         {
             COutPoint prevout = vin[i].prevout;
             assert(inputs.count(prevout.hash) > 0);
@@ -1093,7 +1093,7 @@ bool CTransaction::ClientConnectInputs()
     CRITICAL_BLOCK(cs_mapTransactions)
     {
         int64 nValueIn = 0;
-        for (int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); i++)
         {
             // Get prev tx from single transactions in memory
             COutPoint prevout = vin[i].prevout;
@@ -1304,7 +1304,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Connect longer branch
     vector<CTransaction> vDelete;
-    for (int i = 0; i < vConnect.size(); i++)
+    for (unsigned int i = 0; i < vConnect.size(); i++)
     {
         CBlockIndex* pindex = vConnect[i];
         CBlock block;
@@ -1483,7 +1483,7 @@ bool CBlock::CheckBlock() const
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
-    for (int i = 1; i < vtx.size(); i++)
+    for (unsigned int i = 1; i < vtx.size(); i++)
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
@@ -1613,7 +1613,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
     vWorkQueue.push_back(hash);
-    for (int i = 0; i < vWorkQueue.size(); i++)
+    for (unsigned int i = 0; i < vWorkQueue.size(); i++)
     {
         uint256 hashPrev = vWorkQueue[i];
         for (multimap<uint256, CBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);
@@ -1837,7 +1837,7 @@ void PrintBlockTree()
 
         // put the main timechain first
         vector<CBlockIndex*>& vNext = mapNext[pindex];
-        for (int i = 0; i < vNext.size(); i++)
+        for (unsigned int i = 0; i < vNext.size(); i++)
         {
             if (vNext[i]->pnext)
             {
@@ -1847,7 +1847,7 @@ void PrintBlockTree()
         }
 
         // iterate children
-        for (int i = 0; i < vNext.size(); i++)
+        for (unsigned int i = 0; i < vNext.size(); i++)
             vStack.push_back(make_pair(nCol+i, vNext[i]));
     }
 }
@@ -1977,7 +1977,18 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
-    case MSG_TX:    return mapTransactions.count(inv.hash) || mapOrphanTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
+    case MSG_TX:
+        {
+        bool txInMap = false;
+        CRITICAL_BLOCK(cs_mapTransactions)
+        {
+            txInMap = (mapTransactions.count(inv.hash) != 0);
+        }
+        return txInMap ||
+               mapOrphanTransactions.count(inv.hash) ||
+               txdb.ContainsTx(inv.hash);
+        }
+
     case MSG_BLOCK: return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
@@ -2363,7 +2374,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vWorkQueue.push_back(inv.hash);
 
             // Recursively process any orphan transactions that depended on this one
-            for (int i = 0; i < vWorkQueue.size(); i++)
+            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
             {
                 uint256 hashPrev = vWorkQueue[i];
                 for (multimap<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev.lower_bound(hashPrev);
@@ -2648,7 +2659,7 @@ bool ProcessMessages(CNode* pfrom)
 
 bool SendMessages(CNode* pto, bool fSendTrickle)
 {
-    CRITICAL_BLOCK(cs_main)
+    TRY_CRITICAL_BLOCK(cs_main)
     {
         // Don't send anything until we get their version message
         if (pto->nVersion == 0)
@@ -3152,7 +3163,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     FormatHashBlocks(&tmp.hash1, sizeof(tmp.hash1));
 
     // Byte swap all the input buffer
-    for (int i = 0; i < sizeof(tmp)/4; i++)
+    for (unsigned int i = 0; i < sizeof(tmp)/4; i++)
         ((unsigned int*)&tmp)[i] = ByteReverse(((unsigned int*)&tmp)[i]);
 
     // Precalc the first half of the first hash, which stays constant
@@ -3273,7 +3284,7 @@ void static BitcoinMiner(CWallet *pwallet)
             // Check if something found
             if (nNonceFound != -1)
             {
-                for (int i = 0; i < sizeof(hash)/4; i++)
+                for (unsigned int i = 0; i < sizeof(hash)/4; i++)
                     ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
 
                 if (hash <= hashTarget)
