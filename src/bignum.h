@@ -117,9 +117,9 @@ public:
     {
         unsigned long n = BN_get_word(this);
         if (!BN_is_negative(this))
-            return (n > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : n);
+            return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : n);
         else
-            return (n > std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
+            return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
     }
 
     void setint64(int64 n)

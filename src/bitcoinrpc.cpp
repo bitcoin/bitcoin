@@ -999,7 +999,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[2]);
 
     // Gather public keys
-    if (nRequired < 1 || keys.size() < nRequired)
+    if ((nRequired < 1) || ((int)keys.size() < nRequired))
         throw runtime_error(
             strprintf("wrong number of keys"
                       "(got %d, need at least %d)", keys.size(), nRequired));
@@ -1331,8 +1331,10 @@ Value listtransactions(const Array& params, bool fHelp)
     }
     // ret is newest to oldest
     
-    if (nFrom > ret.size()) nFrom = ret.size();
-    if (nFrom+nCount > ret.size()) nCount = ret.size()-nFrom;
+    if (nFrom > (int)ret.size())
+        nFrom = ret.size();
+    if ((nFrom + nCount) > (int)ret.size())
+        nCount = ret.size() - nFrom;
     Array::iterator first = ret.begin();
     std::advance(first, nFrom);
     Array::iterator last = ret.begin();
@@ -2202,7 +2204,7 @@ int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRe
 
     // Read header
     int nLen = ReadHTTPHeader(stream, mapHeadersRet);
-    if (nLen < 0 || nLen > MAX_SIZE)
+    if (nLen < 0 || nLen > (int)MAX_SIZE)
         return 500;
 
     // Read message

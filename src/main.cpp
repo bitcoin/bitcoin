@@ -376,10 +376,10 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         hashBlock = pblock->GetHash();
 
         // Locate the transaction
-        for (nIndex = 0; nIndex < pblock->vtx.size(); nIndex++)
+        for (nIndex = 0; nIndex < (int)pblock->vtx.size(); nIndex++)
             if (pblock->vtx[nIndex] == *(CTransaction*)this)
                 break;
-        if (nIndex == pblock->vtx.size())
+        if (nIndex == (int)pblock->vtx.size())
         {
             vMerkleBranch.clear();
             nIndex = -1;
@@ -2750,7 +2750,7 @@ bool ProcessMessages(CNode* pfrom)
         int nHeaderSize = vRecv.GetSerializeSize(CMessageHeader());
         if (vRecv.end() - pstart < nHeaderSize)
         {
-            if (vRecv.size() > nHeaderSize)
+            if ((int)vRecv.size() > nHeaderSize)
             {
                 printf("\n\nPROCESSMESSAGE MESSAGESTART NOT FOUND\n\n");
                 vRecv.erase(vRecv.begin(), vRecv.end() - nHeaderSize);
@@ -3084,7 +3084,7 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
         if ((nNonce & 0xffff) == 0)
         {
             nHashesDone = 0xffff+1;
-            return -1;
+            return (unsigned int) -1;
         }
     }
 }
@@ -3461,7 +3461,7 @@ void static BitcoinMiner(CWallet *pwallet)
                                             (char*)&hash, nHashesDone);
 
             // Check if something found
-            if (nNonceFound != -1)
+            if (nNonceFound != (unsigned int) -1)
             {
                 for (unsigned int i = 0; i < sizeof(hash)/4; i++)
                     ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);

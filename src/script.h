@@ -467,7 +467,7 @@ public:
         opcodetype opcode;
         do
         {
-            while (end() - pc >= b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
+            while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
             {
                 erase(pc, pc + b.size());
                 ++nFound;
