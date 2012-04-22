@@ -2141,7 +2141,18 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 {
     switch (inv.type)
     {
-    case MSG_TX:    return mapTransactions.count(inv.hash) || mapOrphanTransactions.count(inv.hash) || txdb.ContainsTx(inv.hash);
+    case MSG_TX:
+        {
+        bool txInMap = false;
+        CRITICAL_BLOCK(cs_mapTransactions)
+        {
+            txInMap = (mapTransactions.count(inv.hash) != 0);
+        }
+        return txInMap ||
+               mapOrphanTransactions.count(inv.hash) ||
+               txdb.ContainsTx(inv.hash);
+        }
+
     case MSG_BLOCK: return mapBlockIndex.count(inv.hash) || mapOrphanBlocks.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
@@ -2806,7 +2817,7 @@ bool ProcessMessages(CNode* pfrom)
 
 bool SendMessages(CNode* pto, bool fSendTrickle)
 {
-    CRITICAL_BLOCK(cs_main)
+    TRY_CRITICAL_BLOCK(cs_main)
     {
         // Don't send anything until we get their version message
         if (pto->nVersion == 0)
