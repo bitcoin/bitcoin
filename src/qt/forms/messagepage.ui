@@ -128,7 +128,7 @@
      <item>
       <widget class="QPushButton" name="copyToClipboard">
        <property name="toolTip">
-        <string>Copy the currently selected address to the system clipboard</string>
+        <string>Copy the current signature to the system clipboard</string>
        </property>
        <property name="text">
         <string>&amp;Copy to Clipboard</string>
