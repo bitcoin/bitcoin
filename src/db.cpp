@@ -313,7 +313,7 @@ void DBFlush(bool fShutdown)
                 mapFileUseCount.erase(mi++);
             }
             else
-                mi++;
+                ++mi;
         }
         if (fShutdown)
         {
@@ -689,7 +689,7 @@ bool CTxDB::LoadBlockIndex()
                                     }
                                 }
                             }
-                            nOutput++;
+                            ++nOutput;
                         }
                     }
                 }

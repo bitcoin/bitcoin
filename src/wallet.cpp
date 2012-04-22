@@ -621,7 +621,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
             LOCK(pwallet->cs_wallet);
             map<uint256, const CMerkleTx*> mapWalletPrev;
             set<uint256> setAlreadyDone;
-            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+            for (unsigned int i = 0; i < vWorkQueue.size(); ++i)
             {
                 uint256 hash = vWorkQueue[i];
                 if (setAlreadyDone.count(hash))
@@ -687,7 +687,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             BOOST_FOREACH(CTransaction& tx, block.vtx)
             {
                 if (AddToWalletIfInvolvingMe(tx, &block, fUpdate))
-                    ret++;
+                    ++ret;
             }
             pindex = pindex->pnext;
         }
@@ -729,7 +729,7 @@ void CWallet::ReacceptWalletTransactions()
                     printf("ERROR: ReacceptWalletTransactions() : txindex.vSpent.size() %d != wtx.vout.size() %d\n", txindex.vSpent.size(), wtx.vout.size());
                     continue;
                 }
-                for (unsigned int i = 0; i < txindex.vSpent.size(); i++)
+                for (unsigned int i = 0; i < txindex.vSpent.size(); ++i)
                 {
                     if (wtx.IsSpent(i))
                         continue;
@@ -908,7 +908,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
             if (nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
                 continue;
 
-            for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+            for (unsigned int i = 0; i < pcoin->vout.size(); ++i)
             {
                 if (pcoin->IsSpent(i) || !IsMine(pcoin->vout[i]))
                     continue;
@@ -967,14 +967,14 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
     vector<char> vfBest(vValue.size(), true);
     int64 nBest = nTotalLower;
 
-    for (int nRep = 0; nRep < 1000 && nBest != nTargetValue; nRep++)
+    for (int nRep = 0; nRep < 1000 && nBest != nTargetValue; ++nRep)
     {
         vfIncluded.assign(vValue.size(), false);
         int64 nTotal = 0;
         bool fReachedTarget = false;
-        for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
+        for (int nPass = 0; nPass < 2 && !fReachedTarget; ++nPass)
         {
-            for (unsigned int i = 0; i < vValue.size(); i++)
+            for (unsigned int i = 0; i < vValue.size(); ++i)
             {
                 if (nPass == 0 ? rand() % 2 : !vfIncluded[i])
                 {
@@ -1003,7 +1003,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
         nValueRet += coinLowestLarger.first;
     }
     else {
-        for (unsigned int i = 0; i < vValue.size(); i++)
+        for (unsigned int i = 0; i < vValue.size(); ++i)
             if (vfBest[i])
             {
                 setCoinsRet.insert(vValue[i].second);
@@ -1012,7 +1012,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
 
         //// debug print
         printf("SelectCoins() best subset: ");
-        for (unsigned int i = 0; i < vValue.size(); i++)
+        for (unsigned int i = 0; i < vValue.size(); ++i)
             if (vfBest[i])
                 printf("%s ", FormatMoney(vValue[i].first).c_str());
         printf("total %s\n", FormatMoney(nBest).c_str());
@@ -1118,7 +1118,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
                 // Sign
                 int nIn = 0;
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-                    if (!SignSignature(*this, *coin.first, wtxNew, nIn++))
+                    if (!SignSignature(*this, *coin.first, wtxNew, ++nIn))
                         return false;
 
                 // Limit size
@@ -1369,7 +1369,7 @@ bool CWallet::NewKeyPool()
             return false;
 
         int64 nKeys = max(GetArg("-keypool", 100), (int64)0);
-        for (int i = 0; i < nKeys; i++)
+        for (int i = 0; i < nKeys; ++i)
         {
             int64 nIndex = i+1;
             walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));

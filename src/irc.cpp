@@ -124,7 +124,7 @@ bool Wait(int nSeconds)
     if (fShutdown)
         return false;
     printf("IRC waiting %d seconds to reconnect\n", nSeconds);
-    for (int i = 0; i < nSeconds; i++)
+    for (int i = 0; i < nSeconds; ++i)
     {
         if (fShutdown)
             return false;
@@ -343,7 +343,7 @@ void ThreadIRCSeed2(void* parg)
                     addr.nTime = GetAdjustedTime();
                     if (addrman.Add(addr, addrConnect, 51 * 60))
                         printf("IRC got new address: %s\n", addr.ToString().c_str());
-                    nGotIRCAddresses++;
+                    ++nGotIRCAddresses;
                 }
                 else
                 {

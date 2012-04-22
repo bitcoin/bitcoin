@@ -72,12 +72,12 @@ double GetDifficulty(const CBlockIndex* blockindex = NULL)
     while (nShift < 29)
     {
         dDiff *= 256.0;
-        nShift++;
+        ++nShift;
     }
     while (nShift > 29)
     {
         dDiff /= 256.0;
-        nShift--;
+        --nShift;
     }
 
     return dDiff;
@@ -1005,7 +1005,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
                       "(got %d, need at least %d)", keys.size(), nRequired));
     std::vector<CKey> pubkeys;
     pubkeys.resize(keys.size());
-    for (unsigned int i = 0; i < keys.size(); i++)
+    for (unsigned int i = 0; i < keys.size(); ++i)
     {
         const std::string& ks = keys[i].get_str();
 
@@ -1427,7 +1427,7 @@ Value listsinceblock(const Array& params, bool fHelp)
 
     Array transactions;
 
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
+    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         CWalletTx tx = (*it).second;
 
@@ -1848,7 +1848,7 @@ Value getwork(const Array& params, bool fHelp)
         CBlock* pdata = (CBlock*)&vchData[0];
 
         // Byte reverse
-        for (int i = 0; i < 128/4; i++)
+        for (int i = 0; i < 128/4; ++i)
             ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
 
         // Get saved block
@@ -2059,7 +2059,7 @@ static const CRPCCommand vRPCCommands[] =
 CRPCTable::CRPCTable()
 {
     unsigned int vcidx;
-    for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
+    for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); ++vcidx)
     {
         const CRPCCommand *pcmd;
 
@@ -2336,15 +2336,15 @@ void ThreadRPCServer(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer(parg));
     try
     {
-        vnThreadsRunning[THREAD_RPCSERVER]++;
+        ++vnThreadsRunning[THREAD_RPCSERVER];
         ThreadRPCServer2(parg);
-        vnThreadsRunning[THREAD_RPCSERVER]--;
+        --vnThreadsRunning[THREAD_RPCSERVER];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_RPCSERVER]--;
+        --vnThreadsRunning[THREAD_RPCSERVER];
         PrintException(&e, "ThreadRPCServer()");
     } catch (...) {
-        vnThreadsRunning[THREAD_RPCSERVER]--;
+        --vnThreadsRunning[THREAD_RPCSERVER];
         PrintException(NULL, "ThreadRPCServer()");
     }
     printf("ThreadRPCServer exiting\n");
@@ -2427,9 +2427,9 @@ void ThreadRPCServer2(void* parg)
         iostreams::stream<SSLIOStreamDevice> stream(d);
 
         ip::tcp::endpoint peer;
-        vnThreadsRunning[THREAD_RPCSERVER]--;
+        --vnThreadsRunning[THREAD_RPCSERVER];
         acceptor.accept(sslStream.lowest_layer(), peer);
-        vnThreadsRunning[4]++;
+        ++vnThreadsRunning[4];
         if (fShutdown)
             return;
 
@@ -2627,8 +2627,8 @@ int CommandLineRPC(int argc, char *argv[])
         // Skip switches
         while (argc > 1 && IsSwitchChar(argv[1][0]))
         {
-            argc--;
-            argv++;
+            --argc;
+            ++argv;
         }
 
         // Method
@@ -2638,7 +2638,7 @@ int CommandLineRPC(int argc, char *argv[])
 
         // Parameters default to strings
         Array params;
-        for (int i = 2; i < argc; i++)
+        for (int i = 2; i < argc; ++i)
             params.push_back(argv[i]);
         int n = params.size();
 

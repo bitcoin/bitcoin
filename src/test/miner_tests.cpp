@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(sha256transform_equality)
 
     int i;
 
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < 32; ++i) {
         pinput[i] = i;
         pinput[i+32] = 0;
     }

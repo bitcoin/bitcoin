@@ -188,7 +188,7 @@ void static EraseOrphanTx(uint256 hash)
             if ((*mi).second == pvMsg)
                 mapOrphanTransactionsByPrev.erase(mi++);
             else
-                mi++;
+                ++mi;
         }
     }
     delete pvMsg;
@@ -286,7 +286,7 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
     if (IsCoinBase())
         return true; // Coinbases don't use vin normally
 
-    for (unsigned int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); ++i)
     {
         const CTxOut& prev = GetOutputFor(vin[i], mapInputs);
 
@@ -369,7 +369,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         hashBlock = pblock->GetHash();
 
         // Locate the transaction
-        for (nIndex = 0; nIndex < pblock->vtx.size(); nIndex++)
+        for (nIndex = 0; nIndex < pblock->vtx.size(); ++nIndex)
             if (pblock->vtx[nIndex] == *(CTransaction*)this)
                 break;
         if (nIndex == pblock->vtx.size())
@@ -483,7 +483,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
     // Check for conflicts with in-memory transactions
     CTransaction* ptxOld = NULL;
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    for (unsigned int i = 0; i < tx.vin.size(); ++i)
     {
         COutPoint outpoint = tx.vin[i].prevout;
         if (mapNextTx.count(outpoint))
@@ -499,7 +499,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
                 return false;
             if (!tx.IsNewerThan(*ptxOld))
                 return false;
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
+            for (unsigned int i = 0; i < tx.vin.size(); ++i)
             {
                 COutPoint outpoint = tx.vin[i].prevout;
                 if (!mapNextTx.count(outpoint) || mapNextTx[outpoint].ptx != ptxOld)
@@ -605,9 +605,9 @@ bool CTxMemPool::addUnchecked(CTransaction &tx)
         LOCK(cs);
         uint256 hash = tx.GetHash();
         mapTx[hash] = tx;
-        for (unsigned int i = 0; i < tx.vin.size(); i++)
+        for (unsigned int i = 0; i < tx.vin.size(); ++i)
             mapNextTx[tx.vin[i].prevout] = CInPoint(&mapTx[hash], i);
-        nTransactionsUpdated++;
+        ++nTransactionsUpdated;
     }
     return true;
 }
@@ -624,7 +624,7 @@ bool CTxMemPool::remove(CTransaction &tx)
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
             mapTx.erase(hash);
-            nTransactionsUpdated++;
+            ++nTransactionsUpdated;
         }
     }
     return true;
@@ -841,7 +841,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
     // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < nInterval-1; i++)
+    for (int i = 0; pindexFirst && i < nInterval-1; ++i)
         pindexFirst = pindexFirst->pprev;
     assert(pindexFirst);
 
@@ -989,7 +989,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
     if (IsCoinBase())
         return true; // Coinbase transactions have no inputs to fetch.
 
-    for (unsigned int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); ++i)
     {
         COutPoint prevout = vin[i].prevout;
         if (inputsRet.count(prevout.hash))
@@ -1034,7 +1034,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
     }
 
     // Make sure all prevout.n's are valid:
-    for (unsigned int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); ++i)
     {
         const COutPoint prevout = vin[i].prevout;
         assert(inputsRet.count(prevout.hash) != 0);
@@ -1071,7 +1071,7 @@ int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
         return 0;
 
     int64 nResult = 0;
-    for (unsigned int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); ++i)
     {
         nResult += GetOutputFor(vin[i], inputs).nValue;
     }
@@ -1085,7 +1085,7 @@ int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
         return 0;
 
     int nSigOps = 0;
-    for (unsigned int i = 0; i < vin.size(); i++)
+    for (unsigned int i = 0; i < vin.size(); ++i)
     {
         const CTxOut& prevout = GetOutputFor(vin[i], inputs);
         if (prevout.scriptPubKey.IsPayToScriptHash())
@@ -1106,7 +1106,7 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
     {
         int64 nValueIn = 0;
         int64 nFees = 0;
-        for (unsigned int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); ++i)
         {
             COutPoint prevout = vin[i].prevout;
             assert(inputs.count(prevout.hash) > 0);
@@ -1185,7 +1185,7 @@ bool CTransaction::ClientConnectInputs()
     {
         LOCK(mempool.cs);
         int64 nValueIn = 0;
-        for (unsigned int i = 0; i < vin.size(); i++)
+        for (unsigned int i = 0; i < vin.size(); ++i)
         {
             // Get prev tx from single transactions in memory
             COutPoint prevout = vin[i].prevout;
@@ -1228,7 +1228,7 @@ bool CTransaction::ClientConnectInputs()
 bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 {
     // Disconnect in reverse order
-    for (int i = vtx.size()-1; i >= 0; i--)
+    for (int i = vtx.size()-1; i >= 0; --i)
         if (!vtx[i].DisconnectInputs(txdb))
             return false;
 
@@ -1397,7 +1397,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Connect longer branch
     vector<CTransaction> vDelete;
-    for (unsigned int i = 0; i < vConnect.size(); i++)
+    for (unsigned int i = 0; i < vConnect.size(); ++i)
     {
         CBlockIndex* pindex = vConnect[i];
         CBlock block;
@@ -1552,7 +1552,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     nBestHeight = pindexBest->nHeight;
     bnBestChainWork = pindexNew->bnChainWork;
     nTimeBestReceived = GetTime();
-    nTransactionsUpdated++;
+    ++nTransactionsUpdated;
     printf("SetBestChain: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
 
     std::string strCmd = GetArg("-blocknotify", "");
@@ -1636,7 +1636,7 @@ bool CBlock::CheckBlock() const
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
-    for (unsigned int i = 1; i < vtx.size(); i++)
+    for (unsigned int i = 1; i < vtx.size(); ++i)
         if (vtx[i].IsCoinBase())
             return DoS(100, error("CheckBlock() : more than one coinbase"));
 
@@ -1772,7 +1772,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
     vWorkQueue.push_back(hash);
-    for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+    for (unsigned int i = 0; i < vWorkQueue.size(); ++i)
     {
         uint256 hashPrev = vWorkQueue[i];
         for (multimap<uint256, CBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);
@@ -1854,7 +1854,7 @@ FILE* AppendBlockFile(unsigned int& nFileRet)
             return file;
         }
         fclose(file);
-        nCurrentBlockFile++;
+        ++nCurrentBlockFile;
     }
 }
 
@@ -1965,20 +1965,20 @@ void PrintBlockTree()
         // print split or gap
         if (nCol > nPrevCol)
         {
-            for (int i = 0; i < nCol-1; i++)
+            for (int i = 0; i < nCol-1; ++i)
                 printf("| ");
             printf("|\\\n");
         }
         else if (nCol < nPrevCol)
         {
-            for (int i = 0; i < nCol; i++)
+            for (int i = 0; i < nCol; ++i)
                 printf("| ");
             printf("|\n");
        }
         nPrevCol = nCol;
 
         // print columns
-        for (int i = 0; i < nCol; i++)
+        for (int i = 0; i < nCol; ++i)
             printf("| ");
 
         // print item
@@ -1996,7 +1996,7 @@ void PrintBlockTree()
 
         // put the main timechain first
         vector<CBlockIndex*>& vNext = mapNext[pindex];
-        for (unsigned int i = 0; i < vNext.size(); i++)
+        for (unsigned int i = 0; i < vNext.size(); ++i)
         {
             if (vNext[i]->pnext)
             {
@@ -2006,7 +2006,7 @@ void PrintBlockTree()
         }
 
         // iterate children
-        for (unsigned int i = 0; i < vNext.size(); i++)
+        for (unsigned int i = 0; i < vNext.size(); ++i)
             vStack.push_back(make_pair(nCol+i, vNext[i]));
     }
 }
@@ -2096,7 +2096,7 @@ bool CAlert::ProcessAlert()
                 mapAlerts.erase(mi++);
             }
             else
-                mi++;
+                ++mi;
         }
 
         // Check if this alert has been cancelled
@@ -2268,7 +2268,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
              pfrom->nVersion >= NOBLKS_VERSION_END) &&
              (nAskedForBlocks < 1 || vNodes.size() <= 1))
         {
-            nAskedForBlocks++;
+            ++nAskedForBlocks;
             pfrom->PushGetBlocks(pindexBest, uint256(0));
         }
 
@@ -2375,7 +2375,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         CTxDB txdb("r");
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+        for (unsigned int nInv = 0; nInv < vInv.size(); ++nInv)
         {
             const CInv &inv = vInv[nInv];
 
@@ -2551,7 +2551,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vWorkQueue.push_back(inv.hash);
 
             // Recursively process any orphan transactions that depended on this one
-            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+            for (unsigned int i = 0; i < vWorkQueue.size(); ++i)
             {
                 uint256 hashPrev = vWorkQueue[i];
                 for (multimap<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev.lower_bound(hashPrev);
@@ -3038,14 +3038,14 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit)
 
     SHA256_Init(&ctx);
 
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 16; ++i)
         ((uint32_t*)data)[i] = ByteReverse(((uint32_t*)pinput)[i]);
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; ++i)
         ctx.h[i] = ((uint32_t*)pinit)[i];
 
     SHA256_Update(&ctx, data, sizeof(data));
-    for (int i = 0; i < 8; i++) 
+    for (int i = 0; i < 8; ++i)
         ((uint32_t*)pstate)[i] = ctx.h[i];
 }
 
@@ -3064,7 +3064,7 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
         // Crypto++ SHA-256
         // Hash pdata using pmidstate as the starting state into
         // preformatted buffer phash1, then hash phash1 into phash
-        nNonce++;
+        ++nNonce;
         SHA256Transform(phash1, pdata, pmidstate);
         SHA256Transform(phash, phash1, pSHA256InitState);
 
@@ -3331,7 +3331,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     FormatHashBlocks(&tmp.hash1, sizeof(tmp.hash1));
 
     // Byte swap all the input buffer
-    for (unsigned int i = 0; i < sizeof(tmp)/4; i++)
+    for (unsigned int i = 0; i < sizeof(tmp)/4; ++i)
         ((unsigned int*)&tmp)[i] = ByteReverse(((unsigned int*)&tmp)[i]);
 
     // Precalc the first half of the first hash, which stays constant
@@ -3456,7 +3456,7 @@ void static BitcoinMiner(CWallet *pwallet)
             // Check if something found
             if (nNonceFound != -1)
             {
-                for (unsigned int i = 0; i < sizeof(hash)/4; i++)
+                for (unsigned int i = 0; i < sizeof(hash)/4; ++i)
                     ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);
 
                 if (hash <= hashTarget)
@@ -3536,15 +3536,15 @@ void static ThreadBitcoinMiner(void* parg)
     CWallet* pwallet = (CWallet*)parg;
     try
     {
-        vnThreadsRunning[THREAD_MINER]++;
+        ++vnThreadsRunning[THREAD_MINER];
         BitcoinMiner(pwallet);
-        vnThreadsRunning[THREAD_MINER]--;
+        --vnThreadsRunning[THREAD_MINER];
     }
     catch (std::exception& e) {
-        vnThreadsRunning[THREAD_MINER]--;
+        --vnThreadsRunning[THREAD_MINER];
         PrintException(&e, "ThreadBitcoinMiner()");
     } catch (...) {
-        vnThreadsRunning[THREAD_MINER]--;
+        --vnThreadsRunning[THREAD_MINER];
         PrintException(NULL, "ThreadBitcoinMiner()");
     }
     nHPSTimerStart = 0;
@@ -3572,7 +3572,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet)
             nProcessors = nLimitProcessors;
         int nAddThreads = nProcessors - vnThreadsRunning[THREAD_MINER];
         printf("Starting %d BitcoinMiner threads\n", nAddThreads);
-        for (int i = 0; i < nAddThreads; i++)
+        for (int i = 0; i < nAddThreads; ++i)
         {
             if (!CreateThread(ThreadBitcoinMiner, pwallet))
                 printf("Error: CreateThread(ThreadBitcoinMiner) failed\n");

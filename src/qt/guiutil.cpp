@@ -61,7 +61,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     rv.address = uri.path();
     rv.amount = 0;
     QList<QPair<QString, QString> > items = uri.queryItems();
-    for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
+    for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); ++i)
     {
         bool fShouldReturnFalse = false;
         if (i->first.startsWith("req-"))

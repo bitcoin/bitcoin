@@ -68,7 +68,7 @@ inline size_t strlcat(char *dst, const char *src, size_t siz)
 
     /* Find the end of dst and adjust bytes left but don't go past end */
     while (n-- != 0 && *d != '\0')
-        d++;
+        ++d;
     dlen = d - dst;
     n = siz - dlen;
 
@@ -79,9 +79,9 @@ inline size_t strlcat(char *dst, const char *src, size_t siz)
         if (n != 1)
         {
             *d++ = *s;
-            n--;
+            --n;
         }
-        s++;
+        ++s;
     }
     *d = '\0';
 

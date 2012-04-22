@@ -38,7 +38,7 @@ CBigNum CastToBigNum(const valtype& vch)
 
 bool CastToBool(const valtype& vch)
 {
-    for (int i = 0; i < vch.size(); i++)
+    for (int i = 0; i < vch.size(); ++i)
     {
         if (vch[i] != 0)
         {
@@ -655,7 +655,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if (stack.size() < 1)
                         return false;
                     valtype& vch = stacktop(-1);
-                    for (int i = 0; i < vch.size(); i++)
+                    for (int i = 0; i < vch.size(); ++i)
                         vch[i] = ~vch[i];
                 }
                 break;
@@ -672,17 +672,17 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     MakeSameSize(vch1, vch2);
                     if (opcode == OP_AND)
                     {
-                        for (int i = 0; i < vch1.size(); i++)
+                        for (int i = 0; i < vch1.size(); ++i)
                             vch1[i] &= vch2[i];
                     }
                     else if (opcode == OP_OR)
                     {
-                        for (int i = 0; i < vch1.size(); i++)
+                        for (int i = 0; i < vch1.size(); ++i)
                             vch1[i] |= vch2[i];
                     }
                     else if (opcode == OP_XOR)
                     {
-                        for (int i = 0; i < vch1.size(); i++)
+                        for (int i = 0; i < vch1.size(); ++i)
                             vch1[i] ^= vch2[i];
                     }
                     popstack(stack);
@@ -966,7 +966,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     CScript scriptCode(pbegincodehash, pend);
 
                     // Drop the signatures, since there's no way for a signature to sign itself
-                    for (int k = 0; k < nSigsCount; k++)
+                    for (int k = 0; k < nSigsCount; ++k)
                     {
                         valtype& vchSig = stacktop(-isig-k);
                         scriptCode.FindAndDelete(CScript(vchSig));
@@ -981,11 +981,11 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         // Check signature
                         if (CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType))
                         {
-                            isig++;
-                            nSigsCount--;
+                            ++isig;
+                            --nSigsCount;
                         }
-                        ikey++;
-                        nKeysCount--;
+                        ++ikey;
+                        --nKeysCount;
 
                         // If there are more signatures left than keys left,
                         // then too many signatures have failed
@@ -1050,7 +1050,7 @@ uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int
     scriptCode.FindAndDelete(CScript(OP_CODESEPARATOR));
 
     // Blank out other inputs' signatures
-    for (int i = 0; i < txTmp.vin.size(); i++)
+    for (int i = 0; i < txTmp.vin.size(); ++i)
         txTmp.vin[i].scriptSig = CScript();
     txTmp.vin[nIn].scriptSig = scriptCode;
 
@@ -1061,7 +1061,7 @@ uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int
         txTmp.vout.clear();
 
         // Let the others update at will
-        for (int i = 0; i < txTmp.vin.size(); i++)
+        for (int i = 0; i < txTmp.vin.size(); ++i)
             if (i != nIn)
                 txTmp.vin[i].nSequence = 0;
     }
@@ -1075,11 +1075,11 @@ uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int
             return 1;
         }
         txTmp.vout.resize(nOut+1);
-        for (int i = 0; i < nOut; i++)
+        for (int i = 0; i < nOut; ++i)
             txTmp.vout[i].SetNull();
 
         // Let the others update at will
-        for (int i = 0; i < txTmp.vin.size(); i++)
+        for (int i = 0; i < txTmp.vin.size(); ++i)
             if (i != nIn)
                 txTmp.vin[i].nSequence = 0;
     }
@@ -1260,7 +1260,7 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 {
     int nSigned = 0;
     int nRequired = multisigdata.front()[0];
-    for (vector<valtype>::const_iterator it = multisigdata.begin()+1; it != multisigdata.begin()+multisigdata.size()-1; it++)
+    for (vector<valtype>::const_iterator it = multisigdata.begin()+1; it != multisigdata.begin()+multisigdata.size()-1; ++it)
     {
         const valtype& pubkey = *it;
         CBitcoinAddress address;
@@ -1449,7 +1449,7 @@ bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, vector<C
     if (typeRet == TX_MULTISIG)
     {
         nRequiredRet = vSolutions.front()[0];
-        for (int i = 1; i < vSolutions.size()-1; i++)
+        for (int i = 1; i < vSolutions.size()-1; ++i)
         {
             CBitcoinAddress address;
             address.SetPubKey(vSolutions[i]);
@@ -1577,7 +1577,7 @@ int CScript::GetSigOpCount(bool fAccurate) const
         if (!GetOp(pc, opcode))
             break;
         if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
-            n++;
+            ++n;
         else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
         {
             if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)

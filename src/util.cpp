@@ -89,7 +89,7 @@ public:
     {
         // Init openssl library multithreading support
         ppmutexOpenSSL = (boost::interprocess::interprocess_mutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(boost::interprocess::interprocess_mutex*));
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
+        for (int i = 0; i < CRYPTO_num_locks(); ++i)
             ppmutexOpenSSL[i] = new boost::interprocess::interprocess_mutex();
         CRYPTO_set_locking_callback(locking_callback);
 
@@ -105,7 +105,7 @@ public:
     {
         // Shutdown openssl library multithreading support
         CRYPTO_set_locking_callback(NULL);
-        for (int i = 0; i < CRYPTO_num_locks(); i++)
+        for (int i = 0; i < CRYPTO_num_locks(); ++i)
             delete ppmutexOpenSSL[i];
         OPENSSL_free(ppmutexOpenSSL);
     }
@@ -254,7 +254,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
             char* p2;
             while (p2 = strchr(p1, '\n'))
             {
-                p2++;
+                ++p2;
                 char c = *p2;
                 *p2 = '\0';
                 OutputDebugStringA(p1);
@@ -390,12 +390,12 @@ bool ParseMoney(const char* pszIn, int64& nRet)
     int64 nUnits = 0;
     const char* p = pszIn;
     while (isspace(*p))
-        p++;
-    for (; *p; p++)
+        ++p;
+    for (; *p; ++p)
     {
         if (*p == '.')
         {
-            p++;
+            ++p;
             int64 nMult = CENT*10;
             while (isdigit(*p) && (nMult > 0))
             {
@@ -410,7 +410,7 @@ bool ParseMoney(const char* pszIn, int64& nRet)
             return false;
         strWhole.insert(strWhole.end(), *p);
     }
-    for (; *p; p++)
+    for (; *p; ++p)
         if (!isspace(*p))
             return false;
     if (strWhole.size() > 10) // guard against 63 bit overflow
@@ -460,7 +460,7 @@ vector<unsigned char> ParseHex(const char* psz)
     loop
     {
         while (isspace(*psz))
-            psz++;
+            ++psz;
         signed char c = phexdigit[(unsigned char)*psz++];
         if (c == (signed char)-1)
             break;
@@ -498,7 +498,7 @@ void ParseParameters(int argc, const char*const argv[])
 {
     mapArgs.clear();
     mapMultiArgs.clear();
-    for (int i = 1; i < argc; i++)
+    for (int i = 1; i < argc; ++i)
     {
         char psz[10000];
         strlcpy(psz, argv[i], sizeof(psz));
@@ -664,7 +664,7 @@ vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
     {
          int dec = decode64_table[(unsigned char)*p];
          if (dec == -1) break;
-         p++;
+         ++p;
          switch (mode)
          {
              case 0: // we have no bits and get 6
@@ -741,8 +741,8 @@ bool WildcardMatch(const char* psz, const char* mask)
                 return false;
             break;
         }
-        psz++;
-        mask++;
+        ++psz;
+        ++mask;
     }
 }
 

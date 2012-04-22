@@ -36,7 +36,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, MapPrevTx& inputsRet)
 
     // Add some keys to the keystore:
     CKey key[4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         key[i].MakeNewKey(i % 2);
         keystoreRet.AddKey(key[i]);

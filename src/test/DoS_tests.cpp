@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     keystore.AddKey(key);
 
     // 50 orphan transactions:
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < 50; ++i)
     {
         CTransaction tx;
         tx.vin.resize(1);
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     }
 
     // ... and 50 that depend on other orphans:
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < 50; ++i)
     {
         CTransaction txPrev = RandomOrphan();
 

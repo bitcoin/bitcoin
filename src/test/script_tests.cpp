@@ -31,7 +31,7 @@ ParseScript(string s)
 
     if (mapOpNames.size() == 0)
     {
-        for (int op = OP_NOP; op <= OP_NOP10; op++)
+        for (int op = OP_NOP; op <= OP_NOP10; ++op)
         {
             const char* name = GetOpName((opcodetype)op);
             if (strcmp(name, "OP_UNKNOWN") == 0)

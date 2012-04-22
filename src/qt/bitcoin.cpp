@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 // TODO: implement qtipcserver.cpp for Mac and Windows
 
     // Do this early as we don't want to bother initializing if we are just calling IPC
-    for (int i = 1; i < argc; i++)
+    for (int i = 1; i < argc; ++i)
     {
         if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
         {
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 // TODO: implement qtipcserver.cpp for Mac and Windows
 
                 // Check for URI in argv
-                for (int i = 1; i < argc; i++)
+                for (int i = 1; i < argc; ++i)
                 {
                     if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
                     {

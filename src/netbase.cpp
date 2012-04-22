@@ -136,7 +136,7 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
     if (!fRet)
         return false;
     vAddr.resize(vIP.size());
-    for (unsigned int i = 0; i < vIP.size(); i++)
+    for (unsigned int i = 0; i < vIP.size(); ++i)
         vAddr[i] = CService(vIP[i], port);
     return true;
 }
@@ -568,7 +568,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
     while (nBits >= 8)
     {
         vchRet.push_back(GetByte(15 - nStartByte));
-        nStartByte++;
+        ++nStartByte;
         nBits -= 8;
     }
     if (nBits > 0)
