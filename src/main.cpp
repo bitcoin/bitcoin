@@ -297,6 +297,8 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
         if (!Solver(prevScript, whichType, vSolutions))
             return false;
         int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
+        if (nArgsExpected < 0)
+            return false;
 
         // Transactions with extra stuff in their scriptSigs are
         // non-standard. Note that this EvalScript() call will
@@ -318,10 +320,15 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
                 return false;
             if (whichType2 == TX_SCRIPTHASH)
                 return false;
-            nArgsExpected += ScriptSigArgsExpected(whichType2, vSolutions2);
+
+            int tmpExpected;
+            tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
+            if (tmpExpected < 0)
+                return false;
+            nArgsExpected += tmpExpected;
         }
 
-        if (stack.size() != nArgsExpected)
+        if (stack.size() != (unsigned int)nArgsExpected)
             return false;
     }
 
