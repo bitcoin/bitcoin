@@ -1360,9 +1360,9 @@ bool IsStandard(const CScript& scriptPubKey)
 }
 
 
-int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
+unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
-    int nResult = 0;
+    unsigned int nResult = 0;
     BOOST_FOREACH(const valtype& pubkey, pubkeys)
     {
         CBitcoinAddress address;
@@ -1566,9 +1566,9 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     return true;
 }
 
-int CScript::GetSigOpCount(bool fAccurate) const
+unsigned int CScript::GetSigOpCount(bool fAccurate) const
 {
-    int n = 0;
+    unsigned int n = 0;
     const_iterator pc = begin();
     opcodetype lastOpcode = OP_INVALIDOPCODE;
     while (pc < end())
@@ -1590,7 +1590,7 @@ int CScript::GetSigOpCount(bool fAccurate) const
     return n;
 }
 
-int CScript::GetSigOpCount(const CScript& scriptSig) const
+unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
 {
     if (!IsPayToScriptHash())
         return GetSigOpCount(true);
