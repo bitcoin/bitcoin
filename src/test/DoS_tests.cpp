@@ -14,7 +14,7 @@
 
 // Tests this internal-to-main.cpp method:
 extern void AddOrphanTx(const CDataStream& vMsg);
-extern int LimitOrphanTxSize(int nMaxOrphans);
+extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 extern std::map<uint256, CDataStream*> mapOrphanTransactions;
 extern std::multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
 

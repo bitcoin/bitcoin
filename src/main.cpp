@@ -195,9 +195,9 @@ void static EraseOrphanTx(uint256 hash)
     mapOrphanTransactions.erase(hash);
 }
 
-int LimitOrphanTxSize(int nMaxOrphans)
+unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 {
-    int nEvicted = 0;
+    unsigned int nEvicted = 0;
     while (mapOrphanTransactions.size() > nMaxOrphans)
     {
         // Evict a random orphan:
@@ -328,10 +328,10 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
     return true;
 }
 
-int
+unsigned int
 CTransaction::GetLegacySigOpCount() const
 {
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
         nSigOps += txin.scriptSig.GetSigOpCount(false);
@@ -1079,12 +1079,12 @@ int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
 
 }
 
-int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
+unsigned int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
 {
     if (IsCoinBase())
         return 0;
 
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     for (unsigned int i = 0; i < vin.size(); i++)
     {
         const CTxOut& prevout = GetOutputFor(vin[i], inputs);
@@ -1284,7 +1284,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     map<uint256, CTxIndex> mapQueuedChanges;
     int64 nFees = 0;
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
         nSigOps += tx.GetLegacySigOpCount();
@@ -1645,7 +1645,7 @@ bool CBlock::CheckBlock() const
         if (!tx.CheckTransaction())
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         nSigOps += tx.GetLegacySigOpCount();
@@ -2583,9 +2583,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             AddOrphanTx(vMsg);
 
             // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-            int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
+            unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
             if (nEvicted > 0)
-                printf("mapOrphan overflow, removed %d tx\n", nEvicted);
+                printf("mapOrphan overflow, removed %u tx\n", nEvicted);
         }
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
@@ -3209,7 +3209,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 continue;
 
             // Legacy limits on sigOps:
-            int nTxSigOps = tx.GetLegacySigOpCount();
+            unsigned int nTxSigOps = tx.GetLegacySigOpCount();
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
