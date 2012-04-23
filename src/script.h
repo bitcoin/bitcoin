@@ -467,7 +467,7 @@ public:
         opcodetype opcode;
         do
         {
-            while (end() - pc >= b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
+            while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
             {
                 erase(pc, pc + b.size());
                 ++nFound;
@@ -491,11 +491,11 @@ public:
     // CHECKMULTISIGs serialized in scriptSigs are
     // counted more accurately, assuming they are of the form
     //  ... OP_N CHECKMULTISIG ...
-    int GetSigOpCount(bool fAccurate) const;
+    unsigned int GetSigOpCount(bool fAccurate) const;
 
     // Accurately count sigOps, including sigOps in
     // pay-to-script-hash transactions:
-    int GetSigOpCount(const CScript& scriptSig) const;
+    unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
     bool IsPayToScriptHash() const;
 

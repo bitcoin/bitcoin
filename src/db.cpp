@@ -648,7 +648,7 @@ bool CTxDB::LoadBlockIndex()
                             }
                     }
                     // check level 4: check whether spent txouts were spent within the main chain
-                    int nOutput = 0;
+                    unsigned int nOutput = 0;
                     if (nCheckLevel>3)
                     {
                         BOOST_FOREACH(const CDiskTxPos &txpos, txindex.vSpent)
