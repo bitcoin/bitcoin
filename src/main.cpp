@@ -195,9 +195,9 @@ void static EraseOrphanTx(uint256 hash)
     mapOrphanTransactions.erase(hash);
 }
 
-int LimitOrphanTxSize(int nMaxOrphans)
+unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 {
-    int nEvicted = 0;
+    unsigned int nEvicted = 0;
     while (mapOrphanTransactions.size() > nMaxOrphans)
     {
         // Evict a random orphan:
@@ -297,6 +297,8 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
         if (!Solver(prevScript, whichType, vSolutions))
             return false;
         int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
+        if (nArgsExpected < 0)
+            return false;
 
         // Transactions with extra stuff in their scriptSigs are
         // non-standard. Note that this EvalScript() call will
@@ -318,20 +320,25 @@ bool CTransaction::AreInputsStandard(const MapPrevTx& mapInputs) const
                 return false;
             if (whichType2 == TX_SCRIPTHASH)
                 return false;
-            nArgsExpected += ScriptSigArgsExpected(whichType2, vSolutions2);
+
+            int tmpExpected;
+            tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
+            if (tmpExpected < 0)
+                return false;
+            nArgsExpected += tmpExpected;
         }
 
-        if (stack.size() != nArgsExpected)
+        if (stack.size() != (unsigned int)nArgsExpected)
             return false;
     }
 
     return true;
 }
 
-int
+unsigned int
 CTransaction::GetLegacySigOpCount() const
 {
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
         nSigOps += txin.scriptSig.GetSigOpCount(false);
@@ -369,10 +376,10 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
         hashBlock = pblock->GetHash();
 
         // Locate the transaction
-        for (nIndex = 0; nIndex < pblock->vtx.size(); nIndex++)
+        for (nIndex = 0; nIndex < (int)pblock->vtx.size(); nIndex++)
             if (pblock->vtx[nIndex] == *(CTransaction*)this)
                 break;
-        if (nIndex == pblock->vtx.size())
+        if (nIndex == (int)pblock->vtx.size())
         {
             vMerkleBranch.clear();
             nIndex = -1;
@@ -1079,12 +1086,12 @@ int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
 
 }
 
-int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
+unsigned int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
 {
     if (IsCoinBase())
         return 0;
 
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     for (unsigned int i = 0; i < vin.size(); i++)
     {
         const CTxOut& prevout = GetOutputFor(vin[i], inputs);
@@ -1284,7 +1291,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     map<uint256, CTxIndex> mapQueuedChanges;
     int64 nFees = 0;
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
         nSigOps += tx.GetLegacySigOpCount();
@@ -1645,7 +1652,7 @@ bool CBlock::CheckBlock() const
         if (!tx.CheckTransaction())
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
-    int nSigOps = 0;
+    unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         nSigOps += tx.GetLegacySigOpCount();
@@ -2583,9 +2590,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             AddOrphanTx(vMsg);
 
             // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-            int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
+            unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
             if (nEvicted > 0)
-                printf("mapOrphan overflow, removed %d tx\n", nEvicted);
+                printf("mapOrphan overflow, removed %u tx\n", nEvicted);
         }
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
@@ -2743,7 +2750,7 @@ bool ProcessMessages(CNode* pfrom)
         int nHeaderSize = vRecv.GetSerializeSize(CMessageHeader());
         if (vRecv.end() - pstart < nHeaderSize)
         {
-            if (vRecv.size() > nHeaderSize)
+            if ((int)vRecv.size() > nHeaderSize)
             {
                 printf("\n\nPROCESSMESSAGE MESSAGESTART NOT FOUND\n\n");
                 vRecv.erase(vRecv.begin(), vRecv.end() - nHeaderSize);
@@ -3077,7 +3084,7 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
         if ((nNonce & 0xffff) == 0)
         {
             nHashesDone = 0xffff+1;
-            return -1;
+            return (unsigned int) -1;
         }
     }
 }
@@ -3209,7 +3216,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 continue;
 
             // Legacy limits on sigOps:
-            int nTxSigOps = tx.GetLegacySigOpCount();
+            unsigned int nTxSigOps = tx.GetLegacySigOpCount();
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
@@ -3454,7 +3461,7 @@ void static BitcoinMiner(CWallet *pwallet)
                                             (char*)&hash, nHashesDone);
 
             // Check if something found
-            if (nNonceFound != -1)
+            if (nNonceFound != (unsigned int) -1)
             {
                 for (unsigned int i = 0; i < sizeof(hash)/4; i++)
                     ((unsigned int*)&hash)[i] = ByteReverse(((unsigned int*)&hash)[i]);

@@ -1391,8 +1391,8 @@ bool CWallet::TopUpKeyPool()
         CWalletDB walletdb(strWalletFile);
 
         // Top up key pool
-        int64 nTargetSize = max(GetArg("-keypool", 100), (int64)0);
-        while (setKeyPool.size() < nTargetSize+1)
+        unsigned int nTargetSize = max(GetArg("-keypool", 100), 0LL);
+        while (setKeyPool.size() < (nTargetSize + 1))
         {
             int64 nEnd = 1;
             if (!setKeyPool.empty())
