@@ -283,7 +283,7 @@ int my_snprintf(char* buffer, size_t limit, const char* format, ...)
     va_start(arg_ptr, format);
     int ret = _vsnprintf(buffer, limit, format, arg_ptr);
     va_end(arg_ptr);
-    if (ret < 0 || ret >= limit)
+    if (ret < 0 || ret >= (int)limit)
     {
         ret = limit - 1;
         buffer[limit-1] = 0;
