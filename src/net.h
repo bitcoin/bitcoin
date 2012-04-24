@@ -30,6 +30,7 @@ extern int nBestHeight;
 inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 10*1000); }
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 10*1000); }
 
+void AddOneShot(std::string strDest);
 bool RecvLine(SOCKET hSocket, std::string& strLine);
 bool GetMyExternalIP(CNetAddr& ipRet);
 void AddressCurrentlyConnected(const CService& addr);
@@ -122,6 +123,7 @@ public:
     std::string addrName;
     int nVersion;
     std::string strSubVer;
+    bool fOneShot;
     bool fClient;
     bool fInbound;
     bool fNetworkNode;
@@ -171,6 +173,7 @@ public:
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
         strSubVer = "";
+        fOneShot = false;
         fClient = false; // set by version message
         fInbound = fInboundIn;
         fNetworkNode = false;
