@@ -35,7 +35,7 @@ void ThreadOpenAddedConnections2(void* parg);
 void ThreadMapPort2(void* parg);
 #endif
 void ThreadDNSAddressSeed2(void* parg);
-bool OpenNetworkConnection(const CAddress& addrConnect, const char *strDest = NULL);
+bool OpenNetworkConnection(const CAddress& addrConnect, const char *strDest = NULL, bool fOneShot = false);
 
 
 
@@ -59,6 +59,8 @@ deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 map<CInv, int64> mapAlreadyAskedFor;
 
+static deque<string> vOneShots;
+CCriticalSection cs_vOneShots;
 
 set<CNetAddr> setservAddNodeAddresses;
 CCriticalSection cs_setservAddNodeAddresses;
@@ -67,6 +69,12 @@ static CWaitableCriticalSection csOutbound;
 static int nOutbound = 0;
 static CConditionVariable condOutbound;
 
+
+void AddOneShot(string strDest)
+{
+    LOCK(cs_vOneShots);
+    vOneShots.push_back(strDest);
+}
 
 unsigned short GetListenPort()
 {
@@ -328,7 +336,7 @@ CNode* FindNode(const CService& addr)
 
 CNode* ConnectNode(CAddress addrConnect, const char *pszDest, int64 nTimeout)
 {
-    if (pszDest != NULL) {
+    if (pszDest == NULL) {
         if ((CNetAddr)addrConnect == (CNetAddr)addrLocalHost)
             return NULL;
 
@@ -1038,8 +1046,7 @@ void ThreadDNSAddressSeed2(void* parg)
 
         for (unsigned int seed_idx = 0; seed_idx < ARRAYLEN(strDNSSeed); seed_idx++) {
             if (fProxyNameLookup) {
-                CAddress addr;
-                OpenNetworkConnection(addr, strDNSSeed[seed_idx][1]);
+                AddOneShot(strDNSSeed[seed_idx][1]);
             } else {
                 vector<CNetAddr> vaddr;
                 vector<CAddress> vAdd;
@@ -1205,6 +1212,21 @@ void ThreadOpenConnections(void* parg)
     printf("ThreadOpenConnections exiting\n");
 }
 
+void static ProcessOneShot()
+{
+    string strDest;
+    {
+        LOCK(cs_vOneShots);
+        if (vOneShots.empty())
+            return;
+        strDest = vOneShots.front();
+        vOneShots.pop_front();
+    }
+    CAddress addr;
+    if (!OpenNetworkConnection(addr, strDest.c_str(), true))
+        AddOneShot(strDest);
+}
+
 void ThreadOpenConnections2(void* parg)
 {
     printf("ThreadOpenConnections started\n");
@@ -1214,9 +1236,10 @@ void ThreadOpenConnections2(void* parg)
     {
         for (int64 nLoop = 0;; nLoop++)
         {
+            ProcessOneShot();
             BOOST_FOREACH(string strAddr, mapMultiArgs["-connect"])
             {
-                CAddress addr(CService("0.0.0.0:0"));
+                CAddress addr;
                 OpenNetworkConnection(addr, strAddr.c_str());
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
@@ -1232,6 +1255,8 @@ void ThreadOpenConnections2(void* parg)
     int64 nStart = GetTime();
     loop
     {
+        ProcessOneShot();
+
         vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
         Sleep(500);
         vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
@@ -1403,7 +1428,7 @@ void ThreadOpenAddedConnections2(void* parg)
     }
 }
 
-bool OpenNetworkConnection(const CAddress& addrConnect, const char *strDest)
+bool OpenNetworkConnection(const CAddress& addrConnect, const char *strDest, bool fOneShot)
 {
     //
     // Initiate outbound network connection
@@ -1426,6 +1451,8 @@ bool OpenNetworkConnection(const CAddress& addrConnect, const char *strDest)
     if (!pnode)
         return false;
     pnode->fNetworkNode = true;
+    if (fOneShot)
+        pnode->fOneShot = true;
 
     return true;
 }
