@@ -136,8 +136,8 @@ public:
     }
 
     IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
-    void SetNull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
-    bool IsNull() const { return (nFile == -1); }
+    void SetNull() { nFile = 0; nBlockPos = 0; nTxPos = 0; }
+    bool IsNull() const { return (nFile == 0); }
 
     friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
     {
@@ -156,7 +156,7 @@ public:
         if (IsNull())
             return "null";
         else
-            return strprintf("(nFile=%d, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
+            return strprintf("(nFile=%u, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
     }
 
     void print() const
@@ -176,8 +176,8 @@ public:
 
     CInPoint() { SetNull(); }
     CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
-    void SetNull() { ptx = NULL; n = -1; }
-    bool IsNull() const { return (ptx == NULL && n == -1); }
+    void SetNull() { ptx = NULL; n = 0; }
+    bool IsNull() const { return (ptx == NULL && n == 0); }
 };
 
 
@@ -192,8 +192,8 @@ public:
     COutPoint() { SetNull(); }
     COutPoint(uint256 hashIn, unsigned int nIn) { hash = hashIn; n = nIn; }
     IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
-    void SetNull() { hash = 0; n = -1; }
-    bool IsNull() const { return (hash == 0 && n == -1); }
+    void SetNull() { hash = 0; n = 0; }
+    bool IsNull() const { return (hash == 0 && n == 0); }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
@@ -212,7 +212,7 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("COutPoint(%s, %d)", hash.ToString().substr(0,10).c_str(), n);
+        return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10).c_str(), n);
     }
 
     void print() const
