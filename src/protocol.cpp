@@ -8,6 +8,7 @@
 
 #ifndef __WXMSW__
 # include <arpa/inet.h>
+# include <netinet/in.h>
 #endif
 
 // Prototypes from net.h, but that header (currently) stinks, can't #include it without breaking things
