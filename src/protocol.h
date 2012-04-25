@@ -10,6 +10,10 @@
 #ifndef __INCLUDED_PROTOCOL_H__
 #define __INCLUDED_PROTOCOL_H__
 
+#ifndef WIN32
+#include <netinet/in.h>
+#endif
+
 #include "serialize.h"
 #include <string>
 #include "uint256.h"
