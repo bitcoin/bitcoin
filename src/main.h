@@ -1004,7 +1004,7 @@ public:
         filein >> *this;
 
         // Check the header
-        if (!CheckProofOfWork(GetHash(), nBits))
+        if (IsProofOfWork() && !CheckProofOfWork(GetHash(), nBits))
             return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;
@@ -1199,7 +1199,7 @@ public:
 
     bool CheckIndex() const
     {
-        return CheckProofOfWork(GetBlockHash(), nBits);
+        return IsProofOfWork() ? CheckProofOfWork(GetBlockHash(), nBits) : true;
     }
 
     bool EraseBlockFromDisk()
