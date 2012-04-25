@@ -19,8 +19,6 @@
 #include <netdb.h>
 #include <net/if.h>
 #include <ifaddrs.h>
-#endif
-#ifdef BSD
 #include <netinet/in.h>
 #endif
 
