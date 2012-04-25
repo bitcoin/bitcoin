@@ -12,6 +12,8 @@
 
 #ifdef WIN32
 #include <string.h>
+#else
+#include <netinet/in.h>
 #endif
 
 #ifdef USE_UPNP
