@@ -3279,6 +3279,8 @@ void static BitcoinMiner(CWallet *pwallet)
         if (!pblock.get())
             return;
 
+        IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
+
         // ppcoin: if proof-of-stake block found then process block
         if (pblock->IsProofOfStake())
         {
@@ -3290,8 +3292,6 @@ void static BitcoinMiner(CWallet *pwallet)
             SetThreadPriority(THREAD_PRIORITY_LOWEST);
             continue;
         }
-
-        IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
 
         printf("Running BitcoinMiner with %d transactions in block\n", pblock->vtx.size());
 
