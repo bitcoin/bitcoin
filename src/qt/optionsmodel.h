@@ -26,7 +26,8 @@ public:
         Fee, // qint64
         DisplayUnit, // BitcoinUnits::Unit
         DisplayAddresses, // bool
-        OptionIDRowCount
+        DetachDatabases, // bool
+        OptionIDRowCount,
     };
 
     void Init();

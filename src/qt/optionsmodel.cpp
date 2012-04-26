@@ -28,6 +28,8 @@ void OptionsModel::Init()
         SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool());
     if (settings.contains("addrProxy") && settings.value("fUseProxy").toBool())
         SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
+    if (settings.contains("detachDB"))
+        SoftSetBoolArg("-detachdb", settings.value("detachDB").toBool());
 }
 
 bool OptionsModel::Upgrade()
@@ -121,6 +123,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(nDisplayUnit);
         case DisplayAddresses:
             return QVariant(bDisplayAddresses);
+        case DetachDatabases:
+            return QVariant(fDetachDB);
         default:
             return QVariant();
         }
@@ -202,6 +206,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case DisplayAddresses: {
             bDisplayAddresses = value.toBool();
             settings.setValue("bDisplayAddresses", bDisplayAddresses);
+            }
+            break;
+        case DetachDatabases: {
+            fDetachDB = value.toBool();
+            settings.setValue("detachDB", fDetachDB);
             }
             break;
         default:
