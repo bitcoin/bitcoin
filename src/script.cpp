@@ -939,7 +939,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 {
                     // ([sig ...] num_of_signatures [pubkey ...] num_of_pubkeys -- bool)
 
-                    unsigned int i = 1;
+                    int i = 1;
                     if (stack.size() < i)
                         return false;
 
