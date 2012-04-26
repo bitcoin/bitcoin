@@ -1403,8 +1403,8 @@ Value listsinceblock(const Array& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
-            "listsinceblock [blockid] [target-confirmations]\n"
-            "Get all transactions in blocks since block [blockid], or all transactions if omitted");
+            "listsinceblock [blockhash] [target-confirmations]\n"
+            "Get all transactions in blocks since block [blockhash], or all transactions if omitted");
 
     CBlockIndex *pindex = NULL;
     int target_confirms = 1;
