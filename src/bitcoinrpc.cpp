@@ -1318,7 +1318,6 @@ Value listsinceblock(const Array& params, bool fHelp)
 
     if (target_confirms == 1)
     {
-        printf("oops!\n");
         lastblock = hashBestChain;
     }
     else
