@@ -5,8 +5,9 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/foreach.hpp>
+#include <boost/preprocessor/stringize.hpp>
+#include <boost/test/unit_test.hpp>
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
@@ -87,10 +88,13 @@ read_json(const std::string& filename)
 {
     namespace fs = boost::filesystem;
     fs::path testFile = fs::current_path() / "test" / "data" / filename;
+
+#ifdef TEST_DATA_DIR
     if (!fs::exists(testFile))
     {
-        fs::path testFile = fs::path(__FILE__).parent_path() / "data" / filename;
+        testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
     }
+#endif
 
     ifstream ifs(testFile.string().c_str(), ifstream::in);
     Value v;

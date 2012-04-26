@@ -22,6 +22,9 @@ LIBPATHS= \
 USE_UPNP:=1
 
 LIBS= -dead_strip
+
+TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
+
 ifdef STATIC
 # Build STATIC if you are redistributing the bitcoind binary
 TESTLIBS += \

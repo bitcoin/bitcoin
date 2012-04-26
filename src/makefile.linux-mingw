@@ -31,6 +31,7 @@ DEFS=-D_MT -DWIN32 -D_WINDOWS -DNOPCH -DBOOST_THREAD_USE_LIB
 DEBUGFLAGS=-g
 CFLAGS=-O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
+TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
 ifdef USE_UPNP
 	LIBPATHS += -L"$(DEPSDIR)/miniupnpc"
@@ -78,20 +79,19 @@ obj/%.o: %.cpp $(HEADERS)
 bitcoind.exe: $(OBJS:obj/%=obj/%)
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
+TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
-obj/test/%.o: obj/test/%.cpp $(HEADERS)
-	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
+obj-test/%.o: test/%.cpp $(HEADERS)
+	i586-mingw32msvc-g++ -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
-test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework-mt-s
+test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework $(LIBS)
 
 
 clean:
 	-rm -f obj/*.o
-	-rm -f obj/test/*.o
-	-rm -f test/*.o
-	-rm -f headers.h.gch
 	-rm -f bitcoind.exe
+	-rm -f obj-test/*.o
 	-rm -f test_bitcoin.exe
 	-rm -f src/build.h
 
