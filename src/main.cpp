@@ -1860,11 +1860,12 @@ void PrintBlockTree()
         // print item
         CBlock block;
         block.ReadFromDisk(pindex);
-        printf("%d (%u,%u) %s  %s  tx %d",
+        printf("%d (%u,%u) %s  %08lx  %s  tx %d",
             pindex->nHeight,
             pindex->nFile,
             pindex->nBlockPos,
             block.GetHash().ToString().substr(0,20).c_str(),
+            block.nBits,
             DateTimeStrFormat("%x %H:%M:%S", block.GetBlockTime()).c_str(),
             block.vtx.size());
 
@@ -2973,7 +2974,6 @@ public:
 
 CBlock* CreateNewBlock(CWallet* pwallet)
 {
-    CBlockIndex* pindexPrev = pindexBest;
     CReserveKey reservekey(pwallet);
 
     // Create new block
@@ -2993,9 +2993,11 @@ CBlock* CreateNewBlock(CWallet* pwallet)
 
     // ppcoin: if coinstake available add coinstake tx
     static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift;  // only initialized at startup
-    pblock->nBits = GetNextTargetRequired(pindexPrev, true);
+    CBlockIndex* pindexPrev = pindexBest;
     while (nLastCoinStakeCheckTime < GetAdjustedTime())
     {
+        pindexPrev = pindexBest;  // get best block again to avoid getting stale
+        pblock->nBits = GetNextTargetRequired(pindexPrev, true);
         static CCriticalSection cs;
         CTransaction txCoinStake;
         CRITICAL_BLOCK(cs)
@@ -3009,8 +3011,8 @@ CBlock* CreateNewBlock(CWallet* pwallet)
             break;
         }
     }
-    if (pblock->IsProofOfWork())
-        pblock->nBits = GetNextTargetRequired(pindexPrev, false);
+
+    pblock->nBits = GetNextTargetRequired(pindexPrev, pblock->IsProofOfStake());
 
     // Collect memory pool transactions into the block
     int64 nFees = 0;
