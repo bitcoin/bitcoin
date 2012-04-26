@@ -21,10 +21,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <net/if.h>
-#include <ifaddrs.h>
-#endif
-#ifdef BSD
 #include <netinet/in.h>
+#include <ifaddrs.h>
 #endif
 
 typedef u_int SOCKET;
