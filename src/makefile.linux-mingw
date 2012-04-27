@@ -9,13 +9,13 @@ USE_UPNP:=0
 INCLUDEPATHS= \
  -I"$(DEPSDIR)/boost_1_47_0" \
  -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -I"$(DEPSDIR)/openssl-1.0.0e/include" \
+ -I"$(DEPSDIR)/openssl-1.0.1b/include" \
  -I"$(DEPSDIR)"
 
 LIBPATHS= \
  -L"$(DEPSDIR)/boost_1_47_0/stage/lib" \
  -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -L"$(DEPSDIR)/openssl-1.0.0e"
+ -L"$(DEPSDIR)/openssl-1.0.1b"
 
 LIBS= \
  -l boost_system-mt-s \
