@@ -62,7 +62,7 @@ script: |
   make $MAKEOPTS
   cd ..
   #
-  zip -r $OUTDIR/bitcoin-deps-0.0.3.zip \
+  zip -r $OUTDIR/bitcoin-deps-0.0.4.zip \
     $(ls qrencode-*/{qrencode.h,.libs/libqrencode.{,l}a} | sort) \
     $(ls db-*/build_unix/{libdb_cxx.a,db.h,db_cxx.h,libdb.a,.libs/libdb_cxx-?.?.a} | sort) \
     $(find openssl-* -name '*.a' -o -name '*.h' | sort) \
