@@ -18,7 +18,7 @@ remotes:
 files:
 - "wxwidgets-win32-2.9.2-gitian.zip"
 - "boost-win32-1.47.0-gitian.zip"
-- "openssl-1.0.0d.tar.gz"
+- "openssl-1.0.1b.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
 script: |
@@ -50,8 +50,8 @@ script: |
   mv include/boost .
   cd ..
   #
-  tar xzf openssl-1.0.0d.tar.gz
-  cd openssl-1.0.0d
+  tar xzf openssl-1.0.1b.tar.gz
+  cd openssl-1.0.1b
   ./Configure --cross-compile-prefix=i586-mingw32msvc- mingw
   make
   cd ..

@@ -9,7 +9,7 @@ USE_UPNP:=0
 INCLUDEPATHS= \
  -I"$(DEPSDIR)/boost_1_47_0" \
  -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -I"$(DEPSDIR)/openssl-1.0.0d/include" \
+ -I"$(DEPSDIR)/openssl-1.0.1b/include" \
  -I"$(DEPSDIR)/wxWidgets-2.9.2/lib/gcc_lib/mswud" \
  -I"$(DEPSDIR)/wxWidgets-2.9.2/include" \
  -I"$(DEPSDIR)/wxWidgets-2.9.2/lib/wx/include/i586-mingw32msvc-msw-unicode-static-2.9/" \
@@ -18,7 +18,7 @@ INCLUDEPATHS= \
 LIBPATHS= \
  -L"$(DEPSDIR)/boost_1_47_0/stage/lib" \
  -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -L"$(DEPSDIR)/openssl-1.0.0d" \
+ -L"$(DEPSDIR)/openssl-1.0.1b" \
  -L"$(DEPSDIR)/wxWidgets-2.9.2/lib"
 
 WXLIBS= -l wx_mswu-2.9-i586-mingw32msvc

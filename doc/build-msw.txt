@@ -28,7 +28,7 @@ Libraries you need to download separately and build:
 
                 default path               download
 wxWidgets       \wxwidgets-2.9.2-mgw       http://www.wxwidgets.org/downloads/
-OpenSSL         \openssl-1.0.0d-mgw        http://www.openssl.org/source/
+OpenSSL         \openssl-1.0.1b-mgw        http://www.openssl.org/source/
 Berkeley DB     \db-4.8.30.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
 Boost           \boost-1.47.0-mgw          http://www.boost.org/users/download/
 miniupnpc       \miniupnpc-1.6-mgw         http://miniupnp.tuxfamily.org/files/
@@ -42,7 +42,7 @@ miniupnpc      New (3-clause) BSD license
 
 Versions used in this release:
 wxWidgets    2.9.2
-OpenSSL      1.0.0d
+OpenSSL      1.0.1b
 Berkeley DB  4.8.30.NC
 Boost        1.47.0
 miniupnpc    1.6
@@ -66,7 +66,7 @@ MSYS shell:
 un-tar sources with MSYS 'tar xfz' to avoid issue with symlinks (OpenSSL ticket 2377)
 change 'MAKE' env. variable from 'C:\MinGW32\bin\mingw32-make.exe' to '/c/MinGW32/bin/mingw32-make.exe'
 
-cd /c/openssl-1.0.0d-mgw
+cd /c/openssl-1.0.1b-mgw
 ./config
 make
 
