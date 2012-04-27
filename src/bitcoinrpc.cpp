@@ -2421,7 +2421,7 @@ void ThreadRPCServer2(void* parg)
         acceptor.bind(endpoint);
         acceptor.listen(socket_base::max_connections);
     }
-    catch(system::system_error &e)
+    catch(boost::system::system_error &e)
     {
         HACK_SHUTDOWN = true;
         ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
