@@ -1081,6 +1081,7 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
         if (nBalance <= nBalanceReserve)
             return false;
         set<pair<const CWalletTx*,unsigned int> > setCoins;
+        vector<const CWalletTx*> vwtxPrev;
         int64 nValueIn = 0;
         if (!SelectCoins(nBalance - nBalanceReserve, txNew.nTime, setCoins, nValueIn))
             return false;
@@ -1111,6 +1112,7 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
                 txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
                 nCredit += pcoin.first->vout[pcoin.second].nValue;
                 // Only spend one tx for now
+                vwtxPrev.push_back(pcoin.first);
                 break;
             }
         }
@@ -1121,7 +1123,7 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
             uint64 nCoinAge;
             CTxDB txdb("r");
             if (!txNew.GetCoinAge(txdb, nCoinAge))
-                return false;
+                return error("CreateCoinStake : failed to calculate coin age");
             nCredit += GetProofOfStakeReward(nCoinAge);
         }
         // Fill vout
@@ -1130,12 +1132,10 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
 
         // Sign
         int nIn = 0;
-        BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+        BOOST_FOREACH(const CWalletTx* pcoin, vwtxPrev)
         {
-            if (!SignSignature(*this, *coin.first, txNew, nIn++))
-                return false;
-            // Only spend one tx for now
-            break;
+            if (!SignSignature(*this, *pcoin, txNew, nIn++))
+                return error("CreateCoinStake : failed to sign coinstake");
         }
     }
     return true;
