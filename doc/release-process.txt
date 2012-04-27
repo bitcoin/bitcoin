@@ -2,7 +2,7 @@
 
 * update (commit) version in sources
   bitcoin-qt.pro
-  src/version.cpp
+  src/version.h
   share/setup.nsi
   doc/README*
 
