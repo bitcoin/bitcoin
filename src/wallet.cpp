@@ -312,7 +312,7 @@ void CWallet::MarkDirty()
     }
 }
 
-bool CWallet::AddToWallet(const CWalletTx& wtxIn)
+bool CWallet::AddToWallet(const CWalletTx& wtxIn, int64 nTime)
 {
     uint256 hash = wtxIn.GetHash();
     {
@@ -323,7 +323,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         wtx.BindWallet(this);
         bool fInsertedNew = ret.second;
         if (fInsertedNew)
-            wtx.nTimeReceived = GetAdjustedTime();
+            wtx.nTimeReceived = nTime;
 
         bool fUpdated = false;
         if (!fInsertedNew)
@@ -398,9 +398,12 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
         {
             CWalletTx wtx(this,tx);
             // Get merkle branch if transaction was found in a block
-            if (pblock)
+            if (pblock) {
                 wtx.SetMerkleBranch(pblock);
-            return AddToWallet(wtx);
+                return AddToWallet(wtx, pblock->nTime);
+            } else {
+                return AddToWallet(wtx);
+            }
         }
         else
             WalletUpdateSpent(tx);
