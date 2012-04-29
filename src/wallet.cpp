@@ -1106,7 +1106,7 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
             CBigNum bnCoinDay = CBigNum(nValueIn) * (txNew.nTime-pcoin.first->nTime) / COIN / (24 * 60 * 60);
             // Calculate hash
             CDataStream ss(SER_GETHASH, VERSION);
-            ss << nBits << block.nTime << pcoin.first->nTime << txNew.nTime;
+            ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin.first->nTime << pcoin.second << txNew.nTime;
             if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
             {
                 txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
