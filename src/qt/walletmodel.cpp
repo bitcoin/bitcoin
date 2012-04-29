@@ -59,8 +59,6 @@ void WalletModel::update()
     cachedBalance = newBalance;
     cachedUnconfirmedBalance = newUnconfirmedBalance;
     cachedNumTransactions = newNumTransactions;
-
-    addressTableModel->update();
 }
 
 void WalletModel::updateAddressList()
