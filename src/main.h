@@ -360,7 +360,13 @@ public:
         return (nValue == -1);
     }
 
-    bool IsCoinStake() const
+    bool SetEmpty()
+    {
+        nValue = 0;
+        scriptPubKey.clear();
+    }
+
+    bool IsEmpty() const
     {
         return (nValue == 0 && scriptPubKey.empty());
     }
@@ -383,7 +389,7 @@ public:
 
     std::string ToString() const
     {
-        if (IsCoinStake()) return "CTxOut(coinstake)";
+        if (IsEmpty()) return "CTxOut(empty)";
         if (scriptPubKey.size() < 6)
             return "CTxOut(error)";
         return strprintf("CTxOut(nValue=%s, scriptPubKey=%s)", FormatMoney(nValue).c_str(), scriptPubKey.ToString().substr(0,30).c_str());
@@ -504,7 +510,7 @@ public:
     bool IsCoinStake() const
     {
         // ppcoin: the coin stake transaction is marked with the first output empty
-        return (vout.size() == 2 && vout[0].IsCoinStake());
+        return ((!IsCoinBase()) && vout.size() == 2 && vout[0].IsEmpty());
     }
 
     int GetSigOpCount() const
@@ -632,7 +638,8 @@ public:
     std::string ToString() const
     {
         std::string str;
-        str += strprintf("CTransaction(hash=%s, nTime=%d, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
+        str += IsCoinBase()? "Coinbase" : (IsCoinStake()? "Coinstake" : "CTransaction");
+        str += strprintf("(hash=%s, nTime=%d, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
             GetHash().ToString().substr(0,10).c_str(),
             nTime,
             nVersion,
@@ -1037,8 +1044,9 @@ public:
     bool SignBlock(const CKeyStore& keystore)
     {
         std::vector<std::pair<opcodetype, valtype> > vSolution;
+        const CTxOut& txout = IsProofOfStake()? vtx[1].vout[1] : vtx[0].vout[0];
 
-        if (!Solver(vtx[0].vout[0].scriptPubKey, vSolution))
+        if (!Solver(txout.scriptPubKey, vSolution))
             return false;
         BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
         {
@@ -1063,8 +1071,9 @@ public:
             return vchBlockSig.empty();
 
         std::vector<std::pair<opcodetype, valtype> > vSolution;
+        const CTxOut& txout = IsProofOfStake()? vtx[1].vout[1] : vtx[0].vout[0];
 
-        if (!Solver(vtx[0].vout[0].scriptPubKey, vSolution))
+        if (!Solver(txout.scriptPubKey, vSolution))
             return false;
         BOOST_FOREACH(PAIRTYPE(opcodetype, valtype)& item, vSolution)
         {

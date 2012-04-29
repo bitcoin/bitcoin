@@ -324,9 +324,11 @@ bool CTransaction::CheckTransaction() const
 
     // Check for negative or overflow output values
     int64 nValueOut = 0;
-    for (int i = (IsCoinStake()? 1 : 0); i < vout.size(); i++)
+    for (int i = 0; i < vout.size(); i++)
     {
         const CTxOut& txout = vout[i];
+        if (txout.IsEmpty() && (!IsCoinBase()) && (!IsCoinStake()))
+            return DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
         if (txout.nValue < 0)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue negative"));
         if (txout.nValue > MAX_MONEY)
@@ -1101,7 +1103,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     // ppcoin: fees are not collected by miners as in bitcoin
     // ppcoin: fees are destroyed to compensate the entire network
-    if (vtx[0].GetValueOut() > GetProofOfWorkReward(nBits))
+    if (IsProofOfWork() && vtx[0].GetValueOut() > GetProofOfWorkReward(nBits))
         return false;
     if (fDebug && GetBoolArg("-printcreation"))
         printf("ConnectBlock() : destroy=%s nFees=%"PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
@@ -1495,6 +1497,10 @@ bool CBlock::CheckBlock() const
     for (int i = 2; i < vtx.size(); i++)
         if (vtx[i].IsCoinStake())
             return DoS(100, error("CheckBlock() : coinstake in wrong position"));
+
+    // ppcoin: coinbase output should be empty if proof-of-stake block
+    if (IsProofOfStake() && !vtx[0].vout[0].IsEmpty())
+        return error("CheckBlock() : coinbase output not empty for proof-of-stake block");
 
     // Check coinbase timestamp
     if (GetBlockTime() > (int64)vtx[0].nTime + nMaxClockDrift)
@@ -3014,6 +3020,7 @@ CBlock* CreateNewBlock(CWallet* pwallet)
         if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, pblock->nBits, txCoinStake))
         {
             pblock->vtx.push_back(txCoinStake);
+            pblock->vtx[0].vout[0].SetEmpty();
             break;
         }
     }
