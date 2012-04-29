@@ -57,6 +57,15 @@ void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
+
+    {
+        CNetAddr addr;
+        if (addr.SetSpecial(std::string(pszName))) {
+            vIP.push_back(addr);
+            return true;
+        }
+    }
+
     struct addrinfo aiHint;
     memset(&aiHint, 0, sizeof(struct addrinfo));
 
@@ -530,6 +539,32 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
     memcpy(ip, ipIn.ip, sizeof(ip));
 }
 
+static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
+static const unsigned char pchGarliCat[] = {0xFD,0x60,0xDB,0x4D,0xDD,0xB5};
+
+bool CNetAddr::SetSpecial(const std::string &strName)
+{
+    if (strName.size()>6 && strName.substr(strName.size() - 6, 6) == ".onion") {
+        std::vector<unsigned char> vchAddr = DecodeBase32(strName.substr(0, strName.size() - 6).c_str());
+        if (vchAddr.size() != 16-sizeof(pchOnionCat))
+            return false;
+        memcpy(ip, pchOnionCat, sizeof(pchOnionCat));
+        for (unsigned int i=0; i<16-sizeof(pchOnionCat); i++)
+            ip[i + sizeof(pchOnionCat)] = vchAddr[i];
+        return true;
+    }
+    if (strName.size()>11 && strName.substr(strName.size() - 11, 11) == ".oc.b32.i2p") {
+        std::vector<unsigned char> vchAddr = DecodeBase32(strName.substr(0, strName.size() - 11).c_str());
+        if (vchAddr.size() != 16-sizeof(pchGarliCat))
+            return false;
+        memcpy(ip, pchOnionCat, sizeof(pchGarliCat));
+        for (unsigned int i=0; i<16-sizeof(pchGarliCat); i++)
+            ip[i + sizeof(pchGarliCat)] = vchAddr[i];
+        return true;
+    }
+    return false;
+}
+
 CNetAddr::CNetAddr()
 {
     Init();
@@ -576,7 +611,7 @@ bool CNetAddr::IsIPv4() const
 
 bool CNetAddr::IsIPv6() const
 {
-    return (!IsIPv4());
+    return (!IsIPv4() && !IsTor() && !IsI2P());
 }
 
 bool CNetAddr::IsRFC1918() const
@@ -635,15 +670,13 @@ bool CNetAddr::IsRFC4843() const
     return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10);
 }
 
-bool CNetAddr::IsOnionCat() const
+bool CNetAddr::IsTor() const
 {
-    static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
     return (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
 }
 
-bool CNetAddr::IsGarliCat() const
+bool CNetAddr::IsI2P() const
 {
-    static const unsigned char pchGarliCat[] = {0xFD,0x60,0xDB,0x4D,0xDD,0xB5};
     return (memcmp(ip, pchGarliCat, sizeof(pchGarliCat)) == 0);
 }
 
@@ -705,7 +738,7 @@ bool CNetAddr::IsValid() const
 
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || (IsRFC4193() && !IsOnionCat() && !IsGarliCat()) || IsRFC4843() || IsLocal());
+    return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || (IsRFC4193() && !IsTor() && !IsI2P()) || IsRFC4843() || IsLocal());
 }
 
 enum Network CNetAddr::GetNetwork() const
@@ -716,10 +749,10 @@ enum Network CNetAddr::GetNetwork() const
     if (IsIPv4())
         return NET_IPV4;
 
-    if (IsOnionCat())
+    if (IsTor())
         return NET_TOR;
 
-    if (IsGarliCat())
+    if (IsI2P())
         return NET_I2P;
 
     return NET_IPV6;
@@ -727,6 +760,10 @@ enum Network CNetAddr::GetNetwork() const
 
 std::string CNetAddr::ToStringIP() const
 {
+    if (IsTor())
+        return EncodeBase32(&ip[6], 10) + ".onion";
+    if (IsI2P())
+        return EncodeBase32(&ip[6], 10) + ".oc.b32.i2p";
     CService serv(*this, 0);
 #ifdef USE_IPV6
     struct sockaddr_storage sockaddr;
@@ -739,7 +776,7 @@ std::string CNetAddr::ToStringIP() const
         if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name, sizeof(name), NULL, 0, NI_NUMERICHOST))
             return std::string(name);
     }
-    if (IsIPv4()) 
+    if (IsIPv4())
         return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
     else
         return strprintf("%x:%x:%x:%x:%x:%x:%x:%x",
@@ -828,6 +865,18 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         vchRet.push_back(GetByte(2) ^ 0xFF);
         return vchRet;
     }
+    else if (IsTor())
+    {
+        nClass = NET_TOR;
+        nStartByte = 6;
+        nBits = 4;
+    }
+    else if (IsI2P())
+    {
+        nClass = NET_I2P;
+        nStartByte = 6;
+        nBits = 4;
+    }
     // for he.net, use /36 groups
     else if (GetByte(15) == 0x20 && GetByte(14) == 0x11 && GetByte(13) == 0x04 && GetByte(12) == 0x70)
         nBits = 36;
@@ -861,11 +910,11 @@ void CNetAddr::print() const
     printf("CNetAddr(%s)\n", ToString().c_str());
 }
 
-// for IPv6 partners:        for unknown/Teredo partners:      for IPv4 partners:
-// 0 - unroutable            // 0 - unroutable                 // 0 - unroutable
-// 1 - teredo                // 1 - teredo                     // 1 - ipv4
-// 2 - tunneled ipv6         // 2 - tunneled ipv6
-// 3 - ipv4                  // 3 - ipv6
+// for IPv6 partners:        for unknown/Teredo partners:      for IPv4 partners:     for Tor partners:     for I2P partners:
+// 0 - unroutable            // 0 - unroutable                 // 0 - unroutable      // 0 - unroutable     // 0 - unroutable
+// 1 - teredo                // 1 - teredo                     // 1 - ipv4            // 1 - the rest       // 1 - the rest
+// 2 - tunneled ipv6         // 2 - tunneled ipv6                                     // 2 - ip4            // 2 - I2P
+// 3 - ipv4                  // 3 - ipv6                                              // 3 - tor
 // 4 - ipv6                  // 4 - ipv4
 int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
 {
@@ -873,6 +922,18 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         return 0;
     if (paddrPartner && paddrPartner->IsIPv4())
         return IsIPv4() ? 1 : 0;
+    if (paddrPartner && paddrPartner->IsTor()) {
+        if (IsIPv4())
+            return 2;
+        if (IsTor())
+            return 3;
+        return 1;
+    }
+    if (paddrPartner && paddrPartner->IsI2P()) {
+        if (IsI2P())
+            return 2;
+        return 1;
+    }
     if (IsRFC4380())
         return 1;
     if (IsRFC3964() || IsRFC6052())
@@ -1036,7 +1097,7 @@ std::string CService::ToStringPort() const
 
 std::string CService::ToStringIPPort() const
 {
-    if (IsIPv4()) {
+    if (IsIPv4() || IsTor() || IsI2P()) {
         return ToStringIP() + ":" + ToStringPort();
     } else {
         return "[" + ToStringIP() + "]:" + ToStringPort();

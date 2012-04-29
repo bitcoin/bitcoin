@@ -704,7 +704,7 @@ string DecodeBase64(const string& str)
 
 string EncodeBase32(const unsigned char* pch, size_t len)
 {
-    static const char *pbase32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
     string strRet="";
     strRet.reserve((len+4)/5*8);
