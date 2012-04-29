@@ -772,40 +772,40 @@ bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 std::vector<unsigned char> CNetAddr::GetGroup() const
 {
     std::vector<unsigned char> vchRet;
-    int nClass = 0; // 0=IPv6, 1=IPv4, 254=local, 255=unroutable
+    int nClass = NET_IPV6;
     int nStartByte = 0;
     int nBits = 16;
 
     // all local addresses belong to the same group
     if (IsLocal())
     {
-        nClass = 254;
+        nClass = 255;
         nBits = 0;
     }
 
     // all unroutable addresses belong to the same group
     if (!IsRoutable())
     {
-        nClass = 255;
+        nClass = NET_UNROUTABLE;
         nBits = 0;
     }
     // for IPv4 addresses, '1' + the 16 higher-order bits of the IP
     // includes mapped IPv4, SIIT translated IPv4, and the well-known prefix
     else if (IsIPv4() || IsRFC6145() || IsRFC6052())
     {
-        nClass = 1;
+        nClass = NET_IPV4;
         nStartByte = 12;
     }
     // for 6to4 tunneled addresses, use the encapsulated IPv4 address
     else if (IsRFC3964())
     {
-        nClass = 1;
+        nClass = NET_IPV4;
         nStartByte = 2;
     }
     // for Teredo-tunneled IPv6 addresses, use the encapsulated IPv4 address
     else if (IsRFC4380())
     {
-        vchRet.push_back(1);
+        vchRet.push_back(NET_IPV4);
         vchRet.push_back(GetByte(3) ^ 0xFF);
         vchRet.push_back(GetByte(2) ^ 0xFF);
         return vchRet;
