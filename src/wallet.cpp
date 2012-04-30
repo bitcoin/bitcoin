@@ -1062,7 +1062,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 }
 
 // ppcoin: create coin stake transaction
-bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransaction& txNew)
+bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
 {
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -1111,13 +1111,25 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
             {
                 txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
                 nCredit += pcoin.first->vout[pcoin.second].nValue;
-                // Only spend one tx for now
                 vwtxPrev.push_back(pcoin.first);
+                // Set output scriptPubKey
+                txNew.vout.push_back(CTxOut(0, pcoin.first->vout[pcoin.second].scriptPubKey));
                 break;
             }
         }
         if (nCredit == 0 || nCredit > nBalance - nBalanceReserve)
             return false;
+        BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
+        {
+            if (pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
+            {
+                if (nCredit + pcoin.first->vout[pcoin.second].nValue > nBalance - nBalanceReserve)
+                    break;
+                txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
+                nCredit += pcoin.first->vout[pcoin.second].nValue;
+                vwtxPrev.push_back(pcoin.first);
+            }
+        }
         // Calculate coin age reward
         {
             uint64 nCoinAge;
@@ -1126,9 +1138,8 @@ bool CWallet::CreateCoinStake(CScript scriptPubKey, unsigned int nBits, CTransac
                 return error("CreateCoinStake : failed to calculate coin age");
             nCredit += GetProofOfStakeReward(nCoinAge);
         }
-        // Fill vout
-        txNew.vout.push_back(CTxOut(nCredit, scriptPubKey));
-
+        // Set output amount
+        txNew.vout[1].nValue = nCredit;
 
         // Sign
         int nIn = 0;

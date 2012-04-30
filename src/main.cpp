@@ -3017,7 +3017,7 @@ CBlock* CreateNewBlock(CWallet* pwallet)
             nLastCoinStakeCheckTime++;
             txCoinStake.nTime = nLastCoinStakeCheckTime;
         }
-        if (pwallet->CreateCoinStake(txNew.vout[0].scriptPubKey, pblock->nBits, txCoinStake))
+        if (pwallet->CreateCoinStake(pblock->nBits, txCoinStake))
         {
             pblock->vtx.push_back(txCoinStake);
             pblock->vtx[0].vout[0].SetEmpty();
