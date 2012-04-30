@@ -510,7 +510,7 @@ public:
     bool IsCoinStake() const
     {
         // ppcoin: the coin stake transaction is marked with the first output empty
-        return ((!IsCoinBase()) && vout.size() == 2 && vout[0].IsEmpty());
+        return (vout.size() == 2 && vout[0].IsEmpty());
     }
 
     int GetSigOpCount() const
