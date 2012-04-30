@@ -174,7 +174,7 @@ int CAddrMan::ShrinkNew(int nUBucket)
         nI++;
     }
     CAddrInfo &info = mapInfo[nOldest];
-    if (--info.nRefCount == 0) 
+    if (--info.nRefCount == 0)
     {
         SwapRandom(info.nRandomPos, vRandom.size()-1);
         vRandom.pop_back();
@@ -223,7 +223,7 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId, int nOrigin)
     infoOld.nRefCount = 1;
     // do not update nTried, as we are going to move something else there immediately
 
-    // check whether there is place in that one, 
+    // check whether there is place in that one,
     if (vNew.size() < ADDRMAN_NEW_BUCKET_SIZE)
     {
         // if so, move it back there
