@@ -1585,12 +1585,16 @@ void StartNode(void* parg)
     {
         vector<CNetAddr> vaddr;
         if (LookupHost(pszHostName, vaddr))
+        {
             BOOST_FOREACH (const CNetAddr &addr, vaddr)
+            {
                 if (!addr.IsLocal())
                 {
                     addrLocalHost.SetIP(addr);
                     break;
                 }
+            }
+        }
     }
 #else
     // Get local host ip
