@@ -252,7 +252,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
             *pend = '\0';
             char* p1 = pszBuffer;
             char* p2;
-            while (p2 = strchr(p1, '\n'))
+            while ((p2 = strchr(p1, '\n')))
             {
                 p2++;
                 char c = *p2;
