@@ -542,6 +542,7 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->nHeight        = diskindex.nHeight;
             pindexNew->nCheckpoint    = diskindex.nCheckpoint;
             pindexNew->fProofOfStake  = diskindex.fProofOfStake;
+            pindexNew->prevoutStake   = diskindex.prevoutStake;
             pindexNew->nVersion       = diskindex.nVersion;
             pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
             pindexNew->nTime          = diskindex.nTime;
@@ -554,6 +555,10 @@ bool CTxDB::LoadBlockIndex()
 
             if (!pindexNew->CheckIndex())
                 return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
+
+            // ppcoin: build setStakeSeen
+            if (pindexNew->fProofOfStake)
+                setStakeSeen.insert(pindexNew->prevoutStake);
         }
         else
         {

@@ -29,6 +29,7 @@ unsigned int nTransactionsUpdated = 0;
 map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
+set<COutPoint> setStakeSeen;
 uint256 hashGenesisBlock("0x000000006d52486334316794cc38ffeb7ebf35a7ebd661fd39f5f46b0d001575");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 const int nInitialBlockThreshold = 120; // Regard blocks up until N-threshold as "initial download"
@@ -1312,33 +1313,33 @@ bool CTransaction::CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const
     if (!IsCoinStake())
         return true;
 
-    BOOST_FOREACH(const CTxIn& txin, vin)
-    {
-        // First try finding the previous transaction in database
-        CTransaction txPrev;
-        CTxIndex txindex;
-        if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
-            continue;  // previous transaction not in main chain
-        if (nTime < txPrev.nTime)
-            return false;  // Transaction timestamp violation
+    // Input 0 must match the stake hash target per coin age (nBits)
+    const CTxIn& txin = vin[0];
 
-        // Read block header
-        CBlock block;
-        if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-            return false; // unable to read block of previous transaction
-        if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > nTime)
-            continue; // only count coins from at least one week ago
+    // First try finding the previous transaction in database
+    CTransaction txPrev;
+    CTxIndex txindex;
+    if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
+        return false;  // previous transaction not in main chain
+    if (nTime < txPrev.nTime)
+        return false;  // Transaction timestamp violation
 
-        int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
-        CBigNum bnCoinDay = CBigNum(nValueIn) * (nTime-txPrev.nTime) / COIN / (24 * 60 * 60);
-        // Calculate hash
-        CDataStream ss(SER_GETHASH, VERSION);
-        ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << txPrev.nTime << txin.prevout.n << nTime;
-        if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
-            return true;
-    }
+    // Read block header
+    CBlock block;
+    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+        return false; // unable to read block of previous transaction
+    if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > nTime)
+        return false; // only count coins from at least one week ago
 
-    return false;
+    int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
+    CBigNum bnCoinDay = CBigNum(nValueIn) * (nTime-txPrev.nTime) / COIN / (24 * 60 * 60);
+    // Calculate hash
+    CDataStream ss(SER_GETHASH, VERSION);
+    ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << txPrev.nTime << txin.prevout.n << nTime;
+    if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
+        return true;
+    else
+        return false;
 }
 
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
