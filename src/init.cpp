@@ -656,11 +656,6 @@ bool AppInit2(int argc, char* argv[])
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
 
-#ifdef QT_GUI
-    if (GetStartOnSystemStartup())
-        SetStartOnSystemStartup(true); // Remove startup links
-#endif
-
 #if !defined(QT_GUI)
     while (1)
         Sleep(5000);

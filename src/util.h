@@ -162,8 +162,6 @@ void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-bool GetStartOnSystemStartup();
-bool SetStartOnSystemStartup(bool fAutoStart);
 void ShrinkDebugFile();
 int GetRandInt(int nMax);
 uint64 GetRand(uint64 nMax);
@@ -173,8 +171,6 @@ int64 GetAdjustedTime();
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 void AddTimeData(const CNetAddr& ip, int64 nTime);
-
-
 
 
 

@@ -4,6 +4,7 @@
 
 #include "init.h"
 #include "walletdb.h"
+#include "guiutil.h"
 
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)
@@ -107,7 +108,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         switch(index.row())
         {
         case StartAtStartup:
-            return QVariant(GetStartOnSystemStartup());
+            return QVariant(GUIUtil::GetStartOnSystemStartup());
         case MinimizeToTray:
             return QVariant(fMinimizeToTray);
         case MapPortUPnP:
@@ -146,7 +147,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         switch(index.row())
         {
         case StartAtStartup:
-            successful = SetStartOnSystemStartup(value.toBool());
+            successful = GUIUtil::SetStartOnSystemStartup(value.toBool());
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();
