@@ -93,7 +93,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wformat -Wformat-security -Wno-invalid-offsetof -Wno-sign-compare -Wno-unused-parameter
 
 # Input
-DEPENDPATH += src/qt src src json/include
+DEPENDPATH += src src/json src/qt
 HEADERS += src/qt/bitcoingui.h \
     src/qt/transactiontablemodel.h \
     src/qt/addresstablemodel.h \
