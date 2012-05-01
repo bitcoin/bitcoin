@@ -184,6 +184,7 @@ bool AppInit2(int argc, char* argv[])
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
+            "  -externalip=<ip> \t  "   + _("Specify your own public address") + "\n" +
             "  -irc             \t  "   + _("Find peers using internet relay chat (default: 0)") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
 #ifdef QT_GUI
@@ -545,6 +546,12 @@ bool AppInit2(int argc, char* argv[])
             ThreadSafeMessageBox(strError, _("Bitcoin"), wxOK | wxMODAL);
             return false;
         }
+    }
+
+    if (mapArgs.count("-externalip"))
+    {
+        BOOST_FOREACH(string strAddr, mapMultiArgs["-externalip"])
+            AddLocal(CNetAddr(strAddr, fAllowDNS), LOCAL_MANUAL);
     }
 
     if (mapArgs.count("-addnode"))

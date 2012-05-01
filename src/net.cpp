@@ -46,7 +46,8 @@ bool fClient = false;
 bool fAllowDNS = false;
 static bool fUseUPnP = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
-CAddress addrLocalHost(CService("0.0.0.0", 0), nLocalServices);
+CCriticalSection cs_mapLocalHost;
+map<CNetAddr, int> mapLocalHost;
 static CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 array<int, THREAD_MAX> vnThreadsRunning;
@@ -85,7 +86,45 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
     PushMessage("getblocks", CBlockLocator(pindexBegin), hashEnd);
 }
 
+// find 'best' local address for a particular peer
+bool GetLocal(CNetAddr& addr, const CNetAddr *paddrPeer)
+{
+    if (fUseProxy || mapArgs.count("-connect") || fNoListen)
+        return false;
 
+    int nBestCount = -1;
+    int nBestReachability = -1;
+    {
+        LOCK(cs_mapLocalHost);
+        for (map<CNetAddr, int>::iterator it = mapLocalHost.begin(); it != mapLocalHost.end(); it++)
+        {
+            int nCount = (*it).second;
+            int nReachability = (*it).first.GetReachabilityFrom(paddrPeer);
+            if (nReachability > nBestReachability || (nReachability == nBestReachability && nCount > nBestCount))
+            {
+                addr = (*it).first;
+                nBestReachability = nReachability;
+                nBestCount = nCount;
+            }
+        }
+    }
+    return nBestCount >= 0;
+}
+
+// get best local address for a particular peer as a CAddress
+CAddress GetLocalAddress(const CNetAddr *paddrPeer)
+{
+    CAddress ret(CService("0.0.0.0",0),0);
+    CNetAddr addr;
+    if (GetLocal(addr, paddrPeer))
+    {
+        ret.SetIP(addr);
+        ret.SetPort(GetListenPort());
+        ret.nServices = nLocalServices;
+        ret.nTime = GetAdjustedTime();
+    }
+    return ret;
+}
 
 bool RecvLine(SOCKET hSocket, string& strLine)
 {
@@ -138,6 +177,64 @@ bool RecvLine(SOCKET hSocket, string& strLine)
     }
 }
 
+// used when scores of local addresses may have changed
+// pushes better local address to peers
+void static AdvertizeLocal()
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        if (pnode->fSuccessfullyConnected)
+        {
+            CAddress addrLocal = GetLocalAddress(&pnode->addr);
+            if (addrLocal.IsRoutable() && (CNetAddr)addrLocal != (CNetAddr)pnode->addrLocal)
+            {
+                pnode->PushAddress(addrLocal);
+                pnode->addrLocal = addrLocal;
+            }
+        }
+    }
+}
+
+// learn a new local address
+bool AddLocal(const CNetAddr& addr, int nScore)
+{
+    if (!addr.IsRoutable())
+        return false;
+
+    printf("AddLocal(%s,%i)\n", addr.ToString().c_str(), nScore);
+
+    {
+        LOCK(cs_mapLocalHost);
+        mapLocalHost[addr] = std::max(nScore, mapLocalHost[addr]) + (mapLocalHost.count(addr) ? 1 : 0);
+    }
+
+    AdvertizeLocal();
+
+    return true;
+}
+
+// vote for a local address
+bool SeenLocal(const CNetAddr& addr)
+{
+    {
+        LOCK(cs_mapLocalHost);
+        if (mapLocalHost.count(addr) == 0)
+            return false;
+        mapLocalHost[addr]++;
+    }
+
+    AdvertizeLocal();
+
+    return true;
+}
+
+// check whether a given address is potentially local
+bool IsLocal(const CNetAddr& addr)
+{
+    LOCK(cs_mapLocalHost);
+    return mapLocalHost.count(addr) > 0;
+}
 
 
 bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const char* pszKeyword, CNetAddr& ipRet)
@@ -251,33 +348,11 @@ bool GetMyExternalIP(CNetAddr& ipRet)
 
 void ThreadGetMyExternalIP(void* parg)
 {
-    // Wait for IRC to get it first
-    if (GetBoolArg("-irc", false))
-    {
-        for (int i = 0; i < 2 * 60; i++)
-        {
-            Sleep(1000);
-            if (fGotExternalIP || fShutdown)
-                return;
-        }
-    }
-
-    // Fallback in case IRC fails to get it
+    CNetAddr addrLocalHost;
     if (GetMyExternalIP(addrLocalHost))
     {
         printf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP().c_str());
-        if (addrLocalHost.IsRoutable())
-        {
-            // If we already connected to a few before we had our IP, go back and addr them.
-            // setAddrKnown automatically filters any duplicate sends.
-            CAddress addr(addrLocalHost);
-            addr.nTime = GetAdjustedTime();
-            {
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    pnode->PushAddress(addr);
-            }
-        }
+        AddLocal(addrLocalHost, LOCAL_HTTP);
     }
 }
 
@@ -320,7 +395,7 @@ CNode* FindNode(const CService& addr)
 
 CNode* ConnectNode(CAddress addrConnect, int64 nTimeout)
 {
-    if ((CNetAddr)addrConnect == (CNetAddr)addrLocalHost)
+    if (IsLocal(addrConnect))
         return NULL;
 
     // Look for an existing connection
@@ -406,7 +481,7 @@ void CNode::PushVersion()
     /// when NTP implemented, change to just nTime = GetAdjustedTime()
     int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (fUseProxy ? CAddress(CService("0.0.0.0",0)) : addr);
-    CAddress addrMe = (fUseProxy || !addrLocalHost.IsRoutable() ? CAddress(CService("0.0.0.0",0)) : addrLocalHost);
+    CAddress addrMe = GetLocalAddress(&addr);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight);
@@ -878,24 +953,19 @@ void ThreadMapPort2(void* parg)
     r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
     if (r == 1)
     {
-        if (!addrLocalHost.IsRoutable())
+        char externalIPAddress[40];
+        r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
+        if(r != UPNPCOMMAND_SUCCESS)
+            printf("UPnP: GetExternalIPAddress() returned %d\n", r);
+        else
         {
-            char externalIPAddress[40];
-            r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
-            if(r != UPNPCOMMAND_SUCCESS)
-                printf("UPnP: GetExternalIPAddress() returned %d\n", r);
-            else
+            if(externalIPAddress[0])
             {
-                if(externalIPAddress[0])
-                {
-                    printf("UPnP: ExternalIPAddress = %s\n", externalIPAddress);
-                    CAddress addrExternalFromUPnP(CService(externalIPAddress, 0), nLocalServices);
-                    if (addrExternalFromUPnP.IsRoutable())
-                        addrLocalHost = addrExternalFromUPnP;
-                }
-                else
-                    printf("UPnP: GetExternalIPAddress failed.\n");
+                printf("UPnP: ExternalIPAddress = %s\n", externalIPAddress);
+                AddLocal(CNetAddr(externalIPAddress), LOCAL_UPNP);
             }
+            else
+                printf("UPnP: GetExternalIPAddress failed.\n");
         }
 
         string strDesc = "Bitcoin " + FormatFullVersion();
@@ -1277,7 +1347,7 @@ void ThreadOpenConnections2(void* parg)
             CAddress addr = addrman.Select(10 + min(nOutbound,8)*10);
 
             // if we selected an invalid address, restart
-            if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.GetGroup()) || addr == addrLocalHost)
+            if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
                 break;
 
             nTries++;
@@ -1380,7 +1450,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect)
     //
     if (fShutdown)
         return false;
-    if ((CNetAddr)addrConnect == (CNetAddr)addrLocalHost || !addrConnect.IsIPv4() ||
+    if (IsLocal(addrConnect) || !addrConnect.IsIPv4() ||
         FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect))
         return false;
 
@@ -1489,7 +1559,6 @@ bool BindListenPort(string& strError)
 {
     strError = "";
     int nOne = 1;
-    addrLocalHost.SetPort(GetListenPort());
 
 #ifdef WIN32
     // Initialize Windows Sockets
@@ -1586,11 +1655,7 @@ void StartNode(void* parg)
         vector<CNetAddr> vaddr;
         if (LookupHost(pszHostName, vaddr))
             BOOST_FOREACH (const CNetAddr &addr, vaddr)
-                if (!addr.IsLocal())
-                {
-                    addrLocalHost.SetIP(addr);
-                    break;
-                }
+               AddLocal(addr, LOCAL_IF);
     }
 #else
     // Get local host ip
@@ -1611,32 +1676,26 @@ void StartNode(void* parg)
                     printf("ipv4 %s: %s\n", ifa->ifa_name, pszIP);
 
                 // Take the first IP that isn't loopback 127.x.x.x
-                CAddress addr(CService(s4->sin_addr, GetListenPort()), nLocalServices);
-                if (addr.IsValid() && !addr.IsLocal())
-                {
-                    addrLocalHost = addr;
-                    break;
-                }
+                CNetAddr addr(s4->sin_addr);
+                AddLocal(addr, LOCAL_IF);
             }
             else if (ifa->ifa_addr->sa_family == AF_INET6)
             {
                 struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
                 if (inet_ntop(ifa->ifa_addr->sa_family, (void*)&(s6->sin6_addr), pszIP, sizeof(pszIP)) != NULL)
                     printf("ipv6 %s: %s\n", ifa->ifa_name, pszIP);
+
+#ifdef USE_IPV6
+                CNetAddr addr(s6->sin6_addr);
+                AddLocal(addr, LOCAL_IF);
+#endif
             }
         }
         freeifaddrs(myaddrs);
     }
 #endif
-    printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
 
-    if (fUseProxy || mapArgs.count("-connect") || fNoListen)
-    {
-        // Proxies can't take incoming connections
-        addrLocalHost.SetIP(CNetAddr("0.0.0.0"));
-        printf("addrLocalHost = %s\n", addrLocalHost.ToString().c_str());
-    }
-    else
+    if (!fUseProxy && !mapArgs.count("-connect") && !fNoListen)
     {
         CreateThread(ThreadGetMyExternalIP, NULL);
     }
