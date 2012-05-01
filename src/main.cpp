@@ -1836,7 +1836,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
 
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode)
 {
-    if (nFile == -1)
+    if ((nFile < 1) || (nFile == (unsigned int) -1))
         return NULL;
     FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
     if (!file)
