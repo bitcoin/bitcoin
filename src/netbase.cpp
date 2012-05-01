@@ -910,39 +910,82 @@ void CNetAddr::print() const
     printf("CNetAddr(%s)\n", ToString().c_str());
 }
 
-// for IPv6 partners:        for unknown/Teredo partners:      for IPv4 partners:     for Tor partners:     for I2P partners:
-// 0 - unroutable            // 0 - unroutable                 // 0 - unroutable      // 0 - unroutable     // 0 - unroutable
-// 1 - teredo                // 1 - teredo                     // 1 - ipv4            // 1 - the rest       // 1 - the rest
-// 2 - tunneled ipv6         // 2 - tunneled ipv6                                     // 2 - ip4            // 2 - I2P
-// 3 - ipv4                  // 3 - ipv6                                              // 3 - tor
-// 4 - ipv6                  // 4 - ipv4
+// private extensions to enum Network, only returned by GetExtNetwork,
+// and only used in GetReachabilityFrom
+static const int NET_UNKNOWN = NET_MAX + 0;
+static const int NET_TEREDO  = NET_MAX + 1;
+int static GetExtNetwork(const CNetAddr *addr)
+{
+    if (addr == NULL)
+        return NET_UNKNOWN;
+    if (addr->IsRFC4380())
+        return NET_TEREDO;
+    return addr->GetNetwork();
+}
+
+/** Calculates a metric for how reachable (*this) is from a given partner */
 int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
 {
-    if (!IsValid() || !IsRoutable())
-        return 0;
-    if (paddrPartner && paddrPartner->IsIPv4())
-        return IsIPv4() ? 1 : 0;
-    if (paddrPartner && paddrPartner->IsTor()) {
-        if (IsIPv4())
-            return 2;
-        if (IsTor())
-            return 3;
-        return 1;
+    enum Reachability {
+        REACH_UNREACHABLE,
+        REACH_DEFAULT,
+        REACH_TEREDO,
+        REACH_IPV6_WEAK,
+        REACH_IPV4,
+        REACH_IPV6_STRONG,
+        REACH_PRIVATE
+    };
+
+    if (!IsRoutable())
+        return REACH_UNREACHABLE;
+
+    int ourNet = GetExtNetwork(this);
+    int theirNet = GetExtNetwork(paddrPartner);
+    bool fTunnel = IsRFC3964() || IsRFC6052() || IsRFC6145();
+
+    switch(theirNet) {
+    case NET_IPV4:
+        switch(ourNet) {
+        default:       return REACH_DEFAULT;
+        case NET_IPV4: return REACH_IPV4;
+        }
+    case NET_IPV6:
+        switch(ourNet) {
+        default:         return REACH_DEFAULT;
+        case NET_TEREDO: return REACH_TEREDO;
+        case NET_IPV4:   return REACH_IPV4;
+        case NET_IPV6:   return fTunnel ? REACH_IPV6_WEAK : REACH_IPV6_STRONG; // only prefer giving our IPv6 address if it's not tunneled
+        }
+    case NET_TOR:
+        switch(ourNet) {
+        default:         return REACH_DEFAULT;
+        case NET_IPV4:   return REACH_IPV4; // Tor users can connect to IPv4 as well
+        case NET_TOR:    return REACH_PRIVATE;
+        }
+    case NET_I2P:
+        switch(ourNet) {
+        default:         return REACH_DEFAULT;
+        case NET_I2P:    return REACH_PRIVATE;
+        }
+    case NET_TEREDO:
+        switch(ourNet) {
+        default:          return REACH_DEFAULT;
+        case NET_TEREDO:  return REACH_TEREDO;
+        case NET_IPV6:    return REACH_IPV6_WEAK;
+        case NET_IPV4:    return REACH_IPV4;
+        }
+    case NET_UNKNOWN:
+    case NET_UNROUTABLE:
+    default:
+        switch(ourNet) {
+        default:          return REACH_DEFAULT;
+        case NET_TEREDO:  return REACH_TEREDO;
+        case NET_IPV6:    return REACH_IPV6_WEAK;
+        case NET_IPV4:    return REACH_IPV4;
+        case NET_I2P:     return REACH_PRIVATE; // assume connections from unroutable addresses are
+        case NET_TOR:     return REACH_PRIVATE; // either from Tor/I2P, or don't care about our address
+        }
     }
-    if (paddrPartner && paddrPartner->IsI2P()) {
-        if (IsI2P())
-            return 2;
-        return 1;
-    }
-    if (IsRFC4380())
-        return 1;
-    if (IsRFC3964() || IsRFC6052())
-        return 2;
-    bool fRealIPv6 = paddrPartner && !paddrPartner->IsRFC4380() && paddrPartner->IsValid() && paddrPartner->IsRoutable();
-    if (fRealIPv6)
-        return IsIPv4() ? 3 : 4;
-    else
-        return IsIPv4() ? 4 : 3;
 }
 
 void CService::Init()

@@ -25,7 +25,7 @@ enum Network
     NET_TOR,
     NET_I2P,
 
-    NET_MAX
+    NET_MAX,
 };
 
 extern int nConnectTimeout;
