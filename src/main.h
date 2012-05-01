@@ -53,6 +53,7 @@ static const int fHaveUPnP = false;
 
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
+extern std::set<COutPoint> setStakeSeen;
 extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
@@ -510,7 +511,7 @@ public:
     bool IsCoinStake() const
     {
         // ppcoin: the coin stake transaction is marked with the first output empty
-        return (vout.size() == 2 && vout[0].IsEmpty());
+        return (vin.size() > 0 && vout.size() == 2 && vout[0].IsEmpty());
     }
 
     int GetSigOpCount() const
@@ -1126,6 +1127,7 @@ public:
     int nHeight;
     int nCheckpoint;    // ppcoin: chain auto checkpoint height
     bool fProofOfStake; // ppcoin: is the block of proof-of-stake type
+    COutPoint prevoutStake;
 
     // block header
     int nVersion;
@@ -1146,6 +1148,7 @@ public:
         nChainTrust = 0;
         nCheckpoint = 0;
         fProofOfStake = true;
+        prevoutStake.SetNull();
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1165,6 +1168,10 @@ public:
         nChainTrust = 0;
         nCheckpoint = 0;
         fProofOfStake = block.IsProofOfStake();
+        if (fProofOfStake)
+            prevoutStake = block.vtx[1].vin[0].prevout;
+        else
+            prevoutStake.SetNull();
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -1313,6 +1320,7 @@ public:
         READWRITE(nHeight);
         READWRITE(nCheckpoint);
         READWRITE(fProofOfStake);
+        READWRITE(prevoutStake);
 
         // block header
         READWRITE(this->nVersion);
