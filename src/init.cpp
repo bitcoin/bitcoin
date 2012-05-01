@@ -584,8 +584,8 @@ bool AppInit2(int argc, char* argv[])
         CreateThread(ThreadRPCServer, NULL);
 
 #ifdef QT_GUI
-    if(GetStartOnSystemStartup())
-        SetStartOnSystemStartup(true); // Remove startup links to bitcoin-wx
+    if (GetStartOnSystemStartup())
+        SetStartOnSystemStartup(true); // Remove startup links
 #endif
 
 #if !defined(QT_GUI)
