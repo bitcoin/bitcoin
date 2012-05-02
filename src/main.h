@@ -897,6 +897,11 @@ public:
         return !IsProofOfStake();
     }
 
+    COutPoint GetProofOfStake() const
+    {
+        return IsProofOfStake()? vtx[1].vin[0].prevout : COutPoint();
+    }
+
     // ppcoin: get max transaction timestamp
     int64 GetMaxTransactionTime() const
     {
@@ -1273,8 +1278,9 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, nCheckpoint=%d, fProofOfStake=%d merkle=%s, hashBlock=%s)",
-            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight, nCheckpoint, fProofOfStake,
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, nCheckpoint=%d, fProofOfStake=%d prevoutStake=(%s) merkle=%s, hashBlock=%s)",
+            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight, nCheckpoint,
+            fProofOfStake, prevoutStake.ToString().c_str(),
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
     }
