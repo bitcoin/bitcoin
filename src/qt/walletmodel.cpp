@@ -152,14 +152,20 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         hex = QString::fromStdString(wtx.GetHash().GetHex());
     }
 
-    // Add addresses that we've sent to to the address book
+    // Add addresses / update labels that we've sent to to the address book
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         std::string strAddress = rcp.address.toStdString();
+        std::string strLabel = rcp.label.toStdString();
         CRITICAL_BLOCK(wallet->cs_wallet)
         {
-            if (!wallet->mapAddressBook.count(strAddress))
-                wallet->SetAddressBookName(strAddress, rcp.label.toStdString());
+            std::map<CBitcoinAddress, std::string>::iterator mi = wallet->mapAddressBook.find(strAddress);
+
+            // Check if we have a new address or an updated label
+            if (mi == wallet->mapAddressBook.end() || mi->second != strLabel)
+            {
+                wallet->SetAddressBookName(strAddress, strLabel);
+            }
         }
     }
 
