@@ -58,25 +58,34 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
         ui->signMessage->setVisible(true);
         break;
     }
-    ui->tableView->setTabKeyNavigation(false);
-    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // Context menu actions
-    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
-    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
-    QAction *editAction = new QAction(tr("Edit"), this);
-    deleteAction = new QAction(tr("Delete"), this);
+    QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
+    QAction *copyAddressAction = new QAction(ui->copyToClipboard->text(), this);
+    QAction *editAction = new QAction(tr("&Edit"), this);
+    QAction *showQRCodeAction = new QAction(ui->showQRCode->text(), this);
+    QAction *signMessageAction = new QAction(ui->signMessage->text(), this);
+    deleteAction = new QAction(ui->deleteButton->text(), this);
 
+    // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(editAction);
-    contextMenu->addAction(deleteAction);
+    if(tab == SendingTab)
+        contextMenu->addAction(deleteAction);
+    contextMenu->addSeparator();
+    contextMenu->addAction(showQRCodeAction);
+    if(tab == ReceivingTab)
+        contextMenu->addAction(signMessageAction);
 
+    // Connect signals for context menu actions
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyToClipboard_clicked()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
     connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteButton_clicked()));
+    connect(showQRCodeAction, SIGNAL(triggered()), this, SLOT(on_showQRCode_clicked()));
+    connect(signMessageAction, SIGNAL(triggered()), this, SLOT(on_signMessage_clicked()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
