@@ -189,6 +189,7 @@ bool AppInit2(int argc, char* argv[])
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
             "  -seednode=<ip>   \t\t  " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n" +
             "  -externalip=<ip> \t  "   + _("Specify your own public address") + "\n" +
+            "  -blocknet=<net>  \t  "   + _("Do not connect to addresses in network net (ipv4, ipv6)") + "\n" +
             "  -discover        \t  "   + _("Try to discover public IP address (default: 1)") + "\n" +
             "  -irc             \t  "   + _("Find peers using internet relay chat (default: 0)") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
@@ -558,6 +559,17 @@ bool AppInit2(int argc, char* argv[])
         SoftSetBoolArg("-proxydns", true);
         SoftSetBoolArg("-upnp", false);
         SoftSetBoolArg("-discover", false);
+    }
+
+    if (mapArgs.count("-blocknet")) {
+        BOOST_FOREACH(std::string snet, mapMultiArgs["-blocknet"]) {
+            enum Network net = ParseNetwork(snet);
+            if (net == NET_UNROUTABLE) {
+                ThreadSafeMessageBox(_("Unknown network specified in -blocknet"), _("Bitcoin"), wxOK | wxMODAL);
+                return false;
+            }
+            SetLimited(net);
+        }
     }
 
     fNameLookup = GetBoolArg("-dns");

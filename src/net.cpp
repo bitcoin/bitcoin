@@ -48,6 +48,7 @@ uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
 static CCriticalSection cs_mapLocalHost;
 static map<CNetAddr, int> mapLocalHost;
 static bool vfReachable[NET_MAX] = {};
+static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 array<int, THREAD_MAX> vnThreadsRunning;
@@ -225,7 +226,20 @@ bool AddLocal(const CNetAddr& addr, int nScore)
     return true;
 }
 
-// vote for a local address
+/** Make a particular network entirely off-limits (no automatic connects to it) */
+void SetLimited(enum Network net, bool fLimited)
+{
+    LOCK(cs_mapLocalHost);
+    vfLimited[net] = fLimited;
+}
+
+bool IsLimited(const CNetAddr& addr)
+{
+    LOCK(cs_mapLocalHost);
+    return vfLimited[addr.GetNetwork()];
+}
+
+/** vote for a local address */
 bool SeenLocal(const CNetAddr& addr)
 {
     {
@@ -240,18 +254,19 @@ bool SeenLocal(const CNetAddr& addr)
     return true;
 }
 
-// check whether a given address is potentially local
+/** check whether a given address is potentially local */
 bool IsLocal(const CNetAddr& addr)
 {
     LOCK(cs_mapLocalHost);
     return mapLocalHost.count(addr) > 0;
 }
 
-// check whether a given address is in a network we can probably connect to
+/** check whether a given address is in a network we can probably connect to */
 bool IsReachable(const CNetAddr& addr)
 {
     LOCK(cs_mapLocalHost);
-    return vfReachable[addr.GetNetwork()];
+    enum Network net = addr.GetNetwork();
+    return vfReachable[net] && !vfLimited[net];
 }
 
 bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const char* pszKeyword, CNetAddr& ipRet)
@@ -1408,6 +1423,9 @@ void ThreadOpenConnections2(void* parg)
                 break;
 
             nTries++;
+
+            if (IsLimited(addr))
+                continue;
 
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr.nLastTry < 600 && nTries < 30)
