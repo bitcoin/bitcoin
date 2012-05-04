@@ -29,6 +29,7 @@ enum Network
 };
 
 enum Network ParseNetwork(std::string net);
+void SetNoProxy(enum Network net, bool fNoProxy = true);
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
