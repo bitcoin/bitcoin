@@ -1234,8 +1234,6 @@ public:
     int nType;
     int nVersion;
 
-    typedef FILE element_type;
-
     CAutoFile(FILE* filenew=NULL, int nTypeIn=SER_DISK, int nVersionIn=PROTOCOL_VERSION)
     {
         file = filenew;
