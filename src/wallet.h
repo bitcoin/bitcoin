@@ -175,7 +175,6 @@ public:
     }
 
     int LoadWallet(bool& fFirstRunRet);
-//    bool BackupWallet(const std::string& strDest);
 
     bool SetAddressBookName(const CBitcoinAddress& address, const std::string& strName);
 
