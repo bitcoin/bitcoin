@@ -1669,16 +1669,6 @@ bool CBlock::CheckBlock() const
     if (uniqueTx.size() != vtx.size())
         return DoS(100, error("CheckBlock() : duplicate transaction"));
 
-    // Check for duplicate txids. This is caught by ConnectInputs(),
-    // but catching it earlier avoids a potential DoS attack:
-    set<uint256> uniqueTx;
-    BOOST_FOREACH(const CTransaction& tx, vtx)
-    {
-        uniqueTx.insert(tx.GetHash());
-    }
-    if (uniqueTx.size() != vtx.size())
-        return error("CheckBlock() : duplicate transaction");
-
     int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
