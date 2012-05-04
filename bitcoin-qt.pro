@@ -90,7 +90,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wno-strict-aliasing -Wno-invalid-offsetof -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-char-subscripts  -Wno-unused-value -Wno-sequence-point -Wno-parentheses -Wno-unknown-pragmas -Wno-switch
 
 # Input
-DEPENDPATH += src/qt src src json/include
+DEPENDPATH += src src/json src/qt
 HEADERS += src/qt/bitcoingui.h \
     src/qt/transactiontablemodel.h \
     src/qt/addresstablemodel.h \
@@ -261,7 +261,7 @@ PRE_TARGETDEPS += compiler_TSQM_make_all
 
 # "Other files" to show in Qt Creator
 OTHER_FILES += \
-    doc/*.rst doc/*.txt doc/README README.md
+    doc/*.rst doc/*.txt doc/README README.md res/bitcoin-qt.rc
 
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
