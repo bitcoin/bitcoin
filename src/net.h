@@ -54,6 +54,8 @@ enum
     LOCAL_MAX
 };
 
+void SetLimited(enum Network net, bool fLimited = true);
+bool IsLimited(const CNetAddr& addr);
 bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 bool SeenLocal(const CNetAddr& addr);
 bool IsLocal(const CNetAddr& addr);
