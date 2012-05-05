@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
-    <height>404</height>
+    <width>334</width>
+    <height>423</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>QR-Code Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
