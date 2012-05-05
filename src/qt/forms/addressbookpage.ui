@@ -86,7 +86,7 @@
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
-         <normaloff>:/images/qrcode</normaloff>:/images/qrcode</iconset>
+         <normaloff>:/icons/qrcode</normaloff>:/icons/qrcode</iconset>
        </property>
       </widget>
      </item>
