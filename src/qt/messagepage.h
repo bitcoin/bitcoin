@@ -33,6 +33,7 @@ private slots:
 
     void on_signMessage_clicked();
     void on_copyToClipboard_clicked();
+    void on_clearButton_clicked();
 };
 
 #endif // MESSAGEPAGE_H

@@ -105,3 +105,10 @@ void MessagePage::on_signMessage_clicked()
     ui->signature->setText(QString::fromStdString(EncodeBase64(&vchSig[0], vchSig.size())));
     ui->signature->setFont(GUIUtil::bitcoinAddressFont());
 }
+
+void MessagePage::on_clearButton_clicked()
+{
+    ui->signFrom->clear();
+    ui->message->clear();
+    ui->signature->clear();
+}
