@@ -373,9 +373,13 @@ bool CTransaction::CheckTransaction() const
     return true;
 }
 
-bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
+bool CTxMemPool::accept(CTxDB *ptxdb, CTransaction &tx, bool fCheckInputs,
                         bool* pfMissingInputs)
 {
+    //ptxdb should always be set if (pblockstore->HasFullBlocks())
+    if (pblockstore->HasFullBlocks())
+        assert(ptxdb);
+
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
@@ -402,8 +406,8 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         if (mapTx.count(hash))
             return false;
     }
-    if (fCheckInputs)
-        if (txdb.ContainsTx(hash))
+    if (fCheckInputs && ptxdb)
+        if (ptxdb->ContainsTx(hash))
             return false;
 
     // Check for conflicts with in-memory transactions
@@ -439,7 +443,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         MapPrevTx mapInputs;
         map<uint256, CTxIndex> mapUnused;
         bool fInvalid = false;
-        if (!tx.FetchInputs(txdb, mapUnused, false, false, mapInputs, fInvalid))
+        if (!tx.FetchInputs(ptxdb, mapUnused, false, false, mapInputs, fInvalid))
         {
             if (fInvalid)
                 return error("CTxMemPool::accept() : FetchInputs found invalid tx %s", hash.ToString().substr(0,10).c_str());
@@ -518,9 +522,9 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+bool CTransaction::AcceptToMemoryPool(CTxDB* ptxdb, bool fCheckInputs, bool* pfMissingInputs)
 {
-    return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
+    return mempool.accept(ptxdb, *this, fCheckInputs, pfMissingInputs);
 }
 
 unsigned long CBlockStore::GetPooledTxSize()
@@ -617,32 +621,6 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-
-bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
-{
-
-    {
-        LOCK(mempool.cs);
-        // Add previous supporting transactions first
-        BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
-        {
-            if (!tx.IsCoinBase())
-            {
-                uint256 hash = tx.GetHash();
-                if (!mempool.exists(hash) && !txdb.ContainsTx(hash))
-                    tx.AcceptToMemoryPool(txdb, fCheckInputs);
-            }
-        }
-        return AcceptToMemoryPool(txdb, fCheckInputs);
-    }
-    return false;
-}
-
-bool CWalletTx::AcceptWalletTransaction() 
-{
-    CTxDB txdb("r");
-    return AcceptWalletTransaction(txdb);
-}
 
 int CTxIndex::GetDepthInMainChain() const
 {
@@ -922,7 +900,7 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb)
 }
 
 
-bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTestPool,
+bool CTransaction::FetchInputs(CTxDB* ptxdb, const map<uint256, CTxIndex>& mapTestPool,
                                bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid)
 {
     // FetchInputs can return false either because we just haven't seen some inputs
@@ -950,8 +928,12 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
         }
         else
         {
-            // Read txindex from txdb
-            fFound = txdb.ReadTxIndex(prevout.hash, txindex);
+            if (ptxdb)
+            {
+                // Read txindex from ptxdb
+                fFound = ptxdb->ReadTxIndex(prevout.hash, txindex);
+            }else
+                fFound = false;
         }
         if (!fFound && (fBlock || fMiner))
             return fMiner ? false : error("FetchInputs() : %s prev tx %s index entry not found", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
@@ -1243,7 +1225,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fHeadersOnly)
         if (!tx.IsCoinBase() && pblockstore->HasFullBlocks())
         {
             bool fInvalid;
-            if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
+            if (!tx.FetchInputs(&txdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
                 return false;
 
             if (fStrictPayToScriptHash)
@@ -1379,7 +1361,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     BOOST_FOREACH(CTransaction& tx, vResurrect)
-        tx.AcceptToMemoryPool(txdb, false);
+        tx.AcceptToMemoryPool(&txdb, false);
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete)
@@ -2406,7 +2388,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             map<uint256, CTxIndex> mapTestPoolTmp(mapTestPool);
             MapPrevTx mapInputs;
             bool fInvalid;
-            if (!tx.FetchInputs(txdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
+            if (!tx.FetchInputs(&txdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
                 continue;
 
             int64 nTxFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
@@ -2779,20 +2761,26 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet)
 
 
 
-bool CBlockStore::EmitTransaction(CTransaction& transaction)
+bool CBlockStore::EmitTransaction(CTransaction& transaction, bool fCheckInputs)
 {
+    if (!IsInitialBlockDownload() && HasFullBlocks())
+        fCheckInputs = true;
+
     {
         LOCK(cs_main);
 
-        if (!pblockstore->HasFullBlocks())
+        if (!pblockstore->HasFullBlocks() && fCheckInputs)
             if (!transaction.ClientConnectInputs())
                 return false;
 
         vector<uint256> vWorkQueue;
-        CTxDB txdb("r");
         bool fMissingInputs = false;
 
-        if (transaction.AcceptToMemoryPool(txdb, pblockstore->HasFullBlocks(), &fMissingInputs))
+        CTxDB* ptxdb = NULL;
+        if (pblockstore->HasFullBlocks())
+            ptxdb = new CTxDB("r");
+
+        if (transaction.AcceptToMemoryPool(ptxdb, fCheckInputs, &fMissingInputs))
         {
             {
                 LOCK(cs_callbacks);
@@ -2812,7 +2800,7 @@ bool CBlockStore::EmitTransaction(CTransaction& transaction)
                     CTransaction& tx = *((*mi).second);
                     uint256 hash = tx.GetHash();
 
-                    if (tx.AcceptToMemoryPool(txdb, true))
+                    if (tx.AcceptToMemoryPool(ptxdb, true))
                     {
                         printf("   accepted orphan tx %s\n", hash.ToString().substr(0,10).c_str());
                         {

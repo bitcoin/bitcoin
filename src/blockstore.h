@@ -69,6 +69,8 @@ private:
     std::queue<uint256> queueRelayedCallbacks;
     std::queue<CTransaction*> queueCommitTransactionToMemoryPoolCallbacks;
     std::queue<uint256> queueTransactionReplacedCallbacks;
+
+    bool fTesting;
 public:
 //Util methods
     // Loops to process callbacks (call ProcessCallbacks(void* parg) with a CBlockStore as parg to launch in a thread)
@@ -111,7 +113,9 @@ public:
 
     bool EmitBlock(CBlock& block);
     // Do not call EmitTransaction except for loose transactions (ie transactions not in a block)
-    bool EmitTransaction(CTransaction& transaction);
+    //   fCheckInputs can only ever be set to false if IsInitialBlockDownload() || !HasFullBlocks()
+    //   Only set fCheckInputs when transaction is a supporting tx for one of our own
+    bool EmitTransaction(CTransaction& transaction, bool fCheckInputs=true);
     bool EmitAlert(CAlert& palert);
 
     // Returns the CBlockIndex that points to the block with specified hash or NULL
@@ -127,7 +131,7 @@ public:
     bool NeedInv(const CInv* pinv);
 
     // Returns false if we are an SPV node, ie we can't provide full blocks when requested
-    inline bool HasFullBlocks() { return true; }
+    inline bool HasFullBlocks() { return !fTesting; }
 
     bool IsInitialBlockDownload();
 
@@ -168,6 +172,14 @@ public:
     {
         LOCK(cs_callbacks);
         queueTransactionReplacedCallbacks.push(hash);
+    }
+
+    // fTesting does not read/write to disk
+    //   like everything here, it will not always work/doesnt apply to several functions;
+    //   only for the cases in src/blockstore_tests.cpp
+    CBlockStore(bool fTestingIn = false)
+    {
+        fTesting = fTestingIn;
     }
 };
 
