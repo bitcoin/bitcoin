@@ -24,14 +24,17 @@ MessagePage::MessagePage(QWidget *parent) :
     ui(new Ui::MessagePage)
 {
     ui->setupUi(this);
-    
+
 #if (QT_VERSION >= 0x040700)
     /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+    ui->signFrom->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
     ui->signature->setPlaceholderText(tr("Click \"Sign Message\" to get signature"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->signFrom, this);
     ui->signature->installEventFilter(this);
+
+    ui->signFrom->setFocus();
 }
 
 MessagePage::~MessagePage()
@@ -117,6 +120,8 @@ void MessagePage::on_clearButton_clicked()
     ui->signFrom->clear();
     ui->message->clear();
     ui->signature->clear();
+
+    ui->signFrom->setFocus();
 }
 
 bool MessagePage::eventFilter(QObject *object, QEvent *event)

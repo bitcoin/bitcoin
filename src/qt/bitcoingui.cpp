@@ -724,8 +724,11 @@ void BitcoinGUI::gotoSendCoinsPage()
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
-void BitcoinGUI::gotoMessagePage()
+void BitcoinGUI::gotoMessagePage(QString addr)
 {
+    if(!addr.isEmpty())
+        messagePage->setAddress(addr);
+
 #ifdef FIRST_CLASS_MESSAGING
     messageAction->setChecked(true);
     centralWidget->setCurrentWidget(messagePage);
@@ -734,14 +737,7 @@ void BitcoinGUI::gotoMessagePage()
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 #else
     messagePage->show();
-    messagePage->setFocus();
 #endif
-}
-
-void BitcoinGUI::gotoMessagePage(QString addr)
-{
-    gotoMessagePage();
-    messagePage->setAddress(addr);
 }
 
 void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
