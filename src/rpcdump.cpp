@@ -73,8 +73,6 @@ Value importprivkey(const Array& params, bool fHelp)
         pwalletMain->ReacceptWalletTransactions();
     }
 
-    MainFrameRepaint();
-
     return Value::null;
 }
 

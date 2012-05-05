@@ -84,20 +84,6 @@ void ThreadSafeHandleURI(const std::string& strURI)
                                Q_ARG(QString, QString::fromStdString(strURI)));
 }
 
-void MainFrameRepaint()
-{
-    if(clientmodel)
-        QMetaObject::invokeMethod(clientmodel, "update", Qt::QueuedConnection);
-    if(walletmodel)
-        QMetaObject::invokeMethod(walletmodel, "update", Qt::QueuedConnection);
-}
-
-void AddressBookRepaint()
-{
-    if(walletmodel)
-        QMetaObject::invokeMethod(walletmodel, "updateAddressList", Qt::QueuedConnection);
-}
-
 void InitMessage(const std::string &message)
 {
     if(splashref)
@@ -118,6 +104,61 @@ void QueueShutdown()
 std::string _(const char* psz)
 {
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
+}
+
+void NotifyBlocksChanged()
+{
+    // This notification is too frequent. Don't trigger a signal.
+    // Don't remove it, though, as it might be useful later.
+}
+
+void NotifyKeyStoreStatusChanged(CBasicKeyStore *wallet)
+{
+    // This currently ignores the wallet argument. When multiple wallet support is implemented, this
+    // parameter should be mapped to a specific WalletModel for that wallet.
+    OutputDebugStringF("NotifyKeyStoreStatusChanged\n");
+    if(walletmodel)
+        QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
+}
+
+void NotifyAddressBookChanged(CWallet *wallet, const std::string &address, const std::string &label, ChangeType status)
+{
+    // This currently ignores the wallet argument. When multiple wallet support is implemented, this
+    // parameter should be mapped to a specific WalletModel for that wallet.
+    OutputDebugStringF("NotifyAddressBookChanged %s %s status=%i\n", address.c_str(), label.c_str(), status);
+    if(walletmodel)
+        QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
+                                  Q_ARG(QString, QString::fromStdString(address)),
+                                  Q_ARG(QString, QString::fromStdString(label)),
+                                  Q_ARG(int, status));
+}
+
+void NotifyTransactionChanged(CWallet *wallet, const uint256 &hash, ChangeType status)
+{
+    // This currently ignores the wallet argument. When multiple wallet support is implemented, this
+    // parameter should be mapped to a specific WalletModel for that wallet.
+    OutputDebugStringF("NotifyTransactionChanged %s status=%i\n", hash.GetHex().c_str(), status);
+    if(walletmodel)
+        QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection,
+                                  Q_ARG(QString, QString::fromStdString(hash.GetHex())),
+                                  Q_ARG(int, status));
+}
+
+void NotifyNumConnectionsChanged(int newNumConnections)
+{
+    // Too noisy: OutputDebugStringF("NotifyNumConnectionsChanged %i\n", newNumConnections);
+    if(clientmodel)
+        QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
+                                  Q_ARG(int, newNumConnections));
+}
+
+void NotifyAlertChanged(const uint256 &hash, ChangeType status)
+{
+    OutputDebugStringF("NotifyAlertChanged %s status=%i\n", hash.GetHex().c_str(), status);
+    if(clientmodel)
+        QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection,
+                                  Q_ARG(QString, QString::fromStdString(hash.GetHex())),
+                                  Q_ARG(int, status));
 }
 
 /* Handle runaway exceptions. Shows a message box with the problem and quits the program.

@@ -137,8 +137,12 @@ signals:
     void error(const QString &title, const QString &message, bool modal);
 
 public slots:
-    void update();
-    void updateAddressList();
+    /* Wallet status might have changed */
+    void updateStatus();
+    /* New transaction, or transaction changed status */
+    void updateTransaction(const QString &hash, int status);
+    /* New, updated or removed address book entry */
+    void updateAddressBook(const QString &address, const QString &label, int status);
 };
 
 

@@ -232,9 +232,10 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & pa
     }
 }
 
-void AddressTableModel::update()
+void AddressTableModel::updateEntry(const QString &address, const QString &label, int status)
 {
     // Update address book model from Bitcoin core
+    // TODO: use address, label, status to update only the specified entry (like in WalletModel)
     beginResetModel();
     priv->refreshAddressTable();
     endResetModel();
