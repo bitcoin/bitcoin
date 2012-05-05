@@ -617,7 +617,7 @@ public:
 
     /** Fetch from memory and/or disk. inputsRet keys are transaction hashes.
 
-     @param[in] txdb	Transaction database
+     @param[in] ptxdb	Transaction database
      @param[in] mapTestPool	List of pending changes to the transaction index database
      @param[in] fBlock	True if being called to add a new best-block to the chain
      @param[in] fMiner	True if being called by CreateNewBlock
@@ -625,7 +625,7 @@ public:
      @param[out] fInvalid	returns true if transaction is invalid
      @return	Returns true if all inputs are in txdb or mapTestPool
      */
-    bool FetchInputs(CTxDB& txdb, const std::map<uint256, CTxIndex>& mapTestPool,
+    bool FetchInputs(CTxDB* ptxdb, const std::map<uint256, CTxIndex>& mapTestPool,
                      bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid);
 
     /** Sanity check previous transactions, then, if all checks succeed,
@@ -645,7 +645,7 @@ public:
                        const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash=true);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
-    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
+    bool AcceptToMemoryPool(CTxDB *ptxdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
 
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
@@ -1537,7 +1537,7 @@ public:
     std::map<uint256, CTransaction> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
 
-    bool accept(CTxDB& txdb, CTransaction &tx,
+    bool accept(CTxDB* ptxdb, CTransaction &tx,
                 bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(CTransaction &tx);
     bool remove(CTransaction &tx);

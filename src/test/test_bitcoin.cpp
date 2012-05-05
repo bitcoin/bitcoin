@@ -11,9 +11,10 @@ struct TestingSetup {
     TestingSetup() {
         fPrintToConsole = true; // don't want to write to debug.log file
         pwalletMain = new CWallet();
-        //pblockstore = new CBlockStore();
-        //if (!CreateThread(ProcessCallbacks, pblockstore))
-        //    wxMessageBox(_("Error: CreateThread(ProcessCallbacks) failed"), "Bitcoin");
+        pblockstore = new CBlockStore(true);
+        // TODO: have to make sure util_tests are run before blockstore_tests to
+        //   identify thread issues before they show up as blockstore issues
+        CreateThread(ProcessCallbacks, pblockstore);
         //pwalletMain->RegisterWithBlockStore(pblockstore);
     }
     ~TestingSetup()

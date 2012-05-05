@@ -743,6 +743,17 @@ int CWallet::ScanForWalletTransaction(const uint256& hashTx)
     return 0;
 }
 
+bool CWalletTx::AcceptWalletTransaction()
+{
+    // Add previous supporting transactions first
+    BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
+    {
+        if (!tx.IsCoinBase())
+            pblockstore->EmitTransaction(tx, false);
+    }
+    return pblockstore->EmitTransaction(*this);
+}
+
 void CWallet::ReacceptWalletTransactions()
 {
     assert(pblockstore->HasFullBlocks());
@@ -791,7 +802,7 @@ void CWallet::ReacceptWalletTransactions()
             {
                 // Reaccept any txes of ours that aren't already in a block
                 if (!wtx.IsCoinBase())
-                    wtx.AcceptWalletTransaction(txdb, false);
+                    wtx.AcceptWalletTransaction();
             }
         }
         if (!vMissingTx.empty())
