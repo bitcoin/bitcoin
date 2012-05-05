@@ -22,9 +22,6 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="text">
-      <string/>
-     </property>
      <property name="pixmap">
       <pixmap resource="../bitcoin.qrc">:/images/about</pixmap>
      </property>
@@ -49,6 +46,9 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="label">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
          <property name="text">
           <string>&lt;b&gt;Bitcoin&lt;/b&gt; version</string>
          </property>
@@ -59,6 +59,9 @@
        </item>
        <item>
         <widget class="QLabel" name="versionLabel">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
          <property name="text">
           <string notr="true">0.3.666-beta</string>
          </property>
@@ -87,6 +90,9 @@
      </item>
      <item>
       <widget class="QLabel" name="label_2">
+       <property name="cursor">
+        <cursorShape>IBeamCursor</cursorShape>
+       </property>
        <property name="text">
         <string>Copyright © 2009-2012 Bitcoin Developers
 
