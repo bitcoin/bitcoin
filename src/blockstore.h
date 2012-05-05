@@ -46,9 +46,9 @@ struct anyTrue
 // This API is subject to change dramatically overnight, do not
 // depend on it for anything.
 
-class CBlockStore
+class CBlockStoreSignalTable
 {
-private:
+public:
     CCriticalSection cs_signals;
 
     boost::signals2::signal<void (const CBlock&)> sigCommitBlock;
@@ -62,15 +62,27 @@ private:
     boost::signals2::signal<void (const uint256)> sigRelayed;
     boost::signals2::signal<bool (const CTransaction&), anyTrue<bool> > sigIsTransactionFromMe;
     boost::signals2::signal<bool (const uint256), anyTrue<bool> > sigIsTransactionFromMeByHash;
+};
+
+class CBlockStoreCallback
+{
+public:
+    virtual ~CBlockStoreCallback() {};
+    virtual void Signal(const CBlockStoreSignalTable& sigtable) =0;
+};
+
+class CBlockStore
+{
+private:
+    CBlockStoreSignalTable sigtable;
 
     CCriticalSection cs_callbacks;
-    std::queue<CBlock*> queueCommitBlockCallbacks;
-    std::queue<std::pair<uint256, uint256> > queueAskForBlocksCallbacks;
-    std::queue<uint256> queueRelayedCallbacks;
-    std::queue<CTransaction*> queueCommitTransactionToMemoryPoolCallbacks;
-    std::queue<uint256> queueTransactionReplacedCallbacks;
+    std::queue<CBlockStoreCallback*> queueCallbacks;
 
     bool fTesting;
+
+    void SubmitCallbackCommitTransactionToMemoryPool(const CTransaction &tx);
+    void SubmitCallbackCommitBlock(const CBlock &block);
 public:
 //Util methods
     // Loops to process callbacks (call ProcessCallbacks(void* parg) with a CBlockStore as parg to launch in a thread)
@@ -78,14 +90,14 @@ public:
 
 //Register methods
     // Register a handler (of the form void f(const CBlock& block)) to be called after every block commit
-    void RegisterCommitBlock(boost::function<void (const CBlock&)> func) { sigCommitBlock.connect(func); }
+    void RegisterCommitBlock(boost::function<void (const CBlock&)> func) { sigtable.sigCommitBlock.connect(func); }
 
     // Register a handler (of the form void f(const CTransaction& block)) to be called after every transaction commit to memory pool
     //   CommitTransactionToMemoryPool is called even when !HasFullBlocks() and txes should NOT be forwarded in that case.
-    void RegisterCommitTransactionToMemoryPool(boost::function<void (const CTransaction&)> func) { sigCommitTransactionToMemoryPool.connect(func); }
+    void RegisterCommitTransactionToMemoryPool(boost::function<void (const CTransaction&)> func) { sigtable.sigCommitTransactionToMemoryPool.connect(func); }
 
     // Register a handler (of the form void f(const uint256)) to be called when a transaciton is replaced
-    void RegisterTransactionReplaced(boost::function<void (const uint256)> func) {sigTransactionReplaced.connect(func); }
+    void RegisterTransactionReplaced(boost::function<void (const uint256)> func) {sigtable.sigTransactionReplaced.connect(func); }
 
     //void RegisterCommitAlert(boost::function<void (const CAlert*)> func) { sigCommitAlert.connect(func); }
 
@@ -93,19 +105,19 @@ public:
     //   Should always start from the best block (GetBestBlockIndex())
     //   The receiver should check if it has a peer which is known to have a block with hash hashOriginator and if it does, it should
     //    send the block query to that node.
-    void RegisterAskForBlocks(boost::function<void (const uint256, const uint256)> func) { sigAskForBlocks.connect(func); }
+    void RegisterAskForBlocks(boost::function<void (const uint256, const uint256)> func) { sigtable.sigAskForBlocks.connect(func); }
 
     // Register a handler (of the form void f(const uint256 hash)) to be called when a node announces or requests an Inv with hash hash
     //   Ideal for wallets which want to keep track of whether their transactions are being relayed to other nodes
-    void RegisterRelayedNotification(boost::function<void (const uint256)> func) { sigRelayed.connect(func); }
+    void RegisterRelayedNotification(boost::function<void (const uint256)> func) { sigtable.sigRelayed.connect(func); }
 
     // Register a handler (of the form bool f(const CTransaction& tx)) which will return true if a given transaction is from a locally attached user
     //   This is used to determine how transactions should be handled in the free transaction and transaction relay logic 
-    void RegisterIsTransactionFromMe(boost::function<bool (const CTransaction&)> func) { sigIsTransactionFromMe.connect(func); }
+    void RegisterIsTransactionFromMe(boost::function<bool (const CTransaction&)> func) { sigtable.sigIsTransactionFromMe.connect(func); }
 
     // Register a handler (of the form bool f(const uint256)) which will return true if a transaction with the given hash is from a locally attached user
     //   This is used to determine how transactions should be handled in the free transaction and transaction relay logic 
-    void RegisterIsTransactionFromMeByHash(boost::function<bool (const uint256)> func) { sigIsTransactionFromMeByHash.connect(func); }
+    void RegisterIsTransactionFromMeByHash(boost::function<bool (const uint256)> func) { sigtable.sigIsTransactionFromMeByHash.connect(func); }
 
 //Blockchain access methods
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to
@@ -147,32 +159,20 @@ public:
     // If hashOriginator is specified, then a node which is known to have a block
     //   with that hash will be the one to get the block request, unless no connected
     //   nodes are known to have this block, in which case a random one will be queried.
-    void AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
-    {
-        LOCK(cs_callbacks);
-        queueAskForBlocksCallbacks.push(std::make_pair(hashEnd, hashOriginator));
-    }
+    void AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator);
 
     // Relay all alerts we have to pnode
     void RelayAlerts(CNode* pnode);
 
     // Used to indicate a transaction is being relayed/has been announced by a peer
     //   (used eg for wallets counting relays of their txes)
-    void Relayed(const uint256 hash)
-    {
-        LOCK(cs_callbacks);
-        queueRelayedCallbacks.push(hash);
-    }
+    void Relayed(const uint256 hash);
 
     // Returns true if a given transaction is from a connected wallet
-    bool IsTransactionFromMe(const CTransaction& tx) { return sigIsTransactionFromMe(tx); }
-    bool IsTransactionFromMe(const uint256 hash) { return sigIsTransactionFromMeByHash(hash); }
+    bool IsTransactionFromMe(const CTransaction& tx) { return sigtable.sigIsTransactionFromMe(tx); }
+    bool IsTransactionFromMe(const uint256 hash) { return sigtable.sigIsTransactionFromMeByHash(hash); }
 
-    void TransactionReplaced(const uint256 hash)
-    {
-        LOCK(cs_callbacks);
-        queueTransactionReplacedCallbacks.push(hash);
-    }
+    void TransactionReplaced(const uint256 hash);
 
     // fTesting does not read/write to disk
     //   like everything here, it will not always work/doesnt apply to several functions;
