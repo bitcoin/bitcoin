@@ -278,8 +278,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         static int nAskedForBlocks = 0;
         if (!pfrom->fClient && !pfrom->fOneShot &&
             (pfrom->nVersion < NOBLKS_VERSION_START ||
-       pfrom->nVersion >= NOBLKS_VERSION_END) &&
-             (nAskedForBlocks < 1 || vNodes.size() <= 1))
+             pfrom->nVersion >= NOBLKS_VERSION_END) &&
+            (nAskedForBlocks < 1 || vNodes.size() <= 1))
         {
             nAskedForBlocks++;
             pfrom->PushGetBlocks(pblockstore->GetBestBlockIndex(), uint256(0));
@@ -829,7 +829,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
     // Keep-alive ping. We send a nonce of zero because we don't use it anywhere 
     // right now.
-    if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty()) {
+    if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty())
+    {
         if (pto->nVersion > BIP0031_VERSION)
             pto->PushMessage("ping", 0);
         else
