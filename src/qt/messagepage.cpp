@@ -26,6 +26,7 @@ MessagePage::MessagePage(QWidget *parent) :
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->signFrom, this);
+    ui->signature->installEventFilter(this);
 }
 
 MessagePage::~MessagePage()
@@ -111,4 +112,15 @@ void MessagePage::on_clearButton_clicked()
     ui->signFrom->clear();
     ui->message->clear();
     ui->signature->clear();
+}
+
+bool MessagePage::eventFilter(QObject *object, QEvent *event)
+{
+    if(object == ui->signature && (event->type() == QEvent::MouseButtonPress ||
+                                   event->type() == QEvent::FocusIn))
+    {
+        ui->signature->selectAll();
+        return true;
+    }
+    return QDialog::eventFilter(object, event);
 }
