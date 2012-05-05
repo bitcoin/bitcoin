@@ -2391,6 +2391,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return error("message inv size() = %d", vInv.size());
         }
 
+        // find last block in inv vector
+        unsigned int nLastBlock = (unsigned int)(-1);
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++) {
+            if (vInv[vInv.size() - 1 - nInv].type == MSG_BLOCK)
+                nLastBlock = vInv.size() - 1 - nInv;
+        }
         CTxDB txdb("r");
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
@@ -2407,9 +2413,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             // Always request the last block in an inv bundle (even if we already have it), as it is the
             // trigger for the other side to send further invs. If we are stuck on a (very long) side chain,
             // this is necessary to connect earlier received orphan blocks to the chain again.
-            if (!fAlreadyHave || (inv.type == MSG_BLOCK && nInv==vInv.size()-1))
+            if (fAlreadyHave && nInv == nLastBlock) {
+                // bypass mapAskFor, and send request directly; it must go through.
+                std::vector<CInv> vGetData(1,inv);
+                pfrom->PushMessage("getdata", vGetData);
+            }
+
+            if (!fAlreadyHave)
                 pfrom->AskFor(inv);
-            if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
+            else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
                 pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
 
             // Track requests for our stuff
