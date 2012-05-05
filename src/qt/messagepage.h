@@ -23,6 +23,9 @@ public:
 
     void setAddress(QString);
 
+protected:
+    bool eventFilter(QObject *object, QEvent *event);
+
 private:
     Ui::MessagePage *ui;
     WalletModel *model;
