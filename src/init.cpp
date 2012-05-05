@@ -54,6 +54,7 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
+        if (pblockstore) pblockstore->StopProcessCallbacks();
         nTransactionsUpdated++;
         DBFlush(false);
         StopNode();
