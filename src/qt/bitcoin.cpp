@@ -187,30 +187,31 @@ int main(int argc, char *argv[])
     // ... then GUI settings:
     OptionsModel optionsModel;
 
-    // Get desired locale ("en_US") from command line or system locale
+    // Get desired locale (e.g. "de_DE") from command line or use system locale
     QString lang_territory = QString::fromStdString(GetArg("-lang", QLocale::system().name().toStdString()));
+    QString lang = lang_territory;
+    // Convert to "de" only by truncating "_DE"
+    lang.truncate(lang_territory.lastIndexOf('_'));
+
+    QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     // Load language files for configured locale:
     // - First load the translator for the base language, without territory
     // - Then load the more specific locale translator
-    QString lang = lang_territory;
 
-    lang.truncate(lang_territory.lastIndexOf('_')); // "en"
-    QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
-
-    qtTranslatorBase.load(QLibraryInfo::location(QLibraryInfo::TranslationsPath) + "/qt_" + lang);
-    if (!qtTranslatorBase.isEmpty())
+    // Load e.g. qt_de.qm
+    if (qtTranslatorBase.load("qt_" + lang, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         app.installTranslator(&qtTranslatorBase);
 
-    qtTranslator.load(QLibraryInfo::location(QLibraryInfo::TranslationsPath) + "/qt_" + lang_territory);
-    if (!qtTranslator.isEmpty())
+    // Load e.g. qt_de_DE.qm
+    if (qtTranslator.load("qt_" + lang_territory, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         app.installTranslator(&qtTranslator);
 
-    translatorBase.load(":/translations/"+lang);
-    if (!translatorBase.isEmpty())
+    // Load e.g. bitcoin_de.qm (shortcut "de" needs to be defined in bitcoin.qrc)
+    if (translatorBase.load(lang, ":/translations/"))
         app.installTranslator(&translatorBase);
 
-    translator.load(":/translations/"+lang_territory);
-    if (!translator.isEmpty())
+    // Load e.g. bitcoin_de_DE.qm (shortcut "de_DE" needs to be defined in bitcoin.qrc)
+    if (translator.load(lang_territory, ":/translations/"))
         app.installTranslator(&translator);
 
     QSplashScreen splash(QPixmap(":/images/splash"), 0);
