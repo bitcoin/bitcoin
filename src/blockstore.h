@@ -76,10 +76,12 @@ class CBlockStore
 private:
     CBlockStoreSignalTable sigtable;
 
-    CCriticalSection cs_callbacks;
+    CWaitableCriticalSection cs_callbacks;
     std::queue<CBlockStoreCallback*> queueCallbacks;
+    CConditionVariable condHaveCallbacks;
 
     bool fTesting;
+    bool fProcessCallbacks;
 
     void SubmitCallbackCommitTransactionToMemoryPool(const CTransaction &tx);
     void SubmitCallbackCommitBlock(const CBlock &block);
@@ -87,6 +89,7 @@ public:
 //Util methods
     // Loops to process callbacks (call ProcessCallbacks(void* parg) with a CBlockStore as parg to launch in a thread)
     void ProcessCallbacks();
+    void StopProcessCallbacks();
 
 //Register methods
     // Register a handler (of the form void f(const CBlock& block)) to be called after every block commit

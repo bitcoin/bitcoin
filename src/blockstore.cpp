@@ -48,32 +48,37 @@ public:
 
 void CBlockStore::AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
 {
-    LOCK(cs_callbacks);
-    queueCallbacks.push(new CBlockStoreCallbackAskForBlocks(hashEnd, hashOriginator));
+    WAITABLE_LOCK(cs_callbacks);
+        queueCallbacks.push(new CBlockStoreCallbackAskForBlocks(hashEnd, hashOriginator));
+    NOTIFY(condHaveCallbacks);
 }
 
 void CBlockStore::Relayed(const uint256 hash)
 {
-    LOCK(cs_callbacks);
-    queueCallbacks.push(new CBlockStoreCallbackRelayed(hash));
+    WAITABLE_LOCK(cs_callbacks);
+        queueCallbacks.push(new CBlockStoreCallbackRelayed(hash));
+    NOTIFY(condHaveCallbacks);
 }
 
 void CBlockStore::TransactionReplaced(const uint256 hash)
 {
-    LOCK(cs_callbacks);
-    queueCallbacks.push(new CBlockStoreCallbackTransactionReplaced(hash));
+    WAITABLE_LOCK(cs_callbacks);
+        queueCallbacks.push(new CBlockStoreCallbackTransactionReplaced(hash));
+    NOTIFY(condHaveCallbacks);
 }
 
 void CBlockStore::SubmitCallbackCommitTransactionToMemoryPool(const CTransaction &tx)
 {
-    LOCK(cs_callbacks);
-    queueCallbacks.push(new CBlockStoreCallbackCommitTransactionToMemoryPool(tx));
+    WAITABLE_LOCK(cs_callbacks);
+        queueCallbacks.push(new CBlockStoreCallbackCommitTransactionToMemoryPool(tx));
+    NOTIFY(condHaveCallbacks);
 }
 
 void CBlockStore::SubmitCallbackCommitBlock(const CBlock &block)
 {
-    LOCK(cs_callbacks);
-    queueCallbacks.push(new CBlockStoreCallbackCommitBlock(block));
+    WAITABLE_LOCK(cs_callbacks);
+        queueCallbacks.push(new CBlockStoreCallbackCommitBlock(block));
+    NOTIFY(condHaveCallbacks);
 }
 
 void ProcessCallbacks(void* parg)
@@ -83,27 +88,37 @@ void ProcessCallbacks(void* parg)
 
 void CBlockStore::ProcessCallbacks()
 {
+    {
+        WAITABLE_LOCK(cs_callbacks);
+        fProcessCallbacks = true;
+    }
+
     loop
     {
         CBlockStoreCallback *pcallback = NULL;
         {
-            LOCK(cs_callbacks);
-            if (!queueCallbacks.empty())
+            WAITABLE_LOCK(cs_callbacks);
+            WAIT(condHaveCallbacks, !fProcessCallbacks || queueCallbacks.size()>0);
+            if (fProcessCallbacks)
             {
                 pcallback = queueCallbacks.front();
                 queueCallbacks.pop();
             }
         }
 
-        if (pcallback)
-        {
-            pcallback->Signal(sigtable);
-            delete pcallback;
-        }
-        else
-            Sleep(100);
-
-        if (fShutdown)
+        if (!fProcessCallbacks)
             return;
+
+        pcallback->Signal(sigtable);
+        delete pcallback;
+    }
+}
+
+void CBlockStore::StopProcessCallbacks()
+{
+    {
+        WAITABLE_LOCK(cs_callbacks);
+        fProcessCallbacks = false;
+        NOTIFY_ALL(condHaveCallbacks);
     }
 }
