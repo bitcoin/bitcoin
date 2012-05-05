@@ -12,7 +12,7 @@ packages:
 - "faketime"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
+- "url": "https://git.gitorious.org/+bitcoin-stable-developers/bitcoin/bitcoind-stable.git"
   "dir": "bitcoin"
 files:
 - "qt-win32-4.7.4-gitian.zip"
