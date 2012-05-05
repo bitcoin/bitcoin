@@ -10,6 +10,7 @@ class CWallet;
 
 QT_BEGIN_NAMESPACE
 class QDateTime;
+class QTimer;
 QT_END_NAMESPACE
 
 /** Model for Bitcoin network client. */
@@ -44,23 +45,24 @@ public:
 private:
     OptionsModel *optionsModel;
 
-    int cachedNumConnections;
     int cachedNumBlocks;
-    QString cachedStatusBar;
+    int cachedNumBlocksOfPeers;
 
     int numBlocksAtStartup;
 
+    QTimer *pollTimer;
+
 signals:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count);
+    void numBlocksChanged(int count, int countOfPeers);
 
     //! Asynchronous error notification
     void error(const QString &title, const QString &message, bool modal);
 
 public slots:
-
-private slots:
-    void update();
+    void updateTimer();
+    void updateNumConnections(int numConnections);
+    void updateAlert(const QString &hash, int status);
 };
 
 #endif // CLIENTMODEL_H

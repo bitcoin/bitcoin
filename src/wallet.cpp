@@ -274,7 +274,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
         CDB::Rewrite(strWalletFile);
+
     }
+    NotifyKeyStoreStatusChanged(this);
 
     return true;
 }
@@ -297,7 +299,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
                     printf("WalletUpdateSpent found spent coin %sbc %s\n", FormatMoney(wtx.GetCredit()).c_str(), wtx.GetHash().ToString().c_str());
                     wtx.MarkSpent(txin.prevout.n);
                     wtx.WriteToDisk();
-                    vWalletUpdated.push_back(txin.prevout.hash);
+                    NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
                 }
             }
         }
@@ -373,15 +375,12 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
             }
         }
 #endif
-        // Notify UI
-        vWalletUpdated.push_back(hash);
-
         // since AddToWallet is called directly for self-originating transactions, check for consumption of own coins
         WalletUpdateSpent(wtx);
-    }
 
-    // Refresh UI
-    MainFrameRepaint();
+        // Notify UI of new or updated transaction
+        NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
+    }
     return true;
 }
 
@@ -1183,7 +1182,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 coin.BindWallet(this);
                 coin.MarkSpent(txin.prevout.n);
                 coin.WriteToDisk();
-                vWalletUpdated.push_back(coin.GetHash());
+                NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
             }
 
             if (fFileBacked)
@@ -1202,7 +1201,6 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         }
         wtxNew.RelayWalletTransaction();
     }
-    MainFrameRepaint();
     return true;
 }
 
@@ -1237,7 +1235,6 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
     if (!CommitTransaction(wtxNew, reservekey))
         return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 
-    MainFrameRepaint();
     return "";
 }
 
@@ -1290,8 +1287,9 @@ int CWallet::LoadWallet(bool& fFirstRunRet)
 
 bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& strName)
 {
+    std::map<CBitcoinAddress, std::string>::iterator mi = mapAddressBook.find(address);
     mapAddressBook[address] = strName;
-    AddressBookRepaint();
+    NotifyAddressBookChanged(this, address.ToString(), strName, (mi == mapAddressBook.end()) ? CT_NEW : CT_UPDATED);
     if (!fFileBacked)
         return false;
     return CWalletDB(strWalletFile).WriteName(address.ToString(), strName);
@@ -1300,7 +1298,7 @@ bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& s
 bool CWallet::DelAddressBookName(const CBitcoinAddress& address)
 {
     mapAddressBook.erase(address);
-    AddressBookRepaint();
+    NotifyAddressBookChanged(this, address.ToString(), "", CT_DELETED);
     if (!fFileBacked)
         return false;
     return CWalletDB(strWalletFile).EraseName(address.ToString());
@@ -1556,5 +1554,16 @@ void CWallet::GetAllReserveAddresses(set<CBitcoinAddress>& setAddress)
         if (!HaveKey(address))
             throw runtime_error("GetAllReserveKeyHashes() : unknown key in key pool");
         setAddress.insert(address);
+    }
+}
+
+void CWallet::UpdatedTransaction(const uint256 &hashTx)
+{
+    {
+        LOCK(cs_wallet);
+        // Only notify UI if this transaction is in this wallet
+        map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
+        if (mi != mapWallet.end())
+            NotifyTransactionChanged(this, hashTx, CT_UPDATED);
     }
 }

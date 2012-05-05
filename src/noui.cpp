@@ -19,14 +19,6 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
     return true;
 }
 
-void MainFrameRepaint()
-{
-}
-
-void AddressBookRepaint()
-{
-}
-
 void InitMessage(const std::string &message)
 {
 }
@@ -42,3 +34,26 @@ void QueueShutdown()
     CreateThread(Shutdown, NULL);
 }
 
+void NotifyBlocksChanged()
+{
+}
+
+void NotifyKeyStoreStatusChanged(CBasicKeyStore *wallet)
+{
+}
+
+void NotifyAddressBookChanged(CWallet *wallet, const std::string &address, const std::string &label, EntryStatus status)
+{
+}
+
+void NotifyTransactionChanged(CWallet *wallet, const uint256 &hashTx, EntryStatus status)
+{
+}
+
+void NotifyNumConnectionsChanged(int newNumConnections)
+{
+}
+
+void NotifyAlertChanged(const uint256 &hash, EntryStatus status)
+{
+}

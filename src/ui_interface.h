@@ -7,6 +7,10 @@
 #include <string>
 #include "util.h" // for int64
 
+class CBasicKeyStore;
+class CWallet;
+class uint256;
+
 #define wxYES                   0x00000002
 #define wxOK                    0x00000004
 #define wxNO                    0x00000008
@@ -36,15 +40,46 @@
 // Force blocking, modal message box dialog (not just notification)
 #define wxMODAL                 0x00040000
 
+enum ChangeType
+{
+    CT_NEW,
+    CT_UPDATED,
+    CT_DELETED
+};
+
 /* These UI communication functions are implemented in bitcoin.cpp (for ui) and noui.cpp (no ui) */
 
 extern int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK);
 extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);
 extern void ThreadSafeHandleURI(const std::string& strURI);
-extern void MainFrameRepaint();
-extern void AddressBookRepaint();
 extern void QueueShutdown();
 extern void InitMessage(const std::string &message);
 extern std::string _(const char* psz);
+
+/* Block chain changed. */
+extern void NotifyBlocksChanged();
+
+/* Wallet status (encrypted, locked) changed.
+ * Note: Called without locks held.
+ */
+extern void NotifyKeyStoreStatusChanged(CBasicKeyStore *wallet);
+
+/* Address book entry changed.
+ * Note: called with lock cs_wallet held.
+ */
+extern void NotifyAddressBookChanged(CWallet *wallet, const std::string &address, const std::string &label, ChangeType status);
+
+/* Wallet transaction added, removed or updated.
+ * Note: called with lock cs_wallet held.
+ */
+extern void NotifyTransactionChanged(CWallet *wallet, const uint256 &hashTx, ChangeType status);
+
+/* Number of connections changed. */
+extern void NotifyNumConnectionsChanged(int newNumConnections);
+
+/* New, updated or cancelled alert.
+ * Note: called with lock cs_mapAlerts held.
+ */
+extern void NotifyAlertChanged(const uint256 &hash, ChangeType status);
 
 #endif
