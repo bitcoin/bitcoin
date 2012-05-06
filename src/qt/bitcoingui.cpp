@@ -457,17 +457,21 @@ void BitcoinGUI::aboutClicked()
     dlg.exec();
 }
 
+extern const int MAX_OUTBOUND_CONNECTIONS;
+
 void BitcoinGUI::setNumConnections(int count)
 {
     QString icon;
-    switch(count)
-    {
-    case 0: icon = ":/icons/connect_0"; break;
-    case 1: case 2: case 3: icon = ":/icons/connect_1"; break;
-    case 4: case 5: case 6: icon = ":/icons/connect_2"; break;
-    case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
-    default: icon = ":/icons/connect_4"; break;
-    }
+    if (count == 0)
+        icon = ":/icons/connect_0";
+    else if (count < (MAX_OUTBOUND_CONNECTIONS/3))
+        icon = ":/icons/connect_1";
+    else if (count < 2*(MAX_OUTBOUND_CONNECTIONS/3.0))
+        icon = ":/icons/connect_2";
+    else if (count < (MAX_OUTBOUND_CONNECTIONS))
+        icon = ":/icons/connect_3";
+    else
+        icon = ":/icons/connect_4";
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
     labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
 }
