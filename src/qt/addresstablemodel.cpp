@@ -26,20 +26,36 @@ struct AddressTableEntry
         type(type), label(label), address(address) {}
 };
 
+struct AddressTableEntryLessThan
+{
+    bool operator()(const AddressTableEntry &a, const AddressTableEntry &b) const
+    {
+        return a.address < b.address;
+    }
+    bool operator()(const AddressTableEntry &a, const QString &b) const
+    {
+        return a.address < b;
+    }
+    bool operator()(const QString &a, const AddressTableEntry &b) const
+    {
+        return a < b.address;
+    }
+};
+
 // Private implementation
 class AddressTablePriv
 {
 public:
     CWallet *wallet;
     QList<AddressTableEntry> cachedAddressTable;
+    AddressTableModel *parent;
 
-    AddressTablePriv(CWallet *wallet):
-            wallet(wallet) {}
+    AddressTablePriv(CWallet *wallet, AddressTableModel *parent):
+        wallet(wallet), parent(parent) {}
 
     void refreshAddressTable()
     {
         cachedAddressTable.clear();
-
         {
             LOCK(wallet->cs_wallet);
             BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, std::string)& item, wallet->mapAddressBook)
@@ -51,6 +67,53 @@ public:
                                   QString::fromStdString(strName),
                                   QString::fromStdString(address.ToString())));
             }
+        }
+    }
+
+    void updateEntry(const QString &address, const QString &label, bool isMine, int status)
+    {
+        // Find address / label in model
+        QList<AddressTableEntry>::iterator lower = qLowerBound(
+            cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
+        QList<AddressTableEntry>::iterator upper = qUpperBound(
+            cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
+        int lowerIndex = (lower - cachedAddressTable.begin());
+        int upperIndex = (upper - cachedAddressTable.begin());
+        bool inModel = (lower != upper);
+        AddressTableEntry::Type newEntryType = isMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending;
+
+        switch(status)
+        {
+        case CT_NEW:
+            if(inModel)
+            {
+                OutputDebugStringF("Warning: AddressTablePriv::updateEntry: Got CT_NOW, but entry is already in model\n");
+                break;
+            }
+            parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
+            cachedAddressTable.insert(lowerIndex, AddressTableEntry(newEntryType, label, address));
+            parent->endInsertRows();
+            break;
+        case CT_UPDATED:
+            if(!inModel)
+            {
+                OutputDebugStringF("Warning: AddressTablePriv::updateEntry: Got CT_UPDATED, but entry is not in model\n");
+                break;
+            }
+            lower->type = newEntryType;
+            lower->label = label;
+            parent->emitDataChanged(lowerIndex);
+            break;
+        case CT_DELETED:
+            if(!inModel)
+            {
+                OutputDebugStringF("Warning: AddressTablePriv::updateEntry: Got CT_DELETED, but entry is not in model\n");
+                break;
+            }
+            parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
+            cachedAddressTable.erase(lower, upper);
+            parent->endRemoveRows();
+            break;
         }
     }
 
@@ -76,7 +139,7 @@ AddressTableModel::AddressTableModel(CWallet *wallet, WalletModel *parent) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
     columns << tr("Label") << tr("Address");
-    priv = new AddressTablePriv(wallet);
+    priv = new AddressTablePriv(wallet, this);
     priv->refreshAddressTable();
 }
 
@@ -158,7 +221,6 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
         {
         case Label:
             wallet->SetAddressBookName(rec->address.toStdString(), value.toString().toStdString());
-            rec->label = value.toString();
             break;
         case Address:
             // Refuse to set invalid address, set error status and return false
@@ -177,12 +239,9 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
                     // Add new entry with new address
                     wallet->SetAddressBookName(value.toString().toStdString(), rec->label.toStdString());
                 }
-
-                rec->address = value.toString();
             }
             break;
         }
-        emit dataChanged(index, index);
 
         return true;
     }
@@ -232,13 +291,10 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & pa
     }
 }
 
-void AddressTableModel::updateEntry(const QString &address, const QString &label, int status)
+void AddressTableModel::updateEntry(const QString &address, const QString &label, bool isMine, int status)
 {
     // Update address book model from Bitcoin core
-    // TODO: use address, label, status to update only the specified entry (like in WalletModel)
-    beginResetModel();
-    priv->refreshAddressTable();
-    endResetModel();
+    priv->updateEntry(address, label, isMine, status);
 }
 
 QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
@@ -342,3 +398,7 @@ int AddressTableModel::lookupAddress(const QString &address) const
     }
 }
 
+void AddressTableModel::emitDataChanged(int idx)
+{
+    emit dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
+}

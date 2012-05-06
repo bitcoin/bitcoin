@@ -132,6 +132,10 @@ void AddressBookPage::setModel(AddressTableModel *model)
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             this, SLOT(selectionChanged()));
 
+    // Select row for newly created address
+    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)),
+            this, SLOT(selectNewAddress(QModelIndex,int,int)));
+
     if(mode == ForSending)
     {
         // Auto-select first row when in sending mode
@@ -193,20 +197,11 @@ void AddressBookPage::on_newAddressButton_clicked()
     EditAddressDialog dlg(
             tab == SendingTab ?
             EditAddressDialog::NewSendingAddress :
-            EditAddressDialog::NewReceivingAddress);
+            EditAddressDialog::NewReceivingAddress, this);
     dlg.setModel(model);
     if(dlg.exec())
     {
-        // Select row for newly created address
-        QString address = dlg.getAddress();
-        QModelIndexList lst = proxyModel->match(proxyModel->index(0,
-                          AddressTableModel::Address, QModelIndex()),
-                          Qt::EditRole, address, 1, Qt::MatchExactly);
-        if(!lst.isEmpty())
-        {
-            ui->tableView->setFocus();
-            ui->tableView->selectRow(lst.at(0).row());
-        }
+        newAddressToSelect = dlg.getAddress();
     }
 }
 
@@ -336,5 +331,17 @@ void AddressBookPage::contextualMenu(const QPoint &point)
     if(index.isValid())
     {
         contextMenu->exec(QCursor::pos());
+    }
+}
+
+void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int end)
+{
+    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, AddressTableModel::Address, parent));
+    if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newAddressToSelect))
+    {
+        // Select row of newly created address, once
+        ui->tableView->setFocus();
+        ui->tableView->selectRow(idx.row());
+        newAddressToSelect.clear();
     }
 }
