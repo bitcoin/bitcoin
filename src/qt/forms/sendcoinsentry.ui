@@ -65,9 +65,6 @@
        <property name="toolTip">
         <string>Enter a label for this address to add it to your address book</string>
        </property>
-       <property name="placeholderText">
-        <string>Enter a label for this address to add it to your address book</string>
-       </property>
       </widget>
      </item>
     </layout>
@@ -97,9 +94,6 @@
        </property>
        <property name="maxLength">
         <number>34</number>
-       </property>
-       <property name="placeholderText">
-        <string>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</string>
        </property>
       </widget>
      </item>
