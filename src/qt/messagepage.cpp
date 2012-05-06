@@ -24,6 +24,11 @@ MessagePage::MessagePage(QWidget *parent) :
     ui(new Ui::MessagePage)
 {
     ui->setupUi(this);
+    
+#if (QT_VERSION >= 0x040700)
+    /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+    ui->signature->setPlaceholderText(tr("Click \"Sign Message\" to get signature"));
+#endif
 
     GUIUtil::setupAddressWidget(ui->signFrom, this);
 }
