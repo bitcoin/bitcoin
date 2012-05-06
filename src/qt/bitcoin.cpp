@@ -282,6 +282,7 @@ int main(int argc, char *argv[])
 #endif
                 app.exec();
 
+                window.hide();
                 window.setClientModel(0);
                 window.setWalletModel(0);
                 guiref = 0;
