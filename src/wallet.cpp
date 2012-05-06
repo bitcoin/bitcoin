@@ -1289,7 +1289,7 @@ bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& s
 {
     std::map<CBitcoinAddress, std::string>::iterator mi = mapAddressBook.find(address);
     mapAddressBook[address] = strName;
-    NotifyAddressBookChanged(this, address.ToString(), strName, (mi == mapAddressBook.end()) ? CT_NEW : CT_UPDATED);
+    NotifyAddressBookChanged(this, address.ToString(), strName, HaveKey(address), (mi == mapAddressBook.end()) ? CT_NEW : CT_UPDATED);
     if (!fFileBacked)
         return false;
     return CWalletDB(strWalletFile).WriteName(address.ToString(), strName);
@@ -1298,7 +1298,7 @@ bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& s
 bool CWallet::DelAddressBookName(const CBitcoinAddress& address)
 {
     mapAddressBook.erase(address);
-    NotifyAddressBookChanged(this, address.ToString(), "", CT_DELETED);
+    NotifyAddressBookChanged(this, address.ToString(), "", HaveKey(address), CT_DELETED);
     if (!fFileBacked)
         return false;
     return CWalletDB(strWalletFile).EraseName(address.ToString());
