@@ -36,15 +36,13 @@ Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 // Need a global reference for the notifications to find the GUI
 static BitcoinGUI *guiref;
 static QSplashScreen *splashref;
-static WalletModel *walletmodel;
-static ClientModel *clientmodel;
 
-int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
+static void ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
 {
     // Message from network thread
     if(guiref)
     {
-        bool modal = (style & wxMODAL);
+        bool modal = (style & MF_MODAL);
         // in case of modal message, use blocking connection to wait for user to click OK
         QMetaObject::invokeMethod(guiref, "error",
                                    modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
@@ -57,10 +55,9 @@ int ThreadSafeMessageBox(const std::string& message, const std::string& caption,
         printf("%s: %s\n", caption.c_str(), message.c_str());
         fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
     }
-    return 4;
 }
 
-bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
+static bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
 {
     if(!guiref)
         return false;
@@ -75,7 +72,7 @@ bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
     return payFee;
 }
 
-void ThreadSafeHandleURI(const std::string& strURI)
+static void ThreadSafeHandleURI(const std::string& strURI)
 {
     if(!guiref)
         return;
@@ -84,7 +81,7 @@ void ThreadSafeHandleURI(const std::string& strURI)
                                Q_ARG(QString, QString::fromStdString(strURI)));
 }
 
-void InitMessage(const std::string &message)
+static void InitMessage(const std::string &message)
 {
     if(splashref)
     {
@@ -93,7 +90,7 @@ void InitMessage(const std::string &message)
     }
 }
 
-void QueueShutdown()
+static void QueueShutdown()
 {
     QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 }
@@ -101,64 +98,9 @@ void QueueShutdown()
 /*
    Translate string to current locale using Qt.
  */
-std::string _(const char* psz)
+static std::string Translate(const char* psz)
 {
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
-}
-
-void NotifyBlocksChanged()
-{
-    // This notification is too frequent. Don't trigger a signal.
-    // Don't remove it, though, as it might be useful later.
-}
-
-void NotifyKeyStoreStatusChanged(CBasicKeyStore *wallet)
-{
-    // This currently ignores the wallet argument. When multiple wallet support is implemented, this
-    // parameter should be mapped to a specific WalletModel for that wallet.
-    OutputDebugStringF("NotifyKeyStoreStatusChanged\n");
-    if(walletmodel)
-        QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
-}
-
-void NotifyAddressBookChanged(CWallet *wallet, const std::string &address, const std::string &label, ChangeType status)
-{
-    // This currently ignores the wallet argument. When multiple wallet support is implemented, this
-    // parameter should be mapped to a specific WalletModel for that wallet.
-    OutputDebugStringF("NotifyAddressBookChanged %s %s status=%i\n", address.c_str(), label.c_str(), status);
-    if(walletmodel)
-        QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
-                                  Q_ARG(QString, QString::fromStdString(address)),
-                                  Q_ARG(QString, QString::fromStdString(label)),
-                                  Q_ARG(int, status));
-}
-
-void NotifyTransactionChanged(CWallet *wallet, const uint256 &hash, ChangeType status)
-{
-    // This currently ignores the wallet argument. When multiple wallet support is implemented, this
-    // parameter should be mapped to a specific WalletModel for that wallet.
-    OutputDebugStringF("NotifyTransactionChanged %s status=%i\n", hash.GetHex().c_str(), status);
-    if(walletmodel)
-        QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection,
-                                  Q_ARG(QString, QString::fromStdString(hash.GetHex())),
-                                  Q_ARG(int, status));
-}
-
-void NotifyNumConnectionsChanged(int newNumConnections)
-{
-    // Too noisy: OutputDebugStringF("NotifyNumConnectionsChanged %i\n", newNumConnections);
-    if(clientmodel)
-        QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
-                                  Q_ARG(int, newNumConnections));
-}
-
-void NotifyAlertChanged(const uint256 &hash, ChangeType status)
-{
-    OutputDebugStringF("NotifyAlertChanged %s status=%i\n", hash.GetHex().c_str(), status);
-    if(clientmodel)
-        QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection,
-                                  Q_ARG(QString, QString::fromStdString(hash.GetHex())),
-                                  Q_ARG(int, status));
 }
 
 /* Handle runaway exceptions. Shows a message box with the problem and quits the program.
@@ -307,6 +249,14 @@ int main(int argc, char *argv[])
     if (translator.load(lang_territory, ":/translations/"))
         app.installTranslator(&translator);
 
+    // Subscribe to global signals from core
+    uiInterface.ThreadSafeMessageBox.connect(ThreadSafeMessageBox);
+    uiInterface.ThreadSafeAskFee.connect(ThreadSafeAskFee);
+    uiInterface.ThreadSafeHandleURI.connect(ThreadSafeHandleURI);
+    uiInterface.InitMessage.connect(InitMessage);
+    uiInterface.QueueShutdown.connect(QueueShutdown);
+    uiInterface.Translate.connect(Translate);
+
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
     if (mapArgs.count("-?") || mapArgs.count("--help"))
@@ -348,9 +298,7 @@ int main(int argc, char *argv[])
                     splash.finish(&window);
 
                 ClientModel clientModel(&optionsModel);
-                clientmodel = &clientModel;
                 WalletModel walletModel(pwalletMain, &optionsModel);
-                walletmodel = &walletModel;
 
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);
@@ -392,8 +340,6 @@ int main(int argc, char *argv[])
                 window.setClientModel(0);
                 window.setWalletModel(0);
                 guiref = 0;
-                clientmodel = 0;
-                walletmodel = 0;
             }
             Shutdown(NULL);
         }

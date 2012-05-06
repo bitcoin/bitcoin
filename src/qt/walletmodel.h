@@ -24,6 +24,7 @@ class WalletModel : public QObject
     Q_OBJECT
 public:
     explicit WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
+    ~WalletModel();
 
     enum StatusCode // Returned by sendCoins
     {
@@ -118,6 +119,8 @@ private:
     qint64 cachedNumTransactions;
     EncryptionStatus cachedEncryptionStatus;
 
+    void subscribeToCoreSignals();
+    void unsubscribeFromCoreSignals();
 signals:
     // Signal that balance in wallet changed
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance);

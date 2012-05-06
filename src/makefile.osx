@@ -88,8 +88,7 @@ OBJS= \
     obj/sync.o \
     obj/util.o \
     obj/wallet.o \
-    obj/walletdb.o \
-    obj/noui.o
+    obj/walletdb.o
 
 ifdef USE_UPNP
 	DEFS += -DUSE_UPNP=$(USE_UPNP)

@@ -5,7 +5,6 @@
 
 #include "keystore.h"
 #include "script.h"
-#include "ui_interface.h"
 
 bool CKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const
 {
@@ -84,7 +83,7 @@ bool CCryptoKeyStore::Lock()
         vMasterKey.clear();
     }
 
-    NotifyKeyStoreStatusChanged(this);
+    NotifyStatusChanged(this);
     return true;
 }
 
@@ -114,7 +113,7 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         }
         vMasterKey = vMasterKeyIn;
     }
-    NotifyKeyStoreStatusChanged(this);
+    NotifyStatusChanged(this);
     return true;
 }
 
