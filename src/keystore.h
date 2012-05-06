@@ -8,6 +8,7 @@
 #include "crypter.h"
 #include "sync.h"
 #include "base58.h"
+#include <boost/signals2/signal.hpp>
 
 class CScript;
 
@@ -174,6 +175,11 @@ public:
             mi++;
         }
     }
+
+    /* Wallet status (encrypted, locked) changed.
+     * Note: Called without locks held.
+     */
+    boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
 };
 
 #endif

@@ -9,6 +9,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "script.h"
+#include "ui_interface.h"
 
 class CWalletTx;
 class CReserveKey;
@@ -261,6 +262,16 @@ public:
 
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { return nWalletVersion; }
+
+    /** Address book entry changed.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (CWallet *wallet, const std::string &address, const std::string &label, ChangeType status)> NotifyAddressBookChanged;
+
+    /** Wallet transaction added, removed or updated.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
 };
 
 /** A key allocated from the key pool. */

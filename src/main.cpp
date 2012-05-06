@@ -946,7 +946,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     {
         bnBestInvalidWork = pindexNew->bnChainWork;
         CTxDB().WriteBestInvalidWork(bnBestInvalidWork);
-        NotifyBlocksChanged();
+        uiInterface.NotifyBlocksChanged();
     }
     printf("InvalidChainFound: invalid block=%s  height=%d  work=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, pindexNew->bnChainWork.ToString().c_str());
     printf("InvalidChainFound:  current best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
@@ -1647,7 +1647,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         hashPrevBestCoinBase = vtx[0].GetHash();
     }
 
-    NotifyBlocksChanged();
+    uiInterface.NotifyBlocksChanged();
     return true;
 }
 
@@ -1858,8 +1858,8 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         string strMessage = _("Warning: Disk space is low");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
-        ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION | wxMODAL);
-        QueueShutdown();
+        uiInterface.ThreadSafeMessageBox(strMessage, "Bitcoin", MF_OK | MF_ICON_EXCLAMATION | MF_MODAL);
+        uiInterface.QueueShutdown();
         return false;
     }
     return true;
@@ -2204,13 +2204,13 @@ bool CAlert::ProcessAlert()
             if (Cancels(alert))
             {
                 printf("cancelling alert %d\n", alert.nID);
-                NotifyAlertChanged((*mi).first, CT_DELETED);
+                uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
             else if (!alert.IsInEffect())
             {
                 printf("expiring alert %d\n", alert.nID);
-                NotifyAlertChanged((*mi).first, CT_DELETED);
+                uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
             else
@@ -2232,7 +2232,7 @@ bool CAlert::ProcessAlert()
         mapAlerts.insert(make_pair(GetHash(), *this));
         // Notify UI if it applies to me
         if(AppliesToMe())
-            NotifyAlertChanged(GetHash(), CT_NEW);
+            uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
     }
 
     printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());

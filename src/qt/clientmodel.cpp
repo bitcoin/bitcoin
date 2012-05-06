@@ -22,6 +22,13 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     pollTimer->setInterval(MODEL_UPDATE_DELAY);
     pollTimer->start();
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
+
+    subscribeToCoreSignals();
+}
+
+ClientModel::~ClientModel()
+{
+    unsubscribeFromCoreSignals();
 }
 
 int ClientModel::getNumConnections() const
@@ -126,4 +133,42 @@ QString ClientModel::clientName() const
 QDateTime ClientModel::formatClientStartupTime() const
 {
     return QDateTime::fromTime_t(nClientStartupTime);
+}
+
+// Handlers for core signals
+static void NotifyBlocksChanged(ClientModel *clientmodel)
+{
+    // This notification is too frequent. Don't trigger a signal.
+    // Don't remove it, though, as it might be useful later.
+}
+
+static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
+{
+    // Too noisy: OutputDebugStringF("NotifyNumConnectionsChanged %i\n", newNumConnections);
+    QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
+                              Q_ARG(int, newNumConnections));
+}
+
+static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
+{
+    OutputDebugStringF("NotifyAlertChanged %s status=%i\n", hash.GetHex().c_str(), status);
+    QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(hash.GetHex())),
+                              Q_ARG(int, status));
+}
+
+void ClientModel::subscribeToCoreSignals()
+{
+    // Connect signals to client
+    uiInterface.NotifyBlocksChanged.connect(boost::bind(NotifyBlocksChanged, this));
+    uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
+    uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
+}
+
+void ClientModel::unsubscribeFromCoreSignals()
+{
+    // Disconnect signals from client
+    uiInterface.NotifyBlocksChanged.disconnect(boost::bind(NotifyBlocksChanged, this));
+    uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
+    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
 }

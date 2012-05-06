@@ -6,40 +6,47 @@
 
 #include <string>
 #include "util.h" // for int64
+#include <boost/signals2/signal.hpp>
+#include <boost/signals2/last_value.hpp>
 
 class CBasicKeyStore;
 class CWallet;
 class uint256;
 
-#define wxYES                   0x00000002
-#define wxOK                    0x00000004
-#define wxNO                    0x00000008
-#define wxYES_NO                (wxYES|wxNO)
-#define wxCANCEL                0x00000010
-#define wxAPPLY                 0x00000020
-#define wxCLOSE                 0x00000040
-#define wxOK_DEFAULT            0x00000000
-#define wxYES_DEFAULT           0x00000000
-#define wxNO_DEFAULT            0x00000080
-#define wxCANCEL_DEFAULT        0x80000000
-#define wxICON_EXCLAMATION      0x00000100
-#define wxICON_HAND             0x00000200
-#define wxICON_WARNING          wxICON_EXCLAMATION
-#define wxICON_ERROR            wxICON_HAND
-#define wxICON_QUESTION         0x00000400
-#define wxICON_INFORMATION      0x00000800
-#define wxICON_STOP             wxICON_HAND
-#define wxICON_ASTERISK         wxICON_INFORMATION
-#define wxICON_MASK             (0x00000100|0x00000200|0x00000400|0x00000800)
-#define wxFORWARD               0x00001000
-#define wxBACKWARD              0x00002000
-#define wxRESET                 0x00004000
-#define wxHELP                  0x00008000
-#define wxMORE                  0x00010000
-#define wxSETUP                 0x00020000
-// Force blocking, modal message box dialog (not just notification)
-#define wxMODAL                 0x00040000
+/** Flags for CClientUIInterface::ThreadSafeMessageBox */
+enum MessageBoxFlags
+{
+    MF_YES                   = 0x00000002,
+    MF_OK                    = 0x00000004,
+    MF_NO                    = 0x00000008,
+    MF_YES_NO                = (MF_YES|MF_NO),
+    MF_CANCEL                = 0x00000010,
+    MF_APPLY                 = 0x00000020,
+    MF_CLOSE                 = 0x00000040,
+    MF_OK_DEFAULT            = 0x00000000,
+    MF_YES_DEFAULT           = 0x00000000,
+    MF_NO_DEFAULT            = 0x00000080,
+    MF_CANCEL_DEFAULT        = 0x80000000,
+    MF_ICON_EXCLAMATION      = 0x00000100,
+    MF_ICON_HAND             = 0x00000200,
+    MF_ICON_WARNING          = MF_ICON_EXCLAMATION,
+    MF_ICON_ERROR            = MF_ICON_HAND,
+    MF_ICON_QUESTION         = 0x00000400,
+    MF_ICON_INFORMATION      = 0x00000800,
+    MF_ICON_STOP             = MF_ICON_HAND,
+    MF_ICON_ASTERISK         = MF_ICON_INFORMATION,
+    MF_ICON_MASK             = (0x00000100|0x00000200|0x00000400|0x00000800),
+    MF_FORWARD               = 0x00001000,
+    MF_BACKWARD              = 0x00002000,
+    MF_RESET                 = 0x00004000,
+    MF_HELP                  = 0x00008000,
+    MF_MORE                  = 0x00010000,
+    MF_SETUP                 = 0x00020000,
+// Force blocking, modal message box dialog (not just OS notification)
+    MF_MODAL                 = 0x00040000
+};
 
+/** General change type (added, updated, removed). */
 enum ChangeType
 {
     CT_NEW,
@@ -47,39 +54,51 @@ enum ChangeType
     CT_DELETED
 };
 
-/* These UI communication functions are implemented in bitcoin.cpp (for ui) and noui.cpp (no ui) */
+/** Signals for UI communication. */
+class CClientUIInterface
+{
+public:
+    /** Show message box. */
+    boost::signals2::signal<void (const std::string& message, const std::string& caption, int style)> ThreadSafeMessageBox;
 
-extern int ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style=wxOK);
-extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);
-extern void ThreadSafeHandleURI(const std::string& strURI);
-extern void QueueShutdown();
-extern void InitMessage(const std::string &message);
-extern std::string _(const char* psz);
+    /** Ask the user whether he want to pay a fee or not. */
+    boost::signals2::signal<bool (int64 nFeeRequired, const std::string& strCaption), boost::signals2::last_value<bool> > ThreadSafeAskFee;
 
-/* Block chain changed. */
-extern void NotifyBlocksChanged();
+    /** Handle an URL passed on the command line. */
+    boost::signals2::signal<void (const std::string& strURI)> ThreadSafeHandleURI;
 
-/* Wallet status (encrypted, locked) changed.
- * Note: Called without locks held.
+    /** Progress message during initialization. */
+    boost::signals2::signal<void (const std::string &message)> InitMessage;
+
+    /** Initiate client shutdown. */
+    boost::signals2::signal<void ()> QueueShutdown;
+
+    /** Translate a message to the native language of the user. */
+    boost::signals2::signal<std::string (const char* psz)> Translate;
+
+    /** Block chain changed. */
+    boost::signals2::signal<void ()> NotifyBlocksChanged;
+
+    /** Number of network connections changed. */
+    boost::signals2::signal<void (int newNumConnections)> NotifyNumConnectionsChanged;
+
+    /**
+     * New, updated or cancelled alert.
+     * @note called with lock cs_mapAlerts held.
+     */
+    boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
+};
+
+extern CClientUIInterface uiInterface;
+
+/**
+ * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
+ * If no translation slot is registered, nothing is returned, and simply return the input.
  */
-extern void NotifyKeyStoreStatusChanged(CBasicKeyStore *wallet);
-
-/* Address book entry changed.
- * Note: called with lock cs_wallet held.
- */
-extern void NotifyAddressBookChanged(CWallet *wallet, const std::string &address, const std::string &label, ChangeType status);
-
-/* Wallet transaction added, removed or updated.
- * Note: called with lock cs_wallet held.
- */
-extern void NotifyTransactionChanged(CWallet *wallet, const uint256 &hashTx, ChangeType status);
-
-/* Number of connections changed. */
-extern void NotifyNumConnectionsChanged(int newNumConnections);
-
-/* New, updated or cancelled alert.
- * Note: called with lock cs_mapAlerts held.
- */
-extern void NotifyAlertChanged(const uint256 &hash, ChangeType status);
+inline std::string _(const char* psz)
+{
+    boost::optional<std::string> rv = uiInterface.Translate(psz);
+    return rv ? (*rv) : psz;
+}
 
 #endif

@@ -18,6 +18,13 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
 {
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
+
+    subscribeToCoreSignals();
+}
+
+WalletModel::~WalletModel()
+{
+    unsubscribeFromCoreSignals();
 }
 
 qint64 WalletModel::getBalance() const
@@ -147,7 +154,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             }
             return TransactionCreationFailed;
         }
-        if(!ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString()))
+        if(!uiInterface.ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString()))
         {
             return Aborted;
         }
@@ -252,6 +259,46 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 bool WalletModel::backupWallet(const QString &filename)
 {
     return BackupWallet(*wallet, filename.toLocal8Bit().data());
+}
+
+// Handlers for core signals
+static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel, CCryptoKeyStore *wallet)
+{
+    OutputDebugStringF("NotifyKeyStoreStatusChanged\n");
+    QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
+}
+
+static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet, const std::string &address, const std::string &label, ChangeType status)
+{
+    OutputDebugStringF("NotifyAddressBookChanged %s %s status=%i\n", address.c_str(), label.c_str(), status);
+    QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(address)),
+                              Q_ARG(QString, QString::fromStdString(label)),
+                              Q_ARG(int, status));
+}
+
+static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
+{
+    OutputDebugStringF("NotifyTransactionChanged %s status=%i\n", hash.GetHex().c_str(), status);
+    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(hash.GetHex())),
+                              Q_ARG(int, status));
+}
+
+void WalletModel::subscribeToCoreSignals()
+{
+    // Connect signals to wallet
+    wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
+    wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4));
+    wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
+}
+
+void WalletModel::unsubscribeFromCoreSignals()
+{
+    // Disconnect signals from wallet
+    wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
+    wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4));
+    wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 
 // WalletModel::UnlockContext implementation
