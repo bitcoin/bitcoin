@@ -124,17 +124,20 @@ int CAddrMan::SelectTried(int nKBucket)
     // random shuffle the first few elements (using the entire list)
     // find the least recently tried among them
     int64 nOldest = -1;
+    int nOldestPos = -1;
     for (unsigned int i = 0; i < ADDRMAN_TRIED_ENTRIES_INSPECT_ON_EVICT && i < vTried.size(); i++)
     {
         int nPos = GetRandInt(vTried.size() - i) + i;
         int nTemp = vTried[nPos];
         vTried[nPos] = vTried[i];
         vTried[i] = nTemp;
-        if (nOldest == -1 || mapInfo[nTemp].nLastSuccess < mapInfo[nOldest].nLastSuccess)
+        if (nOldest == -1 || mapInfo[nTemp].nLastSuccess < mapInfo[nOldest].nLastSuccess) {
            nOldest = nTemp;
+           nOldestPos = nPos;
+        }
     }
 
-    return nOldest;
+    return nOldestPos;
 }
 
 int CAddrMan::ShrinkNew(int nUBucket)
