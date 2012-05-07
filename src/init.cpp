@@ -370,10 +370,13 @@ bool AppInit2(int argc, char* argv[])
     }
 
     pblockstore = new CBlockStore();
-    if (!CreateThread(ProcessCallbacks, pblockstore))
+    for (int i = 0; i < GetArg("-callbackconcurrency", 1); i++)
     {
-        ThreadSafeMessageBox(_("Error: CreateThread(ProcessCallbacks) failed"), "Bitcoin");
-        return false;
+        if (!CreateThread(ProcessCallbacks, pblockstore))
+        {
+            ThreadSafeMessageBox(_("Error: CreateThread(ProcessCallbacks) failed"), "Bitcoin");
+            return false;
+        }
     }
 
     std::ostringstream strErrors;
