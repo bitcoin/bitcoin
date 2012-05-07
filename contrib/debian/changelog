@@ -1,13 +1,43 @@
-bitcoin (0.5.1-natty1) natty; urgency=low
+bitcoin (0.6.1-natty0) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Sun, 6 May 2012 20:09:00 -0500
+
+bitcoin (0.6.0-natty0) natty; urgency=low
+
+  * New upstream release.
+  * Add GNOME/KDE support for bitcoin-qt's bitcoin: URI support.
+    Thanks to luke-jr for the KDE .protocol file.
+
+ -- Matt Corallo <matt@bluematt.me>  Sat, 31 Mar 2012 15:35:00 -0500
+
+bitcoin (0.5.3-natty1) natty; urgency=low
+
+  * Mark for upload to PPA.
+
+ -- Matt Corallo <matt@bluematt.me>  Wed, 14 Mar 2012 23:06:00 -0400
+
+bitcoin (0.5.3-natty0) natty; urgency=low
+
+  * New upstream release.
+
+ -- Luke Dashjr <luke+bitcoin+deb@dashjr.org>  Tue, 10 Jan 2012 15:57:00 -0500
+
+bitcoin (0.5.2-natty1) natty; urgency=low
 
   * Remove mentions on anonymity in package descriptions and manpage.
     These should never have been there, bitcoin isnt anonymous without
     a ton of work that virtually no users will ever be willing and
     capable of doing
-  * Add GNOME/KDE support for bitcoin-qt's bitcoin: URI support.
-    Thanks to luke-jr for the KDE .protocol file.
 
- -- Matt Corallo <matt@bluematt.me>  Fri, 23 Dec 2011 20:25:00 -0500
+ -- Matt Corallo <matt@bluematt.me>  Sat, 7 Jan 2012 13:37:00 -0500
+
+bitcoin (0.5.2-natty0) natty; urgency=low
+
+  * New upstream release.
+
+ -- Luke Dashjr <luke+bitcoin+deb@dashjr.org>  Fri, 16 Dec 2011 17:57:00 -0500
 
 bitcoin (0.5.1-natty0) natty; urgency=low
 
