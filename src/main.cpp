@@ -44,6 +44,9 @@ CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
 
+CCriticalSection cs_setBlocksSeen;
+set<uint256> setBlocksSeen;
+
 map<uint256, CTransaction*> mapOrphanTransactions;
 map<uint256, map<uint256, CTransaction*> > mapOrphanTransactionsByPrev;
 
@@ -1758,13 +1761,13 @@ bool CBlockStore::EmitBlock(CBlock& block)
 {
     // Check for duplicate
     uint256 hash = block.GetHash();
+    {
+        LOCK(cs_setBlocksSeen);
+        if (setBlocksSeen.count(hash) > 0)
+            return error("CHub::EmitBlock() : already seen block %s", hash.ToString().substr(0,20).c_str());
+    }
 
     LOCK(cs_main);
-
-    if (mapBlockIndex.count(hash))
-        return error("CBlockStore::EmitBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
-    if (mapOrphanBlocks.count(hash))
-        return error("CBlockStore::EmitBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
     // Preliminary checks
     if (!block.CheckBlock())
@@ -1789,6 +1792,10 @@ bool CBlockStore::EmitBlock(CBlock& block)
         }
     }
 
+    {
+        LOCK(cs_setBlocksSeen);
+        setBlocksSeen.insert(hash);
+    }
 
     // If don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(block.hashPrevBlock))
@@ -2096,6 +2103,10 @@ bool CBlockStore::LoadBlockIndex(bool fReadOnly)
         if (!AddToBlockIndex(block, nFile, nBlockPos))
             return error("LoadBlockIndex() : genesis block not accepted");
     }
+
+    // Init setBlocksSeen
+    for (map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++)
+        setBlocksSeen.insert(it->first);
 
     return true;
 }
