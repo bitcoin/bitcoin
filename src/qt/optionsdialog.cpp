@@ -222,7 +222,6 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     QLabel *fee_label = new QLabel(tr("Pay transaction &fee"));
     fee_hbox->addWidget(fee_label);
     fee_edit = new BitcoinAmountField();
-    fee_edit->setToolTip(tr("Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended."));
 
     fee_label->setBuddy(fee_edit);
     fee_hbox->addWidget(fee_edit);
