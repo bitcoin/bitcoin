@@ -388,10 +388,10 @@ bool AppInit2()
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().string().c_str()));
 
     pblockstore = new CBlockStore();
-    if (!CreateThread(ProcessCallbacks, pblockstore))
+    for (int i = 0; i < GetArg("-callbackconcurrency", 1); i++)
     {
-        ThreadSafeMessageBox(_("Error: CreateThread(ProcessCallbacks) failed"), "Bitcoin");
-        return false;
+        if (!CreateThread(ProcessCallbacks, pblockstore))
+            return InitError(_("Error: CreateThread(ProcessCallbacks) failed"));
     }
 
     std::ostringstream strErrors;
