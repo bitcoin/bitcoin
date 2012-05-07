@@ -287,6 +287,7 @@ int main(int argc, char *argv[])
 #endif
                 app.exec();
 
+                window.hide();
                 guiref = 0;
             }
             Shutdown(NULL);
