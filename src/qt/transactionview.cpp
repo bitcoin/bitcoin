@@ -115,6 +115,7 @@ TransactionView::TransactionView(QWidget *parent) :
 #endif
     // Always show scroll bar
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    view->setShowGrid(false);
     view->setTabKeyNavigation(false);
     view->setContextMenuPolicy(Qt::CustomContextMenu);
 
