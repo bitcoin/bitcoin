@@ -84,6 +84,21 @@ Take the following steps to build (no UPnP support):
  strip bitcoind
 
 
+ Build Instructions: Fedora
+---------------------------
+
+Get bitcoin src.rpm sources from http://olea.org/paquetes-rpm/repoview/bitcoin.html
+Install build dependencies:
+ yum util-linux diffutils mktemp krb5-devel perl sed zlib-devel desktop-file-utils qt-devel db4-devel boost-devel gcc-c++
+
+Check openssl-devel is _not_ installed since it will conflict with the internal openssl compilation. Remove if present:
+ rpm -e openssl-devel
+
+Rebuild:
+ rpmbuild --rebuild bitcoin.src.rpm
+
+
+
 Notes
 -----
 The release is built with GCC and then "strip bitcoind" to strip the debug
