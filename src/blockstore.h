@@ -16,6 +16,7 @@ class CBlock;
 class CTxDB;
 class CBlockIndex;
 class CHub;
+class CNode;
 
 class CBlockStoreSignalTable
 {
@@ -25,6 +26,9 @@ public:
 
     CCriticalSection cs_sigAskForBlocks;
     boost::signals2::signal<void (const uint256, const uint256)> sigAskForBlocks;
+
+    CCriticalSection cs_sigDoS;
+    boost::function<void (CNode* pNode, const int nDoS)> sigDoS;
 };
 
 class CBlockStore
@@ -35,6 +39,8 @@ private:
     void CallbackCommitBlock(const CBlock &block) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock(block); }
 
     void CallbackAskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)  { LOCK(sigtable.cs_sigAskForBlocks); sigtable.sigAskForBlocks(hashEnd, hashOriginator); }
+
+    void CallbackDoS(CNode* pNode, const int nDoS) { LOCK(sigtable.cs_sigDoS); sigtable.sigDoS(pNode, nDoS); }
 
     bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew);
     bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
@@ -55,6 +61,9 @@ public:
     //   The receiver should check if it has a peer which is known to have a block with hash hashOriginator and if it does, it should
     //    send the block query to that node.
     void RegisterAskForBlocks(boost::function<void (const uint256, const uint256)> func) { LOCK(sigtable.cs_sigAskForBlocks); sigtable.sigAskForBlocks.connect(func); }
+
+    // Register a handler (of the form void f(CNode* pNode, const int nDoS)) that calls pNode->Misbehaving(nDoS)
+    void RegisterDoSHandler(boost::function<void (CNode* pNode, const int nDoS)> func) { LOCK(sigtable.cs_sigDoS); sigtable.sigDoS = func; }
 
 //Blockchain access methods
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to

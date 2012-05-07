@@ -17,6 +17,7 @@ class CBlock;
 class CMerkleTx;
 class CTransaction;
 class CAlert;
+class CNode;
 
 class CHubSignalTable
 {
@@ -64,6 +65,8 @@ private:
 
     void SubmitCallbackCommitAlert(const CAlert &alert);
     void SubmitCallbackRemoveAlert(const CAlert &alert);
+
+    void SubmitCallbackDoS(CNode* pNode, const int nDoS);
 public:
 //Util methods
     // Loops to process callbacks (do not call manually, automatically started in the constructor)
