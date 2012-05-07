@@ -48,6 +48,17 @@ public:
     void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigCommitTransactionToMemoryPool); sigtable.sigCommitTransactionToMemoryPool(tx); }
 };
 
+class CHubCallbackDoS : public CHubCallback
+{
+private:
+    CNode* pNode;
+    int nDoS;
+public:
+    CHubCallbackDoS(CNode* pNodeIn, const int nDoSIn) { pNode = pNodeIn; nDoS = nDoSIn; if(pNode) pNode->AddRef(); }
+    void Signal(CHubSignalTable& sigtable) { if (pNode) pNode->Misbehaving(nDoS); }
+    ~CHubCallbackDoS() { if(pNode) pNode->Release(); }
+};
+
 void CHub::SubmitCallbackCommitBlock(const CBlock &block)
 {
     LOCK(cs_callbacks);
@@ -93,7 +104,16 @@ bool CHub::ConnectToBlockStore(CBlockStore* pblockstoreIn)
 
     pblockstore->RegisterAskForBlocks(boost::bind(&CHub::AskForBlocks, this, _1, _2));
 
+    pblockstore->RegisterDoSHandler(boost::bind(&CHub::SubmitCallbackDoS, this, _1, _2));
+
     return true;
+}
+
+void CHub::SubmitCallbackDoS(CNode* pNode, const int nDoS)
+{
+    LOCK(cs_callbacks);
+        queueCallbacks.push(new CHubCallbackDoS(pNode, nDoS));
+    sem_callbacks.post();
 }
 
 void CHub::ProcessCallbacks()
