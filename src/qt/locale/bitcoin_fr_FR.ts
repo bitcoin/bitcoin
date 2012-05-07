@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="fr_FR" version="2.0">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="fr_FR">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
@@ -136,17 +138,17 @@ Ce produit inclut des logiciels développés par OpenSSL Project pour utilisatio
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="77"/>
+        <location filename="../addresstablemodel.cpp" line="78"/>
         <source>Label</source>
         <translation>Étiquette</translation>
     </message>
     <message>
-        <location filename="../addresstablemodel.cpp" line="77"/>
+        <location filename="../addresstablemodel.cpp" line="78"/>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
     <message>
-        <location filename="../addresstablemodel.cpp" line="113"/>
+        <location filename="../addresstablemodel.cpp" line="114"/>
         <source>(no label)</source>
         <translation>(aucune étiquette)</translation>
     </message>
@@ -293,278 +295,293 @@ Are you sure you wish to encrypt your wallet?</source>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="69"/>
+        <location filename="../bitcoingui.cpp" line="72"/>
         <source>Bitcoin Wallet</source>
         <translation>Porte-monnaie Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="142"/>
-        <location filename="../bitcoingui.cpp" line="464"/>
+        <location filename="../bitcoingui.cpp" line="145"/>
+        <location filename="../bitcoingui.cpp" line="467"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronisation avec le réseau...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="145"/>
+        <location filename="../bitcoingui.cpp" line="148"/>
         <source>Block chain synchronization in progress</source>
         <translation>Synchronisation de la chaîne de blocs en cours</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="176"/>
+        <location filename="../bitcoingui.cpp" line="179"/>
         <source>&amp;Overview</source>
         <translation>&amp;Vue d&apos;ensemble</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="177"/>
+        <location filename="../bitcoingui.cpp" line="180"/>
         <source>Show general overview of wallet</source>
         <translation>Affiche une vue d&apos;ensemble du porte-monnaie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="182"/>
+        <location filename="../bitcoingui.cpp" line="185"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Transactions</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="183"/>
+        <location filename="../bitcoingui.cpp" line="186"/>
         <source>Browse transaction history</source>
         <translation>Permet de parcourir l&apos;historique des transactions</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="188"/>
+        <location filename="../bitcoingui.cpp" line="191"/>
         <source>&amp;Address Book</source>
         <translation>Carnet d&apos;&amp;adresses</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="189"/>
+        <location filename="../bitcoingui.cpp" line="192"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Éditer la liste des adresses et des étiquettes stockées</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="194"/>
+        <location filename="../bitcoingui.cpp" line="197"/>
         <source>&amp;Receive coins</source>
         <translation>&amp;Recevoir des pièces</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="195"/>
+        <location filename="../bitcoingui.cpp" line="198"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Affiche la liste des adresses pour recevoir des paiements</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="200"/>
+        <location filename="../bitcoingui.cpp" line="203"/>
         <source>&amp;Send coins</source>
         <translation>&amp;Envoyer des pièces</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="201"/>
+        <location filename="../bitcoingui.cpp" line="204"/>
         <source>Send coins to a bitcoin address</source>
         <translation>Envoyer des pièces à une adresse bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="206"/>
+        <location filename="../bitcoingui.cpp" line="209"/>
         <source>Sign &amp;message</source>
         <translation>Signer un &amp;message</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="207"/>
+        <location filename="../bitcoingui.cpp" line="210"/>
         <source>Prove you control an address</source>
         <translation>Prouver que vous contrôlez une adresse</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="226"/>
+        <location filename="../bitcoingui.cpp" line="229"/>
         <source>E&amp;xit</source>
         <translation>Q&amp;uitter</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="227"/>
+        <location filename="../bitcoingui.cpp" line="230"/>
         <source>Quit application</source>
         <translation>Quitter l&apos;application</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="230"/>
+        <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;About %1</source>
         <translation>&amp;À propos de %1</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="231"/>
+        <location filename="../bitcoingui.cpp" line="234"/>
         <source>Show information about Bitcoin</source>
         <translation>Afficher des informations à propos de Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="233"/>
+        <location filename="../bitcoingui.cpp" line="236"/>
         <source>About &amp;Qt</source>
         <translation>À propos de &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="237"/>
         <source>Show information about Qt</source>
         <translation>Afficher des informations sur Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
+        <location filename="../bitcoingui.cpp" line="239"/>
         <source>&amp;Options...</source>
         <translation>&amp;Options...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
+        <location filename="../bitcoingui.cpp" line="240"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Modifier les options de configuration pour bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
+        <location filename="../bitcoingui.cpp" line="242"/>
         <source>Open &amp;Bitcoin</source>
         <translation>Ouvrir &amp;Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="240"/>
+        <location filename="../bitcoingui.cpp" line="243"/>
         <source>Show the Bitcoin window</source>
         <translation>Afficher la fenêtre de Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
+        <location filename="../bitcoingui.cpp" line="244"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exporter...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
+        <location filename="../bitcoingui.cpp" line="245"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Exporter les données de l&apos;onglet courant vers un fichier</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
+        <location filename="../bitcoingui.cpp" line="246"/>
         <source>&amp;Encrypt Wallet</source>
         <translation>&amp;Chiffrer le porte-monnaie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="244"/>
+        <location filename="../bitcoingui.cpp" line="247"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Chiffrer ou décrypter le porte-monnaie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="246"/>
+        <location filename="../bitcoingui.cpp" line="249"/>
         <source>&amp;Backup Wallet</source>
         <translation>&amp;Sauvegarder le porte-monnaie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="247"/>
+        <location filename="../bitcoingui.cpp" line="250"/>
         <source>Backup wallet to another location</source>
         <translation>Sauvegarder le porte-monnaie à un autre emplacement</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="248"/>
+        <location filename="../bitcoingui.cpp" line="251"/>
         <source>&amp;Change Passphrase</source>
         <translation>&amp;Modifier la phrase de passe</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="252"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Modifier la phrase de passe utilisée pour le cryptage du porte-monnaie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="272"/>
+        <location filename="../bitcoingui.cpp" line="275"/>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="281"/>
+        <location filename="../bitcoingui.cpp" line="284"/>
         <source>&amp;Settings</source>
         <translation>&amp;Réglages</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="287"/>
+        <location filename="../bitcoingui.cpp" line="290"/>
         <source>&amp;Help</source>
         <translation>&amp;Aide</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="294"/>
+        <location filename="../bitcoingui.cpp" line="297"/>
         <source>Tabs toolbar</source>
         <translation>Barre d&apos;outils des onglets</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="305"/>
+        <location filename="../bitcoingui.cpp" line="308"/>
         <source>Actions toolbar</source>
         <translation>Barre d&apos;outils des actions</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="317"/>
+        <location filename="../bitcoingui.cpp" line="320"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="407"/>
+        <location filename="../bitcoingui.cpp" line="410"/>
         <source>bitcoin-qt</source>
         <translation>bitcoin-qt</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="449"/>
+        <location filename="../bitcoingui.cpp" line="452"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n connexion active avec le réseau Bitcoin</numerusform><numerusform>%n connexions actives avec le réseau Bitcoin</numerusform></translation>
+        <translation>
+            <numerusform>%n connexion active avec le réseau Bitcoin</numerusform>
+            <numerusform>%n connexions actives avec le réseau Bitcoin</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="475"/>
+        <location filename="../bitcoingui.cpp" line="478"/>
         <source>Downloaded %1 of %2 blocks of transaction history.</source>
         <translation>%1 blocs de l&apos;historique des transactions téléchargés sur un total de %2.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="487"/>
+        <location filename="../bitcoingui.cpp" line="490"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>%1 blocs de l&apos;historique de transaction téléchargé.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="502"/>
+        <location filename="../bitcoingui.cpp" line="505"/>
         <source>%n second(s) ago</source>
-        <translation><numerusform>il y a %n seconde</numerusform><numerusform>il y a %n secondes</numerusform></translation>
+        <translation>
+            <numerusform>il y a %n seconde</numerusform>
+            <numerusform>il y a %n secondes</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="506"/>
+        <location filename="../bitcoingui.cpp" line="509"/>
         <source>%n minute(s) ago</source>
-        <translation><numerusform>il y a %n minute</numerusform><numerusform>il y a %n minutes</numerusform></translation>
+        <translation>
+            <numerusform>il y a %n minute</numerusform>
+            <numerusform>il y a %n minutes</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="510"/>
+        <location filename="../bitcoingui.cpp" line="513"/>
         <source>%n hour(s) ago</source>
-        <translation><numerusform>il y a %n heure</numerusform><numerusform>il y a %n heures</numerusform></translation>
+        <translation>
+            <numerusform>il y a %n heure</numerusform>
+            <numerusform>il y a %n heures</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="514"/>
+        <location filename="../bitcoingui.cpp" line="517"/>
         <source>%n day(s) ago</source>
-        <translation><numerusform>il y a %n jour</numerusform><numerusform>il y a %n jours</numerusform></translation>
+        <translation>
+            <numerusform>il y a %n jour</numerusform>
+            <numerusform>il y a %n jours</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="520"/>
+        <location filename="../bitcoingui.cpp" line="523"/>
         <source>Up to date</source>
         <translation>À jour</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="525"/>
+        <location filename="../bitcoingui.cpp" line="528"/>
         <source>Catching up...</source>
         <translation>Rattrapage...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="533"/>
+        <location filename="../bitcoingui.cpp" line="536"/>
         <source>Last received block was generated %1.</source>
         <translation>Le dernier bloc reçu a été généré %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="597"/>
+        <location filename="../bitcoingui.cpp" line="609"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Cette transaction dépasse la limite de taille.  Vous pouvez quand-même l&apos;envoyer en vous acquittant de frais d&apos;un montant de %1, qui iront aux nœuds qui traitent la transaction et aideront à soutenir le réseau.  Voulez-vous payer les frais ?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="602"/>
+        <location filename="../bitcoingui.cpp" line="614"/>
         <source>Sending...</source>
         <translation>Envoi en cours...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="629"/>
+        <location filename="../bitcoingui.cpp" line="641"/>
         <source>Sent transaction</source>
         <translation>Transaction envoyée</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="630"/>
+        <location filename="../bitcoingui.cpp" line="642"/>
         <source>Incoming transaction</source>
         <translation>Transaction entrante</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="631"/>
+        <location filename="../bitcoingui.cpp" line="643"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -577,34 +594,39 @@ Adresse : %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="751"/>
+        <location filename="../bitcoingui.cpp" line="768"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Le porte-monnaie est &lt;b&gt;chiffré&lt;/b&gt; et est actuellement &lt;b&gt;déverrouillé&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="759"/>
+        <location filename="../bitcoingui.cpp" line="776"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Le porte-monnaie est &lt;b&gt;chiffré&lt;/b&gt; et est actuellement &lt;b&gt;verrouillé&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="782"/>
+        <location filename="../bitcoingui.cpp" line="799"/>
         <source>Backup Wallet</source>
         <translation>Sauvegarder le porte-monnaie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="782"/>
+        <location filename="../bitcoingui.cpp" line="799"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Données de porte-monnaie (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="785"/>
+        <location filename="../bitcoingui.cpp" line="802"/>
         <source>Backup Failed</source>
         <translation>La sauvegarde a échoué</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="785"/>
+        <location filename="../bitcoingui.cpp" line="802"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>Une erreur est survenue lors de l&apos;enregistrement des données de porte-monnaie à un autre emplacement.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="139"/>
+        <source>A fatal error occured. Bitcoin can no longer continue safely and will quit.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -621,8 +643,13 @@ Adresse : %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="281"/>
-        <source>Display addresses in transaction list</source>
-        <translation>Afficher les adresses dans la liste des transactions</translation>
+        <source>&amp;Display addresses in transaction list</source>
+        <translation>&amp;Afficher les adresses dans la liste des transactions</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="282"/>
+        <source>Whether to show Bitcoin addresses in the transaction list</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -795,8 +822,8 @@ Adresse : %4
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>L&apos;adresse à laquelle le paiement sera envoyé  (par ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to sign the message with  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
@@ -840,8 +867,8 @@ Adresse : %4
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse surlignée dans votre presse-papiers</translation>
+        <source>Copy the current signature to the system clipboard</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
@@ -927,20 +954,12 @@ Adresse : %4
         <translation>0 BTC</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="82"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Porte-monnaie&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <source>Wallet</source>
+        <translation>Porte-monnaie</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="122"/>
+        <location filename="../forms/overviewpage.ui" line="124"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Transactions récentes&lt;/b&gt;</translation>
     </message>
@@ -973,42 +992,47 @@ p, li { white-space: pre-wrap; }
         <translation>QR Code</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="52"/>
+        <location filename="../forms/qrcodedialog.ui" line="55"/>
         <source>Request Payment</source>
         <translation>Demande de paiement</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="67"/>
+        <location filename="../forms/qrcodedialog.ui" line="70"/>
         <source>Amount:</source>
         <translation>Montant :</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="102"/>
+        <location filename="../forms/qrcodedialog.ui" line="105"/>
         <source>BTC</source>
         <translation>BTC</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="118"/>
+        <location filename="../forms/qrcodedialog.ui" line="121"/>
         <source>Label:</source>
         <translation>Étiquette :</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="141"/>
+        <location filename="../forms/qrcodedialog.ui" line="144"/>
         <source>Message:</source>
         <translation>Message :</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="183"/>
+        <location filename="../forms/qrcodedialog.ui" line="186"/>
         <source>&amp;Save As...</source>
         <translation>&amp;Enregistrer sous...</translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="101"/>
+        <location filename="../qrcodedialog.cpp" line="48"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qrcodedialog.cpp" line="113"/>
         <source>Save Image...</source>
         <translation>Enregistrer l&apos;image...</translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="101"/>
+        <location filename="../qrcodedialog.cpp" line="113"/>
         <source>PNG Images (*.png)</source>
         <translation>Images PNG (*.png)</translation>
     </message>
@@ -1344,54 +1368,60 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Date</source>
         <translation>Date</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Type</source>
         <translation>Type</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Amount</source>
         <translation>Montant</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="274"/>
+        <location filename="../transactiontablemodel.cpp" line="275"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Ouvert pour %n bloc</numerusform><numerusform>Ouvert pour %n blocs</numerusform></translation>
+        <translation>
+            <numerusform>Ouvert pour %n bloc</numerusform>
+            <numerusform>Ouvert pour %n blocs</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="277"/>
+        <location filename="../transactiontablemodel.cpp" line="278"/>
         <source>Open until %1</source>
         <translation>Ouvert jusqu&apos;à %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="280"/>
+        <location filename="../transactiontablemodel.cpp" line="281"/>
         <source>Offline (%1 confirmations)</source>
         <translation>Hors ligne (%1 confirmations)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="283"/>
+        <location filename="../transactiontablemodel.cpp" line="284"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
         <translation>Non confirmée (%1 confirmations sur un total de %2)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="286"/>
+        <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Confirmée (%1 confirmations)</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation><numerusform>Le solde d&apos;extraction (mined) sera disponible dans %n bloc</numerusform><numerusform>Le solde d&apos;extraction (mined) sera disponible dans %n blocs</numerusform></translation>
+        <translation>
+            <numerusform>Le solde d&apos;extraction (mined) sera disponible dans %n bloc</numerusform>
+            <numerusform>Le solde d&apos;extraction (mined) sera disponible dans %n blocs</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
@@ -1634,344 +1664,344 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="3"/>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
         <source>Bitcoin version</source>
         <translation>Version de bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="4"/>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Usage:</source>
         <translation>Utilisation :</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="5"/>
+        <location filename="../bitcoinstrings.cpp" line="10"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Envoyer une commande à -server ou à bitcoind</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="6"/>
+        <location filename="../bitcoinstrings.cpp" line="11"/>
         <source>List commands</source>
         <translation>Lister les commandes</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="7"/>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
         <source>Get help for a command</source>
         <translation>Obtenir de l&apos;aide pour une commande</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <location filename="../bitcoinstrings.cpp" line="13"/>
         <source>Options:</source>
         <translation>Options :</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Spécifier le fichier de configuration (par défaut : bitcoin.conf)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="10"/>
+        <location filename="../bitcoinstrings.cpp" line="15"/>
         <source>Specify pid file (default: bitcoind.pid)</source>
         <translation>Spécifier le fichier pid (par défaut : bitcoind.pid)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="11"/>
+        <location filename="../bitcoinstrings.cpp" line="16"/>
         <source>Generate coins</source>
         <translation>Générer des pièces</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <location filename="../bitcoinstrings.cpp" line="17"/>
         <source>Don&apos;t generate coins</source>
         <translation>Ne pas générer de pièces</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="13"/>
+        <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Start minimized</source>
         <translation>Démarrer sous forme minimisée</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Specify data directory</source>
         <translation>Spécifier le répertoire de données</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="15"/>
+        <location filename="../bitcoinstrings.cpp" line="20"/>
         <source>Specify connection timeout (in milliseconds)</source>
         <translation>Spécifier le délai d&apos;expiration de la connexion (en millisecondes)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="16"/>
+        <location filename="../bitcoinstrings.cpp" line="21"/>
         <source>Connect through socks4 proxy</source>
         <translation>Connexion via un proxy socks4</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="17"/>
+        <location filename="../bitcoinstrings.cpp" line="22"/>
         <source>Allow DNS lookups for addnode and connect</source>
         <translation>Autoriser les recherches DNS pour l&apos;ajout de nœuds et la connexion</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="18"/>
+        <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Écouter les connexions sur le &lt;port&gt; (par défaut : 8333 ou testnet : 18333)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="19"/>
+        <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Garder au plus &lt;n&gt; connexions avec les pairs (par défaut : 125)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="20"/>
+        <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Add a node to connect to</source>
         <translation>Ajouter un nœud auquel se connecter</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <location filename="../bitcoinstrings.cpp" line="26"/>
         <source>Connect only to the specified node</source>
         <translation>Ne se connecter qu&apos;au nœud spécifié</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="22"/>
+        <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Don&apos;t accept connections from outside</source>
         <translation>Ne pas accepter les connexion depuis l&apos;extérieur</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="23"/>
+        <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Don&apos;t bootstrap list of peers using DNS</source>
         <translation>Ne pas amorcer la liste des pairs en utilisant le DNS</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="24"/>
+        <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Seuil de déconnexion des pairs de mauvaise qualité (par défaut : 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="25"/>
+        <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Délai en secondes de refus de reconnexion aux pairs de mauvaise qualité (par défaut : 86400)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="28"/>
+        <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
         <translation>Tampon maximal de réception par connexion, &lt;n&gt;*1000 octets (par défaut : 10000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="29"/>
+        <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
         <translation>Tampon maximal d&apos;envoi par connexion, &lt;n&gt;*1000 octets (par défaut : 10000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="30"/>
+        <location filename="../bitcoinstrings.cpp" line="35"/>
         <source>Don&apos;t attempt to use UPnP to map the listening port</source>
         <translation>Ne pas tenter d&apos;utiliser l&apos;UPnP pour ouvrir le port d&apos;écoute</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="31"/>
+        <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Attempt to use UPnP to map the listening port</source>
         <translation>Essayer d&apos;utiliser l&apos;UPnP pour ouvrir le port d&apos;écoute</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Fee per kB to add to transactions you send</source>
         <translation>Frais par ko à ajouter aux transactions que vous enverrez</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accepter les commandes de JSON-RPC et de la ligne de commande</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="34"/>
+        <location filename="../bitcoinstrings.cpp" line="39"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Fonctionner en arrière-plan en tant que démon et accepter les commandes</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="35"/>
+        <location filename="../bitcoinstrings.cpp" line="40"/>
         <source>Use the test network</source>
         <translation>Utiliser le réseau de test</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="36"/>
+        <location filename="../bitcoinstrings.cpp" line="41"/>
         <source>Output extra debugging information</source>
         <translation>Informations de débogage supplémentaires</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="37"/>
+        <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Prepend debug output with timestamp</source>
         <translation>Faire précéder les données de débogage par un horodatage</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="38"/>
+        <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Envoyer les informations de débogage/trace à la console au lieu du fichier debug.log</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <location filename="../bitcoinstrings.cpp" line="44"/>
         <source>Send trace/debug info to debugger</source>
         <translation>Envoyer les informations de débogage/trace au débogueur</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="40"/>
+        <location filename="../bitcoinstrings.cpp" line="45"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Nom d&apos;utilisateur pour les connexions JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Mot de passe pour les connexions JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
+        <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
         <translation>Écouter les connexions JSON-RPC sur le &lt;port&gt; (par défaut : 8332)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="43"/>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Autoriser les connexions JSON-RPC depuis l&apos;adresse IP spécifiée</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
+        <location filename="../bitcoinstrings.cpp" line="49"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Envoyer des commandes au nœud fonctionnant à &lt;ip&gt; (par défaut : 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="45"/>
+        <location filename="../bitcoinstrings.cpp" line="50"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Régler la taille de la plage de clefs sur &lt;n&gt; (par défaut : 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Réanalyser la chaîne de blocs pour les transactions de porte-monnaie manquantes</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="47"/>
+        <location filename="../bitcoinstrings.cpp" line="52"/>
         <source>
 SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>
 Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="50"/>
+        <location filename="../bitcoinstrings.cpp" line="55"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Utiliser OpenSSL (https) pour les connexions JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="51"/>
+        <location filename="../bitcoinstrings.cpp" line="56"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Fichier de certificat serveur (par défaut : server.cert)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="52"/>
+        <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Server private key (default: server.pem)</source>
         <translation>Clef privée du serveur (par défaut : server.pem)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="53"/>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Clefs de chiffrement acceptables (par défaut : TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="56"/>
+        <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>This help message</source>
         <translation>Ce message d&apos;aide</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <location filename="../bitcoinstrings.cpp" line="62"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Impossible d&apos;obtenir un verrou sur le répertoire de données %s.  Bitcoin fonctionne probablement déjà.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="60"/>
+        <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Loading addresses...</source>
         <translation>Chargement des adresses...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error loading addr.dat</source>
         <translation>Erreur lors du chargement de addr.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="63"/>
+        <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Error loading blkindex.dat</source>
         <translation>Erreur lors du chargement de blkindex.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="65"/>
+        <location filename="../bitcoinstrings.cpp" line="70"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Erreur lors du chargement de wallet.dat : porte-monnaie corrompu</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="66"/>
+        <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
         <translation>Erreur lors du chargement de wallet.dat : le porte-monnaie nécessite une version plus récente de Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="67"/>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Le porte-monnaie nécessitait une réécriture. Veuillez redémarrer Bitcoin pour terminer l&apos;opération</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Error loading wallet.dat</source>
         <translation>Erreur lors du chargement de wallet.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="62"/>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Loading block index...</source>
         <translation>Chargement de l&apos;index des blocs...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="64"/>
+        <location filename="../bitcoinstrings.cpp" line="69"/>
         <source>Loading wallet...</source>
         <translation>Chargement du porte-monnaie...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="69"/>
+        <location filename="../bitcoinstrings.cpp" line="74"/>
         <source>Rescanning...</source>
         <translation>Nouvelle analyse...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="70"/>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Done loading</source>
         <translation>Chargement terminé</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <location filename="../bitcoinstrings.cpp" line="76"/>
         <source>Invalid -proxy address</source>
         <translation>Adresse -proxy invalide</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
         <translation>Montant invalide pour -paytxfee=&lt;montant&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="73"/>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Attention : -paytxfee est réglée sur un montant très élevé.  Il s&apos;agit des frais de transaction que vous payerez si vous envoyez une transaction.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="76"/>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Error: CreateThread(StartNode) failed</source>
         <translation>Erreur : CreateThread(StartNode) a échoué</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <location filename="../bitcoinstrings.cpp" line="82"/>
         <source>Warning: Disk space is low  </source>
         <translation>Attention : l&apos;espace disque est faible</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <location filename="../bitcoinstrings.cpp" line="83"/>
         <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
         <translation>Impossible de s&apos;attacher au port %d sur cet ordinateur.  Bitcoin fonctionne probablement déjà.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="81"/>
+        <location filename="../bitcoinstrings.cpp" line="86"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Attention : veuillez vérifier que l&apos;heure et la date de votre ordinateur sont corrects.  Si votre horloge n&apos;est pas à l&apos;heure, Bitcoin ne fonctionnera pas correctement.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="84"/>
+        <location filename="../bitcoinstrings.cpp" line="89"/>
         <source>beta</source>
         <translation>bêta</translation>
     </message>

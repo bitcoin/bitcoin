@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="lt" version="2.0">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="lt">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
@@ -137,17 +139,17 @@ Platinama pagal licenziją MIT/X11, papildomą informaciją rasite faile license
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="77"/>
+        <location filename="../addresstablemodel.cpp" line="78"/>
         <source>Label</source>
         <translation>Žymė</translation>
     </message>
     <message>
-        <location filename="../addresstablemodel.cpp" line="77"/>
+        <location filename="../addresstablemodel.cpp" line="78"/>
         <source>Address</source>
         <translation>Adresas</translation>
     </message>
     <message>
-        <location filename="../addresstablemodel.cpp" line="113"/>
+        <location filename="../addresstablemodel.cpp" line="114"/>
         <source>(no label)</source>
         <translation>(nėra žymės)</translation>
     </message>
@@ -294,278 +296,298 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="69"/>
+        <location filename="../bitcoingui.cpp" line="72"/>
         <source>Bitcoin Wallet</source>
         <translation>Bitkoinų piniginė</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="142"/>
-        <location filename="../bitcoingui.cpp" line="464"/>
+        <location filename="../bitcoingui.cpp" line="145"/>
+        <location filename="../bitcoingui.cpp" line="467"/>
         <source>Synchronizing with network...</source>
         <translation>Sinchronizavimas su tinklu ...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="145"/>
+        <location filename="../bitcoingui.cpp" line="148"/>
         <source>Block chain synchronization in progress</source>
         <translation>Vyksta blokų grandinės sinchronizavimas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="176"/>
+        <location filename="../bitcoingui.cpp" line="179"/>
         <source>&amp;Overview</source>
         <translation>&amp;O Apžvalga</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="177"/>
+        <location filename="../bitcoingui.cpp" line="180"/>
         <source>Show general overview of wallet</source>
         <translation>Rodyti piniginės bendrą apžvalgą</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="182"/>
+        <location filename="../bitcoingui.cpp" line="185"/>
         <source>&amp;Transactions</source>
         <translation>&amp;T Sandoriai</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="183"/>
+        <location filename="../bitcoingui.cpp" line="186"/>
         <source>Browse transaction history</source>
         <translation>Apžvelgti sandorių istoriją</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="188"/>
+        <location filename="../bitcoingui.cpp" line="191"/>
         <source>&amp;Address Book</source>
         <translation>&amp;Adresų knygelė</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="189"/>
+        <location filename="../bitcoingui.cpp" line="192"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Redaguoti išsaugotus adresus bei žymes</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="194"/>
+        <location filename="../bitcoingui.cpp" line="197"/>
         <source>&amp;Receive coins</source>
         <translation>&amp;R Gautos monetos</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="195"/>
+        <location filename="../bitcoingui.cpp" line="198"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Parodyti adresų sąraša mokėjimams gauti</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="200"/>
+        <location filename="../bitcoingui.cpp" line="203"/>
         <source>&amp;Send coins</source>
         <translation>&amp;Siųsti monetas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="201"/>
+        <location filename="../bitcoingui.cpp" line="204"/>
         <source>Send coins to a bitcoin address</source>
         <translation>Siųsti monetas bitkoinų adresu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="206"/>
+        <location filename="../bitcoingui.cpp" line="209"/>
         <source>Sign &amp;message</source>
         <translation>Registruoti praneši&amp;mą</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="207"/>
+        <location filename="../bitcoingui.cpp" line="210"/>
         <source>Prove you control an address</source>
         <translation>Įrodyti, kad jūs valdyti adresą</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="226"/>
+        <location filename="../bitcoingui.cpp" line="229"/>
         <source>E&amp;xit</source>
         <translation>&amp;x išėjimas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="227"/>
+        <location filename="../bitcoingui.cpp" line="230"/>
         <source>Quit application</source>
         <translation>Išjungti programą</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="230"/>
+        <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;About %1</source>
         <translation>&amp;Apie %1</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="231"/>
+        <location filename="../bitcoingui.cpp" line="234"/>
         <source>Show information about Bitcoin</source>
         <translation>Rodyti informaciją apie Bitkoiną</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="233"/>
+        <location filename="../bitcoingui.cpp" line="236"/>
         <source>About &amp;Qt</source>
         <translation>Apie &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="237"/>
         <source>Show information about Qt</source>
         <translation>Rodyti informaciją apie Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
+        <location filename="../bitcoingui.cpp" line="239"/>
         <source>&amp;Options...</source>
         <translation>&amp;Opcijos...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
+        <location filename="../bitcoingui.cpp" line="240"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Keisti bitcoin konfigūracijos galimybes</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
+        <location filename="../bitcoingui.cpp" line="242"/>
         <source>Open &amp;Bitcoin</source>
         <translation>Atidaryti &amp;Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="240"/>
+        <location filename="../bitcoingui.cpp" line="243"/>
         <source>Show the Bitcoin window</source>
         <translation>Rodyti Bitcoin langą</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
+        <location filename="../bitcoingui.cpp" line="244"/>
         <source>&amp;Export...</source>
         <translation>&amp;Eksportas...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
+        <location filename="../bitcoingui.cpp" line="245"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
+        <location filename="../bitcoingui.cpp" line="246"/>
         <source>&amp;Encrypt Wallet</source>
         <translation>&amp;E Užšifruoti piniginę</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="244"/>
+        <location filename="../bitcoingui.cpp" line="247"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Užšifruoti  ar iššifruoti piniginę</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="246"/>
+        <location filename="../bitcoingui.cpp" line="249"/>
         <source>&amp;Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished">&amp;Backup piniginę</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="247"/>
+        <location filename="../bitcoingui.cpp" line="250"/>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="248"/>
+        <location filename="../bitcoingui.cpp" line="251"/>
         <source>&amp;Change Passphrase</source>
         <translation>&amp;C Pakeisti slaptažodį</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="252"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Pakeisti slaptažodį naudojamą piniginės užšifravimui</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="272"/>
+        <location filename="../bitcoingui.cpp" line="275"/>
         <source>&amp;File</source>
         <translation>&amp;Failas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="281"/>
+        <location filename="../bitcoingui.cpp" line="284"/>
         <source>&amp;Settings</source>
         <translation>Nu&amp;Statymai</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="287"/>
+        <location filename="../bitcoingui.cpp" line="290"/>
         <source>&amp;Help</source>
         <translation>&amp;H Pagelba</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="294"/>
+        <location filename="../bitcoingui.cpp" line="297"/>
         <source>Tabs toolbar</source>
         <translation>Tabs įrankių juosta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="305"/>
+        <location filename="../bitcoingui.cpp" line="308"/>
         <source>Actions toolbar</source>
         <translation>Veiksmų įrankių juosta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="317"/>
+        <location filename="../bitcoingui.cpp" line="320"/>
         <source>[testnet]</source>
         <translation>[testavimotinklas]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="407"/>
+        <location filename="../bitcoingui.cpp" line="410"/>
         <source>bitcoin-qt</source>
         <translation>bitcoin-qt</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="449"/>
+        <location filename="../bitcoingui.cpp" line="452"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n Bitcoin tinklo aktyvus ryšys</numerusform><numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform><numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform></translation>
+        <translation>
+            <numerusform>%n Bitcoin tinklo aktyvus ryšys</numerusform>
+            <numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform>
+            <numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="475"/>
+        <location filename="../bitcoingui.cpp" line="478"/>
         <source>Downloaded %1 of %2 blocks of transaction history.</source>
         <translation>Atsisiuntė %1 iš %2 sandorių istorijos blokų</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="487"/>
+        <location filename="../bitcoingui.cpp" line="490"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Atsisiuntė %1 iš %2 sandorių istorijos blokų</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="502"/>
+        <location filename="../bitcoingui.cpp" line="505"/>
         <source>%n second(s) ago</source>
-        <translation><numerusform>Prieš %n sekundę</numerusform><numerusform>Prieš %n sekundes</numerusform><numerusform>Prieš %n sekundžių</numerusform></translation>
+        <translation>
+            <numerusform>Prieš %n sekundę</numerusform>
+            <numerusform>Prieš %n sekundes</numerusform>
+            <numerusform>Prieš %n sekundžių</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="506"/>
+        <location filename="../bitcoingui.cpp" line="509"/>
         <source>%n minute(s) ago</source>
-        <translation><numerusform>Prieš %n minutę</numerusform><numerusform>Prieš %n minutes</numerusform><numerusform>Prieš %n minutčių</numerusform></translation>
+        <translation>
+            <numerusform>Prieš %n minutę</numerusform>
+            <numerusform>Prieš %n minutes</numerusform>
+            <numerusform>Prieš %n minutčių</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="510"/>
+        <location filename="../bitcoingui.cpp" line="513"/>
         <source>%n hour(s) ago</source>
-        <translation><numerusform>Prieš %n valandą</numerusform><numerusform>Prieš %n valandas</numerusform><numerusform>Prieš %n valandų</numerusform></translation>
+        <translation>
+            <numerusform>Prieš %n valandą</numerusform>
+            <numerusform>Prieš %n valandas</numerusform>
+            <numerusform>Prieš %n valandų</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="514"/>
+        <location filename="../bitcoingui.cpp" line="517"/>
         <source>%n day(s) ago</source>
-        <translation><numerusform>Prieš %n dieną</numerusform><numerusform>Prieš %n dienas</numerusform><numerusform>Prieš %n dienų</numerusform></translation>
+        <translation>
+            <numerusform>Prieš %n dieną</numerusform>
+            <numerusform>Prieš %n dienas</numerusform>
+            <numerusform>Prieš %n dienų</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="520"/>
+        <location filename="../bitcoingui.cpp" line="523"/>
         <source>Up to date</source>
         <translation>Iki šiol</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="525"/>
+        <location filename="../bitcoingui.cpp" line="528"/>
         <source>Catching up...</source>
         <translation>Gaudo...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="533"/>
+        <location filename="../bitcoingui.cpp" line="536"/>
         <source>Last received block was generated %1.</source>
         <translation>Paskutinis gautas blokas buvo sukurtas %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="597"/>
+        <location filename="../bitcoingui.cpp" line="609"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Šis sandoris viršija leistiną dydį.  Jūs galite įvykdyti jį papildomai sumokėję %1 mokesčių, kurie bus išsiųsti tais pačiais mazgais kuriais vyko sandoris ir padės palaikyti tinklą. Ar jūs norite apmokėti papildomą mokestį?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="602"/>
+        <location filename="../bitcoingui.cpp" line="614"/>
         <source>Sending...</source>
         <translation>Siunčiama...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="629"/>
+        <location filename="../bitcoingui.cpp" line="641"/>
         <source>Sent transaction</source>
         <translation>Sandoris nusiųstas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="630"/>
+        <location filename="../bitcoingui.cpp" line="642"/>
         <source>Incoming transaction</source>
         <translation>Ateinantis sandoris</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="631"/>
+        <location filename="../bitcoingui.cpp" line="643"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -577,34 +599,39 @@ Tipas: %3
 Adresas: %4</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="751"/>
+        <location filename="../bitcoingui.cpp" line="768"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Piniginė &lt;b&gt;užšifruota&lt;/b&gt; ir šiuo metu &lt;b&gt;atrakinta&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="759"/>
+        <location filename="../bitcoingui.cpp" line="776"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Piniginė &lt;b&gt;užšifruota&lt;/b&gt; ir šiuo metu &lt;b&gt;užrakinta&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="782"/>
+        <location filename="../bitcoingui.cpp" line="799"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="782"/>
+        <location filename="../bitcoingui.cpp" line="799"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="785"/>
+        <location filename="../bitcoingui.cpp" line="802"/>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="785"/>
+        <location filename="../bitcoingui.cpp" line="802"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="139"/>
+        <source>A fatal error occured. Bitcoin can no longer continue safely and will quit.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -621,8 +648,13 @@ Adresas: %4</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="281"/>
-        <source>Display addresses in transaction list</source>
-        <translation>Rodyti adresus sandorių sąraše </translation>
+        <source>&amp;Display addresses in transaction list</source>
+        <translation>&amp;Rodyti adresus sandorių sąraše</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="282"/>
+        <source>Whether to show Bitcoin addresses in the transaction list</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -791,12 +823,12 @@ Adresas: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Nurodyti adresą mokėjimui siųsti (pvz. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>The address to sign the message with  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
@@ -840,8 +872,8 @@ Adresas: %4</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopijuoti pasirinktą adresą į sistemos mainų atmintį</translation>
+        <source>Copy the current signature to the system clipboard</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
@@ -927,20 +959,12 @@ Adresas: %4</translation>
         <translation>0 BTC</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="82"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wallet&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <source>Wallet</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="122"/>
+        <location filename="../forms/overviewpage.ui" line="124"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Naujausi sandoris&lt;/b&gt;</translation>
     </message>
@@ -973,44 +997,49 @@ p, li { white-space: pre-wrap; }
         <translation>QR kodas</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="52"/>
+        <location filename="../forms/qrcodedialog.ui" line="55"/>
         <source>Request Payment</source>
         <translation>Prašau išmokėti</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="67"/>
+        <location filename="../forms/qrcodedialog.ui" line="70"/>
         <source>Amount:</source>
         <translation>Suma:</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="102"/>
+        <location filename="../forms/qrcodedialog.ui" line="105"/>
         <source>BTC</source>
         <translation>BTC</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="118"/>
+        <location filename="../forms/qrcodedialog.ui" line="121"/>
         <source>Label:</source>
         <translation>Žymė:</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="141"/>
+        <location filename="../forms/qrcodedialog.ui" line="144"/>
         <source>Message:</source>
         <translation>Žinutė:</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="183"/>
+        <location filename="../forms/qrcodedialog.ui" line="186"/>
         <source>&amp;Save As...</source>
         <translation>&amp;S išsaugoti kaip...</translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="101"/>
-        <source>Save Image...</source>
-        <translation type="unfinished"/>
+        <location filename="../qrcodedialog.cpp" line="48"/>
+        <source>Error encoding URI into QR Code.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="101"/>
+        <location filename="../qrcodedialog.cpp" line="113"/>
+        <source>Save Image...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qrcodedialog.cpp" line="113"/>
         <source>PNG Images (*.png)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1344,54 +1373,62 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Date</source>
         <translation>Data</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Type</source>
         <translation>Tipas</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Address</source>
         <translation>Adresas</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="213"/>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Amount</source>
         <translation>Suma</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="274"/>
+        <location filename="../transactiontablemodel.cpp" line="275"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Atidaryta %n blokui</numerusform><numerusform>Atidaryta %n blokams</numerusform><numerusform>Atidaryta %n blokų</numerusform></translation>
+        <translation>
+            <numerusform>Atidaryta %n blokui</numerusform>
+            <numerusform>Atidaryta %n blokams</numerusform>
+            <numerusform>Atidaryta %n blokų</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="277"/>
+        <location filename="../transactiontablemodel.cpp" line="278"/>
         <source>Open until %1</source>
         <translation>Atidaryta kol %n</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="280"/>
+        <location filename="../transactiontablemodel.cpp" line="281"/>
         <source>Offline (%1 confirmations)</source>
         <translation>Atjungta (%1 patvirtinimai)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="283"/>
+        <location filename="../transactiontablemodel.cpp" line="284"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
         <translation>Nepatvirtintos (%1 iš %2 patvirtinimų)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="286"/>
+        <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Patvirtinta (%1 patvirtinimai)</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="295"/>
         <source>Mined balance will be available in %n more blocks</source>
-        <translation><numerusform>Išgautas balansas bus pasiekiamas po %n bloko</numerusform><numerusform>Išgautas balansas bus pasiekiamas po %n blokų</numerusform><numerusform>Išgautas balansas bus pasiekiamas po %n blokų</numerusform></translation>
+        <translation>
+            <numerusform>Išgautas balansas bus pasiekiamas po %n bloko</numerusform>
+            <numerusform>Išgautas balansas bus pasiekiamas po %n blokų</numerusform>
+            <numerusform>Išgautas balansas bus pasiekiamas po %n blokų</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="301"/>
@@ -1634,343 +1671,343 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="3"/>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
         <source>Bitcoin version</source>
         <translation>Bitcoin versija</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="4"/>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Usage:</source>
         <translation>Naudojimas:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="5"/>
+        <location filename="../bitcoinstrings.cpp" line="10"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Siųsti komandą serveriui arba bitcoind</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="6"/>
+        <location filename="../bitcoinstrings.cpp" line="11"/>
         <source>List commands</source>
         <translation>Komandų sąrašas</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="7"/>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
         <source>Get help for a command</source>
         <translation>Suteikti pagalba komandai</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <location filename="../bitcoinstrings.cpp" line="13"/>
         <source>Options:</source>
         <translation>Opcijos:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Nurodyti konfigūracijos failą (pagal nutylėjimąt: bitcoin.conf)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="10"/>
+        <location filename="../bitcoinstrings.cpp" line="15"/>
         <source>Specify pid file (default: bitcoind.pid)</source>
         <translation>Nurodyti pid failą  (pagal nutylėjimą: bitcoind.pid)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="11"/>
+        <location filename="../bitcoinstrings.cpp" line="16"/>
         <source>Generate coins</source>
         <translation>Sukurti monetas</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <location filename="../bitcoinstrings.cpp" line="17"/>
         <source>Don&apos;t generate coins</source>
         <translation>Neišgavinėti monetų</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="13"/>
+        <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Start minimized</source>
         <translation>Pradžia sumažinta</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Specify data directory</source>
         <translation>Nustatyti duomenų direktoriją</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="15"/>
+        <location filename="../bitcoinstrings.cpp" line="20"/>
         <source>Specify connection timeout (in milliseconds)</source>
         <translation>Nustatyti sujungimo trukmę (milisekundėmis)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="16"/>
+        <location filename="../bitcoinstrings.cpp" line="21"/>
         <source>Connect through socks4 proxy</source>
         <translation>Prisijungti per socks4 proxy</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="17"/>
+        <location filename="../bitcoinstrings.cpp" line="22"/>
         <source>Allow DNS lookups for addnode and connect</source>
         <translation>Leisti DNS paiešką sujungimui ir mazgo pridėjimui</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="18"/>
+        <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Sujungimo klausymas prijungčiai  &lt;port&gt; (pagal nutylėjimą: 8333 arba testnet: 18333)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="19"/>
+        <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Palaikyti ne daugiau &lt;n&gt; jungčių kolegoms (pagal nutylėjimą: 125)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="20"/>
+        <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Add a node to connect to</source>
         <translation>Pridėti mazgą prie sujungti su</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <location filename="../bitcoinstrings.cpp" line="26"/>
         <source>Connect only to the specified node</source>
         <translation>Prisijungti tik prie nurodyto mazgo</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="22"/>
+        <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Don&apos;t accept connections from outside</source>
         <translation>Nepriimti išorinio sujungimo</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="23"/>
+        <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Don&apos;t bootstrap list of peers using DNS</source>
         <translation>Neleisti  kolegų sąrašo naudojant DNS</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="24"/>
+        <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Atjungimo dėl netinkamo kolegų elgesio riba  (pagal nutylėjimą: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="25"/>
+        <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Sekundžių kiekis eikiamas palaikyti ryšį dėl lygiarangių nestabilumo (pagal nutylėjimą: 86.400)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="28"/>
+        <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
         <translation>Maksimalus buferis priėmimo sujungimui &lt;n&gt;*1000 bitų (pagal nutylėjimą: 10000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="29"/>
+        <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
         <translation>Maksimalus buferis siuntimo sujungimui &lt;n&gt;*1000 bitų (pagal nutylėjimą: 10000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="30"/>
+        <location filename="../bitcoinstrings.cpp" line="35"/>
         <source>Don&apos;t attempt to use UPnP to map the listening port</source>
         <translation>Nenaudoti UPnP klausymo prievado struktūros</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="31"/>
+        <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Attempt to use UPnP to map the listening port</source>
         <translation>Bandymas naudoti UPnP struktūra klausymosi prievadui</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Fee per kB to add to transactions you send</source>
         <translation> Įtraukti mokestį už kB siunčiamiems sandoriams</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Priimti komandinę eilutę ir JSON-RPC komandas</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="34"/>
+        <location filename="../bitcoinstrings.cpp" line="39"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Dirbti fone kaip šešėlyje ir priimti komandas</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="35"/>
+        <location filename="../bitcoinstrings.cpp" line="40"/>
         <source>Use the test network</source>
         <translation>Naudoti testavimo tinklą</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="36"/>
+        <location filename="../bitcoinstrings.cpp" line="41"/>
         <source>Output extra debugging information</source>
         <translation>Išėjimo papildomas derinimo informacija</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="37"/>
+        <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Prepend debug output with timestamp</source>
         <translation>Prideėti laiko žymę derinimo rezultatams</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="38"/>
+        <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Siųsti atsekimo/derinimo info į konsolę vietoj debug.log failo</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <location filename="../bitcoinstrings.cpp" line="44"/>
         <source>Send trace/debug info to debugger</source>
         <translation>Siųsti sekimo/derinimo info derintojui</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="40"/>
+        <location filename="../bitcoinstrings.cpp" line="45"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Vartotojo vardas JSON-RPC jungimuisi</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Slaptažodis JSON-RPC sujungimams</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
+        <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
         <translation>Klausymas JSON-RPC sujungimui prijungčiai &lt;port&gt; (pagal nutylėjimą: 8332)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="43"/>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Leisti JSON-RPC tik iš nurodytų IP adresų</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
+        <location filename="../bitcoinstrings.cpp" line="49"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Siųsti komandą mazgui dirbančiam &lt;ip&gt; (pagal nutylėjimą: 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="45"/>
+        <location filename="../bitcoinstrings.cpp" line="50"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Nustatyti rakto apimties dydį &lt;n&gt; (pagal nutylėjimą: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Ieškoti  prarastų piniginės sandorių blokų grandinėje</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="47"/>
+        <location filename="../bitcoinstrings.cpp" line="52"/>
         <source>
 SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL opcijos (žr.e Bitcoin Wiki for SSL setup instructions)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="50"/>
+        <location filename="../bitcoinstrings.cpp" line="55"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Naudoti OpenSSL  (https) jungimuisi JSON-RPC </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="51"/>
+        <location filename="../bitcoinstrings.cpp" line="56"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Serverio sertifikato failas (pagal nutylėjimą: server.cert)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="52"/>
+        <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Server private key (default: server.pem)</source>
         <translation>Serverio privatus raktas  (pagal nutylėjimą: server.pem)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="53"/>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Priimtini šifrai (pagal nutylėjimą: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="56"/>
+        <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>This help message</source>
         <translation>Pagelbos žinutė</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <location filename="../bitcoinstrings.cpp" line="62"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Negali gauti duomenų katalogo %s rakto. Bitcoin tikriausiai jau veikia.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="60"/>
+        <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Loading addresses...</source>
         <translation>Užkraunami adresai...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error loading addr.dat</source>
         <translation>addr.dat pakrovimo klaida</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="63"/>
+        <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Error loading blkindex.dat</source>
         <translation>blkindex.dat pakrovimo klaida</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="65"/>
+        <location filename="../bitcoinstrings.cpp" line="70"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation> wallet.dat pakrovimo klaida,  wallet.dat sugadintas</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="66"/>
+        <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
         <translation> wallet.dat pakrovimo klaida,  wallet.dat reikalauja naujasnės Bitcoin versijos</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="67"/>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Piniginė turi būti prrašyta: įvykdymui perkraukite Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Error loading wallet.dat</source>
         <translation> wallet.dat pakrovimo klaida</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="62"/>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Loading block index...</source>
         <translation>Užkraunami blokų indeksai...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="64"/>
+        <location filename="../bitcoinstrings.cpp" line="69"/>
         <source>Loading wallet...</source>
         <translation>Užkraunama piniginė...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="69"/>
+        <location filename="../bitcoinstrings.cpp" line="74"/>
         <source>Rescanning...</source>
         <translation>Peržiūra</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="70"/>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Done loading</source>
         <translation>Pakrovimas baigtas</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <location filename="../bitcoinstrings.cpp" line="76"/>
         <source>Invalid -proxy address</source>
         <translation>Neteisingas proxy adresas</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
         <translation>Neteisinga suma -paytxfee=&lt;amount&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="73"/>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Įspėjimas: -paytxfee yra nustatytas per didelis. Tai sandorio mokestis, kurį turėsite mokėti, jei siųsite sandorį.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="76"/>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Error: CreateThread(StartNode) failed</source>
         <translation>Klaida: nepasileidžia CreateThread(StartNode) </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <location filename="../bitcoinstrings.cpp" line="82"/>
         <source>Warning: Disk space is low  </source>
         <translation>Įspėjimas: nepakanka vietos diske</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <location filename="../bitcoinstrings.cpp" line="83"/>
         <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
         <translation>Nepavyko susieti šiame kompiuteryje prievado %d. Bitcoin tikriausiai jau veikia.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="81"/>
+        <location filename="../bitcoinstrings.cpp" line="86"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Įspėjimas: Patikrinkite, kad kompiuterio data ir laikas yra teisingi.Jei Jūsų laikrodis neteisingai nustatytas Bitcoin, veiks netinkamai.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="84"/>
+        <location filename="../bitcoinstrings.cpp" line="89"/>
         <source>beta</source>
         <translation>beta</translation>
     </message>
