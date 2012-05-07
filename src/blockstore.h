@@ -8,6 +8,7 @@
 
 #include <boost/signals2/signal.hpp>
 #include <queue>
+#include <set>
 
 #include "sync.h"
 #include "uint256.h"
@@ -30,6 +31,9 @@ public:
 class CBlockStore
 {
 private:
+    CCriticalSection cs_setBlocksSeen;
+    std::set<uint256> setBlocksSeen;
+
     CBlockStoreSignalTable sigtable;
 
     void CallbackCommitBlock(const CBlock &block) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock(block); }
