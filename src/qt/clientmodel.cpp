@@ -93,3 +93,8 @@ QString ClientModel::formatBuildDate() const
 {
     return QString::fromStdString(CLIENT_DATE);
 }
+
+QString ClientModel::clientName() const
+{
+    return QString::fromStdString(CLIENT_NAME);
+}
