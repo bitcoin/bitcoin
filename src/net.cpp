@@ -868,7 +868,7 @@ void ThreadSocketHandler2(void* parg)
         if (nSelect == SOCKET_ERROR)
         {
             int nErr = WSAGetLastError();
-            if (hSocketMax > -1)
+            if (hSocketMax != INVALID_SOCKET)
             {
                 printf("socket select error %d\n", nErr);
                 for (unsigned int i = 0; i <= hSocketMax; i++)
