@@ -814,6 +814,52 @@ void CWallet::ReacceptWalletTransactions()
     }
 }
 
+CCriticalSection cs_queueRelayTransactionCallbacks;
+queue<pair<CInv*, CTransaction*> > queueRelayTransactionCallbacks;
+CSemaphore semRelayTransactionCallbacks(0);
+bool fProcessRelayTransactionCallbacks;
+
+void SubmitCallbackRelayTransaction(const uint256 hash, const CTransaction& txIn)
+{
+    CInv* pinv = new CInv(MSG_TX, hash);
+    CTransaction* ptx = new CTransaction(txIn);
+    LOCK(cs_queueRelayTransactionCallbacks);
+        queueRelayTransactionCallbacks.push(make_pair(pinv, ptx));
+    semRelayTransactionCallbacks.post();
+}
+
+void StopRelayTransactionCallbacksThread()
+{
+    LOCK(cs_queueRelayTransactionCallbacks);
+        fProcessRelayTransactionCallbacks = false;
+    semRelayTransactionCallbacks.post();
+}
+
+void HandleRelayTransactionCallbacks(void* parg)
+{
+    {
+        LOCK(cs_queueRelayTransactionCallbacks);
+        fProcessRelayTransactionCallbacks = true;
+    }
+
+    loop
+    {
+        pair<CInv*, CTransaction*> callback;
+        semRelayTransactionCallbacks.wait();
+        if (!fProcessRelayTransactionCallbacks)
+            return;
+        {
+            LOCK(cs_queueRelayTransactionCallbacks);
+            assert(queueRelayTransactionCallbacks.size()>0);
+            callback = queueRelayTransactionCallbacks.front();
+            queueRelayTransactionCallbacks.pop();
+        }
+        RelayMessage(*(callback.first), *(callback.second));
+        delete callback.first;
+        delete callback.second;
+    }
+}
+
 void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
 {
     BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
@@ -822,7 +868,7 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
         {
             uint256 hash = tx.GetHash();
             if (!txdb.ContainsTx(hash))
-                RelayMessage(CInv(MSG_TX, hash), (CTransaction)tx);
+                SubmitCallbackRelayTransaction(hash, (CTransaction)tx);
         }
     }
     if (!IsCoinBase())
@@ -831,7 +877,7 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
         if (!txdb.ContainsTx(hash))
         {
             printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
-            RelayMessage(CInv(MSG_TX, hash), (CTransaction)*this);
+            SubmitCallbackRelayTransaction(hash, (CTransaction)*this);
         }
     }
 }

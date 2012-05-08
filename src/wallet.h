@@ -709,4 +709,7 @@ public:
     )
 };
 
+void HandleRelayTransactionCallbacks(void* parg);
+void StopRelayTransactionCallbacksThread();
+
 #endif

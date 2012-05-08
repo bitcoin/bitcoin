@@ -55,6 +55,7 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         if (pblockstore) pblockstore->StopProcessCallbacks();
+        StopRelayTransactionCallbacksThread();
         nTransactionsUpdated++;
         DBFlush(false);
         StopNode();
@@ -393,6 +394,8 @@ bool AppInit2()
         if (!CreateThread(ProcessCallbacks, pblockstore))
             return InitError(_("Error: CreateThread(ProcessCallbacks) failed"));
     }
+    if (!CreateThread(HandleRelayTransactionCallbacks, NULL))
+        return InitError(_("Error: CreateThread(HandleRelayTransactionCallbacks) failed"));
 
     std::ostringstream strErrors;
     //
