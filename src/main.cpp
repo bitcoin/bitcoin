@@ -2028,6 +2028,62 @@ void PrintBlockTree()
     }
 }
 
+bool LoadExternalBlockFile(FILE* fileIn)
+{
+    int nLoaded = 0;
+    {
+        LOCK(cs_main);
+        try {
+            CAutoFile blkdat(fileIn, SER_DISK, CLIENT_VERSION);
+            unsigned int nPos = 0;
+            while (nPos != -1 && blkdat.good() && !fRequestShutdown)
+            {
+                unsigned char pchData[65536];
+                do {
+                    fseek(blkdat, nPos, SEEK_SET);
+                    int nRead = fread(pchData, 1, sizeof(pchData), blkdat);
+                    if (nRead <= 8)
+                    {
+                        nPos = -1;
+                        break;
+                    }
+                    void* nFind = memchr(pchData, pchMessageStart[0], nRead+1-sizeof(pchMessageStart));
+                    if (nFind)
+                    {
+                        if (memcmp(nFind, pchMessageStart, sizeof(pchMessageStart))==0)
+                        {
+                            nPos += ((unsigned char*)nFind - pchData) + sizeof(pchMessageStart);
+                            break;
+                        }
+                        nPos += ((unsigned char*)nFind - pchData) + 1;
+                    }
+                    else
+                        nPos += sizeof(pchData) - sizeof(pchMessageStart) + 1;
+                } while(!fRequestShutdown);
+                if (nPos == -1)
+                    break;
+                fseek(blkdat, nPos, SEEK_SET);
+                unsigned int nSize;
+                blkdat >> nSize;
+                if (nSize > 0 && nSize <= MAX_BLOCK_SIZE)
+                {
+                    CBlock block;
+                    blkdat >> block;
+                    if (ProcessBlock(NULL,&block))
+                    {
+                        nLoaded++;
+                        nPos += 4 + nSize;
+                    }
+                }
+            }
+        }
+        catch (std::exception &e) 
+        {
+        }
+    }
+    printf("Loaded %i blocks from external file\n", nLoaded);
+    return nLoaded > 0;
+}
 
 
 
