@@ -19,6 +19,8 @@
 #include <QDoubleValidator>
 #include <QRegExpValidator>
 #include <QDialogButtonBox>
+#include <QDir>
+#include <QMessageBox>
 
 class OptionsPage: public QWidget
 {
@@ -66,8 +68,12 @@ public:
 
     virtual void setMapper(MonitoredDataMapper *mapper);
 private:
+    QValueComboBox *lang;
     QValueComboBox *unit;
     QCheckBox *display_addresses;
+    bool restart_warning_displayed;
+private slots:
+    void showRestartWarning();
 };
 
 class NetworkOptionsPage: public OptionsPage
@@ -230,11 +236,32 @@ void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
 
 /* Display options */
 DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
-        OptionsPage(parent)
+    OptionsPage(parent), restart_warning_displayed(false)
 {
     setWindowTitle(tr("Display"));
 
     QVBoxLayout *layout = new QVBoxLayout();
+
+    QHBoxLayout *lang_hbox = new QHBoxLayout();
+    lang_hbox->addSpacing(18);
+    QLabel *lang_label = new QLabel(tr("User Interface &Language: "));
+    lang_hbox->addWidget(lang_label);
+    lang = new QValueComboBox(this);
+    // Make list of languages
+    QDir translations(":translations");
+    lang->addItem("(default)", QVariant(""));
+    foreach(const QString &langStr, translations.entryList())
+    {
+        lang->addItem(langStr, QVariant(langStr));
+    }
+
+    lang->setToolTip(tr("The user interface language can be set here. This setting will only take effect after restarting Bitcoin."));
+    connect(lang, SIGNAL(activated(int)), this, SLOT(showRestartWarning()));
+
+    lang_label->setBuddy(lang);
+    lang_hbox->addWidget(lang);
+
+    layout->addLayout(lang_hbox);
 
     QHBoxLayout *unit_hbox = new QHBoxLayout();
     unit_hbox->addSpacing(18);
@@ -259,8 +286,18 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
 
 void DisplayOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
+    mapper->addMapping(lang, OptionsModel::Language);
     mapper->addMapping(unit, OptionsModel::DisplayUnit);
     mapper->addMapping(display_addresses, OptionsModel::DisplayAddresses);
+}
+
+void DisplayOptionsPage::showRestartWarning()
+{
+    if(!restart_warning_displayed)
+    {
+        QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting Bitcoin."), QMessageBox::Ok);
+        restart_warning_displayed = true;
+    }
 }
 
 /* Window options */
