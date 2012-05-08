@@ -55,6 +55,7 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         if (pblockstore) pblockstore->StopProcessCallbacks();
+        StopRelayTransactionCallbacksThread();
         nTransactionsUpdated++;
         DBFlush(false);
         StopNode();
@@ -377,6 +378,11 @@ bool AppInit2(int argc, char* argv[])
             ThreadSafeMessageBox(_("Error: CreateThread(ProcessCallbacks) failed"), "Bitcoin");
             return false;
         }
+    }
+    if (!CreateThread(HandleRelayTransactionCallbacks, NULL))
+    {
+        ThreadSafeMessageBox(_("Error: CreateThread(HandleRelayTransactionCallbacks) failed"), "Bitcoin");
+        return false;
     }
 
     std::ostringstream strErrors;
