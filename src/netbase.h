@@ -51,6 +51,7 @@ class CNetAddr
         int64 GetHash() const;
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
+        int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;
         void print() const;
 
 #ifdef USE_IPV6
@@ -119,9 +120,13 @@ bool Lookup(const char *pszName, CService& addr, int portDefault = 0, bool fAllo
 bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault = 0, bool fAllowLookup = true, unsigned int nMaxSolutions = 0);
 bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout = nConnectTimeout);
+bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault = 0, int nTimeout = nConnectTimeout);
 
 // Settings
+extern int nSocksVersion;
 extern int fUseProxy;
+extern bool fProxyNameLookup;
+extern bool fNameLookup;
 extern CService addrProxy;
 
 #endif

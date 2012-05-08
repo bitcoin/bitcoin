@@ -8,6 +8,5 @@
 void ThreadIRCSeed(void* parg);
 
 extern int nGotIRCAddresses;
-extern bool fGotExternalIP;
 
 #endif
