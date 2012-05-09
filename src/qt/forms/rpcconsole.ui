@@ -21,7 +21,7 @@
      </property>
      <widget class="QWidget" name="tab_info">
       <attribute name="title">
-       <string>Information</string>
+       <string>&amp;Information</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout" columnstretch="0,1">
        <property name="horizontalSpacing">
@@ -234,7 +234,7 @@
      </widget>
      <widget class="QWidget" name="tab_console">
       <attribute name="title">
-       <string>Console</string>
+       <string>&amp;Console</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <property name="spacing">
