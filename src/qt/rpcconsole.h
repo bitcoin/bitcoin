@@ -28,11 +28,12 @@ public:
     };
 
 protected:
-    virtual bool event(QEvent *event);
     virtual bool eventFilter(QObject* obj, QEvent *event);
 
 private slots:
     void on_lineEdit_returnPressed();
+
+    void on_tabWidget_currentChanged(int index);
 
 public slots:
     void clear();
