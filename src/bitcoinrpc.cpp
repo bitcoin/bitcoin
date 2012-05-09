@@ -1525,7 +1525,7 @@ Value listtransactions(const Array& params, bool fHelp)
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, ret);
 
-        if (ret.size() >= (nCount+nFrom)) break;
+        if ((int)ret.size() >= (nCount+nFrom)) break;
     }
     // ret is newest to oldest
     
