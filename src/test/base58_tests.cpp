@@ -67,7 +67,7 @@ const char *vstrOut[] = {
 
 BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 {
-    for (int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
+    for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
         BOOST_CHECK_EQUAL(EncodeBase58(vstrIn[i].data, vstrIn[i].data + vstrIn[i].size), vstrOut[i]);
     }
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
 {
     std::vector<unsigned char> result;
-    for (int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
+    for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
         std::vector<unsigned char> expected(vstrIn[i].data, vstrIn[i].data + vstrIn[i].size);
         BOOST_CHECK(DecodeBase58(vstrOut[i], result));
