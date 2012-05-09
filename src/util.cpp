@@ -53,7 +53,6 @@ namespace boost {
 #endif
 
 using namespace std;
-using namespace boost;
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
@@ -328,7 +327,7 @@ bool error(const char *format, ...)
     va_end(arg_ptr);
     if (ret < 0 || ret >= limit)
     {
-        buffer[limit-1] = 0;
+        buffer[limit - 1] = 0;
     }
     printf("ERROR: %s\n", buffer);
     return false;
@@ -494,7 +493,7 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
     }
 }
 
-void ParseParameters(int argc, const char*const argv[])
+void ParseParameters(int argc, const char* const argv[])
 {
     mapArgs.clear();
     mapMultiArgs.clear();
@@ -761,8 +760,7 @@ bool WildcardMatch(const string& str, const string& mask)
 void FormatException(char* pszMessage, std::exception* pex, const char* pszThread)
 {
 #ifdef WIN32
-    char pszModule[MAX_PATH];
-    pszModule[0] = '\0';
+    char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
     const char* pszModule = "bitcoin";
@@ -801,38 +799,16 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     strMiscWarning = pszMessage;
 }
 
-#ifdef WIN32
-boost::filesystem::path MyGetSpecialFolderPath(int nFolder, bool fCreate)
-{
-    namespace fs = boost::filesystem;
-
-    char pszPath[MAX_PATH] = "";
-    if(SHGetSpecialFolderPathA(NULL, pszPath, nFolder, fCreate))
-    {
-        return fs::path(pszPath);
-    }
-    else if (nFolder == CSIDL_STARTUP)
-    {
-        return fs::path(getenv("USERPROFILE")) / "Start Menu" / "Programs" / "Startup";
-    }
-    else if (nFolder == CSIDL_APPDATA)
-    {
-        return fs::path(getenv("APPDATA"));
-    }
-    return fs::path("");
-}
-#endif
-
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-
-    // Windows: C:\Documents and Settings\username\Application Data\Bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
     // Mac: ~/Library/Application Support/Bitcoin
     // Unix: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return MyGetSpecialFolderPath(CSIDL_APPDATA, true) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -889,9 +865,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
 boost::filesystem::path GetConfigFile()
 {
-    namespace fs = boost::filesystem;
-
-    fs::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }
@@ -899,24 +873,21 @@ boost::filesystem::path GetConfigFile()
 void ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
-    namespace fs = boost::filesystem;
-    namespace pod = boost::program_options::detail;
-
-    fs::ifstream streamConfig(GetConfigFile());
+    boost::filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
         return; // No bitcoin.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
 
-    for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
+    for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
         // Don't overwrite existing settings so command line settings override bitcoin.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
             mapSettingsRet[strKey] = it->value[0];
-            //  interpret nofoo=1 as foo=0 (and nofoo=0 as foo=1) as long as foo not set)
+            // interpret nofoo=1 as foo=0 (and nofoo=0 as foo=1) as long as foo not set)
             InterpretNegativeSetting(strKey, mapSettingsRet);
         }
         mapMultiSettingsRet[strKey].push_back(it->value[0]);
@@ -925,9 +896,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 
 boost::filesystem::path GetPidFile()
 {
-    namespace fs = boost::filesystem;
-
-    fs::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
+    boost::filesystem::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
@@ -1095,14 +1064,30 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
 }
 
 #ifdef WIN32
+boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate)
+{
+    namespace fs = boost::filesystem;
+
+    char pszPath[MAX_PATH] = "";
+
+    if(SHGetSpecialFolderPathA(NULL, pszPath, nFolder, fCreate))
+    {
+        return fs::path(pszPath);
+    }
+
+    printf("SHGetSpecialFolderPathA() failed, could not obtain requested path.\n");
+    return fs::path("");
+}
+
 boost::filesystem::path static StartupShortcutPath()
 {
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "Bitcoin.lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
 }
 
 bool GetStartOnSystemStartup()
 {
-    return filesystem::exists(StartupShortcutPath());
+    // check for Bitcoin.lnk
+    return boost::filesystem::exists(StartupShortcutPath());
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
