@@ -5,8 +5,21 @@
 
 void CBlockStore::SubmitCallbackFinishEmitBlock(CBlock& block, CNode* pNodeDoS)
 {
-    LOCK(cs_callbacks);
+    unsigned int nQueueSize;
+    {
+        LOCK(cs_callbacks);
+        nQueueSize = queueFinishEmitBlockCallbacks.size();
+    }
+    while (nQueueSize >= GetArg("-blockbuffersize", 20) && fProcessCallbacks)
+    {
+        Sleep(20);
+        LOCK(cs_callbacks);
+        nQueueSize = queueFinishEmitBlockCallbacks.size();
+    }
+
     if (pNodeDoS) pNodeDoS->AddRef();
+
+    LOCK(cs_callbacks);
     queueFinishEmitBlockCallbacks.push(std::make_pair(new CBlock(block), pNodeDoS));
     sem_callbacks.post();
 }

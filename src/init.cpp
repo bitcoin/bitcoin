@@ -264,6 +264,7 @@ std::string HelpMessage()
         "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-6, default: 1)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000?.dat file") + "\n" +
+        "  -blockbuffersize=<n>   " + _("The maximum number of blocks to buffer for committing to disk (default: 20)") + "\n";
         "  -?                     " + _("This help message") + "\n";
 
     strUsage += string() +
