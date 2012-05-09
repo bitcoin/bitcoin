@@ -118,7 +118,7 @@ void QRCodeDialog::on_lnMessage_textChanged(const QString &arg1)
 
 void QRCodeDialog::on_btnSaveAs_clicked()
 {
-    QString fn = GUIUtil::getSaveFileName(this, tr("Save Image..."), QString(), tr("PNG Images (*.png)"));
+    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Images (*.png)"));
     if (!fn.isEmpty())
         myImage.scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE).save(fn);
 }

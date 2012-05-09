@@ -63,7 +63,7 @@
         <string>Create a new address</string>
        </property>
        <property name="text">
-        <string>&amp;New Address...</string>
+        <string>&amp;New Address</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
