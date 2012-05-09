@@ -362,7 +362,7 @@ class CBitcoinSecret : public CBase58Data
 {
 public:
     void SetSecret(const CSecret& vchSecret, bool fCompressed)
-    { 
+    {
         assert(vchSecret.size() == 32);
         SetData(fTestNet ? 239 : 128, &vchSecret[0], vchSecret.size());
         if (fCompressed)
