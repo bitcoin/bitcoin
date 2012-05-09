@@ -2,6 +2,7 @@
 #define OPTIONSDIALOG_H
 
 #include <QDialog>
+#include <QList>
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -10,8 +11,7 @@ class QListWidgetItem;
 class QPushButton;
 QT_END_NAMESPACE
 class OptionsModel;
-class MainOptionsPage;
-class DisplayOptionsPage;
+class OptionsPage;
 class MonitoredDataMapper;
 
 /** Preferences dialog. */
@@ -43,11 +43,7 @@ private:
     MonitoredDataMapper *mapper;
     QPushButton *apply_button;
 
-    // Pages
-    MainOptionsPage *main_page;
-    DisplayOptionsPage *display_page;
-
-    void setupMainPage();
+    QList<OptionsPage*> pages;
 };
 
 #endif // OPTIONSDIALOG_H
