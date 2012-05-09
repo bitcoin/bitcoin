@@ -539,6 +539,13 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
     return fDefault;
 }
 
+double GetFloatArg(const std::string& strArg, double nDefault)
+{
+    if (mapArgs.count(strArg))
+        return atof(mapArgs[strArg].c_str());
+    return nDefault;
+}
+
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     if (mapArgs.count(strArg))
