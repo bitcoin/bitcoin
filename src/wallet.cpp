@@ -742,7 +742,7 @@ void CWallet::ReacceptWalletTransactions()
     bool fRepeat = true;
     while (fRepeat)
     {
-        LOCK(cs_wallet);
+        LOCK2(cs_main, cs_wallet);
         fRepeat = false;
         vector<CDiskTxPos> vMissingTx;
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)

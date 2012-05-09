@@ -2254,7 +2254,6 @@ bool LoadExternalBlockFile(FILE* fileIn)
 {
     int nLoaded = 0;
     {
-        LOCK(cs_main);
         try {
             CAutoFile blkdat(fileIn, SER_DISK, CLIENT_VERSION);
             unsigned int nPos = 0;
@@ -2291,7 +2290,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 {
                     CBlock block;
                     blkdat >> block;
-                    if (phub->EmitBlock(block))
+                    if (phub->EmitBlock(block, false))
                     {
                         nLoaded++;
                         nPos += 4 + nSize;
