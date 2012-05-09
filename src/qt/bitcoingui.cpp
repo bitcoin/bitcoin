@@ -324,8 +324,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
     {
         if(clientModel->isTestNet())
         {
-            QString title_testnet = windowTitle() + QString(" ") + tr("[testnet]");
-            setWindowTitle(title_testnet);
+            setWindowTitle(windowTitle() + QString(" ") + tr("[testnet]"));
 #ifndef Q_WS_MAC
             setWindowIcon(QIcon(":icons/bitcoin_testnet"));
 #else
@@ -333,8 +332,9 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 #endif
             if(trayIcon)
             {
-                trayIcon->setToolTip(title_testnet);
+                trayIcon->setToolTip(tr("Bitcoin client") + QString(" ") + tr("[testnet]"));
                 trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+                toggleHideAction->setIcon(QIcon(":/icons/toolbar_testnet"));
             }
         }
 
