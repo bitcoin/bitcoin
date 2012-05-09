@@ -13,6 +13,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #ifndef WIN32
 #include <signal.h>
@@ -53,12 +54,13 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
+        if (pblockstore) pblockstore->StopProcessCallbacks();
+        StopRelayTransactionCallbacksThread();
         nTransactionsUpdated++;
         DBFlush(false);
         StopNode();
         DBFlush(true);
         boost::filesystem::remove(GetPidFile());
-        UnregisterWallet(pwalletMain);
         delete pwalletMain;
         CreateThread(ExitTimeout, NULL);
         Sleep(50);
@@ -78,6 +80,33 @@ void Shutdown(void* parg)
 void HandleSIGTERM(int)
 {
     fRequestShutdown = true;
+}
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Helper
+//
+static void runCommand(std::string strCommand)
+{
+    int nErr = ::system(strCommand.c_str());
+    if (nErr)
+        printf("runCommand error: system(%s) returned %d\n", strCommand.c_str(), nErr);
+}
+
+void BlockNotifyCommitBlockHandler(const CBlock& block)
+{
+    std::string strCmd = GetArg("-blocknotify", "");
+
+    if (!pblockstore->IsInitialBlockDownload() && !strCmd.empty())
+    {
+        boost::replace_all(strCmd, "%s", block.GetHash().GetHex());
+        boost::thread t(runCommand, strCmd); // thread runs free
+    }
 }
 
 
@@ -325,8 +354,7 @@ bool AppInit2(int argc, char* argv[])
 
     if (GetBoolArg("-loadblockindextest"))
     {
-        CTxDB txdb("r");
-        txdb.LoadBlockIndex();
+        LoadBlockIndex();
         PrintBlockTree();
         return false;
     }
@@ -339,6 +367,21 @@ bool AppInit2(int argc, char* argv[])
     if (!lock.try_lock())
     {
         ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().string().c_str()), _("Bitcoin"), wxOK|wxMODAL);
+        return false;
+    }
+
+    pblockstore = new CBlockStore();
+    for (int i = 0; i < GetArg("-callbackconcurrency", 1); i++)
+    {
+        if (!CreateThread(ProcessCallbacks, pblockstore))
+        {
+            ThreadSafeMessageBox(_("Error: CreateThread(ProcessCallbacks) failed"), "Bitcoin");
+            return false;
+        }
+    }
+    if (!CreateThread(HandleRelayTransactionCallbacks, NULL))
+    {
+        ThreadSafeMessageBox(_("Error: CreateThread(HandleRelayTransactionCallbacks) failed"), "Bitcoin");
         return false;
     }
 
@@ -438,11 +481,11 @@ bool AppInit2(int argc, char* argv[])
     printf("%s", strErrors.str().c_str());
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
-    RegisterWallet(pwalletMain);
+    pwalletMain->RegisterWithBlockStore(pblockstore);
 
-    CBlockIndex *pindexRescan = pindexBest;
+    const CBlockIndex *pindexRescan = pblockstore->GetBestBlockIndex();
     if (GetBoolArg("-rescan"))
-        pindexRescan = pindexGenesisBlock;
+        pindexRescan = pblockstore->GetGenesisBlockIndex();
     else
     {
         CWalletDB walletdb("wallet.dat");
@@ -450,10 +493,11 @@ bool AppInit2(int argc, char* argv[])
         if (walletdb.ReadBestBlock(locator))
             pindexRescan = locator.GetBlockIndex();
     }
-    if (pindexBest != pindexRescan)
+    //TODO: support downloading blocks that are needed for a rescan
+    if (pblockstore->HasFullBlocks() && pblockstore->GetBestBlockIndex() != pindexRescan)
     {
         InitMessage(_("Rescanning..."));
-        printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
+        printf("Rescanning last %i blocks (from block %i)...\n", pblockstore->GetBestBlockIndex()->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
         nStart = GetTimeMillis();
         pwalletMain->ScanForWalletTransactions(pindexRescan, true);
         printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
@@ -463,8 +507,8 @@ bool AppInit2(int argc, char* argv[])
     printf("Done loading\n");
 
     //// debug print
-    printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
-    printf("nBestHeight = %d\n",            nBestHeight);
+    //printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
+    printf("BestBlockHeight = %d\n",        pblockstore->GetBestBlockIndex()->nHeight);
     printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
     printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
     printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
@@ -476,7 +520,9 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Add wallet transactions that aren't already in a block to mapTransactions
-    pwalletMain->ReacceptWalletTransactions();
+    // TODO Implement this for SPV mode?
+    if (pblockstore->HasFullBlocks())
+        pwalletMain->ReacceptWalletTransactions();
 
     // Note: Bitcoin-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
@@ -498,6 +544,7 @@ bool AppInit2(int argc, char* argv[])
             nConnectTimeout = nNewTimeout;
     }
 
+    /* Go use blockexplorer or bitcointools
     if (mapArgs.count("-printblock"))
     {
         string strMatch = mapArgs["-printblock"];
@@ -519,7 +566,7 @@ bool AppInit2(int argc, char* argv[])
         if (nFound == 0)
             printf("No blocks matching %s were found\n", strMatch.c_str());
         return false;
-    }
+    }*/
 
     if (mapArgs.count("-proxy"))
     {
@@ -608,6 +655,9 @@ bool AppInit2(int argc, char* argv[])
     if (GetStartOnSystemStartup())
         SetStartOnSystemStartup(true); // Remove startup links
 #endif
+
+    if (mapArgs.count("-blocknotify"))
+        pblockstore->RegisterCommitBlock(&BlockNotifyCommitBlockHandler);
 
 #if !defined(QT_GUI)
     while (1)

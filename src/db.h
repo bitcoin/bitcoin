@@ -290,7 +290,7 @@ public:
     bool WriteHashBestChain(uint256 hashBestChain);
     bool ReadBestInvalidWork(CBigNum& bnBestInvalidWork);
     bool WriteBestInvalidWork(CBigNum bnBestInvalidWork);
-    bool LoadBlockIndex();
+    bool LoadBlockIndex(std::map<uint256, CBlockIndex*>& mapBlockIndex, CBlockIndex* &pindexGenesisBlock, CBlockIndex* &pindexBest, uint256& hashBestChain, CBigNum& bnBestInvalidWork);
 };
 
 

@@ -70,6 +70,8 @@ private:
     // the maxmimum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
 
+    CBlockStore* pBlockStoreToCall;
+
 public:
     mutable CCriticalSection cs_wallet;
 
@@ -90,6 +92,7 @@ public:
         fFileBacked = false;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
+        pBlockStoreToCall = NULL;
     }
     CWallet(std::string strWalletFileIn)
     {
@@ -99,7 +102,11 @@ public:
         fFileBacked = true;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
+        pBlockStoreToCall = NULL;
     }
+
+    // Registers with the specified blockstore, and sets pBlockStoreToCall to pBlockStoreToRegisterWith if its not already set
+    void RegisterWithBlockStore(CBlockStore* pBlockStoreToRegisterWith);
 
     std::map<uint256, CWalletTx> mapWallet;
     std::vector<uint256> vWalletUpdated;
@@ -137,9 +144,14 @@ public:
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false, bool fFindBlock = false);
+    void HandleCommitBlock(const CBlock& block);
+    void HandleCommitTransactionToMemoryPool(const CTransaction& tx)
+    {
+        AddToWalletIfInvolvingMe(tx, NULL, true);
+    }
     bool EraseFromWallet(uint256 hash);
     void WalletUpdateSpent(const CTransaction& prevout);
-    int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
+    int ScanForWalletTransactions(const CBlockIndex* pindexStart, bool fUpdate = false);
     int ScanForWalletTransaction(const uint256& hashTx);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
@@ -191,6 +203,7 @@ public:
     {
         return (GetDebit(tx) > 0);
     }
+    bool IsFromMeByHash(const uint256 hash) const;
     int64 GetDebit(const CTransaction& tx) const
     {
         int64 nDebit = 0;
@@ -590,7 +603,6 @@ public:
 
     void AddSupportingTransactions(CTxDB& txdb);
 
-    bool AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs=true);
     bool AcceptWalletTransaction();
 
     void RelayWalletTransaction(CTxDB& txdb);
@@ -697,6 +709,7 @@ public:
     )
 };
 
-bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
+void HandleRelayTransactionCallbacks(void* parg);
+void StopRelayTransactionCallbacksThread();
 
 #endif

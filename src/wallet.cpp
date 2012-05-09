@@ -13,6 +13,24 @@ using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////
 //
+//  CBlockStore handling
+//
+
+void CWallet::RegisterWithBlockStore(CBlockStore* pBlockStoreToRegisterWith)
+{
+    if (!pBlockStoreToCall)
+        pBlockStoreToCall = pBlockStoreToRegisterWith;
+    pBlockStoreToRegisterWith->RegisterRelayedNotification(boost::bind(&CWallet::Inventory, this, _1));
+    pBlockStoreToRegisterWith->RegisterIsTransactionFromMe(boost::bind(&CWallet::IsFromMe, this, _1));
+    pBlockStoreToRegisterWith->RegisterIsTransactionFromMeByHash(boost::bind(&CWallet::IsFromMeByHash, this, _1));
+    pBlockStoreToRegisterWith->RegisterCommitTransactionToMemoryPool(boost::bind(&CWallet::HandleCommitTransactionToMemoryPool, this, _1));
+    pBlockStoreToRegisterWith->RegisterCommitBlock(boost::bind(&CWallet::HandleCommitBlock, this, _1));
+    pBlockStoreToRegisterWith->RegisterTransactionReplaced(boost::bind(&CWallet::EraseFromWallet, this, _1));
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
 // mapWallet
 //
 
@@ -408,6 +426,27 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
     return false;
 }
 
+void CWallet::HandleCommitBlock(const CBlock& block)
+{
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
+        AddToWalletIfInvolvingMe(tx, &block, true);
+
+    // we can write best chain locator more often because its in a separate thread from the actual chain download
+    if (!pblockstore->IsInitialBlockDownload() || pblockstore->GetBestBlockIndex()->nHeight % 500 == 0)
+    {
+        const CBlockLocator locator(pblockstore->GetBestBlockIndex());
+        SetBestChain(locator);
+    }
+
+    // Notify UI to display prev block's coinbase if it was ours
+    static uint256 hashPrevBestCoinBase;
+    UpdatedTransaction(hashPrevBestCoinBase);
+    hashPrevBestCoinBase = block.vtx[0].GetHash();
+
+    // Resend wallet transactions on each new block since it doesn't have to happen often anyway
+    ResendWalletTransactions();
+}
+
 bool CWallet::EraseFromWallet(uint256 hash)
 {
     if (!fFileBacked)
@@ -640,7 +679,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
                 {
                     tx = *mapWalletPrev[hash];
                 }
-                else if (!fClient && txdb.ReadDiskTx(hash, tx))
+                else if (pblockstore->HasFullBlocks() && txdb.ReadDiskTx(hash, tx))
                 {
                     ;
                 }
@@ -673,11 +712,11 @@ bool CWalletTx::WriteToDisk()
 // Scan the block chain (starting in pindexStart) for transactions
 // from or to us. If fUpdate is true, found transactions that already
 // exist in the wallet will be updated.
-int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
+int CWallet::ScanForWalletTransactions(const CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
 
-    CBlockIndex* pindex = pindexStart;
+    const CBlockIndex* pindex = pindexStart;
     {
         LOCK(cs_wallet);
         while (pindex)
@@ -704,8 +743,20 @@ int CWallet::ScanForWalletTransaction(const uint256& hashTx)
     return 0;
 }
 
+bool CWalletTx::AcceptWalletTransaction()
+{
+    // Add previous supporting transactions first
+    BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
+    {
+        if (!tx.IsCoinBase())
+            pblockstore->EmitTransaction(tx, false);
+    }
+    return pblockstore->EmitTransaction(*this);
+}
+
 void CWallet::ReacceptWalletTransactions()
 {
+    assert(pblockstore->HasFullBlocks());
     CTxDB txdb("r");
     bool fRepeat = true;
     while (fRepeat)
@@ -751,15 +802,62 @@ void CWallet::ReacceptWalletTransactions()
             {
                 // Reaccept any txes of ours that aren't already in a block
                 if (!wtx.IsCoinBase())
-                    wtx.AcceptWalletTransaction(txdb, false);
+                    wtx.AcceptWalletTransaction();
             }
         }
         if (!vMissingTx.empty())
         {
             // TODO: optimize this to scan just part of the block chain?
-            if (ScanForWalletTransactions(pindexGenesisBlock))
+            if (ScanForWalletTransactions(pblockstore->GetGenesisBlockIndex()))
                 fRepeat = true;  // Found missing transactions: re-do Reaccept.
         }
+    }
+}
+
+CWaitableCriticalSection cs_queueRelayTransactionCallbacks;
+queue<pair<CInv*, CTransaction*> > queueRelayTransactionCallbacks;
+CConditionVariable condHaveRelayTransactionCallbacks;
+bool fProcessRelayTransactionCallbacks;
+
+void SubmitCallbackRelayTransaction(const uint256 hash, const CTransaction& txIn)
+{
+    CInv* pinv = new CInv(MSG_TX, hash);
+    CTransaction* ptx = new CTransaction(txIn);
+    WAITABLE_LOCK(cs_queueRelayTransactionCallbacks);
+        queueRelayTransactionCallbacks.push(make_pair(pinv, ptx));
+    NOTIFY(condHaveRelayTransactionCallbacks);
+}
+
+void StopRelayTransactionCallbacksThread()
+{
+    WAITABLE_LOCK(cs_queueRelayTransactionCallbacks);
+        fProcessRelayTransactionCallbacks = false;
+    NOTIFY_ALL(condHaveRelayTransactionCallbacks);
+}
+
+void HandleRelayTransactionCallbacks(void* parg)
+{
+    {
+        WAITABLE_LOCK(cs_queueRelayTransactionCallbacks);
+        fProcessRelayTransactionCallbacks = true;
+    }
+
+    loop
+    {
+        pair<CInv*, CTransaction*> callback;
+        {
+            WAITABLE_LOCK(cs_queueRelayTransactionCallbacks);
+            WAIT(condHaveRelayTransactionCallbacks, !fProcessRelayTransactionCallbacks || queueRelayTransactionCallbacks.size()>0);
+
+            if (!fProcessRelayTransactionCallbacks)
+                return;
+
+            callback = queueRelayTransactionCallbacks.front();
+            queueRelayTransactionCallbacks.pop();
+        }
+        RelayMessage(*(callback.first), *(callback.second));
+        delete callback.first;
+        delete callback.second;
     }
 }
 
@@ -771,7 +869,7 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
         {
             uint256 hash = tx.GetHash();
             if (!txdb.ContainsTx(hash))
-                RelayMessage(CInv(MSG_TX, hash), (CTransaction)tx);
+                SubmitCallbackRelayTransaction(hash, (CTransaction)tx);
         }
     }
     if (!IsCoinBase())
@@ -780,7 +878,7 @@ void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
         if (!txdb.ContainsTx(hash))
         {
             printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
-            RelayMessage(CInv(MSG_TX, hash), (CTransaction)*this);
+            SubmitCallbackRelayTransaction(hash, (CTransaction)*this);
         }
     }
 }
@@ -1159,7 +1257,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 {
     {
-        LOCK2(cs_main, cs_wallet);
+        LOCK(cs_wallet);
         printf("CommitTransaction:\n%s", wtxNew.ToString().c_str());
         {
             // This is only to keep the database open to defeat the auto-flush for the
@@ -1192,8 +1290,16 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         // Track how many getdata requests our transaction gets
         mapRequestCount[wtxNew.GetHash()] = 0;
 
+        // Add previous supporting transactions first (in case we are running in SPV mode, in
+        // which case the lack of these transactions might result in a failure to AddToMemoryPool)
+        if (!pblockstore->HasFullBlocks())
+        {
+            BOOST_FOREACH(CMerkleTx& tx, wtxNew.vtxPrev)
+                pblockstore->EmitTransaction((CTransaction&)tx);
+        }
+
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool())
+        if (!pblockstore->EmitTransaction((CTransaction&)wtxNew))
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("CommitTransaction() : Error: Transaction not valid");
@@ -1319,6 +1425,15 @@ void CWallet::PrintWallet(const CBlock& block)
     printf("\n");
 }
 
+bool CWallet::IsFromMeByHash(const uint256 hash) const
+{
+    LOCK(cs_wallet);
+    map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hash);
+    if (mi != mapWallet.end())
+        return (*mi).second.fFromMe;
+    return false;
+}
+
 bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
 {
     {
@@ -1341,14 +1456,6 @@ bool CWallet::SetDefaultKey(const std::vector<unsigned char> &vchPubKey)
             return false;
     }
     vchDefaultKey = vchPubKey;
-    return true;
-}
-
-bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)
-{
-    if (!pwallet->fFileBacked)
-        return false;
-    strWalletFileOut = pwallet->strWalletFile;
     return true;
 }
 

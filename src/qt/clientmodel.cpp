@@ -22,7 +22,7 @@ int ClientModel::getNumConnections() const
 
 int ClientModel::getNumBlocks() const
 {
-    return nBestHeight;
+    return pblockstore->GetBestBlockIndex()->nHeight;
 }
 
 int ClientModel::getNumBlocksAtStartup()
@@ -33,7 +33,7 @@ int ClientModel::getNumBlocksAtStartup()
 
 QDateTime ClientModel::getLastBlockDate() const
 {
-    return QDateTime::fromTime_t(pindexBest->GetBlockTime());
+    return QDateTime::fromTime_t(pblockstore->GetBestBlockIndex()->GetBlockTime());
 }
 
 void ClientModel::update()
@@ -66,7 +66,7 @@ bool ClientModel::isTestNet() const
 
 bool ClientModel::inInitialBlockDownload() const
 {
-    return IsInitialBlockDownload();
+    return pblockstore->IsInitialBlockDownload();
 }
 
 int ClientModel::getNumBlocksOfPeers() const
