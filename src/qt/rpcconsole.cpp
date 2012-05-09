@@ -113,27 +113,6 @@ RPCConsole::~RPCConsole()
     delete ui;
 }
 
-bool RPCConsole::event(QEvent *event)
-{
-   int returnValue = QWidget::event(event);
-
-   if (event->type() == QEvent::LayoutRequest && firstLayout)
-   {
-       // Work around QTableWidget issue:
-       // Call resizeRowsToContents on first Layout request with widget visible,
-       // to make sure multiline messages that were added before the console was shown
-       // have the right height.
-       if(ui->messagesWidget->isVisible())
-       {
-           firstLayout = false;
-           ui->messagesWidget->resizeRowsToContents();
-       }
-       return true;
-   }
-
-   return returnValue;
-}
-
 bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
 {
     if(obj == ui->lineEdit)
@@ -313,4 +292,21 @@ void RPCConsole::startExecutor()
 void RPCConsole::copyMessage()
 {
     GUIUtil::copyEntryData(ui->messagesWidget, 1, Qt::EditRole);
+}
+
+void RPCConsole::on_tabWidget_currentChanged(int index)
+{
+    if(ui->tabWidget->widget(index) == ui->tab_console)
+    {
+        if(firstLayout)
+        {
+            // Work around QTableWidget issue:
+            // Call resizeRowsToContents on first Layout request with widget visible,
+            // to make sure multiline messages that were added before the console was shown
+            // have the right height.
+            firstLayout = false;
+            ui->messagesWidget->resizeRowsToContents();
+        }
+        ui->lineEdit->setFocus();
+    }
 }
