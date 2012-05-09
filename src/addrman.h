@@ -204,7 +204,7 @@ protected:
     CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL);
 
     // Swap two elements in vRandom.
-    void SwapRandom(int nRandomPos1, int nRandomPos2);
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
 
     // Return position in given bucket to replace.
     int SelectTried(int nKBucket);
