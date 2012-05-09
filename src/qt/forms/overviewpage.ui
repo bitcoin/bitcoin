@@ -43,8 +43,23 @@
         </item>
         <item row="2" column="1">
          <widget class="QLabel" name="labelBalance">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="cursor">
+           <cursorShape>IBeamCursor</cursorShape>
+          </property>
+          <property name="toolTip">
+           <string>Your current balance</string>
+          </property>
           <property name="text">
-           <string>123.456 BTC</string>
+           <string notr="true">123.456 BTC</string>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
           </property>
          </widget>
         </item>
@@ -57,6 +72,9 @@
         </item>
         <item row="4" column="1">
          <widget class="QLabel" name="labelNumTransactions">
+          <property name="toolTip">
+           <string>Total number of transactions in wallet</string>
+          </property>
           <property name="text">
            <string>0</string>
           </property>
@@ -71,8 +89,23 @@
         </item>
         <item row="3" column="1">
          <widget class="QLabel" name="labelUnconfirmed">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="cursor">
+           <cursorShape>IBeamCursor</cursorShape>
+          </property>
+          <property name="toolTip">
+           <string>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</string>
+          </property>
           <property name="text">
-           <string>0 BTC</string>
+           <string notr="true">0 BTC</string>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
           </property>
          </widget>
         </item>
@@ -81,6 +114,7 @@
           <property name="font">
            <font>
             <pointsize>11</pointsize>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -127,6 +161,9 @@
         </item>
         <item>
          <widget class="QListView" name="listTransactions">
+          <property name="styleSheet">
+           <string notr="true">QListView { background:transparent }</string>
+          </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
           </property>
@@ -135,6 +172,9 @@
           </property>
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::NoSelection</enum>
           </property>
          </widget>
         </item>
