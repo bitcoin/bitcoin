@@ -29,7 +29,7 @@ LIBS= \
 
 DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB
 DEBUGFLAGS=-g
-CFLAGS=-O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
