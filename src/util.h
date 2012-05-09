@@ -217,9 +217,11 @@ public:
             {
                 printf("LOCKCONTENTION: %s\n", pszName);
                 printf("Locker: %s:%d\n", pszFile, nLine);
-            }
 #endif
             lock.lock();
+#ifdef DEBUG_LOCKCONTENTION
+            }
+#endif
         }
     }
 
