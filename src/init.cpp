@@ -174,6 +174,8 @@ bool AppInit2(int argc, char* argv[])
             "  -pid=<file>      \t\t  " + _("Specify pid file (default: bitcoind.pid)") + "\n" +
             "  -gen             \t\t  " + _("Generate coins") + "\n" +
             "  -gen=0           \t\t  " + _("Don't generate coins") + "\n" +
+            "  -txprioweighfee  \t  " + _("Weigh fees when calculating transaction priorities for mining (default: 1.0)") + "\n" +
+            "  -txprioweighdepth\t  " + _("Weigh confirmation depth when calculating transaction priorities for mining (default: 1.0)") + "\n" +
             "  -min             \t\t  " + _("Start minimized") + "\n" +
             "  -splash          \t\t  " + _("Show splash screen on startup (default: 1)") + "\n" +
             "  -datadir=<dir>   \t\t  " + _("Specify data directory") + "\n" +

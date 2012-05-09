@@ -3210,7 +3210,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     {
         CTxDB txdb("r");
 
-        double nFeeWeight = 1., nDepthWeight = 1.;
+        double nFeeWeight = GetFloatArg("-txprioweighfee", 1.);
+        double nDepthWeight = GetFloatArg("-txprioweighdepth", 1.);
         bool fPrintPriority = GetBoolArg("-printpriority");
 
         // Priority order to process transactions
