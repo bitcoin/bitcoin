@@ -1772,12 +1772,7 @@ bool CBlockStore::EmitBlock(CBlock& block, bool fBlocking, CNode* pNodeDoS)
         return error("CBlockStore::EmitBlock() : CheckBlock FAILED");
     }
 
-    CBlockIndex* pcheckpoint = NULL;
-    {
-        LOCK(cs_main); //TODO Remove this lock, as it kills performance
-        pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-    }
-
+    const CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
     if (pcheckpoint && block.hashPrevBlock != hashBestChain)
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
@@ -2171,9 +2166,12 @@ bool CBlockStore::LoadBlockIndex(bool fReadOnly)
             return error("LoadBlockIndex() : genesis block not accepted");
     }
 
-    // Init setBlocksSeen
+    // Init setBlocksSeen and checkpoints TODO this can be much more efficient
     for (map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++)
+    {
         setBlocksSeen.insert(it->first);
+        Checkpoints::HandleCommitBlock(it->second->GetBlockHeader());
+    }
 
     return true;
 }

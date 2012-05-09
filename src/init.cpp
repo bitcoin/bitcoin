@@ -10,6 +10,7 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "hub.h"
+#include "checkpoints.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -530,6 +531,7 @@ bool AppInit2()
     }
     pblockstore = new CBlockStore();
     phub->ConnectToBlockStore(pblockstore);
+    phub->RegisterCommitBlock(&Checkpoints::HandleCommitBlock);
 
     if (GetBoolArg("-loadblockindextest"))
     {

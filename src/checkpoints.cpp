@@ -14,6 +14,8 @@ namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;
 
+    static const CBlockIndex* lastCheckpoint = NULL;
+
     //
     // What makes a good checkpoint block?
     // + Is surrounded by blocks with reasonable timestamps
@@ -56,17 +58,28 @@ namespace Checkpoints
         return checkpoints.rbegin()->first;
     }
 
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
+    void HandleCommitBlock(const CBlock& block)
     {
         MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
+
+        const uint256 blockHash = block.GetHash();
 
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {
             const uint256& hash = i.second;
-            std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
-            if (t != mapBlockIndex.end())
-                return t->second;
+            if (blockHash != hash)
+                continue;
+
+            LOCK(cs_main);
+
+            assert(mapBlockIndex.count(hash));
+            lastCheckpoint = mapBlockIndex[hash];
+            return;
         }
-        return NULL;
+    }
+
+    const CBlockIndex* GetLastCheckpoint()
+    {
+        return lastCheckpoint;
     }
 }
