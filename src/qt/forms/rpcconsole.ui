@@ -19,7 +19,7 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="tab_info">
       <attribute name="title">
        <string>Information</string>
       </attribute>
@@ -232,7 +232,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="tab_console">
       <attribute name="title">
        <string>Console</string>
       </attribute>
