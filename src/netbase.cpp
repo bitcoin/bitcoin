@@ -208,9 +208,9 @@ bool static Socks5(string strDest, int port, SOCKET& hSocket)
     }
     char pszSocks5Init[] = "\5\1\0";
     char *pszSocks5 = pszSocks5Init;
-    int nSize = sizeof(pszSocks5Init);
+    ssize_t nSize = sizeof(pszSocks5Init);
 
-    int ret = send(hSocket, pszSocks5, nSize, MSG_NOSIGNAL);
+    ssize_t ret = send(hSocket, pszSocks5, nSize, MSG_NOSIGNAL);
     if (ret != nSize)
     {
         closesocket(hSocket);
@@ -234,7 +234,7 @@ bool static Socks5(string strDest, int port, SOCKET& hSocket)
     strSocks5 += static_cast<char>((port >> 8) & 0xFF);
     strSocks5 += static_cast<char>((port >> 0) & 0xFF);
     ret = send(hSocket, strSocks5.c_str(), strSocks5.size(), MSG_NOSIGNAL);
-    if (ret != strSocks5.size())
+    if (ret != (ssize_t)strSocks5.size())
     {
         closesocket(hSocket);
         return error("Error sending to proxy");
