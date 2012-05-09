@@ -32,8 +32,8 @@ protected:
 
 private slots:
     void on_lineEdit_returnPressed();
-
     void on_tabWidget_currentChanged(int index);
+    void on_openDebugLogfileButton_clicked();
 
 public slots:
     void clear();
