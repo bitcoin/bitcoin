@@ -843,7 +843,7 @@ boost::filesystem::path GetDefaultDataDir()
 #ifdef MAC_OSX
     // Mac
     pathRet /= "Library/Application Support";
-    filesystem::create_directory(pathRet);
+    fs::create_directory(pathRet);
     return pathRet / "Bitcoin";
 #else
     // Unix
