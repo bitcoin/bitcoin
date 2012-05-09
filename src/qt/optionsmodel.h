@@ -27,6 +27,7 @@ public:
         DisplayUnit, // BitcoinUnits::Unit
         DisplayAddresses, // bool
         DetachDatabases, // bool
+        Language, // QString
         OptionIDRowCount,
     };
 
@@ -45,11 +46,13 @@ public:
     bool getMinimizeOnClose();
     int getDisplayUnit();
     bool getDisplayAddresses();
+    QString getLanguage() { return language; }
 private:
     int nDisplayUnit;
     bool bDisplayAddresses;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
+    QString language;
 signals:
     void displayUnitChanged(int unit);
 
