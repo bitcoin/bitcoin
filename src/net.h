@@ -147,6 +147,7 @@ public:
     bool fNetworkNode;
     bool fSuccessfullyConnected;
     bool fDisconnect;
+    CSemaphoreGrant grantOutbound;
 protected:
     int nRefCount;
 
