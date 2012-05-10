@@ -127,6 +127,7 @@ public:
     bool fNetworkNode;
     bool fSuccessfullyConnected;
     bool fDisconnect;
+    bool fHasGrant; // whether to call semOutbound.post() at disconnect
 protected:
     int nRefCount;
 
@@ -171,6 +172,7 @@ public:
         nVersion = 0;
         strSubVer = "";
         fClient = false; // set by version message
+        fHasGrant = false;
         fInbound = fInboundIn;
         fNetworkNode = false;
         fSuccessfullyConnected = false;
