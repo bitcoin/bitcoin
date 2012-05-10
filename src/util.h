@@ -274,9 +274,8 @@ typedef CMutexLock<CWaitableCriticalSection> CWaitableCriticalBlock;
 typedef boost::interprocess::interprocess_condition CConditionVariable;
 
 /** Wait for a given condition inside a WAITABLE_CRITICAL_BLOCK */
-/** Sleep(1) is to workaround a 100% cpu-usage bug on OSX **/
 #define WAIT(name,condition) \
-    do { while(!(condition)) { (name).wait(waitablecriticalblock.GetLock()); Sleep(1);} } while(0)
+   do { while(!(condition)) { (name).wait(waitablecriticalblock.GetLock()); } } while(0)
 
 /** Notify waiting threads that a condition may hold now */
 #define NOTIFY(name) \
