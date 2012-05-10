@@ -246,7 +246,7 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
 
-        CNetAddr addrLocal;
+        CService addrLocal;
         string strMyName;
         if (GetLocal(addrLocal, &addrConnect))
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
