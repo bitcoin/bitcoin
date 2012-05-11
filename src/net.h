@@ -38,7 +38,7 @@ CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL, int64 nTimeout=0);
 void MapPort(bool fMapPort);
-bool BindListenPort(std::string& strError=REF(std::string()));
+bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::string()));
 void StartNode(void* parg);
 bool StopNode();
 
@@ -46,6 +46,7 @@ enum
 {
     LOCAL_NONE,   // unknown
     LOCAL_IF,     // address a local interface listens on
+    LOCAL_BIND,   // address explicit bound to
     LOCAL_UPNP,   // address reported by UPnP
     LOCAL_IRC,    // address reported by IRC (deprecated)
     LOCAL_HTTP,   // address reported by whatismyip.com and similars
