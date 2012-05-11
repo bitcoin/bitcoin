@@ -4,6 +4,7 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "util.h"
+#include "sync.h"
 #include "strlcpy.h"
 #include "version.h"
 #include "ui_interface.h"
@@ -23,8 +24,6 @@ namespace boost {
 #include <boost/program_options/parsers.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/interprocess/sync/interprocess_mutex.hpp>
-#include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/foreach.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
@@ -71,13 +70,14 @@ bool fLogTimestamps = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
 
 // Init openssl library multithreading support
-static boost::interprocess::interprocess_mutex** ppmutexOpenSSL;
+static CCriticalSection** ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line)
 {
-    if (mode & CRYPTO_LOCK)
-        ppmutexOpenSSL[i]->lock();
-    else
-        ppmutexOpenSSL[i]->unlock();
+    if (mode & CRYPTO_LOCK) {
+        ENTER_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
+    } else {
+        LEAVE_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
+    }
 }
 
 // Init
@@ -87,9 +87,9 @@ public:
     CInit()
     {
         // Init openssl library multithreading support
-        ppmutexOpenSSL = (boost::interprocess::interprocess_mutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(boost::interprocess::interprocess_mutex*));
+        ppmutexOpenSSL = (CCriticalSection**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(CCriticalSection*));
         for (int i = 0; i < CRYPTO_num_locks(); i++)
-            ppmutexOpenSSL[i] = new boost::interprocess::interprocess_mutex();
+            ppmutexOpenSSL[i] = new CCriticalSection();
         CRYPTO_set_locking_callback(locking_callback);
 
 #ifdef WIN32
@@ -1221,117 +1221,3 @@ bool GetStartOnSystemStartup() { return false; }
 bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
 
 #endif
-
-
-
-#ifdef DEBUG_LOCKORDER
-//
-// Early deadlock detection.
-// Problem being solved:
-//    Thread 1 locks  A, then B, then C
-//    Thread 2 locks  D, then C, then A
-//     --> may result in deadlock between the two threads, depending on when they run.
-// Solution implemented here:
-// Keep track of pairs of locks: (A before B), (A before C), etc.
-// Complain if any thread trys to lock in a different order.
-//
-
-struct CLockLocation
-{
-    CLockLocation(const char* pszName, const char* pszFile, int nLine)
-    {
-        mutexName = pszName;
-        sourceFile = pszFile;
-        sourceLine = nLine;
-    }
-
-    std::string ToString() const
-    {
-        return mutexName+"  "+sourceFile+":"+itostr(sourceLine);
-    }
-
-private:
-    std::string mutexName;
-    std::string sourceFile;
-    int sourceLine;
-};
-
-typedef std::vector< std::pair<void*, CLockLocation> > LockStack;
-
-static boost::interprocess::interprocess_mutex dd_mutex;
-static std::map<std::pair<void*, void*>, LockStack> lockorders;
-static boost::thread_specific_ptr<LockStack> lockstack;
-
-
-static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
-{
-    printf("POTENTIAL DEADLOCK DETECTED\n");
-    printf("Previous lock order was:\n");
-    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, s2)
-    {
-        if (i.first == mismatch.first) printf(" (1)");
-        if (i.first == mismatch.second) printf(" (2)");
-        printf(" %s\n", i.second.ToString().c_str());
-    }
-    printf("Current lock order is:\n");
-    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, s1)
-    {
-        if (i.first == mismatch.first) printf(" (1)");
-        if (i.first == mismatch.second) printf(" (2)");
-        printf(" %s\n", i.second.ToString().c_str());
-    }
-}
-
-static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
-{
-    bool fOrderOK = true;
-    if (lockstack.get() == NULL)
-        lockstack.reset(new LockStack);
-
-    if (fDebug) printf("Locking: %s\n", locklocation.ToString().c_str());
-    dd_mutex.lock();
-
-    (*lockstack).push_back(std::make_pair(c, locklocation));
-
-    if (!fTry) BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, (*lockstack))
-    {
-        if (i.first == c) break;
-
-        std::pair<void*, void*> p1 = std::make_pair(i.first, c);
-        if (lockorders.count(p1))
-            continue;
-        lockorders[p1] = (*lockstack);
-
-        std::pair<void*, void*> p2 = std::make_pair(c, i.first);
-        if (lockorders.count(p2))
-        {
-            potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
-            break;
-        }
-    }
-    dd_mutex.unlock();
-}
-
-static void pop_lock()
-{
-    if (fDebug) 
-    {
-        const CLockLocation& locklocation = (*lockstack).rbegin()->second;
-        printf("Unlocked: %s\n", locklocation.ToString().c_str());
-    }
-    dd_mutex.lock();
-    (*lockstack).pop_back();
-    dd_mutex.unlock();
-}
-
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
-{
-    push_lock(cs, CLockLocation(pszName, pszFile, nLine), fTry);
-}
-
-void LeaveCritical()
-{
-    pop_lock();
-}
-
-#endif /* DEBUG_LOCKORDER */
