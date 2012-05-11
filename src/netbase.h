@@ -105,7 +105,8 @@ class CService : public CNetAddr
         void Init();
         void SetPort(unsigned short portIn);
         unsigned short GetPort() const;
-        bool GetSockAddr(struct sockaddr_in* paddr) const;
+        bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
+        bool SetSockAddr(const struct sockaddr* paddr);
         friend bool operator==(const CService& a, const CService& b);
         friend bool operator!=(const CService& a, const CService& b);
         friend bool operator<(const CService& a, const CService& b);
@@ -117,7 +118,6 @@ class CService : public CNetAddr
 
 #ifdef USE_IPV6
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
-        bool GetSockAddr6(struct sockaddr_in6* paddr) const;
         CService(const struct sockaddr_in6& addr);
 #endif
 

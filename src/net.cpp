@@ -52,7 +52,7 @@ static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
 array<int, THREAD_MAX> vnThreadsRunning;
-static SOCKET hListenSocket = INVALID_SOCKET;
+static std::vector<SOCKET> vhListenSocket;
 CAddrMan addrman;
 
 vector<CNode*> vNodes;
@@ -719,9 +719,10 @@ void ThreadSocketHandler2(void* parg)
         FD_ZERO(&fdsetError);
         SOCKET hSocketMax = 0;
 
-        if(hListenSocket != INVALID_SOCKET)
+        BOOST_FOREACH(SOCKET hListenSocket, vhListenSocket) {
             FD_SET(hListenSocket, &fdsetRecv);
-        hSocketMax = max(hSocketMax, hListenSocket);
+            hSocketMax = max(hSocketMax, hListenSocket);
+        }
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
@@ -762,12 +763,13 @@ void ThreadSocketHandler2(void* parg)
         //
         // Accept new connections
         //
+        BOOST_FOREACH(SOCKET hListenSocket, vhListenSocket)
         if (hListenSocket != INVALID_SOCKET && FD_ISSET(hListenSocket, &fdsetRecv))
         {
 #ifdef USE_IPV6
-            struct sockaddr_in6 sockaddr;
+            struct sockaddr_storage sockaddr;
 #else
-            struct sockaddr_in sockaddr;
+            struct sockaddr sockaddr;
 #endif
             socklen_t len = sizeof(sockaddr);
             SOCKET hSocket = accept(hListenSocket, (struct sockaddr*)&sockaddr, &len);
@@ -775,7 +777,8 @@ void ThreadSocketHandler2(void* parg)
             int nInbound = 0;
 
             if (hSocket != INVALID_SOCKET)
-                addr = CAddress(sockaddr);
+                if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
+                    printf("warning: unknown socket family\n");
 
             {
                 LOCK(cs_vNodes);
@@ -1656,9 +1659,8 @@ void ThreadMessageHandler2(void* parg)
 
 
 
-bool BindListenPort(string& strError)
+bool BindListenPort(const CService &addrBind, string& strError)
 {
-    unsigned short nPort = GetListenPort();
     strError = "";
     int nOne = 1;
 
@@ -1676,11 +1678,19 @@ bool BindListenPort(string& strError)
 
     // Create socket for listening for incoming connections
 #ifdef USE_IPV6
-    int nFamily = AF_INET6;
+    struct sockaddr_storage sockaddr;
 #else
-    int nFamily = AF_INET;
+    struct sockaddr sockaddr;
 #endif
-    hListenSocket = socket(nFamily, SOCK_STREAM, IPPROTO_TCP);
+    socklen_t len = sizeof(sockaddr);
+    if (!addrBind.GetSockAddr((struct sockaddr*)&sockaddr, &len))
+    {
+        strError = strprintf("Error: bind address family for %s not supported", addrBind.ToString().c_str());
+        printf("%s\n", strError.c_str());
+        return false;
+    }
+
+    SOCKET hListenSocket = socket(((struct sockaddr*)&sockaddr)->sa_family, SOCK_STREAM, IPPROTO_TCP);
     if (hListenSocket == INVALID_SOCKET)
     {
         strError = strprintf("Error: Couldn't open socket for incoming connections (socket returned error %d)", WSAGetLastError());
@@ -1699,6 +1709,7 @@ bool BindListenPort(string& strError)
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
 #endif
 
+
 #ifdef WIN32
     // Set to nonblocking, incoming connections will also inherit this
     if (ioctlsocket(hListenSocket, FIONBIO, (u_long*)&nOne) == SOCKET_ERROR)
@@ -1711,38 +1722,33 @@ bool BindListenPort(string& strError)
         return false;
     }
 
-    // The sockaddr_in structure specifies the address family,
-    // IP address, and port for the socket that is being bound
 #ifdef USE_IPV6
-    struct sockaddr_in6 sockaddr = sockaddr_in6();
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin6_family = AF_INET6;
-    sockaddr.sin6_addr = in6addr_any;   // bind to all IPs on this computer
-    sockaddr.sin6_port = htons(nPort);
-#  ifdef WIN32
-    int nProtLevel = 10 /* PROTECTION_LEVEL_UNRESTRICTED */;
-    int nParameterId = 23 /* IPV6_PROTECTION_LEVEl */;
-    // this call is allowed to fail
-    setsockopt(hListenSocket, IPPROTO_IPV6, nParameterId, (const char*)&nProtLevel, sizeof(int));
-#  endif
-#else
-    struct sockaddr_in sockaddr = sockaddr_in();
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    sockaddr.sin_addr.s_addr = INADDR_ANY; // bind to all IPs on this computer
-    sockaddr.sin_port = htons(nPort);
+    // some systems don't have IPV6_V6ONLY but are always v6only; others do have the option
+    // and enable it by default or not. Try to enable it, if possible.
+    if (addrBind.IsIPv6()) {
+#ifdef IPV6_V6ONLY
+        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&nOne, sizeof(int));
 #endif
-    if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
+#ifdef WIN32
+        int nProtLevel = 10 /* PROTECTION_LEVEL_UNRESTRICTED */;
+        int nParameterId = 23 /* IPV6_PROTECTION_LEVEl */;
+        // this call is allowed to fail
+        setsockopt(hListenSocket, IPPROTO_IPV6, nParameterId, (const char*)&nProtLevel, sizeof(int));
+#endif
+    }
+#endif
+
+    if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to port %d on this computer.  Bitcoin is probably already running."), nPort);
+            strError = strprintf(_("Unable to bind to %s on this computer.  Bitcoin is probably already running."), addrBind.ToString().c_str());
         else
-            strError = strprintf("Error: Unable to bind to port %d on this computer (bind returned error %d, %s)", nPort, nErr, strerror(nErr));
+            strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %d, %s)"), addrBind.ToString().c_str(), nErr, strerror(nErr));
         printf("%s\n", strError.c_str());
         return false;
     }
-    printf("Bound to port %d\n", (int)nPort);
+    printf("Bound to %s\n", addrBind.ToString().c_str());
 
     // Listen for incoming connections
     if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
@@ -1751,6 +1757,11 @@ bool BindListenPort(string& strError)
         printf("%s\n", strError.c_str());
         return false;
     }
+
+    vhListenSocket.push_back(hListenSocket);
+
+    if (addrBind.IsRoutable() && GetBoolArg("-discover", true))
+        AddLocal(addrBind, LOCAL_BIND);
 
     return true;
 }
@@ -1915,9 +1926,10 @@ public:
         BOOST_FOREACH(CNode* pnode, vNodes)
             if (pnode->hSocket != INVALID_SOCKET)
                 closesocket(pnode->hSocket);
-        if (hListenSocket != INVALID_SOCKET)
-            if (closesocket(hListenSocket) == SOCKET_ERROR)
-                printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
+        BOOST_FOREACH(SOCKET hListenSocket, vhListenSocket)
+            if (hListenSocket != INVALID_SOCKET)
+                if (closesocket(hListenSocket) == SOCKET_ERROR)
+                    printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
 
 #ifdef WIN32
         // Shutdown Windows Sockets
