@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET =
-VERSION = 0.6.2
+VERSION = 0.6.2.2
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB
 CONFIG += no_include_pwd
