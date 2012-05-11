@@ -90,6 +90,12 @@ RPCConsole::RPCConsole(QWidget *parent) :
     ui->messagesWidget->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
     ui->messagesWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
 
+#ifndef WIN32
+    // Show Debug logfile label and Open button only for Windows
+    ui->labelDebugLogfile->setVisible(false);
+    ui->openDebugLogfileButton->setVisible(false);
+#endif
+
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
 
@@ -101,6 +107,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
     ui->messagesWidget->addAction(copyMessageAction);
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+    connect(ui->openDebugLogfileButton, SIGNAL(clicked()), this, SLOT(on_openDebugLogfileButton_clicked()));
 
     startExecutor();
 
@@ -309,4 +316,9 @@ void RPCConsole::on_tabWidget_currentChanged(int index)
         }
         ui->lineEdit->setFocus();
     }
+}
+
+void RPCConsole::on_openDebugLogfileButton_clicked()
+{
+    GUIUtil::openDebugLogfile();
 }
