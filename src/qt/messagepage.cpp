@@ -10,7 +10,6 @@
 #include "main.h"
 #include "wallet.h"
 #include "init.h"
-#include "util.h"
 
 #include "messagepage.h"
 #include "ui_messagepage.h"

@@ -6,7 +6,7 @@
 #define BITCOIN_KEYSTORE_H
 
 #include "crypter.h"
-#include "util.h"
+#include "sync.h"
 #include "base58.h"
 
 class CScript;
