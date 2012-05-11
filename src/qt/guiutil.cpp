@@ -2,6 +2,7 @@
 #include "bitcoinaddressvalidator.h"
 #include "walletmodel.h"
 #include "bitcoinunits.h"
+#include "util.h"
 
 #include <QString>
 #include <QDateTime>
