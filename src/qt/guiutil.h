@@ -77,11 +77,11 @@ namespace GUIUtil
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
       Tooltips longer than the provided size threshold (in characters) are wrapped.
      */
-    class ToolTipToRichTextFilter: public QObject
+    class ToolTipToRichTextFilter : public QObject
     {
         Q_OBJECT
     public:
-        ToolTipToRichTextFilter(int size_threshold, QObject *parent);
+        explicit ToolTipToRichTextFilter(int size_threshold, QObject *parent = 0);
 
     protected:
         bool eventFilter(QObject *obj, QEvent *evt);
