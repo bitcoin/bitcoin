@@ -39,8 +39,9 @@ public:
 
     virtual void setMapper(MonitoredDataMapper *mapper);
 private:
-    QCheckBox *detach_database;
     BitcoinAmountField *fee_edit;
+    QCheckBox *bitcoin_at_startup;
+    QCheckBox *detach_database;
 };
 
 class WindowOptionsPage: public OptionsPage
@@ -51,11 +52,8 @@ public:
 
     virtual void setMapper(MonitoredDataMapper *mapper);
 private:
-    QCheckBox *bitcoin_at_startup;
 #ifndef Q_WS_MAC
     QCheckBox *minimize_to_tray;
-#endif
-#ifndef Q_WS_MAC
     QCheckBox *minimize_on_close;
 #endif
 };
@@ -88,7 +86,6 @@ private:
     QCheckBox *connect_socks4;
     QLineEdit *proxy_ip;
     QLineEdit *proxy_port;
-    BitcoinAmountField *fee_edit;
 };
 
 
@@ -107,7 +104,10 @@ OptionsDialog::OptionsDialog(QWidget *parent):
 
     pages.append(new MainOptionsPage(this));
     pages.append(new NetworkOptionsPage(this));
+#ifndef Q_WS_MAC
+    /* Hide Window options on Mac as there are currently none available */
     pages.append(new WindowOptionsPage(this));
+#endif
     pages.append(new DisplayOptionsPage(this));
 
     foreach(OptionsPage *page, pages)
@@ -219,7 +219,11 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 
     layout->addLayout(fee_hbox);
 
-    detach_database = new QCheckBox(tr("Detach databases at shutdown"));
+    bitcoin_at_startup = new QCheckBox(tr("&Start Bitcoin on system login"));
+    bitcoin_at_startup->setToolTip(tr("Automatically start Bitcoin after logging in to the system"));
+    layout->addWidget(bitcoin_at_startup);
+
+    detach_database = new QCheckBox(tr("&Detach databases at shutdown"));
     detach_database->setToolTip(tr("Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached."));
     layout->addWidget(detach_database);
 
@@ -231,6 +235,7 @@ void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
     // Map model to widgets
     mapper->addMapping(fee_edit, OptionsModel::Fee);
+    mapper->addMapping(bitcoin_at_startup, OptionsModel::StartAtStartup);
     mapper->addMapping(detach_database, OptionsModel::DetachDatabases);
 }
 
@@ -249,7 +254,7 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
     lang = new QValueComboBox(this);
     // Make list of languages
     QDir translations(":translations");
-    lang->addItem("(default)", QVariant(""));
+    lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     foreach(const QString &langStr, translations.entryList())
     {
         lang->addItem(langStr, QVariant(langStr));
@@ -307,10 +312,6 @@ WindowOptionsPage::WindowOptionsPage(QWidget *parent):
     QVBoxLayout *layout = new QVBoxLayout();
     setWindowTitle(tr("Window"));
 
-    bitcoin_at_startup = new QCheckBox(tr("&Start Bitcoin on window system startup"));
-    bitcoin_at_startup->setToolTip(tr("Automatically start Bitcoin after the computer is turned on"));
-    layout->addWidget(bitcoin_at_startup);
-
 #ifndef Q_WS_MAC
     minimize_to_tray = new QCheckBox(tr("&Minimize to the tray instead of the taskbar"));
     minimize_to_tray->setToolTip(tr("Show only a tray icon after minimizing the window"));
@@ -328,7 +329,6 @@ WindowOptionsPage::WindowOptionsPage(QWidget *parent):
 void WindowOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
     // Map model to widgets
-    mapper->addMapping(bitcoin_at_startup, OptionsModel::StartAtStartup);
 #ifndef Q_WS_MAC
     mapper->addMapping(minimize_to_tray, OptionsModel::MinimizeToTray);
 #endif
