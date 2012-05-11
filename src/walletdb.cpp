@@ -367,7 +367,6 @@ void ThreadFlushWalletDB(void* parg)
                     map<string, int>::iterator mi = mapFileUseCount.find(strFile);
                     if (mi != mapFileUseCount.end())
                     {
-                        printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
                         printf("Flushing wallet.dat\n");
                         nLastFlushed = nWalletDBUpdated;
                         int64 nStart = GetTimeMillis();
