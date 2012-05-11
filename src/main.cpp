@@ -522,11 +522,6 @@ bool CTxMemPool::accept(CTxDB *ptxdb, CTransaction &tx, bool fCheckInputs,
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB* ptxdb, bool fCheckInputs, bool* pfMissingInputs)
-{
-    return mempool.accept(ptxdb, *this, fCheckInputs, pfMissingInputs);
-}
-
 unsigned long CBlockStore::GetPooledTxSize()
 {
     return mempool.size();
@@ -1028,7 +1023,7 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
     // Take over previous transactions' spent pointers
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
     // fMiner is true when called from the internal bitcoin miner
-    // ... both are false when called from CTransaction::AcceptToMemoryPool
+    // ... both are false when called from CTxMemPool::accept
     if (!IsCoinBase())
     {
         int64 nValueIn = 0;
@@ -1184,7 +1179,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fHeadersOnly)
     // can be duplicated to remove the ability to spend the first instance -- even after
     // being sent to another address.
     // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
-    // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
+    // This logic is not necessary for memory pool transactions, as CTxMemPool::accept
     // already refuses previously-known transaction id's entirely.
     // This rule applies to all blocks whose timestamp is after March 15, 2012, 0:00 UTC.
     // On testnet it is enabled as of februari 20, 2012, 0:00 UTC.
@@ -1361,7 +1356,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     BOOST_FOREACH(CTransaction& tx, vResurrect)
-        tx.AcceptToMemoryPool(&txdb, false);
+        mempool.accept(&txdb, tx, false);
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete)
@@ -2777,7 +2772,7 @@ bool CBlockStore::EmitTransaction(CTransaction& transaction, bool fCheckInputs)
         if (pblockstore->HasFullBlocks())
             ptxdb = new CTxDB("r");
 
-        if (transaction.AcceptToMemoryPool(ptxdb, fCheckInputs, &fMissingInputs))
+        if (mempool.accept(ptxdb, transaction, fCheckInputs, &fMissingInputs))
         {
             SubmitCallbackCommitTransactionToMemoryPool(transaction);
 
@@ -2794,7 +2789,7 @@ bool CBlockStore::EmitTransaction(CTransaction& transaction, bool fCheckInputs)
                     CTransaction& tx = *((*mi).second);
                     uint256 hash = tx.GetHash();
 
-                    if (tx.AcceptToMemoryPool(ptxdb, true))
+                    if (mempool.accept(ptxdb, tx, true))
                     {
                         printf("   accepted orphan tx %s\n", hash.ToString().substr(0,10).c_str());
                         SubmitCallbackCommitTransactionToMemoryPool(tx);

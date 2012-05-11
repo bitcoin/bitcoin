@@ -646,7 +646,6 @@ public:
                        const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash=true);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
-    bool AcceptToMemoryPool(CTxDB *ptxdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
 
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
@@ -1539,7 +1538,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
 
     bool accept(CTxDB* ptxdb, CTransaction &tx,
-                bool fCheckInputs, bool* pfMissingInputs);
+                bool fCheckInputs=true, bool* pfMissingInputs=NULL);
     bool addUnchecked(CTransaction &tx);
     bool remove(CTransaction &tx);
 
