@@ -46,7 +46,7 @@ public:
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
-    
+
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
@@ -130,8 +130,7 @@ public slots:
     void askFee(qint64 nFeeRequired, bool *payFee);
     void handleURI(QString strURI);
 
-    void gotoMessagePage();
-    void gotoMessagePage(QString);
+    void gotoMessagePage(QString addr = "");
 
 private slots:
     /** Switch to overview (home) page */
