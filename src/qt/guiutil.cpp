@@ -243,8 +243,8 @@ void openDebugLogfile()
 #endif
 }
 
-ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *parent):
-    size_threshold(size_threshold), QObject(parent)
+ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *parent) :
+    QObject(parent), size_threshold(size_threshold)
 {
 
 }
