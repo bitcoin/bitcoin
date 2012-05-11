@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Passphrase Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -88,13 +88,14 @@
      </item>
      <item row="4" column="1">
       <widget class="QLabel" name="capsLabel">
-       <property name="styleSheet">
-        <string notr="true">#capsLabel {
-	font: bold;
-}</string>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
        </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string/>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
