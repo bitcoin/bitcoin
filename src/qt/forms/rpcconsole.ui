@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>706</width>
-    <height>382</height>
+    <height>446</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -327,30 +327,22 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="QTableWidget" name="messagesWidget">
+        <widget class="QTextEdit" name="messagesWidget">
          <property name="minimumSize">
           <size>
            <width>0</width>
            <height>100</height>
           </size>
          </property>
-         <property name="tabKeyNavigation">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="tabKeyNavigation" stdset="0">
           <bool>false</bool>
          </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <property name="columnCount">
+         <property name="columnCount" stdset="0">
           <number>2</number>
          </property>
-         <attribute name="horizontalHeaderVisible">
-          <bool>false</bool>
-         </attribute>
-         <attribute name="verticalHeaderVisible">
-          <bool>false</bool>
-         </attribute>
-         <column/>
-         <column/>
         </widget>
        </item>
        <item>
