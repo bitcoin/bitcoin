@@ -44,7 +44,7 @@ sudo port install qrencode
 4.  Now you should be able to build bitcoind:
 
 cd bitcoin/src
-make -f makefile.osx
+make -f makefile.osx USE_IPV6=1
 
 Run:
   ./bitcoind --help  # for a list of command-line options.

@@ -119,6 +119,18 @@ bool AppInit(int argc, char* argv[])
     return fRet;
 }
 
+bool static Bind(const CService &addr) {
+    if (IsLimited(addr))
+        return false;
+    std::string strError;
+    if (!BindListenPort(addr, strError))
+    {
+        ThreadSafeMessageBox(strError, _("Bitcoin"), wxOK | wxMODAL);
+        return false;
+    }
+    return true;
+}
+
 bool AppInit2(int argc, char* argv[])
 {
 #ifdef _MSC_VER
@@ -180,6 +192,7 @@ bool AppInit2(int argc, char* argv[])
             "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)") + "\n" +
             "  -proxy=<ip:port> \t  "   + _("Connect through socks proxy") + "\n" +
             "  -socks=<n>       \t  "   + _("Select the version of socks proxy to use (4 or 5, 5 is default)") + "\n" +
+            "  -noproxy=<net>   \t  "   + _("Do not use proxy for connections to network net (ipv4 or ipv6)") + "\n" +
             "  -dns             \t  "   + _("Allow DNS lookups for -addnode, -seednode and -connect") + "\n" +
             "  -proxydns        \t  "   + _("Pass DNS requests to (SOCKS5) proxy") + "\n" +
             "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n" +
@@ -188,9 +201,11 @@ bool AppInit2(int argc, char* argv[])
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
             "  -seednode=<ip>   \t\t  " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n" +
             "  -externalip=<ip> \t  "   + _("Specify your own public address") + "\n" +
+            "  -blocknet=<net>  \t  "   + _("Do not connect to addresses in network net (ipv4, ipv6)") + "\n" +
             "  -discover        \t  "   + _("Try to discover public IP address (default: 1)") + "\n" +
             "  -irc             \t  "   + _("Find peers using internet relay chat (default: 0)") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
+            "  -bind=<addr>     \t  "   + _("Bind to given address. Use [host]:port notation for IPv6") + "\n" +
 #ifdef QT_GUI
             "  -lang=<lang>     \t\t  " + _("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
 #endif
@@ -532,9 +547,25 @@ bool AppInit2(int argc, char* argv[])
         }
     }
 
+    if (mapArgs.count("-noproxy"))
+    {
+        BOOST_FOREACH(std::string snet, mapMultiArgs["-noproxy"]) {
+            enum Network net = ParseNetwork(snet);
+            if (net == NET_UNROUTABLE) {
+                ThreadSafeMessageBox(_("Unknown network specified in -noproxy"), _("Bitcoin"), wxOK | wxMODAL);
+                return false;
+            }
+            SetNoProxy(net);
+        }
+    }
+
     if (mapArgs.count("-connect"))
         SoftSetBoolArg("-dnsseed", false);
- 
+
+    // even in Tor mode, if -bind is specified, you really want -listen
+    if (mapArgs.count("-bind"))
+        SoftSetBoolArg("-listen", true);
+
     bool fTor = (fUseProxy && addrProxy.GetPort() == 9050);
     if (fTor)
     {
@@ -545,6 +576,17 @@ bool AppInit2(int argc, char* argv[])
         SoftSetBoolArg("-proxydns", true);
         SoftSetBoolArg("-upnp", false);
         SoftSetBoolArg("-discover", false);
+    }
+
+    if (mapArgs.count("-blocknet")) {
+        BOOST_FOREACH(std::string snet, mapMultiArgs["-blocknet"]) {
+            enum Network net = ParseNetwork(snet);
+            if (net == NET_UNROUTABLE) {
+                ThreadSafeMessageBox(_("Unknown network specified in -blocknet"), _("Bitcoin"), wxOK | wxMODAL);
+                return false;
+            }
+            SetLimited(net);
+        }
     }
 
     fNameLookup = GetBoolArg("-dns");
@@ -563,14 +605,23 @@ bool AppInit2(int argc, char* argv[])
     const char* pszP2SH = "/P2SH/";
     COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
 
+    bool fBound = false;
     if (!fNoListen)
     {
         std::string strError;
-        if (!BindListenPort(strError))
-        {
-            ThreadSafeMessageBox(strError, _("Bitcoin"), wxOK | wxMODAL);
-            return false;
+        if (mapArgs.count("-bind")) {
+            BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
+                fBound |= Bind(CService(strBind, GetDefaultPort(), false));
+            }
+        } else {
+            struct in_addr inaddr_any = {s_addr: INADDR_ANY};
+            fBound |= Bind(CService(inaddr_any, GetDefaultPort()));
+#ifdef USE_IPV6
+            fBound |= Bind(CService(in6addr_any, GetDefaultPort()));
+#endif
         }
+        if (!fBound)
+            return false;
     }
 
     if (mapArgs.count("-externalip"))
