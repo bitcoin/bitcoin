@@ -1887,8 +1887,9 @@ bool StopNode()
     fShutdown = true;
     nTransactionsUpdated++;
     int64 nStart = GetTime();
-    for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
-         semOutbound->post();
+    if (semOutbound)
+        for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
+            semOutbound->post();
     do
     {
         int nThreadsRunning = 0;
