@@ -2,7 +2,7 @@
  * Qt4 bitcoin GUI.
  *
  * W.J. van der Laan 20011-2012
- * The Bitcoin Developers 20011-2012
+ * The Bitcoin Developers 2011-2012
  */
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
