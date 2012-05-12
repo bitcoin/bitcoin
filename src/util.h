@@ -21,10 +21,6 @@ typedef int pid_t; /* define for windows compatiblity */
 #include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/interprocess/sync/interprocess_condition.hpp>
-#include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
@@ -186,125 +182,6 @@ void AddTimeData(const CNetAddr& ip, int64 nTime);
 
 
 
-
-
-/** Wrapped boost mutex: supports recursive locking, but no waiting  */
-typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
-
-/** Wrapped boost mutex: supports waiting but not recursive locking */
-typedef boost::interprocess::interprocess_mutex CWaitableCriticalSection;
-
-#ifdef DEBUG_LOCKORDER
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
-void LeaveCritical();
-#else
-void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
-void static inline LeaveCritical() {}
-#endif
-
-/** Wrapper around boost::interprocess::scoped_lock */
-template<typename Mutex>
-class CMutexLock
-{
-private:
-    boost::interprocess::scoped_lock<Mutex> lock;
-public:
-
-    void Enter(const char* pszName, const char* pszFile, int nLine)
-    {
-        if (!lock.owns())
-        {
-            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()));
-#ifdef DEBUG_LOCKCONTENTION
-            if (!lock.try_lock())
-            {
-                printf("LOCKCONTENTION: %s\n", pszName);
-                printf("Locker: %s:%d\n", pszFile, nLine);
-#endif
-            lock.lock();
-#ifdef DEBUG_LOCKCONTENTION
-            }
-#endif
-        }
-    }
-
-    void Leave()
-    {
-        if (lock.owns())
-        {
-            lock.unlock();
-            LeaveCritical();
-        }
-    }
-
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine)
-    {
-        if (!lock.owns())
-        {
-            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()), true);
-            lock.try_lock();
-            if (!lock.owns())
-                LeaveCritical();
-        }
-        return lock.owns();
-    }
-
-    CMutexLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) : lock(mutexIn, boost::interprocess::defer_lock)
-    {
-        if (fTry)
-            TryEnter(pszName, pszFile, nLine);
-        else
-            Enter(pszName, pszFile, nLine);
-    }
-
-    ~CMutexLock()
-    {
-        if (lock.owns())
-            LeaveCritical();
-    }
-
-    operator bool()
-    {
-        return lock.owns();
-    }
-
-    boost::interprocess::scoped_lock<Mutex> &GetLock()
-    {
-        return lock;
-    }
-};
-
-typedef CMutexLock<CCriticalSection> CCriticalBlock;
-typedef CMutexLock<CWaitableCriticalSection> CWaitableCriticalBlock;
-typedef boost::interprocess::interprocess_condition CConditionVariable;
-
-/** Wait for a given condition inside a WAITABLE_CRITICAL_BLOCK */
-#define WAIT(name,condition) \
-   do { while(!(condition)) { (name).wait(waitablecriticalblock.GetLock()); } } while(0)
-
-/** Notify waiting threads that a condition may hold now */
-#define NOTIFY(name) \
-   do { (name).notify_one(); } while(0)
-
-#define NOTIFY_ALL(name) \
-   do { (name).notify_all(); } while(0)
-
-#define LOCK(cs) CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__)
-#define LOCK2(cs1,cs2) CCriticalBlock criticalblock1(cs1, #cs1, __FILE__, __LINE__),criticalblock2(cs2, #cs2, __FILE__, __LINE__)
-#define TRY_LOCK(cs,name) CCriticalBlock name(cs, #cs, __FILE__, __LINE__, true)
-#define WAITABLE_LOCK(cs) CWaitableCriticalBlock waitablecriticalblock(cs, #cs, __FILE__, __LINE__)
-
-#define ENTER_CRITICAL_SECTION(cs) \
-    { \
-        EnterCritical(#cs, __FILE__, __LINE__, (void*)(&cs)); \
-        (cs).lock(); \
-    }
-
-#define LEAVE_CRITICAL_SECTION(cs) \
-    { \
-        (cs).unlock(); \
-        LeaveCritical(); \
-    }
 
 
 inline std::string i64tostr(int64 n)
