@@ -2447,7 +2447,7 @@ int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRe
     strMessageRet = "";
 
     // Read status
-    int nProto;
+    int nProto = 0;
     int nStatus = ReadHTTPStatus(stream, nProto);
 
     // Read header
