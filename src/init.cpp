@@ -614,7 +614,8 @@ bool AppInit2(int argc, char* argv[])
                 fBound |= Bind(CService(strBind, GetDefaultPort(), false));
             }
         } else {
-            struct in_addr inaddr_any = {s_addr: INADDR_ANY};
+            struct in_addr inaddr_any;
+            inaddr_any.s_addr = INADDR_ANY;
             fBound |= Bind(CService(inaddr_any, GetDefaultPort()));
 #ifdef USE_IPV6
             fBound |= Bind(CService(in6addr_any, GetDefaultPort()));
