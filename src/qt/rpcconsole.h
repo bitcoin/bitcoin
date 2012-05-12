@@ -37,15 +37,13 @@ private slots:
 
 public slots:
     void clear();
-    void message(int category, const QString &message);
+    void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count);
     /** Go forward or back in history */
     void browseHistory(int offset);
-    /** Copy currently selected message to clipboard */
-    void copyMessage();
 
 signals:
     // For RPC command executor
@@ -55,7 +53,6 @@ signals:
 private:
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
-    bool firstLayout;
     QStringList history;
     int historyPtr;
 
