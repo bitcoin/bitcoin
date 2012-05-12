@@ -464,12 +464,14 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     int port = portDefault;
 
     size_t colon = strDest.find_last_of(':');
-    char *endp = NULL;
-    int n = strtol(pszDest + colon + 1, &endp, 10);
-    if (endp && *endp == 0 && n >= 0) {
-        strDest = strDest.substr(0, colon);
-        if (n > 0 && n < 0x10000)
-            port = n;
+    if (colon != strDest.npos) {
+        char *endp = NULL;
+        int n = strtol(pszDest + colon + 1, &endp, 10);
+        if (endp && *endp == 0 && n >= 0) {
+            strDest = strDest.substr(0, colon);
+            if (n > 0 && n < 0x10000)
+                port = n;
+        }
     }
     if (strDest[0] == '[' && strDest[strDest.size()-1] == ']')
         strDest = strDest.substr(1, strDest.size()-2);
