@@ -84,7 +84,7 @@
         <string>Remove all transaction fields</string>
        </property>
        <property name="text">
-        <string>Clear all</string>
+        <string>Clear &amp;All</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
