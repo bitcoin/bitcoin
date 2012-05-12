@@ -38,27 +38,33 @@ CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL, int64 nTimeout=0);
 void MapPort(bool fMapPort);
-bool BindListenPort(std::string& strError=REF(std::string()));
+bool BindListenPort(const CService &bindAddr, std::string& strError=REF(std::string()));
 void StartNode(void* parg);
 bool StopNode();
 
 enum
 {
-    LOCAL_NONE,
-    LOCAL_IF,
-    LOCAL_UPNP,
-    LOCAL_IRC,
-    LOCAL_HTTP,
-    LOCAL_MANUAL,
+    LOCAL_NONE,   // unknown
+    LOCAL_IF,     // address a local interface listens on
+    LOCAL_BIND,   // address explicit bound to
+    LOCAL_UPNP,   // address reported by UPnP
+    LOCAL_IRC,    // address reported by IRC (deprecated)
+    LOCAL_HTTP,   // address reported by whatismyip.com and similars
+    LOCAL_MANUAL, // address explicitly specified (-externalip=)
 
     LOCAL_MAX
 };
 
-bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
-bool SeenLocal(const CNetAddr& addr);
-bool IsLocal(const CNetAddr& addr);
-bool GetLocal(CNetAddr &addr, const CNetAddr *paddrPeer = NULL);
+void SetLimited(enum Network net, bool fLimited = true);
+bool IsLimited(const CNetAddr& addr);
+bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
+bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE, int port = -1);
+bool SeenLocal(const CService& addr);
+bool IsLocal(const CService& addr);
+bool GetLocal(CService &addr, const CNetAddr *paddrPeer = NULL);
+bool IsReachable(const CNetAddr &addr);
 CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
+
 
 enum
 {
@@ -139,7 +145,7 @@ public:
     unsigned int nMessageStart;
     CAddress addr;
     std::string addrName;
-    CNetAddr addrLocal;
+    CService addrLocal;
     int nVersion;
     std::string strSubVer;
     bool fOneShot;

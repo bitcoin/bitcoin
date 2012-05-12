@@ -21,9 +21,23 @@ bool fProxyNameLookup = false;
 bool fNameLookup = false;
 CService addrProxy("127.0.0.1",9050);
 int nConnectTimeout = 5000;
+static bool vfNoProxy[NET_MAX] = {};
 
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
+
+enum Network ParseNetwork(std::string net) {
+    if (net == "ipv4") return NET_IPV4;
+    if (net == "ipv6") return NET_IPV6;
+    if (net == "tor")  return NET_TOR;
+    if (net == "i2p")  return NET_I2P;
+    return NET_UNROUTABLE;
+}
+
+void SetNoProxy(enum Network net, bool fNoProxy) {
+    assert(net >= 0 && net < NET_MAX);
+    vfNoProxy[net] = fNoProxy;
+}
 
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
@@ -169,7 +183,12 @@ bool static Socks4(const CService &addrDest, SOCKET& hSocket)
     }
     char pszSocks4IP[] = "\4\1\0\0\0\0\0\0user";
     struct sockaddr_in addr;
-    addrDest.GetSockAddr(&addr);
+    socklen_t len = sizeof(addr);
+    if (!addrDest.GetSockAddr((struct sockaddr*)&addr, &len) || addr.sin_family != AF_INET)
+    {
+        closesocket(hSocket);
+        return error("Cannot get proxy destination address");
+    }
     memcpy(pszSocks4IP + 2, &addr.sin_port, 2);
     memcpy(pszSocks4IP + 4, &addr.sin_addr, 4);
     char* pszSocks4 = pszSocks4IP;
@@ -305,20 +324,24 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
 {
     hSocketRet = INVALID_SOCKET;
 
-    SOCKET hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+#ifdef USE_IPV6
+    struct sockaddr_storage sockaddr;
+#else
+    struct sockaddr sockaddr;
+#endif
+    socklen_t len = sizeof(sockaddr);
+    if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
+        printf("Cannot connect to %s: unsupported network\n", addrConnect.ToString().c_str());
+        return false;
+    }
+
+    SOCKET hSocket = socket(((struct sockaddr*)&sockaddr)->sa_family, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return false;
 #ifdef SO_NOSIGPIPE
     int set = 1;
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
-
-    struct sockaddr_in sockaddr;
-    if (!addrConnect.GetSockAddr(&sockaddr))
-    {
-        closesocket(hSocket);
-        return false;
-    }
 
 #ifdef WIN32
     u_long fNonblock = 1;
@@ -332,7 +355,7 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
         return false;
     }
 
-    if (connect(hSocket, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == SOCKET_ERROR)
+    if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
         // WSAEINVAL is here because some legacy version of winsock uses it
         if (WSAGetLastError() == WSAEINPROGRESS || WSAGetLastError() == WSAEWOULDBLOCK || WSAGetLastError() == WSAEINVAL)
@@ -409,7 +432,7 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
 bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
 {
     SOCKET hSocket = INVALID_SOCKET;
-    bool fProxy = (fUseProxy && addrDest.IsRoutable());
+    bool fProxy = (fUseProxy && addrDest.IsRoutable() && !vfNoProxy[addrDest.GetNetwork()]);
 
     if (!ConnectSocketDirectly(fProxy ? addrProxy : addrDest, hSocket, nTimeout))
         return false;
@@ -531,6 +554,11 @@ bool CNetAddr::IsIPv4() const
     return (memcmp(ip, pchIPv4, sizeof(pchIPv4)) == 0);
 }
 
+bool CNetAddr::IsIPv6() const
+{
+    return (!IsIPv4());
+}
+
 bool CNetAddr::IsRFC1918() const
 {
     return IsIPv4() && (
@@ -585,6 +613,18 @@ bool CNetAddr::IsRFC6145() const
 bool CNetAddr::IsRFC4843() const
 {
     return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10);
+}
+
+bool CNetAddr::IsOnionCat() const
+{
+    static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
+    return (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
+}
+
+bool CNetAddr::IsGarliCat() const
+{
+    static const unsigned char pchGarliCat[] = {0xFD,0x60,0xDB,0x4D,0xDD,0xB5};
+    return (memcmp(ip, pchGarliCat, sizeof(pchGarliCat)) == 0);
 }
 
 bool CNetAddr::IsLocal() const
@@ -645,7 +685,24 @@ bool CNetAddr::IsValid() const
 
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || IsRFC4193() || IsRFC4843() || IsLocal());
+    return IsValid() && !(IsRFC1918() || IsRFC3927() || IsRFC4862() || (IsRFC4193() && !IsOnionCat() && !IsGarliCat()) || IsRFC4843() || IsLocal());
+}
+
+enum Network CNetAddr::GetNetwork() const
+{
+    if (!IsRoutable())
+        return NET_UNROUTABLE;
+
+    if (IsIPv4())
+        return NET_IPV4;
+
+    if (IsOnionCat())
+        return NET_TOR;
+
+    if (IsGarliCat())
+        return NET_I2P;
+
+    return NET_IPV6;
 }
 
 std::string CNetAddr::ToStringIP() const
@@ -701,40 +758,40 @@ bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 std::vector<unsigned char> CNetAddr::GetGroup() const
 {
     std::vector<unsigned char> vchRet;
-    int nClass = 0; // 0=IPv6, 1=IPv4, 254=local, 255=unroutable
+    int nClass = NET_IPV6;
     int nStartByte = 0;
     int nBits = 16;
 
     // all local addresses belong to the same group
     if (IsLocal())
     {
-        nClass = 254;
+        nClass = 255;
         nBits = 0;
     }
 
     // all unroutable addresses belong to the same group
     if (!IsRoutable())
     {
-        nClass = 255;
+        nClass = NET_UNROUTABLE;
         nBits = 0;
     }
     // for IPv4 addresses, '1' + the 16 higher-order bits of the IP
     // includes mapped IPv4, SIIT translated IPv4, and the well-known prefix
     else if (IsIPv4() || IsRFC6145() || IsRFC6052())
     {
-        nClass = 1;
+        nClass = NET_IPV4;
         nStartByte = 12;
     }
     // for 6to4 tunneled addresses, use the encapsulated IPv4 address
     else if (IsRFC3964())
     {
-        nClass = 1;
+        nClass = NET_IPV4;
         nStartByte = 2;
     }
     // for Teredo-tunneled IPv6 addresses, use the encapsulated IPv4 address
     else if (IsRFC4380())
     {
-        vchRet.push_back(1);
+        vchRet.push_back(NET_IPV4);
         vchRet.push_back(GetByte(3) ^ 0xFF);
         vchRet.push_back(GetByte(2) ^ 0xFF);
         return vchRet;
@@ -831,6 +888,22 @@ CService::CService(const struct sockaddr_in6 &addr) : CNetAddr(addr.sin6_addr), 
 }
 #endif
 
+bool CService::SetSockAddr(const struct sockaddr *paddr)
+{
+    switch (paddr->sa_family) {
+    case AF_INET:
+        *this = CService(*(const struct sockaddr_in*)paddr);
+        return true;
+#ifdef USE_IPV6
+    case AF_INET6:
+        *this = CService(*(const struct sockaddr_in6*)paddr);
+        return true;
+#endif
+    default:
+        return false;
+    }
+}
+
 CService::CService(const char *pszIpPort, bool fAllowLookup)
 {
     Init();
@@ -883,29 +956,36 @@ bool operator<(const CService& a, const CService& b)
     return (CNetAddr)a < (CNetAddr)b || ((CNetAddr)a == (CNetAddr)b && a.port < b.port);
 }
 
-bool CService::GetSockAddr(struct sockaddr_in* paddr) const
+bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
 {
-    if (!IsIPv4())
-        return false;
-    memset(paddr, 0, sizeof(struct sockaddr_in));
-    if (!GetInAddr(&paddr->sin_addr))
-        return false;
-    paddr->sin_family = AF_INET;
-    paddr->sin_port = htons(port);
-    return true;
-}
-
+    if (IsIPv4()) {
+        if (*addrlen < sizeof(struct sockaddr_in))
+            return false;
+        *addrlen = sizeof(struct sockaddr_in);
+        struct sockaddr_in *paddrin = (struct sockaddr_in*)paddr;
+        memset(paddrin, 0, *addrlen);
+        if (!GetInAddr(&paddrin->sin_addr))
+            return false;
+        paddrin->sin_family = AF_INET;
+        paddrin->sin_port = htons(port);
+        return true;
+    }
 #ifdef USE_IPV6
-bool CService::GetSockAddr6(struct sockaddr_in6* paddr) const
-{
-    memset(paddr, 0, sizeof(struct sockaddr_in6));
-    if (!GetIn6Addr(&paddr->sin6_addr))
-        return false;
-    paddr->sin6_family = AF_INET6;
-    paddr->sin6_port = htons(port);
-    return true;
-}
+    if (IsIPv6()) {
+        if (*addrlen < sizeof(struct sockaddr_in6))
+            return false;
+        *addrlen = sizeof(struct sockaddr_in6);
+        struct sockaddr_in6 *paddrin6 = (struct sockaddr_in6*)paddr;
+        memset(paddrin6, 0, *addrlen);
+        if (!GetIn6Addr(&paddrin6->sin6_addr))
+            return false;
+        paddrin6->sin6_family = AF_INET6;
+        paddrin6->sin6_port = htons(port);
+        return true;
+    }
 #endif
+    return false;
+}
 
 std::vector<unsigned char> CService::GetKey() const
 {
@@ -919,12 +999,16 @@ std::vector<unsigned char> CService::GetKey() const
 
 std::string CService::ToStringPort() const
 {
-    return strprintf(":%i", port);
+    return strprintf("%i", port);
 }
 
 std::string CService::ToStringIPPort() const
 {
-    return ToStringIP() + ToStringPort();
+    if (IsIPv4()) {
+        return ToStringIP() + ":" + ToStringPort();
+    } else {
+        return "[" + ToStringIP() + "]:" + ToStringPort();
+    }
 }
 
 std::string CService::ToString() const

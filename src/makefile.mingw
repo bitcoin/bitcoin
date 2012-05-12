@@ -23,7 +23,7 @@ LIBS= \
  -l ssl \
  -l crypto
 
-DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB
+DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DUSE_IPV6
 DEBUGFLAGS=-g
 CFLAGS=-mthreads -O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
