@@ -55,19 +55,26 @@ void RPCExecutor::start()
 void RPCExecutor::request(const QString &command)
 {
     // Parse shell-like command line into separate arguments
-    boost::escaped_list_separator<char> els('\\',' ','\"');
-    std::string strCommand = command.toStdString();
-    boost::tokenizer<boost::escaped_list_separator<char> > tok(strCommand, els);
-
     std::string strMethod;
     std::vector<std::string> strParams;
-    int n = 0;
-    for(boost::tokenizer<boost::escaped_list_separator<char> >::iterator beg=tok.begin(); beg!=tok.end();++beg,++n)
+    try {
+        boost::escaped_list_separator<char> els('\\',' ','\"');
+        std::string strCommand = command.toStdString();
+        boost::tokenizer<boost::escaped_list_separator<char> > tok(strCommand, els);
+
+        int n = 0;
+        for(boost::tokenizer<boost::escaped_list_separator<char> >::iterator beg=tok.begin(); beg!=tok.end();++beg,++n)
+        {
+            if(n == 0) // First parameter is the command
+                strMethod = *beg;
+            else
+                strParams.push_back(*beg);
+        }
+    }
+    catch(boost::escaped_list_error &e)
     {
-        if(n == 0) // First parameter is the command
-            strMethod = *beg;
-        else
-            strParams.push_back(*beg);
+        emit reply(RPCConsole::CMD_ERROR, QString("Parse error"));
+        return;
     }
 
     try {
