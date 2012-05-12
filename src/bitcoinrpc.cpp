@@ -116,11 +116,11 @@ HexBits(unsigned int nBits)
 }
 
 enum DecomposeMode {
-	DM_NONE = 0,
-	DM_HASH,
-	DM_HEX,
-	DM_ASM,
-	DM_OBJ,
+    DM_NONE = 0,
+    DM_HASH,
+    DM_HEX,
+    DM_ASM,
+    DM_OBJ,
 };
 
 enum DecomposeMode
