@@ -10,6 +10,7 @@
 #include <QThread>
 #include <QTextEdit>
 #include <QKeyEvent>
+#include <QUrl>
 
 #include <boost/tokenizer.hpp>
 
@@ -18,6 +19,19 @@
 
 const int CONSOLE_SCROLLBACK = 50;
 const int CONSOLE_HISTORY = 50;
+
+const QSize ICON_SIZE(24, 24);
+
+const struct {
+    const char *url;
+    const char *source;
+} ICON_MAPPING[] = {
+    {"cmd-request", ":/icons/tx_input"},
+    {"cmd-reply", ":/icons/tx_output"},
+    {"cmd-error", ":/icons/tx_output"},
+    {"misc", ":/icons/tx_inout"},
+    {NULL, NULL}
+};
 
 /* Object for executing console RPC commands in a separate thread.
 */
@@ -41,19 +55,26 @@ void RPCExecutor::start()
 void RPCExecutor::request(const QString &command)
 {
     // Parse shell-like command line into separate arguments
-    boost::escaped_list_separator<char> els('\\',' ','\"');
-    std::string strCommand = command.toStdString();
-    boost::tokenizer<boost::escaped_list_separator<char> > tok(strCommand, els);
-
     std::string strMethod;
     std::vector<std::string> strParams;
-    int n = 0;
-    for(boost::tokenizer<boost::escaped_list_separator<char> >::iterator beg=tok.begin(); beg!=tok.end();++beg,++n)
+    try {
+        boost::escaped_list_separator<char> els('\\',' ','\"');
+        std::string strCommand = command.toStdString();
+        boost::tokenizer<boost::escaped_list_separator<char> > tok(strCommand, els);
+
+        int n = 0;
+        for(boost::tokenizer<boost::escaped_list_separator<char> >::iterator beg=tok.begin(); beg!=tok.end();++beg,++n)
+        {
+            if(n == 0) // First parameter is the command
+                strMethod = *beg;
+            else
+                strParams.push_back(*beg);
+        }
+    }
+    catch(boost::escaped_list_error &e)
     {
-        if(n == 0) // First parameter is the command
-            strMethod = *beg;
-        else
-            strParams.push_back(*beg);
+        emit reply(RPCConsole::CMD_ERROR, QString("Parse error"));
+        return;
     }
 
     try {
@@ -83,12 +104,9 @@ void RPCExecutor::request(const QString &command)
 RPCConsole::RPCConsole(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RPCConsole),
-    firstLayout(true),
     historyPtr(0)
 {
     ui->setupUi(this);
-    ui->messagesWidget->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
-    ui->messagesWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
 
 #ifndef WIN32
     // Show Debug logfile label and Open button only for Windows
@@ -98,13 +116,6 @@ RPCConsole::RPCConsole(QWidget *parent) :
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
-
-    // Add "Copy message" to context menu explicitly
-    QAction *copyMessageAction = new QAction(tr("&Copy"), this);
-    copyMessageAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
-    copyMessageAction->setShortcutContext(Qt::WidgetShortcut);
-    connect(copyMessageAction, SIGNAL(triggered()), this, SLOT(copyMessage()));
-    ui->messagesWidget->addAction(copyMessageAction);
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
     connect(ui->openDebugLogfileButton, SIGNAL(clicked()), this, SLOT(on_openDebugLogfileButton_clicked()));
@@ -159,68 +170,62 @@ void RPCConsole::setClientModel(ClientModel *model)
     }
 }
 
-static QColor categoryColor(int category)
+static QString categoryClass(int category)
 {
     switch(category)
     {
-    case RPCConsole::MC_ERROR:     return QColor(255,0,0); break;
-    case RPCConsole::MC_DEBUG:     return QColor(192,192,192); break;
-    case RPCConsole::CMD_REQUEST:  return QColor(128,128,128); break;
-    case RPCConsole::CMD_REPLY:    return QColor(128,255,128); break;
-    case RPCConsole::CMD_ERROR:    return QColor(255,128,128); break;
-    default:           return QColor(0,0,0);
+    case RPCConsole::CMD_REQUEST:  return "cmd-request"; break;
+    case RPCConsole::CMD_REPLY:    return "cmd-reply"; break;
+    case RPCConsole::CMD_ERROR:    return "cmd-error"; break;
+    default:                       return "misc";
     }
 }
 
 void RPCConsole::clear()
 {
     ui->messagesWidget->clear();
-    ui->messagesWidget->setRowCount(0);
     ui->lineEdit->clear();
     ui->lineEdit->setFocus();
 
-    message(CMD_REPLY, tr("Welcome to the bitcoin RPC console.")+"\n"+
-                       tr("Use up and down arrows to navigate history, and Ctrl-L to clear screen.")+"\n"+
-                       tr("Type \"help\" for an overview of available commands."));
-}
-
-void RPCConsole::message(int category, const QString &message)
-{
-    // Add row to messages widget
-    int row = ui->messagesWidget->rowCount();
-    ui->messagesWidget->setRowCount(row+1);
-
-    QTime time = QTime::currentTime();
-    QTableWidgetItem *newTime = new QTableWidgetItem(time.toString());
-    newTime->setData(Qt::DecorationRole, categoryColor(category));
-    newTime->setForeground(QColor(128,128,128));
-    newTime->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled); // make non-editable
-
-    int numLines = message.count("\n") + 1;
-    // As Qt doesn't like very tall cells (they break scrolling) keep only short messages in
-    // the cell text, longer messages trigger a display widget with scroll bar
-    if(numLines < 5)
+    // Add smoothly scaled icon images.
+    // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
+    for(int i=0; ICON_MAPPING[i].url; ++i)
     {
-        QTableWidgetItem *newItem = new QTableWidgetItem(message);
-        newItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled); // make non-editable
-        if(category == CMD_ERROR) // Coloring error messages in red
-            newItem->setForeground(QColor(255,16,16));
-        ui->messagesWidget->setItem(row, 1, newItem);
-    } else {
-        QTextEdit *newWidget = new QTextEdit;
-        newWidget->setText(message);
-        newWidget->setMaximumHeight(100);
-        newWidget->setReadOnly(true);
-        ui->messagesWidget->setCellWidget(row, 1, newWidget);
+        ui->messagesWidget->document()->addResource(
+                    QTextDocument::ImageResource,
+                    QUrl(ICON_MAPPING[i].url),
+                    QImage(ICON_MAPPING[i].source).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
-    ui->messagesWidget->setItem(row, 0, newTime);
-    ui->messagesWidget->resizeRowToContents(row);
-    // Preserve only limited scrollback buffer
-    while(ui->messagesWidget->rowCount() > CONSOLE_SCROLLBACK)
-        ui->messagesWidget->removeRow(0);
-    // Scroll to bottom after table is updated
-    QTimer::singleShot(0, ui->messagesWidget, SLOT(scrollToBottom()));
+    // Set default style sheet
+    ui->messagesWidget->document()->setDefaultStyleSheet(
+                "table { }"
+                "td.time { color: #808080; padding-top: 3px; } "
+                "td.message { font-family: Monospace; font-size: 12px; } "
+                "td.cmd-request { color: #006060; } "
+                "td.cmd-error { color: red; } "
+                "b { color: #006060; } "
+                );
+
+    message(CMD_REPLY, tr("Welcome to the Bitcoin RPC console.<br>"
+                          "Use up and down arrows to navigate history, and <b>Ctrl-L</b> to clear screen.<br>"
+                          "Type <b>help</b> for an overview of available commands."), true);
+}
+
+void RPCConsole::message(int category, const QString &message, bool html)
+{
+    QTime time = QTime::currentTime();
+    QString timeString = time.toString();
+    QString out;
+    out += "<table><tr><td class=\"time\" width=\"65\">" + timeString + "</td>";
+    out += "<td class=\"icon\" width=\"32\"><img src=\"" + categoryClass(category) + "\"></td>";
+    out += "<td class=\"message " + categoryClass(category) + "\" valign=\"middle\">";
+    if(html)
+        out += message;
+    else
+        out += GUIUtil::HtmlEscape(message, true);
+    out += "</td></tr></table>";
+    ui->messagesWidget->append(out);
 }
 
 void RPCConsole::setNumConnections(int count)
@@ -298,24 +303,10 @@ void RPCConsole::startExecutor()
     thread->start();
 }
 
-void RPCConsole::copyMessage()
-{
-    GUIUtil::copyEntryData(ui->messagesWidget, 1, Qt::EditRole);
-}
-
 void RPCConsole::on_tabWidget_currentChanged(int index)
 {
     if(ui->tabWidget->widget(index) == ui->tab_console)
     {
-        if(firstLayout)
-        {
-            // Work around QTableWidget issue:
-            // Call resizeRowsToContents on first Layout request with widget visible,
-            // to make sure multiline messages that were added before the console was shown
-            // have the right height.
-            firstLayout = false;
-            ui->messagesWidget->resizeRowsToContents();
-        }
         ui->lineEdit->setFocus();
     }
 }
