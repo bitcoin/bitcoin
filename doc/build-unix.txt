@@ -43,6 +43,9 @@ your package manager. Set USE_QRCODE to control this:
  USE_QRCODE=0   (the default) No QRCode support - libarcode not required
  USE_QRCODE=1   QRCode support enabled
 
+IPv6 support may be enabled by setting
+ USE_IPV6=1    Enable IPv6 support
+
 Licenses of statically linked libraries:
  Berkeley DB   New BSD license with additional requirement that linked
                software must be free open source
@@ -80,7 +83,7 @@ emerge -av1 --noreplace boost glib openssl sys-libs/db:4.8
 
 Take the following steps to build (no UPnP support):
  cd ${BITCOIN_DIR}/src
- make -f makefile.unix USE_UPNP= BDB_INCLUDE_PATH='/usr/include/db4.8'
+ make -f makefile.unix USE_UPNP= USE_IPV6=1 BDB_INCLUDE_PATH='/usr/include/db4.8'
  strip bitcoind
 
 
