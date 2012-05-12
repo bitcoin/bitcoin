@@ -611,14 +611,14 @@ bool AppInit2(int argc, char* argv[])
         std::string strError;
         if (mapArgs.count("-bind")) {
             BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
-                fBound |= Bind(CService(strBind, GetDefaultPort(), false));
+                fBound |= Bind(CService(strBind, GetListenPort(), false));
             }
         } else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
-            fBound |= Bind(CService(inaddr_any, GetDefaultPort()));
+            fBound |= Bind(CService(inaddr_any, GetListenPort()));
 #ifdef USE_IPV6
-            fBound |= Bind(CService(in6addr_any, GetDefaultPort()));
+            fBound |= Bind(CService(in6addr_any, GetListenPort()));
 #endif
         }
         if (!fBound)
@@ -628,7 +628,7 @@ bool AppInit2(int argc, char* argv[])
     if (mapArgs.count("-externalip"))
     {
         BOOST_FOREACH(string strAddr, mapMultiArgs["-externalip"])
-            AddLocal(CNetAddr(strAddr, fNameLookup), LOCAL_MANUAL);
+            AddLocal(CService(strAddr, GetListenPort(), fNameLookup), LOCAL_MANUAL);
     }
 
     if (mapArgs.count("-paytxfee"))

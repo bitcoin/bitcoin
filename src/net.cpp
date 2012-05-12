@@ -231,11 +231,9 @@ bool AddLocal(const CService& addr, int nScore)
     return true;
 }
 
-bool AddLocal(const CNetAddr& addr, int nScore, int port)
+bool AddLocal(const CNetAddr &addr, int nScore)
 {
-    if (port == -1)
-        port = GetListenPort();
-    return AddLocal(CService(addr, port), nScore);
+    return AddLocal(CService(addr, GetListenPort()), nScore);
 }
 
 /** Make a particular network entirely off-limits (no automatic connects to it) */
