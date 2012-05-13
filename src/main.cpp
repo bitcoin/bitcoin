@@ -1843,7 +1843,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
 bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
-    uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
+    uint64 nFreeBytesAvailable = filesystem::space(pathDataDir).available;
 
     // Check for 15MB because database could create another 10MB log file at any time
     if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
@@ -1863,7 +1863,7 @@ FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszM
 {
     if ((nFile < 1) || (nFile == (unsigned int) -1))
         return NULL;
-    FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
+    FILE* file = fopen((pathDataDir / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
     if (!file)
         return NULL;
     if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))

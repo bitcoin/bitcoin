@@ -162,12 +162,13 @@ bool AppInit2(int argc, char* argv[])
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
 #if !defined(QT_GUI)
     ParseParameters(argc, argv);
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
+    if (!boost::filesystem::is_directory(GetPrepDataDir(false)))
     {
         fprintf(stderr, "Error: Specified directory does not exist\n");
         Shutdown(NULL);
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
+    pathDataDir = GetPrepDataDir(true);
 #endif
 
     if (mapArgs.count("-?") || mapArgs.count("--help"))
@@ -347,13 +348,13 @@ bool AppInit2(int argc, char* argv[])
     }
 
     // Make sure only a single bitcoin process is using the data directory.
-    boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
+    boost::filesystem::path pathLockFile = pathDataDir / ".lock";
     FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
     {
-        ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), GetDataDir().string().c_str()), _("Bitcoin"), wxOK|wxMODAL);
+        ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), pathDataDir.string().c_str()), _("Bitcoin"), wxOK|wxMODAL);
         return false;
     }
 

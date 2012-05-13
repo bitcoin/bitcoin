@@ -236,7 +236,7 @@ bool isObscured(QWidget *w)
 
 void openDebugLogfile()
 {
-    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+    boost::filesystem::path pathDebug = pathDataDir / "debug.log";
 
 #ifdef WIN32
     if (boost::filesystem::exists(pathDebug))
