@@ -1251,7 +1251,7 @@ string CWallet::SendMoneyToBitcoinAddress(const CBitcoinAddress& address, int64 
     if (nValue + nTransactionFee > GetBalance())
         return _("Insufficient funds");
 
-    // Parse bitcoin address
+    // Parse Bitcoin address
     CScript scriptPubKey;
     scriptPubKey.SetBitcoinAddress(address);
 
