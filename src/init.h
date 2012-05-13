@@ -11,6 +11,7 @@ extern CWallet* pwalletMain;
 
 void Shutdown(void* parg);
 bool AppInit(int argc, char* argv[]);
-bool AppInit2(int argc, char* argv[]);
+bool AppInit2();
+std::string HelpMessage();
 
 #endif
