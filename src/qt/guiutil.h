@@ -90,6 +90,9 @@ namespace GUIUtil
         int size_threshold;
     };
 
+    bool GetStartOnSystemStartup();
+    bool SetStartOnSystemStartup(bool fAutoStart);
+
 } // namespace GUIUtil
 
 #endif // GUIUTIL_H
