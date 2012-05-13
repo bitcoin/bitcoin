@@ -214,7 +214,7 @@ bool AddLocal(const CService& addr, int nScore)
     if (!GetBoolArg("-discover", true) && nScore < LOCAL_MANUAL)
         return false;
 
-    if (!IsLimited(addr))
+    if (IsLimited(addr))
         return false;
 
     printf("AddLocal(%s,%i)\n", addr.ToString().c_str(), nScore);
