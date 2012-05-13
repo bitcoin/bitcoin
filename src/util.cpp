@@ -67,6 +67,7 @@ string strMiscWarning;
 bool fTestNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
+boost::filesystem::path pathDataDir;
 CMedianFilter<int64> vTimeOffsets(200,0);
 
 // Init openssl library multithreading support
@@ -201,7 +202,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
 
         if (!fileout)
         {
-            boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+            boost::filesystem::path pathDebug = GetPrepDataDir(true) / "debug.log";
             fileout = fopen(pathDebug.string().c_str(), "a");
             if (fileout) setbuf(fileout, NULL); // unbuffered
         }
@@ -828,7 +829,7 @@ boost::filesystem::path GetDefaultDataDir()
 #endif
 }
 
-const boost::filesystem::path &GetDataDir(bool fNetSpecific)
+const boost::filesystem::path &GetPrepDataDir(bool fNetSpecific)
 {
     namespace fs = boost::filesystem;
 
@@ -859,6 +860,9 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     fs::create_directory(path);
 
+    if (!fNetSpecific)
+        pathDataDir = path;
+
     cachedPath[fNetSpecific]=true;
     return path;
 }
@@ -866,7 +870,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 boost::filesystem::path GetConfigFile()
 {
     boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
-    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
+    if (!pathConfigFile.is_complete()) pathConfigFile = GetPrepDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }
 
@@ -897,7 +901,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 boost::filesystem::path GetPidFile()
 {
     boost::filesystem::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
-    if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
+    if (!pathPidFile.is_complete()) pathPidFile = pathDataDir / pathPidFile;
     return pathPidFile;
 }
 
@@ -924,7 +928,7 @@ int GetFilesize(FILE* file)
 void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
-    boost::filesystem::path pathLog = GetDataDir() / "debug.log";
+    boost::filesystem::path pathLog = pathDataDir / "debug.log";
     FILE* file = fopen(pathLog.string().c_str(), "r");
     if (file && GetFilesize(file) > 10 * 1000000)
     {

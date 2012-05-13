@@ -47,7 +47,7 @@ static void EnvShutdown()
     {
         printf("EnvShutdown exception: %s (%d)\n", e.what(), e.get_errno());
     }
-    DbEnv(0).remove(GetDataDir().string().c_str(), 0);
+    DbEnv(0).remove(pathDataDir.string().c_str(), 0);
 }
 
 class CDBInit
@@ -82,7 +82,6 @@ CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
         {
             if (fShutdown)
                 return;
-            filesystem::path pathDataDir = GetDataDir();
             filesystem::path pathLogDir = pathDataDir / "database";
             filesystem::create_directory(pathLogDir);
             filesystem::path pathErrorFile = pathDataDir / "db.log";

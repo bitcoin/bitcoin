@@ -172,12 +172,13 @@ int main(int argc, char *argv[])
     ParseParameters(argc, argv);
 
     // ... then bitcoin.conf:
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
+    if (!boost::filesystem::is_directory(GetPrepDataDir(false)))
     {
         fprintf(stderr, "Error: Specified directory does not exist\n");
         return 1;
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
+    pathDataDir = GetPrepDataDir(true);
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
