@@ -711,7 +711,19 @@ enum Network CNetAddr::GetNetwork() const
 
 std::string CNetAddr::ToStringIP() const
 {
-    if (IsIPv4())
+    CService serv(*this, 0);
+#ifdef USE_IPV6
+    struct sockaddr_storage sockaddr;
+#else
+    struct sockaddr sockaddr;
+#endif
+    socklen_t socklen = sizeof(sockaddr);
+    if (serv.GetSockAddr((struct sockaddr*)&sockaddr, &socklen)) {
+        char name[1025] = "";
+        if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name, sizeof(name), NULL, 0, NI_NUMERICHOST))
+            return std::string(name);
+    }
+    if (IsIPv4()) 
         return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
     else
         return strprintf("%x:%x:%x:%x:%x:%x:%x:%x",
