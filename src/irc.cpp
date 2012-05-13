@@ -36,12 +36,21 @@ string EncodeAddress(const CService& addr)
         vector<unsigned char> vch(UBEGIN(tmp), UEND(tmp));
         return string("u") + EncodeBase58Check(vch);
     }
-    return "";
+    std::vector<unsigned char> vch = addr.GetKey();
+    return string("v") + EncodeBase58Check(vch);
 }
 
 bool DecodeAddress(string str, CService& addr)
 {
     vector<unsigned char> vch;
+    if (str[0] == 'v') {
+        if (!DecodeBase58Check(str.substr(1), vch) || vch.size() != 18)
+            return false;
+        CDataStream ss(vch, SER_NETWORK, PROTOCOL_VERSION);
+        ss >> addr;
+        return true;
+    }
+
     if (!DecodeBase58Check(str.substr(1), vch))
         return false;
 
@@ -248,7 +257,7 @@ void ThreadIRCSeed2(void* parg)
 
         CService addrLocal;
         string strMyName;
-        if (GetLocal(addrLocal, &addrConnect))
+        if (GetLocal(addrLocal))
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
         else
             strMyName = strprintf("x%u", GetRand(1000000000));
