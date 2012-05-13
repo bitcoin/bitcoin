@@ -5,6 +5,9 @@
 #ifndef BITCOIN_MAIN_H
 #define BITCOIN_MAIN_H
 
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include "bignum.h"
 #include "sync.h"
 #include "net.h"
@@ -64,6 +67,8 @@ extern const std::string strMessageMagic;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
+extern boost::mutex csBestBlock;
+extern boost::condition_variable cvBlockChange;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
