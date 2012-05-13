@@ -12,6 +12,7 @@ namespace Ui {
 }
 class WalletModel;
 class TxViewDelegate;
+class TransactionFilterProxy;
 
 /** Overview ("home") page widget */
 class OverviewPage : public QWidget
@@ -38,9 +39,11 @@ private:
     qint64 currentUnconfirmedBalance;
 
     TxViewDelegate *txdelegate;
+    TransactionFilterProxy *filter;
 
 private slots:
     void displayUnitChanged();
+    void handleTransactionClicked(const QModelIndex &index);
 };
 
 #endif // OVERVIEWPAGE_H
