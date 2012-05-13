@@ -33,6 +33,7 @@ using namespace std;
 static std::string strRPCUserColonPass;
 
 // These are created by StartRPCThreads, destroyed in StopRPCThreads
+bool fRPCRunning = false;
 static asio::io_service* rpc_io_service = NULL;
 static map<string, boost::shared_ptr<deadline_timer> > deadlineTimers;
 static ssl::context* rpc_ssl_context = NULL;
@@ -656,6 +657,8 @@ void StartRPCThreads()
         return;
     }
 
+    fRPCRunning = true;
+
     rpc_worker_group = new boost::thread_group();
     for (int i = 0; i < GetArg("-rpcthreads", 4); i++)
         rpc_worker_group->create_thread(boost::bind(&asio::io_service::run, rpc_io_service));
@@ -678,6 +681,7 @@ void StopRPCThreads()
 {
     if (rpc_io_service == NULL) return;
 
+    fRPCRunning = false;
     // First, cancel all timers and acceptors
     // This is not done automatically by ->stop(), and in some cases the destructor of
     // asio::io_service can hang if this is skipped.
@@ -698,6 +702,7 @@ void StopRPCThreads()
     deadlineTimers.clear();
 
     rpc_io_service->stop();
+    cvBlockChange.notify_all();
     if (rpc_worker_group != NULL)
         rpc_worker_group->join_all();
     delete rpc_dummy_work; rpc_dummy_work = NULL;
