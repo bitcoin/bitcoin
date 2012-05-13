@@ -28,9 +28,6 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="warningLabel">
-     <property name="text">
-      <string>TextLabel</string>
-     </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
      </property>
