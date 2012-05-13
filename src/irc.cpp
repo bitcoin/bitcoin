@@ -246,11 +246,12 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
 
+        CNetAddr addrIPv4("1.2.3.4"); // arbitrary IPv4 address to make GetLocal prefer IPv4 addresses
         CService addrLocal;
         string strMyName;
-        if (GetLocal(addrLocal, &addrConnect))
+        if (GetLocal(addrLocal, &addrIPv4))
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
-        else
+        if (strMyName == "")
             strMyName = strprintf("x%u", GetRand(1000000000));
 
         Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
