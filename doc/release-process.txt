@@ -93,6 +93,7 @@
 * create SHA256SUMS for builds, and PGP-sign it
 
 * update bitcoin.org version
+  make sure all OS download links go to the right versions
 
 * update forum version
 
