@@ -27,6 +27,7 @@ namespace boost {
 #include <boost/foreach.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
+#include <stdarg.h>
 
 #ifdef WIN32
 #ifdef _MSC_VER

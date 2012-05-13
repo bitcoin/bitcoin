@@ -3,8 +3,9 @@
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 #include "sync.h"
+#include "util.h"
 
-
+#include <boost/foreach.hpp>
 
 #ifdef DEBUG_LOCKORDER
 //
@@ -40,7 +41,7 @@ private:
 
 typedef std::vector< std::pair<void*, CLockLocation> > LockStack;
 
-static boost::interprocess::interprocess_mutex dd_mutex;
+static boost::mutex dd_mutex;
 static std::map<std::pair<void*, void*>, LockStack> lockorders;
 static boost::thread_specific_ptr<LockStack> lockstack;
 
@@ -66,7 +67,6 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
 
 static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 {
-    bool fOrderOK = true;
     if (lockstack.get() == NULL)
         lockstack.reset(new LockStack);
 
@@ -75,20 +75,21 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
 
-    if (!fTry) BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, (*lockstack))
-    {
-        if (i.first == c) break;
+    if (!fTry) {
+        BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, (*lockstack)) {
+            if (i.first == c) break;
 
-        std::pair<void*, void*> p1 = std::make_pair(i.first, c);
-        if (lockorders.count(p1))
-            continue;
-        lockorders[p1] = (*lockstack);
+            std::pair<void*, void*> p1 = std::make_pair(i.first, c);
+            if (lockorders.count(p1))
+                continue;
+            lockorders[p1] = (*lockstack);
 
-        std::pair<void*, void*> p2 = std::make_pair(c, i.first);
-        if (lockorders.count(p2))
-        {
-            potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
-            break;
+            std::pair<void*, void*> p2 = std::make_pair(c, i.first);
+            if (lockorders.count(p2))
+            {
+                potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
+                break;
+            }
         }
     }
     dd_mutex.unlock();
