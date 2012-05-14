@@ -6,7 +6,7 @@
 #include "keystore.h"
 #include "script.h"
 
-bool CKeyStore::GetPubKey(const CBitcoinAddress &address, CPubKey &vchPubKeyOut) const
+bool CKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
 {
     CKey key;
     if (!GetKey(address, key))
@@ -21,7 +21,7 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     CSecret secret = key.GetSecret(fCompressed);
     {
         LOCK(cs_KeyStore);
-        mapKeys[CBitcoinAddress(key.GetPubKey())] = make_pair(secret, fCompressed);
+        mapKeys[key.GetPubKey().GetID()] = make_pair(secret, fCompressed);
     }
     return true;
 }
@@ -30,12 +30,12 @@ bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
     {
         LOCK(cs_KeyStore);
-        mapScripts[Hash160(redeemScript)] = redeemScript;
+        mapScripts[redeemScript.GetID()] = redeemScript;
     }
     return true;
 }
 
-bool CBasicKeyStore::HaveCScript(const uint160& hash) const
+bool CBasicKeyStore::HaveCScript(const CScriptID& hash) const
 {
     bool result;
     {
@@ -46,7 +46,7 @@ bool CBasicKeyStore::HaveCScript(const uint160& hash) const
 }
 
 
-bool CBasicKeyStore::GetCScript(const uint160 &hash, CScript& redeemScriptOut) const
+bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const
 {
     {
         LOCK(cs_KeyStore);
@@ -147,12 +147,12 @@ bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<
         if (!SetCrypted())
             return false;
 
-        mapCryptedKeys[CBitcoinAddress(vchPubKey)] = make_pair(vchPubKey, vchCryptedSecret);
+        mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
     }
     return true;
 }
 
-bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
+bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
 {
     {
         LOCK(cs_KeyStore);
@@ -177,7 +177,7 @@ bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
     return false;
 }
 
-bool CCryptoKeyStore::GetPubKey(const CBitcoinAddress &address, CPubKey& vchPubKeyOut) const
+bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 {
     {
         LOCK(cs_KeyStore);

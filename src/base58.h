@@ -19,6 +19,7 @@
 #include <vector>
 #include "bignum.h"
 #include "key.h"
+#include "script.h"
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -258,6 +259,18 @@ public:
  * Script-hash-addresses have version 5 (or 196 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
+class CBitcoinAddress;
+class CBitcoinAddressVisitor : public boost::static_visitor<bool>
+{
+private:
+    CBitcoinAddress *addr;
+public:
+    CBitcoinAddressVisitor(CBitcoinAddress *addrIn) : addr(addrIn) { }
+    bool operator()(const CKeyID &id) const;
+    bool operator()(const CScriptID &id) const;
+    bool operator()(const CNoDestination &no) const;
+};
+
 class CBitcoinAddress : public CBase58Data
 {
 public:
@@ -269,21 +282,19 @@ public:
         SCRIPT_ADDRESS_TEST = 196,
     };
 
-    bool SetHash160(const uint160& hash160)
-    {
-        SetData(fTestNet ? PUBKEY_ADDRESS_TEST : PUBKEY_ADDRESS, &hash160, 20);
+    bool Set(const CKeyID &id) {
+        SetData(fTestNet ? PUBKEY_ADDRESS_TEST : PUBKEY_ADDRESS, &id, 20);
         return true;
     }
 
-    void SetPubKey(const CPubKey& vchPubKey)
-    {
-        SetHash160(vchPubKey.GetID());
+    bool Set(const CScriptID &id) {
+        SetData(fTestNet ? SCRIPT_ADDRESS_TEST : SCRIPT_ADDRESS, &id, 20);
+        return true;
     }
 
-    bool SetScriptHash160(const uint160& hash160)
+    bool Set(const CTxDestination &dest)
     {
-        SetData(fTestNet ? SCRIPT_ADDRESS_TEST : SCRIPT_ADDRESS, &hash160, 20);
-        return true;
+        return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
     }
 
     bool IsValid() const
@@ -315,27 +326,14 @@ public:
         }
         return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
     }
-    bool IsScript() const
-    {
-        if (!IsValid())
-            return false;
-        if (fTestNet)
-            return nVersion == SCRIPT_ADDRESS_TEST;
-        return nVersion == SCRIPT_ADDRESS;
-    }
 
     CBitcoinAddress()
     {
     }
 
-    CBitcoinAddress(uint160 hash160In)
+    CBitcoinAddress(const CTxDestination &dest)
     {
-        SetHash160(hash160In);
-    }
-
-    CBitcoinAddress(const CPubKey& vchPubKey)
-    {
-        SetPubKey(vchPubKey);
+        Set(dest);
     }
 
     CBitcoinAddress(const std::string& strAddress)
@@ -348,14 +346,57 @@ public:
         SetString(pszAddress);
     }
 
-    uint160 GetHash160() const
-    {
-        assert(vchData.size() == 20);
-        uint160 hash160;
-        memcpy(&hash160, &vchData[0], 20);
-        return hash160;
+    CTxDestination Get() const {
+        if (!IsValid())
+            return CNoDestination();
+        switch (nVersion) {
+        case PUBKEY_ADDRESS:
+        case PUBKEY_ADDRESS_TEST: {
+            uint160 id;
+            memcpy(&id, &vchData[0], 20);
+            return CKeyID(id);
+        }
+        case SCRIPT_ADDRESS:
+        case SCRIPT_ADDRESS_TEST: {
+            uint160 id;
+            memcpy(&id, &vchData[0], 20);
+            return CScriptID(id);
+        }
+        }
+        return CNoDestination();
+    }
+
+    bool GetKeyID(CKeyID &keyID) const {
+        if (!IsValid())
+            return false;
+        switch (nVersion) {
+        case PUBKEY_ADDRESS:
+        case PUBKEY_ADDRESS_TEST: {
+            uint160 id;
+            memcpy(&id, &vchData[0], 20);
+            keyID = CKeyID(id);
+            return true;
+        }
+        default: return false;
+        }
+    }
+
+    bool IsScript() const {
+        if (!IsValid())
+            return false;
+        switch (nVersion) {
+        case SCRIPT_ADDRESS:
+        case SCRIPT_ADDRESS_TEST: {
+            return true;
+        }
+        default: return false;
+        }
     }
 };
+
+bool inline CBitcoinAddressVisitor::operator()(const CKeyID &id) const         { return addr->Set(id); }
+bool inline CBitcoinAddressVisitor::operator()(const CScriptID &id) const      { return addr->Set(id); }
+bool inline CBitcoinAddressVisitor::operator()(const CNoDestination &id) const { return false; }
 
 /** A base58-encoded secret key */
 class CBitcoinSecret : public CBase58Data
