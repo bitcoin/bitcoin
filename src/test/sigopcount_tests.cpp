@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 21);
 
     CScript p2sh;
-    p2sh.SetPayToScriptHash(s1);
+    p2sh.SetDestination(s1.GetID());
     CScript scriptSig;
     scriptSig << OP_0 << Serialize(s1);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s2.GetSigOpCount(true), 3);
     BOOST_CHECK_EQUAL(s2.GetSigOpCount(false), 20);
 
-    p2sh.SetPayToScriptHash(s2);
+    p2sh.SetDestination(s2.GetID());
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(true), 0);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(false), 0);
     CScript scriptSig2;

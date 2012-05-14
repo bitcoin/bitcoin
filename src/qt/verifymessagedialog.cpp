@@ -14,6 +14,7 @@
 #include "walletmodel.h"
 #include "addresstablemodel.h"
 #include "guiutil.h"
+#include "base58.h"
 
 VerifyMessageDialog::VerifyMessageDialog(AddressTableModel *addressModel, QWidget *parent) :
     QDialog(parent),
@@ -62,7 +63,7 @@ bool VerifyMessageDialog::checkAddress()
         return false;
     }
 
-    CBitcoinAddress address(key.GetPubKey());
+    CBitcoinAddress address(key.GetPubKey().GetID());
     QString qStringAddress = QString::fromStdString(address.ToString());
     ui->lnAddress->setText(qStringAddress);
     ui->copyToClipboard->setEnabled(true);
