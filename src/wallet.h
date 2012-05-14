@@ -32,14 +32,14 @@ class CKeyPool
 {
 public:
     int64 nTime;
-    std::vector<unsigned char> vchPubKey;
+    CPubKey vchPubKey;
 
     CKeyPool()
     {
         nTime = GetTime();
     }
 
-    CKeyPool(const std::vector<unsigned char>& vchPubKeyIn)
+    CKeyPool(const CPubKey& vchPubKeyIn)
     {
         nTime = GetTime();
         vchPubKey = vchPubKeyIn;
@@ -107,14 +107,14 @@ public:
 
     std::map<CBitcoinAddress, std::string> mapAddressBook;
 
-    std::vector<unsigned char> vchDefaultKey;
+    CPubKey vchDefaultKey;
 
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
 
     // keystore implementation
     // Generate a new key
-    std::vector<unsigned char> GenerateNewKey();
+    CPubKey GenerateNewKey();
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& key);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
@@ -123,9 +123,9 @@ public:
     bool LoadMinVersion(int nVersion) { nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
 
     // Adds an encrypted key to the store, and saves it to disk.
-    bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     // Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { SetMinVersion(FEATURE_WALLETCRYPT); return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
+    bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { SetMinVersion(FEATURE_WALLETCRYPT); return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
     bool AddCScript(const CScript& redeemScript);
     bool LoadCScript(const CScript& redeemScript) { return CCryptoKeyStore::AddCScript(redeemScript); }
 
@@ -156,7 +156,7 @@ public:
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);
     void ReturnKey(int64 nIndex);
-    bool GetKeyFromPool(std::vector<unsigned char> &key, bool fAllowReuse=true);
+    bool GetKeyFromPool(CPubKey &key, bool fAllowReuse=true);
     int64 GetOldestKeyPoolTime();
     void GetAllReserveAddresses(std::set<CBitcoinAddress>& setAddress);
 
@@ -252,7 +252,7 @@ public:
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
-    bool SetDefaultKey(const std::vector<unsigned char> &vchPubKey);
+    bool SetDefaultKey(const CPubKey &vchPubKey);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
@@ -280,7 +280,7 @@ class CReserveKey
 protected:
     CWallet* pwallet;
     int64 nIndex;
-    std::vector<unsigned char> vchPubKey;
+    CPubKey vchPubKey;
 public:
     CReserveKey(CWallet* pwalletIn)
     {
@@ -295,7 +295,7 @@ public:
     }
 
     void ReturnKey();
-    std::vector<unsigned char> GetReservedKey();
+    CPubKey GetReservedKey();
     void KeepKey();
 };
 
@@ -640,7 +640,7 @@ public:
 class CAccount
 {
 public:
-    std::vector<unsigned char> vchPubKey;
+    CPubKey vchPubKey;
 
     CAccount()
     {
@@ -649,7 +649,7 @@ public:
 
     void SetNull()
     {
-        vchPubKey.clear();
+        vchPubKey = CPubKey();
     }
 
     IMPLEMENT_SERIALIZE

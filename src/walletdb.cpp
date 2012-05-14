@@ -104,7 +104,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 
 int CWalletDB::LoadWallet(CWallet* pwallet)
 {
-    pwallet->vchDefaultKey.clear();
+    pwallet->vchDefaultKey = CPubKey();
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
     bool fIsEncrypted = false;

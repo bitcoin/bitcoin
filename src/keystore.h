@@ -28,7 +28,7 @@ public:
     virtual bool HaveKey(const CBitcoinAddress &address) const =0;
     virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
     virtual void GetKeys(std::set<CBitcoinAddress> &setAddress) const =0;
-    virtual bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
+    virtual bool GetPubKey(const CBitcoinAddress &address, CPubKey& vchPubKeyOut) const;
 
     // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
     virtual bool AddCScript(const CScript& redeemScript) =0;
@@ -98,7 +98,7 @@ public:
     virtual bool GetCScript(const uint160 &hash, CScript& redeemScriptOut) const;
 };
 
-typedef std::map<CBitcoinAddress, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > CryptedKeyMap;
+typedef std::map<CBitcoinAddress, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
 
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
@@ -146,7 +146,7 @@ public:
 
     bool Lock();
 
-    virtual bool AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKey(const CKey& key);
     bool HaveKey(const CBitcoinAddress &address) const
     {
@@ -159,7 +159,7 @@ public:
         return false;
     }
     bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const;
-    bool GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const;
+    bool GetPubKey(const CBitcoinAddress &address, CPubKey& vchPubKeyOut) const;
     void GetKeys(std::set<CBitcoinAddress> &setAddress) const
     {
         if (!IsCrypted())
