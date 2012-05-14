@@ -57,6 +57,7 @@ enum
 };
 
 void SetLimited(enum Network net, bool fLimited = true);
+bool IsLimited(enum Network net);
 bool IsLimited(const CNetAddr& addr);
 bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
 bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
