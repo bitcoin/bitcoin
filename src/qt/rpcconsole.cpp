@@ -119,7 +119,6 @@ RPCConsole::RPCConsole(QWidget *parent) :
     ui->lineEdit->installEventFilter(this);
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
-    connect(ui->openDebugLogfileButton, SIGNAL(clicked()), this, SLOT(on_openDebugLogfileButton_clicked()));
 
     startExecutor();
 
