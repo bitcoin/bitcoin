@@ -245,14 +245,21 @@ bool AddLocal(const CNetAddr &addr, int nScore)
 /** Make a particular network entirely off-limits (no automatic connects to it) */
 void SetLimited(enum Network net, bool fLimited)
 {
+    if (net == NET_UNROUTABLE)
+        return;
     LOCK(cs_mapLocalHost);
     vfLimited[net] = fLimited;
 }
 
-bool IsLimited(const CNetAddr& addr)
+bool IsLimited(enum Network net)
 {
     LOCK(cs_mapLocalHost);
-    return vfLimited[addr.GetNetwork()];
+    return vfLimited[net];
+}
+
+bool IsLimited(const CNetAddr &addr)
+{
+    return IsLimited(addr.GetNetwork());
 }
 
 /** vote for a local address */
