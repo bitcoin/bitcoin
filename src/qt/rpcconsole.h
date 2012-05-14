@@ -44,7 +44,8 @@ public slots:
     void setNumBlocks(int count);
     /** Go forward or back in history */
     void browseHistory(int offset);
-
+    /** Scroll console view to end */
+    void scrollToEnd();
 signals:
     // For RPC command executor
     void stopExecutor();
