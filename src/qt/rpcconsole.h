@@ -34,6 +34,7 @@ private slots:
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
     void on_openDebugLogfileButton_clicked();
+    void on_append_scrollToEnd();
 
 public slots:
     void clear();
