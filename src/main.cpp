@@ -1438,7 +1438,6 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         if (!block.ConnectBlock(txdb, pindex))
         {
             // Invalid block
-            txdb.TxnAbort();
             return error("Reorganize() : ConnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
         }
 
