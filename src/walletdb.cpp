@@ -13,7 +13,6 @@ using namespace boost;
 
 static uint64 nAccountingEntryNumber = 0;
 
-extern CCriticalSection cs_db;
 extern map<string, int> mapFileUseCount;
 extern void CloseDb(const string& strFile);
 
@@ -350,7 +349,7 @@ void ThreadFlushWalletDB(void* parg)
 
         if (nLastFlushed != nWalletDBUpdated && GetTime() - nLastWalletUpdate >= 2)
         {
-            TRY_LOCK(cs_db,lockDb);
+            TRY_LOCK(bitdb.cs_db,lockDb);
             if (lockDb)
             {
                 // Don't do this if any databases are in use
@@ -373,8 +372,7 @@ void ThreadFlushWalletDB(void* parg)
 
                         // Flush wallet.dat so it's self contained
                         CloseDb(strFile);
-                        dbenv.txn_checkpoint(0, 0, 0);
-                        dbenv.lsn_reset(strFile.c_str(), 0);
+                        bitdb.CheckpointLSN(strFile);
 
                         mapFileUseCount.erase(mi++);
                         printf("Flushed wallet.dat %"PRI64d"ms\n", GetTimeMillis() - nStart);
@@ -392,13 +390,12 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
     while (!fShutdown)
     {
         {
-            LOCK(cs_db);
+            LOCK(bitdb.cs_db);
             if (!mapFileUseCount.count(wallet.strWalletFile) || mapFileUseCount[wallet.strWalletFile] == 0)
             {
                 // Flush log data to the dat file
                 CloseDb(wallet.strWalletFile);
-                dbenv.txn_checkpoint(0, 0, 0);
-                dbenv.lsn_reset(wallet.strWalletFile.c_str(), 0);
+                bitdb.CheckpointLSN(wallet.strWalletFile);
                 mapFileUseCount.erase(wallet.strWalletFile);
 
                 // Copy wallet.dat
