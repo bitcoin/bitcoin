@@ -234,7 +234,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         if (fFileBacked)
         {
             pwalletdbEncryption = new CWalletDB(strWalletFile);
-            pwalletdbEncryption->TxnBegin();
+            if (!pwalletdbEncryption->TxnBegin())
+                return false;
             pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
         }
 
