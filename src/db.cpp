@@ -26,14 +26,11 @@ unsigned int nWalletDBUpdated;
 // CDB
 //
 
-CCriticalSection cs_db;
-static bool fDbEnvInit = false;
-bool fDetachDB = false;
-DbEnv dbenv(0);
+CDBEnv bitdb;
 map<string, int> mapFileUseCount;
 static map<string, Db*> mapDb;
 
-static void EnvShutdown()
+void CDBEnv::EnvShutdown()
 {
     if (!fDbEnvInit)
         return;
@@ -50,21 +47,69 @@ static void EnvShutdown()
     DbEnv(0).remove(GetDataDir().string().c_str(), 0);
 }
 
-class CDBInit
+CDBEnv::CDBEnv() : dbenv(0)
 {
-public:
-    CDBInit()
-    {
-    }
-    ~CDBInit()
-    {
-        EnvShutdown();
-    }
 }
-instance_of_cdbinit;
+
+CDBEnv::~CDBEnv()
+{
+    EnvShutdown();
+}
+
+void CDBEnv::Close()
+{
+    EnvShutdown();
+}
+
+bool CDBEnv::Open(boost::filesystem::path pathEnv_)
+{
+    if (fDbEnvInit)
+        return true;
+
+    if (fShutdown)
+        return false;
+
+    pathEnv = pathEnv_;
+    filesystem::path pathDataDir = pathEnv;
+    filesystem::path pathLogDir = pathDataDir / "database";
+    filesystem::create_directory(pathLogDir);
+    filesystem::path pathErrorFile = pathDataDir / "db.log";
+    printf("dbenv.open LogDir=%s ErrorFile=%s\n", pathLogDir.string().c_str(), pathErrorFile.string().c_str());
+
+    int nDbCache = GetArg("-dbcache", 25);
+    dbenv.set_lg_dir(pathLogDir.string().c_str());
+    dbenv.set_cachesize(nDbCache / 1024, (nDbCache % 1024)*1048576, 1);
+    dbenv.set_lg_bsize(1048576);
+    dbenv.set_lg_max(10485760);
+    dbenv.set_lk_max_locks(10000);
+    dbenv.set_lk_max_objects(10000);
+    dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
+    dbenv.set_flags(DB_AUTO_COMMIT, 1);
+    dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
+    int ret = dbenv.open(pathDataDir.string().c_str(),
+                     DB_CREATE     |
+                     DB_INIT_LOCK  |
+                     DB_INIT_LOG   |
+                     DB_INIT_MPOOL |
+                     DB_INIT_TXN   |
+                     DB_THREAD     |
+                     DB_RECOVER,
+                     S_IRUSR | S_IWUSR);
+    if (ret > 0)
+        return error("CDB() : error %d opening database environment", ret);
+
+    fDbEnvInit = true;
+    return true;
+}
+
+void CDBEnv::CheckpointLSN(std::string strFile)
+{
+    dbenv.txn_checkpoint(0, 0, 0);
+    dbenv.lsn_reset(strFile.c_str(), 0);
+}
 
 
-CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
+CDB::CDB(const char *pszFile, const char* pszMode, bool fHash) : pdb(NULL)
 {
     int ret;
     if (pszFile == NULL)
@@ -77,52 +122,21 @@ CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
         nFlags |= DB_CREATE;
 
     {
-        LOCK(cs_db);
-        if (!fDbEnvInit)
-        {
-            if (fShutdown)
-                return;
-            filesystem::path pathDataDir = GetDataDir();
-            filesystem::path pathLogDir = pathDataDir / "database";
-            filesystem::create_directory(pathLogDir);
-            filesystem::path pathErrorFile = pathDataDir / "db.log";
-            printf("dbenv.open LogDir=%s ErrorFile=%s\n", pathLogDir.string().c_str(), pathErrorFile.string().c_str());
-
-            int nDbCache = GetArg("-dbcache", 25);
-            dbenv.set_lg_dir(pathLogDir.string().c_str());
-            dbenv.set_cachesize(nDbCache / 1024, (nDbCache % 1024)*1048576, 1);
-            dbenv.set_lg_bsize(1048576);
-            dbenv.set_lg_max(10485760);
-            dbenv.set_lk_max_locks(10000);
-            dbenv.set_lk_max_objects(10000);
-            dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
-            dbenv.set_flags(DB_AUTO_COMMIT, 1);
-            dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
-            ret = dbenv.open(pathDataDir.string().c_str(),
-                             DB_CREATE     |
-                             DB_INIT_LOCK  |
-                             DB_INIT_LOG   |
-                             DB_INIT_MPOOL |
-                             DB_INIT_TXN   |
-                             DB_THREAD     |
-                             DB_RECOVER,
-                             S_IRUSR | S_IWUSR);
-            if (ret > 0)
-                throw runtime_error(strprintf("CDB() : error %d opening database environment", ret));
-            fDbEnvInit = true;
-        }
+        LOCK(bitdb.cs_db);
+        if (!bitdb.Open(GetDataDir()))
+            throw runtime_error("env open failed");
 
         strFile = pszFile;
         ++mapFileUseCount[strFile];
         pdb = mapDb[strFile];
         if (pdb == NULL)
         {
-            pdb = new Db(&dbenv, 0);
+            pdb = new Db(&bitdb.dbenv, 0);
 
             ret = pdb->open(NULL,      // Txn pointer
                             pszFile,   // Filename
                             "main",    // Logical db name
-                            DB_BTREE,  // Database type
+                            fHash ? DB_HASH : DB_BTREE, // Database type
                             nFlags,    // Flags
                             0);
 
@@ -131,7 +145,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
                 delete pdb;
                 pdb = NULL;
                 {
-                     LOCK(cs_db);
+                     LOCK(bitdb.cs_db);
                     --mapFileUseCount[strFile];
                 }
                 strFile = "";
@@ -155,9 +169,9 @@ void CDB::Close()
 {
     if (!pdb)
         return;
-    if (!vTxn.empty())
-        vTxn.front()->abort();
-    vTxn.clear();
+    if (activeTxn)
+        activeTxn->abort();
+    activeTxn = NULL;
     pdb = NULL;
 
     // Flush database activity from memory pool to disk log
@@ -171,10 +185,10 @@ void CDB::Close()
     if (strFile == "blkindex.dat" && IsInitialBlockDownload())
         nMinutes = 5;
 
-    dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
+    bitdb.dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
 
     {
-        LOCK(cs_db);
+        LOCK(bitdb.cs_db);
         --mapFileUseCount[strFile];
     }
 }
@@ -182,7 +196,7 @@ void CDB::Close()
 void CloseDb(const string& strFile)
 {
     {
-        LOCK(cs_db);
+        LOCK(bitdb.cs_db);
         if (mapDb[strFile] != NULL)
         {
             // Close the database handle
@@ -199,13 +213,12 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
     while (!fShutdown)
     {
         {
-            LOCK(cs_db);
+            LOCK(bitdb.cs_db);
             if (!mapFileUseCount.count(strFile) || mapFileUseCount[strFile] == 0)
             {
                 // Flush log data to the dat file
                 CloseDb(strFile);
-                dbenv.txn_checkpoint(0, 0, 0);
-                dbenv.lsn_reset(strFile.c_str(), 0);
+                bitdb.CheckpointLSN(strFile);
                 mapFileUseCount.erase(strFile);
 
                 bool fSuccess = true;
@@ -213,7 +226,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                 string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     CDB db(strFile.c_str(), "r");
-                    Db* pdbCopy = new Db(&dbenv, 0);
+                    Db* pdbCopy = new Db(&bitdb.dbenv, 0);
     
                     int ret = pdbCopy->open(NULL,                 // Txn pointer
                                             strFileRes.c_str(),   // Filename
@@ -271,10 +284,10 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                 }
                 if (fSuccess)
                 {
-                    Db dbA(&dbenv, 0);
+                    Db dbA(&bitdb.dbenv, 0);
                     if (dbA.remove(strFile.c_str(), NULL, 0))
                         fSuccess = false;
-                    Db dbB(&dbenv, 0);
+                    Db dbB(&bitdb.dbenv, 0);
                     if (dbB.rename(strFileRes.c_str(), NULL, strFile.c_str(), 0))
                         fSuccess = false;
                 }
@@ -289,11 +302,11 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 }
 
 
-void DBFlush(bool fShutdown)
+void CDBEnv::Flush(bool fShutdown)
 {
     // Flush log data to the actual data file
     //  on all files that are not in use
-    printf("DBFlush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
+    printf("Flush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
     if (!fDbEnvInit)
         return;
     {
@@ -326,7 +339,7 @@ void DBFlush(bool fShutdown)
             if (mapFileUseCount.empty())
             {
                 dbenv.log_archive(&listp, DB_ARCH_REMOVE);
-                EnvShutdown();
+                Close();
             }
         }
     }
@@ -458,16 +471,6 @@ bool CTxDB::ReadDiskTx(COutPoint outpoint, CTransaction& tx)
     return ReadDiskTx(outpoint.hash, tx, txindex);
 }
 
-bool CTxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
-{
-    return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
-}
-
-bool CTxDB::EraseBlockIndex(uint256 hash)
-{
-    return Erase(make_pair(string("blockindex"), hash));
-}
-
 bool CTxDB::ReadHashBestChain(uint256& hashBestChain)
 {
     return Read(string("hashBestChain"), hashBestChain);
@@ -510,62 +513,6 @@ CBlockIndex static * InsertBlockIndex(uint256 hash)
 
 bool CTxDB::LoadBlockIndex()
 {
-    // Get database cursor
-    Dbc* pcursor = GetCursor();
-    if (!pcursor)
-        return false;
-
-    // Load mapBlockIndex
-    unsigned int fFlags = DB_SET_RANGE;
-    loop
-    {
-        // Read next record
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (fFlags == DB_SET_RANGE)
-            ssKey << make_pair(string("blockindex"), uint256(0));
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
-        fFlags = DB_NEXT;
-        if (ret == DB_NOTFOUND)
-            break;
-        else if (ret != 0)
-            return false;
-
-        // Unserialize
-        string strType;
-        ssKey >> strType;
-        if (strType == "blockindex" && !fRequestShutdown)
-        {
-            CDiskBlockIndex diskindex;
-            ssValue >> diskindex;
-
-            // Construct block index object
-            CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-            pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
-            pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
-            pindexNew->nFile          = diskindex.nFile;
-            pindexNew->nBlockPos      = diskindex.nBlockPos;
-            pindexNew->nHeight        = diskindex.nHeight;
-            pindexNew->nVersion       = diskindex.nVersion;
-            pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
-            pindexNew->nTime          = diskindex.nTime;
-            pindexNew->nBits          = diskindex.nBits;
-            pindexNew->nNonce         = diskindex.nNonce;
-
-            // Watch for genesis block
-            if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
-                pindexGenesisBlock = pindexNew;
-
-            if (!pindexNew->CheckIndex())
-                return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
-        }
-        else
-        {
-            break; // if shutdown requested or finished loading block index
-        }
-    }
-    pcursor->close();
-
     if (fRequestShutdown)
         return true;
 
@@ -722,15 +669,81 @@ bool CTxDB::LoadBlockIndex()
         CBlock block;
         if (!block.ReadFromDisk(pindexFork))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
+
+        CBlockIdxDB blkidxdb;              // ugh
         CTxDB txdb;
-        block.SetBestChain(txdb, pindexFork);
+        block.SetBestChain(blkidxdb, txdb, pindexFork);
     }
 
     return true;
 }
 
 
+//
+// CBlockIdxDB
+//
 
+bool CBlockIdxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
+{
+    uint256 hash = blockindex.GetBlockHash();
+    return Write(hash, blockindex, true);  // is overwrite really ok here?
+}
+
+bool CBlockIdxDB::EraseBlockIndex(uint256 hash)
+{
+    return Erase(hash);
+}
+
+bool CBlockIdxDB::LoadBlockIndex()
+{
+    // Get database cursor
+    Dbc* pcursor = GetCursor();
+    if (!pcursor)
+        return false;
+
+    // Load mapBlockIndex
+    loop
+    {
+        // Read next record
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue);
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+            return false;
+
+        // Unserialize
+        CDiskBlockIndex diskindex;
+        ssValue >> diskindex;
+
+        // Construct block index object
+        CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
+        pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
+        pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
+        pindexNew->nFile          = diskindex.nFile;
+        pindexNew->nBlockPos      = diskindex.nBlockPos;
+        pindexNew->nHeight        = diskindex.nHeight;
+        pindexNew->nVersion       = diskindex.nVersion;
+        pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
+        pindexNew->nTime          = diskindex.nTime;
+        pindexNew->nBits          = diskindex.nBits;
+        pindexNew->nNonce         = diskindex.nNonce;
+
+        // Watch for genesis block
+        if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
+            pindexGenesisBlock = pindexNew;
+
+        if (!pindexNew->CheckIndex())
+            return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
+
+        if (fRequestShutdown)
+            break;
+    }
+    pcursor->close();
+
+    return true;
+}
 
 
 //

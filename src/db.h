@@ -25,12 +25,43 @@ class CWallet;
 class CWalletTx;
 
 extern unsigned int nWalletDBUpdated;
-extern bool fDetachDB;
-extern DbEnv dbenv;
 
-extern void DBFlush(bool fShutdown);
 void ThreadFlushWalletDB(void* parg);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
+
+
+class CDBEnv
+{
+private:
+    bool fDetachDB;
+    bool fDbEnvInit;
+    boost::filesystem::path pathEnv;
+
+    void EnvShutdown();
+
+public:
+    mutable CCriticalSection cs_db;
+    DbEnv dbenv;
+
+    CDBEnv();
+    ~CDBEnv();
+    bool Open(boost::filesystem::path pathEnv_);
+    void Close();
+    void Flush(bool fShutdown);
+    void CheckpointLSN(std::string strFile);
+    void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
+
+    DbTxn *TxnBegin(int flags=DB_TXN_NOSYNC)
+    {
+        DbTxn* ptxn = NULL;
+        int ret = dbenv.txn_begin(NULL, &ptxn, flags);
+        if (!ptxn || ret != 0)
+            return NULL;
+        return ptxn;
+    }
+};
+
+extern CDBEnv bitdb;
 
 
 /** RAII class that provides access to a Berkeley database */
@@ -39,10 +70,10 @@ class CDB
 protected:
     Db* pdb;
     std::string strFile;
-    std::vector<DbTxn*> vTxn;
+    DbTxn *activeTxn;
     bool fReadOnly;
 
-    explicit CDB(const char* pszFile, const char* pszMode="r+");
+    explicit CDB(const char* pszFile, const char* pszMode="r+", bool fHash=false);
     ~CDB() { Close(); }
 public:
     void Close();
@@ -66,7 +97,7 @@ protected:
         // Read
         Dbt datValue;
         datValue.set_flags(DB_DBT_MALLOC);
-        int ret = pdb->get(GetTxn(), &datKey, &datValue, 0);
+        int ret = pdb->get(activeTxn, &datKey, &datValue, 0);
         memset(datKey.get_data(), 0, datKey.get_size());
         if (datValue.get_data() == NULL)
             return false;
@@ -102,7 +133,7 @@ protected:
         Dbt datValue(&ssValue[0], ssValue.size());
 
         // Write
-        int ret = pdb->put(GetTxn(), &datKey, &datValue, (fOverwrite ? 0 : DB_NOOVERWRITE));
+        int ret = pdb->put(activeTxn, &datKey, &datValue, (fOverwrite ? 0 : DB_NOOVERWRITE));
 
         // Clear memory in case it was a private key
         memset(datKey.get_data(), 0, datKey.get_size());
@@ -125,7 +156,7 @@ protected:
         Dbt datKey(&ssKey[0], ssKey.size());
 
         // Erase
-        int ret = pdb->del(GetTxn(), &datKey, 0);
+        int ret = pdb->del(activeTxn, &datKey, 0);
 
         // Clear memory
         memset(datKey.get_data(), 0, datKey.get_size());
@@ -145,7 +176,7 @@ protected:
         Dbt datKey(&ssKey[0], ssKey.size());
 
         // Exists
-        int ret = pdb->exists(GetTxn(), &datKey, 0);
+        int ret = pdb->exists(activeTxn, &datKey, 0);
 
         // Clear memory
         memset(datKey.get_data(), 0, datKey.get_size());
@@ -202,46 +233,33 @@ protected:
         return 0;
     }
 
-    DbTxn* GetTxn()
-    {
-        if (!vTxn.empty())
-            return vTxn.back();
-        else
-            return NULL;
-    }
-
 public:
     bool TxnBegin()
     {
-        if (!pdb)
+        if (!pdb || activeTxn)
             return false;
-        DbTxn* ptxn = NULL;
-        int ret = dbenv.txn_begin(GetTxn(), &ptxn, DB_TXN_NOSYNC);
-        if (!ptxn || ret != 0)
+        DbTxn* ptxn = bitdb.TxnBegin();
+        if (!ptxn)
             return false;
-        vTxn.push_back(ptxn);
+        activeTxn = ptxn;
         return true;
     }
 
     bool TxnCommit()
     {
-        if (!pdb)
+        if (!pdb || !activeTxn)
             return false;
-        if (vTxn.empty())
-            return false;
-        int ret = vTxn.back()->commit(0);
-        vTxn.pop_back();
+        int ret = activeTxn->commit(0);
+        activeTxn = NULL;
         return (ret == 0);
     }
 
     bool TxnAbort()
     {
-        if (!pdb)
+        if (!pdb || !activeTxn)
             return false;
-        if (vTxn.empty())
-            return false;
-        int ret = vTxn.back()->abort();
-        vTxn.pop_back();
+        int ret = activeTxn->abort();
+        activeTxn = NULL;
         return (ret == 0);
     }
 
@@ -284,13 +302,26 @@ public:
     bool ReadDiskTx(uint256 hash, CTransaction& tx);
     bool ReadDiskTx(COutPoint outpoint, CTransaction& tx, CTxIndex& txindex);
     bool ReadDiskTx(COutPoint outpoint, CTransaction& tx);
-    bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
-    bool EraseBlockIndex(uint256 hash);
     bool ReadHashBestChain(uint256& hashBestChain);
     bool WriteHashBestChain(uint256 hashBestChain);
     bool ReadBestInvalidWork(CBigNum& bnBestInvalidWork);
     bool WriteBestInvalidWork(CBigNum bnBestInvalidWork);
     bool LoadBlockIndex();
+};
+
+
+/** Access to the block chain index (blkhash.dat) */
+class CBlockIdxDB : public CDB
+{
+public:
+    CBlockIdxDB(const char* pszMode="r+") : CDB("blkhash.dat", pszMode, true) {}
+private:
+    CBlockIdxDB(const CBlockIdxDB&);
+    void operator=(const CBlockIdxDB&);
+public:
+    bool LoadBlockIndex();
+    bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
+    bool EraseBlockIndex(uint256 hash);
 };
 
 
