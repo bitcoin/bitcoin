@@ -346,8 +346,12 @@ bool AppInit2()
 
     if (GetBoolArg("-loadblockindextest"))
     {
+        CBlockIdxDB blkidxdb("r");
+        blkidxdb.LoadBlockIndex();
+
         CTxDB txdb("r");
         txdb.LoadBlockIndex();
+
         PrintBlockTree();
         return false;
     }

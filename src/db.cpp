@@ -109,7 +109,7 @@ void CDBEnv::CheckpointLSN(std::string strFile)
 }
 
 
-CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
+CDB::CDB(const char *pszFile, const char* pszMode, bool fHash) : pdb(NULL)
 {
     int ret;
     if (pszFile == NULL)
@@ -136,7 +136,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
             ret = pdb->open(NULL,      // Txn pointer
                             pszFile,   // Filename
                             "main",    // Logical db name
-                            DB_BTREE,  // Database type
+                            fHash ? DB_HASH : DB_BTREE, // Database type
                             nFlags,    // Flags
                             0);
 
@@ -471,16 +471,6 @@ bool CTxDB::ReadDiskTx(COutPoint outpoint, CTransaction& tx)
     return ReadDiskTx(outpoint.hash, tx, txindex);
 }
 
-bool CTxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
-{
-    return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
-}
-
-bool CTxDB::EraseBlockIndex(uint256 hash)
-{
-    return Erase(make_pair(string("blockindex"), hash));
-}
-
 bool CTxDB::ReadHashBestChain(uint256& hashBestChain)
 {
     return Read(string("hashBestChain"), hashBestChain);
@@ -523,62 +513,6 @@ CBlockIndex static * InsertBlockIndex(uint256 hash)
 
 bool CTxDB::LoadBlockIndex()
 {
-    // Get database cursor
-    Dbc* pcursor = GetCursor();
-    if (!pcursor)
-        return false;
-
-    // Load mapBlockIndex
-    unsigned int fFlags = DB_SET_RANGE;
-    loop
-    {
-        // Read next record
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (fFlags == DB_SET_RANGE)
-            ssKey << make_pair(string("blockindex"), uint256(0));
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
-        fFlags = DB_NEXT;
-        if (ret == DB_NOTFOUND)
-            break;
-        else if (ret != 0)
-            return false;
-
-        // Unserialize
-        string strType;
-        ssKey >> strType;
-        if (strType == "blockindex" && !fRequestShutdown)
-        {
-            CDiskBlockIndex diskindex;
-            ssValue >> diskindex;
-
-            // Construct block index object
-            CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-            pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
-            pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
-            pindexNew->nFile          = diskindex.nFile;
-            pindexNew->nBlockPos      = diskindex.nBlockPos;
-            pindexNew->nHeight        = diskindex.nHeight;
-            pindexNew->nVersion       = diskindex.nVersion;
-            pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
-            pindexNew->nTime          = diskindex.nTime;
-            pindexNew->nBits          = diskindex.nBits;
-            pindexNew->nNonce         = diskindex.nNonce;
-
-            // Watch for genesis block
-            if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
-                pindexGenesisBlock = pindexNew;
-
-            if (!pindexNew->CheckIndex())
-                return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
-        }
-        else
-        {
-            break; // if shutdown requested or finished loading block index
-        }
-    }
-    pcursor->close();
-
     if (fRequestShutdown)
         return true;
 
@@ -735,15 +669,81 @@ bool CTxDB::LoadBlockIndex()
         CBlock block;
         if (!block.ReadFromDisk(pindexFork))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
+
+        CBlockIdxDB blkidxdb;              // ugh
         CTxDB txdb;
-        block.SetBestChain(txdb, pindexFork);
+        block.SetBestChain(blkidxdb, txdb, pindexFork);
     }
 
     return true;
 }
 
 
+//
+// CBlockIdxDB
+//
 
+bool CBlockIdxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
+{
+    uint256 hash = blockindex.GetBlockHash();
+    return Write(hash, blockindex, true);  // is overwrite really ok here?
+}
+
+bool CBlockIdxDB::EraseBlockIndex(uint256 hash)
+{
+    return Erase(hash);
+}
+
+bool CBlockIdxDB::LoadBlockIndex()
+{
+    // Get database cursor
+    Dbc* pcursor = GetCursor();
+    if (!pcursor)
+        return false;
+
+    // Load mapBlockIndex
+    loop
+    {
+        // Read next record
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue);
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+            return false;
+
+        // Unserialize
+        CDiskBlockIndex diskindex;
+        ssValue >> diskindex;
+
+        // Construct block index object
+        CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
+        pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
+        pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
+        pindexNew->nFile          = diskindex.nFile;
+        pindexNew->nBlockPos      = diskindex.nBlockPos;
+        pindexNew->nHeight        = diskindex.nHeight;
+        pindexNew->nVersion       = diskindex.nVersion;
+        pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
+        pindexNew->nTime          = diskindex.nTime;
+        pindexNew->nBits          = diskindex.nBits;
+        pindexNew->nNonce         = diskindex.nNonce;
+
+        // Watch for genesis block
+        if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
+            pindexGenesisBlock = pindexNew;
+
+        if (!pindexNew->CheckIndex())
+            return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
+
+        if (fRequestShutdown)
+            break;
+    }
+    pcursor->close();
+
+    return true;
+}
 
 
 //
