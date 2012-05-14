@@ -11,6 +11,7 @@
 #include <QTextEdit>
 #include <QKeyEvent>
 #include <QUrl>
+#include <QScrollBar>
 
 #include <boost/tokenizer.hpp>
 
@@ -262,6 +263,8 @@ void RPCConsole::on_lineEdit_returnPressed()
             history.removeFirst();
         // Set pointer to end of history
         historyPtr = history.size();
+        // Scroll console view to end
+        scrollToEnd();
     }
 }
 
@@ -314,4 +317,10 @@ void RPCConsole::on_tabWidget_currentChanged(int index)
 void RPCConsole::on_openDebugLogfileButton_clicked()
 {
     GUIUtil::openDebugLogfile();
+}
+
+void RPCConsole::scrollToEnd()
+{
+    QScrollBar *scrollbar = ui->messagesWidget->verticalScrollBar();
+    scrollbar->setValue(scrollbar->maximum());
 }
