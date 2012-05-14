@@ -15,7 +15,6 @@ QRCodeDialog::QRCodeDialog(const QString &addr, const QString &label, bool enabl
 {
     ui->setupUi(this);
     setWindowTitle(QString("%1").arg(address));
-    setAttribute(Qt::WA_DeleteOnClose);
 
     ui->chkReqPayment->setVisible(enableReq);
     ui->lnReqAmount->setVisible(enableReq);
