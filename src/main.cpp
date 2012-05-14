@@ -1845,11 +1845,11 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
     uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
 
-    // Check for 15MB because database could create another 10MB log file at any time
-    if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
+    // Check for nMinDiskSpace bytes (currently 50MB)
+    if (nFreeBytesAvailable < nMinDiskSpace + nAdditionalBytes)
     {
         fShutdown = true;
-        string strMessage = _("Warning: Disk space is low  ");
+        string strMessage = _("Warning: Disk space is low");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
         ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION | wxMODAL);
