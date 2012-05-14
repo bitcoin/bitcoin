@@ -226,6 +226,10 @@ void RPCConsole::message(int category, const QString &message, bool html)
         out += GUIUtil::HtmlEscape(message, true);
     out += "</td></tr></table>";
     ui->messagesWidget->append(out);
+
+    // only for user initiated messages and replies: scroll to the end of the QTextEdit
+    if (category != (MC_ERROR | MC_DEBUG))
+        on_append_scrollToEnd();
 }
 
 void RPCConsole::setNumConnections(int count)
@@ -314,4 +318,11 @@ void RPCConsole::on_tabWidget_currentChanged(int index)
 void RPCConsole::on_openDebugLogfileButton_clicked()
 {
     GUIUtil::openDebugLogfile();
+}
+
+void RPCConsole::on_append_scrollToEnd()
+{
+    QTextCursor cursor = ui->messagesWidget->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    ui->messagesWidget->setTextCursor(cursor);
 }
