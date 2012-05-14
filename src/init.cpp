@@ -619,9 +619,11 @@ bool AppInit2()
         } else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
-            fBound |= Bind(CService(inaddr_any, GetListenPort()));
+            if (!IsLimited(NET_IPV4))
+                fBound |= Bind(CService(inaddr_any, GetListenPort()));
 #ifdef USE_IPV6
-            fBound |= Bind(CService(in6addr_any, GetListenPort()));
+            if (!IsLimited(NET_IPV6))
+                fBound |= Bind(CService(in6addr_any, GetListenPort()));
 #endif
         }
         if (!fBound)
