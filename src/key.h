@@ -9,7 +9,9 @@
 #include <vector>
 
 #include "allocators.h"
+#include "serialize.h"
 #include "uint256.h"
+#include "util.h"
 
 #include <openssl/ec.h> // for EC_KEY definition
 
@@ -40,6 +42,39 @@ class key_error : public std::runtime_error
 {
 public:
     explicit key_error(const std::string& str) : std::runtime_error(str) {}
+};
+
+class CPubKey {
+private:
+    std::vector<unsigned char> vchPubKey;
+    friend class CKey;
+
+public:
+    CPubKey() { }
+    CPubKey(const std::vector<unsigned char> &vchPubKeyIn) : vchPubKey(vchPubKeyIn) { }
+    friend bool operator==(const CPubKey &a, const CPubKey &b) { return a.vchPubKey == b.vchPubKey; }
+    friend bool operator!=(const CPubKey &a, const CPubKey &b) { return a.vchPubKey != b.vchPubKey; }
+    friend bool operator<(const CPubKey &a, const CPubKey &b) { return a.vchPubKey < b.vchPubKey; }
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(vchPubKey);
+    )
+
+    uint160 GetID() const {
+        return Hash160(vchPubKey);
+    }
+
+    uint256 GetHash() const {
+        return Hash(vchPubKey.begin(), vchPubKey.end());
+    }
+
+    bool IsValid() const {
+        return vchPubKey.size() == 33 || vchPubKey.size() == 65;
+    }
+
+    std::vector<unsigned char> Raw() const {
+        return vchPubKey;
+    }
 };
 
 
@@ -78,8 +113,8 @@ public:
     bool SetSecret(const CSecret& vchSecret, bool fCompressed = false);
     CSecret GetSecret(bool &fCompressed) const;
     CPrivKey GetPrivKey() const;
-    bool SetPubKey(const std::vector<unsigned char>& vchPubKey);
-    std::vector<unsigned char> GetPubKey() const;
+    bool SetPubKey(const CPubKey& vchPubKey);
+    CPubKey GetPubKey() const;
 
     bool Sign(uint256 hash, std::vector<unsigned char>& vchSig);
 

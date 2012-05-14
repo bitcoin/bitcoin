@@ -331,7 +331,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             editStatus = WALLET_UNLOCK_FAILURE;
             return QString();
         }
-        std::vector<unsigned char> newKey;
+        CPubKey newKey;
         if(!wallet->GetKeyFromPool(newKey, true))
         {
             editStatus = KEY_GENERATION_FAILURE;

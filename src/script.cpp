@@ -1374,7 +1374,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
             return false;
         else
         {
-            valtype vch;
+            CPubKey vch;
             keystore.GetPubKey(address, vch);
             scriptSigRet << vch;
         }

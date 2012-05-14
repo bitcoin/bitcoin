@@ -320,6 +320,12 @@ public:
         return *this;
     }
 
+    CScript& operator<<(const CPubKey& key)
+    {
+        std::vector<unsigned char> vchKey = key.Raw();
+        return (*this) << vchKey;
+    }
+
     CScript& operator<<(const CBigNum& b)
     {
         *this << b.getvch();

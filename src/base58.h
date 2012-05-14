@@ -275,9 +275,9 @@ public:
         return true;
     }
 
-    void SetPubKey(const std::vector<unsigned char>& vchPubKey)
+    void SetPubKey(const CPubKey& vchPubKey)
     {
-        SetHash160(Hash160(vchPubKey));
+        SetHash160(vchPubKey.GetID());
     }
 
     bool SetScriptHash160(const uint160& hash160)
@@ -333,7 +333,7 @@ public:
         SetHash160(hash160In);
     }
 
-    CBitcoinAddress(const std::vector<unsigned char>& vchPubKey)
+    CBitcoinAddress(const CPubKey& vchPubKey)
     {
         SetPubKey(vchPubKey);
     }

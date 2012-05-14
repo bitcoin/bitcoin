@@ -6,7 +6,7 @@
 #include "keystore.h"
 #include "script.h"
 
-bool CKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char> &vchPubKeyOut) const
+bool CKeyStore::GetPubKey(const CBitcoinAddress &address, CPubKey &vchPubKeyOut) const
 {
     CKey key;
     if (!GetKey(address, key))
@@ -97,10 +97,10 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         for (; mi != mapCryptedKeys.end(); ++mi)
         {
-            const std::vector<unsigned char> &vchPubKey = (*mi).second.first;
+            const CPubKey &vchPubKey = (*mi).second.first;
             const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
             CSecret vchSecret;
-            if(!DecryptSecret(vMasterKeyIn, vchCryptedSecret, Hash(vchPubKey.begin(), vchPubKey.end()), vchSecret))
+            if(!DecryptSecret(vMasterKeyIn, vchCryptedSecret, vchPubKey.GetHash(), vchSecret))
                 return false;
             if (vchSecret.size() != 32)
                 return false;
@@ -128,9 +128,9 @@ bool CCryptoKeyStore::AddKey(const CKey& key)
             return false;
 
         std::vector<unsigned char> vchCryptedSecret;
-        std::vector<unsigned char> vchPubKey = key.GetPubKey();
+        CPubKey vchPubKey = key.GetPubKey();
         bool fCompressed;
-        if (!EncryptSecret(vMasterKey, key.GetSecret(fCompressed), Hash(vchPubKey.begin(), vchPubKey.end()), vchCryptedSecret))
+        if (!EncryptSecret(vMasterKey, key.GetSecret(fCompressed), vchPubKey.GetHash(), vchCryptedSecret))
             return false;
 
         if (!AddCryptedKey(key.GetPubKey(), vchCryptedSecret))
@@ -140,7 +140,7 @@ bool CCryptoKeyStore::AddKey(const CKey& key)
 }
 
 
-bool CCryptoKeyStore::AddCryptedKey(const std::vector<unsigned char> &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
+bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
     {
         LOCK(cs_KeyStore);
@@ -162,10 +162,10 @@ bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
         {
-            const std::vector<unsigned char> &vchPubKey = (*mi).second.first;
+            const CPubKey &vchPubKey = (*mi).second.first;
             const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
             CSecret vchSecret;
-            if (!DecryptSecret(vMasterKey, vchCryptedSecret, Hash(vchPubKey.begin(), vchPubKey.end()), vchSecret))
+            if (!DecryptSecret(vMasterKey, vchCryptedSecret, vchPubKey.GetHash(), vchSecret))
                 return false;
             if (vchSecret.size() != 32)
                 return false;
@@ -177,7 +177,7 @@ bool CCryptoKeyStore::GetKey(const CBitcoinAddress &address, CKey& keyOut) const
     return false;
 }
 
-bool CCryptoKeyStore::GetPubKey(const CBitcoinAddress &address, std::vector<unsigned char>& vchPubKeyOut) const
+bool CCryptoKeyStore::GetPubKey(const CBitcoinAddress &address, CPubKey& vchPubKeyOut) const
 {
     {
         LOCK(cs_KeyStore);
@@ -207,10 +207,10 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
             CKey key;
             if (!key.SetSecret(mKey.second.first, mKey.second.second))
                 return false;
-            const std::vector<unsigned char> vchPubKey = key.GetPubKey();
+            const CPubKey vchPubKey = key.GetPubKey();
             std::vector<unsigned char> vchCryptedSecret;
             bool fCompressed;
-            if (!EncryptSecret(vMasterKeyIn, key.GetSecret(fCompressed), Hash(vchPubKey.begin(), vchPubKey.end()), vchCryptedSecret))
+            if (!EncryptSecret(vMasterKeyIn, key.GetSecret(fCompressed), vchPubKey.GetHash(), vchCryptedSecret))
                 return false;
             if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
                 return false;

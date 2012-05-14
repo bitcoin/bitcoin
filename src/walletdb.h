@@ -59,27 +59,27 @@ public:
         return Erase(std::make_pair(std::string("tx"), hash));
     }
 
-    bool ReadKey(const std::vector<unsigned char>& vchPubKey, CPrivKey& vchPrivKey)
+    bool ReadKey(const CPubKey& vchPubKey, CPrivKey& vchPrivKey)
     {
         vchPrivKey.clear();
-        return Read(std::make_pair(std::string("key"), vchPubKey), vchPrivKey);
+        return Read(std::make_pair(std::string("key"), vchPubKey.Raw()), vchPrivKey);
     }
 
-    bool WriteKey(const std::vector<unsigned char>& vchPubKey, const CPrivKey& vchPrivKey)
+    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey)
     {
         nWalletDBUpdated++;
-        return Write(std::make_pair(std::string("key"), vchPubKey), vchPrivKey, false);
+        return Write(std::make_pair(std::string("key"), vchPubKey.Raw()), vchPrivKey, false);
     }
 
-    bool WriteCryptedKey(const std::vector<unsigned char>& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, bool fEraseUnencryptedKey = true)
+    bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, bool fEraseUnencryptedKey = true)
     {
         nWalletDBUpdated++;
-        if (!Write(std::make_pair(std::string("ckey"), vchPubKey), vchCryptedSecret, false))
+        if (!Write(std::make_pair(std::string("ckey"), vchPubKey.Raw()), vchCryptedSecret, false))
             return false;
         if (fEraseUnencryptedKey)
         {
-            Erase(std::make_pair(std::string("key"), vchPubKey));
-            Erase(std::make_pair(std::string("wkey"), vchPubKey));
+            Erase(std::make_pair(std::string("key"), vchPubKey.Raw()));
+            Erase(std::make_pair(std::string("wkey"), vchPubKey.Raw()));
         }
         return true;
     }
@@ -120,10 +120,10 @@ public:
         return Read(std::string("defaultkey"), vchPubKey);
     }
 
-    bool WriteDefaultKey(const std::vector<unsigned char>& vchPubKey)
+    bool WriteDefaultKey(const CPubKey& vchPubKey)
     {
         nWalletDBUpdated++;
-        return Write(std::string("defaultkey"), vchPubKey);
+        return Write(std::string("defaultkey"), vchPubKey.Raw());
     }
 
     bool ReadPool(int64 nPool, CKeyPool& keypool)

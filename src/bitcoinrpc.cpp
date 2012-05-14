@@ -590,7 +590,7 @@ Value getnewaddress(const Array& params, bool fHelp)
         pwalletMain->TopUpKeyPool();
 
     // Generate a new key that is added to wallet
-    std::vector<unsigned char> newKey;
+    CPubKey newKey;
     if (!pwalletMain->GetKeyFromPool(newKey, false))
         throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
     CBitcoinAddress address(newKey);
@@ -611,12 +611,12 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     bool bKeyUsed = false;
 
     // Check if the current key has been used
-    if (!account.vchPubKey.empty())
+    if (account.vchPubKey.IsValid())
     {
         CScript scriptPubKey;
         scriptPubKey.SetBitcoinAddress(account.vchPubKey);
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-             it != pwalletMain->mapWallet.end() && !account.vchPubKey.empty();
+             it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
              ++it)
         {
             const CWalletTx& wtx = (*it).second;
@@ -627,7 +627,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     }
 
     // Generate a new key
-    if (account.vchPubKey.empty() || bForceNew || bKeyUsed)
+    if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
     {
         if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
             throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
@@ -1203,19 +1203,19 @@ Value addmultisigaddress(const Array& params, bool fHelp)
             if (address.IsScript())
                 throw runtime_error(
                     strprintf("%s is a pay-to-script address",ks.c_str()));
-            std::vector<unsigned char> vchPubKey;
+            CPubKey vchPubKey;
             if (!pwalletMain->GetPubKey(address, vchPubKey))
                 throw runtime_error(
                     strprintf("no full public key for address %s",ks.c_str()));
-            if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
                 throw runtime_error(" Invalid public key: "+ks);
         }
 
         // Case 2: hex public key
         else if (IsHex(ks))
         {
-            vector<unsigned char> vchPubKey = ParseHex(ks);
-            if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
+            CPubKey vchPubKey(ParseHex(ks));
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
                 throw runtime_error(" Invalid public key: "+ks);
         }
         else
@@ -1954,9 +1954,9 @@ Value validateaddress(const Array& params, bool fHelp)
         if (pwalletMain->HaveKey(address))
         {
             ret.push_back(Pair("ismine", true));
-            std::vector<unsigned char> vchPubKey;
+            CPubKey vchPubKey;
             pwalletMain->GetPubKey(address, vchPubKey);
-            ret.push_back(Pair("pubkey", HexStr(vchPubKey)));
+            ret.push_back(Pair("pubkey", HexStr(vchPubKey.Raw())));
             CKey key;
             key.SetPubKey(vchPubKey);
             ret.push_back(Pair("iscompressed", key.IsCompressed()));
