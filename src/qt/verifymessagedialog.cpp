@@ -22,7 +22,16 @@ VerifyMessageDialog::VerifyMessageDialog(AddressTableModel *addressModel, QWidge
 {
     ui->setupUi(this);
 
+#if (QT_VERSION >= 0x040700)
+    /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+    ui->lnSig->setPlaceholderText(tr("Enter Bitcoin signature"));
+    ui->lnAddress->setPlaceholderText(tr("Click \"Apply\" to obtain address"));
+#endif
+
     GUIUtil::setupAddressWidget(ui->lnAddress, this);
+    ui->lnAddress->installEventFilter(this);
+
+    ui->edMessage->setFocus();
 }
 
 VerifyMessageDialog::~VerifyMessageDialog()
@@ -63,13 +72,33 @@ bool VerifyMessageDialog::checkAddress()
     return true;
 }
 
-void VerifyMessageDialog::on_buttonBox_clicked(QAbstractButton *button)
+void VerifyMessageDialog::on_verifyMessage_clicked()
 {
-    if(ui->buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
-        checkAddress();
+    checkAddress();
 }
 
 void VerifyMessageDialog::on_copyToClipboard_clicked()
 {
     QApplication::clipboard()->setText(ui->lnAddress->text());
+}
+
+void VerifyMessageDialog::on_clearButton_clicked()
+{
+    ui->edMessage->clear();
+    ui->lnSig->clear();
+    ui->lnAddress->clear();
+    ui->lblStatus->clear();
+
+    ui->edMessage->setFocus();
+}
+
+bool VerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
+{
+    if(object == ui->lnAddress && (event->type() == QEvent::MouseButtonPress ||
+                                   event->type() == QEvent::FocusIn))
+    {
+        ui->lnAddress->selectAll();
+        return true;
+    }
+    return QDialog::eventFilter(object, event);
 }
