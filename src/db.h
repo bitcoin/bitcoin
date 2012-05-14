@@ -25,12 +25,34 @@ class CWallet;
 class CWalletTx;
 
 extern unsigned int nWalletDBUpdated;
-extern bool fDetachDB;
-extern DbEnv dbenv;
 
-extern void DBFlush(bool fShutdown);
 void ThreadFlushWalletDB(void* parg);
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
+
+
+class CDBEnv
+{
+private:
+    bool fDetachDB;
+    bool fDbEnvInit;
+    boost::filesystem::path pathEnv;
+
+    void EnvShutdown();
+
+public:
+    mutable CCriticalSection cs_db;
+    DbEnv dbenv;
+
+    CDBEnv();
+    ~CDBEnv();
+    bool Open(boost::filesystem::path pathEnv_);
+    void Close();
+    void Flush(bool fShutdown);
+    void CheckpointLSN(std::string strFile);
+    void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
+};
+
+extern CDBEnv bitdb;
 
 
 /** RAII class that provides access to a Berkeley database */
@@ -216,7 +238,7 @@ public:
         if (!pdb)
             return false;
         DbTxn* ptxn = NULL;
-        int ret = dbenv.txn_begin(GetTxn(), &ptxn, DB_TXN_NOSYNC);
+        int ret = bitdb.dbenv.txn_begin(GetTxn(), &ptxn, DB_TXN_NOSYNC);
         if (!ptxn || ret != 0)
             return false;
         vTxn.push_back(ptxn);
