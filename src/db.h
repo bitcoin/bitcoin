@@ -50,6 +50,15 @@ public:
     void Flush(bool fShutdown);
     void CheckpointLSN(std::string strFile);
     void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
+
+    DbTxn *TxnBegin(DbTxn *baseTxn, int flags=DB_TXN_NOSYNC)
+    {
+        DbTxn* ptxn = NULL;
+        int ret = dbenv.txn_begin(baseTxn, &ptxn, flags);
+        if (!ptxn || ret != 0)
+            return NULL;
+        return ptxn;
+    }
 };
 
 extern CDBEnv bitdb;
@@ -237,9 +246,8 @@ public:
     {
         if (!pdb)
             return false;
-        DbTxn* ptxn = NULL;
-        int ret = bitdb.dbenv.txn_begin(GetTxn(), &ptxn, DB_TXN_NOSYNC);
-        if (!ptxn || ret != 0)
+        DbTxn* ptxn = bitdb.TxnBegin(GetTxn());
+        if (!ptxn)
             return false;
         vTxn.push_back(ptxn);
         return true;
