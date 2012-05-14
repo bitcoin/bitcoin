@@ -160,7 +160,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/qtipcserver.h \
     src/allocators.h \
     src/ui_interface.h \
-    src/qt/rpcconsole.h
+    src/qt/rpcconsole.h \
+    src/qt/verifymessagedialog.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -216,7 +217,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/protocol.cpp \
     src/qt/notificator.cpp \
     src/qt/qtipcserver.cpp \
-    src/qt/rpcconsole.cpp
+    src/qt/rpcconsole.cpp \
+    src/qt/verifymessagedialog.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -231,7 +233,8 @@ FORMS += \
     src/qt/forms/overviewpage.ui \
     src/qt/forms/sendcoinsentry.ui \
     src/qt/forms/askpassphrasedialog.ui \
-    src/qt/forms/rpcconsole.ui
+    src/qt/forms/rpcconsole.ui \
+    src/qt/forms/verifymessagedialog.ui
 
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h
