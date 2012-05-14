@@ -204,7 +204,7 @@ std::string HelpMessage()
         "  -connect=<ip>          " + _("Connect only to the specified node") + "\n" +
         "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n" +
         "  -externalip=<ip>       " + _("Specify your own public address") + "\n" +
-        "  -blocknet=<net>        " + _("Do not connect to addresses in network <net> (IPv4 or IPv6)") + "\n" +
+        "  -onlynet=<net>         " + _("Only connect to nodes in network <net> (IPv4 or IPv6)") + "\n" +
         "  -discover              " + _("Try to discover public IP address (default: 1)") + "\n" +
         "  -irc                   " + _("Find peers using internet relay chat (default: 0)") + "\n" +
         "  -listen                " + _("Accept connections from outside (default: 1)") + "\n" +
@@ -572,12 +572,18 @@ bool AppInit2()
         SoftSetBoolArg("-discover", false);
     }
 
-    if (mapArgs.count("-blocknet")) {
-        BOOST_FOREACH(std::string snet, mapMultiArgs["-blocknet"]) {
+    if (mapArgs.count("-onlynet")) {
+        std::set<enum Network> nets;
+        BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
-                return InitError(strprintf(_("Unknown network specified in -blocknet: '%s'"), snet.c_str()));
-            SetLimited(net);
+                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet.c_str()));
+            nets.insert(net);
+        }
+        for (int n = 0; n < NET_MAX; n++) {
+            enum Network net = (enum Network)n;
+            if (!nets.count(net))
+                SetLimited(net);
         }
     }
 
@@ -605,21 +611,23 @@ bool AppInit2()
         std::string strError;
         if (mapArgs.count("-bind")) {
             BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
-                CService addrBind(strBind, GetListenPort(), false);
-                if (!addrBind.IsValid())
+                CService addrBind;
+                if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(strprintf(_("Cannot resolve -bind address: '%s'"), strBind.c_str()));
                 fBound |= Bind(addrBind);
             }
         } else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
-            fBound |= Bind(CService(inaddr_any, GetListenPort()));
+            if (!IsLimited(NET_IPV4))
+                fBound |= Bind(CService(inaddr_any, GetListenPort()));
 #ifdef USE_IPV6
-            fBound |= Bind(CService(in6addr_any, GetListenPort()));
+            if (!IsLimited(NET_IPV6))
+                fBound |= Bind(CService(in6addr_any, GetListenPort()));
 #endif
         }
         if (!fBound)
-            return false;
+            return InitError(_("Not listening on any port"));
     }
 
     if (mapArgs.count("-externalip"))
