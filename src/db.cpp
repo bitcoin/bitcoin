@@ -169,9 +169,9 @@ void CDB::Close()
 {
     if (!pdb)
         return;
-    if (!vTxn.empty())
-        vTxn.front()->abort();
-    vTxn.clear();
+    if (activeTxn)
+        activeTxn->abort();
+    activeTxn = NULL;
     pdb = NULL;
 
     // Flush database activity from memory pool to disk log
