@@ -499,7 +499,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         if (mapNextTx.count(outpoint))
         {
             // Disable replacement feature for now
-            return false;
+            //return false; // enable this
 
             // Allow replacing with a newer version of the same transaction
             if (i != 0)
