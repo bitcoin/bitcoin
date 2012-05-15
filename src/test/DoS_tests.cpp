@@ -13,10 +13,10 @@
 #include <stdint.h>
 
 // Tests this internal-to-main.cpp method:
-extern void AddOrphanTx(const CDataStream& vMsg);
+extern bool AddOrphanTx(const CDataStream& vMsg);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 extern std::map<uint256, CDataStream*> mapOrphanTransactions;
-extern std::multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
+extern std::map<uint256, std::map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 
 CService ip(uint32_t i)
 {
@@ -182,6 +182,32 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CDataStream ds(SER_DISK, CLIENT_VERSION);
         ds << tx;
         AddOrphanTx(ds);
+    }
+
+    // This really-big orphan should be ignored:
+    for (int i = 0; i < 10; i++)
+    {
+        CTransaction txPrev = RandomOrphan();
+
+        CTransaction tx;
+        tx.vout.resize(1);
+        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
+        tx.vin.resize(500);
+        for (int j = 0; j < tx.vin.size(); j++)
+        {
+            tx.vin[j].prevout.n = j;
+            tx.vin[j].prevout.hash = txPrev.GetHash();
+        }
+        SignSignature(keystore, txPrev, tx, 0);
+        // Re-use same signature for other inputs
+        // (they don't have to be valid for this test)
+        for (int j = 1; j < tx.vin.size(); j++)
+            tx.vin[j].scriptSig = tx.vin[0].scriptSig;
+
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        ds << tx;
+        BOOST_CHECK(!AddOrphanTx(ds));
     }
 
     // Test LimitOrphanTxSize() function:
