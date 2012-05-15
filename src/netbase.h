@@ -143,6 +143,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 // Settings
 extern int nSocksVersion;
 extern int fUseProxy;
+extern int fProxyToo;
 extern bool fProxyNameLookup;
 extern bool fNameLookup;
 extern CService addrProxy;

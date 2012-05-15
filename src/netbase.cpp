@@ -18,6 +18,7 @@ using namespace std;
 // Settings
 int nSocksVersion = 5;
 int fUseProxy = false;
+int fProxyToo = false;
 bool fProxyNameLookup = false;
 bool fNameLookup = false;
 CService addrProxy("127.0.0.1",9050);
@@ -434,7 +435,8 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
 bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
 {
     SOCKET hSocket = INVALID_SOCKET;
-    bool fProxy = (fUseProxy && addrDest.IsRoutable() && !vfNoProxy[addrDest.GetNetwork()]);
+    bool fProxy = ((fUseProxy || (fProxyToo && rand() %2 == 0)) &&
+      addrDest.IsRoutable() && !vfNoProxy[addrDest.GetNetwork()]);
 
     if (!ConnectSocketDirectly(fProxy ? addrProxy : addrDest, hSocket, nTimeout))
         return false;

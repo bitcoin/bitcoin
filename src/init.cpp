@@ -565,6 +565,15 @@ bool AppInit2()
         }
     }
 
+    if (mapArgs.count("-proxytoo")) {
+        fProxyToo = true;
+        addrProxy = CService(mapArgs["-proxytoo"], 9050);
+        if (!addrProxy.IsValid()) {
+            ThreadSafeMessageBox(_("Invalid -proxytoo address"), _("Bitcoin"), wxOK | wxMODAL);
+            return false;
+        }
+    }
+
     if (mapArgs.count("-connect"))
         SoftSetBoolArg("-dnsseed", false);
 
