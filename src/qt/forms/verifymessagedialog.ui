@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Enter the message and signature below (be careful to correctly copy newlines, spaces, tabs, and other invisible characters), and press apply to obtain the bitcoin address used to sign the message.</string>
+      <string>Enter the message and signature below (be careful to correctly copy newlines, spaces, tabs and other invisible characters) to obtain the Bitcoin address used to sign the message.</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -35,9 +35,6 @@
      <property name="text">
       <string/>
      </property>
-     <property name="placeholderText">
-      <string>Signature</string>
-     </property>
     </widget>
    </item>
    <item>
@@ -47,9 +44,6 @@
      </property>
      <property name="readOnly">
       <bool>true</bool>
-     </property>
-     <property name="placeholderText">
-      <string>Address</string>
      </property>
     </widget>
    </item>
@@ -62,6 +56,20 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="verifyMessage">
+       <property name="toolTip">
+        <string>Verify a message and obtain the Bitcoin address used to sign the message</string>
+       </property>
+       <property name="text">
+        <string>&amp;Verify Message</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/transaction_0</normaloff>:/icons/transaction_0</iconset>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="copyToClipboard">
        <property name="enabled">
@@ -80,6 +88,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="clearButton">
+       <property name="toolTip">
+        <string>Reset all verify message fields</string>
+       </property>
+       <property name="text">
+        <string>Clear &amp;All</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -92,19 +114,6 @@
        </property>
       </spacer>
      </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Apply|QDialogButtonBox::Close</set>
-       </property>
-       <property name="centerButtons">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
   </layout>
@@ -112,38 +121,5 @@
  <resources>
   <include location="../bitcoin.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>VerifyMessageDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>VerifyMessageDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
