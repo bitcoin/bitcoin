@@ -2151,6 +2151,11 @@ string GetWarnings(string strFor)
     }
 
     // Longer invalid proof-of-work chain
+    if (pindexBest && bnBestInvalidWork > bnBestChainWork)
+    {
+        nPriority = 1500;
+        strStatusBar = strRPC = "WARNING: A longer invalid chain currently exists.";
+    }
     if (pindexBest && bnBestInvalidWork > bnBestChainWork + pindexBest->GetBlockWork() * 6)
     {
         nPriority = 2000;
