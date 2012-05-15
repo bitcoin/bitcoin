@@ -43,7 +43,7 @@ map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
 
 map<uint256, CDataStream*> mapOrphanTransactions;
-multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
+map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
@@ -160,17 +160,37 @@ void static ResendWalletTransactions()
 // mapOrphanTransactions
 //
 
-void AddOrphanTx(const CDataStream& vMsg)
+bool AddOrphanTx(const CDataStream& vMsg)
 {
     CTransaction tx;
     CDataStream(vMsg) >> tx;
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
-        return;
+        return false;
 
-    CDataStream* pvMsg = mapOrphanTransactions[hash] = new CDataStream(vMsg);
+    CDataStream* pvMsg = new CDataStream(vMsg);
+
+    // Ignore big transactions, to avoid a
+    // send-big-orphans memory exhaustion attack. If a peer has a legitimate
+    // large transaction with a missing parent then we assume
+    // it will rebroadcast it later, after the parent transaction(s)
+    // have been mined or received.
+    // 10,000 orphans, each of which is at most 5,000 bytes big is
+    // at most 500 megabytes of orphans:
+    if (pvMsg->size() > 5000)
+    {
+        delete pvMsg;
+        printf("ignoring large orphan tx (size: %u, hash: %s)\n", pvMsg->size(), hash.ToString().substr(0,10).c_str());
+        return false;
+    }
+
+    mapOrphanTransactions[hash] = pvMsg;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        mapOrphanTransactionsByPrev.insert(make_pair(txin.prevout.hash, pvMsg));
+        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pvMsg));
+
+    printf("stored orphan tx %s (mapsz %u)\n", hash.ToString().substr(0,10).c_str(),
+        mapOrphanTransactions.size());
+    return true;
 }
 
 void static EraseOrphanTx(uint256 hash)
@@ -182,14 +202,9 @@ void static EraseOrphanTx(uint256 hash)
     CDataStream(*pvMsg) >> tx;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        for (multimap<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev.lower_bound(txin.prevout.hash);
-             mi != mapOrphanTransactionsByPrev.upper_bound(txin.prevout.hash);)
-        {
-            if ((*mi).second == pvMsg)
-                mapOrphanTransactionsByPrev.erase(mi++);
-            else
-                mi++;
-        }
+        mapOrphanTransactionsByPrev[txin.prevout.hash].erase(hash);
+        if (mapOrphanTransactionsByPrev[txin.prevout.hash].empty())
+            mapOrphanTransactionsByPrev.erase(txin.prevout.hash);
     }
     delete pvMsg;
     mapOrphanTransactions.erase(hash);
@@ -2569,8 +2584,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             for (unsigned int i = 0; i < vWorkQueue.size(); i++)
             {
                 uint256 hashPrev = vWorkQueue[i];
-                for (multimap<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev.lower_bound(hashPrev);
-                     mi != mapOrphanTransactionsByPrev.upper_bound(hashPrev);
+                for (map<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
+                     mi != mapOrphanTransactionsByPrev[hashPrev].end();
                      ++mi)
                 {
                     const CDataStream& vMsg = *((*mi).second);
@@ -2594,7 +2609,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         else if (fMissingInputs)
         {
-            printf("storing orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
             AddOrphanTx(vMsg);
 
             // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
