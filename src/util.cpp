@@ -147,7 +147,7 @@ void RandAddSeedPerfmon()
     {
         RAND_add(pdata, nSize, nSize/100.0);
         memset(pdata, 0, nSize);
-        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M", GetTime()).c_str(), nSize);
+        printf("RandAddSeed() %d bytes\n", nSize);
     }
 #endif
 }

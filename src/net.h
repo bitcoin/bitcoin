@@ -319,10 +319,8 @@ public:
         nHeaderStart = vSend.size();
         vSend << CMessageHeader(pszCommand, 0);
         nMessageStart = vSend.size();
-        if (fDebug) {
-            printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+        if (fDebug)
             printf("sending: %s ", pszCommand);
-        }
     }
 
     void AbortMessage()
