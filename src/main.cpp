@@ -2267,10 +2267,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     static map<CService, vector<unsigned char> > mapReuseKey;
     RandAddSeedPerfmon();
-    if (fDebug) {
-        printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+    if (fDebug)
         printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
-    }
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {
         printf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -3473,7 +3471,6 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     printf("BitcoinMiner:\n");
     printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
-    printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
 
     // Found a solution
@@ -3614,7 +3611,6 @@ void static BitcoinMiner(CWallet *pwallet)
                         if (GetTime() - nLogTime > 30 * 60)
                         {
                             nLogTime = GetTime();
-                            printf("%s ", DateTimeStrFormat("%x %H:%M", GetTime()).c_str());
                             printf("hashmeter %3d CPUs %6.0f khash/s\n", vnThreadsRunning[THREAD_MINER], dHashesPerSec/1000.0);
                         }
                     }
