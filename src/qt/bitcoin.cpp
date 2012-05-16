@@ -132,6 +132,7 @@ static void handleRunawayException(std::exception *e)
 /** Help message for Bitcoin-Qt, shown with --help. */
 class HelpMessageBox: public QMessageBox
 {
+    Q_OBJECT
 public:
     HelpMessageBox(QWidget *parent = 0);
 
@@ -141,8 +142,7 @@ private:
     QString coreOptions;
     QString uiOptions;
 };
-#include <QSpacerItem>
-#include <QGridLayout>
+
 HelpMessageBox::HelpMessageBox(QWidget *parent):
     QMessageBox(parent)
 {
@@ -163,6 +163,7 @@ HelpMessageBox::HelpMessageBox(QWidget *parent):
     setText(header + QString(em_space).repeated(40));
     setDetailedText(coreOptions + "\n" + uiOptions);
 }
+#include "bitcoin.moc"
 
 void HelpMessageBox::exec()
 {
