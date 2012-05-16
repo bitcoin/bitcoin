@@ -146,17 +146,11 @@ private:
 HelpMessageBox::HelpMessageBox(QWidget *parent):
     QMessageBox(parent)
 {
-    header = tr("Bitcoin-Qt") + " " + tr("version") + " " +
-            QString::fromStdString(FormatFullVersion()) + "\n\n" +
-        tr("Usage:") + "\n" +
-          "  bitcoin-qt [options]                     " + "\n";
-    coreOptions = QString::fromStdString(HelpMessage());
-    uiOptions = tr("UI options") + ":\n" +
-            "  -lang=<lang>           " + tr("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
-            "  -min                   " + tr("Start minimized") + "\n" +
-            "  -splash                " + tr("Show splash screen on startup (default: 1)") + "\n";
+    header = QString::fromStdString(HelpHeader());
+    coreOptions = QString::fromStdString(HelpCoreOptions());
+    uiOptions = QString::fromStdString(HelpUiOptions());
 
-    setWindowTitle(tr("Bitcoin-Qt"));
+    setWindowTitle(QString::fromStdString(_("Bitcoin-Qt")));
     setTextFormat(Qt::PlainText);
     // setMinimumWidth is ignored for QMessageBox so put in nonbreaking spaces to make it wider.
     QChar em_space(0x2003);

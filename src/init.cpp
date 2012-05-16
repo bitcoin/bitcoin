@@ -162,7 +162,6 @@ bool static InitError(const std::string &str)
 {
     ThreadSafeMessageBox(str, _("Bitcoin"), wxOK | wxMODAL);
     return false;
-
 }
 
 bool static InitWarning(const std::string &str)
@@ -181,10 +180,18 @@ bool static Bind(const CService &addr) {
     return true;
 }
 
-// Core-specific options shared between UI and daemon
-std::string HelpMessage()
+std::string HelpHeader()
 {
-    string strUsage = _("Options:") + "\n" +
+    std::string strUsage = _("Bitcoin-Qt") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
+        _("Usage:") + "\n  bitcoin-qt [" + _("options") + "]                     \n";
+
+    return strUsage;
+}
+
+// Core-specific options shared between UI and daemon
+std::string HelpCoreOptions()
+{
+    std::string strUsage = _("Options:") + "\n" +
         "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n" +
         "  -pid=<file>            " + _("Specify pid file (default: bitcoind.pid)") + "\n" +
         "  -gen                   " + _("Generate coins") + "\n" +
@@ -256,6 +263,16 @@ std::string HelpMessage()
         "  -rpcsslcertificatechainfile=<file.cert>  " + _("Server certificate file (default: server.cert)") + "\n" +
         "  -rpcsslprivatekeyfile=<file.pem>         " + _("Server private key (default: server.pem)") + "\n" +
         "  -rpcsslciphers=<ciphers>                 " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)") + "\n";
+
+    return strUsage;
+}
+
+std::string HelpUiOptions()
+{
+    std::string strUsage = _("UI options") + ":\n" +
+        "  -lang=<lang>           " + _("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
+        "  -min                   " + _("Start minimized") + "\n" +
+        "  -splash                " + _("Show splash screen on startup (default: 1)") + "\n";
 
     return strUsage;
 }
@@ -645,7 +662,7 @@ bool AppInit2()
         if (!ParseMoney(mapArgs["-paytxfee"], nTransactionFee))
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s'"), mapArgs["-paytxfee"].c_str()));
         if (nTransactionFee > 0.25 * COIN)
-            InitWarning(_("Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction."));
+            InitWarning(_("Warning: -paytxfee is set very high. This is the transaction fee you will pay if you send a transaction."));
     }
 
     //
