@@ -249,7 +249,7 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
 
     QHBoxLayout *lang_hbox = new QHBoxLayout();
     lang_hbox->addSpacing(18);
-    QLabel *lang_label = new QLabel(tr("User Interface &Language: "));
+    QLabel *lang_label = new QLabel(tr("User Interface &Language:"));
     lang_hbox->addWidget(lang_label);
     lang = new QValueComboBox(this);
     // Make list of languages
@@ -270,7 +270,7 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
 
     QHBoxLayout *unit_hbox = new QHBoxLayout();
     unit_hbox->addSpacing(18);
-    QLabel *unit_label = new QLabel(tr("&Unit to show amounts in: "));
+    QLabel *unit_label = new QLabel(tr("&Unit to show amounts in:"));
     unit_hbox->addWidget(unit_label);
     unit = new QValueComboBox(this);
     unit->setModel(new BitcoinUnits(this));
@@ -354,7 +354,7 @@ NetworkOptionsPage::NetworkOptionsPage(QWidget *parent):
 
     QHBoxLayout *proxy_hbox = new QHBoxLayout();
     proxy_hbox->addSpacing(18);
-    QLabel *proxy_ip_label = new QLabel(tr("Proxy &IP: "));
+    QLabel *proxy_ip_label = new QLabel(tr("Proxy &IP:"));
     proxy_hbox->addWidget(proxy_ip_label);
     proxy_ip = new QLineEdit();
     proxy_ip->setMaximumWidth(140);
@@ -363,7 +363,7 @@ NetworkOptionsPage::NetworkOptionsPage(QWidget *parent):
     proxy_ip->setToolTip(tr("IP address of the proxy (e.g. 127.0.0.1)"));
     proxy_ip_label->setBuddy(proxy_ip);
     proxy_hbox->addWidget(proxy_ip);
-    QLabel *proxy_port_label = new QLabel(tr("&Port: "));
+    QLabel *proxy_port_label = new QLabel(tr("&Port:"));
     proxy_hbox->addWidget(proxy_port_label);
     proxy_port = new QLineEdit();
     proxy_port->setMaximumWidth(55);

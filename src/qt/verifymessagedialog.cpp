@@ -25,7 +25,7 @@ VerifyMessageDialog::VerifyMessageDialog(AddressTableModel *addressModel, QWidge
 #if (QT_VERSION >= 0x040700)
     /* Do not move this to the XML file, Qt before 4.7 will choke on it */
     ui->lnSig->setPlaceholderText(tr("Enter Bitcoin signature"));
-    ui->lnAddress->setPlaceholderText(tr("Click \"Apply\" to obtain address"));
+    ui->lnAddress->setPlaceholderText(tr("Click \"Verify Message\" to obtain address"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->lnAddress, this);

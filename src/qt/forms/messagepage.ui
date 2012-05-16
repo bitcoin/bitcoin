@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Sign Message Dialog</string>
+   <string>Sign Message</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
