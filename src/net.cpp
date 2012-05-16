@@ -1508,7 +1508,7 @@ void ThreadOpenAddedConnections2(void* parg)
                 Sleep(500);
             }
             vnThreadsRunning[THREAD_ADDEDCONNECTIONS]--;
-            Sleep(120000); // Retry every 2 minutes
+            Sleep(30000); // Retry every 0.5 minutes
             vnThreadsRunning[THREAD_ADDEDCONNECTIONS]++;
         }
         return;
@@ -1556,7 +1556,7 @@ void ThreadOpenAddedConnections2(void* parg)
         if (fShutdown)
             return;
         vnThreadsRunning[THREAD_ADDEDCONNECTIONS]--;
-        Sleep(120000); // Retry every 2 minutes
+        Sleep(30000); // Retry every 0.5 minutes
         vnThreadsRunning[THREAD_ADDEDCONNECTIONS]++;
         if (fShutdown)
             return;
