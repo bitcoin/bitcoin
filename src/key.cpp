@@ -2,10 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#include <map>
+
+#include <boost/tuple/tuple.hpp>
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
 
 #include "key.h"
+#include "util.h"
 
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
@@ -347,21 +351,85 @@ bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& v
     return false;
 }
 
+// Valid signature cache, to avoid doing expensive ECDSA signature checking
+// twice for every transaction (once when accepted into memory pool, and
+// again when accepted into the block chain)
+
+// sigdata_type is (signature hash, signature, public key):
+typedef boost::tuple<uint256, std::vector<unsigned char>, std::vector<unsigned char> > sigdata_type;
+static std::set< sigdata_type> setValidSigCache;
+static CCriticalSection cs_sigcache;
+
+static bool
+GetValidSigCache(uint256 hash, const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& pubKey)
+{
+    LOCK(cs_sigcache);
+
+    sigdata_type k(hash, vchSig, pubKey);
+    std::set<sigdata_type>::iterator mi = setValidSigCache.find(k);
+    if (mi != setValidSigCache.end())
+        return true;
+    return false;
+}
+
+static void
+SetValidSigCache(uint256 hash, const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& pubKey)
+{
+    // DoS prevention: limit cache size to less than 10MB
+    // (~200 bytes per cache entry times 50,000 entries)
+    // Since there are a maximum of 20,000 signature operations per block
+    // 50,000 is a reasonable default.
+    int64 nMaxCacheSize = GetArg("-maxsigcachesize", 50000);
+    if (nMaxCacheSize <= 0) return;
+
+    LOCK(cs_sigcache);
+
+    while (setValidSigCache.size() > nMaxCacheSize)
+    {
+        // Evict a random entry. Random because that helps
+        // foil would-be DoS attackers who might try to pre-generate
+        // and re-use a set of valid signatures just-slightly-greater
+        // than our cache size.
+        uint256 randomHash = GetRandHash();
+        std::vector<unsigned char> unused;
+        std::set<sigdata_type>::iterator it =
+            setValidSigCache.lower_bound(sigdata_type(randomHash, unused, unused));
+        if (it == setValidSigCache.end())
+            it = setValidSigCache.begin();
+        setValidSigCache.erase(*it);
+    }
+
+    sigdata_type k(hash, vchSig, pubKey);
+    setValidSigCache.insert(k);
+}
+
+
 bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
 {
+    if (GetValidSigCache(hash, vchSig, GetPubKey()))
+        return true;
+
     // -1 = error, 0 = bad sig, 1 = good
     if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
         return false;
+
+    // good sig
+    SetValidSigCache(hash, vchSig, GetPubKey());
     return true;
 }
 
 bool CKey::VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig)
 {
+    if (GetValidSigCache(hash, vchSig, GetPubKey()))
+        return true;
+
     CKey key;
     if (!key.SetCompactSignature(hash, vchSig))
         return false;
     if (GetPubKey() != key.GetPubKey())
         return false;
+
+    SetValidSigCache(hash, vchSig, GetPubKey());
     return true;
 }
 
