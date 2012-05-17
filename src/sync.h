@@ -10,8 +10,9 @@
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 
-
-
+#ifdef MAC_OSX
+#include "util.h" // for Sleep().
+#endif
 
 /** Wrapped boost mutex: supports recursive locking, but no waiting  */
 typedef boost::interprocess::interprocess_recursive_mutex CCriticalSection;
