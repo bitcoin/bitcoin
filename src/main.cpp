@@ -2672,7 +2672,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         {
             SyncWithWallets(tx, NULL, true);
             RelayMessage(inv, vMsg);
-            mapAlreadyAskedFor.erase(inv);
+            mapWaitingFor.erase(inv);
             vWorkQueue.push_back(inv.hash);
 
             // Recursively process any orphan transactions that depended on this one
@@ -2693,7 +2693,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
                         SyncWithWallets(tx, NULL, true);
                         RelayMessage(inv, vMsg);
-                        mapAlreadyAskedFor.erase(inv);
+                        mapWaitingFor.erase(inv);
                         vWorkQueue.push_back(inv.hash);
                     }
                 }
@@ -2728,7 +2728,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         if (ProcessBlock(pfrom, &block))
-            mapAlreadyAskedFor.erase(inv);
+            mapWaitingFor.erase(inv);
         if (block.nDoS) pfrom->Misbehaving(block.nDoS);
     }
 
@@ -3110,7 +3110,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     vGetData.clear();
                 }
             }
-            mapAlreadyAskedFor[inv] = nNow;
+            mapWaitingFor[inv] = nNow;
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
         if (!vGetData.empty())

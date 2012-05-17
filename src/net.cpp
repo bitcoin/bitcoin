@@ -64,7 +64,7 @@ CCriticalSection cs_vNodes;
 map<CInv, CDataStream> mapRelay;
 deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
-map<CInv, int64> mapAlreadyAskedFor;
+map<CInv, int64> mapWaitingFor;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
