@@ -2623,7 +2623,7 @@ void ThreadRPCServer(void* parg)
         vnThreadsRunning[THREAD_RPCLISTENER]--;
         PrintException(NULL, "ThreadRPCServer()");
     }
-    printf("ThreadRPCServer exiting\n");
+    printf("ThreadRPCServer exited\n");
 }
 
 void ThreadRPCServer2(void* parg)
