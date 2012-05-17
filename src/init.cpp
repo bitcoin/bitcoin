@@ -62,7 +62,7 @@ void Shutdown(void* parg)
         delete pwalletMain;
         CreateThread(ExitTimeout, NULL);
         Sleep(50);
-        printf("Bitcoin exiting\n\n");
+        printf("Bitcoin exited\n\n");
         fExit = true;
         exit(0);
     }
