@@ -97,6 +97,7 @@ extern bool fBenchmark;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern unsigned int nCoinCacheSize;
+extern int nAskedForBlocks;
 
 // Settings
 extern int64 nTransactionFee;

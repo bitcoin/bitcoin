@@ -35,6 +35,7 @@ uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
+int nAskedForBlocks = 0;
 CBigNum bnBestChainWork = 0;
 CBigNum bnBestInvalidWork = 0;
 uint256 hashBestChain = 0;
@@ -3131,18 +3132,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             }
         }
 
-        // Ask the first connected node for block updates
-        static int nAskedForBlocks = 0;
-        if (!pfrom->fClient && !pfrom->fOneShot && !fImporting && !fReindex &&
-            (pfrom->nStartingHeight > (nBestHeight - 144)) &&
-            (pfrom->nVersion < NOBLKS_VERSION_START ||
-             pfrom->nVersion >= NOBLKS_VERSION_END) &&
-             (nAskedForBlocks < 1 || vNodes.size() <= 1))
-        {
-            nAskedForBlocks++;
-            pfrom->PushGetBlocks(pindexBest, uint256(0));
-        }
-
         // Relay alerts
         {
             LOCK(cs_mapAlerts);
@@ -3816,6 +3805,20 @@ bool ProcessMessages(CNode* pfrom)
             PrintExceptionContinue(&e, "ProcessMessages()");
         } catch (...) {
             PrintExceptionContinue(NULL, "ProcessMessages()");
+        }
+
+        // Ask a connected node for block updates
+        if (!pfrom->fClient && !pfrom->fOneShot && !fImporting && !fReindex &&
+            (pfrom->nStartingHeight > (nBestHeight - 144)) &&
+            (pfrom->nVersion < NOBLKS_VERSION_START ||
+             pfrom->nVersion >= NOBLKS_VERSION_END) &&
+            !pfrom->fAskedForBlocks &&
+            (nAskedForBlocks < 1 || vNodes.size() <= 1))
+        {
+            nAskedForBlocks++;
+            pfrom->fAskedForBlocks = true;
+            printf("initial getblocks to %s\n", pfrom->addr.ToString().c_str());
+            pfrom->PushGetBlocks(pindexBest, uint256(0));
         }
 
         if (!fRet)
