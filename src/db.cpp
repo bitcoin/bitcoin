@@ -289,6 +289,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 
 void DBFlush(bool fShutdown)
 {
+    int64 nStart = GetTimeMillis();
     // Flush log data to the actual data file
     //  on all files that are not in use
     printf("DBFlush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
@@ -318,6 +319,7 @@ void DBFlush(bool fShutdown)
             else
                 mi++;
         }
+        printf("DBFlush: After while loop (%s)%s %15"PRI64d"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
         if (fShutdown)
         {
             char** listp;
@@ -589,7 +591,9 @@ bool CTxDB::LoadBlockIndex()
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
     bnBestChainWork = pindexBest->bnChainWork;
-    printf("LoadBlockIndex(): hashBestChain=%s  height=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight);
+    printf("LoadBlockIndex(): hashBestChain=%s  height=%d  date=%s\n",
+      hashBestChain.ToString().substr(0,20).c_str(), nBestHeight,
+      DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
     // Load bnBestInvalidWork, OK if it doesn't exist
     ReadBestInvalidWork(bnBestInvalidWork);
