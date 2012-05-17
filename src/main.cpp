@@ -2514,12 +2514,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // find last block in inv vector
         unsigned int nLastBlock = (unsigned int)(-1);
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++) {
-            if (vInv[vInv.size() - 1 - nInv].type == MSG_BLOCK) {
-                nLastBlock = vInv.size() - 1 - nInv;
-                break;
+        if (!CaughtUp()) // No need to do this once caught up...
+            for (unsigned int nInv = 0; nInv < vInv.size(); nInv++) {
+                if (vInv[vInv.size() - 1 - nInv].type == MSG_BLOCK) {
+                    nLastBlock = vInv.size() - 1 - nInv;
+                    break;
+                }
             }
-        }
         CTxDB txdb("r");
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
