@@ -40,7 +40,7 @@ turned off by default.  Set USE_UPNP to a different value to control this:
 libqrencode may be used for QRCode image generation. It can be downloaded
 from http://fukuchi.org/works/qrencode/index.html.en, or installed via
 your package manager. Set USE_QRCODE to control this:
- USE_QRCODE=0   (the default) No QRCode support - libarcode not required
+ USE_QRCODE=0   (the default) No QRCode support - libqrcode not required
  USE_QRCODE=1   QRCode support enabled
 
 IPv6 support may be enabled by setting
