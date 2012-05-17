@@ -289,6 +289,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 
 void DBFlush(bool fShutdown)
 {
+    int64 nStart = GetTimeMillis();
     // Flush log data to the actual data file
     //  on all files that are not in use
     printf("DBFlush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
@@ -318,6 +319,7 @@ void DBFlush(bool fShutdown)
             else
                 mi++;
         }
+        printf("DBFlush(%s)%s ended %15"PRI64d"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
         if (fShutdown)
         {
             char** listp;
