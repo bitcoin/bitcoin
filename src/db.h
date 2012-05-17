@@ -296,20 +296,15 @@ public:
 
 
 
-/** Access to the (IP) address database (addr.dat) */
-class CAddrDB : public CDB
+/** Access to the (IP) address database (peers.dat) */
+class CAddrDB
 {
-public:
-    CAddrDB(const char* pszMode="r+") : CDB("addr.dat", pszMode) { }
 private:
-    CAddrDB(const CAddrDB&);
-    void operator=(const CAddrDB&);
+    boost::filesystem::path pathAddr;
 public:
-    bool WriteAddrman(const CAddrMan& addr);
-    bool LoadAddresses();
+    CAddrDB();
+    bool Write(const CAddrMan& addr);
+    bool Read(CAddrMan& addr);
 };
-
-bool LoadAddresses();
-
 
 #endif // BITCOIN_DB_H

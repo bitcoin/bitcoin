@@ -19,7 +19,6 @@
 #include "protocol.h"
 #include "addrman.h"
 
-class CAddrDB;
 class CRequestTracker;
 class CNode;
 class CBlockIndex;
