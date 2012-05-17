@@ -107,7 +107,7 @@ all: bitcoind
 -include obj-test/*.P
 
 obj/build.h: FORCE
-	../share/genbuild.sh obj/build.h
+	/bin/sh ../share/genbuild.sh obj/build.h
 version.cpp: obj/build.h
 DEFS += -DHAVE_BUILD_INFO
 
