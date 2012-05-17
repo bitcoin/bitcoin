@@ -10,10 +10,6 @@
 #include "net.h"
 #include "script.h"
 
-#ifdef WIN32
-#include <io.h> /* for _commit */
-#endif
-
 #include <list>
 
 class CWallet;
