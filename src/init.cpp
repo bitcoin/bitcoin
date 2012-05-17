@@ -321,6 +321,7 @@ bool AppInit2()
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
     fLogTimestamps = GetBoolArg("-logtimestamps");
+    fLogTxPeer = GetBoolArg("-logtxpeer"); // Not shown in syntax output for privacy reasons.
 
 #if !defined(WIN32) && !defined(QT_GUI)
     if (fDaemon)
