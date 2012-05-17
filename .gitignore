@@ -19,3 +19,4 @@ qrc_*.cpp
 *.pro.user
 #mac specific
 .DS_Store
+build
