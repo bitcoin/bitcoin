@@ -47,6 +47,7 @@ namespace boost {
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+#include <io.h> /* for _commit */
 #include "shlobj.h"
 #endif
 
@@ -913,7 +914,7 @@ void CreatePidFile(const boost::filesystem::path &path, pid_t pid)
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest)
 {
 #ifdef WIN32
-    return MoveFileEx(src.string().c_str(), dest.string().c_str(),
+    return MoveFileExA(src.string().c_str(), dest.string().c_str(),
                       MOVEFILE_REPLACE_EXISTING);
 #else
     int rc = std::rename(src.string().c_str(), dest.string().c_str());
