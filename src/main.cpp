@@ -216,9 +216,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     while (mapOrphanTransactions.size() > nMaxOrphans)
     {
         // Evict a random orphan:
-        std::vector<unsigned char> randbytes(32);
-        RAND_bytes(&randbytes[0], 32);
-        uint256 randomhash(randbytes);
+        uint256 randomhash = GetRandHash();
         map<uint256, CDataStream*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
         if (it == mapOrphanTransactions.end())
             it = mapOrphanTransactions.begin();
@@ -2380,7 +2378,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     // at a time so the setAddrKnowns of the chosen nodes prevent repeats
                     static uint256 hashSalt;
                     if (hashSalt == 0)
-                        RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
+                        hashSalt = GetRandHash();
                     int64 hashAddr = addr.GetHash();
                     uint256 hashRand = hashSalt ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
@@ -2980,7 +2978,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     // 1/4 of tx invs blast to all immediately
                     static uint256 hashSalt;
                     if (hashSalt == 0)
-                        RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
+                        hashSalt = GetRandHash();
                     uint256 hashRand = inv.hash ^ hashSalt;
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     bool fTrickleWait = ((hashRand & 3) != 0);
