@@ -33,6 +33,7 @@ void AddOneShot(std::string strDest);
 bool RecvLine(SOCKET hSocket, std::string& strLine);
 bool GetMyExternalIP(CNetAddr& ipRet);
 void AddressCurrentlyConnected(const CService& addr);
+void NodeSummary();
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CService& ip);
 CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL, int64 nTimeout=0);
@@ -124,6 +125,7 @@ extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
 extern std::map<CInv, int64> mapAlreadyAskedFor;
+extern std::map<CInv, int64> mapWaitingFor;
 
 
 
@@ -145,6 +147,25 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
+    bool fWaitingForBlock; // true when getdata block sent and not timed out
+    CInv WaitingForBlock;  // the block waiting to be downloaded
+    bool fAskedForBlocks;  // true when getblocks 0 sent
+    bool fReceivingBlock;  // true when block being received
+    int64 tGetblocks;      // Time of last getblocks sent
+    int64 tBlockInvs;      // Time of last block invs received
+    int64 tGetdataBlock;   // Time getdata block request sent
+    int64 tBlockRecvStart; // Time block reception first noticed
+    int64 tBlockRecving;   // Time block reception last progressed
+    int nStuckDB;          // Count of stuck block download
+    int nWasStuckDB;       // Count of stuck block download before unsticking
+    int nStuckWB;          // Count of waiting for block to start downloading
+    int nStuckWI;          // Count of waiting for invs following getblocks
+    int nBlockBytes;       // To track progress of block download
+    bool fBlockShy;        // true when getdata block timeouts
+    bool fInvShy;          // true when getblocks timeouts
+    bool fWasInvShy;       // true when invs arrive after inv timeout
+    bool fWasBlockShy;     // true when block starts to arrive after timeout
+    int nDupBlocks;        // count of concurrent duplicate blocks received
     int nHeaderStart;
     unsigned int nMessageStart;
     CAddress addr;
@@ -188,6 +209,7 @@ public:
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64, CInv> mapAskFor;
+    std::multimap<int64, CInv> mapAskForBlock;
 
     CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : vSend(SER_NETWORK, MIN_PROTO_VERSION), vRecv(SER_NETWORK, MIN_PROTO_VERSION)
     {
@@ -197,6 +219,24 @@ public:
         nLastRecv = 0;
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
+        fWaitingForBlock = false;
+        fAskedForBlocks = false;
+        fReceivingBlock = false;
+        tGetblocks = 0;
+        tBlockInvs = 0;
+        tGetdataBlock = 0;
+        tBlockRecvStart = 0;
+        tBlockRecving = 0;
+        nStuckDB = 0;
+        nWasStuckDB = 0;
+        nStuckWB = 0;
+        nStuckWI = 0;
+        nBlockBytes = 0;
+        fBlockShy = false;
+        fInvShy = false;
+        fWasInvShy = false;
+        fWasBlockShy = false;
+        nDupBlocks = 0;
         nHeaderStart = -1;
         nMessageStart = -1;
         addr = addrIn;
@@ -312,20 +352,17 @@ public:
         mapAskFor.insert(std::make_pair(nRequestTime, inv));
     }
 
-    int64 AskForBlock(const CInv& inv) {
-        int64& nRequestTime = mapAlreadyAskedFor[inv];
+    int64 AskForBlock(const CInv& inv, int nWait) {
+        int64& nRequestTime = mapWaitingFor[inv];
         int64 nNow = (GetTime() - 1) * 1000000;
         static int64 nLastTime;
         nLastTime++;
         nNow = std::max(nNow, nLastTime);
         nLastTime = nNow;
-        nRequestTime = std::max(nRequestTime + 120 * 1000000, nNow);
-        mapAskFor.insert(std::make_pair(nRequestTime, inv));
-
+        nRequestTime = std::max(nRequestTime + nWait * 1000000, nNow);
+        mapAskForBlock.insert(std::make_pair(nRequestTime, inv));
         return nRequestTime;
     }
-
-
 
     void BeginMessage(const char* pszCommand)
     {

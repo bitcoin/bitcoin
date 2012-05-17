@@ -67,6 +67,16 @@ extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
+extern int nAskedForBlocks;    // Nodes sent a getblocks 0
+extern int nWaitingForBlocks;  // Nodes sent a getdata block
+extern int nReceivingBlocks;   // Nodes that have started sending a block
+extern int nInvShyNodes;       // Nodes that take too long to respond to getblocks
+extern int nBlockShyNodes;     // Nodes that take too long to respond to getdata block
+extern int nBlockStuckNodes;   // Nodes that have paused while sending a block
+extern int nUnreliableNodes;   // Total count of shy and stuck nodes
+extern int nWasInvShyNodes;    // Node that responded to getblocks after the timeout
+extern int nWasBlockShyNodes;  // Node that responded to getdata block after the timeout
+extern int nWasBlockStuckNodes;// Node that paused during block download and later resumed
 
 // Settings
 extern int64 nTransactionFee;

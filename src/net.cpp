@@ -66,6 +66,7 @@ map<CInv, CDataStream> mapRelay;
 deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 map<CInv, int64> mapAlreadyAskedFor;
+map<CInv, int64> mapWaitingFor;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -426,8 +427,19 @@ void AddressCurrentlyConnected(const CService& addr)
 
 
 
-
-
+void NodeSummary()
+{
+    printf("Nodes=%d: AskedFor=%d", vNodes.size(), nAskedForBlocks);
+    if (nWaitingForBlocks) printf(", WaitingFor=%d", nWaitingForBlocks);
+    if (nReceivingBlocks) printf(", Receiving=%d", nReceivingBlocks);
+    if (nInvShyNodes) printf(", InvShy=%d", nInvShyNodes);
+    if (nBlockShyNodes) printf(", BlockShy=%d", nBlockShyNodes);
+    if (nBlockStuckNodes) printf(", BlockStuck=%d", nBlockStuckNodes);
+    if (nWasInvShyNodes) printf(", WasInvShy=%d", nWasInvShyNodes);
+    if (nWasBlockShyNodes) printf(", WasBlockShy=%d", nWasBlockShyNodes);
+    if (nWasBlockStuckNodes) printf(", WasBlockStuck=%d", nWasBlockStuckNodes);
+    printf("\n");
+}
 
 
 CNode* FindNode(const CNetAddr& ip)
@@ -531,7 +543,46 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        printf("disconnecting node %s\n", addrName.c_str());
+        printf("disconnecting node %s [", addrName.c_str());
+        if (fAskedForBlocks) {
+            nAskedForBlocks--;
+            printf("ASK.");
+        }
+        if (fWaitingForBlock) {
+            nWaitingForBlocks--;
+            mapWaitingFor.erase(WaitingForBlock);
+            printf("GETDATA(%ds)", GetTime() - tGetdataBlock);
+        }
+        if (fReceivingBlock) {
+            nReceivingBlocks--;
+            printf("BLOCK(%ds)", GetTime() - tBlockRecving);
+        }
+        if (fInvShy) {
+            nInvShyNodes--;
+            printf("IS.");
+        }
+        if (fBlockShy) {
+            nBlockShyNodes--;
+            printf("BS.");
+        }
+        if (nStuckDB >= 3) {
+            nBlockStuckNodes--;
+            printf("ST.");
+        }
+        if (fWasInvShy) {
+            nWasInvShyNodes--;
+            printf("WIS.");
+        }
+        if (fWasBlockShy) {
+            nWasBlockShyNodes--;
+            printf("WBS.");
+        }
+        if (nWasStuckDB) {
+            nWasBlockStuckNodes--;
+            printf("WST.");
+        }
+        printf("]\n");
+        NodeSummary();
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
         vRecv.clear();
