@@ -129,18 +129,10 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
     
 }
 
-static uint256 RandomHash()
-{
-    std::vector<unsigned char> randbytes(32);
-    RAND_bytes(&randbytes[0], 32);
-    uint256 randomhash(randbytes);
-    return randomhash;
-}
-
 CTransaction RandomOrphan()
 {
     std::map<uint256, CDataStream*>::iterator it;
-    it = mapOrphanTransactions.lower_bound(RandomHash());
+    it = mapOrphanTransactions.lower_bound(GetRandHash());
     if (it == mapOrphanTransactions.end())
         it = mapOrphanTransactions.begin();
     const CDataStream* pvMsg = it->second;
@@ -162,7 +154,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = RandomHash();
+        tx.vin[0].prevout.hash = GetRandHash();
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
