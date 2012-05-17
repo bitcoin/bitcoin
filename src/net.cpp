@@ -64,7 +64,7 @@ CCriticalSection cs_vNodes;
 map<CInv, CDataStream> mapRelay;
 deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
-map<CInv, int64> mapAlreadyAskedFor;
+map<CInv, int64> mapWaitingFor;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -422,8 +422,10 @@ void AddressCurrentlyConnected(const CService& addr)
 
 
 
-
-
+void NodeSummary()
+{
+    printf("Nodes=%d: AskedFor=%d, WaitingFor=%d\n", vNodes.size(), nAskedForBlocks, nWaitingForBlocks);
+}
 
 
 CNode* FindNode(const CNetAddr& ip)
@@ -526,14 +528,18 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        if (fDebug)
-            printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
         printf("disconnecting node %s [", addrName.c_str());
         if (fAskedForBlocks) {
             nAskedForBlocks--;
             printf("ASKFOR.");
         }
+        if (fWaitingForBlock) {
+            nWaitingForBlocks--;
+            mapWaitingFor.erase(WaitingForBlock);
+            printf("WAITFOR.");
+        }
         printf("]\n");
+        NodeSummary();
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
         vRecv.clear();
