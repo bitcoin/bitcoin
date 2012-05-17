@@ -38,6 +38,7 @@ void ExitTimeout(void* parg)
 
 void Shutdown(void* parg)
 {
+    printf("Shutdown() entered\n"); // REB
     static CCriticalSection cs_Shutdown;
     static bool fTaken;
     bool fFirstThread = false;
@@ -75,9 +76,10 @@ void Shutdown(void* parg)
     }
 }
 
-void HandleSIGTERM(int)
+void HandleSIGTERM(int signal)
 {
     fRequestShutdown = true;
+    printf("HandleSIGTERM(%d)\n", signal);
 }
 
 
@@ -154,6 +156,7 @@ bool AppInit(int argc, char* argv[])
     }
     if (!fRet)
         Shutdown(NULL);
+    printf("AppInit() exited\n");
     return fRet;
 }
 #endif
@@ -232,6 +235,7 @@ std::string HelpMessage()
         "  -testnet               " + _("Use the test network") + "\n" +
         "  -debug                 " + _("Output extra debugging information") + "\n" +
         "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n" +
+        "  -quietinitial          " + _("Reduce debug output on initial block download") + "\n" +
         "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n" +
 #ifdef WIN32
         "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n" +
@@ -315,6 +319,8 @@ bool AppInit2()
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
     fLogTimestamps = GetBoolArg("-logtimestamps");
+    fQuietInitial = GetBoolArg("-quietinitial");
+    fLogPeers = GetBoolArg("-logpeers");
 
 #if !defined(WIN32) && !defined(QT_GUI)
     if (fDaemon)
@@ -343,6 +349,7 @@ bool AppInit2()
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
+    printf("Config file %s\n", GetConfigFile().c_str());
 
     if (GetBoolArg("-loadblockindextest"))
     {
@@ -487,7 +494,6 @@ bool AppInit2()
 
     //// debug print
     printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
-    printf("nBestHeight = %d\n",            nBestHeight);
     printf("setKeyPool.size() = %d\n",      pwalletMain->setKeyPool.size());
     printf("mapWallet.size() = %d\n",       pwalletMain->mapWallet.size());
     printf("mapAddressBook.size() = %d\n",  pwalletMain->mapAddressBook.size());
@@ -662,6 +668,7 @@ bool AppInit2()
 
     RandAddSeedPerfmon();
 
+    printf("CreateThread(StartNode)\n");
     if (!CreateThread(StartNode, NULL))
         InitError(_("Error: could not start node"));
 
@@ -675,6 +682,7 @@ bool AppInit2()
         Sleep(5000);
 #endif
 
+    printf("AppInit2() exited\n");
     return true;
 }
 

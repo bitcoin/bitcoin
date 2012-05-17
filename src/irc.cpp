@@ -200,7 +200,7 @@ void ThreadIRCSeed(void* parg)
     } catch (...) {
         PrintExceptionContinue(NULL, "ThreadIRCSeed()");
     }
-    printf("ThreadIRCSeed exiting\n");
+    printf("ThreadIRCSeed exited\n");
 }
 
 void ThreadIRCSeed2(void* parg)
@@ -321,7 +321,7 @@ void ThreadIRCSeed2(void* parg)
                 // index 7 is limited to 16 characters
                 // could get full length name at index 10, but would be different from join messages
                 strlcpy(pszName, vWords[7].c_str(), sizeof(pszName));
-                printf("IRC got who\n");
+                if (fDebug) printf("IRC got who\n");
             }
 
             if (vWords[1] == "JOIN" && vWords[0].size() > 1)

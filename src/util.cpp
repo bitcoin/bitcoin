@@ -67,6 +67,8 @@ string strMiscWarning;
 bool fTestNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
+bool fQuietInitial = false;
+bool fLogPeers = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
 
 // Init openssl library multithreading support

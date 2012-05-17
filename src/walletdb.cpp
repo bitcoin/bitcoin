@@ -367,7 +367,11 @@ void ThreadFlushWalletDB(void* parg)
                     map<string, int>::iterator mi = mapFileUseCount.find(strFile);
                     if (mi != mapFileUseCount.end())
                     {
-                        printf("Flushing wallet.dat\n");
+                        if (CaughtUp() || !fQuietInitial) {
+                            if (!fLogTimestamps) // we don't want the date twice.
+                                printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+                            printf("Flushing wallet.dat\n");
+                        }
                         nLastFlushed = nWalletDBUpdated;
                         int64 nStart = GetTimeMillis();
 
