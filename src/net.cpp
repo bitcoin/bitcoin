@@ -1278,8 +1278,13 @@ unsigned int pnSeed[] =
 
 void DumpAddresses()
 {
+    int64 nStart = GetTimeMillis();
+
     CAddrDB adb;
-    adb.WriteAddrman(addrman);
+    adb.Write(addrman);
+
+    printf("Flushed %d addresses to peers.dat  %"PRI64d"ms\n",
+           addrman.size(), GetTimeMillis() - nStart);
 }
 
 void ThreadDumpAddress2(void* parg)

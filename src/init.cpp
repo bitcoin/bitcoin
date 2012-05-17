@@ -371,9 +371,15 @@ bool AppInit2()
     InitMessage(_("Loading addresses..."));
     printf("Loading addresses...\n");
     nStart = GetTimeMillis();
-    if (!LoadAddresses())
-        strErrors << _("Error loading addr.dat") << "\n";
-    printf(" addresses   %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+
+    {
+        CAddrDB adb;
+        if (!adb.Read(addrman))
+            printf("Invalid or missing peers.dat; recreating\n");
+    }
+
+    printf("Loaded %i addresses from peers.dat  %"PRI64d"ms\n",
+           addrman.size(), GetTimeMillis() - nStart);
 
     InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
