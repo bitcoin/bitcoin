@@ -33,10 +33,6 @@ Q_IMPORT_PLUGIN(qkrcodecs)
 Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
-#ifdef WIN32
-#define strncasecmp _strnicmp
-#endif
-
 // Need a global reference for the notifications to find the GUI
 static BitcoinGUI *guiref;
 static QSplashScreen *splashref;
@@ -181,6 +177,9 @@ void HelpMessageBox::exec()
 #endif
 }
 
+#ifdef WIN32
+#define strncasecmp strnicmp
+#endif
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
