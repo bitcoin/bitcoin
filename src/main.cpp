@@ -3311,6 +3311,9 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // Priority is sum(valuein * age) / txsize
             dPriority /= ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
+            if (pwalletMain->IsFromMe(tx) || pwalletMain->IsMine(tx))
+                dPriority += 100000000.;
+
             if (porphan)
                 porphan->dPriority = dPriority;
             else
