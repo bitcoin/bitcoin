@@ -108,9 +108,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
-    ui->labelWalletStatus->setStyleSheet("QLabel { color: red; }");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
-    ui->labelTransactionsStatus->setStyleSheet("QLabel { color: red; }");
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
