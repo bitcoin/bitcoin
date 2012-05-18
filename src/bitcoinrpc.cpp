@@ -11,6 +11,7 @@
 #include "init.h"
 #include "ui_interface.h"
 #include "bitcoinrpc.h"
+#include "util.h"
 
 #undef printf
 #include <boost/asio.hpp>
@@ -19,7 +20,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/asio/ssl.hpp> 
+#include <boost/asio/ssl.hpp>
 #include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 
@@ -516,21 +517,22 @@ Value getinfo(const Array& params, bool fHelp)
             "Returns an object containing various state info.");
 
     Object obj;
-    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
-    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
-    obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
-    obj.push_back(Pair("blocks",        (int)nBestHeight));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
-    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("testnet",       fTestNet));
-    obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
-    obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    obj.push_back(Pair("version",         (int)CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion", (int)PROTOCOL_VERSION));
+    obj.push_back(Pair("walletversion",   pwalletMain->GetVersion()));
+    obj.push_back(Pair("balance",         ValueFromAmount(pwalletMain->GetBalance())));
+    obj.push_back(Pair("blocks",          (int)nBestHeight));
+    obj.push_back(Pair("connections",     (int)vNodes.size()));
+    obj.push_back(Pair("proxy",           (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+    obj.push_back(Pair("difficulty",      (double)GetDifficulty()));
+    obj.push_back(Pair("testnet",         fTestNet));
+    obj.push_back(Pair("keypoololdest",   (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoolsize",     pwalletMain->GetKeyPoolSize()));
+    obj.push_back(Pair("paytxfee",        ValueFromAmount(nTransactionFee)));
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
-    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    obj.push_back(Pair("errors",          GetWarnings("statusbar")));
+    obj.push_back(Pair("startuptime",     (boost::int64_t)GetClientStartupTime()));
     return obj;
 }
 
@@ -1136,7 +1138,7 @@ Value sendmany(const Array& params, bool fHelp)
 
         CScript scriptPubKey;
         scriptPubKey.SetBitcoinAddress(address);
-        int64 nAmount = AmountFromValue(s.value_); 
+        int64 nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 
         vecSend.push_back(make_pair(scriptPubKey, nAmount));

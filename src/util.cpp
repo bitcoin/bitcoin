@@ -69,6 +69,8 @@ bool fTestNet = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
+// Client startup time
+static const int64 nClientStartupTime = GetTime();
 
 // Init openssl library multithreading support
 static CCriticalSection** ppmutexOpenSSL;
@@ -1101,3 +1103,8 @@ boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate)
     return fs::path("");
 }
 #endif
+
+int64 GetClientStartupTime()
+{
+    return nClientStartupTime;
+}
