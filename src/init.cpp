@@ -16,6 +16,8 @@
 
 #ifndef WIN32
 #include <signal.h>
+#else
+#define strncasecmp _strnicmp
 #endif
 
 using namespace std;
@@ -162,7 +164,6 @@ bool static InitError(const std::string &str)
 {
     ThreadSafeMessageBox(str, _("Bitcoin"), wxOK | wxMODAL);
     return false;
-
 }
 
 bool static InitWarning(const std::string &str)
