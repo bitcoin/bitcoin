@@ -109,7 +109,9 @@ RPCConsole::RPCConsole(QWidget *parent) :
 {
     ui->setupUi(this);
 
-#ifndef WIN32
+#ifdef WIN32
+    ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
+#else
     // Show Debug logfile label and Open button only for Windows
     ui->labelDebugLogfile->setVisible(false);
     ui->openDebugLogfileButton->setVisible(false);

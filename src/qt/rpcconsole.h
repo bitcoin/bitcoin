@@ -33,6 +33,7 @@ protected:
 private slots:
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
+    /** open the debug.log from the current datadir */
     void on_openDebugLogfileButton_clicked();
 
 public slots:
