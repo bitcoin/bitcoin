@@ -1609,7 +1609,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
     // ppcoin: check proof-of-stake
-    if (pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()))
+    // Limited duplicity on stake: prevents block flood attack
+    // Duplicate stake allowed only when there is orphan child block
+    if (pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
         return error("ProcessBlock() : duplicate proof-of-stake (%s) for block %s", pblock->GetProofOfStake().ToString().c_str(), hash.ToString().c_str());
 
     // Preliminary checks
@@ -1646,7 +1648,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         // ppcoin: check proof-of-stake
         if (pblock2->IsProofOfStake())
         {
-            if (setStakeSeenOrphan.count(pblock2->GetProofOfStake()))
+            // Limited duplicity on stake: prevents block flood attack
+            // Duplicate stake allowed only when there is orphan child block
+            if (setStakeSeenOrphan.count(pblock2->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
                 return error("ProcessBlock() : duplicate proof-of-stake (%s) for orphan block %s", pblock2->GetProofOfStake().ToString().c_str(), hash.ToString().c_str());
             else
                 setStakeSeenOrphan.insert(pblock2->GetProofOfStake());
