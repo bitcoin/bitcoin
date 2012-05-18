@@ -42,6 +42,8 @@ private:
 public:
     mutable CCriticalSection cs_db;
     DbEnv dbenv;
+    std::map<std::string, int> mapFileUseCount;
+    std::map<std::string, Db*> mapDb;
 
     CDBEnv();
     ~CDBEnv();
@@ -50,6 +52,8 @@ public:
     void Flush(bool fShutdown);
     void CheckpointLSN(std::string strFile);
     void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
+
+    void CloseDb(const std::string& strFile);
 
     DbTxn *TxnBegin(int flags=DB_TXN_WRITE_NOSYNC)
     {

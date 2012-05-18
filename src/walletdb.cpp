@@ -13,9 +13,6 @@ using namespace boost;
 
 static uint64 nAccountingEntryNumber = 0;
 
-extern map<string, int> mapFileUseCount;
-extern void CloseDb(const string& strFile);
-
 //
 // CWalletDB
 //
@@ -354,8 +351,8 @@ void ThreadFlushWalletDB(void* parg)
             {
                 // Don't do this if any databases are in use
                 int nRefCount = 0;
-                map<string, int>::iterator mi = mapFileUseCount.begin();
-                while (mi != mapFileUseCount.end())
+                map<string, int>::iterator mi = bitdb.mapFileUseCount.begin();
+                while (mi != bitdb.mapFileUseCount.end())
                 {
                     nRefCount += (*mi).second;
                     mi++;
@@ -363,18 +360,18 @@ void ThreadFlushWalletDB(void* parg)
 
                 if (nRefCount == 0 && !fShutdown)
                 {
-                    map<string, int>::iterator mi = mapFileUseCount.find(strFile);
-                    if (mi != mapFileUseCount.end())
+                    map<string, int>::iterator mi = bitdb.mapFileUseCount.find(strFile);
+                    if (mi != bitdb.mapFileUseCount.end())
                     {
                         printf("Flushing wallet.dat\n");
                         nLastFlushed = nWalletDBUpdated;
                         int64 nStart = GetTimeMillis();
 
                         // Flush wallet.dat so it's self contained
-                        CloseDb(strFile);
+                        bitdb.CloseDb(strFile);
                         bitdb.CheckpointLSN(strFile);
 
-                        mapFileUseCount.erase(mi++);
+                        bitdb.mapFileUseCount.erase(mi++);
                         printf("Flushed wallet.dat %"PRI64d"ms\n", GetTimeMillis() - nStart);
                     }
                 }
@@ -391,12 +388,12 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
     {
         {
             LOCK(bitdb.cs_db);
-            if (!mapFileUseCount.count(wallet.strWalletFile) || mapFileUseCount[wallet.strWalletFile] == 0)
+            if (!bitdb.mapFileUseCount.count(wallet.strWalletFile) || bitdb.mapFileUseCount[wallet.strWalletFile] == 0)
             {
                 // Flush log data to the dat file
-                CloseDb(wallet.strWalletFile);
+                bitdb.CloseDb(wallet.strWalletFile);
                 bitdb.CheckpointLSN(wallet.strWalletFile);
-                mapFileUseCount.erase(wallet.strWalletFile);
+                bitdb.mapFileUseCount.erase(wallet.strWalletFile);
 
                 // Copy wallet.dat
                 filesystem::path pathSrc = GetDataDir() / wallet.strWalletFile;
