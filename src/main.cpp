@@ -3501,6 +3501,11 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // incentive to create smaller transactions.
             double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
 
+            if (pwalletMain->IsFromMe(tx) || pwalletMain->IsMine(tx)) {
+                dPriority += 100000000.;
+                dFeePerKb += 100000000.;
+            }
+
             if (porphan)
             {
                 porphan->dPriority = dPriority;
