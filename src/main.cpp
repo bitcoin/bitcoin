@@ -719,7 +719,7 @@ bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
     return false;
 }
 
-bool CWalletTx::AcceptWalletTransaction() 
+bool CWalletTx::AcceptWalletTransaction()
 {
     CTxDB txdb("r");
     return AcceptWalletTransaction(txdb);
@@ -2108,7 +2108,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 }
             }
         }
-        catch (std::exception &e) 
+        catch (std::exception &e)
         {
         }
     }
@@ -2704,7 +2704,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         else if (fMissingInputs)
         {
-            printf("storing orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+            printf("storing orphan tx %s (mapsz %d)\n",
+                   inv.hash.ToString().substr(0,10).c_str(),
+                   mapOrphanTransactions.size() + 1);
             AddOrphanTx(vMsg);
 
             // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
@@ -2970,7 +2972,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pto->nVersion == 0)
             return true;
 
-        // Keep-alive ping. We send a nonce of zero because we don't use it anywhere 
+        // Keep-alive ping. We send a nonce of zero because we don't use it anywhere
         // right now.
         if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty()) {
             if (pto->nVersion > BIP0031_VERSION)
@@ -3170,7 +3172,7 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit)
         ctx.h[i] = ((uint32_t*)pinit)[i];
 
     SHA256_Update(&ctx, data, sizeof(data));
-    for (int i = 0; i < 8; i++) 
+    for (int i = 0; i < 8; i++)
         ((uint32_t*)pstate)[i] = ctx.h[i];
 }
 
