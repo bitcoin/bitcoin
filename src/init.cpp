@@ -162,7 +162,6 @@ bool static InitError(const std::string &str)
 {
     ThreadSafeMessageBox(str, _("Bitcoin"), wxOK | wxMODAL);
     return false;
-
 }
 
 bool static InitWarning(const std::string &str)
@@ -352,7 +351,7 @@ bool AppInit2()
         return false;
     }
 
-    // Make sure only a single bitcoin process is using the data directory.
+    // Make sure only a single Bitcoin process is using the data directory.
     boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
     FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
@@ -365,7 +364,7 @@ bool AppInit2()
     // Load data files
     //
     if (fDaemon)
-        fprintf(stdout, "bitcoin server starting\n");
+        fprintf(stdout, "Bitcoin server starting\n");
     int64 nStart;
 
     InitMessage(_("Loading addresses..."));
@@ -498,7 +497,7 @@ bool AppInit2()
     // Add wallet transactions that aren't already in a block to mapTransactions
     pwalletMain->ReacceptWalletTransactions();
 
-    // Note: Bitcoin-QT stores several settings in the wallet, so we want
+    // Note: Bitcoin-Qt stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
     // the command-line/bitcoin.conf settings override GUI setting.
 
