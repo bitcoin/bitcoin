@@ -91,41 +91,6 @@ void HandleSIGTERM(int)
 // Start
 //
 #if !defined(QT_GUI)
-static int noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
-{
-    printf("%s: %s\n", caption.c_str(), message.c_str());
-    fprintf(stderr, "%s: %s\n", caption.c_str(), message.c_str());
-    return 4;
-}
-
-static bool noui_ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
-{
-    return true;
-}
-
-static void noui_QueueShutdown()
-{
-    // Without UI, Shutdown can simply be started in a new thread
-    CreateThread(Shutdown, NULL);
-}
-
-int main(int argc, char* argv[])
-{
-    bool fRet = false;
-
-    // Connect bitcoind signal handlers
-    uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
-    uiInterface.ThreadSafeAskFee.connect(noui_ThreadSafeAskFee);
-    uiInterface.QueueShutdown.connect(noui_QueueShutdown);
-
-    fRet = AppInit(argc, argv);
-
-    if (fRet && fDaemon)
-        return 0;
-
-    return 1;
-}
-
 bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
@@ -181,17 +146,33 @@ bool AppInit(int argc, char* argv[])
         Shutdown(NULL);
     return fRet;
 }
+
+extern void noui_connect();
+int main(int argc, char* argv[])
+{
+    bool fRet = false;
+
+    // Connect bitcoind signal handlers
+    noui_connect();
+
+    fRet = AppInit(argc, argv);
+
+    if (fRet && fDaemon)
+        return 0;
+
+    return 1;
+}
 #endif
 
 bool static InitError(const std::string &str)
 {
-    uiInterface.ThreadSafeMessageBox(str, _("Bitcoin"), MF_OK|MF_MODAL);
+    uiInterface.ThreadSafeMessageBox(str, _("Bitcoin"), CClientUIInterface::OK | CClientUIInterface::MODAL);
     return false;
 }
 
 bool static InitWarning(const std::string &str)
 {
-    uiInterface.ThreadSafeMessageBox(str, _("Bitcoin"), MF_OK | MF_ICON_EXCLAMATION | MF_MODAL);
+    uiInterface.ThreadSafeMessageBox(str, _("Bitcoin"), CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
     return true;
 }
 
