@@ -55,6 +55,6 @@ Site: https://bitcointalk.org/index.php?topic=32273.0
 License: Public domain
 
 Icon: src/qt/res/icons/debugwindow.png
-Designer: Based on icon from Turbomilk
-Site: http://www.iconza.com/
-License: Free for commercial use
+Designer: Vignoni David
+Site: http://www.oxygen-icons.org/
+License: Oxygen icon theme is dual licensed. You may copy it under the Creative Common Attribution-ShareAlike 3.0 License or the GNU Library General Public License.
