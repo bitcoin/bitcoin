@@ -96,6 +96,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) : pdb(NULL)
             dbenv.set_lk_max_locks(10000);
             dbenv.set_lk_max_objects(10000);
             dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
+            dbenv.set_flags(DB_TXN_WRITE_NOSYNC, 1);
             dbenv.set_flags(DB_AUTO_COMMIT, 1);
             dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
             ret = dbenv.open(pathDataDir.string().c_str(),
