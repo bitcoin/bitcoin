@@ -128,7 +128,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case DisplayAddresses:
             return QVariant(bDisplayAddresses);
         case DetachDatabases:
-            return QVariant(fDetachDB);
+            return QVariant(bitdb.GetDetach());
         case Language:
             return settings.value("language", "");
         default:
@@ -215,7 +215,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             }
             break;
         case DetachDatabases: {
-            fDetachDB = value.toBool();
+            bool fDetachDB = value.toBool();
+            bitdb.SetDetach(fDetachDB);
             settings.setValue("detachDB", fDetachDB);
             }
             break;

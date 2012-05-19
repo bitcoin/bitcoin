@@ -52,6 +52,7 @@ public:
     void Flush(bool fShutdown);
     void CheckpointLSN(std::string strFile);
     void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
+    bool GetDetach() { return fDetachDB; }
 
     void CloseDb(const std::string& strFile);
 
