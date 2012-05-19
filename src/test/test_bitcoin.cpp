@@ -5,11 +5,15 @@
 #include "wallet.h"
 
 CWallet* pwalletMain;
+CClientUIInterface uiInterface;
 
 extern bool fPrintToConsole;
+extern void noui_connect();
+
 struct TestingSetup {
     TestingSetup() {
         fPrintToConsole = true; // don't want to write to debug.log file
+        noui_connect();
         pwalletMain = new CWallet();
         RegisterWallet(pwalletMain);
     }
