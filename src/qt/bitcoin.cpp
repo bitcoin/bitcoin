@@ -147,14 +147,14 @@ HelpMessageBox::HelpMessageBox(QWidget *parent):
     QMessageBox(parent)
 {
     header = tr("Bitcoin-Qt") + " " + tr("version") + " " +
-            QString::fromStdString(FormatFullVersion()) + "\n\n" +
+        QString::fromStdString(FormatFullVersion()) + "\n\n" +
         tr("Usage:") + "\n" +
-          "  bitcoin-qt [options]                     " + "\n";
+        "  bitcoin-qt [" + tr("options") + "]                     " + "\n";
     coreOptions = QString::fromStdString(HelpMessage());
     uiOptions = tr("UI options") + ":\n" +
-            "  -lang=<lang>           " + tr("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
-            "  -min                   " + tr("Start minimized") + "\n" +
-            "  -splash                " + tr("Show splash screen on startup (default: 1)") + "\n";
+        "  -lang=<lang>           " + tr("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
+        "  -min                   " + tr("Start minimized") + "\n" +
+        "  -splash                " + tr("Show splash screen on startup (default: 1)") + "\n";
 
     setWindowTitle(tr("Bitcoin-Qt"));
     setTextFormat(Qt::PlainText);
