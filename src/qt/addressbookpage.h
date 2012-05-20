@@ -13,6 +13,7 @@ class QTableView;
 class QItemSelection;
 class QSortFilterProxyModel;
 class QMenu;
+class QModelIndex;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of sending or receiving addresses.
@@ -51,6 +52,7 @@ private:
     QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction;
+    QString newAddressToSelect;
 
 private slots:
     void on_deleteButton_clicked();
@@ -67,6 +69,9 @@ private slots:
     void onCopyLabelAction();
     /** Edit currently selected address entry */
     void onEditAction();
+
+    /** New entry/entries were added to address table */
+    void selectNewAddress(const QModelIndex &parent, int begin, int end);
 };
 
 #endif // ADDRESSBOOKDIALOG_H
