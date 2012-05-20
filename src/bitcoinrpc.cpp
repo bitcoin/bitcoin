@@ -435,7 +435,7 @@ Value stop(const Array& params, bool fHelp)
             "stop\n"
             "Stop Bitcoin server.");
     // Shutdown will take long enough that the response should get back
-    QueueShutdown();
+    uiInterface.QueueShutdown();
     return "Bitcoin server stopping";
 }
 
@@ -1928,7 +1928,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    QueueShutdown();
+    uiInterface.QueueShutdown();
     return "wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet";
 }
 
@@ -2620,7 +2620,7 @@ void ThreadRPCServer2(void* parg)
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
         else if (mapArgs.count("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
-        ThreadSafeMessageBox(strprintf(
+        uiInterface.ThreadSafeMessageBox(strprintf(
             _("%s, you must set a rpcpassword in the configuration file:\n %s\n"
               "It is recommended you use the following random password:\n"
               "rpcuser=bitcoinrpc\n"
@@ -2630,8 +2630,8 @@ void ThreadRPCServer2(void* parg)
                 strWhatAmI.c_str(),
                 GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
-            _("Error"), wxOK | wxMODAL);
-        QueueShutdown();
+            _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
+        uiInterface.QueueShutdown();
         return;
     }
 
@@ -2650,9 +2650,9 @@ void ThreadRPCServer2(void* parg)
     }
     catch(boost::system::system_error &e)
     {
-        ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
-                             _("Error"), wxOK | wxMODAL);
-        QueueShutdown();
+        uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
+                             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
+        uiInterface.QueueShutdown();
         return;
     }
 

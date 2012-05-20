@@ -9,6 +9,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "script.h"
+#include "ui_interface.h"
 
 class CWalletTx;
 class CReserveKey;
@@ -102,8 +103,6 @@ public:
     }
 
     std::map<uint256, CWalletTx> mapWallet;
-    std::vector<uint256> vWalletUpdated;
-
     std::map<uint256, int> mapRequestCount;
 
     std::map<CBitcoinAddress, std::string> mapAddressBook;
@@ -232,13 +231,7 @@ public:
 
     bool DelAddressBookName(const CBitcoinAddress& address);
 
-    void UpdatedTransaction(const uint256 &hashTx)
-    {
-        {
-            LOCK(cs_wallet);
-            vWalletUpdated.push_back(hashTx);
-        }
-    }
+    void UpdatedTransaction(const uint256 &hashTx);
 
     void PrintWallet(const CBlock& block);
 
@@ -269,6 +262,16 @@ public:
 
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { return nWalletVersion; }
+
+    /** Address book entry changed.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (CWallet *wallet, const std::string &address, const std::string &label, bool isMine, ChangeType status)> NotifyAddressBookChanged;
+
+    /** Wallet transaction added, removed or updated.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
 };
 
 /** A key allocated from the key pool. */
