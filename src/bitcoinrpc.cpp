@@ -2798,6 +2798,12 @@ void ThreadRPCServer2(void* parg)
     const bool fUseSSL = GetBoolArg("-rpcssl");
 
     asio::io_service io_service;
+
+    // Make sure that we'll get stopped when the application shuts down
+    boost::signals2::scoped_connection rpc_listen_thread_stop(
+            uiInterface.QueueShutdown.connect(boost::bind(
+                &asio::io_service::stop, &io_service)));
+
     ssl::context context(io_service, ssl::context::sslv23);
     if (fUseSSL)
     {
@@ -2862,8 +2868,7 @@ void ThreadRPCServer2(void* parg)
     }
 
     vnThreadsRunning[THREAD_RPCLISTENER]--;
-    while (!fShutdown)
-        io_service.run_one();
+    io_service.run();
     vnThreadsRunning[THREAD_RPCLISTENER]++;
 
     // Terminate all outstanding accept-requests
@@ -2873,11 +2878,6 @@ void ThreadRPCServer2(void* parg)
         acceptor->close();
     }
     acceptors.clear();
-
-    // Handle any actions that are still in progress.
-    vnThreadsRunning[THREAD_RPCLISTENER]--;
-    io_service.run();
-    vnThreadsRunning[THREAD_RPCLISTENER]++;
 }
 
 void ThreadRPCServer3(void* parg)
