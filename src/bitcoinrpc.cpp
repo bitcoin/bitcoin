@@ -2558,7 +2558,10 @@ bool ClientAllowed(const boost::asio::ip::address& address)
         return ClientAllowed(address.to_v6().to_v4());
 
     if (address == asio::ip::address_v4::loopback()
-     || address == asio::ip::address_v6::loopback())
+     || address == asio::ip::address_v6::loopback()
+     || (address.is_v4()
+         // Chech whether IPv4 addresses match 127.0.0.0/8 (loopback subnet)
+      && (address.to_v4().to_ulong() & 0xff000000) == 0x7f000000))
         return true;
 
     const string strAddress = address.to_string();
