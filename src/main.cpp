@@ -710,10 +710,10 @@ int64 GetProofOfStakeReward(int64 nCoinAge)
     return nSubsidy;
 }
 
-static const int64 nTargetTimespan = 7 * 24 * 60 * 60; // one week
-static const int64 nTargetSpacing = 10 * 60;
-static const int64 nInterval = nTargetTimespan / nTargetSpacing;
-static const int64 nMaxClockDrift = 2 * 60 * 60; // 2 hours
+static const int64 nTargetTimespan = 7 * 24 * 60 * 60;  // one week
+static const int64 nTargetSpacingStake = 10 * 60;       // ten minutes
+static const int64 nTargetSpacingWorkMax = 2 * 60 * 60; // two hours
+static const int64 nMaxClockDrift = 2 * 60 * 60;        // two hours
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -761,6 +761,8 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     // ppcoin: retarget with exponential moving toward target spacing
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
+    int64 nTargetSpacing = fProofOfStake? nTargetSpacingStake : min(nTargetSpacingWorkMax, nTargetSpacingStake * (1 + pindexLast->nHeight - pindexPrev->nHeight));
+    int64 nInterval = nTargetTimespan / nTargetSpacing;
     bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
 
