@@ -130,9 +130,9 @@ QString ClientModel::clientName() const
     return QString::fromStdString(CLIENT_NAME);
 }
 
-QDateTime ClientModel::formatClientStartupTime() const
+QString ClientModel::formatClientStartupTime() const
 {
-    return QDateTime::fromTime_t(nClientStartupTime);
+    return QDateTime::fromTime_t(nClientStartupTime).toString();
 }
 
 // Handlers for core signals
