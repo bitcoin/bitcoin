@@ -849,7 +849,7 @@ void BitcoinGUI::changePassphrase()
 
 void BitcoinGUI::verifyMessage()
 {
-    VerifyMessageDialog *dlg = new VerifyMessageDialog(walletModel->getAddressTableModel(), this);
+    VerifyMessageDialog *dlg = new VerifyMessageDialog(this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
