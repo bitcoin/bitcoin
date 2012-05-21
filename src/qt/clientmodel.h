@@ -41,7 +41,7 @@ public:
     QString formatFullVersion() const;
     QString formatBuildDate() const;
     QString clientName() const;
-    QDateTime formatClientStartupTime() const;
+    QString formatClientStartupTime() const;
 
 private:
     OptionsModel *optionsModel;
