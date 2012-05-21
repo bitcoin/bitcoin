@@ -82,6 +82,10 @@ void HandleSIGTERM(int)
     fRequestShutdown = true;
 }
 
+void HandleSIGHUP(int)
+{
+    fReopenDebugLog = true;
+}
 
 
 
@@ -291,7 +295,13 @@ bool AppInit2()
     sa.sa_flags = 0;
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGHUP, &sa, NULL);
+
+    // Reopen debug.log on SIGHUP
+    struct sigaction sa_hup;
+    sa_hup.sa_handler = HandleSIGHUP;
+    sigemptyset(&sa_hup.sa_mask);
+    sa_hup.sa_flags = 0;
+    sigaction(SIGHUP, &sa_hup, NULL);
 #endif
 
     fTestNet = GetBoolArg("-testnet");
