@@ -189,8 +189,9 @@ bool AddOrphanTx(const CDataStream& vMsg)
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
         mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pvMsg));
 
-    printf("stored orphan tx %s (mapsz %u)\n", hash.ToString().substr(0,10).c_str(),
-        mapOrphanTransactions.size());
+    if (!fQuietInitial || CaughtUp())
+        printf("stored orphan tx %s (mapsz %u)\n", hash.ToString().substr(0,10).c_str(),
+            mapOrphanTransactions.size());
     return true;
 }
 
@@ -939,6 +940,11 @@ int GetNumBlocksOfPeers()
     return std::max(cPeerBlockCounts.median(), Checkpoints::GetTotalBlocksEstimate());
 }
 
+bool CaughtUp()
+{
+    return (nBestHeight >= GetNumBlocksOfPeers());
+}
+
 bool IsInitialBlockDownload()
 {
     if (pindexBest == NULL || nBestHeight < Checkpoints::GetTotalBlocksEstimate())
@@ -1064,8 +1070,11 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
             // Get prev tx from single transactions in memory
             {
                 LOCK(mempool.cs);
-                if (!mempool.exists(prevout.hash))
-                    return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+                if (!mempool.exists(prevout.hash)) {
+                    if (!fQuietInitial || CaughtUp())
+                        printf("mempool.exists() : %s prev (%s) not found\n", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+                    return false;
+                }
                 txPrev = mempool.lookup(prevout.hash);
             }
             if (!fFound)
@@ -2250,7 +2259,8 @@ bool CAlert::ProcessAlert()
             uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
     }
 
-    printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
+    if (!fQuietInitial || CaughtUp())
+        printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
     return true;
 }
 
@@ -2515,6 +2525,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->Misbehaving(20);
             return error("message inv size() = %d", vInv.size());
         }
+        int invblocks = 0;
+        int askblocks = 0;
+        int orphanget = 0;
+        int lastblockget = 0;
 
         // find last block in inv vector
         unsigned int nLastBlock = (unsigned int)(-1);
@@ -2531,30 +2545,60 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
             if (fShutdown)
                 return true;
+
+            if (inv.type == MSG_BLOCK) invblocks++;
+
             pfrom->AddInventoryKnown(inv);
 
             bool fAlreadyHave = AlreadyHave(txdb, inv);
             if (fDebug)
                 printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
-            if (!fAlreadyHave)
-                pfrom->AskFor(inv);
-            else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
-                pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
-            } else if (nInv == nLastBlock) {
-                // In case we are on a very long side-chain, it is possible that we already have
-                // the last block in an inv bundle sent in response to getblocks. Try to detect
-                // this situation and push another getblocks to continue.
-                std::vector<CInv> vGetData(1,inv);
-                pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0));
-                if (fDebug)
-                    printf("force request: %s\n", inv.ToString().c_str());
+            if (!fAlreadyHave) {
+                if (inv.type == MSG_BLOCK) {
+                    int64 nRequestTime = pfrom->AskForBlock(inv);
+                    if (!fQuietInitial || vInv.size() == 1 || CaughtUp())
+                        printf("askfor %s   %s (%"PRI64d")   %s\n", inv.ToString().c_str(),
+                          DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str(), nRequestTime,
+                          pfrom->addr.ToString().c_str());
+                    askblocks++;
+                } else
+                    pfrom->AskFor(inv);
+            } else {
+                if (inv.type == MSG_BLOCK && vInv.size() == 1)
+                    printf("inv %s at %s\n", inv.ToString().c_str(), pfrom->addr.ToString().c_str());
+                if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
+                    pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
+                    orphanget++;
+                    if (!fQuietInitial || vInv.size() == 1 || CaughtUp())
+                        printf("orphan getblocks %s to %s\n", inv.ToString().c_str(),
+                          pfrom->addr.ToString().c_str());
+                } else if (nInv == nLastBlock) {
+                    // In case we are on a very long side-chain, it is possible that we already have
+                    // the last block in an inv bundle sent in response to getblocks. Try to detect
+                    // this situation and push another getblocks to continue.
+                    std::vector<CInv> vGetData(1,inv);
+                    pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0));
+                    lastblockget++;
+                    if (fDebug)
+                        printf("force request: %s\n", inv.ToString().c_str());
+                }
             }
 
             // Track requests for our stuff
             Inventory(inv.hash);
+        } // for each item in inv bundle
+
+        if (fQuietInitial && !CaughtUp()) {
+            if (invblocks && vInv.size() > 1)
+                printf("inv containing %d (askfor %d) blocks at %s\n", invblocks, askblocks,
+                  pfrom->addr.ToString().c_str());
+            if (orphanget)
+                printf("orphan getblocks (%d) to %s\n", orphanget, pfrom->addr.ToString().c_str());
+            if (lastblockget)
+                printf("lastblock getblocks to %s\n", pfrom->addr.ToString().c_str());
         }
-    }
+    } // strCommand == "inv"
 
 
     else if (strCommand == "getdata")
@@ -2566,16 +2610,20 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->Misbehaving(20);
             return error("message getdata size() = %d", vInv.size());
         }
+        int nBlocks = 0;
+        int nTxs = 0;
 
         BOOST_FOREACH(const CInv& inv, vInv)
         {
             if (fShutdown)
                 return true;
-            printf("received getdata for: %s\n", inv.ToString().c_str());
+            if (!fQuietInitial || vInv.size() < 5 || CaughtUp())
+                printf("received getdata for: %s\n", inv.ToString().c_str());
 
             if (inv.type == MSG_BLOCK)
             {
                 // Send block from disk
+                nBlocks++;
                 map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(inv.hash);
                 if (mi != mapBlockIndex.end())
                 {
@@ -2595,10 +2643,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         pfrom->hashContinue = 0;
                     }
                 }
-            }
+            } // if a block
             else if (inv.IsKnownType())
             {
                 // Send stream from relay memory
+                nTxs++;
                 {
                     LOCK(cs_mapRelay);
                     map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
@@ -2609,8 +2658,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
             // Track requests for our stuff
             Inventory(inv.hash);
+        } // for each getdata request
+
+        if (vInv.size() > 4 && fQuietInitial && !CaughtUp()) {
+            printf("got getdata for ");
+            if (nBlocks) {
+                printf("%d blocks ", nBlocks);
+                if (nTxs) printf("and ");
+            }
+            if (nTxs) printf("%d txs ", nTxs);
+            printf("from %s. Sending.\n", pfrom->addr.ToString().c_str());
         }
-    }
+
+    } // strCommand = "getdata"
 
 
     else if (strCommand == "getblocks")
@@ -2627,12 +2687,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pindex = pindex->pnext;
         int nLimit = 500 + locator.GetDistanceBack();
         unsigned int nBytes = 0;
-        printf("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
+        if (!fQuietInitial || CaughtUp())
+            printf("getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit);
         for (; pindex; pindex = pindex->pnext)
         {
             if (pindex->GetBlockHash() == hashStop)
             {
-                printf("  getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
+                if (!fQuietInitial || CaughtUp())
+                    printf("  getblocks stopping at %d %s (%u bytes)\n", pindex->nHeight, pindex->GetBlockHash().ToString().substr(0,20).c_str(), nBytes);
                 break;
             }
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
@@ -3137,26 +3199,47 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         vector<CInv> vGetData;
         int64 nNow = GetTime() * 1000000;
         CTxDB txdb("r");
+        int gettxs = 0;
+        int getblocks = 0;
+        CInv blockinv;
+
         while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
             if (!AlreadyHave(txdb, inv))
             {
-                printf("sending getdata: %s\n", inv.ToString().c_str());
+                if (!fQuietInitial || CaughtUp())
+                    printf("sending getdata: %s\n", inv.ToString().c_str());
+
+                if (inv.type == MSG_BLOCK) {
+                    getblocks++;
+                    blockinv = inv;
+                }
+                if (inv.type == MSG_TX) gettxs++;
                 vGetData.push_back(inv);
                 if (vGetData.size() >= 1000)
                 {
                     pto->PushMessage("getdata", vGetData);
                     vGetData.clear();
                 }
+                mapAlreadyAskedFor[inv] = nNow;
             }
-            mapAlreadyAskedFor[inv] = nNow;
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
         if (!vGetData.empty())
             pto->PushMessage("getdata", vGetData);
 
-    }
+        if (getblocks && fQuietInitial && !CaughtUp()) {
+            if (getblocks == 1)
+                printf("sending getdata %s\n", blockinv.ToString().c_str());
+            else {
+                printf("getdata %d blocks", getblocks);
+                if (gettxs) printf(" and %d txs\n", gettxs);
+                else printf("\n");
+            }
+        }
+
+    } // if LockMain
     return true;
 }
 
