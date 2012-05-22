@@ -417,9 +417,11 @@ bool CTransaction::CheckTransaction() const
 
     // Basic checks that don't depend on any context
     if (vin.empty()) {
+        if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(10, error("checktx: %s vin empty", hash.ToString().substr(0,10).c_str()));
     }
     if (vout.empty()) {
+        if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(10, error("checktx: %s vout empty", hash.ToString().substr(0,10).c_str()));
     }
     // Size limits
@@ -495,11 +497,13 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
     // To help v0.1.5 clients who would see it as a negative number
     if ((int64)tx.nLockTime > std::numeric_limits<int>::max()) {
+        if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
         return error("txaccept: %s not accepting nLockTime beyond 2038 yet", hash.ToString().substr(0,10).c_str());
     }
 
     // Rather not work on nonstandard transactions (unless -testnet)
     if (!fTestNet && !tx.IsStandard()) {
+        if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
         return error("txaccept: %s nonstandard tx type", hash.ToString().substr(0,10).c_str());
     }
 
@@ -525,15 +529,18 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
             // Allow replacing with a newer version of the same transaction
             if (i != 0) {
+                if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
                 printf("txaccept: replacement failed as i != 0\n", hash.ToString().substr(0,10).c_str());
                 return false;
             }
             ptxOld = mapNextTx[outpoint].ptx;
             if (ptxOld->IsFinal()) {
+                if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
                 printf("txaccept: replacement failed as old outpoint IsFinal\n", hash.ToString().substr(0,10).c_str()); 
                 return false;
             }
             if (!tx.IsNewerThan(*ptxOld)) {
+                if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
                 printf("txaccept: %s replacement failed as IsNewerThan\n", hash.ToString().substr(0,10).c_str());
                 return false;
             }
@@ -541,14 +548,17 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
             {
                 COutPoint outpoint = tx.vin[i].prevout;
                 if (!mapNextTx.count(outpoint)) {
-                    printf("txaccept: %s replacement failed as no outpoint found\n", hash.ToString().substr(0,10).c_str()); // REB
+                    if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
+                    printf("txaccept: %s replacement failed as no outpoint found\n", hash.ToString().substr(0,10).c_str());
                     return false;
                 }
                 if (mapNextTx[outpoint].ptx != ptxOld) {
+                    if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
                     printf("txaccept: %s replacement failed as outpoint is different\n", hash.ToString().substr(0,10).c_str());
                     return false;
                 }
             }
+            if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
             printf("txaccept: %s is a replacement\n", hash.ToString().substr(0,10).c_str());
 
             break;
@@ -565,6 +575,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         if (!tx.FetchInputs(txdb, mapUnused, false, false, mapInputs, fInvalid))
         {
             if (fInvalid) {
+                if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
                 return error("txaccept: %s FetchInputs found invalid", hash.ToString().substr(0,10).c_str());
             }
             if (pfMissingInputs)
@@ -574,6 +585,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
         // Check for non-standard pay-to-script-hash in inputs
         if (!tx.AreInputsStandard(mapInputs) && !fTestNet) {
+            if (txnode && fLogTxPeer) printf("%s ", txnode->addr.ToString().c_str());
             return error("txaccept: %s nonstandard inputs", hash.ToString().substr(0,10).c_str());
         }
 
@@ -586,7 +598,9 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
         // Don't accept it if it can't get into a block
         if (nFees < tx.GetMinFee(1000, true, GMF_RELAY)) {
-            printf("txaccept: tx %s not enough fees\n", hash.ToString().substr(0,10).c_str());
+            printf("txaccept: tx %s ", hash.ToString().substr(0,10).c_str());
+            if (txnode && fLogTxPeer) printf("from %s ", txnode->addr.ToString().c_str());
+            printf("not enough fees\n");
             return false;
         }
 
@@ -608,7 +622,9 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
                 // -limitfreerelay unit is thousand-bytes-per-minute
                 // At default rate it would take over a month to fill 1GB
                 if (dFreeCount > GetArg("-limitfreerelay", 15)*10*1000 && !IsFromMe(tx)) {
-                    printf("txaccept: free tx %s rejected by rate limiter\n", hash.ToString().substr(0,10).c_str());
+                    printf("txaccept: free tx %s ", hash.ToString().substr(0,10).c_str());
+                    if (txnode && fLogTxPeer) printf("from %s ", txnode->addr.ToString().c_str());
+                    printf("rejected by rate limiter\n");
                     return false;
                 } else
                     fFreetx = true;
@@ -644,7 +660,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
     printf("mempool %lu: ", mapTx.size());
     if (fFreetx) printf("free ");
-    printf("tx %s accepted\n", hash.ToString().substr(0,10).c_str());
+    printf("tx %s accepted ", hash.ToString().substr(0,10).c_str());
 
     return true;
 }
@@ -2850,10 +2866,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         bool fMissingInputs = false;
-        txnode = pfrom;
+        txnode = pfrom; 
         if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs))
         {
             txnode = NULL;
+            if (fLogTxPeer)
+                printf("from %s\n", pfrom->addr.ToString().c_str());
+            else
+                printf("\n");
             SyncWithWallets(tx, NULL, true);
             RelayMessage(inv, vMsg);
             mapAlreadyAskedFor.erase(inv);
@@ -2874,7 +2894,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
                     if (tx.AcceptToMemoryPool(txdb, true))
                     {
-                        printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+                        printf("(orphan)\n");
                         SyncWithWallets(tx, NULL, true);
                         RelayMessage(inv, vMsg);
                         mapAlreadyAskedFor.erase(inv);
@@ -2885,7 +2905,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
             BOOST_FOREACH(uint256 hash, vWorkQueue)
                 EraseOrphanTx(hash);
-        }
+        } // if tx.AcceptToMemoryPool()
         else if (fMissingInputs)
         {
             if (CaughtUp() || !fQuietInitial)

@@ -117,6 +117,7 @@ extern bool fTestNet;
 extern bool fNoListen;
 extern bool fLogTimestamps;
 extern bool fQuietInitial;
+extern bool fLogTxPeer;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
