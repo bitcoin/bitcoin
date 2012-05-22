@@ -926,6 +926,11 @@ int GetNumBlocksOfPeers()
     return std::max(cPeerBlockCounts.median(), Checkpoints::GetTotalBlocksEstimate());
 }
 
+bool CaughtUp()
+{
+    return (nBestHeight >= GetNumBlocksOfPeers());
+}
+
 bool IsInitialBlockDownload()
 {
     if (pindexBest == NULL || nBestHeight < Checkpoints::GetTotalBlocksEstimate())
@@ -1634,9 +1639,14 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         return false;
 
     // New best
-    if (pindexNew->bnChainWork > bnBestChainWork)
-        if (!SetBestChain(txdb, pindexNew))
+    if (pindexNew->bnChainWork > bnBestChainWork) {
+        if (CaughtUp()) printf("New block is a potential best. Checkng...\n");
+        if (!SetBestChain(txdb, pindexNew)) {
+            printf("SetBestChain() failed\n");
             return false;
+        }
+    } else
+        printf("New block has less work than current best.\n");
 
     txdb.Close();
 
@@ -1765,6 +1775,7 @@ bool CBlock::AcceptBlock()
 
 bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 {
+    int64 nStart = GetTimeMillis();
     // Check for duplicate
     uint256 hash = pblock->GetHash();
     if (mapBlockIndex.count(hash))
@@ -1818,6 +1829,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (!pblock->AcceptBlock())
         return error("ProcessBlock() : AcceptBlock FAILED");
 
+    printf("Block ACCEPTED %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    nStart = GetTimeMillis();
+
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
     vWorkQueue.push_back(hash);
@@ -1829,15 +1843,20 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              ++mi)
         {
             CBlock* pblockOrphan = (*mi).second;
-            if (pblockOrphan->AcceptBlock())
-                vWorkQueue.push_back(pblockOrphan->GetHash());
-            mapOrphanBlocks.erase(pblockOrphan->GetHash());
+            uint256 orphanhash = pblockOrphan->GetHash();
+            if (pblockOrphan->AcceptBlock()) {
+                vWorkQueue.push_back(orphanhash);
+                printf("Orphan block %s ACCEPTED %15"PRI64d"ms\n", orphanhash.ToString().substr(0,20).c_str(),
+                  GetTimeMillis() - nStart);
+            } else
+                printf("Orphan block %s REJECTED %15"PRI64d"ms\n", orphanhash.ToString().substr(0,20).c_str(),
+                  GetTimeMillis() - nStart);
+            mapOrphanBlocks.erase(orphanhash);
             delete pblockOrphan;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    printf("ProcessBlock: ACCEPTED\n");
     return true;
 }
 
