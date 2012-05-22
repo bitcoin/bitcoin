@@ -239,6 +239,7 @@ std::string HelpMessage()
         "  -testnet               " + _("Use the test network") + "\n" +
         "  -debug                 " + _("Output extra debugging information") + "\n" +
         "  -logtimestamps         " + _("Prepend debug output with timestamp") + "\n" +
+        "  -quietinitial          " + _("Reduce debug output on initial block download") + "\n" +
         "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n" +
 #ifdef WIN32
         "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n" +
@@ -322,6 +323,7 @@ bool AppInit2()
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
     fLogTimestamps = GetBoolArg("-logtimestamps");
+    fQuietInitial = GetBoolArg("-quietinitial");
 
 #if !defined(WIN32) && !defined(QT_GUI)
     if (fDaemon)

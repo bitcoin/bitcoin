@@ -293,12 +293,13 @@ public:
         }
     }
 
-    void AskFor(const CInv& inv)
+    int64 AskFor(const CInv& inv)
     {
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
         int64& nRequestTime = mapAlreadyAskedFor[inv];
-        printf("askfor %s   %"PRI64d"\n", inv.ToString().c_str(), nRequestTime);
+        if (CaughtUp() || !fQuietInitial)
+            printf("askfor %s   %"PRI64d"\n", inv.ToString().c_str(), nRequestTime);
 
         // Make sure not to reuse time indexes to keep things in the same order
         int64 nNow = (GetTime() - 1) * 1000000;
@@ -310,6 +311,8 @@ public:
         // Each retry is 2 minutes after the last
         nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
         mapAskFor.insert(std::make_pair(nRequestTime, inv));
+
+        return nRequestTime;
     }
 
 

@@ -172,7 +172,7 @@ bool RecvLine(SOCKET hSocket, string& strLine)
             if (nBytes == 0)
             {
                 // socket closed
-                printf("socket closed\n");
+                if (fDebug) printf("socket closed\n");
                 return false;
             }
             else
@@ -488,7 +488,8 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, int64 nTimeout)
         addrman.Attempt(addrConnect);
 
         /// debug print
-        printf("connected %s\n", pszDest ? pszDest : addrConnect.ToString().c_str());
+        if (CaughtUp() || !fQuietInitial)
+            printf("connected %s\n", pszDest ? pszDest : addrConnect.ToString().c_str());
 
         // Set to nonblocking
 #ifdef WIN32
