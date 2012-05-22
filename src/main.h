@@ -594,7 +594,13 @@ public:
         // Read transaction
         if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
             return error("CTransaction::ReadFromDisk() : fseek failed");
-        filein >> *this;
+
+        try {
+            filein >> *this;
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+        }
 
         // Return file pointer
         if (pfileRet)
@@ -976,7 +982,12 @@ public:
             filein.nType |= SER_BLOCKHEADERONLY;
 
         // Read block
-        filein >> *this;
+        try {
+            filein >> *this;
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+        }
 
         // Check the header
         if (!CheckProofOfWork(GetHash(), nBits))

@@ -1490,7 +1490,9 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 {
     uint256 hash = GetHash();
 
-    txdb.TxnBegin();
+    if (!txdb.TxnBegin())
+        return error("SetBestChain() : TxnBegin failed");
+
     if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
     {
         txdb.WriteHashBestChain(hash);
@@ -1539,7 +1541,10 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
                 printf("SetBestChain() : ReadFromDisk failed\n");
                 break;
             }
-            txdb.TxnBegin();
+            if (!txdb.TxnBegin()) {
+                printf("SetBestChain() : TxnBegin 2 failed\n");
+                break;
+            }
             // errors now are not fatal, we still did a reorganisation to a new chain in a valid way
             if (!block.SetBestChainInner(txdb, pindex))
                 break;
@@ -1597,7 +1602,8 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     pindexNew->bnChainWork = (pindexNew->pprev ? pindexNew->pprev->bnChainWork : 0) + pindexNew->GetBlockWork();
 
     CTxDB txdb;
-    txdb.TxnBegin();
+    if (!txdb.TxnBegin())
+        return false;
     txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
     if (!txdb.TxnCommit())
         return false;
@@ -1825,7 +1831,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
     if (nFreeBytesAvailable < (uint64)15000000 + nAdditionalBytes)
     {
         fShutdown = true;
-        string strMessage = _("Warning: Disk space is low  ");
+        string strMessage = _("Warning: Disk space is low");
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
         ThreadSafeMessageBox(strMessage, "Bitcoin", wxOK | wxICON_EXCLAMATION | wxMODAL);
@@ -2392,6 +2398,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return error("message inv size() = %d", vInv.size());
         }
 
+        // find last block in inv vector
+        unsigned int nLastBlock = (unsigned int)(-1);
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++) {
+            if (vInv[vInv.size() - 1 - nInv].type == MSG_BLOCK) {
+                nLastBlock = vInv.size() - 1 - nInv;
+                break;
+            }
+        }
         CTxDB txdb("r");
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
@@ -2405,13 +2419,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (fDebug)
                 printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
 
-            // Always request the last block in an inv bundle (even if we already have it), as it is the
-            // trigger for the other side to send further invs. If we are stuck on a (very long) side chain,
-            // this is necessary to connect earlier received orphan blocks to the chain again.
-            if (!fAlreadyHave || (inv.type == MSG_BLOCK && nInv==vInv.size()-1))
+            if (!fAlreadyHave)
                 pfrom->AskFor(inv);
-            if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash))
+            else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
                 pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
+            } else if (nInv == nLastBlock) {
+                // In case we are on a very long side-chain, it is possible that we already have
+                // the last block in an inv bundle sent in response to getblocks. Try to detect
+                // this situation and push another getblocks to continue.
+                std::vector<CInv> vGetData(1,inv);
+                pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0));
+                if (fDebug)
+                    printf("force request: %s\n", inv.ToString().c_str());
+            }
 
             // Track requests for our stuff
             Inventory(inv.hash);
@@ -2787,7 +2807,7 @@ bool ProcessMessages(CNode* pfrom)
         unsigned int nMessageSize = hdr.nMessageSize;
         if (nMessageSize > MAX_SIZE)
         {
-            printf("ProcessMessage(%s, %u bytes) : nMessageSize > MAX_SIZE\n", strCommand.c_str(), nMessageSize);
+            printf("ProcessMessages(%s, %u bytes) : nMessageSize > MAX_SIZE\n", strCommand.c_str(), nMessageSize);
             continue;
         }
         if (nMessageSize > vRecv.size())
@@ -2803,7 +2823,7 @@ bool ProcessMessages(CNode* pfrom)
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
         if (nChecksum != hdr.nChecksum)
         {
-            printf("ProcessMessage(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
+            printf("ProcessMessages(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
                strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
             continue;
         }
@@ -2828,22 +2848,22 @@ bool ProcessMessages(CNode* pfrom)
             if (strstr(e.what(), "end of data"))
             {
                 // Allow exceptions from underlength message on vRecv
-                printf("ProcessMessage(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
+                printf("ProcessMessages(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
             }
             else if (strstr(e.what(), "size too large"))
             {
                 // Allow exceptions from overlong size
-                printf("ProcessMessage(%s, %u bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
+                printf("ProcessMessages(%s, %u bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
             }
             else
             {
-                PrintExceptionContinue(&e, "ProcessMessage()");
+                PrintExceptionContinue(&e, "ProcessMessages()");
             }
         }
         catch (std::exception& e) {
-            PrintExceptionContinue(&e, "ProcessMessage()");
+            PrintExceptionContinue(&e, "ProcessMessages()");
         } catch (...) {
-            PrintExceptionContinue(NULL, "ProcessMessage()");
+            PrintExceptionContinue(NULL, "ProcessMessages()");
         }
 
         if (!fRet)
