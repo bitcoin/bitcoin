@@ -405,9 +405,15 @@ bool CTxDB::ReadOwnerTxes(uint160 hash160, int nMinHeight, vector<CTransaction>&
         string strType;
         uint160 hashItem;
         CDiskTxPos pos;
-        ssKey >> strType >> hashItem >> pos;
         int nItemHeight;
-        ssValue >> nItemHeight;
+
+        try {
+            ssKey >> strType >> hashItem >> pos;
+            ssValue >> nItemHeight;
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
 
         // Read transaction
         if (strType != "owner" || hashItem != hash160)
@@ -527,6 +533,8 @@ bool CTxDB::LoadBlockIndex()
             return false;
 
         // Unserialize
+
+        try {
         string strType;
         ssKey >> strType;
         if (strType == "blockindex")
@@ -557,6 +565,10 @@ bool CTxDB::LoadBlockIndex()
         else
         {
             break;
+        }
+        }    // try
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
     pcursor->close();

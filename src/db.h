@@ -73,8 +73,13 @@ protected:
             return false;
 
         // Unserialize value
-        CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK);
-        ssValue >> value;
+        try {
+            CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK);
+            ssValue >> value;
+        }
+        catch (std::exception &e) {
+            return false;
+        }
 
         // Clear and free memory
         memset(datValue.get_data(), 0, datValue.get_size());
