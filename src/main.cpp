@@ -2755,9 +2755,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         else if (fMissingInputs)
         {
-            printf("storing orphan tx %s (mapsz %d)\n",
-                   inv.hash.ToString().substr(0,10).c_str(),
-                   mapOrphanTransactions.size() + 1);
             AddOrphanTx(vMsg);
 
             // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
