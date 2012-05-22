@@ -176,6 +176,12 @@ int GetRandInt(int nMax)
     return GetRand(nMax);
 }
 
+uint256 GetRandHash()
+{
+    uint256 hash;
+    RAND_bytes((unsigned char*)&hash, sizeof(hash));
+    return hash;
+}
 
 
 
