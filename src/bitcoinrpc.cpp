@@ -791,7 +791,8 @@ Value movecmd(const Array& params, bool fHelp)
         strComment = params[4].get_str();
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.TxnBegin();
+    if (!walletdb.TxnBegin())
+        throw JSONRPCError(-20, "database error");
 
     int64 nNow = GetAdjustedTime();
 
@@ -813,7 +814,8 @@ Value movecmd(const Array& params, bool fHelp)
     credit.strComment = strComment;
     walletdb.WriteAccountingEntry(credit);
 
-    walletdb.TxnCommit();
+    if (!walletdb.TxnCommit())
+        throw JSONRPCError(-20, "database error");
 
     return true;
 }
