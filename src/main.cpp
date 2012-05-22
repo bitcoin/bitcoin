@@ -2947,7 +2947,7 @@ bool ProcessMessages(CNode* pfrom)
         unsigned int nMessageSize = hdr.nMessageSize;
         if (nMessageSize > MAX_SIZE)
         {
-            printf("ProcessMessage(%s, %u bytes) : nMessageSize > MAX_SIZE\n", strCommand.c_str(), nMessageSize);
+            printf("ProcessMessages(%s, %u bytes) : nMessageSize > MAX_SIZE\n", strCommand.c_str(), nMessageSize);
             continue;
         }
         if (nMessageSize > vRecv.size())
@@ -2963,7 +2963,7 @@ bool ProcessMessages(CNode* pfrom)
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
         if (nChecksum != hdr.nChecksum)
         {
-            printf("ProcessMessage(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
+            printf("ProcessMessages(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
                strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
             continue;
         }
@@ -2988,22 +2988,22 @@ bool ProcessMessages(CNode* pfrom)
             if (strstr(e.what(), "end of data"))
             {
                 // Allow exceptions from underlength message on vRecv
-                printf("ProcessMessage(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
+                printf("ProcessMessages(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
             }
             else if (strstr(e.what(), "size too large"))
             {
                 // Allow exceptions from overlong size
-                printf("ProcessMessage(%s, %u bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
+                printf("ProcessMessages(%s, %u bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
             }
             else
             {
-                PrintExceptionContinue(&e, "ProcessMessage()");
+                PrintExceptionContinue(&e, "ProcessMessages()");
             }
         }
         catch (std::exception& e) {
-            PrintExceptionContinue(&e, "ProcessMessage()");
+            PrintExceptionContinue(&e, "ProcessMessages()");
         } catch (...) {
-            PrintExceptionContinue(NULL, "ProcessMessage()");
+            PrintExceptionContinue(NULL, "ProcessMessages()");
         }
 
         if (!fRet)
