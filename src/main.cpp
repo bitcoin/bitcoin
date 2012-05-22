@@ -424,6 +424,7 @@ bool CTransaction::CheckTransaction() const
     }
     // Size limits
     if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("checktx: %s size limits failed", hash.ToString().substr(0,10).c_str()));
     }
 
@@ -432,13 +433,16 @@ bool CTransaction::CheckTransaction() const
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         if (txout.nValue < 0) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("checktx: %s txout.nValue negative", hash.ToString().substr(0,10).c_str()));
         }
         if (txout.nValue > MAX_MONEY) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("checktx: %s txout.nValue too high", hash.ToString().substr(0,10).c_str()));
         }
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut)) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("checktx: %s txout total out of range", hash.ToString().substr(0,10).c_str()));
         }
     }
@@ -457,6 +461,7 @@ bool CTransaction::CheckTransaction() const
     if (IsCoinBase())
     {
         if (vin[0].scriptSig.size() < 2 || vin[0].scriptSig.size() > 100) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("checktx: %s coinbase script size %d", hash.ToString().substr(0,10).c_str(), vin[0].scriptSig.size()));
         }
     }
@@ -484,6 +489,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase()) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return tx.DoS(100, error("txaccept: %s coinbase as individual tx", hash.ToString().substr(0,10).c_str()));
     }
 
@@ -1133,6 +1139,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
             // Revisit this if/when transaction replacement is implemented and allows
             // adding inputs:
             fInvalid = true;
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("FetchInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
         }
     }
@@ -1201,8 +1208,10 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             CTxIndex& txindex = inputs[prevout.hash].first;
             CTransaction& txPrev = inputs[prevout.hash].second;
 
-            if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
+            if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size()) {
+                if (txnode) printf("%s ", txnode->addr.ToString().c_str());
                 return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %d %d prev tx %s\n%s", GetHash().ToString().substr(0,10).c_str(), prevout.n, txPrev.vout.size(), txindex.vSpent.size(), prevout.hash.ToString().substr(0,10).c_str(), txPrev.ToString().c_str()));
+            }
 
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
@@ -1220,8 +1229,10 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
 
             // Check for negative or overflow input values
             nValueIn += txPrev.vout[prevout.n].nValue;
-            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn)) {
+                if (txnode) printf("%s ", txnode->addr.ToString().c_str());
                 return DoS(100, error("ConnectInputs() : txin values out of range"));
+            }
 
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
@@ -1236,6 +1247,7 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
                     if (fStrictPayToScriptHash && VerifySignature(txPrev, *this, i, false, 0))
                         return error("ConnectInputs() : %s P2SH VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
 
+                    if (txnode) printf("%s ", txnode->addr.ToString().c_str());
                     return DoS(100,error("ConnectInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
                 }
             }
@@ -1250,16 +1262,22 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             }
         }
 
-        if (nValueIn < GetValueOut())
+        if (nValueIn < GetValueOut()) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("ConnectInputs() : %s value in < value out", GetHash().ToString().substr(0,10).c_str()));
+        }
 
         // Tally transaction fees
         int64 nTxFee = nValueIn - GetValueOut();
-        if (nTxFee < 0)
+        if (nTxFee < 0) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("ConnectInputs() : %s nTxFee < 0", GetHash().ToString().substr(0,10).c_str()));
+        }
         nFees += nTxFee;
-        if (!MoneyRange(nFees))
+        if (!MoneyRange(nFees)) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("ConnectInputs() : nFees out of range"));
+        }
     }
 
     return true;
@@ -1380,8 +1398,10 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
         nSigOps += tx.GetLegacySigOpCount();
-        if (nSigOps > MAX_BLOCK_SIGOPS)
+        if (nSigOps > MAX_BLOCK_SIGOPS) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("ConnectBlock() : too many sigops"));
+        }
 
         CDiskTxPos posThisTx(pindex->nFile, pindex->nBlockPos, nTxPos);
         nTxPos += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
@@ -1399,8 +1419,10 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
                 // this is to prevent a "rogue miner" from creating
                 // an incredibly-expensive-to-validate block.
                 nSigOps += tx.GetP2SHSigOpCount(mapInputs);
-                if (nSigOps > MAX_BLOCK_SIGOPS)
+                if (nSigOps > MAX_BLOCK_SIGOPS) {
+                    if (txnode) printf("%s ", txnode->addr.ToString().c_str());
                     return DoS(100, error("ConnectBlock() : too many sigops"));
+                }
             }
 
             nFees += tx.GetValueIn(mapInputs)-tx.GetValueOut();
@@ -1724,23 +1746,30 @@ bool CBlock::CheckBlock() const
     // that can be verified before saving an orphan block.
 
     // Size limits
-    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("CheckBlock() : size limits failed"));
+    }
 
     // Check proof of work matches claimed amount
     if (!CheckProofOfWork(GetHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
-    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60) {
         return error("CheckBlock() : block timestamp too far in the future");
+    }
 
     // First transaction must be coinbase, the rest must not be
-    if (vtx.empty() || !vtx[0].IsCoinBase())
+    if (vtx.empty() || !vtx[0].IsCoinBase()) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
+    }
     for (unsigned int i = 1; i < vtx.size(); i++)
-        if (vtx[i].IsCoinBase())
+        if (vtx[i].IsCoinBase()) {
+            if (txnode) printf("%s ", txnode->addr.ToString().c_str());
             return DoS(100, error("CheckBlock() : more than one coinbase"));
+        }
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -1754,20 +1783,26 @@ bool CBlock::CheckBlock() const
     {
         uniqueTx.insert(tx.GetHash());
     }
-    if (uniqueTx.size() != vtx.size())
+    if (uniqueTx.size() != vtx.size()) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("CheckBlock() : duplicate transaction"));
+    }
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         nSigOps += tx.GetLegacySigOpCount();
     }
-    if (nSigOps > MAX_BLOCK_SIGOPS)
+    if (nSigOps > MAX_BLOCK_SIGOPS) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+    }
 
     // Check merkleroot
-    if (hashMerkleRoot != BuildMerkleTree())
+    if (hashMerkleRoot != BuildMerkleTree()) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+    }
 
     return true;
 }
@@ -1787,8 +1822,10 @@ bool CBlock::AcceptBlock()
     int nHeight = pindexPrev->nHeight+1;
 
     // Check proof of work
-    if (nBits != GetNextWorkRequired(pindexPrev, this))
+    if (nBits != GetNextWorkRequired(pindexPrev, this)) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("AcceptBlock() : incorrect proof of work"));
+    }
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -1800,8 +1837,10 @@ bool CBlock::AcceptBlock()
             return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
 
     // Check that the block chain matches the known block chain up to a checkpoint
-    if (!Checkpoints::CheckBlock(nHeight, hash))
+    if (!Checkpoints::CheckBlock(nHeight, hash)) {
+        if (txnode) printf("%s ", txnode->addr.ToString().c_str());
         return DoS(100, error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight));
+    }
 
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
@@ -2811,8 +2850,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         bool fMissingInputs = false;
+        txnode = pfrom;
         if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs))
         {
+            txnode = NULL;
             SyncWithWallets(tx, NULL, true);
             RelayMessage(inv, vMsg);
             mapAlreadyAskedFor.erase(inv);
