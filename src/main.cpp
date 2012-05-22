@@ -653,6 +653,15 @@ bool CTxMemPool::remove(CTransaction &tx)
     return true;
 }
 
+void
+CTxMemPool::clear()
+{
+    LOCK(cs);
+    mapTx.clear();
+    mapNextTx.clear();
+    ++nTransactionsUpdated;
+}
+
 void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
 {
     vtxid.clear();
