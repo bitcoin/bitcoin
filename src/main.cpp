@@ -44,7 +44,7 @@ map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
 
 map<uint256, CDataStream*> mapOrphanTransactions;
-multimap<uint256, CDataStream*> mapOrphanTransactionsByPrev;
+map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
@@ -161,17 +161,37 @@ void static ResendWalletTransactions()
 // mapOrphanTransactions
 //
 
-void AddOrphanTx(const CDataStream& vMsg)
+bool AddOrphanTx(const CDataStream& vMsg)
 {
     CTransaction tx;
     CDataStream(vMsg) >> tx;
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
-        return;
+        return false;
 
-    CDataStream* pvMsg = mapOrphanTransactions[hash] = new CDataStream(vMsg);
+    CDataStream* pvMsg = new CDataStream(vMsg);
+
+    // Ignore big transactions, to avoid a
+    // send-big-orphans memory exhaustion attack. If a peer has a legitimate
+    // large transaction with a missing parent then we assume
+    // it will rebroadcast it later, after the parent transaction(s)
+    // have been mined or received.
+    // 10,000 orphans, each of which is at most 5,000 bytes big is
+    // at most 500 megabytes of orphans:
+    if (pvMsg->size() > 5000)
+    {
+        delete pvMsg;
+        printf("ignoring large orphan tx (size: %u, hash: %s)\n", pvMsg->size(), hash.ToString().substr(0,10).c_str());
+        return false;
+    }
+
+    mapOrphanTransactions[hash] = pvMsg;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        mapOrphanTransactionsByPrev.insert(make_pair(txin.prevout.hash, pvMsg));
+        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pvMsg));
+
+    printf("stored orphan tx %s (mapsz %u)\n", hash.ToString().substr(0,10).c_str(),
+        mapOrphanTransactions.size());
+    return true;
 }
 
 void static EraseOrphanTx(uint256 hash)
@@ -183,14 +203,9 @@ void static EraseOrphanTx(uint256 hash)
     CDataStream(*pvMsg) >> tx;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        for (multimap<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev.lower_bound(txin.prevout.hash);
-             mi != mapOrphanTransactionsByPrev.upper_bound(txin.prevout.hash);)
-        {
-            if ((*mi).second == pvMsg)
-                mapOrphanTransactionsByPrev.erase(mi++);
-            else
-                mi++;
-        }
+        mapOrphanTransactionsByPrev[txin.prevout.hash].erase(hash);
+        if (mapOrphanTransactionsByPrev[txin.prevout.hash].empty())
+            mapOrphanTransactionsByPrev.erase(txin.prevout.hash);
     }
     delete pvMsg;
     mapOrphanTransactions.erase(hash);
@@ -202,9 +217,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     while (mapOrphanTransactions.size() > nMaxOrphans)
     {
         // Evict a random orphan:
-        std::vector<unsigned char> randbytes(32);
-        RAND_bytes(&randbytes[0], 32);
-        uint256 randomhash(randbytes);
+        uint256 randomhash = GetRandHash();
         map<uint256, CDataStream*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
         if (it == mapOrphanTransactions.end())
             it = mapOrphanTransactions.begin();
@@ -1155,16 +1168,27 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
 
+            // Check for negative or overflow input values
+            nValueIn += txPrev.vout[prevout.n].nValue;
+            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+                return DoS(100, error("ConnectInputs() : txin values out of range"));
+
+        }
+        // The first loop above does all the inexpensive checks.
+        // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
+        // Helps prevent CPU exhaustion attacks.
+        for (unsigned int i = 0; i < vin.size(); i++)
+        {
+            COutPoint prevout = vin[i].prevout;
+            assert(inputs.count(prevout.hash) > 0);
+            CTxIndex& txindex = inputs[prevout.hash].first;
+            CTransaction& txPrev = inputs[prevout.hash].second;
+
             // Check for conflicts (double-spend)
             // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
             // for an attacker to attempt to split the network.
             if (!txindex.vSpent[prevout.n].IsNull())
                 return fMiner ? false : error("ConnectInputs() : %s prev tx already used at %s", GetHash().ToString().substr(0,10).c_str(), txindex.vSpent[prevout.n].ToString().c_str());
-
-            // Check for negative or overflow input values
-            nValueIn += txPrev.vout[prevout.n].nValue;
-            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
-                return DoS(100, error("ConnectInputs() : txin values out of range"));
 
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
@@ -2460,7 +2484,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     // at a time so the setAddrKnowns of the chosen nodes prevent repeats
                     static uint256 hashSalt;
                     if (hashSalt == 0)
-                        RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
+                        hashSalt = GetRandHash();
                     int64 hashAddr = addr.GetHash();
                     uint256 hashRand = hashSalt ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
@@ -2676,6 +2700,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     else if (strCommand == "tx")
     {
         vector<uint256> vWorkQueue;
+        vector<uint256> vEraseQueue;
         CDataStream vMsg(vRecv);
         CTxDB txdb("r");
         CTransaction tx;
@@ -2691,32 +2716,41 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             RelayMessage(inv, vMsg);
             mapAlreadyAskedFor.erase(inv);
             vWorkQueue.push_back(inv.hash);
+            vEraseQueue.push_back(inv.hash);
 
             // Recursively process any orphan transactions that depended on this one
             for (unsigned int i = 0; i < vWorkQueue.size(); i++)
             {
                 uint256 hashPrev = vWorkQueue[i];
-                for (multimap<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev.lower_bound(hashPrev);
-                     mi != mapOrphanTransactionsByPrev.upper_bound(hashPrev);
+                for (map<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
+                     mi != mapOrphanTransactionsByPrev[hashPrev].end();
                      ++mi)
                 {
                     const CDataStream& vMsg = *((*mi).second);
                     CTransaction tx;
                     CDataStream(vMsg) >> tx;
                     CInv inv(MSG_TX, tx.GetHash());
+                    bool fMissingInputs2 = false;
 
-                    if (tx.AcceptToMemoryPool(txdb, true))
+                    if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs2))
                     {
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
                         SyncWithWallets(tx, NULL, true);
                         RelayMessage(inv, vMsg);
                         mapAlreadyAskedFor.erase(inv);
                         vWorkQueue.push_back(inv.hash);
+                        vEraseQueue.push_back(inv.hash);
+                    }
+                    else if (!fMissingInputs2)
+                    {
+                        // invalid orphan
+                        vEraseQueue.push_back(inv.hash);
+                        printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
                     }
                 }
             }
 
-            BOOST_FOREACH(uint256 hash, vWorkQueue)
+            BOOST_FOREACH(uint256 hash, vEraseQueue)
                 EraseOrphanTx(hash);
         }
         else if (fMissingInputs)
@@ -3072,7 +3106,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     // 1/4 of tx invs blast to all immediately
                     static uint256 hashSalt;
                     if (hashSalt == 0)
-                        RAND_bytes((unsigned char*)&hashSalt, sizeof(hashSalt));
+                        hashSalt = GetRandHash();
                     uint256 hashRand = inv.hash ^ hashSalt;
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     bool fTrickleWait = ((hashRand & 3) != 0);
