@@ -78,7 +78,7 @@ protected:
     DbTxn *activeTxn;
     bool fReadOnly;
 
-    explicit CDB(const char* pszFile, const char* pszMode="r+");
+    explicit CDB(const char* pszFile, const char* pszMode="r+", bool fHashDb=false);
     ~CDB() { Close(); }
 public:
     void Close();
@@ -328,7 +328,8 @@ public:
 class CTxDB : public CDB
 {
 public:
-    CTxDB(const char* pszMode="r+") : CDB("blockchain/txhash.dat", pszMode) { }
+    CTxDB(const char* pszMode="r+") :
+            CDB("blockchain/txhash.dat", pszMode, true) { }
 private:
     CTxDB(const CTxDB&);
     void operator=(const CTxDB&);
@@ -349,7 +350,8 @@ public:
 class CBlockIdxDB : public CDB
 {
 public:
-    CBlockIdxDB(const char* pszMode="r+") : CDB("blockchain/blkhash.dat", pszMode) {}
+    CBlockIdxDB(const char* pszMode="r+") :
+            CDB("blockchain/blkhash.dat", pszMode, true) {}
 private:
     CBlockIdxDB(const CBlockIdxDB&);
     void operator=(const CBlockIdxDB&);

@@ -113,7 +113,7 @@ void CDBEnv::CheckpointLSN(std::string strFile)
 }
 
 
-CDB::CDB(const char *pszFile, const char* pszMode) :
+CDB::CDB(const char *pszFile, const char* pszMode, bool fHashDb) :
     pdb(NULL), activeTxn(NULL)
 {
     int ret;
@@ -141,7 +141,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
             ret = pdb->open(NULL,      // Txn pointer
                             pszFile,   // Filename
                             "main",    // Logical db name
-                            DB_BTREE,  // Database type
+                            fHashDb ? DB_HASH : DB_BTREE,  // Database type
                             nFlags,    // Flags
                             0);
 
