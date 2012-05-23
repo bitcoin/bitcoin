@@ -191,6 +191,34 @@ bool static Bind(const CService &addr) {
     return true;
 }
 
+static bool WantChainUpgrade()
+{
+    filesystem::path pathOld = GetDataDir() / "blk0001.dat";
+    filesystem::path pathNew = GetDataDir() / "blockchain" / "blk0001.dat";
+
+    // if new db exists, no upgrade needed
+    if (filesystem::exists(pathNew))
+        return false;
+
+    // if old db missing, no upgrade possible
+    if (!filesystem::exists(pathOld))
+        return false;
+
+    return true;
+}
+
+static void UpgradeBlockChain()
+{
+    filesystem::path pathOld = GetDataDir() / "blk0001.dat";
+
+    InitWarning(_("Upgrading and reindexing database.  This will take a LONG time."));
+    printf("Upgrading and reindexing database.  This will take a LONG time.\n");
+
+    FILE *file = fopen(pathOld.string().c_str(), "rb");
+    if (file)
+        LoadExternalBlockFile(file);
+}
+
 // Core-specific options shared between UI and daemon
 std::string HelpMessage()
 {
@@ -508,17 +536,23 @@ bool AppInit2()
 
     if (GetBoolArg("-loadblockindextest"))
     {
-        CTxDB txdb("r");
-        txdb.LoadBlockIndex();
+        CBlockIdxDB blkidxdb("r");
+        blkidxdb.LoadBlockIndex();
+
+        CMetaDB metadb("r");
+        metadb.LoadBlockIndex();
+
         PrintBlockTree();
         return false;
     }
+
+    bool fWantUpgrade = WantChainUpgrade();
 
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
     if (!LoadBlockIndex())
-        strErrors << _("Error loading blkindex.dat") << "\n";
+        strErrors << _("Error loading block index") << "\n";
 
     // as LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill bitcoin-qt during the last operation. If so, exit.
@@ -637,6 +671,9 @@ bool AppInit2()
     }
 
     // ********************************************************* Step 8: import blocks
+
+    if (fWantUpgrade)
+        UpgradeBlockChain();
 
     if (mapArgs.count("-loadblock"))
     {

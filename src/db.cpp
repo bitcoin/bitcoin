@@ -172,7 +172,9 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
 
 static bool IsChainFile(std::string strFile)
 {
-    if (strFile == "blkindex.dat")
+    if (strFile == "blockchain/blkmeta.dat" ||
+        strFile == "blockchain/blkhash.dat" ||
+        strFile == "blockchain/txhash.dat")
         return true;
 
     return false;
@@ -371,13 +373,13 @@ bool CTxDB::ReadTxIndex(uint256 hash, CTxIndex& txindex)
 {
     assert(!fClient);
     txindex.SetNull();
-    return Read(make_pair(string("tx"), hash), txindex);
+    return Read(hash, txindex);
 }
 
 bool CTxDB::UpdateTxIndex(uint256 hash, const CTxIndex& txindex)
 {
     assert(!fClient);
-    return Write(make_pair(string("tx"), hash), txindex);
+    return Write(hash, txindex);
 }
 
 bool CTxDB::AddTxIndex(const CTransaction& tx, const CDiskTxPos& pos, int nHeight)
@@ -387,7 +389,7 @@ bool CTxDB::AddTxIndex(const CTransaction& tx, const CDiskTxPos& pos, int nHeigh
     // Add to tx index
     uint256 hash = tx.GetHash();
     CTxIndex txindex(pos, tx.vout.size());
-    return Write(make_pair(string("tx"), hash), txindex);
+    return Write(hash, txindex);
 }
 
 bool CTxDB::EraseTxIndex(const CTransaction& tx)
@@ -395,16 +397,16 @@ bool CTxDB::EraseTxIndex(const CTransaction& tx)
     assert(!fClient);
     uint256 hash = tx.GetHash();
 
-    return Erase(make_pair(string("tx"), hash));
+    return Erase(hash);
 }
 
 bool CTxDB::ContainsTx(uint256 hash)
 {
     assert(!fClient);
-    return Exists(make_pair(string("tx"), hash));
+    return Exists(hash);
 }
 
-bool CTxDB::ReadOwnerTxes(uint160 hash160, int nMinHeight, vector<CTransaction>& vtx)
+bool CMetaDB::ReadOwnerTxes(uint160 hash160, int nMinHeight, vector<CTransaction>& vtx)
 {
     assert(!fClient);
     vtx.clear();
@@ -490,27 +492,22 @@ bool CTxDB::ReadDiskTx(COutPoint outpoint, CTransaction& tx)
     return ReadDiskTx(outpoint.hash, tx, txindex);
 }
 
-bool CTxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
-{
-    return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
-}
-
-bool CTxDB::ReadHashBestChain(uint256& hashBestChain)
+bool CMetaDB::ReadHashBestChain(uint256& hashBestChain)
 {
     return Read(string("hashBestChain"), hashBestChain);
 }
 
-bool CTxDB::WriteHashBestChain(uint256 hashBestChain)
+bool CMetaDB::WriteHashBestChain(uint256 hashBestChain)
 {
     return Write(string("hashBestChain"), hashBestChain);
 }
 
-bool CTxDB::ReadBestInvalidWork(CBigNum& bnBestInvalidWork)
+bool CMetaDB::ReadBestInvalidWork(CBigNum& bnBestInvalidWork)
 {
     return Read(string("bnBestInvalidWork"), bnBestInvalidWork);
 }
 
-bool CTxDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
+bool CMetaDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
 {
     return Write(string("bnBestInvalidWork"), bnBestInvalidWork);
 }
@@ -535,11 +532,8 @@ CBlockIndex static * InsertBlockIndex(uint256 hash)
     return pindexNew;
 }
 
-bool CTxDB::LoadBlockIndex()
+bool CMetaDB::LoadBlockIndex()
 {
-    if (!LoadBlockIndexGuts())
-        return false;
-
     if (fRequestShutdown)
         return true;
 
@@ -603,11 +597,12 @@ bool CTxDB::LoadBlockIndex()
         {
             pair<unsigned int, unsigned int> pos = make_pair(pindex->nFile, pindex->nBlockPos);
             mapBlockPos[pos] = pindex;
+            CTxDB txdb;                  // ugh; at least Satoshi did it first
             BOOST_FOREACH(const CTransaction &tx, block.vtx)
             {
                 uint256 hashTx = tx.GetHash();
                 CTxIndex txindex;
-                if (ReadTxIndex(hashTx, txindex))
+                if (txdb.ReadTxIndex(hashTx, txindex))
                 {
                     // check level 3: checker transaction hashes
                     if (nCheckLevel>2 || pindex->nFile != txindex.pos.nFile || pindex->nBlockPos != txindex.pos.nBlockPos)
@@ -678,7 +673,7 @@ bool CTxDB::LoadBlockIndex()
                      BOOST_FOREACH(const CTxIn &txin, tx.vin)
                      {
                           CTxIndex txindex;
-                          if (ReadTxIndex(txin.prevout.hash, txindex))
+                          if (txdb.ReadTxIndex(txin.prevout.hash, txindex))
                               if (txindex.vSpent.size()-1 < txin.prevout.n || txindex.vSpent[txin.prevout.n].IsNull())
                               {
                                   printf("LoadBlockIndex(): *** found unspent prevout %s:%i in %s\n", txin.prevout.hash.ToString().c_str(), txin.prevout.n, hashTx.ToString().c_str());
@@ -696,16 +691,33 @@ bool CTxDB::LoadBlockIndex()
         CBlock block;
         if (!block.ReadFromDisk(pindexFork))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
+
+        CBlockIdxDB blkidxdb;              // ugh; Satoshi did it first :)
         CTxDB txdb;
-        block.SetBestChain(txdb, pindexFork);
+        CMetaDB metadb;
+        block.SetBestChain(blkidxdb, txdb, metadb, pindexFork);
     }
 
     return true;
 }
 
 
+//
+// CBlockIdxDB
+//
 
-bool CTxDB::LoadBlockIndexGuts()
+bool CBlockIdxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
+{
+    uint256 hash = blockindex.GetBlockHash();
+    return Write(hash, blockindex, true);  // is overwrite really ok here?
+}
+
+bool CBlockIdxDB::EraseBlockIndex(uint256 hash)
+{
+    return Erase(hash);
+}
+
+bool CBlockIdxDB::LoadBlockIndex()
 {
     // Get database cursor
     Dbc* pcursor = GetCursor();
@@ -713,16 +725,12 @@ bool CTxDB::LoadBlockIndexGuts()
         return false;
 
     // Load mapBlockIndex
-    unsigned int fFlags = DB_SET_RANGE;
     loop
     {
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (fFlags == DB_SET_RANGE)
-            ssKey << make_pair(string("blockindex"), uint256(0));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
-        fFlags = DB_NEXT;
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue);
         if (ret == DB_NOTFOUND)
             break;
         else if (ret != 0)
@@ -731,11 +739,10 @@ bool CTxDB::LoadBlockIndexGuts()
         // Unserialize
 
         try {
-        string strType;
-        ssKey >> strType;
-        if (strType == "blockindex" && !fRequestShutdown)
-        {
+            uint256 hashKey;
             CDiskBlockIndex diskindex;
+
+            ssKey >> hashKey;
             ssValue >> diskindex;
 
             // Construct block index object
@@ -757,15 +764,13 @@ bool CTxDB::LoadBlockIndexGuts()
 
             if (!pindexNew->CheckIndex())
                 return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
-        }
-        else
-        {
-            break; // if shutdown requested or finished loading block index
-        }
         }    // try
         catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+            printf("%s() : deserialize error, ignoring", __PRETTY_FUNCTION__);
         }
+
+        if (fRequestShutdown)
+            break;
     }
     pcursor->close();
 
