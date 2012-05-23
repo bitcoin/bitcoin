@@ -2217,6 +2217,40 @@ Value getblock(const Array& params, bool fHelp)
                        (params.size() > 1) ? params[1].get_obj() : emptyobj);
 }
 
+Value sendrawtx(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "sendrawtx <hex string>\n"
+            "Submits raw transaction (serialized, hex-encoded) to local node and network.");
+
+    // parse hex string from parameter
+    vector<unsigned char> txData(ParseHex(params[0].get_str()));
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    CTransaction tx;
+
+    // deserialize binary data stream
+    try {
+        ssData >> tx;
+    }
+    catch (std::exception &e) {
+        throw JSONRPCError(-22, "TX decode failed");
+    }
+
+    // push to local node
+    CTxDB txdb("r");
+    if (!tx.AcceptToMemoryPool(txdb))
+        throw JSONRPCError(-22, "TX rejected");
+
+    SyncWithWallets(tx, NULL, true);
+
+    // relay to network
+    CInv inv(MSG_TX, tx.GetHash());
+    RelayInventory(inv);
+
+    return true;
+}
+
 
 
 
@@ -2280,6 +2314,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listsinceblock",         &listsinceblock,         false },
     { "dumpprivkey",            &dumpprivkey,            false },
     { "importprivkey",          &importprivkey,          false },
+    { "sendrawtx",              &sendrawtx,              false },
 };
 
 CRPCTable::CRPCTable()
