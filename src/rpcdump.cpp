@@ -8,17 +8,11 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
-#include "json/json_spirit_utils.h"
-
 #define printf OutputDebugStringF
 
 // using namespace boost::asio;
 using namespace json_spirit;
 using namespace std;
-
-extern Object JSONRPCError(int code, const string& message);
 
 class CTxDump
 {
