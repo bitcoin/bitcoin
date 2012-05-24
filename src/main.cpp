@@ -7,6 +7,7 @@
 #include "db.h"
 #include "net.h"
 #include "init.h"
+#include "filter.h"
 #include "ui_interface.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -611,6 +612,10 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     printf("CTxMemPool::accept() : accepted %s (poolsz %u)\n",
            hash.ToString().substr(0,10).c_str(),
            mapTx.size());
+
+    // exec -filtertx/-filter hook
+    FilterNotifyTx(tx);
+
     return true;
 }
 
@@ -1615,6 +1620,9 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
         boost::replace_all(strCmd, "%s", hashBestChain.GetHex());
         boost::thread t(runCommand, strCmd); // thread runs free
     }
+
+    // exec -filterblock/-filter hook
+    FilterNotifyBlock(*this);
 
     return true;
 }

@@ -387,6 +387,9 @@ bool AppInit2()
             InitWarning(_("Warning: -paytxfee is set very high. This is the transaction fee you will pay if you send a transaction."));
     }
 
+    extern void FilterSetup();
+    FilterSetup();
+
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
     // Make sure only a single Bitcoin process is using the data directory.
