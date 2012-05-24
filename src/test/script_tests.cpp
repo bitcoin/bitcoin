@@ -59,13 +59,15 @@ ParseScript(string s)
         }
         else if (starts_with(w, "0x") && IsHex(string(w.begin()+2, w.end())))
         {
-            // Hex data:
-            result << ParseHex(string(w.begin()+2, w.end()));
+            // Raw hex data, inserted NOT pushed onto stack:
+            std::vector<unsigned char> raw = ParseHex(string(w.begin()+2, w.end()));
+            result.insert(result.end(), raw.begin(), raw.end());
         }
-        else if (s.size() >= 2 && starts_with(w, "'") && ends_with(w, "'"))
+        else if (w.size() >= 2 && starts_with(w, "'") && ends_with(w, "'"))
         {
-            // Single-quoted string, pushed as data:
-            std::vector<unsigned char> value(s.begin()+1, s.end()-1);
+            // Single-quoted string, pushed as data. NOTE: this is poor-man's
+            // parsing, spaces/tabs/newlines in single-quoted strings won't work.
+            std::vector<unsigned char> value(w.begin()+1, w.end()-1);
             result << value;
         }
         else if (mapOpNames.count(w))
