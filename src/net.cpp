@@ -99,7 +99,7 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 // find 'best' local address for a particular peer
 bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
 {
-    if (fUseProxy || mapArgs.count("-connect") || fNoListen)
+    if (fUseProxy || fNoListen || mapArgs.count("-connect"))
         return false;
 
     int nBestScore = -1;
@@ -196,7 +196,7 @@ void static AdvertizeLocal()
         if (pnode->fSuccessfullyConnected)
         {
             CAddress addrLocal = GetLocalAddress(&pnode->addr);
-            if (addrLocal.IsRoutable() && (CService)addrLocal != (CService)pnode->addrLocal)
+            if ((CService)addrLocal != (CService)pnode->addrLocal && addrLocal.IsRoutable())
             {
                 pnode->PushAddress(addrLocal);
                 pnode->addrLocal = addrLocal;
@@ -211,7 +211,7 @@ bool AddLocal(const CService& addr, int nScore)
     if (!addr.IsRoutable())
         return false;
 
-    if (!GetBoolArg("-discover", true) && nScore < LOCAL_MANUAL)
+    if (nScore < LOCAL_MANUAL && !GetBoolArg("-discover", true))
         return false;
 
     if (IsLimited(addr))
@@ -345,7 +345,7 @@ bool GetMyExternalIP(CNetAddr& ipRet)
     const char* pszGet;
     const char* pszKeyword;
 
-    if (fNoListen||fUseProxy)
+    if (fNoListen || fUseProxy)
         return false;
 
     for (int nLookup = 0; nLookup <= 1; nLookup++)
@@ -705,7 +705,7 @@ void ThreadSocketHandler2(void* parg)
         if (vNodes.size() != nPrevNodeCount)
         {
             nPrevNodeCount = vNodes.size();
-            uiInterface.NotifyNumConnectionsChanged(vNodes.size());
+            uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
         }
 
 
@@ -1395,7 +1395,7 @@ void ThreadOpenConnections2(void* parg)
 
         // Add seed nodes if IRC isn't working
         bool fTOR = (fUseProxy && addrProxy.GetPort() == 9050);
-        if (addrman.size()==0 && (GetTime() - nStart > 60 || fTOR) && !fTestNet)
+        if (!fTestNet && addrman.size() == 0 && (GetTime() - nStart > 60 || fTOR))
         {
             std::vector<CAddress> vAdd;
             for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
@@ -1454,7 +1454,7 @@ void ThreadOpenConnections2(void* parg)
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != GetDefaultPort() && nTries < 50)
+            if (nTries < 50 && addr.GetPort() != GetDefaultPort())
                 continue;
 
             addrConnect = addr;
@@ -1835,7 +1835,7 @@ void static Discover()
     }
 #endif
 
-    if (!fUseProxy && !mapArgs.count("-connect") && !fNoListen)
+    if (!fUseProxy && !fNoListen && !mapArgs.count("-connect"))
     {
         CreateThread(ThreadGetMyExternalIP, NULL);
     }
