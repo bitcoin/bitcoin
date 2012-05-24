@@ -102,7 +102,10 @@ read_json(const std::string& filename)
     Value v;
     if (!read_stream(ifs, v))
     {
-        BOOST_ERROR("Cound not find/open " << filename);
+        if (ifs.fail())
+            BOOST_ERROR("Cound not find/open " << filename);
+        else
+            BOOST_ERROR("JSON syntax error in " << filename);
         return Array();
     }
     if (v.type() != array_type)
