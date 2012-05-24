@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
         tx.vin.resize(500);
-        for (int j = 0; j < tx.vin.size(); j++)
+        for (unsigned int j = 0; j < tx.vin.size(); j++)
         {
             tx.vin[j].prevout.n = j;
             tx.vin[j].prevout.hash = txPrev.GetHash();
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         SignSignature(keystore, txPrev, tx, 0);
         // Re-use same signature for other inputs
         // (they don't have to be valid for this test)
-        for (int j = 1; j < tx.vin.size(); j++)
+        for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
         CDataStream ds(SER_DISK, CLIENT_VERSION);
@@ -257,14 +257,14 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     tx.vout[0].nValue = 1*CENT;
     tx.vout[0].scriptPubKey.SetBitcoinAddress(key.GetPubKey());
     tx.vin.resize(NPREV);
-    for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
     {
         tx.vin[j].prevout.n = 0;
         tx.vin[j].prevout.hash = orphans[j].GetHash();
     }
     // Creating signatures primes the cache:
     boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time();
-    for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
         BOOST_CHECK(SignSignature(keystore, orphans[j], tx, j));
     boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration msdiff = mst2 - mst1;
@@ -276,8 +276,8 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     // uncached Verify takes ~250ms, cached Verify takes ~50ms
     // (for 100 single-signature inputs)
     mst1 = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 5; i++)
-        for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int i = 0; i < 5; i++)
+        for (unsigned int j = 0; j < tx.vin.size(); j++)
             BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, SIGHASH_ALL));
     mst2 = boost::posix_time::microsec_clock::local_time();
     msdiff = mst2 - mst1;
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     CScript oldSig = tx.vin[0].scriptSig;
     BOOST_CHECK(SignSignature(keystore, orphans[0], tx, 0));
     BOOST_CHECK(tx.vin[0].scriptSig != oldSig);
-    for (int j = 0; j < tx.vin.size(); j++)
+    for (unsigned int j = 0; j < tx.vin.size(); j++)
         BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, SIGHASH_ALL));
     mapArgs.erase("-maxsigcachesize");
 
