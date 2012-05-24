@@ -13,6 +13,8 @@
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
 
+json_spirit::Object JSONRPCError(int code, const std::string& message);
+
 void ThreadRPCServer(void* parg);
 int CommandLineRPC(int argc, char *argv[]);
 
