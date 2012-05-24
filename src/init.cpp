@@ -182,12 +182,15 @@ bool static InitWarning(const std::string &str)
 }
 
 
-bool static Bind(const CService &addr) {
+bool static Bind(const CService &addr, bool fError = true) {
     if (IsLimited(addr))
         return false;
     std::string strError;
-    if (!BindListenPort(addr, strError))
-        return InitError(strError);
+    if (!BindListenPort(addr, strError)) {
+        if (fError)
+            return InitError(strError);
+        return false;
+    }
     return true;
 }
 
@@ -204,20 +207,18 @@ std::string HelpMessage()
         "  -dblogsize=<n>         " + _("Set database disk log size in megabytes (default: 100)") + "\n" +
         "  -timeout=<n>           " + _("Specify connection timeout (in milliseconds)") + "\n" +
         "  -proxy=<ip:port>       " + _("Connect through socks proxy") + "\n" +
-        "  -socks=<n>             " + _("Select the version of socks proxy to use (4 or 5, 5 is default)") + "\n" +
-        "  -noproxy=<net>         " + _("Do not use proxy for connections to network <net> (IPv4 or IPv6)") + "\n" +
+        "  -socks=<n>             " + _("Select the version of socks proxy to use (4-5, default: 5)") + "\n" +
         "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + "\n" +
-        "  -proxydns              " + _("Pass DNS requests to (SOCKS5) proxy") + "\n" +
         "  -port=<port>           " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n" +
         "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
         "  -addnode=<ip>          " + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
-        "  -connect=<ip>          " + _("Connect only to the specified node") + "\n" +
+        "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n" +
         "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n" +
         "  -externalip=<ip>       " + _("Specify your own public address") + "\n" +
         "  -onlynet=<net>         " + _("Only connect to nodes in network <net> (IPv4 or IPv6)") + "\n" +
-        "  -discover              " + _("Try to discover public IP address (default: 1)") + "\n" +
+        "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n" +
         "  -irc                   " + _("Find peers using internet relay chat (default: 0)") + "\n" +
-        "  -listen                " + _("Accept connections from outside (default: 1)") + "\n" +
+        "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n" +
         "  -bind=<addr>           " + _("Bind to given address. Use [host]:port notation for IPv6") + "\n" +
         "  -dnsseed               " + _("Find peers using DNS lookup (default: 1)") + "\n" +
         "  -banscore=<n>          " + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
@@ -226,9 +227,9 @@ std::string HelpMessage()
         "  -maxsendbuffer=<n>     " + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)") + "\n" +
 #ifdef USE_UPNP
 #if USE_UPNP
-        "  -upnp                  " + _("Use Universal Plug and Play to map the listening port (default: 1)") + "\n" +
+        "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n" +
 #else
-        "  -upnp                  " + _("Use Universal Plug and Play to map the listening port (default: 0)") + "\n" +
+        "  -upnp                  " + _("Use UPnP to map the listening port (default: 0)") + "\n" +
 #endif
 #endif
         "  -detachdb              " + _("Detach block and address databases. Increases shutdown time (default: 0)") + "\n" +
@@ -308,27 +309,35 @@ bool AppInit2()
     // ********************************************************* Step 2: parameter interactions
 
     fTestNet = GetBoolArg("-testnet");
-    if (fTestNet)
-    {
+    if (fTestNet) {
         SoftSetBoolArg("-irc", true);
     }
 
-    if (mapArgs.count("-connect"))
-        SoftSetBoolArg("-dnsseed", false);
-
-    // even in Tor mode, if -bind is specified, you really want -listen
-    if (mapArgs.count("-bind"))
+    if (mapArgs.count("-bind")) {
+        // when specifying an explicit binding address, you want to listen on it
+        // even when -connect or -proxy is specified
         SoftSetBoolArg("-listen", true);
+    }
 
-    bool fTor = (fUseProxy && addrProxy.GetPort() == 9050);
-    if (fTor)
-    {
-        // Use SoftSetBoolArg here so user can override any of these if they wish.
-        // Note: the GetBoolArg() calls for all of these must happen later.
+    if (mapArgs.count("-connect")) {
+        // when only connecting to trusted nodes, do not seed via DNS, or listen by default
+        SoftSetBoolArg("-dnsseed", false);
         SoftSetBoolArg("-listen", false);
-        SoftSetBoolArg("-irc", false);
-        SoftSetBoolArg("-proxydns", true);
+    }
+
+    if (mapArgs.count("-proxy")) {
+        // to protect privacy, do not listen by default if a proxy server is specified
+        SoftSetBoolArg("-listen", false);
+    }
+
+    if (GetBoolArg("-listen", true)) {
+        // do not map ports or try to retrieve public IP when not listening (pointless)
         SoftSetBoolArg("-upnp", false);
+        SoftSetBoolArg("-discover", false);
+    }
+
+    if (mapArgs.count("-externalip")) {
+        // if an explicit public IP is specified, do not try to find others
         SoftSetBoolArg("-discover", false);
     }
 
@@ -425,30 +434,8 @@ bool AppInit2()
 
     // ********************************************************* Step 5: network initialization
 
-    if (mapArgs.count("-proxy"))
-    {
-        fUseProxy = true;
-        addrProxy = CService(mapArgs["-proxy"], 9050);
-        if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"].c_str()));
-    }
+    int nSocksVersion = GetArg("-socks", 5);
 
-    if (mapArgs.count("-noproxy"))
-    {
-        BOOST_FOREACH(std::string snet, mapMultiArgs["-noproxy"]) {
-            enum Network net = ParseNetwork(snet);
-            if (net == NET_UNROUTABLE)
-                return InitError(strprintf(_("Unknown network specified in -noproxy: '%s'"), snet.c_str()));
-            SetNoProxy(net);
-        }
-    }
-
-    fNameLookup = GetBoolArg("-dns");
-    fProxyNameLookup = GetBoolArg("-proxydns");
-    if (fProxyNameLookup)
-        fNameLookup = true;
-    fNoListen = !GetBoolArg("-listen", true);
-    nSocksVersion = GetArg("-socks", 5);
     if (nSocksVersion != 4 && nSocksVersion != 5)
         return InitError(strprintf(_("Unknown -socks proxy version requested: %i"), nSocksVersion));
 
@@ -467,8 +454,29 @@ bool AppInit2()
         }
     }
 
-    BOOST_FOREACH(string strDest, mapMultiArgs["-seednode"])
-        AddOneShot(strDest);
+    if (mapArgs.count("-proxy")) {
+        CService addrProxy = CService(mapArgs["-proxy"], 9050);
+        if (!addrProxy.IsValid())
+            return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"].c_str()));
+
+        if (!IsLimited(NET_IPV4))
+            SetProxy(NET_IPV4, addrProxy, nSocksVersion);
+        if (nSocksVersion > 4) {
+#ifdef USE_IPV6
+            if (!IsLimited(NET_IPV6))
+                SetProxy(NET_IPV6, addrProxy, nSocksVersion);
+#endif
+            SetNameProxy(addrProxy, nSocksVersion);
+        }
+    }
+
+    // see Step 2: parameter interactions for more information about these
+    fNoListen = !GetBoolArg("-listen", true);
+    fDiscover = GetBoolArg("-discover", true);
+    fNameLookup = GetBoolArg("-dns", true);
+#ifdef USE_UPNP
+    fUseUPnP = GetBoolArg("-upnp", USE_UPNP);
+#endif
 
     bool fBound = false;
     if (!fNoListen)
@@ -484,15 +492,15 @@ bool AppInit2()
         } else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
-            if (!IsLimited(NET_IPV4))
-                fBound |= Bind(CService(inaddr_any, GetListenPort()));
 #ifdef USE_IPV6
             if (!IsLimited(NET_IPV6))
-                fBound |= Bind(CService(in6addr_any, GetListenPort()));
+                fBound |= Bind(CService(in6addr_any, GetListenPort()), false);
 #endif
+            if (!IsLimited(NET_IPV4))
+                fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound);
         }
         if (!fBound)
-            return InitError(_("Not listening on any port"));
+            return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
     }
 
     if (mapArgs.count("-externalip"))
@@ -504,6 +512,9 @@ bool AppInit2()
             AddLocal(CService(strAddr, GetListenPort(), fNameLookup), LOCAL_MANUAL);
         }
     }
+
+    BOOST_FOREACH(string strDest, mapMultiArgs["-seednode"])
+        AddOneShot(strDest);
 
     // ********************************************************* Step 6: load blockchain
 
