@@ -9,7 +9,7 @@ DEB_INSTALL_EXAMPLES_bitcoind += debian/examples/*
 DEB_INSTALL_MANPAGES_bitcoind += debian/manpages/*
 
 %:
-	dh $@
+	dh --with bash-completion $@
 
 override_dh_auto_build:
 	cd src; $(MAKE) -f makefile.unix bitcoind
