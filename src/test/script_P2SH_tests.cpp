@@ -65,14 +65,14 @@ BOOST_AUTO_TEST_CASE(sign)
     // different keys, straight/P2SH, pubkey/pubkeyhash
     CScript standardScripts[4];
     standardScripts[0] << key[0].GetPubKey() << OP_CHECKSIG;
-    standardScripts[1].SetBitcoinAddress(key[1].GetPubKey());
+    standardScripts[1].SetDestination(key[1].GetPubKey().GetID());
     standardScripts[2] << key[1].GetPubKey() << OP_CHECKSIG;
-    standardScripts[3].SetBitcoinAddress(key[2].GetPubKey());
+    standardScripts[3].SetDestination(key[2].GetPubKey().GetID());
     CScript evalScripts[4];
     for (int i = 0; i < 4; i++)
     {
         keystore.AddCScript(standardScripts[i]);
-        evalScripts[i].SetPayToScriptHash(standardScripts[i]);
+        evalScripts[i].SetDestination(standardScripts[i].GetID());
     }
 
     CTransaction txFrom;  // Funding transaction:
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
     invalidAsScript << OP_INVALIDOPCODE << OP_INVALIDOPCODE;
 
     CScript p2sh;
-    p2sh.SetPayToScriptHash(invalidAsScript);
+    p2sh.SetDestination(invalidAsScript.GetID());
 
     CScript scriptSig;
     scriptSig << Serialize(invalidAsScript);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
     // Try to recurse, and verification should succeed because
     // the inner HASH160 <> EQUAL should only check the hash:
     CScript p2sh2;
-    p2sh2.SetPayToScriptHash(p2sh);
+    p2sh2.SetDestination(p2sh.GetID());
     CScript scriptSig2;
     scriptSig2 << Serialize(invalidAsScript) << Serialize(p2sh);
 
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(set)
     }
 
     CScript inner[4];
-    inner[0].SetBitcoinAddress(key[0].GetPubKey());
+    inner[0].SetDestination(key[0].GetPubKey().GetID());
     inner[1].SetMultisig(2, std::vector<CKey>(keys.begin(), keys.begin()+2));
     inner[2].SetMultisig(1, std::vector<CKey>(keys.begin(), keys.begin()+2));
     inner[3].SetMultisig(2, std::vector<CKey>(keys.begin(), keys.begin()+3));
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(set)
     CScript outer[4];
     for (int i = 0; i < 4; i++)
     {
-        outer[i].SetPayToScriptHash(inner[i]);
+        outer[i].SetDestination(inner[i].GetID());
         keystore.AddCScript(inner[i]);
     }
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(switchover)
     scriptSig << Serialize(notValid);
 
     CScript fund;
-    fund.SetPayToScriptHash(notValid);
+    fund.SetDestination(notValid.GetID());
 
 
     // Validation should succeed under old rules (hash is correct):
@@ -258,9 +258,9 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout.resize(6);
 
     // First three are standard:
-    CScript pay1; pay1.SetBitcoinAddress(key[0].GetPubKey());
+    CScript pay1; pay1.SetDestination(key[0].GetPubKey().GetID());
     keystore.AddCScript(pay1);
-    CScript payScriptHash1; payScriptHash1.SetPayToScriptHash(pay1);
+    CScript payScriptHash1; payScriptHash1.SetDestination(pay1.GetID());
     CScript pay1of3; pay1of3.SetMultisig(1, keys);
 
     txFrom.vout[0].scriptPubKey = payScriptHash1;
@@ -278,13 +278,13 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     for (int i = 0; i < 11; i++)
         oneOfEleven << key[0].GetPubKey();
     oneOfEleven << OP_11 << OP_CHECKMULTISIG;
-    txFrom.vout[5].scriptPubKey.SetPayToScriptHash(oneOfEleven);
+    txFrom.vout[5].scriptPubKey.SetDestination(oneOfEleven.GetID());
 
     mapInputs[txFrom.GetHash()] = make_pair(CTxIndex(), txFrom);
 
     CTransaction txTo;
     txTo.vout.resize(1);
-    txTo.vout[0].scriptPubKey.SetBitcoinAddress(key[1].GetPubKey());
+    txTo.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
 
     txTo.vin.resize(3);
     txTo.vin[0].prevout.n = 0;
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     CTransaction txToNonStd;
     txToNonStd.vout.resize(1);
-    txToNonStd.vout[0].scriptPubKey.SetBitcoinAddress(key[1].GetPubKey());
+    txToNonStd.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
     txToNonStd.vin.resize(2);
     txToNonStd.vin[0].prevout.n = 4;
     txToNonStd.vin[0].prevout.hash = txFrom.GetHash();
