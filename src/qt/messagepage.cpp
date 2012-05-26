@@ -10,6 +10,7 @@
 #include "main.h"
 #include "wallet.h"
 #include "init.h"
+#include "base58.h"
 
 #include "messagepage.h"
 #include "ui_messagepage.h"
@@ -83,6 +84,13 @@ void MessagePage::on_signMessage_clicked()
                               QMessageBox::Abort, QMessageBox::Abort);
         return;
     }
+    CKeyID keyID;
+    if (!addr.GetKeyID(keyID))
+    {
+        QMessageBox::critical(this, tr("Error signing"), tr("%1 does not refer to a key.").arg(address),
+                              QMessageBox::Abort, QMessageBox::Abort);
+        return;
+    }
 
     WalletModel::UnlockContext ctx(model->requestUnlock());
     if(!ctx.isValid())
@@ -92,7 +100,7 @@ void MessagePage::on_signMessage_clicked()
     }
 
     CKey key;
-    if (!pwalletMain->GetKey(addr, key))
+    if (!pwalletMain->GetKey(keyID, key))
     {
         QMessageBox::critical(this, tr("Error signing"), tr("Private key for %1 is not available.").arg(address),
                               QMessageBox::Abort, QMessageBox::Abort);

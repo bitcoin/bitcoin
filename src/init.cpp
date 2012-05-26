@@ -605,11 +605,11 @@ bool AppInit2()
         // Create new keyUser and set as default key
         RandAddSeedPerfmon();
 
-        std::vector<unsigned char> newDefaultKey;
+        CPubKey newDefaultKey;
         if (!pwalletMain->GetKeyFromPool(newDefaultKey, false))
             strErrors << _("Cannot initialize keypool") << "\n";
         pwalletMain->SetDefaultKey(newDefaultKey);
-        if (!pwalletMain->SetAddressBookName(CBitcoinAddress(pwalletMain->vchDefaultKey), ""))
+        if (!pwalletMain->SetAddressBookName(pwalletMain->vchDefaultKey.GetID(), ""))
             strErrors << _("Cannot write default address") << "\n";
     }
 
