@@ -336,7 +336,10 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         wtx.BindWallet(this);
         bool fInsertedNew = ret.second;
         if (fInsertedNew)
+        {
             wtx.nTimeReceived = GetAdjustedTime();
+            wtx.nOrderPos = nOrderPosNext++;
+        }
 
         bool fUpdated = false;
         if (!fInsertedNew)
