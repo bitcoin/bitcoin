@@ -42,9 +42,14 @@ bool CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
     return Write(make_pair(string("acc"), strAccount), account);
 }
 
+bool CWalletDB::WriteAccountingEntry(const uint64 nAccEntryNum, const CAccountingEntry& acentry)
+{
+    return Write(boost::make_tuple(string("acentry"), acentry.strAccount, nAccEntryNum), acentry);
+}
+
 bool CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry)
 {
-    return Write(boost::make_tuple(string("acentry"), acentry.strAccount, ++nAccountingEntryNumber), acentry);
+    return WriteAccountingEntry(++nAccountingEntryNumber, acentry);
 }
 
 int64 CWalletDB::GetAccountCreditDebit(const string& strAccount)
@@ -95,10 +100,84 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
             break;
 
         ssValue >> acentry;
+        ssKey >> acentry.nEntryNo;
         entries.push_back(acentry);
     }
 
     pcursor->close();
+}
+
+
+int
+CWalletDB::ReorderTransactions(CWallet* pwallet)
+{
+    LOCK(pwallet->cs_wallet);
+    // Old wallets didn't have any defined order for transactions
+    // Probably a bad idea to change the output of this
+
+    // First: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap.
+    typedef pair<CWalletTx*, CAccountingEntry*> TxPair;
+    typedef multimap<int64, TxPair > TxItems;
+    TxItems txByTime;
+
+    for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
+    {
+        CWalletTx* wtx = &((*it).second);
+        txByTime.insert(make_pair(wtx->nTimeReceived, TxPair(wtx, (CAccountingEntry*)0)));
+    }
+    list<CAccountingEntry> acentries;
+    ListAccountCreditDebit("", acentries);
+    BOOST_FOREACH(CAccountingEntry& entry, acentries)
+    {
+        txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
+    }
+
+    int64& nOrderPosNext = pwallet->nOrderPosNext;
+    nOrderPosNext = 0;
+    std::vector<int64> nOrderPosOffsets;
+    for (TxItems::iterator it = txByTime.begin(); it != txByTime.end(); ++it)
+    {
+        CWalletTx *const pwtx = (*it).second.first;
+        CAccountingEntry *const pacentry = (*it).second.second;
+        int64& nOrderPos = (pwtx != 0) ? pwtx->nOrderPos : pacentry->nOrderPos;
+
+        if (nOrderPos == -1)
+        {
+            nOrderPos = nOrderPosNext++;
+            nOrderPosOffsets.push_back(nOrderPos);
+
+            if (pacentry)
+                // Have to write accounting regardless, since we don't keep it in memory
+                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
+                    return DB_LOAD_FAIL;
+        }
+        else
+        {
+            int64 nOrderPosOff = 0;
+            BOOST_FOREACH(const int64& nOffsetStart, nOrderPosOffsets)
+            {
+                if (nOrderPos >= nOffsetStart)
+                    ++nOrderPosOff;
+            }
+            nOrderPos += nOrderPosOff;
+            nOrderPosNext = std::max(nOrderPosNext, nOrderPos + 1);
+
+            if (!nOrderPosOff)
+                continue;
+
+            // Since we're changing the order, write it back
+            if (pwtx)
+            {
+                if (!WriteTx(pwtx->GetHash(), *pwtx))
+                    return DB_LOAD_FAIL;
+            }
+            else
+                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
+                    return DB_LOAD_FAIL;
+        }
+    }
+
+    return DB_LOAD_OK;
 }
 
 
@@ -108,6 +187,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
     bool fIsEncrypted = false;
+    bool fAnyUnordered = false;
 
     //// todo: shouldn't we catch exceptions and try to recover and continue?
     {
@@ -183,6 +263,9 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                     vWalletUpgrade.push_back(hash);
                 }
 
+                if (wtx.nOrderPos == -1)
+                    fAnyUnordered = true;
+
                 //// debug print
                 //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
                 //printf(" %12"PRI64d"  %s  %s  %s\n",
@@ -199,6 +282,14 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 ssKey >> nNumber;
                 if (nNumber > nAccountingEntryNumber)
                     nAccountingEntryNumber = nNumber;
+
+                if (!fAnyUnordered)
+                {
+                    CAccountingEntry acentry;
+                    ssValue >> acentry;
+                    if (acentry.nOrderPos == -1)
+                        fAnyUnordered = true;
+                }
             }
             else if (strType == "key" || strType == "wkey")
             {
@@ -318,6 +409,10 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
     if (nFileVersion < CLIENT_VERSION) // Update
         WriteVersion(CLIENT_VERSION);
 
+    if (fAnyUnordered)
+        return ReorderTransactions(pwallet);
+
+    // If you add anything else here... be sure to do it if ReorderTransactions returns DB_LOAD_OK too!
     return DB_LOAD_OK;
 }
 
