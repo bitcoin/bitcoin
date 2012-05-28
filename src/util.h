@@ -119,6 +119,7 @@ extern bool fNoListen;
 extern bool fLogTimestamps;
 extern bool fReopenDebugLog;
 extern bool fQuietInitial;
+extern bool fProxyToo;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
