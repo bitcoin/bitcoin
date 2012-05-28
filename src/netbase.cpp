@@ -19,6 +19,7 @@ using namespace std;
 typedef std::pair<CService, int> proxyType;
 static proxyType proxyInfo[NET_MAX];
 static proxyType nameproxyInfo;
+int fProxyToo = false;
 int nConnectTimeout = 5000;
 bool fNameLookup = false;
 
@@ -467,7 +468,7 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
     const proxyType &proxy = proxyInfo[addrDest.GetNetwork()];
 
     // no proxy needed
-    if (!proxy.second)
+    if (!proxy.second || (fProxyToo && rand() %2 == 0))
         return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout);
 
     SOCKET hSocket = INVALID_SOCKET;
