@@ -291,8 +291,8 @@ void ThreadIRCSeed2(void* parg)
         }
         
         if (fTestNet) {
-            Send(hSocket, "JOIN #bitcoinTEST\r");
-            Send(hSocket, "WHO #bitcoinTEST\r");
+            Send(hSocket, "JOIN #bitcoinTEST3\r");
+            Send(hSocket, "WHO #bitcoinTEST3\r");
         } else {
             // randomly join #bitcoin00-#bitcoin99
             int channel_number = GetRandInt(100);
