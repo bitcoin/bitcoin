@@ -9,6 +9,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "hub.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -55,6 +56,7 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
+        if (phub) phub->StopProcessCallbacks();
         nTransactionsUpdated++;
         bitdb.Flush(false);
         StopNode();
@@ -525,6 +527,12 @@ bool AppInit2()
         txdb.LoadBlockIndex();
         PrintBlockTree();
         return false;
+    }
+
+    try {
+        phub = new CHub();
+    } catch (runtime_error& e) {
+        return InitError(_("Unable to create CHub."));
     }
 
     uiInterface.InitMessage(_("Loading block index..."));
