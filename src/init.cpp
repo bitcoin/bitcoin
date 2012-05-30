@@ -9,6 +9,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "checkpoints.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -259,6 +260,8 @@ std::string HelpMessage()
         "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-6, default: 1)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000?.dat file") + "\n" +
+        "  -autoprune             " + _("Prunes blkindex.dat of spent transactions during download (default: 1)") + "\n" +
+        "  -prune                 " + _("Prunes blkindex.dat of spent transactions during startup (default: 0)") + "\n" +
         "  -?                     " + _("This help message") + "\n";
 
     strUsage += string() +
@@ -571,6 +574,26 @@ bool AppInit2()
             printf("No blocks matching %s were found\n", strMatch.c_str());
         return false;
     }
+
+    uiInterface.InitMessage(_("Upgrading block index..."));
+    printf("Upgrading block index...\n");
+    nStart = GetTimeMillis();
+    if (GetBoolArg("-prune", false))
+    {
+        CTxDB txdb;
+        if (!txdb.PruneBlockIndex(0, Checkpoints::GetLastCheckpointHash()))
+            strErrors << _("Error pruning blkindex.dat") << "\n";
+    }
+
+    // as PruneBlockIndex can take several minutes, it's possible the user
+    // requested to kill bitcoin-qt during the last operation. If so, exit.
+    // As the program has not fully started yet, Shutdown() is possibly overkill.
+    if (fRequestShutdown)
+    {
+        printf("Shutdown requested. Exiting.\n");
+        return false;
+    }
+    printf(" block index prune %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     // ********************************************************* Step 7: load wallet
 

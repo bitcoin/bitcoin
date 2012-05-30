@@ -398,6 +398,12 @@ bool CTxDB::EraseTxIndex(const CTransaction& tx)
     return Erase(make_pair(string("tx"), hash));
 }
 
+bool CTxDB::EraseTxIndex(uint256 hash)
+{
+    assert(!fClient);
+    return Erase(make_pair(string("tx"), hash));
+}
+
 bool CTxDB::ContainsTx(uint256 hash)
 {
     assert(!fClient);
@@ -505,6 +511,16 @@ bool CTxDB::WriteHashBestChain(uint256 hashBestChain)
     return Write(string("hashBestChain"), hashBestChain);
 }
 
+bool CTxDB::ReadHashBestCheckpoint(uint256& hashBestCheckpoint)
+{
+    return Read(string("hashBestCheckpoint"), hashBestCheckpoint);
+}
+
+bool CTxDB::WriteHashBestCheckpoint(uint256 hashBestCheckpoint)
+{
+    return Write(string("hashBestCheckpoint"), hashBestCheckpoint);
+}
+
 bool CTxDB::ReadBestInvalidWork(CBigNum& bnBestInvalidWork)
 {
     return Read(string("bnBestInvalidWork"), bnBestInvalidWork);
@@ -533,6 +549,118 @@ CBlockIndex static * InsertBlockIndex(uint256 hash)
     pindexNew->phashBlock = &((*mi).first);
 
     return pindexNew;
+}
+
+bool CTxDB::PruneBlockIndex(uint256 hashPruneFrom, uint256 hashPruneTo)
+{
+//    TODO: assert here, but cant #include main.h
+//    if (hashPruneFrom != 0)
+//        assert(hashPruneTo == hashBestBlock);
+
+    CBlockIndex* pindexScan = pindexGenesisBlock;
+    uint256 hashOldBestCheckpoint;
+    if (ReadHashBestCheckpoint(hashOldBestCheckpoint) && hashOldBestCheckpoint == hashPruneTo)
+        return true;
+
+    if (!mapBlockIndex.count(hashPruneTo))
+        return true;
+
+    if (hashPruneFrom != 0)
+        pindexScan = mapBlockIndex[hashPruneFrom];
+    assert(pindexScan);
+
+    printf("Pruning Block Index from %s to %s.\n", hashPruneFrom.ToString().substr(0,20).c_str(), hashPruneTo.ToString().substr(0,20).c_str());
+
+    // Cache of Txes by hash -> txouts spent before hashPruneTo flags + cant be deleted flag
+    map<uint256, pair<vector<bool>, bool> > mapTxIndexCache;
+
+    while (pindexScan != NULL && *(pindexScan->phashBlock) != hashPruneTo)
+    {
+        if(fRequestShutdown)
+            return true;
+
+        CBlock block;
+        block.ReadFromDisk(pindexScan);
+
+        BOOST_FOREACH(CTransaction& tx, block.vtx)
+        {
+            if (tx.IsCoinBase())
+                continue;
+
+            BOOST_FOREACH(CTxIn& txin, tx.vin)
+            {
+                COutPoint& txout = txin.prevout;
+                uint256& hash = txout.hash;
+                pair<vector<bool>, bool>& pairTx = mapTxIndexCache[hash];
+
+                if (pairTx.first.size() == 0)
+                {
+                    CTxIndex txindex;
+                    if (!ReadTxIndex(hash, txindex))
+                    {
+                        // This should only ever happen if we get interrupted pruning and dont WriteHashBestCheckpoint
+                        pairTx.second = false;
+                        break;
+                    }
+
+                    vector<CDiskTxPos>& vSpent = txindex.vSpent;
+                    unsigned int vouts = vSpent.size();
+
+                    pairTx.first.resize(vouts);
+
+                    pairTx.second = true;
+                    for (unsigned int i = 0; i < vouts; i++)
+                    {
+                        if (vSpent[i].IsNull())
+                        {
+                            pairTx.second = false;
+                            break;
+                        }
+                        pairTx.first[i] = false;
+                    }
+                }
+
+                if (pairTx.second == false)
+                    continue;
+
+                pairTx.first[txout.n] = true;
+            }
+        }
+
+        pindexScan = pindexScan->pnext;
+    }
+
+    // TODO: It may be prudent to use DB Transactions here, but if we do we overrun our maximum lock objects
+    //if (!TxnBegin())
+    //    return false;
+
+    unsigned int nTxsPruned = 0;
+    typedef pair<const uint256, pair<vector<bool>, bool> > TxIndexCachePairType;
+    BOOST_FOREACH(TxIndexCachePairType& pair, mapTxIndexCache)
+    {
+        bool fPrunable = true;
+        BOOST_FOREACH(bool fSpent, pair.second.first)
+            if (!fSpent)
+            {
+                fPrunable = false;
+                break;
+            }
+
+        if (!fPrunable)
+            continue;
+
+        EraseTxIndex(pair.first);
+        nTxsPruned++;
+    }
+
+    WriteHashBestCheckpoint(hashPruneTo);
+
+    //if (!TxnCommit())
+    //    return false;
+
+    printf("Pruned %u items from txindex.dat\n", nTxsPruned);
+
+    return true;
 }
 
 bool CTxDB::LoadBlockIndex()

@@ -1755,6 +1755,10 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckBlock(nHeight, hash))
         return DoS(100, error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight));
 
+    CBlockIndex* pPrevCheckpoint = NULL;
+    if (GetBoolArg("-autoprune", true))
+        pPrevCheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
         return error("AcceptBlock() : out of disk space");
@@ -1764,6 +1768,19 @@ bool CBlock::AcceptBlock()
         return error("AcceptBlock() : WriteToDisk failed");
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
+
+    if (GetBoolArg("-autoprune", true))
+    {
+        CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+        if (pcheckpoint == pindexBest)
+        {
+            CTxDB txdb;
+            if (!pPrevCheckpoint)
+                txdb.PruneBlockIndex(0, hash);
+            else
+                txdb.PruneBlockIndex(*(pPrevCheckpoint->phashBlock), hash);
+        }
+    }
 
     // Relay inventory, but don't relay old inventory during initial block download
     int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
