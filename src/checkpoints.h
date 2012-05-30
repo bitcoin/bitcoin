@@ -22,23 +22,27 @@ class CBlockIndex;
 //
 namespace Checkpoints
 {
-    extern int nAutoCheckpoint;
-    extern int nBranchPoint;
-
     // Returns true if block passes checkpoint checks
     bool CheckHardened(int nHeight, const uint256& hash);
-    bool CheckAuto(const CBlockIndex *pindex);
-
-    int  GetNextChainCheckpoint(const CBlockIndex *pindex);
-    int  GetNextAutoCheckpoint(int nCheckpoint);
-    void AdvanceAutoCheckpoint(int nCheckpoint);
-    bool ResetAutoCheckpoint(int nCheckpoint);
 
     // Return conservative estimate of total number of blocks, 0 if unknown
     int GetTotalBlocksEstimate();
 
     // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
+
+    // ppcoin: synchronized checkpoint
+    extern uint256 hashSyncCheckpoint;
+
+    // ppcoin: automatic checkpoint
+    extern int nAutoCheckpoint;
+    extern int nBranchPoint;
+
+    bool CheckAuto(const CBlockIndex *pindex);
+    int  GetNextChainCheckpoint(const CBlockIndex *pindex);
+    int  GetNextAutoCheckpoint(int nCheckpoint);
+    void AdvanceAutoCheckpoint(int nCheckpoint);
+    bool ResetAutoCheckpoint(int nCheckpoint);
 }
 
 #endif

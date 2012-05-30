@@ -25,10 +25,6 @@ namespace Checkpoints
         ( 0, hashGenesisBlock )
         ; // ppcoin: no checkpoint yet; to be created in future releases
 
-    // ppcoin: automatic checkpoint (represented by height of checkpoint)
-    int nAutoCheckpoint = 0;
-    int nBranchPoint = 0;    // branch point to alternative branch
-
     bool CheckHardened(int nHeight, const uint256& hash)
     {
         if (fTestNet) return true; // Testnet has no checkpoints
@@ -37,6 +33,39 @@ namespace Checkpoints
         if (i == mapCheckpoints.end()) return true;
         return hash == i->second;
     }
+
+    int GetTotalBlocksEstimate()
+    {
+        if (fTestNet) return 0;
+
+        return mapCheckpoints.rbegin()->first;
+    }
+
+    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
+    {
+        if (fTestNet) return NULL;
+
+        int64 nResult;
+        BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, mapCheckpoints)
+        {
+            const uint256& hash = i.second;
+            std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
+            if (t != mapBlockIndex.end())
+                return t->second;
+        }
+        return NULL;
+    }
+
+    // ppcoin: synchronized checkpoint (centrally broadcasted)
+    uint256 hashSyncCheckpoint;
+
+    bool AcceptNewSyncCheckpoint(uint256 hashCheckpoint)
+    {
+    }
+
+    // ppcoin: automatic checkpoint (represented by height of checkpoint)
+    int nAutoCheckpoint = 0;
+    int nBranchPoint = 0;    // branch point to alternative branch
 
     // ppcoin: check automatic checkpoint
     // To pass the check:
@@ -125,13 +154,6 @@ namespace Checkpoints
         printf("Checkpoints: auto checkpoint now at height=%d\n", nAutoCheckpoint);
     }
 
-    int GetTotalBlocksEstimate()
-    {
-        if (fTestNet) return 0;
-
-        return mapCheckpoints.rbegin()->first;
-    }
-
     // ppcoin: reset auto checkpoint
     bool ResetAutoCheckpoint(int nCheckpoint)
     {
@@ -156,20 +178,5 @@ namespace Checkpoints
         }
 
         return true;
-    }
-
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
-    {
-        if (fTestNet) return NULL;
-
-        int64 nResult;
-        BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, mapCheckpoints)
-        {
-            const uint256& hash = i.second;
-            std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
-            if (t != mapBlockIndex.end())
-                return t->second;
-        }
-        return NULL;
     }
 }
