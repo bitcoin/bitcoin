@@ -481,6 +481,16 @@ bool CTxDB::WriteAutoCheckpoint(int nCheckpoint, bool fReset)
     return Write(string("nAutoCheckpoint"), nCheckpoint);
 }
 
+bool CTxDB::ReadSyncCheckpoint(uint256& hashCheckpoint)
+{
+    return Read(string("hashSyncCheckpoint"), hashCheckpoint);
+}
+
+bool CTxDB::WriteSyncCheckpoint(uint256 hashCheckpoint)
+{
+    return Write(string("hashSyncCheckpoint"), hashCheckpoint);
+}
+
 CBlockIndex static * InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
@@ -581,10 +591,15 @@ bool CTxDB::LoadBlockIndex()
     nBestChainTrust = pindexBest->nChainTrust;
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust);
 
-    // Load nAutoCheckpoint
+    // ppcoin: load nAutoCheckpoint
     if (!ReadAutoCheckpoint(Checkpoints::nAutoCheckpoint))
         return error("CTxDB::LoadBlockIndex() : nAutoCheckpoint not loaded");
     printf("LoadBlockIndex(): automatic checkpoint at height=%d\n", Checkpoints::nAutoCheckpoint);
+
+    // ppcoin: load hashSyncCheckpoint
+    if (!ReadSyncCheckpoint(Checkpoints::hashSyncCheckpoint))
+        return error("CTxDB::LoadBlockIndex() : hashSyncCheckpoint not loaded");
+    printf("LoadBlockIndex(): synchronized checkpoint %s\n", Checkpoints::hashSyncCheckpoint.ToString().c_str());
 
     // Load nBestInvalidTrust, OK if it doesn't exist
     ReadBestInvalidTrust(nBestInvalidTrust);
