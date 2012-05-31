@@ -2261,7 +2261,7 @@ Value sendrawtx(const Array& params, bool fHelp)
     CInv inv(MSG_TX, tx.GetHash());
     RelayInventory(inv);
 
-    return true;
+    return tx.GetHash().GetHex();
 }
 
 
