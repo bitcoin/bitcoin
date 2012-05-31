@@ -2989,24 +2989,11 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
-    if (strMethod == "sendmany"               && n > 1)
-    {
-        string s = params[1].get_str();
-        Value v;
-        if (!read_string(s, v) || v.type() != obj_type)
-            throw runtime_error("type mismatch");
-        params[1] = v.get_obj();
-    }
-    if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
-    if (strMethod == "addmultisigaddress"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
-    if (strMethod == "addmultisigaddress"      && n > 1)
-    {
-        string s = params[1].get_str();
-        Value v;
-        if (!read_string(s, v) || v.type() != array_type)
-            throw runtime_error("type mismatch "+s);
-        params[1] = v.get_array();
-    }
+    if (strMethod == "sendmany"               && n > 1) ConvertTo<Object>(params[1]);
+    if (strMethod == "sendmany"               && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "addmultisigaddress"     && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "addmultisigaddress"     && n > 1) ConvertTo<Array>(params[1]);
+
     return params;
 }
 
