@@ -676,6 +676,7 @@ bool AppInit2()
 
     if (mapArgs.count("-loadblock"))
     {
+        uiInterface.InitMessage(_("Importing additional blocks..."));
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
         {
             FILE *file = fopen(strFile.c_str(), "rb");
