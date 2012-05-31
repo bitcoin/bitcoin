@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include <climits>
+#include <limits>
 
 #include "bignum.h"
 #include "util.h"
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(bignum_setint64)
         BOOST_CHECK(num.ToString() == "-5");
     }
     {
-        n = LLONG_MIN;
+        n = std::numeric_limits<int64>::min();
         CBigNum num(n);
         BOOST_CHECK(num.ToString() == "-9223372036854775808");
         num.setulong(0);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(bignum_setint64)
         BOOST_CHECK(num.ToString() == "-9223372036854775808");
     }
     {
-        n = LLONG_MAX;
+        n = std::numeric_limits<int64>::max();
         CBigNum num(n);
         BOOST_CHECK(num.ToString() == "9223372036854775807");
         num.setulong(0);
