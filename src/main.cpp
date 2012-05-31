@@ -1081,10 +1081,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     if (!CheckBlock())
         return false;
 
-    // ppcoin: coin stake tx must meet target protocol
-    if (IsProofOfStake() && !vtx[1].CheckProofOfStake(txdb, nBits))
-        return error("ConnectBlock() : Block %s unable to meet hash target for coinstake", GetHash().ToString().c_str());
-
     //// issue here: it doesn't know the version
     unsigned int nTxPos = pindex->nBlockPos + ::GetSerializeSize(CBlock(), SER_DISK) - (2 * GetSizeOfCompactSize(0)) + GetSizeOfCompactSize(vtx.size());
 
@@ -1308,7 +1304,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 //   quantities so as to generate blocks faster, degrading the system back into
 //   a proof-of-work situation.
 //
-bool CTransaction::CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const
+bool CTransaction::CheckProofOfStake(unsigned int nBits) const
 {
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -1320,12 +1316,18 @@ bool CTransaction::CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const
     const CTxIn& txin = vin[0];
 
     // First try finding the previous transaction in database
+    CTxDB txdb("r");
     CTransaction txPrev;
     CTxIndex txindex;
     if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
         return false;  // previous transaction not in main chain
+    txdb.Close();
     if (nTime < txPrev.nTime)
         return false;  // Transaction timestamp violation
+
+    // Verify signature
+    if (!VerifySignature(txPrev, *this, 0))
+        return DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", GetHash().ToString().c_str()));
 
     // Read block header
     CBlock block;
@@ -1342,7 +1344,7 @@ bool CTransaction::CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const
     if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
         return true;
     else
-        return false;
+        return DoS(100, error("CheckProofOfStake() : check target failed on coinstake %s", GetHash().ToString().c_str()));
 }
 
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
@@ -1554,6 +1556,10 @@ bool CBlock::AcceptBlock()
     // Check proof-of-work or proof-of-stake
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
         return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+
+    // ppcoin: coinstake tx must meet target protocol
+    if (IsProofOfStake() && !vtx[1].CheckProofOfStake(nBits))
+        return error("AcceptBlock() : Block %s unable to meet hash target for coinstake", GetHash().ToString().c_str());
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
