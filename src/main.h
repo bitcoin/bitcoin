@@ -675,7 +675,7 @@ protected:
 public:
     bool RemoveFromMemoryPool();
     bool GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const;  // ppcoin: get transaction coin age
-    bool CheckProofOfStake(CTxDB& txdb, unsigned int nBits) const;
+    bool CheckProofOfStake(unsigned int nBits) const;
 };
 
 
