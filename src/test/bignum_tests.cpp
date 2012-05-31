@@ -2,6 +2,7 @@
 #include <climits>
 
 #include "bignum.h"
+#include "util.h"
 
 BOOST_AUTO_TEST_SUITE(bignum_tests)
 
@@ -29,9 +30,7 @@ BOOST_AUTO_TEST_SUITE(bignum_tests)
 // Let's force this code not to be inlined, in order to actually
 // test a generic version of the function. This increases the chance
 // that -ftrapv will detect overflows.
-void mysetint64(CBigNum& num, int64 n) __attribute__((noinline));
-
-void mysetint64(CBigNum& num, int64 n)
+NOINLINE void mysetint64(CBigNum& num, int64 n)
 {
 	num.setint64(n);
 }
