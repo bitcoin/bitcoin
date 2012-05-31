@@ -573,8 +573,7 @@ bool AppInit2()
         fProxyToo = true;
         addrProxy = CService(mapArgs["-proxytoo"], 9050);
         if (!addrProxy.IsValid()) {
-            ThreadSafeMessageBox(_("Invalid -proxytoo address"), _("Bitcoin"), wxOK | wxMODAL);
-            return false;
+            return InitError(strprintf(_("Invalid -proxytoo address: '%S'"),addrProxy));
         }
     }
 
