@@ -1866,7 +1866,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
         // Ask this guy to fill in what we're missing
         if (pfrom)
-            pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
+            if (pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2)))
+                printf("fill-in getblocks to %s\n", pfrom->addr.ToString().c_str());
         return true;
     }
 
@@ -2473,8 +2474,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         nAskedForBlocks++;
         pfrom->fAskedForBlocks = true;
-        printf("initial getblocks to %s\n", pfrom->addr.ToString().c_str());
-        pfrom->PushGetBlocks(pindexBest, uint256(0));
+        if (pfrom->PushGetBlocks(pindexBest, uint256(0)))
+            printf("initial getblocks to %s\n", pfrom->addr.ToString().c_str());
+        else
+            printf("no initial getblocks to %s\n", pfrom->addr.ToString().c_str());
         NodeSummary();
     }
 
@@ -2614,19 +2617,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 if (inv.type == MSG_BLOCK && vInv.size() == 1)
                     printf("inv %s at %s\n", inv.ToString().c_str(), pfrom->addr.ToString().c_str());
                 if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
-                    pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
-                    orphanget++;
-                    if (!fQuietInitial || vInv.size() == 1 || CaughtUp())
-                        printf("orphan getblocks %s to %s\n", inv.ToString().c_str(),
-                          pfrom->addr.ToString().c_str());
+                    if (pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]))) {
+                        orphanget++;
+                        if (!fQuietInitial || vInv.size() == 1 || CaughtUp())
+                            printf("orphan getblocks %s to %s\n", inv.ToString().c_str(),
+                              pfrom->addr.ToString().c_str());
+                    }
                 } else if (nInv == nLastBlock) {
                     // In case we are on a very long side-chain, it is possible that we already have
                     // the last block in an inv bundle sent in response to getblocks. Try to detect
                     // this situation and push another getblocks to continue.
-                    pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0));
-                    lastblockget++;
-                    if (fDebug)
-                        printf("force request: %s\n", inv.ToString().c_str());
+                    if (pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0))) {
+                        lastblockget++;
+                        if (!fQuietInitial || vInv.size() == 1 || CaughtUp())
+                            printf("last %s getblocks to %s\n", inv.ToString().c_str(),
+                              pfrom->addr.ToString().c_str());
+                    }
                 }
             }
 
