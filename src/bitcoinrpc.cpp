@@ -12,6 +12,7 @@
 #include "ui_interface.h"
 #include "base58.h"
 #include "bitcoinrpc.h"
+#include "hub.h"
 
 #undef printf
 #include <boost/asio.hpp>
@@ -2190,7 +2191,7 @@ Value getmemorypool(const Array& params, bool fHelp)
         CBlock pblock;
         ssBlock >> pblock;
 
-        return ProcessBlock(NULL, &pblock);
+        return phub->EmitBlock(pblock);
     }
 }
 

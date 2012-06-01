@@ -3,6 +3,15 @@
 
 CHub* phub;
 
+class CHubCallbackCommitBlock : public CHubCallback
+{
+private:
+    CBlock block;
+public:
+    CHubCallbackCommitBlock(const CBlock &blockIn) : block(blockIn) {}
+    void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock(block); }
+};
+
 class CHubCallbackAskForBlocks : public CHubCallback
 {
 private:
@@ -11,6 +20,13 @@ public:
     CHubCallbackAskForBlocks(uint256 hashEndIn, uint256 hashOrigIn) : hashEnd(hashEndIn), hashOrig(hashOrigIn) {}
     void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigAskForBlocks); sigtable.sigAskForBlocks(hashEnd, hashOrig); }
 };
+
+void CHub::SubmitCallbackCommitBlock(const CBlock &block)
+{
+    LOCK(cs_callbacks);
+        queueCallbacks.push(new CHubCallbackCommitBlock(block));
+    sem_callbacks.post();
+}
 
 void CHub::AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
 {
@@ -80,6 +96,8 @@ CHub::CHub() : sem_callbacks(0), fProcessCallbacks(true), nCallbackThreads(0)
 
 void CHubListener::RegisterWithHub(CHub* phub)
 {
+    phub->RegisterCommitBlock(boost::bind(&CHubListener::HandleCommitBlock, this, _1));
+
     phub->RegisterAskForBlocks(boost::bind(&CHubListener::HandleAskForBlocks, this, _1, _2));
 }
 

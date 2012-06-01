@@ -8,6 +8,7 @@
 #include "net.h"
 #include "init.h"
 #include "ui_interface.h"
+#include "hub.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -1778,60 +1779,60 @@ bool CBlock::AcceptBlock()
     return true;
 }
 
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)
+bool CHub::EmitBlock(CBlock& block)
 {
     // Check for duplicate
-    uint256 hash = pblock->GetHash();
+    uint256 hash = block.GetHash();
+
+    LOCK(cs_main);
+
     if (mapBlockIndex.count(hash))
-        return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        return error("CHub::EmitBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
     if (mapOrphanBlocks.count(hash))
-        return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
+        return error("CHub::EmitBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
     // Preliminary checks
-    if (!pblock->CheckBlock())
-        return error("ProcessBlock() : CheckBlock FAILED");
+    if (!block.CheckBlock())
+        return error("CHub::EmitBlock() : CheckBlock FAILED");
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-    if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
+    if (pcheckpoint && block.hashPrevBlock != hashBestChain)
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
-        int64 deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
+        int64 deltaTime = block.GetBlockTime() - pcheckpoint->nTime;
         if (deltaTime < 0)
         {
-            if (pfrom)
-                pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with timestamp before last checkpoint");
+            return block.DoS(100, error("CHub::EmitBlock() : block with timestamp before last checkpoint"));
         }
         CBigNum bnNewBlock;
-        bnNewBlock.SetCompact(pblock->nBits);
+        bnNewBlock.SetCompact(block.nBits);
         CBigNum bnRequired;
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
-            if (pfrom)
-                pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with too little proof-of-work");
+            return block.DoS(100, error("CHub::EmitBlock() : block with too little proof-of-work"));
         }
     }
 
 
     // If don't already have its previous block, shunt it off to holding area until we get it
-    if (!mapBlockIndex.count(pblock->hashPrevBlock))
+    if (!mapBlockIndex.count(block.hashPrevBlock))
     {
-        printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
-        CBlock* pblock2 = new CBlock(*pblock);
-        mapOrphanBlocks.insert(make_pair(hash, pblock2));
-        mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
+        printf("CHub::EmitBlock: ORPHAN BLOCK, prev=%s\n", block.hashPrevBlock.ToString().substr(0,20).c_str());
+        CBlock* pblock = new CBlock(block);
+        mapOrphanBlocks.insert(make_pair(hash, pblock));
+        mapOrphanBlocksByPrev.insert(make_pair(pblock->hashPrevBlock, pblock));
 
         // Ask this guy to fill in what we're missing
-        if (pfrom)
-            pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
+        AskForBlocks(GetOrphanRoot(pblock), hash);
         return true;
     }
 
     // Store to disk
-    if (!pblock->AcceptBlock())
-        return error("ProcessBlock() : AcceptBlock FAILED");
+    if (!block.AcceptBlock())
+        return error("CHub::EmitBlock() : AcceptBlock FAILED");
+
+    SubmitCallbackCommitBlock(block);
 
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
@@ -1845,14 +1846,18 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         {
             CBlock* pblockOrphan = (*mi).second;
             if (pblockOrphan->AcceptBlock())
+            {
                 vWorkQueue.push_back(pblockOrphan->GetHash());
+                SubmitCallbackCommitBlock(*pblockOrphan);
+            }
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
             delete pblockOrphan;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    printf("ProcessBlock: ACCEPTED\n");
+    printf("CHub::EmitBlock: ACCEPTED\n");
+
     return true;
 }
 
@@ -2114,7 +2119,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 {
                     CBlock block;
                     blkdat >> block;
-                    if (ProcessBlock(NULL,&block))
+                    if (phub->EmitBlock(block))
                     {
                         nLoaded++;
                         nPos += 4 + nSize;
@@ -2767,7 +2772,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CInv inv(MSG_BLOCK, block.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if (ProcessBlock(pfrom, &block))
+        if (phub->EmitBlock(block))
             mapAlreadyAskedFor.erase(inv);
         if (block.nDoS) pfrom->Misbehaving(block.nDoS);
     }
@@ -3537,8 +3542,8 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         }
 
         // Process this block the same as if we had received it from another node
-        if (!ProcessBlock(NULL, pblock))
-            return error("BitcoinMiner : ProcessBlock, block not accepted");
+        if (!phub->EmitBlock(*pblock))
+            return error("BitcoinMiner : phub->EmitBlock, block not accepted");
     }
 
     return true;
