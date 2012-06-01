@@ -164,13 +164,19 @@ static void NotifyAlertCommitted(ClientModel *clientmodel, const CAlert& alert)
         NotifyAlertChanged(clientmodel, alert.GetHash(), CT_NEW);
 }
 
+static void NotifyAlertRemoved(ClientModel *clientmodel, const CAlert& alert)
+{
+    if (alert.AppliesToMe())
+        NotifyAlertChanged(clientmodel, alert.GetHash(), CT_DELETED);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
     phub->RegisterCommitBlock(boost::bind(NotifyNewBlock, this, _1));
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
     phub->RegisterCommitAlert(boost::bind(NotifyAlertCommitted, this, _1));
+    phub->RegisterRemoveAlert(boost::bind(NotifyAlertRemoved, this, _1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -178,5 +184,4 @@ void ClientModel::unsubscribeFromCoreSignals()
     // Disconnect signals from client
     //  Note that CHub does not support disconnecting (yet)!
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
 }
