@@ -113,54 +113,6 @@ static void handleRunawayException(std::exception *e)
     exit(1);
 }
 
-/** Help message for Bitcoin-Qt, shown with --help. */
-class HelpMessageBox: public QMessageBox
-{
-    Q_OBJECT
-public:
-    HelpMessageBox(QWidget *parent = 0);
-
-    void exec();
-private:
-    QString header;
-    QString coreOptions;
-    QString uiOptions;
-};
-
-HelpMessageBox::HelpMessageBox(QWidget *parent):
-    QMessageBox(parent)
-{
-    header = tr("Bitcoin-Qt") + " " + tr("version") + " " +
-        QString::fromStdString(FormatFullVersion()) + "\n\n" +
-        tr("Usage:") + "\n" +
-        "  bitcoin-qt [" + tr("options") + "]                     " + "\n";
-    coreOptions = QString::fromStdString(HelpMessage());
-    uiOptions = tr("UI options") + ":\n" +
-        "  -lang=<lang>           " + tr("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
-        "  -min                   " + tr("Start minimized") + "\n" +
-        "  -splash                " + tr("Show splash screen on startup (default: 1)") + "\n";
-
-    setWindowTitle(tr("Bitcoin-Qt"));
-    setTextFormat(Qt::PlainText);
-    // setMinimumWidth is ignored for QMessageBox so put in nonbreaking spaces to make it wider.
-    QChar em_space(0x2003);
-    setText(header + QString(em_space).repeated(40));
-    setDetailedText(coreOptions + "\n" + uiOptions);
-}
-#include "bitcoin.moc"
-
-void HelpMessageBox::exec()
-{
-#if defined(WIN32)
-    // On windows, show a message box, as there is no stderr in windowed applications
-    QMessageBox::exec();
-#else
-    // On other operating systems, the expected action is to print the message to the console.
-    QString strUsage = header + "\n" + coreOptions + "\n" + uiOptions;
-    fprintf(stderr, "%s", strUsage.toStdString().c_str());
-#endif
-}
-
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
@@ -259,7 +211,7 @@ int main(int argc, char *argv[])
     // but before showing splash screen.
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
-        HelpMessageBox help;
+        GUIUtil::HelpMessageBox help;
         help.exec();
         return 1;
     }
