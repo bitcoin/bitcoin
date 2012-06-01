@@ -2188,10 +2188,10 @@ Value getmemorypool(const Array& params, bool fHelp)
     {
         // Parse parameters
         CDataStream ssBlock(ParseHex(params[0].get_str()), SER_NETWORK, PROTOCOL_VERSION);
-        CBlock pblock;
-        ssBlock >> pblock;
+        CBlock block;
+        ssBlock >> block;
 
-        return phub->EmitBlock(pblock);
+        return phub->EmitBlock(block);
     }
 }
 
