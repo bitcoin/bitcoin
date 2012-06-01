@@ -1584,8 +1584,6 @@ public:
         return true;
     }
 
-    bool ProcessAlert();
-
     /*
      * Get copy of (active) alert object by hash. Returns a null alert if it is not found.
      */

@@ -13,12 +13,16 @@
 #include "sync.h"
 
 class CBlock;
+class CAlert;
 
 class CHubSignalTable
 {
 public:
     CCriticalSection cs_sigCommitBlock;
     boost::signals2::signal<void (const CBlock&)> sigCommitBlock;
+
+    CCriticalSection cs_sigCommitAlert;
+    boost::signals2::signal<void (const CAlert&)> sigCommitAlert;
 
     CCriticalSection cs_sigAskForBlocks;
     boost::signals2::signal<void (const uint256, const uint256)> sigAskForBlocks;
@@ -44,6 +48,7 @@ private:
     int nCallbackThreads;
 
     void SubmitCallbackCommitBlock(const CBlock &block);
+    void SubmitCallbackCommitAlert(const CAlert &alert);
 public:
 //Util methods
     // Loops to process callbacks (do not call manually, automatically started in the constructor)
@@ -58,6 +63,9 @@ public:
     // Register a handler (of the form void f(const CBlock& block)) to be called after every block commit
     void RegisterCommitBlock(boost::function<void (const CBlock&)> func) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock.connect(func); }
 
+    // Register a handler (of the form void f(const CAlert& alert)) to be called after every alert commit
+    void RegisterCommitAlert(boost::function<void (const CAlert&)> func) { LOCK(sigtable.cs_sigCommitAlert); sigtable.sigCommitAlert.connect(func); }
+
     // Register a handler (of the form void f(const uint256 hashEnd, const uint256 hashOriginator)) to be called when we need to ask for blocks up to hashEnd
     //   Should always start from the best block (GetBestBlockIndex())
     //   The receiver should check if it has a peer which is known to have a block with hash hashOriginator and if it does, it should
@@ -68,6 +76,7 @@ public:
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to
     //   be handled by listeners
     bool EmitBlock(CBlock& block);
+    bool EmitAlert(CAlert& alert);
 
 //Connected wallet/etc access methods
 
@@ -92,6 +101,7 @@ public:
 
 protected:
     virtual void HandleCommitBlock(const CBlock& block) {}
+    virtual void HandleCommitAlert(const CAlert& alert) {}
 
     virtual void HandleAskForBlocks(const uint256, const uint256) {}
 };

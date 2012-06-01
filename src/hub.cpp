@@ -12,6 +12,15 @@ public:
     void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock(block); }
 };
 
+class CHubCallbackCommitAlert : public CHubCallback
+{
+private:
+    CAlert alert;
+public:
+    CHubCallbackCommitAlert(const CAlert &alertIn) : alert(alertIn) {}
+    void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigCommitAlert); sigtable.sigCommitAlert(alert); }
+};
+
 class CHubCallbackAskForBlocks : public CHubCallback
 {
 private:
@@ -25,6 +34,13 @@ void CHub::SubmitCallbackCommitBlock(const CBlock &block)
 {
     LOCK(cs_callbacks);
         queueCallbacks.push(new CHubCallbackCommitBlock(block));
+    sem_callbacks.post();
+}
+
+void CHub::SubmitCallbackCommitAlert(const CAlert &alert)
+{
+    LOCK(cs_callbacks);
+        queueCallbacks.push(new CHubCallbackCommitAlert(alert));
     sem_callbacks.post();
 }
 
@@ -97,6 +113,7 @@ CHub::CHub() : sem_callbacks(0), fProcessCallbacks(true), nCallbackThreads(0)
 void CHubListener::RegisterWithHub(CHub* phub)
 {
     phub->RegisterCommitBlock(boost::bind(&CHubListener::HandleCommitBlock, this, _1));
+    phub->RegisterCommitAlert(boost::bind(&CHubListener::HandleCommitAlert, this, _1));
 
     phub->RegisterAskForBlocks(boost::bind(&CHubListener::HandleAskForBlocks, this, _1, _2));
 }

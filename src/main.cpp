@@ -2196,11 +2196,11 @@ CAlert CAlert::getAlertByHash(const uint256 &hash)
     return retval;
 }
 
-bool CAlert::ProcessAlert()
+bool CHub::EmitAlert(CAlert& alert)
 {
-    if (!CheckSignature())
+    if (!alert.CheckSignature())
         return false;
-    if (!IsInEffect())
+    if (!alert.IsInEffect())
         return false;
 
     {
@@ -2208,16 +2208,16 @@ bool CAlert::ProcessAlert()
         // Cancel previous alerts
         for (map<uint256, CAlert>::iterator mi = mapAlerts.begin(); mi != mapAlerts.end();)
         {
-            const CAlert& alert = (*mi).second;
-            if (Cancels(alert))
+            const CAlert& alert2 = (*mi).second;
+            if (alert.Cancels(alert2))
             {
-                printf("cancelling alert %d\n", alert.nID);
+                printf("cancelling alert %d\n", alert2.nID);
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
-            else if (!alert.IsInEffect())
+            else if (!alert2.IsInEffect())
             {
-                printf("expiring alert %d\n", alert.nID);
+                printf("expiring alert %d\n", alert2.nID);
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
                 mapAlerts.erase(mi++);
             }
@@ -2228,22 +2228,23 @@ bool CAlert::ProcessAlert()
         // Check if this alert has been cancelled
         BOOST_FOREACH(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
         {
-            const CAlert& alert = item.second;
-            if (alert.Cancels(*this))
+            const CAlert& alert2 = item.second;
+            if (alert2.Cancels(alert))
             {
-                printf("alert already cancelled by %d\n", alert.nID);
+                printf("alert already cancelled by %d\n", alert2.nID);
                 return false;
             }
         }
 
         // Add to mapAlerts
-        mapAlerts.insert(make_pair(GetHash(), *this));
+        mapAlerts.insert(make_pair(alert.GetHash(), alert));
         // Notify UI if it applies to me
-        if(AppliesToMe())
-            uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
+        if(alert.AppliesToMe())
+            uiInterface.NotifyAlertChanged(alert.GetHash(), CT_NEW);
     }
 
-    printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
+    printf("accepted alert %d, AppliesToMe()=%d\n", alert.nID, alert.AppliesToMe());
+    SubmitCallbackCommitAlert(alert);
     return true;
 }
 
@@ -2849,7 +2850,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAlert alert;
         vRecv >> alert;
 
-        if (alert.ProcessAlert())
+        if (phub->EmitAlert(alert))
         {
             // Relay
             pfrom->setKnown.insert(alert.GetHash());
