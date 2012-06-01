@@ -11,6 +11,7 @@
 #include "addrman.h"
 #include "ui_interface.h"
 #include "hub.h"
+#include "checkpoints.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -86,6 +87,25 @@ unsigned short GetListenPort()
 {
     return (unsigned short)(GetArg("-port", GetDefaultPort()));
 }
+
+
+
+void HandleCommitBlock(const CBlock& block)
+{
+    // Relay inventory, but don't relay old inventory during initial block download
+    uint256 hash = block.GetHash();
+    int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
+    if (hashBestChain == hash)
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
+                pnode->PushInventory(CInv(MSG_BLOCK, hash));
+    }
+}
+
+
+
 
 void AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
 {
@@ -1861,6 +1881,7 @@ void static Discover()
 void StartNode(void* parg)
 {
     phub->RegisterAskForBlocks(&AskForBlocks);
+    phub->RegisterCommitBlock(&HandleCommitBlock);
 
     if (semOutbound == NULL) {
         // initialize semaphore
