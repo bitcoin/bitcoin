@@ -2255,15 +2255,8 @@ Value sendrawtx(const Array& params, bool fHelp)
     }
 
     // push to local node
-    CTxDB txdb("r");
-    if (!tx.AcceptToMemoryPool(txdb))
+    if (!phub->EmitTransaction(tx))
         throw JSONRPCError(-22, "TX rejected");
-
-    SyncWithWallets(tx, NULL, true);
-
-    // relay to network
-    CInv inv(MSG_TX, tx.GetHash());
-    RelayInventory(inv);
 
     return tx.GetHash().GetHex();
 }
