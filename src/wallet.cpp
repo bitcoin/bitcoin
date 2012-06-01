@@ -409,6 +409,11 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
     return false;
 }
 
+void CWallet::HandleCommitTransactionToMemoryPool(const CTransaction& tx)
+{
+    AddToWalletIfInvolvingMe(tx, NULL, true);
+}
+
 bool CWallet::EraseFromWallet(uint256 hash)
 {
     if (!fFileBacked)

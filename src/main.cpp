@@ -622,11 +622,11 @@ bool CHub::EmitTransaction(CTransaction& tx)
     CTxDB txdb("r");
     uint256 hash = tx.GetHash();
 
+    LOCK(cs_main);
+
     bool fMissingInputs = false;
     if (mempool.accept(txdb, tx, true, &fMissingInputs))
     {
-        SyncWithWallets(tx, NULL, true);
-
         // Recursively process any orphan transactions that depended on this one
         for (map<uint256, CTransaction*>::iterator mi = mapOrphanTransactionsByPrev[hash].begin();
              mi != mapOrphanTransactionsByPrev[hash].end();
