@@ -105,6 +105,15 @@ void HandleCommitBlock(const CBlock& block)
     }
 }
 
+void HandleCommitTransactionToMemoryPool(const CTransaction& tx)
+{
+    CInv inv(MSG_TX, tx.GetHash());
+    RelayMessage(inv, tx);
+
+    LOCK(cs_mapAlreadyAskedFor);
+    mapAlreadyAskedFor.erase(inv);
+}
+
 
 
 

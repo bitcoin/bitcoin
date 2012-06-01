@@ -39,6 +39,15 @@ public:
     void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigAskForBlocks); sigtable.sigAskForBlocks(hashEnd, hashOrig); }
 };
 
+class CHubCallbackCommitTransactionToMemoryPool : public CHubCallback
+{
+private:
+    CTransaction tx;
+public:
+    CHubCallbackCommitTransactionToMemoryPool(const CTransaction &txIn) : tx(txIn) {}
+    void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigCommitTransactionToMemoryPool); sigtable.sigCommitTransactionToMemoryPool(tx); }
+};
+
 void CHub::SubmitCallbackCommitBlock(const CBlock &block)
 {
     LOCK(cs_callbacks);
@@ -64,6 +73,13 @@ void CHub::AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
 {
     LOCK(cs_callbacks);
         queueCallbacks.push(new CHubCallbackAskForBlocks(hashEnd, hashOriginator));
+    sem_callbacks.post();
+}
+
+void CHub::SubmitCallbackCommitTransactionToMemoryPool(const CTransaction &tx)
+{
+    LOCK(cs_callbacks);
+        queueCallbacks.push(new CHubCallbackCommitTransactionToMemoryPool(tx));
     sem_callbacks.post();
 }
 
@@ -129,6 +145,8 @@ CHub::CHub() : sem_callbacks(0), fProcessCallbacks(true), nCallbackThreads(0)
 void CHubListener::RegisterWithHub(CHub* phub)
 {
     phub->RegisterCommitBlock(boost::bind(&CHubListener::HandleCommitBlock, this, _1));
+
+    phub->RegisterCommitTransactionToMemoryPool(boost::bind(&CHubListener::HandleCommitTransactionToMemoryPool, this, _1));
 
     phub->RegisterCommitAlert(boost::bind(&CHubListener::HandleCommitAlert, this, _1));
     phub->RegisterRemoveAlert(boost::bind(&CHubListener::HandleRemoveAlert, this, _1));

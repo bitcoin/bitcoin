@@ -617,6 +617,48 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
 }
 
+bool CHub::EmitTransaction(CTransaction& tx)
+{
+    CTxDB txdb("r");
+    uint256 hash = tx.GetHash();
+
+    bool fMissingInputs = false;
+    if (mempool.accept(txdb, tx, true, &fMissingInputs))
+    {
+        SyncWithWallets(tx, NULL, true);
+
+        // Recursively process any orphan transactions that depended on this one
+        for (map<uint256, CTransaction*>::iterator mi = mapOrphanTransactionsByPrev[hash].begin();
+             mi != mapOrphanTransactionsByPrev[hash].end();
+             ++mi)
+        {
+            CTransaction& tx2 = *((*mi).second);
+            CInv inv(MSG_TX, tx2.GetHash());
+
+            if (phub->EmitTransaction(tx2))
+                printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+        }
+
+        SubmitCallbackCommitTransactionToMemoryPool(tx);
+        return true;
+    }
+    else if (fMissingInputs)
+    {
+        AddOrphanTx(tx);
+
+        // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
+        unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
+        if (nEvicted > 0)
+            printf("mapOrphan overflow, removed %u tx\n", nEvicted);
+
+        return true;
+    }
+    else
+        EraseOrphanTx(hash);
+
+    return false;
+}
+
 bool CTxMemPool::addUnchecked(CTransaction &tx)
 {
     // Add to memory pool without checking anything.  Don't call this directly,
@@ -2677,73 +2719,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "tx")
     {
-        vector<uint256> vWorkQueue;
-        vector<uint256> vEraseQueue;
-        CDataStream vMsg(vRecv);
-        CTxDB txdb("r");
         CTransaction tx;
         vRecv >> tx;
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        bool fMissingInputs = false;
-        if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs))
-        {
-            SyncWithWallets(tx, NULL, true);
-            RelayMessage(inv, vMsg);
-            {
-                LOCK(cs_mapAlreadyAskedFor);
-                mapAlreadyAskedFor.erase(inv);
-            }
-            vWorkQueue.push_back(inv.hash);
-            vEraseQueue.push_back(inv.hash);
-
-            // Recursively process any orphan transactions that depended on this one
-            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-            {
-                uint256 hashPrev = vWorkQueue[i];
-                for (map<uint256, CTransaction*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
-                     mi != mapOrphanTransactionsByPrev[hashPrev].end();
-                     ++mi)
-                {
-                    CTransaction& tx = *((*mi).second);
-                    CInv inv(MSG_TX, tx.GetHash());
-                    bool fMissingInputs2 = false;
-
-                    if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs2))
-                    {
-                        printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-                        SyncWithWallets(tx, NULL, true);
-                        RelayMessage(inv, tx);
-                        {
-                            LOCK(cs_mapAlreadyAskedFor);
-                            mapAlreadyAskedFor.erase(inv);
-                        }
-                        vWorkQueue.push_back(inv.hash);
-                        vEraseQueue.push_back(inv.hash);
-                    }
-                    else if (!fMissingInputs2)
-                    {
-                        // invalid orphan
-                        vEraseQueue.push_back(inv.hash);
-                        printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-                    }
-                }
-            }
-
-            BOOST_FOREACH(uint256 hash, vEraseQueue)
-                EraseOrphanTx(hash);
-        }
-        else if (fMissingInputs)
-        {
-            AddOrphanTx(tx);
-
-            // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-            unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
-            if (nEvicted > 0)
-                printf("mapOrphan overflow, removed %u tx\n", nEvicted);
-        }
+        phub->EmitTransaction(tx);
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
 

@@ -13,6 +13,7 @@
 #include "sync.h"
 
 class CBlock;
+class CTransaction;
 class CAlert;
 
 class CHubSignalTable
@@ -20,6 +21,9 @@ class CHubSignalTable
 public:
     CCriticalSection cs_sigCommitBlock;
     boost::signals2::signal<void (const CBlock&)> sigCommitBlock;
+
+    CCriticalSection cs_sigCommitTransactionToMemoryPool;
+    boost::signals2::signal<void (const CTransaction&)> sigCommitTransactionToMemoryPool;
 
     CCriticalSection cs_sigCommitAlert;
     boost::signals2::signal<void (const CAlert&)> sigCommitAlert;
@@ -51,6 +55,8 @@ private:
 
     void SubmitCallbackCommitBlock(const CBlock &block);
 
+    void SubmitCallbackCommitTransactionToMemoryPool(const CTransaction &tx);
+
     void SubmitCallbackCommitAlert(const CAlert &alert);
     void SubmitCallbackRemoveAlert(const CAlert &alert);
 public:
@@ -66,6 +72,9 @@ public:
 //Register methods
     // Register a handler (of the form void f(const CBlock& block)) to be called after every block commit
     void RegisterCommitBlock(boost::function<void (const CBlock&)> func) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock.connect(func); }
+
+    // Register a handler (of the form void f(const CTransaction& tx)) to be called after every transaction commit to memory pool
+    void RegisterCommitTransactionToMemoryPool(boost::function<void (const CTransaction&)> func) { LOCK(sigtable.cs_sigCommitTransactionToMemoryPool); sigtable.sigCommitTransactionToMemoryPool.connect(func); }
 
     // Register a handler (of the form void f(const CAlert& alert)) to be called after every alert commit
     void RegisterCommitAlert(boost::function<void (const CAlert&)> func) { LOCK(sigtable.cs_sigCommitAlert); sigtable.sigCommitAlert.connect(func); }
@@ -83,6 +92,8 @@ public:
     //   be handled by listeners
     bool EmitBlock(CBlock& block);
     bool EmitAlert(CAlert& alert);
+    // Do not call EmitTransaction except for loose transactions (ie transactions not in a block)
+    bool EmitTransaction(CTransaction& tx);
 
 //Connected wallet/etc access methods
 
@@ -107,6 +118,8 @@ public:
 
 protected:
     virtual void HandleCommitBlock(const CBlock& block) {}
+
+    virtual void HandleCommitTransactionToMemoryPool(const CTransaction& tx) {}
 
     virtual void HandleCommitAlert(const CAlert& alert) {}
     virtual void HandleRemoveAlert(const CAlert& alert) {}
