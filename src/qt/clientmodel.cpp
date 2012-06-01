@@ -158,12 +158,19 @@ static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, Ch
                               Q_ARG(int, status));
 }
 
+static void NotifyAlertCommitted(ClientModel *clientmodel, const CAlert& alert)
+{
+    if (alert.AppliesToMe())
+        NotifyAlertChanged(clientmodel, alert.GetHash(), CT_NEW);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
     phub->RegisterCommitBlock(boost::bind(NotifyNewBlock, this, _1));
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    phub->RegisterCommitAlert(boost::bind(NotifyAlertCommitted, this, _1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()

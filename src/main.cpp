@@ -2238,9 +2238,6 @@ bool CHub::EmitAlert(CAlert& alert)
 
         // Add to mapAlerts
         mapAlerts.insert(make_pair(alert.GetHash(), alert));
-        // Notify UI if it applies to me
-        if(alert.AppliesToMe())
-            uiInterface.NotifyAlertChanged(alert.GetHash(), CT_NEW);
     }
 
     printf("accepted alert %d, AppliesToMe()=%d\n", alert.nID, alert.AppliesToMe());
