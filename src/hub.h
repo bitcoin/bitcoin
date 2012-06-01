@@ -23,6 +23,8 @@ public:
 
     CCriticalSection cs_sigCommitAlert;
     boost::signals2::signal<void (const CAlert&)> sigCommitAlert;
+    CCriticalSection cs_sigRemoveAlert;
+    boost::signals2::signal<void (const CAlert&)> sigRemoveAlert;
 
     CCriticalSection cs_sigAskForBlocks;
     boost::signals2::signal<void (const uint256, const uint256)> sigAskForBlocks;
@@ -48,7 +50,9 @@ private:
     int nCallbackThreads;
 
     void SubmitCallbackCommitBlock(const CBlock &block);
+
     void SubmitCallbackCommitAlert(const CAlert &alert);
+    void SubmitCallbackRemoveAlert(const CAlert &alert);
 public:
 //Util methods
     // Loops to process callbacks (do not call manually, automatically started in the constructor)
@@ -65,6 +69,8 @@ public:
 
     // Register a handler (of the form void f(const CAlert& alert)) to be called after every alert commit
     void RegisterCommitAlert(boost::function<void (const CAlert&)> func) { LOCK(sigtable.cs_sigCommitAlert); sigtable.sigCommitAlert.connect(func); }
+    // Register a handler (of the form void f(const CAlert& alert)) to be called after every alert cancel or expire
+    void RegisterRemoveAlert(boost::function<void (const CAlert&)> func) { LOCK(sigtable.cs_sigRemoveAlert); sigtable.sigRemoveAlert.connect(func); }
 
     // Register a handler (of the form void f(const uint256 hashEnd, const uint256 hashOriginator)) to be called when we need to ask for blocks up to hashEnd
     //   Should always start from the best block (GetBestBlockIndex())
@@ -101,7 +107,9 @@ public:
 
 protected:
     virtual void HandleCommitBlock(const CBlock& block) {}
+
     virtual void HandleCommitAlert(const CAlert& alert) {}
+    virtual void HandleRemoveAlert(const CAlert& alert) {}
 
     virtual void HandleAskForBlocks(const uint256, const uint256) {}
 };

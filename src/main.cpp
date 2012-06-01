@@ -2213,12 +2213,14 @@ bool CHub::EmitAlert(CAlert& alert)
             {
                 printf("cancelling alert %d\n", alert2.nID);
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
+                SubmitCallbackRemoveAlert(alert2);
                 mapAlerts.erase(mi++);
             }
             else if (!alert2.IsInEffect())
             {
                 printf("expiring alert %d\n", alert2.nID);
                 uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
+                SubmitCallbackRemoveAlert(alert2);
                 mapAlerts.erase(mi++);
             }
             else
