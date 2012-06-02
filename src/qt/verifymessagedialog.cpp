@@ -4,35 +4,36 @@
 #include <string>
 #include <vector>
 
-#include <QDialogButtonBox>
-#include <QAbstractButton>
-#include <QClipboard>
-#include <QMessageBox>
+#include <QDialog>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QPushButton>
 
 #include "main.h"
 #include "wallet.h"
 #include "walletmodel.h"
-#include "addresstablemodel.h"
 #include "guiutil.h"
 #include "base58.h"
 
-VerifyMessageDialog::VerifyMessageDialog(AddressTableModel *addressModel, QWidget *parent) :
+VerifyMessageDialog::VerifyMessageDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::VerifyMessageDialog),
-    model(addressModel)
+    ui(new Ui::VerifyMessageDialog)
 {
     ui->setupUi(this);
 
 #if (QT_VERSION >= 0x040700)
     /* Do not move this to the XML file, Qt before 4.7 will choke on it */
+    ui->lnAddress->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
     ui->lnSig->setPlaceholderText(tr("Enter Bitcoin signature"));
-    ui->lnAddress->setPlaceholderText(tr("Click \"Verify Message\" to obtain address"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->lnAddress, this);
     ui->lnAddress->installEventFilter(this);
 
-    ui->edMessage->setFocus();
+    ui->lnSig->setFont(GUIUtil::bitcoinAddressFont());
+
+    ui->lnAddress->setFocus();
 }
 
 VerifyMessageDialog::~VerifyMessageDialog()
@@ -40,54 +41,65 @@ VerifyMessageDialog::~VerifyMessageDialog()
     delete ui;
 }
 
-bool VerifyMessageDialog::checkAddress()
+void VerifyMessageDialog::on_verifyMessage_clicked()
 {
+    CBitcoinAddress addr(ui->lnAddress->text().toStdString());
+    if (!addr.IsValid())
+    {
+        ui->lnAddress->setValid(false);
+        ui->lblStatus->setStyleSheet("QLabel { color: red; }");
+        ui->lblStatus->setText(tr("\"%1\" is not a valid address.").arg(ui->lnAddress->text()) + QString(" ") + tr("Please check the address and try again."));
+        return;
+    }
+    CKeyID keyID;
+    if (!addr.GetKeyID(keyID))
+    {
+        ui->lnAddress->setValid(false);
+        ui->lblStatus->setStyleSheet("QLabel { color: red; }");
+        ui->lblStatus->setText(tr("\"%1\" does not refer to a key.").arg(ui->lnAddress->text()) + QString(" ") + tr("Please check the address and try again."));
+        return;
+    }
+
+    bool fInvalid = false;
+    std::vector<unsigned char> vchSig = DecodeBase64(ui->lnSig->text().toStdString().c_str(), &fInvalid);
+
+    if (fInvalid)
+    {
+        ui->lnSig->setValid(false);
+        ui->lblStatus->setStyleSheet("QLabel { color: red; }");
+        ui->lblStatus->setText(tr("The signature could not be decoded.") + QString(" ") + tr("Please check the signature and try again."));
+        return;
+    }
+
     CDataStream ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << ui->edMessage->document()->toPlainText().toStdString();
-    uint256 hash = Hash(ss.begin(), ss.end());
-
-    bool invalid = true;
-    std::vector<unsigned char> vchSig = DecodeBase64(ui->lnSig->text().toStdString().c_str(), &invalid);
-
-    if(invalid)
-    {
-        QMessageBox::warning(this, tr("Invalid Signature"), tr("The signature could not be decoded. Please check the signature and try again."));
-        return false;
-    }
 
     CKey key;
-    if(!key.SetCompactSignature(hash, vchSig))
+    if (!key.SetCompactSignature(Hash(ss.begin(), ss.end()), vchSig))
     {
-        QMessageBox::warning(this, tr("Invalid Signature"), tr("The signature did not match the message digest. Please check the signature and try again."));
-        return false;
+        ui->lnSig->setValid(false);
+        ui->lblStatus->setStyleSheet("QLabel { color: red; }");
+        ui->lblStatus->setText(tr("The signature did not match the message digest.")+ QString(" ") + tr("Please check the signature and try again."));
+        return;
     }
 
-    CBitcoinAddress address(key.GetPubKey().GetID());
-    QString qStringAddress = QString::fromStdString(address.ToString());
-    ui->lnAddress->setText(qStringAddress);
-    ui->copyToClipboard->setEnabled(true);
+    if (!(CBitcoinAddress(key.GetPubKey().GetID()) == addr))
+    {
+        ui->lblStatus->setStyleSheet("QLabel { color: red; }");
+        ui->lblStatus->setText(QString("<nobr>") + tr("Message verification failed.") + QString("</nobr>"));
+        return;
+    }
 
-    QString label = model->labelForAddress(qStringAddress);
-    ui->lblStatus->setText(label.isEmpty() ? tr("Address not found in address book.") : tr("Address found in address book: %1").arg(label));
-    return true;
-}
-
-void VerifyMessageDialog::on_verifyMessage_clicked()
-{
-    checkAddress();
-}
-
-void VerifyMessageDialog::on_copyToClipboard_clicked()
-{
-    QApplication::clipboard()->setText(ui->lnAddress->text());
+    ui->lblStatus->setStyleSheet("QLabel { color: green; }");
+    ui->lblStatus->setText(QString("<nobr>") + tr("Message verified.") + QString("</nobr>"));
 }
 
 void VerifyMessageDialog::on_clearButton_clicked()
 {
-    ui->edMessage->clear();
-    ui->lnSig->clear();
     ui->lnAddress->clear();
+    ui->lnSig->clear();
+    ui->edMessage->clear();
     ui->lblStatus->clear();
 
     ui->edMessage->setFocus();
@@ -95,9 +107,11 @@ void VerifyMessageDialog::on_clearButton_clicked()
 
 bool VerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
 {
-    if(object == ui->lnAddress && (event->type() == QEvent::MouseButtonPress ||
+    if (object == ui->lnAddress && (event->type() == QEvent::MouseButtonPress ||
                                    event->type() == QEvent::FocusIn))
     {
+        // set lnAddress to valid, as QEvent::FocusIn would not reach QValidatedLineEdit::focusInEvent
+        ui->lnAddress->setValid(true);
         ui->lnAddress->selectAll();
         return true;
     }
