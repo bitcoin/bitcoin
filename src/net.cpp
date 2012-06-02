@@ -107,8 +107,14 @@ void HandleCommitBlock(const CBlock& block)
 
 void HandleCommitTransactionToMemoryPool(const CTransaction& tx)
 {
-    CInv inv(MSG_TX, tx.GetHash());
-    RelayMessage(inv, tx);
+    assert(!fClient);
+    CTxDB txdb;
+
+    uint256 hash = tx.GetHash();
+    CInv inv(MSG_TX, hash);
+
+    if (!tx.IsCoinBase() && !txdb.ContainsTx(hash))
+        RelayMessage(inv, tx);
 
     LOCK(cs_mapAlreadyAskedFor);
     mapAlreadyAskedFor.erase(inv);

@@ -612,20 +612,16 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+bool CHub::EmitTransactionInner(CTransaction& tx, bool fCheckInputs)
 {
-    return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
-}
-
-bool CHub::EmitTransaction(CTransaction& tx)
-{
-    CTxDB txdb("r");
     uint256 hash = tx.GetHash();
 
-    LOCK(cs_main);
+    CTxDB* ptxdb = NULL;
+    if (!fClient && fCheckInputs)
+        ptxdb = new CTxDB("r");
 
     bool fMissingInputs = false;
-    if (mempool.accept(txdb, tx, true, &fMissingInputs))
+    if (mempool.accept(*ptxdb, tx, fCheckInputs, &fMissingInputs))
     {
         // Recursively process any orphan transactions that depended on this one
         for (map<uint256, CTransaction*>::iterator mi = mapOrphanTransactionsByPrev[hash].begin();
@@ -657,6 +653,34 @@ bool CHub::EmitTransaction(CTransaction& tx)
         EraseOrphanTx(hash);
 
     return false;
+}
+
+bool CHub::EmitTransaction(CTransaction& tx, bool fCheckInputs)
+{
+    LOCK(cs_main);
+
+    if (!fClient && !IsInitialBlockDownload())
+        fCheckInputs = true;
+
+    if (fClient && fCheckInputs)
+        if (!tx.ClientConnectInputs())
+            return false;
+
+    return EmitTransactionInner(tx, fCheckInputs);
+}
+
+bool CHub::EmitTransaction(CMerkleTx& tx, bool fCheckInputs)
+{
+    LOCK(cs_main);
+
+    if (!fClient && !IsInitialBlockDownload())
+        fCheckInputs = true;
+
+    if (fClient)
+        if (!tx.IsInMainChain() && !tx.ClientConnectInputs())
+            return false;
+
+    return EmitTransactionInner(tx, fCheckInputs);
 }
 
 bool CTxMemPool::addUnchecked(CTransaction &tx)
@@ -731,53 +755,6 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
-{
-    if (fClient)
-    {
-        if (!IsInMainChain() && !ClientConnectInputs())
-            return false;
-        return CTransaction::AcceptToMemoryPool(txdb, false);
-    }
-    else
-    {
-        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs);
-    }
-}
-
-bool CMerkleTx::AcceptToMemoryPool()
-{
-    CTxDB txdb("r");
-    return AcceptToMemoryPool(txdb);
-}
-
-
-
-bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
-{
-
-    {
-        LOCK(mempool.cs);
-        // Add previous supporting transactions first
-        BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
-        {
-            if (!tx.IsCoinBase())
-            {
-                uint256 hash = tx.GetHash();
-                if (!mempool.exists(hash) && !txdb.ContainsTx(hash))
-                    tx.AcceptToMemoryPool(txdb, fCheckInputs);
-            }
-        }
-        return AcceptToMemoryPool(txdb, fCheckInputs);
-    }
-    return false;
-}
-
-bool CWalletTx::AcceptWalletTransaction()
-{
-    CTxDB txdb("r");
-    return AcceptWalletTransaction(txdb);
-}
 
 int CTxIndex::GetDepthInMainChain() const
 {
@@ -1528,7 +1505,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     BOOST_FOREACH(CTransaction& tx, vResurrect)
-        tx.AcceptToMemoryPool(txdb, false);
+        mempool.accept(txdb, tx, false, NULL);
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete)

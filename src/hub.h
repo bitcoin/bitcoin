@@ -13,6 +13,7 @@
 #include "sync.h"
 
 class CBlock;
+class CMerkleTx;
 class CTransaction;
 class CAlert;
 
@@ -55,6 +56,7 @@ private:
 
     void SubmitCallbackCommitBlock(const CBlock &block);
 
+    bool EmitTransactionInner(CTransaction& tx, bool fCheckInputs);
     void SubmitCallbackCommitTransactionToMemoryPool(const CTransaction &tx);
 
     void SubmitCallbackCommitAlert(const CAlert &alert);
@@ -92,8 +94,12 @@ public:
     //   be handled by listeners
     bool EmitBlock(CBlock& block);
     bool EmitAlert(CAlert& alert);
-    // Do not call EmitTransaction except for loose transactions (ie transactions not in a block)
-    bool EmitTransaction(CTransaction& tx);
+    // Emitting transactions already in a block is acceptable only if it is a supporting
+    //   transaction for one of our own
+    // fCheckInputs is ignored (and set to true) if !IsInitialBlockDownload() && !fClient
+    // Only set fCheckInputs when tx is a supporting transaction for one of our own
+    bool EmitTransaction(CMerkleTx& tx, bool fCheckInputs=true);
+    bool EmitTransaction(CTransaction& tx, bool fCheckInputs=true);
 
 //Connected wallet/etc access methods
 
