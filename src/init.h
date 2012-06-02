@@ -7,6 +7,7 @@
 
 #include "wallet.h"
 
+extern std::string strWalletFile;
 extern CWallet* pwalletMain;
 
 void StartShutdown();
