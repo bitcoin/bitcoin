@@ -58,9 +58,19 @@ namespace Checkpoints
 
     // ppcoin: synchronized checkpoint (centrally broadcasted)
     uint256 hashSyncCheckpoint;
+    CCriticalSection cs_hashSyncCheckpoint;
 
     bool AcceptNewSyncCheckpoint(uint256 hashCheckpoint)
     {
+    }
+
+    bool CSyncCheckpoint::ProcessSyncCheckpoint()
+    {
+        if (!CheckSignature())
+            return false;
+
+        CRITICAL_BLOCK(cs_hashSyncCheckpoint)
+            hashSyncCheckpoint = this->hashCheckpoint;
     }
 
     // ppcoin: automatic checkpoint (represented by height of checkpoint)
