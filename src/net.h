@@ -146,6 +146,7 @@ public:
     std::set<CAddress> setAddrKnown;
     bool fGetAddr;
     std::set<uint256> setKnown;
+    uint256 hashCheckpointKnown; // ppcoin: known sent sync-checkpoint
 
     // inventory based relay
     std::set<CInv> setInventoryKnown;
@@ -193,6 +194,7 @@ public:
         fGetAddr = false;
         vfSubscribe.assign(256, false);
         nMisbehavior = 0;
+        hashCheckpointKnown = 0;
 
         // Be shy and don't send version until we hear
         if (!fInbound)
