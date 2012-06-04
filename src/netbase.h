@@ -28,8 +28,8 @@ enum Network
     NET_MAX
 };
 
-enum Network ParseNetwork(std::string net);
-void SetNoProxy(enum Network net, bool fNoProxy = true);
+extern int nConnectTimeout;
+extern bool fNameLookup;
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
@@ -132,6 +132,12 @@ class CService : public CNetAddr
             )
 };
 
+enum Network ParseNetwork(std::string net);
+bool SetProxy(enum Network net, CService addrProxy, int nSocksVersion = 5);
+bool GetProxy(enum Network net, CService &addrProxy);
+bool IsProxy(const CNetAddr &addr);
+bool SetNameProxy(CService addrProxy, int nSocksVersion = 5);
+bool GetNameProxy();
 bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
 bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0);
 bool Lookup(const char *pszName, CService& addr, int portDefault = 0, bool fAllowLookup = true);
@@ -139,12 +145,5 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault =
 bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout = nConnectTimeout);
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault = 0, int nTimeout = nConnectTimeout);
-
-// Settings
-extern int nSocksVersion;
-extern int fUseProxy;
-extern bool fProxyNameLookup;
-extern bool fNameLookup;
-extern CService addrProxy;
 
 #endif
