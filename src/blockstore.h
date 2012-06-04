@@ -44,7 +44,7 @@ private:
     bool AddToBlockIndex(CBlock& block, unsigned int nFile, unsigned int nBlockPos);
     bool AcceptBlock(CBlock& block);
 public:
-    bool LoadBlockIndex(bool fAllowNew=true);
+    bool LoadBlockIndex(bool fReadOnly=false);
 
 //Register methods
     // Register a handler (of the form void f(const CBlock& block)) to be called after every block commit
