@@ -83,6 +83,15 @@ void CHub::SubmitCallbackCommitTransactionToMemoryPool(const CTransaction &tx)
     sem_callbacks.post();
 }
 
+bool CHub::ConnectToBlockStore(CBlockStore* pblockstoreIn)
+{
+    if (pblockstore)
+        return false;
+    pblockstore = pblockstoreIn;
+
+    return true;
+}
+
 void CHub::ProcessCallbacks()
 {
     {
@@ -133,7 +142,7 @@ void ProcessCallbacks(void* parg)
     ((CHub*)parg)->ProcessCallbacks();
 }
 
-CHub::CHub() : sem_callbacks(0), fProcessCallbacks(true), nCallbackThreads(0)
+CHub::CHub() : sem_callbacks(0), fProcessCallbacks(true), nCallbackThreads(0), pblockstore(NULL)
 {
     for (int i = 0; i < GetArg("-callbackconcurrency", 1); i++)
         if (!CreateThread(::ProcessCallbacks, this))

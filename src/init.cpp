@@ -534,6 +534,8 @@ bool AppInit2()
     } catch (runtime_error& e) {
         return InitError(_("Unable to create CHub."));
     }
+    CBlockStore* pblockstore = new CBlockStore(phub);
+    phub->ConnectToBlockStore(pblockstore);
 
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");

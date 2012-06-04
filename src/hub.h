@@ -11,6 +11,7 @@
 
 #include "uint256.h"
 #include "sync.h"
+#include "blockstore.h"
 
 class CBlock;
 class CMerkleTx;
@@ -54,6 +55,8 @@ private:
     bool fProcessCallbacks;
     int nCallbackThreads;
 
+    CBlockStore* pblockstore;
+
     void SubmitCallbackCommitBlock(const CBlock &block);
 
     bool EmitTransactionInner(CTransaction& tx, bool fCheckInputs);
@@ -70,6 +73,8 @@ public:
 
     CHub();
     ~CHub()  { StopProcessCallbacks(); }
+
+    bool ConnectToBlockStore(CBlockStore* pblockstoreIn);
 
 //Register methods
     // Register a handler (of the form void f(const CBlock& block)) to be called after every block commit
@@ -92,7 +97,7 @@ public:
 //Blockchain access methods
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to
     //   be handled by listeners
-    bool EmitBlock(CBlock& block);
+    bool EmitBlock(CBlock& block) { if (!pblockstore) return false; return pblockstore->EmitBlock(block); }
     bool EmitAlert(CAlert& alert);
     // Emitting transactions already in a block is acceptable only if it is a supporting
     //   transaction for one of our own
