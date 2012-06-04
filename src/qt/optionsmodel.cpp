@@ -148,7 +148,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             if (GetProxy(NET_IPV4, addrProxy))
                 return QVariant(QString::fromStdString(addrProxy.ToStringIP()));
             else
-                return QVariant(QString::fromStdString("localhost"));
+                return QVariant(QString::fromStdString("127.0.0.1"));
         }
         case ProxyPort: {
             CService addrProxy;
