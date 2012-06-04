@@ -409,6 +409,24 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
     return false;
 }
 
+void CWallet::HandleCommitBlock(const CBlock& block)
+{
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
+        AddToWalletIfInvolvingMe(tx, &block, true);
+
+    // we can write best chain locator more often because its in a separate thread from the actual chain download
+    if (!IsInitialBlockDownload() || nBestHeight % 500 == 0)
+    {
+        const CBlockLocator locator(pindexBest);
+        SetBestChain(locator);
+    }
+
+    // Notify UI to display prev block's coinbase if it was ours
+    static uint256 hashPrevBestCoinBase;
+    UpdatedTransaction(hashPrevBestCoinBase);
+    hashPrevBestCoinBase = block.vtx[0].GetHash();
+}
+
 void CWallet::HandleCommitTransactionToMemoryPool(const CTransaction& tx)
 {
     AddToWalletIfInvolvingMe(tx, NULL, true);

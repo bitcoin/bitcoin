@@ -116,20 +116,6 @@ void SyncWithWallets(const CTransaction& tx, const CBlock* pblock, bool fUpdate)
         pwallet->AddToWalletIfInvolvingMe(tx, pblock, fUpdate);
 }
 
-// notify wallets about a new best chain
-void static SetBestChain(const CBlockLocator& loc)
-{
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->SetBestChain(loc);
-}
-
-// notify wallets about an updated transaction
-void static UpdatedTransaction(const uint256& hashTx)
-{
-    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->UpdatedTransaction(hashTx);
-}
-
 // dump all wallets
 void static PrintWallets(const CBlock& block)
 {
@@ -1413,10 +1399,6 @@ bool CBlockStore::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
             return error("ConnectBlock() : WriteBlockIndex failed");
     }
 
-    // Watch for transactions paying to me
-    BOOST_FOREACH(CTransaction& tx, block.vtx)
-        SyncWithWallets(tx, &block, true);
-
     return true;
 }
 
@@ -1469,7 +1451,7 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     }
 
     // Connect longer branch
-    vector<CTransaction> vDelete;
+    vector<CBlock> vCommitted;
     for (unsigned int i = 0; i < vConnect.size(); i++)
     {
         CBlockIndex* pindex = vConnect[i];
@@ -1483,8 +1465,7 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         }
 
         // Queue memory transactions to delete
-        BOOST_FOREACH(const CTransaction& tx, block.vtx)
-            vDelete.push_back(tx);
+        vCommitted.push_back(block);
     }
     if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
         return error("CBlockStore::Reorganize() : WriteHashBestChain failed");
@@ -1508,8 +1489,12 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         mempool.accept(txdb, tx, false, NULL);
 
     // Delete redundant memory transactions that are in the connected branch
-    BOOST_FOREACH(CTransaction& tx, vDelete)
-        mempool.remove(tx);
+    BOOST_FOREACH(CBlock& block, vCommitted)
+        BOOST_FOREACH(CTransaction& tx, block.vtx)
+            mempool.remove(tx);
+
+    BOOST_FOREACH(CBlock& block, vCommitted)
+        CallbackCommitBlock(block);
 
     printf("REORGANIZE: done\n");
 
@@ -1538,6 +1523,8 @@ bool CBlockStore::SetBestChainInner(CBlock& block, CTxDB& txdb, CBlockIndex *pin
     // Delete redundant memory transactions
     BOOST_FOREACH(CTransaction& tx, block.vtx)
         mempool.remove(tx);
+
+    CallbackCommitBlock(block);
 
     return true;
 }
@@ -1607,14 +1594,6 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
         }
     }
 
-    // Update best block in wallet (so we can detect restored wallets)
-    bool fIsInitialDownload = IsInitialBlockDownload();
-    if (!fIsInitialDownload)
-    {
-        const CBlockLocator locator(pindexNew);
-        ::SetBestChain(locator);
-    }
-
     // New best block
     hashBestChain = hash;
     pindexBest = pindexNew;
@@ -1626,7 +1605,7 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
 
     std::string strCmd = GetArg("-blocknotify", "");
 
-    if (!fIsInitialDownload && !strCmd.empty())
+    if (!IsInitialBlockDownload() && !strCmd.empty())
     {
         boost::replace_all(strCmd, "%s", hashBestChain.GetHex());
         boost::thread t(runCommand, strCmd); // thread runs free
@@ -1670,14 +1649,6 @@ bool CBlockStore::AddToBlockIndex(CBlock& block, unsigned int nFile, unsigned in
             return false;
 
     txdb.Close();
-
-    if (pindexNew == pindexBest)
-    {
-        // Notify UI to display prev block's coinbase if it was ours
-        static uint256 hashPrevBestCoinBase;
-        UpdatedTransaction(hashPrevBestCoinBase);
-        hashPrevBestCoinBase = block.vtx[0].GetHash();
-    }
 
     return true;
 }
@@ -1836,8 +1807,6 @@ bool CBlockStore::EmitBlock(CBlock& block)
     if (!AcceptBlock(block))
         return error("CBlockStore::EmitBlock() : AcceptBlock FAILED");
 
-    CallbackCommitBlock(block);
-
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
     vWorkQueue.push_back(hash);
@@ -1850,10 +1819,7 @@ bool CBlockStore::EmitBlock(CBlock& block)
         {
             CBlock* pblockOrphan = (*mi).second;
             if (AcceptBlock(*pblockOrphan))
-            {
                 vWorkQueue.push_back(pblockOrphan->GetHash());
-                CallbackCommitBlock(*pblockOrphan);
-            }
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
             delete pblockOrphan;
         }
