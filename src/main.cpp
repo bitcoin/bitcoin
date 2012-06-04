@@ -1754,7 +1754,7 @@ bool CBlockStore::AcceptBlock(CBlock& block)
     return true;
 }
 
-bool CBlockStore::EmitBlock(CBlock& block)
+bool CBlockStore::EmitBlock(CBlock& block, CNode* pNodeDoS)
 {
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -1768,7 +1768,11 @@ bool CBlockStore::EmitBlock(CBlock& block)
 
     // Preliminary checks
     if (!block.CheckBlock())
+    {
+        if (block.nDoS && pNodeDoS)
+            CallbackDoS(pNodeDoS, block.nDoS);
         return error("CBlockStore::EmitBlock() : CheckBlock FAILED");
+    }
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
     if (pcheckpoint && block.hashPrevBlock != hashBestChain)
@@ -1777,6 +1781,7 @@ bool CBlockStore::EmitBlock(CBlock& block)
         int64 deltaTime = block.GetBlockTime() - pcheckpoint->nTime;
         if (deltaTime < 0)
         {
+            if (pNodeDoS) CallbackDoS(pNodeDoS, 100);
             return block.DoS(100, error("CBlockStore::EmitBlock() : block with timestamp before last checkpoint"));
         }
         CBigNum bnNewBlock;
@@ -1785,6 +1790,7 @@ bool CBlockStore::EmitBlock(CBlock& block)
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
+            if (pNodeDoS) CallbackDoS(pNodeDoS, 100);
             return block.DoS(100, error("CBlockStore::EmitBlock() : block with too little proof-of-work"));
         }
     }
@@ -1809,7 +1815,11 @@ bool CBlockStore::EmitBlock(CBlock& block)
 
     // Store to disk
     if (!AcceptBlock(block))
+    {
+        if (block.nDoS && pNodeDoS)
+            CallbackDoS(pNodeDoS, block.nDoS);
         return error("CBlockStore::EmitBlock() : AcceptBlock FAILED");
+    }
 
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
