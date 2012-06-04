@@ -68,7 +68,8 @@ public:
 //Blockchain access methods
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to
     //   be handled by listeners
-    bool EmitBlock(CBlock& block);
+    // DoSHandler will be called with the final value of block.nDoS at some point during callbacks.
+    bool EmitBlock(CBlock& block, CNode* pNodeDoS=NULL);
 };
 
 #endif
