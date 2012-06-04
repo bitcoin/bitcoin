@@ -534,13 +534,13 @@ bool AppInit2()
     } catch (runtime_error& e) {
         return InitError(_("Unable to create CHub."));
     }
-    CBlockStore* pblockstore = new CBlockStore(phub);
+    CBlockStore* pblockstore = new CBlockStore();
     phub->ConnectToBlockStore(pblockstore);
 
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
-    if (!LoadBlockIndex())
+    if (!pblockstore->LoadBlockIndex())
         strErrors << _("Error loading blkindex.dat") << "\n";
 
     // as LoadBlockIndex can take several minutes, it's possible the user

@@ -89,6 +89,10 @@ bool CHub::ConnectToBlockStore(CBlockStore* pblockstoreIn)
         return false;
     pblockstore = pblockstoreIn;
 
+    pblockstore->RegisterCommitBlock(boost::bind(&CHub::SubmitCallbackCommitBlock, this, _1));
+
+    pblockstore->RegisterAskForBlocks(boost::bind(&CHub::AskForBlocks, this, _1, _2));
+
     return true;
 }
 
