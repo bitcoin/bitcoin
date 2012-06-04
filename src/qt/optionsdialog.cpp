@@ -390,7 +390,7 @@ void NetworkOptionsPage::setMapper(MonitoredDataMapper *mapper)
 {
     // Map model to widgets
     mapper->addMapping(map_port_upnp, OptionsModel::MapPortUPnP);
-    mapper->addMapping(connect_socks4, OptionsModel::ConnectSOCKS4);
+    mapper->addMapping(connect_socks4, OptionsModel::ProxyUse);
     mapper->addMapping(proxy_ip, OptionsModel::ProxyIP);
     mapper->addMapping(proxy_port, OptionsModel::ProxyPort);
 }
