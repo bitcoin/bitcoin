@@ -101,8 +101,10 @@ public:
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to
     //   be handled by listeners
 
+    // if (!fBlocking) only initial checks will be performed before returning
+    //   This means block.nDoS may not be set to its final value before returning
     // pNodeDoS->Misbehaving() will be called with the final value of block.nDoS at some point during callbacks.
-    bool EmitBlock(CBlock& block, CNode* pNodeDoS=NULL) { if (!pblockstore) return false; return pblockstore->EmitBlock(block, pNodeDoS); }
+    bool EmitBlock(CBlock& block, bool fBlocking=true, CNode* pNodeDoS=NULL) { if (!pblockstore) return false; return pblockstore->EmitBlock(block, fBlocking, pNodeDoS); }
 
     bool EmitAlert(CAlert& alert);
 

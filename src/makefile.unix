@@ -110,6 +110,7 @@ OBJS= \
     obj/wallet.o \
     obj/walletdb.o \
     obj/hub.o \
+    obj/blockstore.o \
     obj/noui.o
 
 
