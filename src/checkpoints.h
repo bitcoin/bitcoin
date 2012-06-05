@@ -32,8 +32,6 @@ namespace Checkpoints
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
 
     // ppcoin: synchronized checkpoint
-    extern uint256 hashSyncCheckpoint;
-
     class CUnsignedSyncCheckpoint
     {
     public:
@@ -132,6 +130,10 @@ namespace Checkpoints
 
         bool ProcessSyncCheckpoint();
     };
+
+    extern uint256 hashSyncCheckpoint;
+    extern CSyncCheckpoint checkpointMessage;
+    extern CCriticalSection cs_hashSyncCheckpoint;
 
     // ppcoin: automatic checkpoint
     extern int nAutoCheckpoint;
