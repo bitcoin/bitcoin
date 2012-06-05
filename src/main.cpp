@@ -2848,12 +2848,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CInv inv(MSG_BLOCK, block.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if (phub->EmitBlock(block))
-        {
-            LOCK(cs_mapAlreadyAskedFor);
-            mapAlreadyAskedFor.erase(inv);
-        }
-        if (block.nDoS) pfrom->Misbehaving(block.nDoS);
+        phub->EmitBlock(block, false, pfrom);
     }
 
 

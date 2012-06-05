@@ -93,8 +93,15 @@ unsigned short GetListenPort()
 
 void HandleCommitBlock(const CBlock& block)
 {
-    // Relay inventory, but don't relay old inventory during initial block download
     uint256 hash = block.GetHash();
+
+    CInv inv(MSG_BLOCK, hash);
+    {
+        LOCK(cs_mapAlreadyAskedFor);
+        mapAlreadyAskedFor.erase(inv);
+    }
+
+    // Relay inventory, but don't relay old inventory during initial block download
     int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
     if (hashBestChain == hash)
     {
