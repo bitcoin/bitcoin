@@ -439,28 +439,6 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 }
 #endif
 
-void BitcoinGUI::toggleHidden()
-{
-    // activateWindow() (sometimes) helps with keyboard focus on Windows
-    if (isHidden())
-    {
-        show();
-        activateWindow();
-    }
-    else if (isMinimized())
-    {
-        showNormal();
-        activateWindow();
-    }
-    else if (GUIUtil::isObscured(this))
-    {
-        raise();
-        activateWindow();
-    }
-    else
-        hide();
-}
-
 void BitcoinGUI::optionsClicked()
 {
     if(!clientModel || !clientModel->getOptionsModel())
@@ -782,9 +760,6 @@ void BitcoinGUI::handleURI(QString strURI)
     gotoSendCoinsPage();
     sendCoinsPage->handleURI(strURI);
 
-    if(!isActiveWindow())
-        activateWindow();
-
     showNormalIfMinimized();
 }
 
@@ -867,10 +842,29 @@ void BitcoinGUI::unlockWallet()
     }
 }
 
-void BitcoinGUI::showNormalIfMinimized()
+void BitcoinGUI::showNormalIfMinimized(bool fToggleHidden)
 {
-    if(!isVisible()) // Show, if hidden
+    // activateWindow() (sometimes) helps with keyboard focus on Windows
+    if (isHidden())
+    {
         show();
-    if(isMinimized()) // Unminimize, if minimized
+        activateWindow();
+    }
+    else if (isMinimized())
+    {
         showNormal();
+        activateWindow();
+    }
+    else if (GUIUtil::isObscured(this))
+    {
+        raise();
+        activateWindow();
+    }
+    else if(fToggleHidden)
+        hide();
+}
+
+void BitcoinGUI::toggleHidden()
+{
+    showNormalIfMinimized(true);
 }
