@@ -635,18 +635,19 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
     const int COPY_DEPTH = 3;
     if (SetMerkleBranch() < COPY_DEPTH)
     {
-        vector<uint256> vWorkQueue;
+        queue<uint256> qWorkQueue;
         BOOST_FOREACH(const CTxIn& txin, vin)
-            vWorkQueue.push_back(txin.prevout.hash);
+            qWorkQueue.push(txin.prevout.hash);
 
         // This critsect is OK because txdb is already open
         {
             LOCK(pwallet->cs_wallet);
             map<uint256, const CMerkleTx*> mapWalletPrev;
             set<uint256> setAlreadyDone;
-            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+            while(!qWorkQueue.empty())
             {
-                uint256 hash = vWorkQueue[i];
+                uint256 hash = qWorkQueue.front();
+                qWorkQueue.pop();
                 if (setAlreadyDone.count(hash))
                     continue;
                 setAlreadyDone.insert(hash);
@@ -679,7 +680,7 @@ void CWalletTx::AddSupportingTransactions(CTxDB& txdb)
                 if (nDepth < COPY_DEPTH)
                 {
                     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                        vWorkQueue.push_back(txin.prevout.hash);
+                        qWorkQueue.push(txin.prevout.hash);
                 }
             }
         }
