@@ -58,11 +58,9 @@ namespace Checkpoints
 
     // ppcoin: synchronized checkpoint (centrally broadcasted)
     uint256 hashSyncCheckpoint;
+    CSyncCheckpoint checkpointMessage;
+    CSyncCheckpoint checkpointMessagePending;
     CCriticalSection cs_hashSyncCheckpoint;
-
-    bool AcceptNewSyncCheckpoint(uint256 hashCheckpoint)
-    {
-    }
 
     bool CSyncCheckpoint::ProcessSyncCheckpoint()
     {
@@ -70,7 +68,31 @@ namespace Checkpoints
             return false;
 
         CRITICAL_BLOCK(cs_hashSyncCheckpoint)
+        {
+            if (!mapBlockIndex.count(hashCheckpoint))
+            {
+                // TODO: we don't have this block yet, so ask for it
+                checkpointMessagePending = *this;
+                return false;
+            }
+
+            if (!mapBlockIndex.count(hashSyncCheckpoint))
+                return error("ProcessSyncCheckpoint: block index missing for synchronized checkpoint %s", hashSyncCheckpoint.ToString().c_str());
+
+            CBlockIndex* pindexSyncCheckpoint = mapBlockIndex[hashSyncCheckpoint];
+            CBlockIndex* pindexCheckpointPending = mapBlockIndex[hashCheckpoint];
+            if (pindexCheckpointPending->nHeight <= pindexSyncCheckpoint->nHeight)
+                return false;  // this is an older checkpoint, ignore
+
+            CBlockIndex* pindex = pindexCheckpointPending;
+            while (pindex->nHeight > pindexSyncCheckpoint->nHeight)
+                pindex = pindex->pprev;
+            if (pindex->GetBlockHash() != hashSyncCheckpoint)
+                return error("ProcessSyncCheckpoint: new sync-checkpoint %s is not a descendant of current sync-checkpoint %s", hashCheckpoint.ToString().c_str(), hashSyncCheckpoint.ToString().c_str());
             hashSyncCheckpoint = this->hashCheckpoint;
+            checkpointMessage = *this;
+        }
+        return true;
     }
 
     // ppcoin: automatic checkpoint (represented by height of checkpoint)
