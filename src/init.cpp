@@ -24,6 +24,7 @@ using namespace std;
 using namespace boost;
 
 CWallet* pwalletMain;
+CBlockStore* pblockstore;
 CClientUIInterface uiInterface;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -57,6 +58,7 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         if (phub) phub->StopProcessCallbacks();
+        if (pblockstore) pblockstore->StopProcessCallbacks();
         nTransactionsUpdated++;
         bitdb.Flush(false);
         StopNode();
@@ -526,7 +528,7 @@ bool AppInit2()
     } catch (runtime_error& e) {
         return InitError(_("Unable to create CHub."));
     }
-    CBlockStore* pblockstore = new CBlockStore();
+    pblockstore = new CBlockStore();
     phub->ConnectToBlockStore(pblockstore);
 
     if (GetBoolArg("-loadblockindextest"))

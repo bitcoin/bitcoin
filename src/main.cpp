@@ -1754,7 +1754,7 @@ bool CBlockStore::AcceptBlock(CBlock& block)
     return true;
 }
 
-bool CBlockStore::EmitBlock(CBlock& block, CNode* pNodeDoS)
+bool CBlockStore::EmitBlock(CBlock& block, bool fBlocking, CNode* pNodeDoS)
 {
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -1764,8 +1764,6 @@ bool CBlockStore::EmitBlock(CBlock& block, CNode* pNodeDoS)
             return error("CHub::EmitBlock() : already seen block %s", hash.ToString().substr(0,20).c_str());
     }
 
-    LOCK(cs_main);
-
     // Preliminary checks
     if (!block.CheckBlock())
     {
@@ -1774,7 +1772,12 @@ bool CBlockStore::EmitBlock(CBlock& block, CNode* pNodeDoS)
         return error("CBlockStore::EmitBlock() : CheckBlock FAILED");
     }
 
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    CBlockIndex* pcheckpoint = NULL;
+    {
+        LOCK(cs_main); //TODO Remove this lock, as it kills performance
+        pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    }
+
     if (pcheckpoint && block.hashPrevBlock != hashBestChain)
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
@@ -1800,10 +1803,24 @@ bool CBlockStore::EmitBlock(CBlock& block, CNode* pNodeDoS)
         setBlocksSeen.insert(hash);
     }
 
+    if (fBlocking)
+        return FinishEmitBlock(block, pNodeDoS);
+    else
+        SubmitCallbackFinishEmitBlock(block, pNodeDoS);
+
+    return true;
+}
+
+bool CBlockStore::FinishEmitBlock(CBlock& block, CNode* pNodeDoS)
+{
+    uint256 hash = block.GetHash();
+
+    LOCK(cs_main);
+
     // If don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(block.hashPrevBlock))
     {
-        printf("CBlockStore::EmitBlock: ORPHAN BLOCK, prev=%s\n", block.hashPrevBlock.ToString().substr(0,20).c_str());
+        printf("CBlockStore::FinishEmitBlock: ORPHAN BLOCK, prev=%s\n", block.hashPrevBlock.ToString().substr(0,20).c_str());
         CBlock* pblock = new CBlock(block);
         mapOrphanBlocks.insert(make_pair(hash, pblock));
         mapOrphanBlocksByPrev.insert(make_pair(pblock->hashPrevBlock, pblock));
@@ -1818,7 +1835,7 @@ bool CBlockStore::EmitBlock(CBlock& block, CNode* pNodeDoS)
     {
         if (block.nDoS && pNodeDoS)
             CallbackDoS(pNodeDoS, block.nDoS);
-        return error("CBlockStore::EmitBlock() : AcceptBlock FAILED");
+        return error("CBlockStore::FinishEmitBlock() : AcceptBlock FAILED");
     }
 
     // Recursively process any orphan blocks that depended on this one
@@ -1840,7 +1857,7 @@ bool CBlockStore::EmitBlock(CBlock& block, CNode* pNodeDoS)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    printf("CBlockStore::EmitBlock: ACCEPTED\n");
+    printf("CBlockStore::FinishEmitBlock: ACCEPTED\n");
 
     return true;
 }

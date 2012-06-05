@@ -49,6 +49,15 @@ private:
 
     void CallbackDoS(CNode* pNode, const int nDoS) { LOCK(sigtable.cs_sigDoS); sigtable.sigDoS(pNode, nDoS); }
 
+    CCriticalSection cs_callbacks;
+    CSemaphore sem_callbacks;
+    bool fProcessCallbacks;
+    bool fProcessingCallbacks;
+
+    std::queue<std::pair<CBlock*, CNode*> > queueFinishEmitBlockCallbacks;
+    void SubmitCallbackFinishEmitBlock(CBlock& block, CNode* pNodeDoS);
+    bool FinishEmitBlock(CBlock& block, CNode* pNodeDoS);
+
     bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew);
     bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
     bool ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
@@ -57,6 +66,14 @@ private:
     bool AddToBlockIndex(CBlock& block, unsigned int nFile, unsigned int nBlockPos);
     bool AcceptBlock(CBlock& block);
 public:
+    // Loops to process callbacks (do not call manually, automatically started in the constructor)
+        void ProcessCallbacks();
+    // Stop callback processing threads
+    void StopProcessCallbacks();
+
+    CBlockStore();
+    ~CBlockStore()  { StopProcessCallbacks(); }
+
     bool LoadBlockIndex(bool fReadOnly=false);
 
 //Register methods
@@ -75,8 +92,11 @@ public:
 //Blockchain access methods
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to
     //   be handled by listeners
+
+    // if (!fBlocking) only initial checks will be performed before returning
+    //   This means block.nDoS may not be set to its final value before returning
     // DoSHandler will be called with the final value of block.nDoS at some point during callbacks.
-    bool EmitBlock(CBlock& block, CNode* pNodeDoS=NULL);
+    bool EmitBlock(CBlock& block, bool fBlocking=true, CNode* pNodeDoS=NULL);
 
     // Returns true if we have/have seen a block with the given hash
     // Does not indicate whether the block is orphan/was invalid/is in the main chain/is waiting to be committed/etc
