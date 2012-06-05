@@ -2431,6 +2431,7 @@ unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
+    static CCriticalSection cs_mapReuseKey;
     static map<CService, CPubKey> mapReuseKey;
     RandAddSeedPerfmon();
     if (fDebug)
@@ -2447,6 +2448,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     if (strCommand == "version")
     {
+        LOCK(cs_main);
+
         // Each connection can only send one version message
         if (pfrom->nVersion != 0)
         {
@@ -2570,6 +2573,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "addr")
     {
+        LOCK(cs_main);
+
         vector<CAddress> vAddr;
         vRecv >> vAddr;
 
@@ -2654,6 +2659,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             }
         }
 
+        LOCK(cs_main);
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
@@ -2695,6 +2701,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->Misbehaving(20);
             return error("message getdata size() = %d", vInv.size());
         }
+
+        LOCK(cs_main);
 
         BOOST_FOREACH(const CInv& inv, vInv)
         {
@@ -2748,6 +2756,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         uint256 hashStop;
         vRecv >> locator >> hashStop;
 
+        LOCK(cs_main);
+
         // Find the last block the caller has in the main chain
         CBlockIndex* pindex = locator.GetBlockIndex();
 
@@ -2785,6 +2795,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CBlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
+
+        LOCK(cs_main);
 
         CBlockIndex* pindex = NULL;
         if (locator.IsNull())
@@ -2851,6 +2863,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "getaddr")
     {
+        LOCK(cs_main);
+
         pfrom->vAddrToSend.clear();
         vector<CAddress> vAddr = addrman.GetAddr();
         BOOST_FOREACH(const CAddress &addr, vAddr)
@@ -2873,6 +2887,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> order;
 
         /// we have a chance to check the order here
+
+        LOCK(cs_mapReuseKey);
 
         // Keep giving the same key to the same ip until they use it
         if (!mapReuseKey.count(pfrom->addr))
@@ -2900,6 +2916,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 pfrom->mapRequests.erase(mi);
             }
         }
+
+        LOCK(cs_main);
+
         if (!tracker.IsNull())
             tracker.fn(tracker.param1, vRecv);
     }
@@ -3039,10 +3058,7 @@ bool ProcessMessages(CNode* pfrom)
         bool fRet = false;
         try
         {
-            {
-                LOCK(cs_main);
-                fRet = ProcessMessage(pfrom, strCommand, vMsg);
-            }
+            fRet = ProcessMessage(pfrom, strCommand, vMsg);
             if (fShutdown)
                 return true;
         }
