@@ -1010,7 +1010,7 @@ bool operator<(const CService& a, const CService& b)
 bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
 {
     if (IsIPv4()) {
-        if (*addrlen < sizeof(struct sockaddr_in))
+        if (*addrlen < (socklen_t)sizeof(struct sockaddr_in))
             return false;
         *addrlen = sizeof(struct sockaddr_in);
         struct sockaddr_in *paddrin = (struct sockaddr_in*)paddr;
@@ -1023,7 +1023,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
     }
 #ifdef USE_IPV6
     if (IsIPv6()) {
-        if (*addrlen < sizeof(struct sockaddr_in6))
+        if (*addrlen < (socklen_t)sizeof(struct sockaddr_in6))
             return false;
         *addrlen = sizeof(struct sockaddr_in6);
         struct sockaddr_in6 *paddrin6 = (struct sockaddr_in6*)paddr;
