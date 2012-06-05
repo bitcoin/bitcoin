@@ -1421,22 +1421,21 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     }
 
     // List of what to disconnect
-    vector<CBlockIndex*> vDisconnect;
+    list<CBlockIndex*> lDisconnect;
     for (CBlockIndex* pindex = pindexBest; pindex != pfork; pindex = pindex->pprev)
-        vDisconnect.push_back(pindex);
+        lDisconnect.push_back(pindex);
 
     // List of what to connect
-    vector<CBlockIndex*> vConnect;
+    list<CBlockIndex*> lConnect;
     for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
-        vConnect.push_back(pindex);
-    reverse(vConnect.begin(), vConnect.end());
+        lConnect.push_front(pindex);
 
-    printf("REORGANIZE: Disconnect %i blocks; %s..%s\n", vDisconnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexBest->GetBlockHash().ToString().substr(0,20).c_str());
-    printf("REORGANIZE: Connect %i blocks; %s..%s\n", vConnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->GetBlockHash().ToString().substr(0,20).c_str());
+    printf("REORGANIZE: Disconnect %i blocks; %s..%s\n", lDisconnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexBest->GetBlockHash().ToString().substr(0,20).c_str());
+    printf("REORGANIZE: Connect %i blocks; %s..%s\n", lConnect.size(), pfork->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->GetBlockHash().ToString().substr(0,20).c_str());
 
     // Disconnect shorter branch
-    vector<CTransaction> vResurrect;
-    BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
+    list<CTransaction> lResurrect;
+    BOOST_FOREACH(CBlockIndex* pindex, lDisconnect)
     {
         CBlock block;
         if (!block.ReadFromDisk(pindex))
@@ -1447,14 +1446,13 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         // Queue memory transactions to resurrect
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
             if (!tx.IsCoinBase())
-                vResurrect.push_back(tx);
+                lResurrect.push_back(tx);
     }
 
     // Connect longer branch
-    vector<CBlock> vCommitted;
-    for (unsigned int i = 0; i < vConnect.size(); i++)
+    list<CBlock> lCommitted;
+    BOOST_FOREACH(CBlockIndex* pindex, lConnect)
     {
-        CBlockIndex* pindex = vConnect[i];
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("CBlockStore::Reorganize() : ReadFromDisk for connect failed");
@@ -1465,7 +1463,7 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         }
 
         // Queue memory transactions to delete
-        vCommitted.push_back(block);
+        lCommitted.push_back(block);
     }
     if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
         return error("CBlockStore::Reorganize() : WriteHashBestChain failed");
@@ -1475,26 +1473,26 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         return error("CBlockStore::Reorganize() : TxnCommit failed");
 
     // Disconnect shorter branch
-    BOOST_FOREACH(CBlockIndex* pindex, vDisconnect)
+    BOOST_FOREACH(CBlockIndex* pindex, lDisconnect)
         if (pindex->pprev)
             pindex->pprev->pnext = NULL;
 
     // Connect longer branch
-    BOOST_FOREACH(CBlockIndex* pindex, vConnect)
+    BOOST_FOREACH(CBlockIndex* pindex, lConnect)
         if (pindex->pprev)
             pindex->pprev->pnext = pindex;
 
     // Resurrect memory transactions that were in the disconnected branch
-    BOOST_FOREACH(CTransaction& tx, vResurrect)
+    BOOST_FOREACH(CTransaction& tx, lResurrect)
         mempool.accept(txdb, tx, false, NULL);
 
     // Delete redundant memory transactions that are in the connected branch
-    BOOST_FOREACH(CBlock& block, vCommitted)
+    BOOST_FOREACH(CBlock& block, lCommitted)
+    {
         BOOST_FOREACH(CTransaction& tx, block.vtx)
             mempool.remove(tx);
-
-    BOOST_FOREACH(CBlock& block, vCommitted)
         CallbackCommitBlock(block);
+    }
 
     printf("REORGANIZE: done\n");
 
@@ -1554,18 +1552,18 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
         CBlockIndex *pindexIntermediate = pindexNew;
 
         // list of blocks that need to be connected afterwards
-        std::vector<CBlockIndex*> vpindexSecondary;
+        std::list<CBlockIndex*> lpindexSecondary;
 
         // Reorganize is costly in terms of db load, as it works in a single db transaction.
         // Try to limit how much needs to be done inside
         while (pindexIntermediate->pprev && pindexIntermediate->pprev->bnChainWork > pindexBest->bnChainWork)
         {
-            vpindexSecondary.push_back(pindexIntermediate);
+            lpindexSecondary.push_back(pindexIntermediate);
             pindexIntermediate = pindexIntermediate->pprev;
         }
 
-        if (!vpindexSecondary.empty())
-            printf("Postponing %i reconnects\n", vpindexSecondary.size());
+        if (!lpindexSecondary.empty())
+            printf("Postponing %i reconnects\n", lpindexSecondary.size());
 
         // Switch to new best branch
         if (!Reorganize(txdb, pindexIntermediate))
@@ -1576,7 +1574,7 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
         }
 
         // Connect futher blocks
-        BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vpindexSecondary)
+        BOOST_REVERSE_FOREACH(CBlockIndex *pindex, lpindexSecondary)
         {
             CBlock block2;
             if (!block2.ReadFromDisk(pindex))
@@ -1834,19 +1832,21 @@ bool CBlockStore::FinishEmitBlock(CBlock& block, CNode* pNodeDoS)
     }
 
     // Recursively process any orphan blocks that depended on this one
-    vector<uint256> vWorkQueue;
-    vWorkQueue.push_back(hash);
-    for (unsigned int i = 0; i < vWorkQueue.size(); i++)
+    queue<uint256> qWorkQueue;
+    qWorkQueue.push(hash);
+    while (!qWorkQueue.empty())
     {
-        uint256 hashPrev = vWorkQueue[i];
+        uint256 hashPrev = qWorkQueue.front();
+        qWorkQueue.pop();
         for (multimap<uint256, CBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);
              mi != mapOrphanBlocksByPrev.upper_bound(hashPrev);
              ++mi)
         {
             CBlock* pblockOrphan = (*mi).second;
+            uint256 hashOrphan = pblockOrphan->GetHash();
             if (AcceptBlock(*pblockOrphan))
-                vWorkQueue.push_back(pblockOrphan->GetHash());
-            mapOrphanBlocks.erase(pblockOrphan->GetHash());
+                qWorkQueue.push(hashOrphan);
+            mapOrphanBlocks.erase(hashOrphan);
             delete pblockOrphan;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
@@ -2191,15 +2191,15 @@ void PrintBlockTree()
         //    mapNext[pindex->pprev].push_back(pindex);
     }
 
-    vector<pair<int, CBlockIndex*> > vStack;
-    vStack.push_back(make_pair(0, pindexGenesisBlock));
+    stack<pair<int, CBlockIndex*> > sStack;
+    sStack.push(make_pair(0, pindexGenesisBlock));
 
     int nPrevCol = 0;
-    while (!vStack.empty())
+    while (!sStack.empty())
     {
-        int nCol = vStack.back().first;
-        CBlockIndex* pindex = vStack.back().second;
-        vStack.pop_back();
+        int nCol = sStack.top().first;
+        CBlockIndex* pindex = sStack.top().second;
+        sStack.pop();
 
         // print split or gap
         if (nCol > nPrevCol)
@@ -2246,7 +2246,7 @@ void PrintBlockTree()
 
         // iterate children
         for (unsigned int i = 0; i < vNext.size(); i++)
-            vStack.push_back(make_pair(nCol+i, vNext[i]));
+            sStack.push(make_pair(nCol+i, vNext[i]));
     }
 }
 
