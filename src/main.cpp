@@ -3192,7 +3192,9 @@ bool ProcessMessages(CNode* pfrom)
 
         if (!fRet)
             printf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand.c_str(), nMessageSize);
-    }
+        else
+            break; // give other peers a chance
+    } // loop
 
     vRecv.Compact();
     return true;
@@ -3336,6 +3338,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         int64 nNow = GetTime() * 1000000;
         CTxDB txdb("r");
         int getblocks = 0;
+        int haveblocks = 0;
         CInv blockinv;
 
         // First, the blocks
@@ -3356,15 +3359,19 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     vGetData.clear();
                 }
                 mapWaitingFor[inv] = nNow;
-            } // if !AlreadyHave
+            } else // if !AlreadyHave
+                haveblocks++;
             pto->mapAskForBlock.erase(pto->mapAskForBlock.begin());
         } // while
 
         if (getblocks && fQuietInitial && !CaughtUp()) {
-            if (getblocks == 1)
-                printf("getdata %s to %s\n", blockinv.ToString().c_str(), pto->addr.ToString().c_str());
+            if (haveblocks == 0)
+                if (getblocks == 1)
+                    printf("getdata %s to %s\n", blockinv.ToString().c_str(), pto->addr.ToString().c_str());
+                else
+                    printf("getdata %d blocks to %s\n", getblocks, pto->addr.ToString().c_str());
             else
-                printf("getdata %d blocks to %s\n", getblocks, pto->addr.ToString().c_str());
+                printf("getdata %d (AH %d) blocks to %s\n", getblocks, haveblocks, pto->addr.ToString().c_str());
         }
 
         // Finally, the transactions
