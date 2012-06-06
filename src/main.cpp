@@ -2420,7 +2420,8 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 
     case MSG_BLOCK:
         return mapBlockIndex.count(inv.hash) ||
-               mapOrphanBlocks.count(inv.hash);
+               mapOrphanBlocks.count(inv.hash) ||
+               setBlocksSeen.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -2665,6 +2666,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             }
         }
 
+        int nBlockCount = 0;
+
         LOCK(cs_main);
 
         CTxDB txdb("r");
@@ -2693,6 +2696,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 if (fDebug)
                     printf("force request: %s\n", inv.ToString().c_str());
             }
+
+            if (inv.type == MSG_BLOCK)
+                nBlockCount++;
+
+            // Don't set hashLastInvLastBlock if we are getting a hashContinue inv
+            if (nInv == nLastBlock && nBlockCount > 5)
+                pfrom->hashLastInvLastBlock = inv.hash;
 
             // Track requests for our stuff
             Inventory(inv.hash);
@@ -2861,6 +2871,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         phub->EmitBlock(block, false, pfrom);
+
+        // Though we request duplicates, Satoshi nodes will not return any,
+        // thanks to setInventoryKnown, however they will still count them
+        // towards the block size in the inv result, its still better to
+        // request blocks now, but #973 will optimize this further.
+        if (pfrom->hashLastInvLastBlock == inv.hash)
+        {
+            LOCK(cs_main);
+            pfrom->PushGetBlocks(pindexBest, uint256(0));
+        }
     }
 
 
