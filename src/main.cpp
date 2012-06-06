@@ -3224,7 +3224,10 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         }
         if (!vInv.empty())
             pto->PushMessage("inv", vInv);
+    }
 
+    {
+        LOCK(pto->cs_mapAskFor);
 
         //
         // Message: getdata
@@ -3253,8 +3256,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         }
         if (!vGetData.empty())
             pto->PushMessage("getdata", vGetData);
-
     }
+
     return true;
 }
 
