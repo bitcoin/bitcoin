@@ -175,6 +175,7 @@ public:
     uint256 hashContinue;
     const CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
+    uint256 hashLastInvLastBlock;
     int nStartingHeight;
 
     // flood relay
