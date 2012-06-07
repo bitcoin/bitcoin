@@ -2588,7 +2588,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         Checkpoints::CSyncCheckpoint checkpoint;
         vRecv >> checkpoint;
 
-        if (checkpoint.ProcessSyncCheckpoint())
+        if (checkpoint.ProcessSyncCheckpoint(pfrom))
         {
             // Relay
             pfrom->hashCheckpointKnown = checkpoint.hashCheckpoint;

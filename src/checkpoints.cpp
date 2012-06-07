@@ -62,7 +62,7 @@ namespace Checkpoints
     CSyncCheckpoint checkpointMessagePending;
     CCriticalSection cs_hashSyncCheckpoint;
 
-    bool CSyncCheckpoint::ProcessSyncCheckpoint()
+    bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
     {
         if (!CheckSignature())
             return false;
@@ -71,8 +71,11 @@ namespace Checkpoints
         {
             if (!mapBlockIndex.count(hashCheckpoint))
             {
-                // TODO: we don't have this block yet, so ask for it
+                // We haven't accepted this block, keep the checkpoint as pending
                 checkpointMessagePending = *this;
+                // Ask this guy to fill in what we're missing
+                if (pfrom)
+                    pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
                 return false;
             }
 

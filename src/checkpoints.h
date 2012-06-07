@@ -128,7 +128,7 @@ namespace Checkpoints
             return true;
         }
 
-        bool ProcessSyncCheckpoint();
+        bool ProcessSyncCheckpoint(CNode* pfrom);
     };
 
     extern uint256 hashSyncCheckpoint;
