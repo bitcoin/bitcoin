@@ -53,7 +53,7 @@ static const int fHaveUPnP = false;
 
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
-extern std::set<COutPoint> setStakeSeen;
+extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
@@ -897,9 +897,9 @@ public:
         return !IsProofOfStake();
     }
 
-    COutPoint GetProofOfStake() const
+    std::pair<COutPoint, unsigned int> GetProofOfStake() const
     {
-        return IsProofOfStake()? vtx[1].vin[0].prevout : COutPoint();
+        return IsProofOfStake()? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
 
     // ppcoin: get max transaction timestamp
@@ -1133,6 +1133,7 @@ public:
     int nCheckpoint;    // ppcoin: chain auto checkpoint height
     bool fProofOfStake; // ppcoin: is the block of proof-of-stake type
     COutPoint prevoutStake;
+    unsigned int nStakeTime;
 
     // block header
     int nVersion;
@@ -1154,6 +1155,7 @@ public:
         nCheckpoint = 0;
         fProofOfStake = true;
         prevoutStake.SetNull();
+        nStakeTime = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1174,9 +1176,15 @@ public:
         nCheckpoint = 0;
         fProofOfStake = block.IsProofOfStake();
         if (fProofOfStake)
+        {
             prevoutStake = block.vtx[1].vin[0].prevout;
+            nStakeTime = block.vtx[1].nTime;
+        }
         else
+        {
             prevoutStake.SetNull();
+            nStakeTime = 0;
+        }
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -1278,9 +1286,9 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, nCheckpoint=%d, fProofOfStake=%d prevoutStake=(%s) merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, nCheckpoint=%d, fProofOfStake=%d prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight, nCheckpoint,
-            fProofOfStake, prevoutStake.ToString().c_str(),
+            fProofOfStake, prevoutStake.ToString().c_str(), nStakeTime,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
     }
@@ -1327,6 +1335,7 @@ public:
         READWRITE(nCheckpoint);
         READWRITE(fProofOfStake);
         READWRITE(prevoutStake);
+        READWRITE(nStakeTime);
 
         // block header
         READWRITE(this->nVersion);

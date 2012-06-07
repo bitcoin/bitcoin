@@ -568,7 +568,7 @@ bool CTxDB::LoadBlockIndex()
 
             // ppcoin: build setStakeSeen
             if (pindexNew->fProofOfStake)
-                setStakeSeen.insert(pindexNew->prevoutStake);
+                setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
         }
         else
         {
