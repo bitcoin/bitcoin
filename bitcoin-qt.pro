@@ -71,12 +71,16 @@ contains(FIRST_CLASS_MESSAGING, 1) {
     DEFINES += FIRST_CLASS_MESSAGING
 }
 
-# use: qmake "USE_IPV6=1" (enabled; default)
+# use: qmake "USE_IPV6=1" ( enabled by default; default)
+#  or: qmake "USE_IPV6=0" (disabled by default)
 #  or: qmake "USE_IPV6=-" (not supported)
 contains(USE_IPV6, -) {
 	message(Building without IPv6 support)
 } else {
-	DEFINES += USE_IPV6
+	count(USE_IPV6, 0) {
+		USE_IPV6=1
+	}
+	DEFINES += USE_IPV6=$$USE_IPV6
 }
 
 contains(BITCOIN_NEED_QT_PLUGINS, 1) {
