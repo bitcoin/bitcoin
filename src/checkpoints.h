@@ -135,6 +135,8 @@ namespace Checkpoints
     extern CSyncCheckpoint checkpointMessage;
     extern CCriticalSection cs_hashSyncCheckpoint;
 
+    bool AcceptPendingSyncCheckpoint(uint256 hashAcceptedBlock);
+
     // ppcoin: automatic checkpoint
     extern int nAutoCheckpoint;
     extern int nBranchPoint;

@@ -62,6 +62,27 @@ namespace Checkpoints
     CSyncCheckpoint checkpointMessagePending;
     CCriticalSection cs_hashSyncCheckpoint;
 
+    // ppcoin: only descendant of current sync-checkpoint is allowed
+    bool ValidateSyncCheckpoint(uint256 hashCheckpoint)
+    {
+        if (!mapBlockIndex.count(hashSyncCheckpoint))
+            return error("ValidateSyncCheckpoint: block index missing for current sync-checkpoint %s", hashSyncCheckpoint.ToString().c_str());
+        if (!mapBlockIndex.count(hashCheckpoint))
+            return error("ValidateSyncCheckpoint: block index missing for received sync-checkpoint %s", hashCheckpoint.ToString().c_str());
+
+        CBlockIndex* pindexSyncCheckpoint = mapBlockIndex[hashSyncCheckpoint];
+        CBlockIndex* pindexCheckpointRecv = mapBlockIndex[hashCheckpoint];
+        if (pindexCheckpointRecv->nHeight <= pindexSyncCheckpoint->nHeight)
+            return false;  // this is an older checkpoint, ignore
+
+        CBlockIndex* pindex = pindexCheckpointRecv;
+        while (pindex->nHeight > pindexSyncCheckpoint->nHeight)
+            pindex = pindex->pprev;
+        if (pindex->GetBlockHash() != hashSyncCheckpoint)
+            return error("ValidateSyncCheckpoint: new sync-checkpoint %s is not a descendant of current sync-checkpoint %s", hashCheckpoint.ToString().c_str(), hashSyncCheckpoint.ToString().c_str());
+        return true;
+    }
+
     bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
     {
         if (!CheckSignature())
@@ -78,24 +99,35 @@ namespace Checkpoints
                     pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
                 return false;
             }
-
-            if (!mapBlockIndex.count(hashSyncCheckpoint))
-                return error("ProcessSyncCheckpoint: block index missing for synchronized checkpoint %s", hashSyncCheckpoint.ToString().c_str());
-
-            CBlockIndex* pindexSyncCheckpoint = mapBlockIndex[hashSyncCheckpoint];
-            CBlockIndex* pindexCheckpointPending = mapBlockIndex[hashCheckpoint];
-            if (pindexCheckpointPending->nHeight <= pindexSyncCheckpoint->nHeight)
-                return false;  // this is an older checkpoint, ignore
-
-            CBlockIndex* pindex = pindexCheckpointPending;
-            while (pindex->nHeight > pindexSyncCheckpoint->nHeight)
-                pindex = pindex->pprev;
-            if (pindex->GetBlockHash() != hashSyncCheckpoint)
-                return error("ProcessSyncCheckpoint: new sync-checkpoint %s is not a descendant of current sync-checkpoint %s", hashCheckpoint.ToString().c_str(), hashSyncCheckpoint.ToString().c_str());
+            if (!ValidateSyncCheckpoint(hashCheckpoint))
+                return false;
             hashSyncCheckpoint = this->hashCheckpoint;
             checkpointMessage = *this;
+            checkpointMessagePending.SetNull();
         }
         return true;
+    }
+
+    bool AcceptPendingSyncCheckpoint(uint256 hashAcceptedBlock)
+    {
+        if (!mapBlockIndex.count(hashAcceptedBlock))
+            return false;
+
+        CRITICAL_BLOCK(cs_hashSyncCheckpoint)
+            if ((!checkpointMessagePending.IsNull()) && checkpointMessagePending.hashCheckpoint == hashAcceptedBlock)
+            {
+                if (!ValidateSyncCheckpoint(checkpointMessagePending.hashCheckpoint))
+                {
+                    checkpointMessagePending.SetNull();
+                    return false;
+                }
+                hashSyncCheckpoint = checkpointMessagePending.hashCheckpoint;
+                checkpointMessage = checkpointMessagePending;
+                checkpointMessagePending.SetNull();
+                return true;
+            }
+
+        return false;
     }
 
     // ppcoin: automatic checkpoint (represented by height of checkpoint)
