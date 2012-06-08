@@ -30,7 +30,10 @@ CFLAGS=-mthreads -O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-par
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
-ifdef USE_UPNP
+ifndef USE_UPNP
+	override USE_UPNP = -
+endif
+ifneq (${USE_UPNP}, -)
  INCLUDEPATHS += -I"C:\miniupnpc-1.6-mgw"
  LIBPATHS += -L"C:\miniupnpc-1.6-mgw"
  LIBS += -l miniupnpc -l iphlpapi
