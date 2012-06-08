@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = bitcoin-qt
 VERSION = 0.6.99
 INCLUDEPATH += src src/json src/qt
-DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE USE_IPV6
+DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 
 # for boost 1.37, add -mt to the boost libraries
@@ -69,6 +69,14 @@ contains(USE_DBUS, 1) {
 contains(FIRST_CLASS_MESSAGING, 1) {
     message(Building with first-class messaging)
     DEFINES += FIRST_CLASS_MESSAGING
+}
+
+# use: qmake "USE_IPV6=1" (enabled; default)
+#  or: qmake "USE_IPV6=-" (not supported)
+contains(USE_IPV6, -) {
+	message(Building without IPv6 support)
+} else {
+	DEFINES += USE_IPV6
 }
 
 contains(BITCOIN_NEED_QT_PLUGINS, 1) {
