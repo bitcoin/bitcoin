@@ -43,7 +43,7 @@ ifneq (${USE_UPNP}, -)
 endif
 
 ifneq (${USE_IPV6}, -)
-	DEFS += -DUSE_IPV6
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
 LIBS+= \
