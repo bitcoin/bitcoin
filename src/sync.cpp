@@ -7,6 +7,14 @@
 
 #include <boost/foreach.hpp>
 
+#ifdef DEBUG_LOCKCONTENTION
+void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
+{
+    printf("LOCKCONTENTION: %s\n", pszName);
+    printf("Locker: %s:%d\n", pszFile, nLine);
+}
+#endif /* DEBUG_LOCKCONTENTION */
+
 #ifdef DEBUG_LOCKORDER
 //
 // Early deadlock detection.
