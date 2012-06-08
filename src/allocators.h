@@ -117,7 +117,6 @@ struct zero_after_free_allocator : public std::allocator<T>
 };
 
 // This is exactly like std::string, but with a custom allocator.
-// (secure_allocator<> is defined in serialize.h)
 typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
 
 #endif
