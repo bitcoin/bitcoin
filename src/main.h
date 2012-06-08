@@ -1334,8 +1334,16 @@ public:
         READWRITE(nHeight);
         READWRITE(nCheckpoint);
         READWRITE(fProofOfStake);
-        READWRITE(prevoutStake);
-        READWRITE(nStakeTime);
+        if (fProofOfStake)
+        {
+            READWRITE(prevoutStake);
+            READWRITE(nStakeTime);
+        }
+        else if (fRead)
+        {
+            const_cast<CDiskBlockIndex*>(this)->prevoutStake.SetNull();
+            const_cast<CDiskBlockIndex*>(this)->nStakeTime = 0;
+        }
 
         // block header
         READWRITE(this->nVersion);
