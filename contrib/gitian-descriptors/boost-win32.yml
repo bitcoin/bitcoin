@@ -11,12 +11,12 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "boost_1_47_0.tar.bz2"
+- "boost_1_49_0.tar.bz2"
 script: |
   TMPDIR="$HOME/tmpdir"
   mkdir -p $TMPDIR/bin/$GBUILD_BITS $TMPDIR/include
-  tar xjf boost_1_47_0.tar.bz2
-  cd boost_1_47_0
+  tar xjf boost_1_49_0.tar.bz2
+  cd boost_1_49_0
   echo "using gcc : 4.4 : i586-mingw32msvc-g++
         :
         <rc>i586-mingw32msvc-windres
@@ -34,5 +34,5 @@ script: |
   cd $TMPDIR
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r boost-win32-1.47.0-gitian.zip *
-  cp boost-win32-1.47.0-gitian.zip $OUTDIR
+  zip -r boost-win32-1.49.0-gitian.zip *
+  cp boost-win32-1.49.0-gitian.zip $OUTDIR
