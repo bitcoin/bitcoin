@@ -44,7 +44,7 @@ private:
     TransactionFilterProxy *filter;
 
 private slots:
-    void displayUnitChanged();
+    void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
 };
 
