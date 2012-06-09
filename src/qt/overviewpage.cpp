@@ -143,7 +143,7 @@ void OverviewPage::setNumTransactions(int count)
 void OverviewPage::setModel(WalletModel *model)
 {
     this->model = model;
-    if(model)
+    if(model && model->getOptionsModel())
     {
         // Set up transaction list
         TransactionFilterProxy *filter = new TransactionFilterProxy();
@@ -163,17 +163,23 @@ void OverviewPage::setModel(WalletModel *model)
         setNumTransactions(model->getNumTransactions());
         connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
 
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(displayUnitChanged()));
+        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     }
+
+    // update the display unit, to not use the default ("BTC")
+    updateDisplayUnit();
 }
 
-void OverviewPage::displayUnitChanged()
+void OverviewPage::updateDisplayUnit()
 {
-    if(!model || !model->getOptionsModel())
-        return;
-    if(currentBalance != -1)
-        setBalance(currentBalance, currentUnconfirmedBalance);
+    if(model && model->getOptionsModel())
+    {
+        if(currentBalance != -1)
+            setBalance(currentBalance, currentUnconfirmedBalance);
 
-    txdelegate->unit = model->getOptionsModel()->getDisplayUnit();
-    ui->listTransactions->update();
+        // Update txdelegate->unit with the current unit
+        txdelegate->unit = model->getOptionsModel()->getDisplayUnit();
+
+        ui->listTransactions->update();
+    }
 }
