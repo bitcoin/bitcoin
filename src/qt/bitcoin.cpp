@@ -301,6 +301,7 @@ int main(int argc, char *argv[])
     } catch (...) {
         handleRunawayException(NULL);
     }
+    printf("Bitcoin-Qt exited\n\n");
     return 0;
 }
 #endif // BITCOIN_QT_TEST

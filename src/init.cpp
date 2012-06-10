@@ -64,9 +64,14 @@ void Shutdown(void* parg)
         delete pwalletMain;
         CreateThread(ExitTimeout, NULL);
         Sleep(50);
-        printf("Bitcoin exited\n\n");
         fExit = true;
+// ensure a clean exit for Bitcoin-Qt
+#ifndef QT_GUI
+        printf("Bitcoin exited\n\n");
         exit(0);
+#else
+        uiInterface.QueueShutdown();
+#endif
     }
     else
     {
