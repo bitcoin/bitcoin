@@ -83,31 +83,6 @@ namespace Checkpoints
         return true;
     }
 
-    bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
-    {
-        if (!CheckSignature())
-            return false;
-
-        CRITICAL_BLOCK(cs_hashSyncCheckpoint)
-        {
-            if (!mapBlockIndex.count(hashCheckpoint))
-            {
-                // We haven't accepted this block, keep the checkpoint as pending
-                checkpointMessagePending = *this;
-                // Ask this guy to fill in what we're missing
-                if (pfrom)
-                    pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
-                return false;
-            }
-            if (!ValidateSyncCheckpoint(hashCheckpoint))
-                return false;
-            hashSyncCheckpoint = this->hashCheckpoint;
-            checkpointMessage = *this;
-            checkpointMessagePending.SetNull();
-        }
-        return true;
-    }
-
     bool AcceptPendingSyncCheckpoint(uint256 hashAcceptedBlock)
     {
         if (!mapBlockIndex.count(hashAcceptedBlock))
@@ -246,4 +221,30 @@ namespace Checkpoints
 
         return true;
     }
+}
+
+// ppcoin: process synchronized checkpoint
+bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
+{
+    if (!CheckSignature())
+        return false;
+
+    CRITICAL_BLOCK(Checkpoints::cs_hashSyncCheckpoint)
+    {
+        if (!mapBlockIndex.count(hashCheckpoint))
+        {
+            // We haven't accepted this block, keep the checkpoint as pending
+            Checkpoints::checkpointMessagePending = *this;
+            // Ask this guy to fill in what we're missing
+            if (pfrom)
+                pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
+            return false;
+        }
+        if (!Checkpoints::ValidateSyncCheckpoint(hashCheckpoint))
+            return false;
+        Checkpoints::hashSyncCheckpoint = this->hashCheckpoint;
+        Checkpoints::checkpointMessage = *this;
+        Checkpoints::checkpointMessagePending.SetNull();
+    }
+    return true;
 }
