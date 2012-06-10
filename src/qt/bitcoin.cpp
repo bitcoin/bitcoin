@@ -122,13 +122,12 @@ int main(int argc, char *argv[])
     // Do this early as we don't want to bother initializing if we are just calling IPC
     for (int i = 1; i < argc; i++)
     {
-        // limit length of parsed URIs to max. size of message queue messages
-        if (strlen(argv[i]) <= IPC_MQ_MAX_MESSAGE_SIZE && boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+        if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
         {
             std::string strURI = argv[i];
             try {
                 boost::interprocess::message_queue mq(boost::interprocess::open_only, IPC_MQ_NAME);
-                if (mq.try_send(strURI.c_str(), strURI.length(), 0))
+                if (mq.try_send(strURI.data(), strURI.length(), 0))
                     exit(0);
                 else
                     break;
@@ -283,12 +282,12 @@ int main(int argc, char *argv[])
                 for (int i = 1; i < argc; i++)
                 {
                     // only bother with this if IPC is initialized
-                    if (globalIpcState == IPC_INITIALIZED && strlen(argv[i]) <= IPC_MQ_MAX_MESSAGE_SIZE && boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+                    if (globalIpcState == IPC_INITIALIZED && boost::algorithm::istarts_with(argv[i], "bitcoin:"))
                     {
                         std::string strURI = argv[i];
                         try {
                             boost::interprocess::message_queue mq(boost::interprocess::open_only, IPC_MQ_NAME);
-                            mq.try_send(strURI.c_str(), strURI.length(), 0);
+                            mq.try_send(strURI.data(), strURI.length(), 0);
                         }
                         catch (boost::interprocess::interprocess_exception &ex) {
                             printf("boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());

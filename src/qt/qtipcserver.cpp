@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 
@@ -40,14 +41,12 @@ void ipcThread2(void* pArg)
 
     loop
     {
-        if (mq->try_receive(&buffer, sizeof(buffer), nSize, nPriority))
+        boost::posix_time::ptime d = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::millisec(100);
+        if (mq->timed_receive(&buffer, sizeof(buffer), nSize, nPriority, d))
         {
             uiInterface.ThreadSafeHandleURI(std::string(buffer, nSize));
             Sleep(1000);
         }
-        else
-            /** needs to be here to stop this thread from utilizing 100% of a CPU core */
-            Sleep(100);
 
         if (fShutdown)
             break;
@@ -60,7 +59,7 @@ void ipcThread2(void* pArg)
 
 void ipcInit(bool fUseMQModeOpenOnly, bool fInitCalledAfterRecovery)
 {
-    /** set global IPC state variable to not initialized */
+    /** set global IPC state to not initialized */
     globalIpcState = IPC_NOT_INITIALIZED;
 
     interprocess::message_queue* mq = NULL;
