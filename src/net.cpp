@@ -1705,7 +1705,7 @@ void ThreadMessageHandler2(void* parg)
         vnThreadsRunning[2]--;
         Sleep(100);
         if (fRequestShutdown)
-            Shutdown(NULL);
+            StartShutdown();
         vnThreadsRunning[2]++;
         if (fShutdown)
             return;

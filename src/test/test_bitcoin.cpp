@@ -17,7 +17,7 @@
 
 CWallet* pwalletMain;
 
-void Shutdown(void* parg)
+void StartShutdown()
 {
   exit(0);
 }
