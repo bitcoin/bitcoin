@@ -1931,6 +1931,19 @@ Value repairwallet(const Array& params, bool fHelp)
     return result;
 }
 
+// ppcoin: make a public-private key pair
+Value makekeypair(const Array& params, bool fHelp)
+{
+    CKey key;
+    key.MakeNewKey();
+    CPrivKey vchPrivKey = key.GetPrivKey();
+
+    Object result;
+    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
+    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey())));
+    return result;
+}
+
 extern CCriticalSection cs_mapAlerts;
 extern map<uint256, CAlert> mapAlerts;
 
@@ -1993,17 +2006,48 @@ Value sendalert(const Array& params, bool fHelp)
     return result;
 }
 
-Value makekeypair(const Array& params, bool fHelp)
+// ppcoin: send checkpoint
+Value sendcheckpoint(const Array& params, bool fHelp)
 {
-    CKey key;
-    key.MakeNewKey();
-    CPrivKey vchPrivKey = key.GetPrivKey();
+    if (fHelp || params.size() > 2 || params.size() < 1 )
+        throw runtime_error(
+            "sendcheckpoint <privatekey> [checkpointhash]\n"
+            "<privatekey> is hex string of checkpoint master private key\n"
+            "<checkpointhash> is the hash of checkpoint block\n");
 
-    Object result;
-    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
-    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey())));
-    return result;
+    CSyncCheckpoint checkpoint;
+    CKey key;
+
+    // TODO: omit checkpointhash parameter
+    if (params.size() > 1)
+    {
+        checkpoint.hashCheckpoint = uint256(params[1].get_str());
+        if (!mapBlockIndex.count(checkpoint.hashCheckpoint))
+            throw runtime_error(
+                "Provided checkpoint block is not on main chain\n");
+    }
+
+    CDataStream sMsg;
+    sMsg << (CUnsignedSyncCheckpoint)checkpoint;
+    checkpoint.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
+
+    vector<unsigned char> vchPrivKey = ParseHex(params[0].get_str());
+    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+    if (!key.Sign(Hash(checkpoint.vchMsg.begin(), checkpoint.vchMsg.end()), checkpoint.vchSig))
+        throw runtime_error(
+            "Unable to sign checkpoint, check private key?\n");
+
+    if(!checkpoint.ProcessSyncCheckpoint(NULL))
+        throw runtime_error(
+            "Failed to process checkpoint.\n");
+    // Relay checkpoint
+    CRITICAL_BLOCK(cs_vNodes)
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            checkpoint.RelayTo(pnode);
+
+    return Value::null;
 }
+
 
 //
 // Call Table
@@ -2056,8 +2100,9 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("reservebalance",         &reservebalance),
     make_pair("checkwallet",            &checkwallet),
     make_pair("repairwallet",           &repairwallet),
-    make_pair("sendalert",              &sendalert),
     make_pair("makekeypair",            &makekeypair),
+    make_pair("sendalert",              &sendalert),
+    make_pair("sendcheckpoint",         &sendcheckpoint),
 };
 map<string, rpcfn_type> mapCallTable(pCallTable, pCallTable + sizeof(pCallTable)/sizeof(pCallTable[0]));
 
