@@ -99,6 +99,10 @@ namespace Checkpoints
                 hashSyncCheckpoint = checkpointMessagePending.hashCheckpoint;
                 checkpointMessage = checkpointMessagePending;
                 checkpointMessagePending.SetNull();
+                printf("AcceptPendingSyncCheckpoint : sync-checkpoint at %s\n", hashSyncCheckpoint.ToString().c_str());
+                // relay the checkpoint
+                BOOST_FOREACH(CNode* pnode, vNodes)
+                    checkpointMessage.RelayTo(pnode);
                 return true;
             }
 
@@ -235,6 +239,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
         {
             // We haven't accepted this block, keep the checkpoint as pending
             Checkpoints::checkpointMessagePending = *this;
+            printf("ProcessSyncCheckpoint : pending for sync-checkpoint %s\n", hashCheckpoint.ToString().c_str());
             // Ask this guy to fill in what we're missing
             if (pfrom)
                 pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
@@ -245,6 +250,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
         Checkpoints::hashSyncCheckpoint = this->hashCheckpoint;
         Checkpoints::checkpointMessage = *this;
         Checkpoints::checkpointMessagePending.SetNull();
+        printf("ProcessSyncCheckpoint : sync-checkpoint at %s\n", Checkpoints::hashSyncCheckpoint.ToString().c_str());
     }
     return true;
 }

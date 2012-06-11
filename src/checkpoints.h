@@ -102,7 +102,7 @@ public:
     bool CheckSignature()
     {
         CKey key;
-        if (!key.SetPubKey(ParseHex("0487ca85b6ae9d311f996c7616d20d0c88a5b4f07d25e78f419019f35cce6522acf978b2d99f0e7a58db1f120439e5c1889266927854aa57c93956c2569188a539")))
+        if (!key.SetPubKey(ParseHex("04ea21daea8c15559870b5e93750ddc2f0c16bd0cb16636ba88c0746cfac07912ec7ad14111cc4aedda12c2687c920c7b7b62fd67ca14eed53f2d1704ec72362ce")))
             return error("CSyncCheckpoint::CheckSignature() : SetPubKey failed");
         if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
             return error("CSyncCheckpoint::CheckSignature() : verify signature failed");
