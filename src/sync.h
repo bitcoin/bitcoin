@@ -6,18 +6,37 @@
 #define BITCOIN_SYNC_H
 
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/thread/tss.hpp>
 
 
 
 
-/** Wrapped boost mutex: supports recursive locking, but no waiting  */
-typedef boost::recursive_mutex CCriticalSection;
+/** Extend boost::shared_mutex to have recursive support */
+class CCriticalSection
+{
+    boost::thread_specific_ptr<int> nHasExclusive;
+    boost::thread_specific_ptr<int> nHasUpgrade;
+    boost::thread_specific_ptr<int> nHadUpgrade;
+    boost::thread_specific_ptr<int> nHasShared;
+    boost::thread_specific_ptr<int> nHadShared;
+    boost::shared_mutex mutex;
+public:
+    CCriticalSection();
 
-/** Wrapped boost mutex: supports waiting but not recursive locking */
-typedef boost::mutex CWaitableCriticalSection;
+    void lock();
+    bool try_lock();
+    void unlock();
+
+    void lock_upgrade();
+    void unlock_upgrade();
+
+    void lock_shared();
+    bool try_lock_shared();
+    void unlock_shared();
+};
 
 #ifdef DEBUG_LOCKORDER
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);

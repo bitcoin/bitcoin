@@ -126,3 +126,234 @@ void LeaveCritical()
 }
 
 #endif /* DEBUG_LOCKORDER */
+
+
+static void do_nothing (int* pBool) {}
+
+CCriticalSection::CCriticalSection() : nHasExclusive(&do_nothing), 
+nHasUpgrade(&do_nothing), nHadUpgrade(&do_nothing), 
+nHasShared(&do_nothing), nHadShared(&do_nothing) {}
+
+void CCriticalSection::lock()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        nHasExclusive.reset(nHasExclusive.get() + 1);
+        return;
+    }
+
+    if (nHasShared.get() > (int*)0)
+    {
+        mutex.unlock_shared();
+        mutex.lock();
+
+        nHadShared.reset(nHasShared.get());
+        nHasShared.reset((int*) 0);
+    }
+    else if (nHasUpgrade.get() > (int*)0)
+    {
+        mutex.unlock_upgrade_and_lock();
+
+        nHadUpgrade.reset(nHasUpgrade.get());
+        nHasUpgrade.reset((int*) 0);
+    }
+    else
+        mutex.lock();
+
+    nHasExclusive.reset((int*) 1);
+}
+
+bool CCriticalSection::try_lock()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        nHasExclusive.reset(nHasExclusive.get() + 1);
+        return true;
+    }
+
+    if (nHasShared.get() > (int*)0)
+    {
+        mutex.unlock_shared();
+        if (mutex.try_lock())
+        {
+            nHadShared.reset(nHasShared.get());
+            nHasShared.reset((int*) 0);
+            nHasExclusive.reset((int*) 1);
+            return true;
+        }
+        else
+        {
+            mutex.lock_shared();
+            return false;
+        }
+    }
+    else if (nHasUpgrade.get() > (int*)0)
+    {
+        mutex.unlock_upgrade();
+        if (mutex.try_lock())
+        {
+            nHadUpgrade.reset(nHasUpgrade.get());
+            nHasUpgrade.reset((int*) 0);
+            nHasExclusive.reset((int*) 1);
+            return true;
+        }
+        else
+        {
+            mutex.lock_upgrade();
+            return false;
+        }
+    }
+    else
+    {
+        if (mutex.try_lock())
+        {
+            nHasExclusive.reset((int*) 1);
+            return true;
+        }
+        else
+            return false;
+    }
+}
+
+void CCriticalSection::unlock()
+{
+    if (nHasExclusive.get() == (int*)0)
+        return;
+    else if (nHasExclusive.get() > (int*)1)
+    {
+        nHasExclusive.reset(nHasExclusive.get() - 1);
+        return;
+    }
+
+    if (nHadUpgrade.get() > (int*)0)
+    {
+        mutex.unlock_and_lock_upgrade();
+
+        nHasUpgrade.reset(nHadUpgrade.get());
+        nHadUpgrade.reset((int*) 0);
+    }
+    else if (nHadShared.get() > (int*)0)
+    {
+        mutex.unlock();
+        mutex.lock_shared();
+
+        nHasShared.reset(nHadShared.get());
+        nHadShared.reset((int*) 0);
+    }
+    else
+        mutex.unlock();
+
+    nHasExclusive.reset((int*) 0);
+}
+
+void CCriticalSection::lock_upgrade()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        nHadUpgrade.reset(nHadUpgrade.get() + 1);
+        return;
+    }
+    else if (nHasUpgrade.get() > (int*)0)
+    {
+        nHasUpgrade.reset(nHasUpgrade.get() + 1);
+        return;
+    }
+
+    if (nHasShared.get() > (int*)0)
+    {
+        mutex.unlock_shared();
+        mutex.lock_upgrade();
+
+        nHadShared.reset(nHasShared.get());
+        nHasShared.reset((int*) 0);
+    }
+    else
+        mutex.lock_upgrade();
+
+    nHasUpgrade.reset((int*) 1);
+}
+
+void CCriticalSection::unlock_upgrade()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        if (nHadUpgrade.get() > (int*)0)
+            nHadUpgrade.reset(nHadUpgrade.get() - 1);
+        return;
+    }
+    else if (nHasUpgrade.get() > (int*)1)
+    {
+        nHasUpgrade.reset(nHasUpgrade.get() - 1);
+        return;
+    }
+
+    if (nHadShared.get() > (int*)0)
+    {
+        mutex.unlock_upgrade_and_lock_shared();
+
+        nHasShared.reset(nHadShared.get());
+        nHadShared.reset((int*) 0);
+    }
+    else
+        mutex.unlock_upgrade();
+
+    nHasUpgrade.reset((int*) 0);
+}
+
+void CCriticalSection::lock_shared()
+{
+    if (nHasExclusive.get() > (int*)0 || nHasUpgrade.get() > (int*)0)
+    {
+        nHadShared.reset(nHadShared.get() + 1);
+        return;
+    }
+    else if (nHasShared.get() > (int*)0)
+    {
+        nHasShared.reset(nHasShared.get() + 1);
+        return;
+    }
+
+    mutex.lock_shared();
+    nHasShared.reset((int*) 1);
+}
+
+bool CCriticalSection::try_lock_shared()
+{
+    if (nHasExclusive.get() > (int*)0 || nHasUpgrade.get() > (int*)0)
+    {
+        nHadShared.reset(nHadShared.get() + 1);
+        return true;
+    }
+    else if (nHasShared.get() > (int*)0)
+    {
+        nHasShared.reset(nHasShared.get() + 1);
+        return true;
+    }
+
+    if (mutex.try_lock_shared())
+    {
+        nHasShared.reset((int*) 1);
+        return true;
+    }
+    else
+        return false;
+}
+
+void CCriticalSection::unlock_shared()
+{
+    if (nHasExclusive.get() > (int*)0 || nHasUpgrade.get() > (int*)0)
+    {
+        if (nHadShared.get() > (int*)0)
+            nHadShared.reset(nHadShared.get() - 1);
+        return;
+    }
+    else if (nHasShared.get() > (int*)1)
+    {
+        nHasShared.reset(nHasShared.get() - 1);
+        return;
+    }
+
+    mutex.unlock_shared();
+    nHasShared.reset((int*) 0);
+}
+
