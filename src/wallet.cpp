@@ -409,6 +409,29 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
     return false;
 }
 
+void CWallet::HandleCommitBlock(const CBlock& block)
+{
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
+        AddToWalletIfInvolvingMe(tx, &block, true);
+
+    // we can write best chain locator more often because its in a separate thread from the actual chain download
+    if (!IsInitialBlockDownload() || nBestHeight % 500 == 0)
+    {
+        const CBlockLocator locator(pindexBest);
+        SetBestChain(locator);
+    }
+
+    // Notify UI to display prev block's coinbase if it was ours
+    static uint256 hashPrevBestCoinBase;
+    UpdatedTransaction(hashPrevBestCoinBase);
+    hashPrevBestCoinBase = block.vtx[0].GetHash();
+}
+
+void CWallet::HandleCommitTransactionToMemoryPool(const CTransaction& tx)
+{
+    AddToWalletIfInvolvingMe(tx, NULL, true);
+}
+
 bool CWallet::EraseFromWallet(uint256 hash)
 {
     if (!fFileBacked)
@@ -704,6 +727,15 @@ int CWallet::ScanForWalletTransaction(const uint256& hashTx)
     return 0;
 }
 
+bool CWalletTx::AcceptWalletTransaction()
+{
+    // Add previous supporting transactions first
+    BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
+        phub->EmitTransaction(tx, false);
+    return phub->EmitTransaction(*this);
+}
+
+
 void CWallet::ReacceptWalletTransactions()
 {
     CTxDB txdb("r");
@@ -751,7 +783,7 @@ void CWallet::ReacceptWalletTransactions()
             {
                 // Reaccept any txes of ours that aren't already in a block
                 if (!wtx.IsCoinBase())
-                    wtx.AcceptWalletTransaction(txdb, false);
+                    wtx.AcceptWalletTransaction();
             }
         }
         if (!vMissingTx.empty())
@@ -1206,13 +1238,12 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool())
+        if (!wtxNew.AcceptWalletTransaction())
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("CommitTransaction() : Error: Transaction not valid");
             return false;
         }
-        wtxNew.RelayWalletTransaction();
     }
     return true;
 }
