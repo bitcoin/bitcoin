@@ -1,6 +1,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include "util.h"
 
@@ -128,6 +129,41 @@ BOOST_AUTO_TEST_CASE(intarg)
     ResetArgs("-foo=NaN -bar=NotANumber");
     BOOST_CHECK_EQUAL(GetArg("-foo", 1), 0);
     BOOST_CHECK_EQUAL(GetArg("-bar", 11), 0);
+}
+
+BOOST_AUTO_TEST_CASE(floatarg)
+{
+    ResetArgs("");
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 11.), 11.);
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 0.), 0.);
+
+    ResetArgs("-foo -bar");
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 11.), 0.);
+    BOOST_CHECK_EQUAL(GetFloatArg("-bar", 11.), 0.);
+
+    ResetArgs("-foo=11 -bar=-12");
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 0.), 11.);
+    BOOST_CHECK_EQUAL(GetFloatArg("-bar", 11.), -12.);
+
+    ResetArgs("-foo=+11.25 -bar=12.125e+1");
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 0.), 11.25);
+    BOOST_CHECK_EQUAL(GetFloatArg("-bar", 11.), 121.25);
+
+    ResetArgs("-foo=0x10 -bar=0x11p-2");
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 0.), 16);
+    BOOST_CHECK_EQUAL(GetFloatArg("-bar", 11.), 4.25);
+
+    ResetArgs("-foo=INF -bar=-INFINITY");
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 0.), INFINITY);
+    BOOST_CHECK_EQUAL(GetFloatArg("-bar", 11.), -INFINITY);
+
+    ResetArgs("-foo=NaN -bar=-NAN");
+    BOOST_CHECK(isnan(GetFloatArg("-foo", 1.)));
+    BOOST_CHECK(isnan(GetFloatArg("-bar", 11.)));
+
+    ResetArgs("-foo=invalid -bar=reallyinvalid");
+    BOOST_CHECK_EQUAL(GetFloatArg("-foo", 1.), 0.);
+    BOOST_CHECK_EQUAL(GetFloatArg("-bar", 11.), 0.);
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)
