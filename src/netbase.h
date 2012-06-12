@@ -24,6 +24,7 @@ enum Network
     NET_IPV6,
     NET_TOR,
     NET_I2P,
+    NET_CJDNS,
 
     NET_MAX
 };
@@ -58,6 +59,7 @@ class CNetAddr
         bool IsRFC6145() const; // IPv6 IPv4-translated address (::FFFF:0:0:0/96)
         bool IsOnionCat() const;
         bool IsGarliCat() const;
+        bool IsCJDNS() const;
         bool IsLocal() const;
         bool IsRoutable() const;
         bool IsValid() const;
