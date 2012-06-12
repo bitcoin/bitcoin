@@ -2026,6 +2026,13 @@ Value sendcheckpoint(const Array& params, bool fHelp)
             throw runtime_error(
                 "Provided checkpoint block is not on main chain\n");
     }
+    else
+    {
+        checkpoint.hashCheckpoint = Checkpoints::AutoSelectSyncCheckpoint();
+        if (checkpoint.hashCheckpoint == Checkpoints::hashSyncCheckpoint)
+            throw runtime_error(
+                "Unable to select a more recent sync-checkpoint");
+    }
 
     CDataStream sMsg;
     sMsg << (CUnsignedSyncCheckpoint)checkpoint;
@@ -2045,7 +2052,11 @@ Value sendcheckpoint(const Array& params, bool fHelp)
         BOOST_FOREACH(CNode* pnode, vNodes)
             checkpoint.RelayTo(pnode);
 
-    return Value::null;
+    Object result;
+    result.push_back(Pair("checkpoint", Checkpoints::hashSyncCheckpoint.ToString().c_str()));
+    result.push_back(Pair("height", mapBlockIndex[Checkpoints::hashSyncCheckpoint]->nHeight));
+    result.push_back(Pair("timestamp", DateTimeStrFormat("%x %H:%M:%S", mapBlockIndex[Checkpoints::hashSyncCheckpoint]->GetBlockTime()).c_str()));
+    return result;
 }
 
 
