@@ -30,7 +30,7 @@ map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
-uint256 hashGenesisBlock("0x000000006d52486334316794cc38ffeb7ebf35a7ebd661fd39f5f46b0d001575");
+uint256 hashGenesisBlock("0x000000007c82d1f0aa2896b01bf533a8cc26a1f44790be4ceb4ecde7bee24add");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 const int nInitialBlockThreshold = 120; // Regard blocks up until N-threshold as "initial download"
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -1802,20 +1802,19 @@ bool LoadBlockIndex(bool fAllowNew)
         // Genesis block
         const char* pszTimestamp = "MarketWatch 07/Nov/2011 Gold tops $1,790 to end at over six-week high";
         CTransaction txNew;
-        txNew.nTime = 1325878371;
+        txNew.nTime = 1339538219;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = GetProofOfWorkReward(bnProofOfWorkLimit.GetCompact());
-        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+        txNew.vout[0].SetEmpty();
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1325882536;
+        block.nTime    = 1339540307;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 2081920190;
+        block.nNonce   = 1281822831;
 
         if (fTestNet)
         {
@@ -1828,7 +1827,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("%s\n", block.GetHash().ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0xc7311b56de266580cca65be108ae53d7100b5c3b17da8b1106044103abd7a521"));
+        assert(block.hashMerkleRoot == uint256("0x1557f46a17fcf8843dbe4c0c0edfd1d17eeff2c3c48d73a59d11f5d176e4b54d"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
         assert(block.CheckBlock());

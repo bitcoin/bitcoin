@@ -22,8 +22,7 @@ int main(int argc, char *argv[])
     txNew.vin.resize(1);
     txNew.vout.resize(1);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-    txNew.vout[0].nValue = 9999 * COIN;
-    txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+    txNew.vout[0].SetEmpty();
     CBlock block;
     block.vtx.push_back(txNew);
     block.hashPrevBlock = 0;
@@ -38,10 +37,14 @@ int main(int argc, char *argv[])
 
     while (block.GetHash() > bnTarget.getuint256())
     {
-        if (block.nNonce % 1048576 == 0)
-            printf("n=%dM hash=%s\n", block.nNonce / 1048576,
+        if ((block.nNonce >> 20) << 20 == block.nNonce)
+        {
+            if (block.vtx[0].nTime + 7200 < GetAdjustedTime() + 60)
+                block.vtx[0].nTime = GetAdjustedTime();
+            block.nTime = GetAdjustedTime();
+            printf("n=%dM hash=%s\n", block.nNonce >> 20,
                    block.GetHash().ToString().c_str());
-        block.nTime = GetAdjustedTime();
+        }
         block.nNonce++;
     }
 
@@ -51,4 +54,4 @@ int main(int argc, char *argv[])
     block.print();
 
     printf("PPCoin End Genesis Block\n");
-} 
+}
