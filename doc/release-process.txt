@@ -48,4 +48,5 @@
 
 * update wiki download links
 
+* update wiki changelog: https://en.bitcoin.it/wiki/Changelog
 
