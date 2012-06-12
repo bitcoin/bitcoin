@@ -136,11 +136,6 @@ void AddressBookPage::setModel(AddressTableModel *model)
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)),
             this, SLOT(selectNewAddress(QModelIndex,int,int)));
 
-    if(mode == ForSending)
-    {
-        // Auto-select first row when in sending mode
-        ui->tableView->selectRow(0);
-    }
     selectionChanged();
 }
 
