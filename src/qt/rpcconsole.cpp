@@ -114,12 +114,6 @@ RPCConsole::RPCConsole(QWidget *parent) :
     ui->showCLOptionsButton->setIcon(QIcon(":/icons/options"));
 #endif
 
-#ifndef WIN32
-    // Hide Debug logfile label and Open button for non Windows-OSes
-    ui->labelDebugLogfile->setVisible(false);
-    ui->openDebugLogfileButton->setVisible(false);
-#endif
-
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
 
