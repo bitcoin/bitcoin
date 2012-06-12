@@ -90,11 +90,6 @@ void AddressBookPage::setModel(AddressTableModel *model)
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             this, SLOT(selectionChanged()));
 
-    if(mode == ForSending)
-    {
-        // Auto-select first row when in sending mode
-        ui->tableView->selectRow(0);
-    }
     selectionChanged();
 }
 
