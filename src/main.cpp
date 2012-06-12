@@ -3247,25 +3247,143 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
     }
 }
 
-// Some explaining would be appreciated
-class COrphan
+// CTxInfo represents a logical transaction to potentially be included in blocks
+// It stores extra metadata such as the subjective priority of a transaction at the time of building the block
+// When there are unconfirmed transactions that depend on other unconfirmed transactions, these "child" transactions' CTxInfo object factors in its "parents" to its priority and effective size; this way, the "child" can cover the "cost" of its "parents", and the "parents" are included into the block as part of the "child"
+
+class CTxInfo;
+typedef std::map<uint256, CTxInfo> mapInfo_t;
+
+class CTxInfo
 {
 public:
+    mapInfo_t *pmapInfoById;
     CTransaction* ptx;
+    uint256 hash;
+private:
     set<uint256> setDependsOn;
+public:
+    set<uint256> setDependents;
     double dPriority;
+    uint64 nTxFee;
+    bool fInvalid;
+    unsigned int nSize;
+    unsigned int nEffectiveSizeCached;
 
-    COrphan(CTransaction* ptxIn)
+    CTxInfo()
     {
-        ptx = ptxIn;
+        pmapInfoById = NULL;
+        hash = 0;
+        ptx = NULL;
         dPriority = 0;
+        nTxFee = 0;
+        fInvalid = false;
+        nSize = 0;
+        nEffectiveSizeCached = 0;
     }
 
     void print() const
     {
-        printf("COrphan(hash=%s, dPriority=%.1f)\n", ptx->GetHash().ToString().substr(0,10).c_str(), dPriority);
+        printf("CTxInfo(hash=%s, dPriority=%.1f, nTxFee=%"PRI64u")\n", hash.ToString().substr(0,10).c_str(), dPriority, nTxFee);
         BOOST_FOREACH(uint256 hash, setDependsOn)
             printf("   setDependsOn %s\n", hash.ToString().substr(0,10).c_str());
+    }
+
+    void addDependsOn(const uint256& hashPrev)
+    {
+        setDependsOn.insert(hashPrev);
+        nEffectiveSizeCached = 0;
+    }
+
+    void rmDependsOn(const uint256& hashPrev)
+    {
+        setDependsOn.erase(hashPrev);
+        nEffectiveSizeCached = 0;
+    }
+
+    // effectiveSize and effectivePriority handle inheriting the fInvalid flag as a side effect
+    unsigned int
+    effectiveSize()
+    {
+        if (fInvalid)
+            return -1;
+
+        if (nEffectiveSizeCached)
+            return nEffectiveSizeCached;
+
+        assert(pmapInfoById);
+
+        if (!nSize)
+            nSize = ::GetSerializeSize(*ptx, SER_NETWORK, PROTOCOL_VERSION);
+        unsigned int nEffectiveSize = nSize;
+        BOOST_FOREACH(const uint256& dephash, setDependsOn)
+        {
+            CTxInfo& depinfo = (*pmapInfoById)[dephash];
+            nEffectiveSize += depinfo.effectiveSize();
+
+            if (depinfo.fInvalid)
+            {
+                fInvalid = true;
+                return -1;
+            }
+        }
+        nEffectiveSizeCached = nEffectiveSize;
+        return nEffectiveSize;
+    }
+
+    double
+    effectivePriority()
+    {
+        // Priority is sum(valuein * age) / txsize
+        return dPriority / effectiveSize();
+    }
+
+    unsigned int
+    GetLegacySigOpCount()
+    {
+        assert(pmapInfoById);
+
+        unsigned int n = ptx->GetLegacySigOpCount();
+        BOOST_FOREACH(const uint256& dephash, setDependsOn)
+        {
+            CTxInfo& depinfo = (*pmapInfoById)[dephash];
+            n += depinfo.GetLegacySigOpCount();
+        }
+        return n;
+    }
+
+    bool
+    DoInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoolTmp, CBlockIndex*pindexPrev, std::vector<CTxInfo*>& vAdded, unsigned int& nTxSigOps)
+    {
+        CTransaction& tx = *ptx;
+
+        if (mapTestPoolTmp.count(hash))
+            // Already included in block template
+            return true;
+
+        assert(pmapInfoById);
+
+        BOOST_FOREACH(const uint256& dephash, setDependsOn)
+        {
+            CTxInfo& depinfo = (*pmapInfoById)[dephash];
+            if (!depinfo.DoInputs(txdb, mapTestPoolTmp, pindexPrev, vAdded, nTxSigOps))
+                return false;
+        }
+
+        MapPrevTx mapInputs;
+        bool fInvalid;
+        if (!tx.FetchInputs(txdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
+            return false;
+
+        nTxSigOps += tx.GetP2SHSigOpCount(mapInputs);
+
+        if (!tx.ConnectInputs(mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
+            return false;
+
+        mapTestPoolTmp[hash] = CTxIndex(CDiskTxPos(1,1,1), tx.vout.size());
+        vAdded.push_back(this);
+
+        return true;
     }
 };
 
@@ -3298,62 +3416,94 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
         LOCK2(cs_main, mempool.cs);
         CTxDB txdb("r");
 
+        double nFeeWeight = GetFloatArg("-txprioweighfee", 1.);
+        double nDepthWeight = GetFloatArg("-txprioweighdepth", 1.);
+        bool fPrintPriority = GetBoolArg("-printpriority");
+
         // Priority order to process transactions
-        list<COrphan> vOrphan; // list memory doesn't move
-        map<uint256, vector<COrphan*> > mapDependers;
-        multimap<double, CTransaction*> mapPriority;
+        mapInfo_t mapInfoById;
         for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
         {
             CTransaction& tx = (*mi).second;
             if (tx.IsCoinBase() || !tx.IsFinal())
                 continue;
 
-            COrphan* porphan = NULL;
-            double dPriority = 0;
+            const uint256& hash = tx.GetHash();
+            CTxInfo& txinfo = mapInfoById[hash];
+            txinfo.hash = hash;
+            txinfo.pmapInfoById = &mapInfoById;
+            txinfo.ptx = &tx;
+
+            double& dPriority = txinfo.dPriority;
+            uint64& nTxFee = txinfo.nTxFee;
+            uint64 nValueIn;
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
                 // Read prev transaction
                 CTransaction txPrev;
                 CTxIndex txindex;
-                if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
+                int64 nValueIn;
+                int nConf;
+                if (txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
                 {
-                    // Has to wait for dependencies
-                    if (!porphan)
-                    {
-                        // Use list for automatic deletion
-                        vOrphan.push_back(COrphan(&tx));
-                        porphan = &vOrphan.back();
-                    }
-                    mapDependers[txin.prevout.hash].push_back(porphan);
-                    porphan->setDependsOn.insert(txin.prevout.hash);
-                    continue;
+                    // Input is confirmed
+                    nConf = txindex.GetDepthInMainChain();
+                    nValueIn = txPrev.vout[txin.prevout.n].nValue;
+                    dPriority += (double)nValueIn * nConf;
                 }
-                int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
+                else
+                if (mempool.mapTx.count(txin.prevout.hash))
+                {
+                    // Input is still unconfirmed
+                    const uint256& hashPrev = txin.prevout.hash;
+                    nValueIn = mempool.mapTx[hashPrev].vout[txin.prevout.n].nValue;
+                    txinfo.addDependsOn(hashPrev);
+                    mapInfoById[hashPrev].setDependents.insert(hash);
+                    nConf = 0;
+                }
+                else
+                {
+                    // We don't know where the input is
+                    // In this case, it's impossible to include this transaction in a block, so mark it invalid and move on
+                    txinfo.fInvalid = true;
+                    printf("priority %s invalid input %s", txinfo.hash.ToString().substr(0,10).c_str(), txin.prevout.hash.ToString().substr(0,10).c_str());
+                    goto nexttxn;
+                }
+                nTxFee += nValueIn;
 
-                // Read block header
-                int nConf = txindex.GetDepthInMainChain();
-
-                dPriority += (double)nValueIn * nConf;
-
-                if (fDebug && GetBoolArg("-printpriority"))
+                if (fPrintPriority)
                     printf("priority     nValueIn=%-12"PRI64d" nConf=%-5d dPriority=%-20.1f\n", nValueIn, nConf, dPriority);
             }
 
-            // Priority is sum(valuein * age) / txsize
-            dPriority /= ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            nValueIn = nTxFee;
+            nTxFee -= tx.GetValueOut();
 
-            if (porphan)
-                porphan->dPriority = dPriority;
-            else
-                mapPriority.insert(make_pair(-dPriority, &(*mi).second));
+            dPriority *= nDepthWeight;
 
-            if (fDebug && GetBoolArg("-printpriority"))
-            {
-                printf("priority %-20.1f %s\n%s", dPriority, tx.GetHash().ToString().substr(0,10).c_str(), tx.ToString().c_str());
-                if (porphan)
-                    porphan->print();
-                printf("\n");
-            }
+            // Allow boosting "age" with fees
+            dPriority += (double)nValueIn * (double)nTxFee * nFeeWeight;
+
+            if (fPrintPriority)
+                txinfo.print();
+nexttxn:    (void)1;
+        }
+
+        // Second pass: consider dependencies
+        multimap<double, CTxInfo*> mapPriority;
+        BOOST_FOREACH(mapInfo_t::value_type& i, mapInfoById)
+        {
+            CTxInfo& txinfo = i.second;
+
+            double dPriority = txinfo.effectivePriority();
+
+            // effectivePriority does fInvalid inheritance as a side-effect
+            if (txinfo.fInvalid)
+                continue;
+
+            mapPriority.insert(make_pair(-dPriority, &txinfo));
+
+            if (fPrintPriority)
+                printf("priority insert %s at priority %.1f\n", txinfo.hash.ToString().substr(0,10).c_str(), dPriority);
         }
 
         // Collect transactions into block
@@ -3365,63 +3515,61 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
         {
             // Take highest priority transaction off priority queue
             double dPriority = -(*mapPriority.begin()).first;
-            CTransaction& tx = *(*mapPriority.begin()).second;
+            CTxInfo& txinfo = *(*mapPriority.begin()).second;
+            CTransaction& tx = *txinfo.ptx;
             mapPriority.erase(mapPriority.begin());
 
+            if (mapTestPool.count(txinfo.hash))
+                // Already in the block
+                continue;
+
             // Size limits
-            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            unsigned int nTxSize = txinfo.effectiveSize();
             if (nBlockSize + nTxSize >= MAX_BLOCK_SIZE_GEN)
                 continue;
 
             // Legacy limits on sigOps:
-            unsigned int nTxSigOps = tx.GetLegacySigOpCount();
+            unsigned int nTxSigOps = txinfo.GetLegacySigOpCount();
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
             // Transaction fee required depends on block size
             bool fAllowFree = (nBlockSize + nTxSize < 4000 || CTransaction::AllowFree(dPriority));
-            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree, GMF_BLOCK);
+            int64 nMinFee = tx.GetMinFee(nBlockSize, fAllowFree, GMF_BLOCK, nTxSize);
 
-            // Connecting shouldn't fail due to dependency on other memory pool transactions
-            // because we're already processing them in order of dependency
-            map<uint256, CTxIndex> mapTestPoolTmp(mapTestPool);
-            MapPrevTx mapInputs;
-            bool fInvalid;
-            if (!tx.FetchInputs(txdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
-                continue;
-
-            int64 nTxFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
+            uint64& nTxFees = txinfo.nTxFee;
             if (nTxFees < nMinFee)
                 continue;
 
-            nTxSigOps += tx.GetP2SHSigOpCount(mapInputs);
+            map<uint256, CTxIndex> mapTestPoolTmp(mapTestPool);
+            std::vector<CTxInfo*> vAdded;
+            if (!txinfo.DoInputs(txdb, mapTestPoolTmp, pindexPrev, vAdded, nTxSigOps))
+                continue;
+
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
-            if (!tx.ConnectInputs(mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
-                continue;
-            mapTestPoolTmp[tx.GetHash()] = CTxIndex(CDiskTxPos(1,1,1), tx.vout.size());
             swap(mapTestPool, mapTestPoolTmp);
 
             // Added
-            pblock->vtx.push_back(tx);
             nBlockSize += nTxSize;
-            ++nBlockTx;
+            nBlockTx += vAdded.size();
             nBlockSigOps += nTxSigOps;
-            nFees += nTxFees;
-
-            // Add transactions that depend on this one to the priority queue
-            uint256 hash = tx.GetHash();
-            if (mapDependers.count(hash))
+            BOOST_FOREACH(CTxInfo* ptxinfo, vAdded)
             {
-                BOOST_FOREACH(COrphan* porphan, mapDependers[hash])
+                pblock->vtx.push_back(*ptxinfo->ptx);
+                nFees += ptxinfo->nTxFee;
+
+                // Add transactions that depend on this one to the priority queue
+                // again, since they likely have improved their standing alone
+                BOOST_FOREACH(const uint256& dhash, ptxinfo->setDependents)
                 {
-                    if (!porphan->setDependsOn.empty())
-                    {
-                        porphan->setDependsOn.erase(hash);
-                        if (porphan->setDependsOn.empty())
-                            mapPriority.insert(make_pair(-porphan->dPriority, porphan->ptx));
-                    }
+                    CTxInfo& dtxinfo = mapInfoById[dhash];
+                    dtxinfo.rmDependsOn(ptxinfo->hash);
+                    if (dtxinfo.fInvalid)
+                        continue;
+                    double dPriority = dtxinfo.effectivePriority();
+                    mapPriority.insert(make_pair(-dPriority, &dtxinfo));
                 }
             }
         }

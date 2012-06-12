@@ -202,6 +202,8 @@ std::string HelpMessage()
         "  -pid=<file>            " + _("Specify pid file (default: bitcoind.pid)") + "\n" +
         "  -gen                   " + _("Generate coins") + "\n" +
         "  -gen=0                 " + _("Don't generate coins") + "\n" +
+        "  -txprioweighfee        " + _("Weigh fees when calculating transaction priorities for mining (default: 1.0)") + "\n" +
+        "  -txprioweighdepth      " + _("Weigh confirmation depth when calculating transaction priorities for mining (default: 1.0)") + "\n" +
         "  -datadir=<dir>         " + _("Specify data directory") + "\n" +
         "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 25)") + "\n" +
         "  -dblogsize=<n>         " + _("Set database disk log size in megabytes (default: 100)") + "\n" +
