@@ -1514,6 +1514,10 @@ bool CBlock::CheckBlock() const
     if (GetBlockTime() > (int64)vtx[0].nTime + nMaxClockDrift)
         return DoS(50, error("CheckBlock() : coinbase timestamp is too early"));
 
+    // Check coinstake timestamp
+    if (IsProofOfStake() && GetBlockTime() > (int64)vtx[1].nTime + nMaxClockDrift)
+        return DoS(50, error("CheckBlock() : coinstake timestamp is too early"));
+
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -3046,7 +3050,7 @@ CBlock* CreateNewBlock(CWallet* pwallet)
     pblock->vtx.push_back(txNew);
 
     // ppcoin: if coinstake available add coinstake tx
-    static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift;  // only initialized at startup
+    static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift + 60;  // only initialized at startup
     CBlockIndex* pindexPrev = pindexBest;
     while (nLastCoinStakeCheckTime < GetAdjustedTime())
     {
@@ -3056,7 +3060,9 @@ CBlock* CreateNewBlock(CWallet* pwallet)
         CTransaction txCoinStake;
         CRITICAL_BLOCK(cs)
         {
-            nLastCoinStakeCheckTime++;
+            // mining may have been suspended for a while so 
+            // need to take max to satisfy the timestamp protocol
+            nLastCoinStakeCheckTime = max(++nLastCoinStakeCheckTime, (unsigned int) (GetAdjustedTime() - nMaxClockDrift + 60));
             txCoinStake.nTime = nLastCoinStakeCheckTime;
         }
         if (pwallet->CreateCoinStake(pblock->nBits, txCoinStake))
