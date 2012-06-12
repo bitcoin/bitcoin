@@ -22,6 +22,8 @@ else
 	TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
+BDB_LIB_SUFFIX = -4.8
+
 # for boost 1.37, add -mt to the boost libraries
 LIBS += \
  -Wl,-B$(LMODE) \
