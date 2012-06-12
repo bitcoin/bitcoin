@@ -241,11 +241,9 @@ void openDebugLogfile()
 {
     boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
 
-#ifdef WIN32
+    /* Open debug.log with the associated application */
     if (boost::filesystem::exists(pathDebug))
-        /* Open debug.log with the associated application */
-        ShellExecuteA((HWND)0, (LPCSTR)"open", (LPCSTR)pathDebug.string().c_str(), NULL, NULL, SW_SHOWNORMAL);
-#endif
+        QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(pathDebug.string())));
 }
 
 ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *parent) :
