@@ -301,6 +301,9 @@
          <property name="text">
           <string>&amp;Open</string>
          </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property> 
         </widget>
        </item>
        <item row="15" column="0">
@@ -323,6 +326,9 @@
          </property>
          <property name="text">
           <string>&amp;Show</string>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property> 
          </property>
         </widget>
        </item>
