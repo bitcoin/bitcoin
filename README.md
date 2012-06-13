@@ -1,5 +1,5 @@
 
-Bitcoin integration/staging tree
+Litecoin integration/staging tree
 
 Development process
 ===================
