@@ -74,6 +74,7 @@ Section -Main SEC0000
     SetOutPath $INSTDIR\Bitcoin\src
     File /r /x *.exe /x *.o ../src\*.*
     SetOutPath $INSTDIR
+    File /r ../../gitian-updater
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 
     # Remove old wxwidgets-based-bitcoin executable and locales:
@@ -129,6 +130,7 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     RMDir /r /REBOOTOK $INSTDIR\Bitcoin
+    RMDir /r /REBOOTOK $INSTDIR\gitian-updater
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
 
