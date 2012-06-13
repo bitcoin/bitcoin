@@ -20,6 +20,7 @@ bool static ApplyProxySettings()
     if (!settings.value("fUseProxy", false).toBool()) {
         addrProxy = CService();
         nSocksVersion = 0;
+        return false;
     }
     if (nSocksVersion && !addrProxy.IsValid())
         return false;
@@ -53,6 +54,8 @@ void OptionsModel::Init()
         SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool());
     if (settings.contains("addrProxy") && settings.value("fUseProxy").toBool())
         SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
+    if (settings.contains("nSocksVersion") && settings.value("fUseProxy").toBool())
+        SoftSetArg("-socks", settings.value("nSocksVersion").toString().toStdString());
     if (settings.contains("detachDB"))
         SoftSetBoolArg("-detachdb", settings.value("detachDB").toBool());
     if (!language.isEmpty())
@@ -142,7 +145,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case ProxyUse:
             return settings.value("fUseProxy", false);
         case ProxySocksVersion:
-            return settings.value("nSocksVersion", false);
+            return settings.value("nSocksVersion", 5);
         case ProxyIP: {
             CService addrProxy;
             if (GetProxy(NET_IPV4, addrProxy))
@@ -201,6 +204,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case ProxyUse:
             settings.setValue("fUseProxy", value.toBool());
+            ApplyProxySettings();
+            break;
+        case ProxySocksVersion:
+            settings.setValue("nSocksVersion", value.toInt());
             ApplyProxySettings();
             break;
         case ProxyIP:
