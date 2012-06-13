@@ -137,11 +137,11 @@ void FilterNotifyBlock(const CBlock& block)
 
 void FilterSetup()
 {
-    string strNotifyTx = GetArg("-filtertx", "");
+    strNotifyTx = GetArg("-filtertx", "");
     if (strNotifyTx.empty())
         strNotifyTx = GetArg("-filter", "");
 
-    string strNotifyBlock = GetArg("-filterblock", "");
+    strNotifyBlock = GetArg("-filterblock", "");
     if (strNotifyBlock.empty())
         strNotifyBlock = GetArg("-filter", "");
 }
