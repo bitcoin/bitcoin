@@ -89,6 +89,8 @@
 
 * update wiki download links
 
+* update wiki changelog: https://en.bitcoin.it/wiki/Changelog
+
 * Commit your signature to gitian.sigs:
   pushd gitian.sigs
   git add ${VERSION}/${SIGNER}
