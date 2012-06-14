@@ -266,15 +266,17 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     entry->setValue(rv);
 }
 
-
-void SendCoinsDialog::handleURI(const QString &uri)
+bool SendCoinsDialog::handleURI(const QString &uri)
 {
     SendCoinsRecipient rv;
-    if(!GUIUtil::parseBitcoinURI(uri, &rv))
+    // URI has to be valid
+    if (GUIUtil::parseBitcoinURI(uri, &rv))
     {
-        return;
+        pasteEntry(rv);
+        return true;
     }
-    pasteEntry(rv);
+
+    return false;
 }
 
 void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
