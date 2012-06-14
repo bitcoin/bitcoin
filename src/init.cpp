@@ -42,6 +42,17 @@ void ExitTimeout(void* parg)
 #endif
 }
 
+void StartShutdown()
+{
+#ifdef QT_GUI
+    // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called in bitcoin.cpp afterwards)
+    QueueShutdown();
+#else
+    // Without UI, Shutdown() can simply be started in a new thread
+    CreateThread(Shutdown, NULL);
+#endif
+}
+
 void Shutdown(void* parg)
 {
     static CCriticalSection cs_Shutdown;
@@ -67,7 +78,10 @@ void Shutdown(void* parg)
         Sleep(50);
         printf("Bitcoin exiting\n\n");
         fExit = true;
+#ifndef QT_GUI
+        // ensure non UI client get's exited here, but let Bitcoin-Qt reach return 0; in bitcoin.cpp
         exit(0);
+#endif
     }
     else
     {
