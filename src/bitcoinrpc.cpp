@@ -225,7 +225,7 @@ Value stop(const Array& params, bool fHelp)
             "stop\n"
             "Stop bitcoin server.");
     // Shutdown will take long enough that the response should get back
-    QueueShutdown();
+    StartShutdown();
     return "bitcoin server stopping";
 }
 
@@ -1707,7 +1707,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    QueueShutdown();
+    StartShutdown();
     return "wallet encrypted; bitcoin server stopping, restart to run with encrypted wallet";
 }
 
@@ -2380,7 +2380,7 @@ void ThreadRPCServer2(void* parg)
                 GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
             _("Error"), wxOK | wxMODAL);
-        QueueShutdown();
+        StartShutdown();
         return;
     }
 
@@ -2401,7 +2401,7 @@ void ThreadRPCServer2(void* parg)
     {
         ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
                              _("Error"), wxOK | wxMODAL);
-        QueueShutdown();
+        StartShutdown();
         return;
     }
 
