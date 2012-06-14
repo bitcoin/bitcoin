@@ -223,7 +223,8 @@ Value stop(const Array& params, bool fHelp)
             "Stop bitcoin server.");
 #ifndef QT_GUI
     // Shutdown will take long enough that the response should get back
-    CreateThread(Shutdown, NULL);
+    // NOTE: This should actually work with Bitcoin-Qt too now, but 0.6.0 didn't allow it
+    StartShutdown();
     return "bitcoin server stopping";
 #else
     throw runtime_error("NYI: cannot shut down GUI with RPC command");
@@ -1713,7 +1714,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    CreateThread(Shutdown, NULL);
+    StartShutdown();
     return "wallet encrypted; bitcoin server stopping, restart to run with encrypted wallet";
 }
 
@@ -2372,10 +2373,6 @@ void ThreadRPCServer(void* parg)
     printf("ThreadRPCServer exiting\n");
 }
 
-#ifdef QT_GUI
-extern bool HACK_SHUTDOWN;
-#endif
-
 void ThreadRPCServer2(void* parg)
 {
     printf("ThreadRPCServer started\n");
@@ -2402,7 +2399,7 @@ void ThreadRPCServer2(void* parg)
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
             _("Error"), wxOK | wxMODAL);
 #ifndef QT_GUI
-        CreateThread(Shutdown, NULL);
+        StartShutdown();
 #endif
         return;
     }
@@ -2427,9 +2424,9 @@ void ThreadRPCServer2(void* parg)
     }
     catch(boost::system::system_error &e)
     {
-        HACK_SHUTDOWN = true;
         ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
                              _("Error"), wxOK | wxMODAL);
+        StartShutdown();
         return;
     }
 #endif

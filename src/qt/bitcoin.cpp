@@ -123,6 +123,11 @@ void InitMessage(const std::string &message)
     }
 }
 
+void QueueShutdown()
+{
+    QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+}
+
 /*
    Translate string to current locale using Qt.
  */
@@ -290,6 +295,7 @@ int main(int argc, char *argv[])
                 window.hide();
                 guiref = 0;
             }
+            // Shutdown the core and it's threads, but don't exit Bitcoin-Qt here
             Shutdown(NULL);
         }
         else
