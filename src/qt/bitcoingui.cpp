@@ -409,17 +409,17 @@ void BitcoinGUI::createTrayIcon()
 
     // Configuration of the tray icon (or dock icon) icon menu
     trayIconMenu->addAction(toggleHideAction);
-    trayIconMenu->addAction(openRPCConsoleAction);
     trayIconMenu->addSeparator();
-    trayIconMenu->addAction(messageAction);
-    trayIconMenu->addAction(verifyMessageAction);
+    trayIconMenu->addAction(sendCoinsAction);
+    trayIconMenu->addAction(receiveCoinsAction);
 #ifndef FIRST_CLASS_MESSAGING
     trayIconMenu->addSeparator();
 #endif
-    trayIconMenu->addAction(sendCoinsAction);
-    trayIconMenu->addAction(receiveCoinsAction);
+    trayIconMenu->addAction(messageAction);
+    trayIconMenu->addAction(verifyMessageAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(openRPCConsoleAction);
 #ifndef Q_WS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
