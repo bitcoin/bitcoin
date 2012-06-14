@@ -20,7 +20,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/asio/ssl.hpp> 
+#include <boost/asio/ssl.hpp>
 #include <boost/filesystem/fstream.hpp>
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
 
@@ -436,7 +436,7 @@ Value stop(const Array& params, bool fHelp)
             "stop\n"
             "Stop Bitcoin server.");
     // Shutdown will take long enough that the response should get back
-    uiInterface.QueueShutdown();
+    StartShutdown();
     return "Bitcoin server stopping";
 }
 
@@ -1148,7 +1148,7 @@ Value sendmany(const Array& params, bool fHelp)
 
         CScript scriptPubKey;
         scriptPubKey.SetDestination(address.Get());
-        int64 nAmount = AmountFromValue(s.value_); 
+        int64 nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
@@ -1524,7 +1524,7 @@ Value listtransactions(const Array& params, bool fHelp)
         if ((int)ret.size() >= (nCount+nFrom)) break;
     }
     // ret is newest to oldest
-    
+
     if (nFrom > (int)ret.size())
         nFrom = ret.size();
     if ((nFrom + nCount) > (int)ret.size())
@@ -1935,7 +1935,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    uiInterface.QueueShutdown();
+    StartShutdown();
     return "wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet";
 }
 
@@ -2682,7 +2682,7 @@ void ThreadRPCServer2(void* parg)
                 GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
+        StartShutdown();
         return;
     }
 
@@ -2703,7 +2703,7 @@ void ThreadRPCServer2(void* parg)
     {
         uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
                              _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
+        StartShutdown();
         return;
     }
 
