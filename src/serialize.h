@@ -10,7 +10,7 @@
 #include <map>
 #include <set>
 #include <cassert>
-#include <climits>
+#include <limits>
 #include <cstring>
 #include <cstdio>
 
