@@ -1875,7 +1875,7 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
         strMiscWarning = strMessage;
         printf("*** %s\n", strMessage.c_str());
         uiInterface.ThreadSafeMessageBox(strMessage, "Bitcoin", CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
+        StartShutdown();
         return false;
     }
     return true;
