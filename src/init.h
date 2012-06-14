@@ -9,6 +9,7 @@
 
 extern CWallet* pwalletMain;
 
+void StartShutdown();
 void Shutdown(void* parg);
 bool AppInit(int argc, char* argv[]);
 bool AppInit2(int argc, char* argv[]);
