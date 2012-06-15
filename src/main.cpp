@@ -1561,10 +1561,6 @@ bool CBlock::AcceptBlock()
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
         return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 
-    // ppcoin: coinstake tx must meet target protocol
-    if (IsProofOfStake() && !vtx[1].CheckProofOfStake(nBits))
-        return error("AcceptBlock() : Block %s unable to meet hash target for coinstake", GetHash().ToString().c_str());
-
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
         return error("AcceptBlock() : block's timestamp is too early");
@@ -1624,6 +1620,10 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (!pblock->CheckBlock())
         return error("ProcessBlock() : CheckBlock FAILED");
 
+    // ppcoin: verify hash target and signature of coinstake tx
+    if (pblock->IsProofOfStake() && !pblock->vtx[1].CheckProofOfStake(pblock->nBits))
+        return error("ProcessBlock() : check proof-of-stake failed for block %s", hash.ToString().c_str());
+
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
     {
@@ -1637,11 +1637,15 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         CBigNum bnNewBlock;
         bnNewBlock.SetCompact(pblock->nBits);
         CBigNum bnRequired;
-        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        if (pblock->IsProofOfWork() && bnNewBlock > bnRequired)
+        if (pblock->IsProofOfWork())
+            bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+        else
+            bnRequired = bnNewBlock; // TODO: Computer Min Stake Target Allowed
+
+        if (bnNewBlock > bnRequired)
         {
             pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with too little proof-of-work");
+            return error("ProcessBlock() : block with too little %s", pblock->IsProofOfStake()? "proof-of-stake" : "proof-of-work");
         }
     }
 
