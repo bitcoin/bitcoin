@@ -1604,6 +1604,7 @@ public:
                 bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(CTransaction &tx);
     bool remove(CTransaction &tx);
+    void fillInv(std::vector<CInv> &vInv, unsigned int max_inv);
 
     unsigned long size()
     {
