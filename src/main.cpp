@@ -1578,6 +1578,10 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckAuto(pindexPrev))
         return DoS(100, error("AcceptBlock() : rejected by automatic checkpoint at %d", Checkpoints::nAutoCheckpoint));
 
+    // ppcoin: check that the block satisfies synchronized checkpoint
+    if (!Checkpoints::CheckSync(nHeight, hash))
+        return DoS(100, error("AcceptBlock() : rejected by synchronized checkpoint"));
+
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))
         return error("AcceptBlock() : out of disk space");
@@ -1596,7 +1600,7 @@ bool CBlock::AcceptBlock()
                     pnode->PushInventory(CInv(MSG_BLOCK, hash));
 
     // ppcoin: check pending sync-checkpoint
-    Checkpoints::AcceptPendingSyncCheckpoint(hash);
+    Checkpoints::AcceptPendingSyncCheckpoint();
 
     return true;
 }

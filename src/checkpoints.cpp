@@ -83,19 +83,22 @@ namespace Checkpoints
         return true;
     }
 
-    bool AcceptPendingSyncCheckpoint(uint256 hashAcceptedBlock)
+    bool AcceptPendingSyncCheckpoint()
     {
-        if (!mapBlockIndex.count(hashAcceptedBlock))
-            return false;
-
         CRITICAL_BLOCK(cs_hashSyncCheckpoint)
-            if ((!checkpointMessagePending.IsNull()) && checkpointMessagePending.hashCheckpoint == hashAcceptedBlock)
+            if ((!checkpointMessagePending.IsNull()) && mapBlockIndex.count(checkpointMessagePending.hashCheckpoint))
             {
                 if (!ValidateSyncCheckpoint(checkpointMessagePending.hashCheckpoint))
                 {
                     checkpointMessagePending.SetNull();
                     return false;
                 }
+
+                CTxDB txdb;
+                if (!txdb.WriteSyncCheckpoint(checkpointMessagePending.hashCheckpoint))
+                    return error("AcceptPendingSyncCheckpoint() : failed to write to db sync checkpoint %s\n", checkpointMessagePending.hashCheckpoint.ToString().c_str());
+                txdb.Close();
+
                 hashSyncCheckpoint = checkpointMessagePending.hashCheckpoint;
                 checkpointMessage = checkpointMessagePending;
                 checkpointMessagePending.SetNull();
@@ -116,6 +119,22 @@ namespace Checkpoints
         while (pindex->pnext && pindex->pnext->GetBlockTime() + AUTO_CHECKPOINT_MIN_SPAN <= GetAdjustedTime())
             pindex = pindex->pnext;
         return pindex->GetBlockHash();
+    }
+
+    // Check against synchronized checkpoint
+    bool CheckSync(int nHeight, const uint256& hashBlock)
+    {
+        if (fTestNet) return true; // Testnet has no checkpoints
+
+        CRITICAL_BLOCK(cs_hashSyncCheckpoint)
+        {
+            CBlockIndex* pindexSync = mapBlockIndex[hashSyncCheckpoint];
+            if (nHeight == pindexSync->nHeight && hashBlock != hashSyncCheckpoint)
+                return false; // same height with sync-checkpoint
+            if (nHeight < pindexSync->nHeight && !mapBlockIndex.count(hashBlock))
+                return false; // lower height than sync-checkpoint
+        }
+        return true;
     }
 
     // ppcoin: automatic checkpoint (represented by height of checkpoint)
@@ -256,6 +275,12 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
         }
         if (!Checkpoints::ValidateSyncCheckpoint(hashCheckpoint))
             return false;
+
+        CTxDB txdb;
+        if (!txdb.WriteSyncCheckpoint(this->hashCheckpoint))
+            return error("ProcessSyncCheckpoint() : failed to write to db sync checkpoint %s\n", this->hashCheckpoint.ToString().c_str());
+        txdb.Close();
+
         Checkpoints::hashSyncCheckpoint = this->hashCheckpoint;
         Checkpoints::checkpointMessage = *this;
         Checkpoints::checkpointMessagePending.SetNull();
