@@ -65,6 +65,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QAction *editAction = new QAction(tr("&Edit"), this);
     QAction *showQRCodeAction = new QAction(ui->showQRCode->text(), this);
     QAction *signMessageAction = new QAction(ui->signMessage->text(), this);
+    QAction *verifyMessageAction = new QAction(ui->verifyMessage->text(), this);
     deleteAction = new QAction(ui->deleteButton->text(), this);
 
     // Build context menu
@@ -78,6 +79,8 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     contextMenu->addAction(showQRCodeAction);
     if(tab == ReceivingTab)
         contextMenu->addAction(signMessageAction);
+    else if(tab == SendingTab)
+        contextMenu->addAction(verifyMessageAction);
 
     // Connect signals for context menu actions
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyToClipboard_clicked()));
@@ -86,6 +89,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteButton_clicked()));
     connect(showQRCodeAction, SIGNAL(triggered()), this, SLOT(on_showQRCode_clicked()));
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(on_signMessage_clicked()));
+    connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(on_verifyMessage_clicked()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -182,7 +186,25 @@ void AddressBookPage::on_signMessage_clicked()
     QObject *qoGUI = parent()->parent();
     BitcoinGUI *gui = qobject_cast<BitcoinGUI *>(qoGUI);
     if (gui)
-        gui->gotoMessagePage(addr);
+        gui->gotoSignMessageTab(addr);
+}
+
+void AddressBookPage::on_verifyMessage_clicked()
+{
+    QTableView *table = ui->tableView;
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+    QString addr;
+
+    foreach (QModelIndex index, indexes)
+    {
+        QVariant address = index.data();
+        addr = address.toString();
+    }
+
+    QObject *qoGUI = parent()->parent();
+    BitcoinGUI *gui = qobject_cast<BitcoinGUI *>(qoGUI);
+    if (gui)
+        gui->gotoVerifyMessageTab(addr);
 }
 
 void AddressBookPage::on_newAddressButton_clicked()
@@ -230,6 +252,8 @@ void AddressBookPage::selectionChanged()
             deleteAction->setEnabled(true);
             ui->signMessage->setEnabled(false);
             ui->signMessage->setVisible(false);
+            ui->verifyMessage->setEnabled(true);
+            ui->verifyMessage->setVisible(true);
             break;
         case ReceivingTab:
             // Deleting receiving addresses, however, is not allowed
@@ -238,6 +262,8 @@ void AddressBookPage::selectionChanged()
             deleteAction->setEnabled(false);
             ui->signMessage->setEnabled(true);
             ui->signMessage->setVisible(true);
+            ui->verifyMessage->setEnabled(false);
+            ui->verifyMessage->setVisible(false);
             break;
         }
         ui->copyToClipboard->setEnabled(true);
@@ -249,6 +275,7 @@ void AddressBookPage::selectionChanged()
         ui->showQRCode->setEnabled(false);
         ui->copyToClipboard->setEnabled(false);
         ui->signMessage->setEnabled(false);
+        ui->verifyMessage->setEnabled(false);
     }
 }
 
