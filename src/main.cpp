@@ -656,7 +656,7 @@ void CTxMemPool::fillInv(std::vector<CInv> &vInv, unsigned int max_inv)
 {
     LOCK(cs);
 
-    for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
+    for (map<uint256, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
     {
         CTransaction& tx = (*mi).second;
 
