@@ -2299,6 +2299,27 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 // a large 4-byte int at any alignment.
 unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
+// List of commands we openly advertise to remote nodes
+static const char *commandList[] = {
+    "addr",
+    "alert",
+    "block",
+    "checkorder",
+    "cmdlist",
+    "headers",
+    "inv",
+    "getaddr",
+    "getblocks",
+    "getcmds",
+    "getdata",
+    "getheaders",
+    "ping",
+    "pong",
+    "reply",
+    "tx",
+    "version",
+    "verack",
+};
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
@@ -2866,6 +2887,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     alert.RelayTo(pnode);
             }
         }
+    }
+
+
+    else if (strCommand == "getcmds")
+    {
+        vector<string> vCmds;
+        for (unsigned int i = 0; i < ARRAYLEN(commandList); i++)
+            vCmds.push_back(commandList[i]);
+        pfrom->PushMessage("cmdlist", vCmds);
     }
 
 
