@@ -7,6 +7,7 @@ namespace Ui {
     class SendCoinsDialog;
 }
 class WalletModel;
+class ClientModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 
@@ -23,7 +24,8 @@ public:
     explicit SendCoinsDialog(QWidget *parent = 0);
     ~SendCoinsDialog();
 
-    void setModel(WalletModel *model);
+    void setWalletModel(WalletModel *model);
+    void setClientModel(ClientModel *model);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue http://bugreports.qt.nokia.com/browse/QTBUG-10907).
      */
@@ -42,13 +44,15 @@ public slots:
 
 private:
     Ui::SendCoinsDialog *ui;
-    WalletModel *model;
+    WalletModel *walletModel;
+    ClientModel *clientModel;
     bool fNewRecipientAllowed;
 
 private slots:
     void on_sendButton_clicked();
 
     void removeEntry(SendCoinsEntry* entry);
+    void updateBalance();
 };
 
 #endif // SENDCOINSDIALOG_H

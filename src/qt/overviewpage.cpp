@@ -2,6 +2,7 @@
 #include "ui_overviewpage.h"
 
 #include "walletmodel.h"
+#include "clientmodel.h"
 #include "bitcoinunits.h"
 #include "optionsmodel.h"
 #include "transactiontablemodel.h"
@@ -129,7 +130,7 @@ OverviewPage::~OverviewPage()
 
 void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
 {
-    int unit = model->getOptionsModel()->getDisplayUnit();
+    int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
     currentUnconfirmedBalance = unconfirmedBalance;
     currentImmatureBalance = immatureBalance;
@@ -149,10 +150,10 @@ void OverviewPage::setNumTransactions(int count)
     ui->labelNumTransactions->setText(QLocale::system().toString(count));
 }
 
-void OverviewPage::setModel(WalletModel *model)
+void OverviewPage::setWalletModel(WalletModel *model)
 {
-    this->model = model;
-    if(model)
+    this->walletModel = model;
+    if(model && model->getOptionsModel())
     {
         // Set up transaction list
         filter = new TransactionFilterProxy();
@@ -166,7 +167,7 @@ void OverviewPage::setModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
+        updateBalance();
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
 
         setNumTransactions(model->getNumTransactions());
@@ -176,14 +177,22 @@ void OverviewPage::setModel(WalletModel *model)
     }
 }
 
+void OverviewPage::setClientModel(ClientModel *model)
+{
+    this->clientModel = model;
+    if(model)
+        // changed block counts can mature a former immature balance, so update displayed balance on block change
+        connect(model, SIGNAL(numBlocksChanged(int, int)), this, SLOT(updateBalance()));
+}
+
 void OverviewPage::displayUnitChanged()
 {
-    if(!model || !model->getOptionsModel())
+    if(!walletModel || !walletModel->getOptionsModel())
         return;
     if(currentBalance != -1)
         setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance);
 
-    txdelegate->unit = model->getOptionsModel()->getDisplayUnit();
+    txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
     ui->listTransactions->update();
 }
 
@@ -191,4 +200,10 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+}
+
+void OverviewPage::updateBalance()
+{
+    if(walletModel)
+        setBalance(walletModel->getBalance(), walletModel->getUnconfirmedBalance(), walletModel->getImmatureBalance());
 }
