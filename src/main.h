@@ -652,14 +652,25 @@ class CTxOutCompressor
 {
 private:
     CTxOut &txout;
+
 public:
+    static uint64 CompressAmount(uint64 nAmount);
+    static uint64 DecompressAmount(uint64 nAmount);
+
     CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
-    IMPLEMENT_SERIALIZE(
-        READWRITE(VARINT(txout.nValue));
+    IMPLEMENT_SERIALIZE(({
+        if (!fRead) {
+            uint64 nVal = CompressAmount(txout.nValue);
+            READWRITE(VARINT(nVal));
+        } else {
+            uint64 nVal = 0;
+            READWRITE(VARINT(nVal));
+            txout.nValue = DecompressAmount(nVal);
+        }
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
-    )
+    });)
 };
 
 
