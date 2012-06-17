@@ -357,6 +357,8 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         connect(clientModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
 
         rpcConsole->setClientModel(clientModel);
+        overviewPage->setClientModel(clientModel);
+        sendCoinsPage->setClientModel(clientModel);
     }
 }
 
@@ -371,10 +373,10 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         // Put transaction list in tabs
         transactionView->setModel(walletModel);
 
-        overviewPage->setModel(walletModel);
+        overviewPage->setWalletModel(walletModel);
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
-        sendCoinsPage->setModel(walletModel);
+        sendCoinsPage->setWalletModel(walletModel);
         messagePage->setModel(walletModel);
 
         setEncryptionStatus(walletModel->getEncryptionStatus());

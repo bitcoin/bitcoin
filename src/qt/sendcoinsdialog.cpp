@@ -1,6 +1,7 @@
 #include "sendcoinsdialog.h"
 #include "ui_sendcoinsdialog.h"
 #include "walletmodel.h"
+#include "clientmodel.h"
 #include "bitcoinunits.h"
 #include "addressbookpage.h"
 #include "optionsmodel.h"
@@ -16,7 +17,8 @@
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
-    model(0)
+    walletModel(0),
+    clientModel(0)
 {
     ui->setupUi(this);
 
@@ -34,9 +36,9 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     fNewRecipientAllowed = true;
 }
 
-void SendCoinsDialog::setModel(WalletModel *model)
+void SendCoinsDialog::setWalletModel(WalletModel *model)
 {
-    this->model = model;
+    this->walletModel = model;
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {
@@ -53,6 +55,14 @@ void SendCoinsDialog::setModel(WalletModel *model)
     }
 }
 
+void SendCoinsDialog::setClientModel(ClientModel *model)
+{
+    this->clientModel = model;
+    if(model)
+        // changed block counts can mature a former immature balance, so update displayed balance on block change
+        connect(model, SIGNAL(numBlocksChanged(int, int)), this, SLOT(updateBalance()));
+}
+
 SendCoinsDialog::~SendCoinsDialog()
 {
     delete ui;
@@ -63,7 +73,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     QList<SendCoinsRecipient> recipients;
     bool valid = true;
 
-    if(!model)
+    if(!walletModel)
         return;
 
     for(int i = 0; i < ui->entries->count(); ++i)
@@ -107,7 +117,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    WalletModel::UnlockContext ctx(model->requestUnlock());
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid())
     {
         // Unlock wallet was cancelled
@@ -115,7 +125,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients);
+    WalletModel::SendCoinsReturn sendstatus = walletModel->sendCoins(recipients);
     switch(sendstatus.status)
     {
     case WalletModel::InvalidAddress:
@@ -190,7 +200,7 @@ void SendCoinsDialog::accept()
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
     SendCoinsEntry *entry = new SendCoinsEntry(this);
-    entry->setModel(model);
+    entry->setModel(walletModel);
     ui->entries->addWidget(entry);
     connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
 
@@ -283,9 +293,15 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
-    if(!model || !model->getOptionsModel())
+    if(!walletModel || !walletModel->getOptionsModel())
         return;
 
-    int unit = model->getOptionsModel()->getDisplayUnit();
+    int unit = walletModel->getOptionsModel()->getDisplayUnit();
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
+}
+
+void SendCoinsDialog::updateBalance()
+{
+    if(walletModel)
+        setBalance(walletModel->getBalance(), 0, 0);
 }

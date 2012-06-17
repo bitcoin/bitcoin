@@ -11,6 +11,7 @@ namespace Ui {
     class OverviewPage;
 }
 class WalletModel;
+class ClientModel;
 class TxViewDelegate;
 class TransactionFilterProxy;
 
@@ -23,7 +24,8 @@ public:
     explicit OverviewPage(QWidget *parent = 0);
     ~OverviewPage();
 
-    void setModel(WalletModel *model);
+    void setWalletModel(WalletModel *model);
+    void setClientModel(ClientModel *model);
     void showOutOfSyncWarning(bool fShow);
 
 public slots:
@@ -35,7 +37,8 @@ signals:
 
 private:
     Ui::OverviewPage *ui;
-    WalletModel *model;
+    WalletModel *walletModel;
+    ClientModel *clientModel;
     qint64 currentBalance;
     qint64 currentUnconfirmedBalance;
     qint64 currentImmatureBalance;
@@ -46,6 +49,7 @@ private:
 private slots:
     void displayUnitChanged();
     void handleTransactionClicked(const QModelIndex &index);
+    void updateBalance();
 };
 
 #endif // OVERVIEWPAGE_H

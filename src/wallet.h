@@ -325,10 +325,12 @@ public:
     // memory only
     mutable bool fDebitCached;
     mutable bool fCreditCached;
+    mutable bool fImmatureCreditCached;
     mutable bool fAvailableCreditCached;
     mutable bool fChangeCached;
     mutable int64 nDebitCached;
     mutable int64 nCreditCached;
+    mutable int64 nImmatureCreditCached;
     mutable int64 nAvailableCreditCached;
     mutable int64 nChangeCached;
 
@@ -365,10 +367,12 @@ public:
         vfSpent.clear();
         fDebitCached = false;
         fCreditCached = false;
+        fImmatureCreditCached = false;
         fAvailableCreditCached = false;
         fChangeCached = false;
         nDebitCached = 0;
         nCreditCached = 0;
+        nImmatureCreditCached = 0;
         nAvailableCreditCached = 0;
         nChangeCached = 0;
     }
@@ -498,6 +502,20 @@ public:
         nCreditCached = pwallet->GetCredit(*this);
         fCreditCached = true;
         return nCreditCached;
+    }
+
+    int64 GetImmatureCredit(bool fUseCache=true) const
+    {
+        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
+        {
+            if (fUseCache && fImmatureCreditCached)
+                return nImmatureCreditCached;
+            nImmatureCreditCached = pwallet->GetCredit(*this);
+            fImmatureCreditCached = true;
+            return nImmatureCreditCached;
+        }
+
+        return 0;
     }
 
     int64 GetAvailableCredit(bool fUseCache=true) const

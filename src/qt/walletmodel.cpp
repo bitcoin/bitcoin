@@ -74,15 +74,20 @@ void WalletModel::updateTransaction(const QString &hash, int status)
     int newNumTransactions = getNumTransactions();
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
+    {
+        cachedBalance = newBalance;
+        cachedUnconfirmedBalance = newUnconfirmedBalance;
+        cachedImmatureBalance = newImmatureBalance;
+
         emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance);
+    }
 
     if(cachedNumTransactions != newNumTransactions)
-        emit numTransactionsChanged(newNumTransactions);
+    {
+        cachedNumTransactions = newNumTransactions;
 
-    cachedBalance = newBalance;
-    cachedUnconfirmedBalance = newUnconfirmedBalance;
-    cachedImmatureBalance = newImmatureBalance;
-    cachedNumTransactions = newNumTransactions;
+        emit numTransactionsChanged(newNumTransactions);
+    }
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label, bool isMine, int status)
