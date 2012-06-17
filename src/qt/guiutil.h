@@ -103,7 +103,11 @@ namespace GUIUtil
     public:
         HelpMessageBox(QWidget *parent = 0);
 
-        void exec();
+        /** Show message box or print help message to standard output, based on operating system. */
+        void showOrPrint();
+
+        /** Print help message to console */
+        void printToConsole();
 
     private:
         QString header;
