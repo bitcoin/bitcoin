@@ -12,6 +12,30 @@ OptionsModel::OptionsModel(QObject *parent) :
     Init();
 }
 
+bool static ApplyProxySettings()
+{
+    QSettings settings;
+    CService addrProxy(settings.value("addrProxy", "127.0.0.1:9050").toString().toStdString());
+    int nSocksVersion(settings.value("nSocksVersion", 5).toInt());
+    if (!settings.value("fUseProxy", false).toBool()) {
+        addrProxy = CService();
+        nSocksVersion = 0;
+        return false;
+    }
+    if (nSocksVersion && !addrProxy.IsValid())
+        return false;
+    if (!IsLimited(NET_IPV4))
+        SetProxy(NET_IPV4, addrProxy, nSocksVersion);
+    if (nSocksVersion > 4) {
+#ifdef USE_IPV6
+        if (!IsLimited(NET_IPV6))
+            SetProxy(NET_IPV6, addrProxy, nSocksVersion);
+#endif
+        SetNameProxy(addrProxy, nSocksVersion);
+    }
+    return true;
+}
+
 void OptionsModel::Init()
 {
     QSettings settings;
@@ -30,6 +54,8 @@ void OptionsModel::Init()
         SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool());
     if (settings.contains("addrProxy") && settings.value("fUseProxy").toBool())
         SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
+    if (settings.contains("nSocksVersion") && settings.value("fUseProxy").toBool())
+        SoftSetArg("-socks", settings.value("nSocksVersion").toString().toStdString());
     if (settings.contains("detachDB"))
         SoftSetBoolArg("-detachdb", settings.value("detachDB").toBool());
     if (!language.isEmpty())
@@ -75,20 +101,21 @@ bool OptionsModel::Upgrade()
         CAddress addrProxyAddress;
         if (walletdb.ReadSetting("addrProxy", addrProxyAddress))
         {
-            addrProxy = addrProxyAddress;
-            settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
+            settings.setValue("addrProxy", addrProxyAddress.ToStringIPPort().c_str());
             walletdb.EraseSetting("addrProxy");
         }
     }
     catch (std::ios_base::failure &e)
     {
         // 0.6.0rc1 saved this as a CService, which causes failure when parsing as a CAddress
+        CService addrProxy;
         if (walletdb.ReadSetting("addrProxy", addrProxy))
         {
             settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
             walletdb.EraseSetting("addrProxy");
         }
     }
+    ApplyProxySettings();
     Init();
 
     return true;
@@ -115,12 +142,24 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("fUseUPnP", GetBoolArg("-upnp", true));
         case MinimizeOnClose:
             return QVariant(fMinimizeOnClose);
-        case ConnectSOCKS4:
+        case ProxyUse:
             return settings.value("fUseProxy", false);
-        case ProxyIP:
-            return QVariant(QString::fromStdString(addrProxy.ToStringIP()));
-        case ProxyPort:
-            return QVariant(addrProxy.GetPort());
+        case ProxySocksVersion:
+            return settings.value("nSocksVersion", 5);
+        case ProxyIP: {
+            CService addrProxy;
+            if (GetProxy(NET_IPV4, addrProxy))
+                return QVariant(QString::fromStdString(addrProxy.ToStringIP()));
+            else
+                return QVariant(QString::fromStdString("127.0.0.1"));
+        }
+        case ProxyPort: {
+            CService addrProxy;
+            if (GetProxy(NET_IPV4, addrProxy))
+                return QVariant(addrProxy.GetPort());
+            else
+                return 9050;
+        }
         case Fee:
             return QVariant(nTransactionFee);
         case DisplayUnit:
@@ -137,7 +176,6 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
     }
     return QVariant();
 }
-
 bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
     bool successful = true; /* set to false on parse error */
@@ -155,27 +193,33 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case MapPortUPnP:
             {
-                bool bUseUPnP = value.toBool();
-                settings.setValue("fUseUPnP", bUseUPnP);
-                MapPort(bUseUPnP);
+                fUseUPnP = value.toBool();
+                settings.setValue("fUseUPnP", fUseUPnP);
+                MapPort();
             }
             break;
         case MinimizeOnClose:
             fMinimizeOnClose = value.toBool();
             settings.setValue("fMinimizeOnClose", fMinimizeOnClose);
             break;
-        case ConnectSOCKS4:
-            fUseProxy = value.toBool();
-            settings.setValue("fUseProxy", fUseProxy);
+        case ProxyUse:
+            settings.setValue("fUseProxy", value.toBool());
+            ApplyProxySettings();
+            break;
+        case ProxySocksVersion:
+            settings.setValue("nSocksVersion", value.toInt());
+            ApplyProxySettings();
             break;
         case ProxyIP:
             {
-                // Use CAddress to parse and check IP
+                CService addrProxy("127.0.0.1", 9050);
+                GetProxy(NET_IPV4, addrProxy);
                 CNetAddr addr(value.toString().toStdString());
                 if (addr.IsValid())
                 {
                     addrProxy.SetIP(addr);
                     settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
+                    successful = ApplyProxySettings();
                 }
                 else
                 {
@@ -185,11 +229,14 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case ProxyPort:
             {
+                CService addrProxy("127.0.0.1", 9050);
+                GetProxy(NET_IPV4, addrProxy);
                 int nPort = atoi(value.toString().toAscii().data());
                 if (nPort > 0 && nPort < std::numeric_limits<unsigned short>::max())
                 {
                     addrProxy.SetPort(nPort);
                     settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
+                    successful = ApplyProxySettings();
                 }
                 else
                 {

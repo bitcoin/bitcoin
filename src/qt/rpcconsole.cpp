@@ -109,12 +109,9 @@ RPCConsole::RPCConsole(QWidget *parent) :
 {
     ui->setupUi(this);
 
-#ifdef WIN32
+#ifndef Q_WS_MAC
     ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
-#else
-    // Show Debug logfile label and Open button only for Windows
-    ui->labelDebugLogfile->setVisible(false);
-    ui->openDebugLogfileButton->setVisible(false);
+    ui->showCLOptionsButton->setIcon(QIcon(":/icons/options"));
 #endif
 
     // Install event filter for up and down arrow
@@ -163,7 +160,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->clientVersion->setText(model->formatFullVersion());
         ui->clientName->setText(model->clientName());
         ui->buildDate->setText(model->formatBuildDate());
-        ui->startupTime->setText(model->formatClientStartupTime().toString());
+        ui->startupTime->setText(model->formatClientStartupTime());
 
         setNumConnections(model->getNumConnections());
         ui->isTestNet->setChecked(model->isTestNet());
@@ -325,4 +322,10 @@ void RPCConsole::scrollToEnd()
 {
     QScrollBar *scrollbar = ui->messagesWidget->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
+}
+
+void RPCConsole::on_showCLOptionsButton_clicked()
+{
+    GUIUtil::HelpMessageBox help;
+    help.exec();
 }

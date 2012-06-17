@@ -7,6 +7,7 @@
 #include "wallet.h"
 #include "db.h"
 #include "ui_interface.h"
+#include "base58.h"
 
 #include <QString>
 
@@ -85,14 +86,14 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                 {
                     if (wallet->IsMine(txout))
                     {
-                        CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, address) && wallet->HaveKey(address))
+                        CTxDestination address;
+                        if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
                         {
                             if (wallet->mapAddressBook.count(address))
                             {
                                 strHTML += tr("<b>From:</b> ") + tr("unknown") + "<br>";
                                 strHTML += tr("<b>To:</b> ");
-                                strHTML += GUIUtil::HtmlEscape(address.ToString());
+                                strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
                                 if (!wallet->mapAddressBook[address].empty())
                                     strHTML += tr(" (yours, label: ") + GUIUtil::HtmlEscape(wallet->mapAddressBook[address]) + ")";
                                 else
@@ -115,8 +116,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
             // Online transaction
             strAddress = wtx.mapValue["to"];
             strHTML += tr("<b>To:</b> ");
-            if (wallet->mapAddressBook.count(strAddress) && !wallet->mapAddressBook[strAddress].empty())
-                strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[strAddress]) + " ";
+            CTxDestination dest = CBitcoinAddress(strAddress).Get();
+            if (wallet->mapAddressBook.count(dest) && !wallet->mapAddressBook[dest].empty())
+                strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[dest]) + " ";
             strHTML += GUIUtil::HtmlEscape(strAddress) + "<br>";
         }
 
@@ -170,13 +172,13 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                     if (wtx.mapValue["to"].empty())
                     {
                         // Offline transaction
-                        CBitcoinAddress address;
-                        if (ExtractAddress(txout.scriptPubKey, address))
+                        CTxDestination address;
+                        if (ExtractDestination(txout.scriptPubKey, address))
                         {
                             strHTML += tr("<b>To:</b> ");
                             if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
                                 strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address]) + " ";
-                            strHTML += GUIUtil::HtmlEscape(address.ToString());
+                            strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
                             strHTML += "<br>";
                         }
                     }
@@ -224,7 +226,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         strHTML += QString("<b>") + tr("Transaction ID:") + "</b> " + wtx.GetHash().ToString().c_str() + "<br>";
 
         if (wtx.IsCoinBase())
-            strHTML += QString("<br>") + tr("Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to \"not accepted\" and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
+            strHTML += QString("<br>") + tr("Generated coins must mature 120 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, it's state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.") + "<br>";
 
         //
         // Debug view
@@ -260,12 +262,12 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                         {
                             strHTML += "<li>";
                             const CTxOut &vout = prev.vout[prevout.n];
-                            CBitcoinAddress address;
-                            if (ExtractAddress(vout.scriptPubKey, address))
+                            CTxDestination address;
+                            if (ExtractDestination(vout.scriptPubKey, address))
                             {
                                 if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].empty())
                                     strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address]) + " ";
-                                strHTML += QString::fromStdString(address.ToString());
+                                strHTML += QString::fromStdString(CBitcoinAddress(address).ToString());
                             }
                             strHTML = strHTML + " Amount=" + BitcoinUnits::formatWithUnit(BitcoinUnits::BTC,vout.nValue);
                             strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) ? "true" : "false") + "</li>";
