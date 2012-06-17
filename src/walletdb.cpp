@@ -104,7 +104,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 
 int CWalletDB::LoadWallet(CWallet* pwallet)
 {
-    pwallet->vchDefaultKey.clear();
+    pwallet->vchDefaultKey = CPubKey();
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
     bool fIsEncrypted = false;
@@ -151,7 +151,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
             {
                 string strAddress;
                 ssKey >> strAddress;
-                ssValue >> pwallet->mapAddressBook[strAddress];
+                ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()];
             }
             else if (strType == "tx")
             {

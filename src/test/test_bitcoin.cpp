@@ -30,3 +30,9 @@ void Shutdown(void* parg)
 {
   exit(0);
 }
+
+void StartShutdown()
+{
+  exit(0);
+}
+

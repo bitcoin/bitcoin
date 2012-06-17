@@ -10,6 +10,7 @@
 #include "net.h"
 #include "init.h"
 #include "ui_interface.h"
+#include "base58.h"
 #include "bitcoinrpc.h"
 
 #undef printf
@@ -22,7 +23,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/asio/ssl.hpp> 
+#include <boost/asio/ssl.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/shared_ptr.hpp>
 #include <list>
@@ -188,10 +189,10 @@ ScriptSigToJSON(const CTxIn& txin, Object& out)
         return;
 
     txnouttype type;
-    vector<CBitcoinAddress> addresses;
+    vector<CTxDestination> addresses;
     int nRequired;
 
-    if (!ExtractAddresses(txprev.vout[txin.prevout.n].scriptPubKey, type,
+    if (!ExtractDestinations(txprev.vout[txin.prevout.n].scriptPubKey, type,
                           addresses, nRequired))
     {
         out.push_back(Pair("type", GetTxnOutputType(TX_NONSTANDARD)));
@@ -206,8 +207,8 @@ ScriptSigToJSON(const CTxIn& txin, Object& out)
     }
 
     Array a;
-    BOOST_FOREACH(const CBitcoinAddress& addr, addresses)
-        a.push_back(addr.ToString());
+    BOOST_FOREACH(const CTxDestination& addr, addresses)
+        a.push_back(CBitcoinAddress(addr).ToString());
     out.push_back(Pair("addresses", a));
 }
 
@@ -215,13 +216,13 @@ void
 ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
 {
     txnouttype type;
-    vector<CBitcoinAddress> addresses;
+    vector<CTxDestination> addresses;
     int nRequired;
 
     out.push_back(Pair("asm", scriptPubKey.ToString()));
     out.push_back(Pair("hex", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
-    if (!ExtractAddresses(scriptPubKey, type, addresses, nRequired))
+    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired))
     {
         out.push_back(Pair("type", GetTxnOutputType(TX_NONSTANDARD)));
         return;
@@ -231,8 +232,8 @@ ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
     out.push_back(Pair("type", GetTxnOutputType(type)));
 
     Array a;
-    BOOST_FOREACH(const CBitcoinAddress& addr, addresses)
-        a.push_back(addr.ToString());
+    BOOST_FOREACH(const CTxDestination& addr, addresses)
+        a.push_back(CBitcoinAddress(addr).ToString());
     out.push_back(Pair("addresses", a));
 }
 
@@ -439,7 +440,7 @@ Value stop(const Array& params, bool fHelp)
             "stop\n"
             "Stop Bitcoin server.");
     // Shutdown will take long enough that the response should get back
-    uiInterface.QueueShutdown();
+    StartShutdown();
     return "Bitcoin server stopping";
 }
 
@@ -534,6 +535,9 @@ Value getinfo(const Array& params, bool fHelp)
             "getinfo\n"
             "Returns an object containing various state info.");
 
+    CService addrProxy;
+    GetProxy(NET_IPV4, addrProxy);
+
     Object obj;
     obj.push_back(Pair("version",       (int)CLIENT_VERSION));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
@@ -541,7 +545,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+    obj.push_back(Pair("proxy",         (addrProxy.IsValid() ? addrProxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       fTestNet));
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
@@ -594,14 +598,14 @@ Value getnewaddress(const Array& params, bool fHelp)
         pwalletMain->TopUpKeyPool();
 
     // Generate a new key that is added to wallet
-    std::vector<unsigned char> newKey;
+    CPubKey newKey;
     if (!pwalletMain->GetKeyFromPool(newKey, false))
         throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
-    CBitcoinAddress address(newKey);
+    CKeyID keyID = newKey.GetID();
 
-    pwalletMain->SetAddressBookName(address, strAccount);
+    pwalletMain->SetAddressBookName(keyID, strAccount);
 
-    return address.ToString();
+    return CBitcoinAddress(keyID).ToString();
 }
 
 
@@ -615,12 +619,12 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     bool bKeyUsed = false;
 
     // Check if the current key has been used
-    if (!account.vchPubKey.empty())
+    if (account.vchPubKey.IsValid())
     {
         CScript scriptPubKey;
-        scriptPubKey.SetBitcoinAddress(account.vchPubKey);
+        scriptPubKey.SetDestination(account.vchPubKey.GetID());
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
-             it != pwalletMain->mapWallet.end() && !account.vchPubKey.empty();
+             it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
              ++it)
         {
             const CWalletTx& wtx = (*it).second;
@@ -631,16 +635,16 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     }
 
     // Generate a new key
-    if (account.vchPubKey.empty() || bForceNew || bKeyUsed)
+    if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
     {
         if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
             throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
 
-        pwalletMain->SetAddressBookName(CBitcoinAddress(account.vchPubKey), strAccount);
+        pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), strAccount);
         walletdb.WriteAccount(strAccount, account);
     }
 
-    return CBitcoinAddress(account.vchPubKey);
+    return CBitcoinAddress(account.vchPubKey.GetID());
 }
 
 Value getaccountaddress(const Array& params, bool fHelp)
@@ -679,14 +683,14 @@ Value setaccount(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[1]);
 
     // Detect when changing the account of an address that is the 'unused current key' of another account:
-    if (pwalletMain->mapAddressBook.count(address))
+    if (pwalletMain->mapAddressBook.count(address.Get()))
     {
-        string strOldAccount = pwalletMain->mapAddressBook[address];
+        string strOldAccount = pwalletMain->mapAddressBook[address.Get()];
         if (address == GetAccountAddress(strOldAccount))
             GetAccountAddress(strOldAccount, true);
     }
 
-    pwalletMain->SetAddressBookName(address, strAccount);
+    pwalletMain->SetAddressBookName(address.Get(), strAccount);
 
     return Value::null;
 }
@@ -704,7 +708,7 @@ Value getaccount(const Array& params, bool fHelp)
         throw JSONRPCError(-5, "Invalid Bitcoin address");
 
     string strAccount;
-    map<CBitcoinAddress, string>::iterator mi = pwalletMain->mapAddressBook.find(address);
+    map<CTxDestination, string>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
     if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
         strAccount = (*mi).second;
     return strAccount;
@@ -773,7 +777,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (pwalletMain->IsLocked())
         throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-    string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -796,8 +800,12 @@ Value signmessage(const Array& params, bool fHelp)
     if (!addr.IsValid())
         throw JSONRPCError(-3, "Invalid address");
 
+    CKeyID keyID;
+    if (!addr.GetKeyID(keyID))
+        throw JSONRPCError(-3, "Address does not refer to key");
+
     CKey key;
-    if (!pwalletMain->GetKey(addr, key))
+    if (!pwalletMain->GetKey(keyID, key))
         throw JSONRPCError(-4, "Private key not available");
 
     CDataStream ss(SER_GETHASH, 0);
@@ -826,6 +834,10 @@ Value verifymessage(const Array& params, bool fHelp)
     if (!addr.IsValid())
         throw JSONRPCError(-3, "Invalid address");
 
+    CKeyID keyID;
+    if (!addr.GetKeyID(keyID))
+        throw JSONRPCError(-3, "Address does not refer to key");
+
     bool fInvalid = false;
     vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
 
@@ -840,7 +852,7 @@ Value verifymessage(const Array& params, bool fHelp)
     if (!key.SetCompactSignature(Hash(ss.begin(), ss.end()), vchSig))
         return false;
 
-    return (CBitcoinAddress(key.GetPubKey()) == addr);
+    return (key.GetPubKey().GetID() == keyID);
 }
 
 
@@ -856,7 +868,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     CScript scriptPubKey;
     if (!address.IsValid())
         throw JSONRPCError(-5, "Invalid Bitcoin address");
-    scriptPubKey.SetBitcoinAddress(address);
+    scriptPubKey.SetDestination(address.Get());
     if (!IsMine(*pwalletMain,scriptPubKey))
         return (double)0.0;
 
@@ -883,17 +895,16 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 }
 
 
-void GetAccountAddresses(string strAccount, set<CBitcoinAddress>& setAddress)
+void GetAccountAddresses(string strAccount, set<CTxDestination>& setAddress)
 {
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& item, pwalletMain->mapAddressBook)
     {
-        const CBitcoinAddress& address = item.first;
+        const CTxDestination& address = item.first;
         const string& strName = item.second;
         if (strName == strAccount)
             setAddress.insert(address);
     }
 }
-
 
 Value getreceivedbyaccount(const Array& params, bool fHelp)
 {
@@ -909,7 +920,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
     // Get the set of pub keys assigned to account
     string strAccount = AccountFromValue(params[0]);
-    set<CBitcoinAddress> setAddress;
+    set<CTxDestination> setAddress;
     GetAccountAddresses(strAccount, setAddress);
 
     // Tally
@@ -922,8 +933,8 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
-            CBitcoinAddress address;
-            if (ExtractAddress(txout.scriptPubKey, address) && pwalletMain->HaveKey(address) && setAddress.count(address))
+            CTxDestination address;
+            if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
         }
@@ -994,15 +1005,15 @@ Value getbalance(const Array& params, bool fHelp)
             int64 allGeneratedImmature, allGeneratedMature, allFee;
             allGeneratedImmature = allGeneratedMature = allFee = 0;
             string strSentAccount;
-            list<pair<CBitcoinAddress, int64> > listReceived;
-            list<pair<CBitcoinAddress, int64> > listSent;
+            list<pair<CTxDestination, int64> > listReceived;
+            list<pair<CTxDestination, int64> > listSent;
             wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
-                BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64)& r, listReceived)
+                BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64)& r, listReceived)
                     nBalance += r.second;
             }
-            BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64)& r, listSent)
+            BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
             nBalance += allGeneratedMature;
@@ -1098,7 +1109,7 @@ Value sendfrom(const Array& params, bool fHelp)
         throw JSONRPCError(-6, "Account has insufficient funds");
 
     // Send
-    string strError = pwalletMain->SendMoneyToBitcoinAddress(address, nAmount, wtx);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -1140,8 +1151,8 @@ Value sendmany(const Array& params, bool fHelp)
         setAddress.insert(address);
 
         CScript scriptPubKey;
-        scriptPubKey.SetBitcoinAddress(address);
-        int64 nAmount = AmountFromValue(s.value_); 
+        scriptPubKey.SetDestination(address.Get());
+        int64 nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
@@ -1204,22 +1215,23 @@ Value addmultisigaddress(const Array& params, bool fHelp)
         CBitcoinAddress address(ks);
         if (address.IsValid())
         {
-            if (address.IsScript())
+            CKeyID keyID;
+            if (!address.GetKeyID(keyID))
                 throw runtime_error(
-                    strprintf("%s is a pay-to-script address",ks.c_str()));
-            std::vector<unsigned char> vchPubKey;
-            if (!pwalletMain->GetPubKey(address, vchPubKey))
+                    strprintf("%s does not refer to a key",ks.c_str()));
+            CPubKey vchPubKey;
+            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
                 throw runtime_error(
                     strprintf("no full public key for address %s",ks.c_str()));
-            if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
                 throw runtime_error(" Invalid public key: "+ks);
         }
 
         // Case 2: hex public key
         else if (IsHex(ks))
         {
-            vector<unsigned char> vchPubKey = ParseHex(ks);
-            if (vchPubKey.empty() || !pubkeys[i].SetPubKey(vchPubKey))
+            CPubKey vchPubKey(ParseHex(ks));
+            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
                 throw runtime_error(" Invalid public key: "+ks);
         }
         else
@@ -1231,16 +1243,11 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     // Construct using pay-to-script-hash:
     CScript inner;
     inner.SetMultisig(nRequired, pubkeys);
-
-    uint160 scriptHash = Hash160(inner);
-    CScript scriptPubKey;
-    scriptPubKey.SetPayToScriptHash(inner);
+    CScriptID innerID = inner.GetID();
     pwalletMain->AddCScript(inner);
-    CBitcoinAddress address;
-    address.SetScriptHash160(scriptHash);
 
-    pwalletMain->SetAddressBookName(address, strAccount);
-    return address.ToString();
+    pwalletMain->SetAddressBookName(innerID, strAccount);
+    return CBitcoinAddress(innerID).ToString();
 }
 
 
@@ -1282,8 +1289,8 @@ Value ListReceived(const Array& params, bool fByAccounts)
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
-            CBitcoinAddress address;
-            if (!ExtractAddress(txout.scriptPubKey, address) || !pwalletMain->HaveKey(address) || !address.IsValid())
+            CTxDestination address;
+            if (!ExtractDestination(txout.scriptPubKey, address) || !IsMine(*pwalletMain, address))
                 continue;
 
             tallyitem& item = mapTally[address];
@@ -1380,8 +1387,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 {
     int64 nGeneratedImmature, nGeneratedMature, nFee;
     string strSentAccount;
-    list<pair<CBitcoinAddress, int64> > listReceived;
-    list<pair<CBitcoinAddress, int64> > listSent;
+    list<pair<CTxDestination, int64> > listReceived;
+    list<pair<CTxDestination, int64> > listSent;
 
     wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
 
@@ -1410,11 +1417,11 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
-        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64)& s, listSent)
+        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& s, listSent)
         {
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
-            entry.push_back(Pair("address", s.first.ToString()));
+            entry.push_back(Pair("address", CBitcoinAddress(s.first).ToString()));
             entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
@@ -1427,7 +1434,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
-        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64)& r, listReceived)
+        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& r, listReceived)
         {
             string account;
             if (pwalletMain->mapAddressBook.count(r.first))
@@ -1436,7 +1443,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             {
                 Object entry;
                 entry.push_back(Pair("account", account));
-                entry.push_back(Pair("address", r.first.ToString()));
+                entry.push_back(Pair("address", CBitcoinAddress(r.first).ToString()));
                 entry.push_back(Pair("category", "receive"));
                 entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                 if (fLong)
@@ -1521,7 +1528,7 @@ Value listtransactions(const Array& params, bool fHelp)
         if ((int)ret.size() >= (nCount+nFrom)) break;
     }
     // ret is newest to oldest
-    
+
     if (nFrom > (int)ret.size())
         nFrom = ret.size();
     if ((nFrom + nCount) > (int)ret.size())
@@ -1551,8 +1558,8 @@ Value listaccounts(const Array& params, bool fHelp)
         nMinDepth = params[0].get_int();
 
     map<string, int64> mapAccountBalances;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& entry, pwalletMain->mapAddressBook) {
-        if (pwalletMain->HaveKey(entry.first)) // This address belongs to me
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
+        if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
             mapAccountBalances[entry.second] = 0;
     }
 
@@ -1561,16 +1568,16 @@ Value listaccounts(const Array& params, bool fHelp)
         const CWalletTx& wtx = (*it).second;
         int64 nGeneratedImmature, nGeneratedMature, nFee;
         string strSentAccount;
-        list<pair<CBitcoinAddress, int64> > listReceived;
-        list<pair<CBitcoinAddress, int64> > listSent;
+        list<pair<CTxDestination, int64> > listReceived;
+        list<pair<CTxDestination, int64> > listSent;
         wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
         mapAccountBalances[strSentAccount] -= nFee;
-        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64)& s, listSent)
+        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& s, listSent)
             mapAccountBalances[strSentAccount] -= s.second;
         if (wtx.GetDepthInMainChain() >= nMinDepth)
         {
             mapAccountBalances[""] += nGeneratedMature;
-            BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64)& r, listReceived)
+            BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& r, listReceived)
                 if (pwalletMain->mapAddressBook.count(r.first))
                     mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
                 else
@@ -1932,10 +1939,44 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    uiInterface.QueueShutdown();
+    StartShutdown();
     return "wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet";
 }
 
+class DescribeAddressVisitor : public boost::static_visitor<Object>
+{
+public:
+    Object operator()(const CNoDestination &dest) const { return Object(); }
+
+    Object operator()(const CKeyID &keyID) const {
+        Object obj;
+        CPubKey vchPubKey;
+        pwalletMain->GetPubKey(keyID, vchPubKey);
+        obj.push_back(Pair("isscript", false));
+        obj.push_back(Pair("pubkey", HexStr(vchPubKey.Raw())));
+        obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+        return obj;
+    }
+
+    Object operator()(const CScriptID &scriptID) const {
+        Object obj;
+        obj.push_back(Pair("isscript", true));
+        CScript subscript;
+        pwalletMain->GetCScript(scriptID, subscript);
+        std::vector<CTxDestination> addresses;
+        txnouttype whichType;
+        int nRequired;
+        ExtractDestinations(subscript, whichType, addresses, nRequired);
+        obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+        Array a;
+        BOOST_FOREACH(const CTxDestination& addr, addresses)
+            a.push_back(CBitcoinAddress(addr).ToString());
+        obj.push_back(Pair("addresses", a));
+        if (whichType == TX_MULTISIG)
+            obj.push_back(Pair("sigsrequired", nRequired));
+        return obj;
+    }
+};
 
 Value validateaddress(const Array& params, bool fHelp)
 {
@@ -1951,42 +1992,17 @@ Value validateaddress(const Array& params, bool fHelp)
     ret.push_back(Pair("isvalid", isValid));
     if (isValid)
     {
-        // Call Hash160ToAddress() so we always return current ADDRESSVERSION
-        // version of the address:
+        CTxDestination dest = address.Get();
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
-        if (pwalletMain->HaveKey(address))
-        {
-            ret.push_back(Pair("ismine", true));
-            std::vector<unsigned char> vchPubKey;
-            pwalletMain->GetPubKey(address, vchPubKey);
-            ret.push_back(Pair("pubkey", HexStr(vchPubKey)));
-            CKey key;
-            key.SetPubKey(vchPubKey);
-            ret.push_back(Pair("iscompressed", key.IsCompressed()));
+        bool fMine = IsMine(*pwalletMain, dest);
+        ret.push_back(Pair("ismine", fMine));
+        if (fMine) {
+            Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
+            ret.insert(ret.end(), detail.begin(), detail.end());
         }
-        else if (pwalletMain->HaveCScript(address.GetHash160()))
-        {
-            ret.push_back(Pair("isscript", true));
-            CScript subscript;
-            pwalletMain->GetCScript(address.GetHash160(), subscript);
-            ret.push_back(Pair("ismine", ::IsMine(*pwalletMain, subscript)));
-            std::vector<CBitcoinAddress> addresses;
-            txnouttype whichType;
-            int nRequired;
-            ExtractAddresses(subscript, whichType, addresses, nRequired);
-            ret.push_back(Pair("script", GetTxnOutputType(whichType)));
-            Array a;
-            BOOST_FOREACH(const CBitcoinAddress& addr, addresses)
-                a.push_back(addr.ToString());
-            ret.push_back(Pair("addresses", a));
-            if (whichType == TX_MULTISIG)
-                ret.push_back(Pair("sigsrequired", nRequired));
-        }
-        else
-            ret.push_back(Pair("ismine", false));
-        if (pwalletMain->mapAddressBook.count(address))
-            ret.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
+        if (pwalletMain->mapAddressBook.count(dest))
+            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest]));
     }
     return ret;
 }
@@ -2252,7 +2268,7 @@ Value sendrawtx(const Array& params, bool fHelp)
     CInv inv(MSG_TX, tx.GetHash());
     RelayInventory(inv);
 
-    return true;
+    return tx.GetHash().GetHex();
 }
 
 
@@ -2791,7 +2807,7 @@ void ThreadRPCServer2(void* parg)
                 GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
+        StartShutdown();
         return;
     }
 
@@ -2863,12 +2879,13 @@ void ThreadRPCServer2(void* parg)
     {
         uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
                              _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
+        StartShutdown();
         return;
     }
 
     vnThreadsRunning[THREAD_RPCLISTENER]--;
-    io_service.run();
+    while (!fShutdown)
+        io_service.run_one();
     vnThreadsRunning[THREAD_RPCLISTENER]++;
 
     // Terminate all outstanding accept-requests
@@ -3111,24 +3128,11 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listaccounts"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "walletpassphrase"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
-    if (strMethod == "sendmany"               && n > 1)
-    {
-        string s = params[1].get_str();
-        Value v;
-        if (!read_string(s, v) || v.type() != obj_type)
-            throw runtime_error("type mismatch");
-        params[1] = v.get_obj();
-    }
-    if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
-    if (strMethod == "addmultisigaddress"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
-    if (strMethod == "addmultisigaddress"      && n > 1)
-    {
-        string s = params[1].get_str();
-        Value v;
-        if (!read_string(s, v) || v.type() != array_type)
-            throw runtime_error("type mismatch "+s);
-        params[1] = v.get_array();
-    }
+    if (strMethod == "sendmany"               && n > 1) ConvertTo<Object>(params[1]);
+    if (strMethod == "sendmany"               && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "addmultisigaddress"     && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "addmultisigaddress"     && n > 1) ConvertTo<Array>(params[1]);
+
     return params;
 }
 

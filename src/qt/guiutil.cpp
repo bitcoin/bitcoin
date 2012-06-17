@@ -3,6 +3,8 @@
 #include "walletmodel.h"
 #include "bitcoinunits.h"
 #include "util.h"
+#include "init.h"
+#include "base58.h"
 
 #include <QString>
 #include <QDateTime>
@@ -35,6 +37,8 @@
 #define NOMINMAX
 #endif
 #include "shlwapi.h"
+#include "shlobj.h"
+#include "shellapi.h"
 #endif
 
 namespace GUIUtil {
@@ -75,6 +79,11 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     if(uri.scheme() != QString("bitcoin"))
+        return false;
+
+    // check if the address is valid
+    CBitcoinAddress addressFromUri(uri.path().toStdString());
+    if (!addressFromUri.IsValid())
         return false;
 
     SendCoinsRecipient rv;
@@ -219,30 +228,27 @@ Qt::ConnectionType blockingGUIThreadConnection()
 
 bool checkPoint(const QPoint &p, const QWidget *w)
 {
-  QWidget *atW = qApp->widgetAt(w->mapToGlobal(p));
-  if(!atW) return false;
-  return atW->topLevelWidget() == w;
+    QWidget *atW = qApp->widgetAt(w->mapToGlobal(p));
+    if (!atW) return false;
+    return atW->topLevelWidget() == w;
 }
 
 bool isObscured(QWidget *w)
 {
-
-  return !(checkPoint(QPoint(0, 0), w)
-           && checkPoint(QPoint(w->width() - 1, 0), w)
-           && checkPoint(QPoint(0, w->height() - 1), w)
-           && checkPoint(QPoint(w->width() - 1, w->height() - 1), w)
-           && checkPoint(QPoint(w->width()/2, w->height()/2), w));
+    return !(checkPoint(QPoint(0, 0), w)
+        && checkPoint(QPoint(w->width() - 1, 0), w)
+        && checkPoint(QPoint(0, w->height() - 1), w)
+        && checkPoint(QPoint(w->width() - 1, w->height() - 1), w)
+        && checkPoint(QPoint(w->width() / 2, w->height() / 2), w));
 }
 
 void openDebugLogfile()
 {
     boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
 
-#ifdef WIN32
+    /* Open debug.log with the associated application */
     if (boost::filesystem::exists(pathDebug))
-        /* Open debug.log with the associated application */
-        ShellExecuteA((HWND)0, (LPCSTR)"open", (LPCSTR)pathDebug.string().c_str(), NULL, NULL, SW_SHOWNORMAL);
-#endif
+        QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(pathDebug.string())));
 }
 
 ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *parent) :
@@ -412,6 +418,40 @@ bool GetStartOnSystemStartup() { return false; }
 bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
 
 #endif
+
+HelpMessageBox::HelpMessageBox(QWidget *parent) :
+    QMessageBox(parent)
+{
+    header = tr("Bitcoin-Qt") + " " + tr("version") + " " +
+        QString::fromStdString(FormatFullVersion()) + "\n\n" +
+        tr("Usage:") + "\n" +
+        "  bitcoin-qt [" + tr("command-line options") + "]                     " + "\n";
+
+    coreOptions = QString::fromStdString(HelpMessage());
+
+    uiOptions = tr("UI options") + ":\n" +
+        "  -lang=<lang>           " + tr("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
+        "  -min                   " + tr("Start minimized") + "\n" +
+        "  -splash                " + tr("Show splash screen on startup (default: 1)") + "\n";
+
+    setWindowTitle(tr("Bitcoin-Qt"));
+    setTextFormat(Qt::PlainText);
+    // setMinimumWidth is ignored for QMessageBox so put in nonbreaking spaces to make it wider.
+    setText(header + QString(QChar(0x2003)).repeated(50));
+    setDetailedText(coreOptions + "\n" + uiOptions);
+}
+
+void HelpMessageBox::exec()
+{
+#if defined(WIN32)
+    // On windows, show a message box, as there is no stderr in windowed applications
+    QMessageBox::exec();
+#else
+    // On other operating systems, the expected action is to print the message to the console.
+    QString strUsage = header + "\n" + coreOptions + "\n" + uiOptions;
+    fprintf(stderr, "%s", strUsage.toStdString().c_str());
+#endif
+}
 
 } // namespace GUIUtil
 

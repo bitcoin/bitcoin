@@ -5,6 +5,7 @@
 #include "init.h" // for pwalletMain
 #include "bitcoinrpc.h"
 #include "ui_interface.h"
+#include "base58.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -51,8 +52,7 @@ Value importprivkey(const Array& params, bool fHelp)
     bool fCompressed;
     CSecret secret = vchSecret.GetSecret(fCompressed);
     key.SetSecret(secret, fCompressed);
-    CBitcoinAddress vchAddress = CBitcoinAddress(key.GetPubKey());
-
+    CKeyID vchAddress = key.GetPubKey().GetID();
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -80,9 +80,12 @@ Value dumpprivkey(const Array& params, bool fHelp)
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
         throw JSONRPCError(-5, "Invalid Bitcoin address");
+    CKeyID keyID;
+    if (!address.GetKeyID(keyID))
+        throw JSONRPCError(-3, "Address does not refer to a key");
     CSecret vchSecret;
     bool fCompressed;
-    if (!pwalletMain->GetSecret(address, vchSecret, fCompressed))
+    if (!pwalletMain->GetSecret(keyID, vchSecret, fCompressed))
         throw JSONRPCError(-4,"Private key for address " + strAddress + " is not known");
     return CBitcoinSecret(vchSecret, fCompressed).ToString();
 }
