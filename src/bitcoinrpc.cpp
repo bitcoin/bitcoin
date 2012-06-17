@@ -2884,8 +2884,7 @@ void ThreadRPCServer2(void* parg)
     }
 
     vnThreadsRunning[THREAD_RPCLISTENER]--;
-    while (!fShutdown)
-        io_service.run_one();
+    io_service.run();
     vnThreadsRunning[THREAD_RPCLISTENER]++;
 
     // Terminate all outstanding accept-requests
