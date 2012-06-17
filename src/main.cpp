@@ -1741,34 +1741,42 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
 
 
-bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
+bool CBlock::CheckBlockHeader(bool fCheckPOW) const
+{
+    // These are checks that are independent of transaction count/content
+    // that can be verified with just the block header
+
+    // Check proof of work matches claimed amount
+    if (fCheckPOW && !CheckProofOfWork(GetHash(), nBits))
+        return DoS(50, error("CheckBlockHeader() : proof of work failed"));
+
+    // Check timestamp
+    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+        return error("CheckBlockHeader() : block timestamp too far in the future");
+
+    return true;
+}
+
+bool CBlock::CheckBlockBody(bool fCheckMerkleRoot) const
 {
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
 
     // Size limits
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return DoS(100, error("CheckBlock() : size limits failed"));
-
-    // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(GetHash(), nBits))
-        return DoS(50, error("CheckBlock() : proof of work failed"));
-
-    // Check timestamp
-    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
-        return error("CheckBlock() : block timestamp too far in the future");
+        return DoS(100, error("CheckBlockBody() : size limits failed"));
 
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
-        return DoS(100, error("CheckBlock() : first tx is not coinbase"));
+        return DoS(100, error("CheckBlockBody() : first tx is not coinbase"));
     for (unsigned int i = 1; i < vtx.size(); i++)
         if (vtx[i].IsCoinBase())
-            return DoS(100, error("CheckBlock() : more than one coinbase"));
+            return DoS(100, error("CheckBlockBody() : more than one coinbase"));
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
         if (!tx.CheckTransaction())
-            return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
+            return DoS(tx.nDoS, error("CheckBlockBody() : CheckTransaction failed"));
 
     // Check for duplicate txids. This is caught by ConnectInputs(),
     // but catching it earlier avoids a potential DoS attack:
@@ -1778,7 +1786,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
         uniqueTx.insert(tx.GetHash());
     }
     if (uniqueTx.size() != vtx.size())
-        return DoS(100, error("CheckBlock() : duplicate transaction"));
+        return DoS(100, error("CheckBlockBody() : duplicate transaction"));
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -1786,13 +1794,18 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
         nSigOps += tx.GetLegacySigOpCount();
     }
     if (nSigOps > MAX_BLOCK_SIGOPS)
-        return DoS(100, error("CheckBlock() : out-of-bounds SigOpCount"));
+        return DoS(100, error("CheckBlockBody() : out-of-bounds SigOpCount"));
 
     // Check merkle root
     if (fCheckMerkleRoot && hashMerkleRoot != BuildMerkleTree())
-        return DoS(100, error("CheckBlock() : hashMerkleRoot mismatch"));
+        return DoS(100, error("CheckBlockBody() : hashMerkleRoot mismatch"));
 
     return true;
+}
+
+bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
+{
+    return CheckBlockHeader(fCheckPOW) && CheckBlockBody(fCheckMerkleRoot);
 }
 
 bool CBlock::AcceptBlock()
@@ -1859,8 +1872,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
     // Preliminary checks
-    if (!pblock->CheckBlock())
-        return error("ProcessBlock() : CheckBlock FAILED");
+    if (!pblock->CheckBlockHeader(true))
+        return error("ProcessBlock() : CheckBlockHeader FAILED");
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
@@ -1885,6 +1898,35 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         }
     }
 
+    bool fEnablePreview;
+    // Only enable block preview broadcasts when the difficulty in making them is high enough that it's not worth DoSing with them
+    {
+        double dDiff = (double)0x0000ffff / (double)(pblock->nBits & 0x00ffffff);
+        for (int nShift = pblock->nBits >> 24; nShift < 29; ++nShift)
+            dDiff *= 0x100;
+        fEnablePreview = dDiff >= 0x20000;
+    }
+
+    if (pblock->hashPrevBlock == pindexBest->GetBlockHash())
+    {
+        // We can check the immediate next block's time and bits headers earlier
+        if (pblock->GetBlockTime() <= pindexBest->GetMedianTimePast())
+            return error("ProcessBlock() : block's timestamp is too early");
+
+        if (pblock->nBits != GetNextWorkRequired(pindexBest, pblock))
+            return pblock->DoS(100, error("ProcessBlock() : incorrect proof of work"));
+
+        if (fEnablePreview)
+            // Relay blocks after only checking their header, so we don't bias them against including transactions too much
+            RelayMessage(CInv(MSG_BLOCK_PREVIEW, hash), *pblock);
+    }
+
+    if (!pblock->CheckBlockBody(true))
+    {
+        if (fEnablePreview)
+            pblock->nDoS = 0;
+        return error("ProcessBlock() : CheckBlockBody FAILED");
+    }
 
     // If don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
@@ -1902,7 +1944,11 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     // Store to disk
     if (!pblock->AcceptBlock())
+    {
+        if (fEnablePreview)
+            pblock->nDoS = 0;
         return error("ProcessBlock() : AcceptBlock FAILED");
+    }
 
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
@@ -2355,6 +2401,7 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
         }
 
     case MSG_BLOCK:
+    case MSG_BLOCK_PREVIEW:
         return mapBlockIndex.count(inv.hash) ||
                mapOrphanBlocks.count(inv.hash);
     }
@@ -2590,7 +2637,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // find last block in inv vector
         unsigned int nLastBlock = (unsigned int)(-1);
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++) {
-            if (vInv[vInv.size() - 1 - nInv].type == MSG_BLOCK) {
+            int& type = vInv[vInv.size() - 1 - nInv].type;
+            if (type == MSG_BLOCK || type == MSG_BLOCK_PREVIEW) {
                 nLastBlock = vInv.size() - 1 - nInv;
                 break;
             }

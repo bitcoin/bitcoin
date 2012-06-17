@@ -72,6 +72,7 @@ enum
 {
     MSG_TX = 1,
     MSG_BLOCK,
+    MSG_BLOCK_PREVIEW,
 };
 
 class CRequestTracker

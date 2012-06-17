@@ -1021,6 +1021,8 @@ public:
     bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
     bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
+    bool CheckBlockHeader(bool fCheckPOW) const;
+    bool CheckBlockBody(bool fCheckMerkleRoot) const;
     bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true) const;
     bool AcceptBlock();
 
