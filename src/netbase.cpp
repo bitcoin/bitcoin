@@ -33,6 +33,27 @@ enum Network ParseNetwork(std::string net) {
     return NET_UNROUTABLE;
 }
 
+void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
+    size_t colon = in.find_last_of(':');
+    // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
+    bool fHaveColon = colon != in.npos;
+    bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
+    bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
+    if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
+        char *endp = NULL;
+        int n = strtol(in.c_str() + colon + 1, &endp, 10);
+        if (endp && *endp == 0 && n >= 0) {
+            in = in.substr(0, colon);
+            if (n > 0 && n < 0x10000)
+                portOut = n;
+        }
+    }
+    if (in.size()>0 && in[0] == '[' && in[in.size()-1] == ']')
+        hostOut = in.substr(1, in.size()-2);
+    else
+        hostOut = in;
+}
+
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
@@ -114,36 +135,11 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
     if (pszName[0] == 0)
         return false;
     int port = portDefault;
-    char psz[256];
-    char *pszHost = psz;
-    strlcpy(psz, pszName, sizeof(psz));
-    char* pszColon = strrchr(psz+1,':');
-    char *pszPortEnd = NULL;
-    int portParsed = pszColon ? strtoul(pszColon+1, &pszPortEnd, 10) : 0;
-    if (pszColon && pszPortEnd && pszPortEnd[0] == 0)
-    {
-        if (psz[0] == '[' && pszColon[-1] == ']')
-        {
-            pszHost = psz+1;
-            pszColon[-1] = 0;
-        }
-        else
-            pszColon[0] = 0;
-        if (port >= 0 && port <= USHRT_MAX)
-            port = portParsed;
-    }
-    else
-    {
-        if (psz[0] == '[' && psz[strlen(psz)-1] == ']')
-        {
-            pszHost = psz+1;
-            psz[strlen(psz)-1] = 0;
-        }
-
-    }
+    std::string hostname = "";
+    SplitHostPort(std::string(pszName), port, hostname);
 
     std::vector<CNetAddr> vIP;
-    bool fRet = LookupIntern(pszHost, vIP, nMaxSolutions, fAllowLookup);
+    bool fRet = LookupIntern(hostname.c_str(), vIP, nMaxSolutions, fAllowLookup);
     if (!fRet)
         return false;
     vAddr.resize(vIP.size());
@@ -496,22 +492,9 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
 
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout)
 {
-    string strDest(pszDest);
+    string strDest;
     int port = portDefault;
-
-    // split hostname and port
-    size_t colon = strDest.find_last_of(':');
-    if (colon != strDest.npos) {
-        char *endp = NULL;
-        int n = strtol(pszDest + colon + 1, &endp, 10);
-        if (endp && *endp == 0 && n >= 0) {
-            strDest = strDest.substr(0, colon);
-            if (n > 0 && n < 0x10000)
-                port = n;
-        }
-    }
-    if (strDest[0] == '[' && strDest[strDest.size()-1] == ']')
-        strDest = strDest.substr(1, strDest.size()-2);
+    SplitHostPort(string(pszDest), port, strDest);
 
     SOCKET hSocket = INVALID_SOCKET;
     CService addrResolved(CNetAddr(strDest, fNameLookup && !nameproxyInfo.second), port);
