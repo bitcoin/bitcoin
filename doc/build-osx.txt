@@ -1,10 +1,10 @@
 Copyright (c) 2009-2012 Bitcoin Developers
-Distributed under the MIT/X11 software license, see the accompanying file
-license.txt or http://www.opensource.org/licenses/mit-license.php.  This
-product includes software developed by the OpenSSL Project for use in the
-OpenSSL Toolkit (http://www.openssl.org/).  This product includes cryptographic
-software written by Eric Young (eay@cryptsoft.com) and UPnP software written by
-Thomas Bernard.
+Distributed under the MIT/X11 software license, see the accompanying
+file license.txt or http://www.opensource.org/licenses/mit-license.php.
+This product includes software developed by the OpenSSL Project for use in
+the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
+cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP
+software written by Thomas Bernard.
 
 
 Mac OS X bitcoind build instructions
@@ -12,7 +12,7 @@ Laszlo Hanyecz <solar@heliacal.net>
 Douglas Huff <dhuff@jrbobdobbs.org>
 
 
-See readme-qt.rst for instructions on building Bitcoin QT, the
+See readme-qt.rst for instructions on building Bitcoin-Qt, the
 graphical user interface.
 
 Tested on 10.5, 10.6 and 10.7 intel.  PPC is not supported because it's big-endian.
@@ -21,7 +21,7 @@ All of the commands should be executed in Terminal.app.. it's in
 /Applications/Utilities
 
 You need to install XCode with all the options checked so that the compiler and
-everything is available in /usr not just /Developer. XCode should be available on your OSX
+everything is available in /usr not just /Developer. XCode should be available on your OS X
 install DVD, but if not, you can get the current version from https://developer.apple.com/xcode/
 
 
