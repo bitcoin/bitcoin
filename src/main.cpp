@@ -1579,8 +1579,8 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : rejected by automatic checkpoint at %d", Checkpoints::nAutoCheckpoint));
 
     // ppcoin: check that the block satisfies synchronized checkpoint
-    if (!Checkpoints::CheckSync(nHeight, hash))
-        return DoS(100, error("AcceptBlock() : rejected by synchronized checkpoint"));
+    if (!Checkpoints::CheckSync(hash, pindexPrev))
+        return error("AcceptBlock() : rejected by synchronized checkpoint");
 
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))
