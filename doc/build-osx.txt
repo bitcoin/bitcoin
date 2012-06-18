@@ -12,7 +12,7 @@ Laszlo Hanyecz <solar@heliacal.net>
 Douglas Huff <dhuff@jrbobdobbs.org>
 
 
-See readme-qt.rst for instructions on building Bitcoin QT, the
+See readme-qt.rst for instructions on building Bitcoin-Qt, the
 graphical user interface.
 
 Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
