@@ -130,15 +130,9 @@ public:
 
         if (sn < (int64)0)
         {
-            // We negate in 2 steps to avoid signed subtraction overflow,
-            // i.e. -(-2^63), which is an undefined operation and causes SIGILL
-            // when compiled with -ftrapv.
-            //
-            // Note that uint64_t n = sn, when sn is an int64_t, is a
-            // well-defined operation and n will be equal to sn + 2^64 when sn
-            // is negative.
-            n = sn;
-            n = -n;
+            // Since the minimum signed integer cannot be represented as positive so long as its type is signed, and it's not well-defined what happens if you make it unsigned before negating it, we instead increment the negative integer by 1, convert it, then increment the (now positive) unsigned integer by 1 to compensate
+            n = -(sn + 1);
+            ++n;
             fNegative = true;
         } else {
             n = sn;
