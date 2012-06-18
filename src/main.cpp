@@ -959,7 +959,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     if (pindexNew->bnChainWork > bnBestInvalidWork)
     {
         bnBestInvalidWork = pindexNew->bnChainWork;
-        CTxDB().WriteBestInvalidWork(bnBestInvalidWork);
+        CMetaDB().WriteBestInvalidWork(bnBestInvalidWork);
         uiInterface.NotifyBlocksChanged();
     }
     printf("InvalidChainFound: invalid block=%s  height=%d  work=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, pindexNew->bnChainWork.ToString().c_str());
@@ -1282,7 +1282,8 @@ bool CTransaction::ClientConnectInputs()
 
 
 
-bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
+bool CBlock::DisconnectBlock(CBlockIdxDB& blkidxdb, CTxDB& txdb,
+                             CBlockIndex* pindex)
 {
     // Disconnect in reverse order
     for (int i = vtx.size()-1; i >= 0; i--)
@@ -1295,14 +1296,15 @@ bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     {
         CDiskBlockIndex blockindexPrev(pindex->pprev);
         blockindexPrev.hashNext = 0;
-        if (!txdb.WriteBlockIndex(blockindexPrev))
+        if (!blkidxdb.WriteBlockIndex(blockindexPrev))
             return error("DisconnectBlock() : WriteBlockIndex failed");
     }
 
     return true;
 }
 
-bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
+bool CBlock::ConnectBlock(CBlockIdxDB& blkidxdb, CTxDB& txdb,
+                          CBlockIndex* pindex)
 {
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock())
@@ -1393,7 +1395,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     {
         CDiskBlockIndex blockindexPrev(pindex->pprev);
         blockindexPrev.hashNext = pindex->GetBlockHash();
-        if (!txdb.WriteBlockIndex(blockindexPrev))
+        if (!blkidxdb.WriteBlockIndex(blockindexPrev))
             return error("ConnectBlock() : WriteBlockIndex failed");
     }
 
@@ -1404,7 +1406,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     return true;
 }
 
-bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
+bool static Reorganize(CBlockIdxDB& blkidxdb, CTxDB& txdb, CMetaDB& metadb,
+                       DbTxn *txn, CBlockIndex* pindexNew)
 {
     printf("REORGANIZE\n");
 
@@ -1443,7 +1446,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("Reorganize() : ReadFromDisk for disconnect failed");
-        if (!block.DisconnectBlock(txdb, pindex))
+        if (!block.DisconnectBlock(blkidxdb, txdb, pindex))
             return error("Reorganize() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
 
         // Queue memory transactions to resurrect
@@ -1460,7 +1463,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("Reorganize() : ReadFromDisk for connect failed");
-        if (!block.ConnectBlock(txdb, pindex))
+        if (!block.ConnectBlock(blkidxdb, txdb, pindex))
         {
             // Invalid block
             return error("Reorganize() : ConnectBlock %s failed", pindex->GetBlockHash().ToString().substr(0,20).c_str());
@@ -1470,11 +1473,17 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
             vDelete.push_back(tx);
     }
-    if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
+    if (!metadb.WriteHashBestChain(pindexNew->GetBlockHash()))
         return error("Reorganize() : WriteHashBestChain failed");
 
     // Make sure it's successfully written to disk before changing memory structure
-    if (!txdb.TxnCommit())
+    if (!blkidxdb.TxnClearActive())
+        printf("CBlockIdxDB::TxnClearActive failed\n");
+    if (!txdb.TxnClearActive())
+        printf("CTxDB::TxnClearActive failed\n");
+    if (!metadb.TxnClearActive())
+        printf("CMetaDB::TxnClearActive failed\n");
+    if (txn->commit(0) != 0)
         return error("Reorganize() : TxnCommit failed");
 
     // Disconnect shorter branch
@@ -1502,18 +1511,34 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
 
 // Called from inside SetBestChain: attaches a block to the new best chain being built
-bool CBlock::SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew)
+bool CBlock::SetBestChainInner(CBlockIdxDB& blkidxdb, CTxDB& txdb,
+                               CMetaDB& metadb, DbTxn *txn,
+                               CBlockIndex *pindexNew)
 {
     uint256 hash = GetHash();
 
     // Adding to current best branch
-    if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
+    if (!ConnectBlock(blkidxdb, txdb, pindexNew) || !metadb.WriteHashBestChain(hash))
     {
-        txdb.TxnAbort();
+        if (!blkidxdb.TxnClearActive())
+            printf("CBlockIdxDB::TxnClearActive failed\n");
+        if (!txdb.TxnClearActive())
+            printf("CTxDB::TxnClearActive failed\n");
+        if (!metadb.TxnClearActive())
+            printf("CMetaDB::TxnClearActive failed\n");
+        txn->abort();
+
         InvalidChainFound(pindexNew);
         return false;
     }
-    if (!txdb.TxnCommit())
+
+    if (!blkidxdb.TxnClearActive())
+        printf("CBlockIdxDB::TxnClearActive failed\n");
+    if (!txdb.TxnClearActive())
+        printf("CTxDB::TxnClearActive failed\n");
+    if (!metadb.TxnClearActive())
+        printf("CMetaDB::TxnClearActive failed\n");
+    if (txn->commit(0) != 0)
         return error("SetBestChain() : TxnCommit failed");
 
     // Add to current best branch
@@ -1526,23 +1551,38 @@ bool CBlock::SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew)
     return true;
 }
 
-bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
+bool CBlock::SetBestChain(CBlockIdxDB& blkidxdb, CTxDB& txdb, CMetaDB& metadb, CBlockIndex* pindexNew)
 {
     uint256 hash = GetHash();
 
-    if (!txdb.TxnBegin())
+    DbTxn *txn = bitdb.TxnBegin();
+    if (!txn)
         return error("SetBestChain() : TxnBegin failed");
+    if (!blkidxdb.TxnSetActive(txn))
+        printf("CBlockIdxDB::TxnSetActive failed\n");
+    if (!txdb.TxnSetActive(txn))
+        printf("CTxDB::TxnSetActive failed\n");
+    if (!metadb.TxnSetActive(txn))
+        printf("CMetaDB::TxnSetActive failed\n");
 
     if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
     {
-        txdb.WriteHashBestChain(hash);
-        if (!txdb.TxnCommit())
+        metadb.WriteHashBestChain(hash);
+
+        if (!blkidxdb.TxnClearActive())
+            printf("CBlockIdxDB::TxnClearActive failed\n");
+        if (!txdb.TxnClearActive())
+            printf("CTxDB::TxnClearActive failed\n");
+        if (!metadb.TxnClearActive())
+            printf("CMetaDB::TxnClearActive failed\n");
+        if (txn->commit(0) != 0)
             return error("SetBestChain() : TxnCommit failed");
+
         pindexGenesisBlock = pindexNew;
     }
     else if (hashPrevBlock == hashBestChain)
     {
-        if (!SetBestChainInner(txdb, pindexNew))
+        if (!SetBestChainInner(blkidxdb, txdb, metadb, txn, pindexNew))
             return error("SetBestChain() : SetBestChainInner failed");
     }
     else
@@ -1565,9 +1605,15 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
             printf("Postponing %i reconnects\n", vpindexSecondary.size());
 
         // Switch to new best branch
-        if (!Reorganize(txdb, pindexIntermediate))
+        if (!Reorganize(blkidxdb, txdb, metadb, txn, pindexIntermediate))
         {
-            txdb.TxnAbort();
+            if (!blkidxdb.TxnClearActive())
+                printf("CBlockIdxDB::TxnClearActive failed\n");
+            if (!txdb.TxnClearActive())
+                printf("CTxDB::TxnClearActive failed\n");
+            if (!metadb.TxnClearActive())
+                printf("CMetaDB::TxnClearActive failed\n");
+            txn->abort();
             InvalidChainFound(pindexNew);
             return error("SetBestChain() : Reorganize failed");
         }
@@ -1581,12 +1627,14 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
                 printf("SetBestChain() : ReadFromDisk failed\n");
                 break;
             }
-            if (!txdb.TxnBegin()) {
+
+            txn = bitdb.TxnBegin();
+            if (!txn) {
                 printf("SetBestChain() : TxnBegin 2 failed\n");
                 break;
             }
             // errors now are not fatal, we still did a reorganisation to a new chain in a valid way
-            if (!block.SetBestChainInner(txdb, pindex))
+            if (!block.SetBestChainInner(blkidxdb, txdb, metadb, txn, pindex))
                 break;
         }
     }
@@ -1641,19 +1689,23 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     }
     pindexNew->bnChainWork = (pindexNew->pprev ? pindexNew->pprev->bnChainWork : 0) + pindexNew->GetBlockWork();
 
+    CBlockIdxDB blkidxdb;
+    if (!blkidxdb.TxnBegin())
+        return false;
+    blkidxdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
+    if (!blkidxdb.TxnCommit())
+        return false;
+
     CTxDB txdb;
-    if (!txdb.TxnBegin())
-        return false;
-    txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
-    if (!txdb.TxnCommit())
-        return false;
+    CMetaDB metadb;
 
     // New best
     if (pindexNew->bnChainWork > bnBestChainWork)
-        if (!SetBestChain(txdb, pindexNew))
+        if (!SetBestChain(blkidxdb, txdb, metadb, pindexNew))
             return false;
 
     txdb.Close();
+    blkidxdb.Close();
 
     if (pindexNew == pindexBest)
     {
@@ -1885,9 +1937,13 @@ FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszM
 {
     if ((nFile < 1) || (nFile == (unsigned int) -1))
         return NULL;
-    FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
+
+    filesystem::path pathBlockFn =
+        GetDataDir() / "blockchain" / strprintf("blk%04d.dat", nFile);
+    FILE* file = fopen(pathBlockFn.string().c_str(), pszMode);
     if (!file)
         return NULL;
+
     if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))
     {
         if (fseek(file, nBlockPos, SEEK_SET) != 0)
@@ -1934,11 +1990,21 @@ bool LoadBlockIndex(bool fAllowNew)
     }
 
     //
-    // Load block index
+    // Load block hashes index
+    //
+    CBlockIdxDB blkidxdb("cr");
+    if (!blkidxdb.LoadBlockIndex())
+        return false;
+    blkidxdb.Close();
+
+    //
+    // Load TX index
     //
     CTxDB txdb("cr");
-    if (!txdb.LoadBlockIndex())
+    CMetaDB metadb("cr");
+    if (!metadb.LoadBlockIndex())
         return false;
+    metadb.Close();
     txdb.Close();
 
     //

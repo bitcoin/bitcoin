@@ -837,6 +837,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
         path /= "testnet3";
 
     fs::create_directory(path);
+    fs::create_directory(path / "blockchain");
 
     cachedPath[fNetSpecific]=true;
     return path;
