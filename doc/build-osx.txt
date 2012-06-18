@@ -15,14 +15,14 @@ Douglas Huff <dhuff@jrbobdobbs.org>
 See readme-qt.rst for instructions on building Bitcoin QT, the
 graphical user interface.
 
-Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
+Tested on 10.5, 10.6 and 10.7 intel.  PPC is not supported because it's big-endian.
 
 All of the commands should be executed in Terminal.app.. it's in
 /Applications/Utilities
 
 You need to install XCode with all the options checked so that the compiler and
-everything is available in /usr not just /Developer I think it comes on the DVD
-but you can get the current version from http://developer.apple.com
+everything is available in /usr not just /Developer. XCode should be available on your OSX
+install DVD, but if not, you can get the current version from https://developer.apple.com/xcode/
 
 
 1.  Clone the github tree to get the source code:
