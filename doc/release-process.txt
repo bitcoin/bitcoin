@@ -31,7 +31,23 @@
    wget 'http://fukuchi.org/works/qrencode/qrencode-3.2.0.tar.bz2'
    wget 'http://downloads.sourceforge.net/project/boost/boost/1.47.0/boost_1_47_0.tar.bz2'
    wget 'http://download.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.4.tar.gz'
+   # Download Xcode 3.1.2 Developer Tools from https://developer.apple.com/downloads (login required)
+   # SHA256SUM: 8009fa313c7ef612c6d53ce093db402b70b63196540812d5c27990690a46fb73  xcode312_2621_developerdvd.dmg
+   wget 'http://www.opensource.apple.com/darwinsource/tarballs/other/gcc-5490.tar.gz'
    cd ..
+   git clone git://gitorious.org/cross-osx/cross-osx.git
+   ./bin/gbuild cross-osx/gitian/cross.yml
+   cp build/out/bin-osx-cross-4.0.1-r2.tbz2 inputs/
+   ./bin/gbuild cross-osx/gitian/bdb48.yml
+   cp build/out/bin-osx-bdb-4.8.30-r3.tbz2 inputs/
+   ./bin/gbuild cross-osx/gitian/boost.yml
+   cp build/out/bin-osx-boost-1.47.0.tbz2 inputs/
+   ./bin/gbuild cross-osx/gitian/miniupnpc.yml
+   cp build/out/bin-osx-miniupnpc-1.6-r1.tbz2 inputs/
+   ./bin/gbuild cross-osx/gitian/openssl.yml
+   cp build/out/bin-osx-openssl-1.0.1b-r1.tbz2 inputs/
+   ./bin/gbuild cross-osx/gitian/zlib.yml
+   cp build/out/bin-osx-zlib-1.2.6-r2.tbz2 inputs/
    ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
    cp build/out/boost-win32-1.47.0-gitian.zip inputs/
    ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
@@ -39,13 +55,16 @@
    ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
    cp build/out/bitcoin-deps-0.0.3.zip inputs/
 
-  * Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
+  * Build bitcoind and bitcoin-qt for Linux32, Linux64, Mac OS X, and Win32:
    ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian.yml
    ./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian.yml
    pushd build/out
    zip -r bitcoin-${VERSION}-linux-gitian.zip *
    mv bitcoin-${VERSION}-linux-gitian.zip ../../
    popd
+   ./bin/gbuild --commit bitcoin=v${VERSION} cross-osx/gitian/bitcoind.yml
+   ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ cross-osx/gitian/bitcoind.yml
+   mv build/out/bin-osx-bitcoind-v${VERSION}.bz2 .
    ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
    ./bin/gsign --signer $SIGNER --release ${VERSION}-win32 --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
    pushd build/out
@@ -55,8 +74,9 @@
 
   Build output expected:
   1. linux 32-bit and 64-bit binaries + source (bitcoin-${VERSION}-linux-gitian.zip)
-  2. windows 32-bit binary, installer + source (bitcoin-${VERSION}-win32-gitian.zip)
-  3. Gitian signatures (in gitian.sigs/${VERSION}[-win32]/(your gitian key)/
+  2. osx 32-bit bitcoind binary (bin-osx-bitcoind-v${VERSION}.bz2)
+  3. windows 32-bit binary, installer + source (bitcoin-${VERSION}-win32-gitian.zip)
+  4. Gitian signatures (in gitian.sigs/${VERSION}[-win32]/(your gitian key)/
 
 * repackage gitian builds for release as stand-alone zip/tar/installer exe
 
@@ -71,7 +91,8 @@
    zip -r bitcoin-${VERSION}-win32.zip bitcoin-${VERSION}-win32
    rm -rf bitcoin-${VERSION}-win32
 
-* perform Mac build
+* perform Mac Bitcoin-Qt build
+  This currently must be done on a real Mac, and is not deterministic.
   See this blog post for how Gavin set up his build environment to build the OSX
   release; note that a patched version of macdeployqt is not needed anymore, as
   the required functionality and fixes are implemented directly in macdeployqtplus:
@@ -104,6 +125,7 @@
 * Commit your signature to gitian.sigs:
   pushd gitian.sigs
   git add ${VERSION}/${SIGNER}
+  git add ${VERSION}-osx/${SIGNER}
   git add ${VERSION}-win32/${SIGNER}
   git commit -a
   git push  # Assuming you can push to the gitian.sigs tree
