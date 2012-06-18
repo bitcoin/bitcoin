@@ -21,6 +21,7 @@ LIBPATHS= \
 
 USE_UPNP:=1
 USE_IPV6:=1
+USE_LEVELDB:=1
 
 LIBS= -dead_strip
 
@@ -115,6 +116,21 @@ endif
 
 all: bitcoind
 
+#
+# LevelDB support
+#
+ifdef USE_LEVELDB
+LIBS += $(CURDIR)/leveldb-1.5.0/libleveldb.a $(CURDIR)/leveldb-1.5.0/libmemenv.a
+DEFS += $(addprefix -I,$(CURDIR)/leveldb-1.5.0/include) -DUSE_LEVELDB
+DEFS += $(addprefix -I,$(CURDIR)/leveldb-1.5.0/helpers)
+OBJS += obj/txdb-leveldb.o
+leveldb-1.5.0/libleveldb.a:
+	@echo "Building LevelDB ..."; cd leveldb-1.5.0; make; cd ..
+obj/txdb-leveldb.o: leveldb-1.5.0/libleveldb.a
+else
+OBJS += obj/txdb-bdb.o
+endif
+
 # auto-generated dependencies:
 -include obj/*.P
 -include obj-test/*.P
@@ -153,5 +169,6 @@ clean:
 	-rm -f obj/*.P
 	-rm -f obj-test/*.P
 	-rm -f src/build.h
+	-cd leveldb-1.5.0; make clean; cd ..;
 
 FORCE:

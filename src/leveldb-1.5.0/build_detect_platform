@@ -57,6 +57,13 @@ PLATFORM_SHARED_VERSIONED=true
 
 # On GCC, we pick libc's memcmp over GCC's memcmp via -fno-builtin-memcmp
 case "$TARGET_OS" in
+    BitcoinCrossCompileMingW)
+	PLATFORM=OS_WIN32
+	PLATFORM_SHARED_EXT=lib
+	CROSS_COMPILE=true
+	CXX=i586-mingw32msvc-g++
+	CC=i586-mingw32msvc-gcc
+	;;
     Darwin)
         PLATFORM=OS_MACOSX
         COMMON_FLAGS="-fno-builtin-memcmp -DOS_MACOSX"

@@ -2,6 +2,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "db.h"
+#include "txdb.h"
 #include "main.h"
 #include "wallet.h"
 
@@ -15,8 +16,9 @@ struct TestingSetup {
     TestingSetup() {
         fPrintToDebugger = true; // don't want to write to debug.log file
         noui_connect();
-        bitdb.MakeMock();
-        LoadBlockIndex(true);
+        bitdb.MakeMock();  // Sets up BDB for wallets and addresses.
+        MakeMockTXDB();    // Sets up the chosen txdb layer (bdb = noop, or leveldb)
+        LoadBlockIndex();
         bool fFirstRun;
         pwalletMain = new CWallet("wallet.dat");
         pwalletMain->LoadWallet(fFirstRun);

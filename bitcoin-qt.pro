@@ -86,6 +86,25 @@ contains(USE_IPV6, -) {
 contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     DEFINES += BITCOIN_NEED_QT_PLUGINS
     QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs qtaccessiblewidgets
+} 
+
+contains(USE_LEVELDB, -) {
+    message(Building without LevelDB)
+    SOURCES += src/txdb-bdb.cpp
+} else {
+    message(Building with LevelDB)
+    DEFINES += USE_LEVELDB
+    INCLUDEPATH += src/leveldb-1.5.0/include src/leveldb-1.5.0/helpers
+    LIBS += $$PWD/src/leveldb-1.5.0/libleveldb.a $$PWD/src/leveldb-1.5.0/libmemenv.a
+    SOURCES += src/txdb-leveldb.cpp
+    genleveldb.commands = cd $$PWD/src/leveldb-1.5.0; make
+    genleveldb.target = $$PWD/src/leveldb-1.5.0/libleveldb.a
+    genleveldb.depends = FORCE
+    PRE_TARGETDEPS += $$PWD/src/leveldb-1.5.0/libleveldb.a
+    QMAKE_EXTRA_TARGETS += genleveldb
+    cleanleveldb.commands = cd $$PWD/src/leveldb-1.5.0 ; make clean
+    cleanleveldb.depends = FORCE
+    QMAKE_CLEAN += cleanleveldb
 }
 
 !windows {
@@ -133,6 +152,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/net.h \
     src/key.h \
     src/db.h \
+    src/txdb.h \
     src/walletdb.h \
     src/script.h \
     src/init.h \
