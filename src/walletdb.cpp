@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
-// file license.txt or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletdb.h"
 #include "wallet.h"
@@ -189,7 +189,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
 
                 //// debug print
                 //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
-                //printf(" %12I64d  %s  %s  %s\n",
+                //printf(" %12"PRI64d"  %s  %s  %s\n",
                 //    wtx.vout[0].nValue,
                 //    DateTimeStrFormat("%x %H:%M:%S", wtx.GetBlockTime()).c_str(),
                 //    wtx.hashBlock.ToString().substr(0,20).c_str(),

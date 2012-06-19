@@ -1,7 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
-// file license.txt or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
 #include "wallet.h"
@@ -225,7 +225,7 @@ Value stop(const Array& params, bool fHelp)
             "stop\n"
             "Stop bitcoin server.");
     // Shutdown will take long enough that the response should get back
-    QueueShutdown();
+    StartShutdown();
     return "bitcoin server stopping";
 }
 
@@ -839,7 +839,8 @@ Value movecmd(const Array& params, bool fHelp)
         strComment = params[4].get_str();
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.TxnBegin();
+    if (!walletdb.TxnBegin())
+        throw JSONRPCError(-20, "database error");
 
     int64 nNow = GetAdjustedTime();
 
@@ -861,7 +862,8 @@ Value movecmd(const Array& params, bool fHelp)
     credit.strComment = strComment;
     walletdb.WriteAccountingEntry(credit);
 
-    walletdb.TxnCommit();
+    if (!walletdb.TxnCommit())
+        throw JSONRPCError(-20, "database error");
 
     return true;
 }
@@ -999,10 +1001,12 @@ Value addmultisigaddress(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[2]);
 
     // Gather public keys
-    if ((nRequired < 1) || ((int)keys.size() < nRequired))
+    if (nRequired < 1)
+        throw runtime_error("a multisignature address must require at least one key to redeem");
+    if ((int)keys.size() < nRequired)
         throw runtime_error(
-            strprintf("wrong number of keys"
-                      "(got %d, need at least %d)", keys.size(), nRequired));
+            strprintf("not enough keys supplied "
+                      "(got %d keys, but need at least %d to redeem)", keys.size(), nRequired));
     std::vector<CKey> pubkeys;
     pubkeys.resize(keys.size());
     for (unsigned int i = 0; i < keys.size(); i++)
@@ -1703,7 +1707,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    QueueShutdown();
+    StartShutdown();
     return "wallet encrypted; bitcoin server stopping, restart to run with encrypted wallet";
 }
 
@@ -2376,7 +2380,7 @@ void ThreadRPCServer2(void* parg)
                 GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
             _("Error"), wxOK | wxMODAL);
-        QueueShutdown();
+        StartShutdown();
         return;
     }
 
@@ -2397,7 +2401,7 @@ void ThreadRPCServer2(void* parg)
     {
         ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
                              _("Error"), wxOK | wxMODAL);
-        QueueShutdown();
+        StartShutdown();
         return;
     }
 

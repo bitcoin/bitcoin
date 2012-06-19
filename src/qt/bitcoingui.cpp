@@ -1,8 +1,8 @@
 /*
  * Qt4 bitcoin GUI.
  *
- * W.J. van der Laan 20011-2012
- * The Bitcoin Developers 20011-2012
+ * W.J. van der Laan 2011-2012
+ * The Bitcoin Developers 2011-2012
  */
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
@@ -163,8 +163,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
 BitcoinGUI::~BitcoinGUI()
 {
-    if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
-        trayIcon->hide();
 #ifdef Q_WS_MAC
     delete appMenuBar;
 #endif
@@ -385,7 +383,6 @@ void BitcoinGUI::createTrayIcon()
 #else
     // Note: On Mac, the dock icon is used to provide the tray's functionality.
     MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-    connect(dockIconHandler, SIGNAL(dockIconClicked()), toggleHideAction, SLOT(trigger()));
     trayIconMenu = dockIconHandler->dockMenu();
 #endif
 

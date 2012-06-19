@@ -21,9 +21,12 @@ BitcoinAddressValidator::BitcoinAddressValidator(QObject *parent) :
 QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) const
 {
     // Correction
-    for(int idx=0; idx<input.size(); ++idx)
+    for(int idx=0; idx<input.size();)
     {
-        switch(input.at(idx).unicode())
+        bool removeChar = false;
+        QChar ch = input.at(idx);
+        // Transform characters that are visually close
+        switch(ch.unicode())
         {
         case 'l':
         case 'I':
@@ -33,9 +36,22 @@ QValidator::State BitcoinAddressValidator::validate(QString &input, int &pos) co
         case 'O':
             input[idx] = QChar('o');
             break;
+        // Qt categorizes these as "Other_Format" not "Separator_Space"
+        case 0x200B: // ZERO WIDTH SPACE
+        case 0xFEFF: // ZERO WIDTH NO-BREAK SPACE
+            removeChar = true;
+            break;
         default:
             break;
         }
+        // Remove whitespace
+        if(ch.isSpace())
+            removeChar = true;
+        // To next character
+        if(removeChar)
+            input.remove(idx, 1);
+        else
+            ++idx;
     }
 
     // Validation

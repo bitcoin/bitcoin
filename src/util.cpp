@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
-// file license.txt or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "util.h"
 #include "strlcpy.h"
@@ -26,6 +26,7 @@ namespace boost {
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/foreach.hpp>
+#include <boost/thread.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 
@@ -215,6 +216,8 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         if (fileout)
         {
             static bool fStartedNewLine = true;
+            static boost::mutex mutexDebugLog;
+            boost::mutex::scoped_lock scoped_lock(mutexDebugLog);
 
             // Debug print useful for profiling
             if (fLogTimestamps && fStartedNewLine)
@@ -849,7 +852,7 @@ boost::filesystem::path GetDefaultDataDir()
 #ifdef MAC_OSX
     // Mac
     pathRet /= "Library/Application Support";
-    filesystem::create_directory(pathRet);
+    fs::create_directory(pathRet);
     return pathRet / "Bitcoin";
 #else
     // Unix
