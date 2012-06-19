@@ -958,7 +958,7 @@ public:
         return true;
     }
 
-    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
+    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true, uint256 hashTarget=0)
     {
         SetNull();
 
@@ -977,8 +977,13 @@ public:
             return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
         }
 
+        uint256 hash = GetHash();
+
+        if (hashTarget != 0 && hash != hashTarget)
+            return error("CBlock::ReadFromDisk() : GetHash() doesn't match hashTarget");
+
         // Check the header
-        if (!CheckProofOfWork(GetHash(), nBits))
+        if (!CheckProofOfWork(hash, nBits))
             return error("CBlock::ReadFromDisk() : errors in block header");
 
         return true;
