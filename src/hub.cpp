@@ -9,7 +9,7 @@ private:
     CBlock block;
 public:
     CHubCallbackCommitBlock(const CBlock &blockIn) : block(blockIn) {}
-    void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock(block); }
+    void Signal(CHubSignalTable& sigtable) { LOCK(sigtable.cs_sigCommitBlock); printf("CHubCallbackCommitBlock: New Block Committed: %s\n", block.GetHash().ToString().substr(0,20).c_str()); sigtable.sigCommitBlock(block); }
 };
 
 class CHubCallbackCommitAlert : public CHubCallback
