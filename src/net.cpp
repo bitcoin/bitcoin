@@ -10,6 +10,8 @@
 #include "strlcpy.h"
 #include "addrman.h"
 #include "ui_interface.h"
+#include "hub.h"
+#include "checkpoints.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -66,6 +68,7 @@ map<CInv, CDataStream> mapRelay;
 deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 map<CInv, int64> mapAlreadyAskedFor;
+CCriticalSection cs_mapAlreadyAskedFor;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -84,6 +87,73 @@ void AddOneShot(string strDest)
 unsigned short GetListenPort()
 {
     return (unsigned short)(GetArg("-port", GetDefaultPort()));
+}
+
+
+
+void HandleCommitBlock(const CBlock& block)
+{
+    uint256 hash = block.GetHash();
+
+    CInv inv(MSG_BLOCK, hash);
+    {
+        LOCK(cs_mapAlreadyAskedFor);
+        mapAlreadyAskedFor.erase(inv);
+    }
+
+    // Relay inventory, but don't relay old inventory during initial block download
+    int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
+    if (hashBestChain == hash)
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
+                pnode->PushInventory(CInv(MSG_BLOCK, hash));
+    }
+}
+
+void HandleCommitTransactionToMemoryPool(const CTransaction& tx)
+{
+    assert(!fClient);
+    CTxDB txdb;
+
+    uint256 hash = tx.GetHash();
+    CInv inv(MSG_TX, hash);
+
+    if (!tx.IsCoinBase() && !txdb.ContainsTx(hash))
+        RelayMessage(inv, tx);
+
+    LOCK(cs_mapAlreadyAskedFor);
+    mapAlreadyAskedFor.erase(inv);
+}
+
+
+
+
+void AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
+{
+    CInv inv(MSG_BLOCK, hashOriginator);
+    CNode* pnodeToAsk = NULL;
+    {
+        LOCK(cs_vNodes);
+        if (hashOriginator != 0)
+        {
+            BOOST_FOREACH(CNode* pnode, vNodes)
+            {
+                LOCK(pnode->cs_inventory);
+                if (pnode->setInventoryKnown.count(inv))
+                {
+                    pnodeToAsk = pnode;
+                    break;
+                }
+            }
+        }
+        if (pnodeToAsk == NULL)
+            pnodeToAsk = vNodes.front();
+        pnodeToAsk->AddRef();
+    }
+    pnodeToAsk->PushGetBlocks(pindexBest, hashEnd);
+    pnodeToAsk->Release();
 }
 
 void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
@@ -1833,6 +1903,9 @@ void static Discover()
 
 void StartNode(void* parg)
 {
+    phub->RegisterAskForBlocks(&AskForBlocks);
+    phub->RegisterCommitBlock(&HandleCommitBlock);
+
     if (semOutbound == NULL) {
         // initialize semaphore
         int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, (int)GetArg("-maxconnections", 125));

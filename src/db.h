@@ -306,18 +306,22 @@ public:
     bool UpdateTxIndex(uint256 hash, const CTxIndex& txindex);
     bool AddTxIndex(const CTransaction& tx, const CDiskTxPos& pos, int nHeight);
     bool EraseTxIndex(const CTransaction& tx);
+    bool EraseTxIndex(uint256 hash);
     bool ContainsTx(uint256 hash);
     bool ReadOwnerTxes(uint160 hash160, int nHeight, std::vector<CTransaction>& vtx);
     bool ReadDiskTx(uint256 hash, CTransaction& tx, CTxIndex& txindex);
     bool ReadDiskTx(uint256 hash, CTransaction& tx);
     bool ReadDiskTx(COutPoint outpoint, CTransaction& tx, CTxIndex& txindex);
     bool ReadDiskTx(COutPoint outpoint, CTransaction& tx);
-    bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
+    bool WriteBlockIndex(const uint256& blockhash, const CDiskBlockIndex& blockindex);
     bool ReadHashBestChain(uint256& hashBestChain);
     bool WriteHashBestChain(uint256 hashBestChain);
+    bool ReadHashBestCheckpoint(uint256& hashBestCheckpoint);
+    bool WriteHashBestCheckpoint(uint256 hashBestCheckpoint);
     bool ReadBestInvalidWork(CBigNum& bnBestInvalidWork);
     bool WriteBestInvalidWork(CBigNum bnBestInvalidWork);
     bool LoadBlockIndex();
+    bool PruneBlockIndex(uint256 hashPruneFrom, uint256 hashPruneTo);
 private:
     bool LoadBlockIndexGuts();
 };

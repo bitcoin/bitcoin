@@ -14,6 +14,8 @@ namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;
 
+    static const CBlockIndex* lastCheckpoint = NULL;
+
     //
     // What makes a good checkpoint block?
     // + Is surrounded by blocks with reasonable timestamps
@@ -33,6 +35,9 @@ namespace Checkpoints
         (134444, uint256("0x00000000000005b12ffd4cd315cd34ffd4a594f430ac814c91184a0d42d2b0fe"))
         (140700, uint256("0x000000000000033b512028abb90e1626d8b346fd0ed598ac0a3c371138dce2bd"))
         (168000, uint256("0x000000000000099e61ea72015e79632f216fe6cb33d7899acb35b75c8303b763"))
+        (173000, uint256("0x000000000000077ff3de38ce09c0279dfd7746d07a476d72dd6323ffa2520ef0"))
+        (178000, uint256("0x00000000000009eae2697a7aaf57e730b707b9f4530449c16d924d534d41f297"))
+        (183000, uint256("0x00000000000007be8b15bd307b7bc04aa22369e4079c12914a415f6c96ab2844"))
         ;
 
     static MapCheckpoints mapCheckpointsTestnet =
@@ -56,17 +61,42 @@ namespace Checkpoints
         return checkpoints.rbegin()->first;
     }
 
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
+    uint256 GetLastCheckpointHash()
     {
         MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
+
+        return checkpoints.rbegin()->second;
+    }
+
+    void HandleCommitBlock(const CBlock& block)
+    {
+        MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
+
+        const uint256 blockHash = block.GetHash();
 
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {
             const uint256& hash = i.second;
-            std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
-            if (t != mapBlockIndex.end())
-                return t->second;
+            if (blockHash != hash)
+                continue;
+
+            LOCK(cs_main);
+
+            assert(mapBlockIndex.count(hash));
+            lastCheckpoint = mapBlockIndex[hash];
+            return;
         }
-        return NULL;
+    }
+
+    const CBlockIndex* GetLastCheckpoint()
+    {
+        return lastCheckpoint;
+    }
+
+    bool IsCheckpoint(int nHeight)
+    {
+        MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
+
+        return checkpoints.count(nHeight) > 0;
     }
 }

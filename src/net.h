@@ -123,6 +123,7 @@ extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
 extern std::map<CInv, int64> mapAlreadyAskedFor;
+extern CCriticalSection cs_mapAlreadyAskedFor;
 
 
 
@@ -174,6 +175,7 @@ public:
     uint256 hashContinue;
     CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
+    uint256 hashLastInvLastBlock;
     int nStartingHeight;
 
     // flood relay
@@ -187,6 +189,7 @@ public:
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64, CInv> mapAskFor;
+    CCriticalSection cs_mapAskFor;
 
     CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : vSend(SER_NETWORK, MIN_PROTO_VERSION), vRecv(SER_NETWORK, MIN_PROTO_VERSION)
     {
@@ -295,7 +298,11 @@ public:
     {
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
-        int64& nRequestTime = mapAlreadyAskedFor[inv];
+        int64 nRequestTime;
+        {
+            LOCK(cs_mapAlreadyAskedFor);
+            nRequestTime = mapAlreadyAskedFor[inv];
+        }
         printf("askfor %s   %"PRI64d"\n", inv.ToString().c_str(), nRequestTime);
 
         // Make sure not to reuse time indexes to keep things in the same order
@@ -307,6 +314,7 @@ public:
 
         // Each retry is 2 minutes after the last
         nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
+        LOCK(cs_mapAskFor);
         mapAskFor.insert(std::make_pair(nRequestTime, inv));
     }
 
