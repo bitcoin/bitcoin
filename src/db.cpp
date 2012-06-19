@@ -496,9 +496,9 @@ bool CTxDB::ReadDiskTx(COutPoint outpoint, CTransaction& tx)
     return ReadDiskTx(outpoint.hash, tx, txindex);
 }
 
-bool CTxDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
+bool CTxDB::WriteBlockIndex(const uint256& blockhash, const CDiskBlockIndex& blockindex)
 {
-    return Write(make_pair(string("blockindex"), blockindex.GetBlockHash()), blockindex);
+    return Write(make_pair(string("blockindex"), blockhash), blockindex);
 }
 
 bool CTxDB::ReadHashBestChain(uint256& hashBestChain)
