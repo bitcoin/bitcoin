@@ -1592,7 +1592,7 @@ public:
     bool accept(CTxDB& txdb, CTransaction &tx,
                 bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(CTransaction &tx);
-    bool remove(CTransaction &tx);
+    bool remove(CTransaction &tx, uint256 hash=0);
 
     unsigned long size()
     {
