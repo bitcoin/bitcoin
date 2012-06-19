@@ -1306,10 +1306,6 @@ bool CBlockStore::DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pinde
 
 bool CBlockStore::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
 {
-    // Check it again in case a previous version let a bad block in
-    if (!block.CheckBlock())
-        return false;
-
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
     // If such overwrites are allowed, coinbases and transactions depending upon those
@@ -1456,6 +1452,9 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         CBlock block;
         if (!block.ReadFromDisk(pindex))
             return error("CBlockStore::Reorganize() : ReadFromDisk for connect failed");
+        // Check it again in case a previous version let a bad block in
+        if (!block.CheckBlock())
+            return error("CBlockStore::Reorganize() : CheckBlock for connect failed");
         if (!ConnectBlock(block, txdb, pindex))
         {
             // Invalid block
@@ -1580,6 +1579,12 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
             if (!block2.ReadFromDisk(pindex))
             {
                 printf("SetBestChain() : ReadFromDisk failed\n");
+                break;
+            }
+            // Check it again in case a previous version let a bad block in
+            if (!block2.CheckBlock())
+            {
+                printf("SetBestChain() : CheckBlock for connect failed");
                 break;
             }
             if (!txdb.TxnBegin()) {
