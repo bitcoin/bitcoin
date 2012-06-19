@@ -685,17 +685,18 @@ bool CTxMemPool::addUnchecked(CTransaction &tx)
 }
 
 
-bool CTxMemPool::remove(CTransaction &tx)
+bool CTxMemPool::remove(CTransaction &tx, uint256 hashTx)
 {
     // Remove transaction from memory pool
     {
         LOCK(cs);
-        uint256 hash = tx.GetHash();
-        if (mapTx.count(hash))
+        if (hashTx == 0)
+            hashTx = tx.GetHash();
+        if (mapTx.count(hashTx))
         {
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
-            mapTx.erase(hash);
+            mapTx.erase(hashTx);
             nTransactionsUpdated++;
         }
     }
@@ -1326,10 +1327,13 @@ bool CBlockStore::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
     map<uint256, CTxIndex> mapQueuedChanges;
     int64 nFees = 0;
     unsigned int nSigOps = 0;
-    BOOST_FOREACH(CTransaction& tx, block.vtx)
+    unsigned int nTxes = block.vtx.size();
+    if (block.vMerkleTree.size() < nTxes)
+        block.BuildMerkleTree();
+    for (unsigned int i = 0; i < nTxes; i++)
     {
-        // TODO: cache this value from when we check the merkle tree
-        uint256 hashTx = tx.GetHash();
+        uint256& hashTx = block.vMerkleTree[i];
+        CTransaction& tx = block.vtx[i];
 
         if (fEnforceBIP30)
         {
@@ -1516,8 +1520,11 @@ bool CBlockStore::SetBestChainInner(CBlock& block, uint256& hash, CTxDB& txdb, C
     pindexNew->pprev->pnext = pindexNew;
 
     // Delete redundant memory transactions
-    BOOST_FOREACH(CTransaction& tx, block.vtx)
-        mempool.remove(tx);
+    unsigned int nTxes = block.vtx.size();
+    if (block.vMerkleTree.size() < nTxes)
+        block.BuildMerkleTree();
+    for (unsigned int i = 0; i < nTxes; i++)
+        mempool.remove(block.vtx[i], block.vMerkleTree[i]);
 
     CallbackCommitBlock(block);
 
