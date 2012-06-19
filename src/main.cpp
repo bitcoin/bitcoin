@@ -1602,7 +1602,7 @@ bool CBlockStore::SetBestChain(CBlock& block, uint256& hash, CTxDB& txdb, CBlock
     bnBestChainWork = pindexNew->bnChainWork;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
-    printf("SetBestChain: new best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
+    printf("SetBestChain: new best height=%d\n", nBestHeight);
 
     std::string strCmd = GetArg("-blocknotify", "");
 
