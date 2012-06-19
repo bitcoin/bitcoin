@@ -265,6 +265,8 @@ std::string HelpMessage()
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-6, default: 1)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000?.dat file") + "\n" +
         "  -blockbuffersize=<n>   " + _("The maximum number of blocks to buffer for committing to disk (default: 20)") + "\n";
+        "  -autoprune             " + _("Prunes blkindex.dat of spent transactions during download (default: 1)") + "\n" +
+        "  -prune                 " + _("Prunes blkindex.dat of spent transactions during startup (default: 0)") + "\n" +
         "  -?                     " + _("This help message") + "\n";
 
     strUsage += string() +
@@ -586,6 +588,26 @@ bool AppInit2()
         return false;
     }
 
+    uiInterface.InitMessage(_("Upgrading block index..."));
+    printf("Upgrading block index...\n");
+    nStart = GetTimeMillis();
+    if (GetBoolArg("-prune", false))
+    {
+        CTxDB txdb;
+        if (!txdb.PruneBlockIndex(0, Checkpoints::GetLastCheckpointHash()))
+            strErrors << _("Error pruning blkindex.dat") << "\n";
+    }
+
+    // as PruneBlockIndex can take several minutes, it's possible the user
+    // requested to kill bitcoin-qt during the last operation. If so, exit.
+    // As the program has not fully started yet, Shutdown() is possibly overkill.
+    if (fRequestShutdown)
+    {
+        printf("Shutdown requested. Exiting.\n");
+        return false;
+    }
+    printf(" block index prune %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+
     // ********************************************************* Step 7: load wallet
 
     uiInterface.InitMessage(_("Loading wallet..."));
@@ -668,6 +690,7 @@ bool AppInit2()
 
     if (mapArgs.count("-loadblock"))
     {
+        uiInterface.InitMessage(_("Importing additional blocks..."));
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
         {
             FILE *file = fopen(strFile.c_str(), "rb");
