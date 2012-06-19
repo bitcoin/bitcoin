@@ -8,6 +8,7 @@
 #include "net.h"
 #include "init.h"
 #include "ui_interface.h"
+#include "hub.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -43,8 +44,8 @@ CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
 
-map<uint256, CDataStream*> mapOrphanTransactions;
-map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
+map<uint256, CTransaction*> mapOrphanTransactions;
+map<uint256, map<uint256, CTransaction*> > mapOrphanTransactionsByPrev;
 
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
@@ -161,15 +162,13 @@ void static ResendWalletTransactions()
 // mapOrphanTransactions
 //
 
-bool AddOrphanTx(const CDataStream& vMsg)
+bool AddOrphanTx(const CTransaction& tx)
 {
-    CTransaction tx;
-    CDataStream(vMsg) >> tx;
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
         return false;
 
-    CDataStream* pvMsg = new CDataStream(vMsg);
+    CTransaction* pTx = new CTransaction(tx);
 
     // Ignore big transactions, to avoid a
     // send-big-orphans memory exhaustion attack. If a peer has a legitimate
@@ -178,16 +177,17 @@ bool AddOrphanTx(const CDataStream& vMsg)
     // have been mined or received.
     // 10,000 orphans, each of which is at most 5,000 bytes big is
     // at most 500 megabytes of orphans:
-    if (pvMsg->size() > 5000)
+    unsigned int size = tx.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+    if (size > 5000)
     {
-        delete pvMsg;
-        printf("ignoring large orphan tx (size: %u, hash: %s)\n", pvMsg->size(), hash.ToString().substr(0,10).c_str());
+        delete pTx;
+        printf("ignoring large orphan tx (size: %u, hash: %s)\n", size, hash.ToString().substr(0,10).c_str());
         return false;
     }
 
-    mapOrphanTransactions[hash] = pvMsg;
+    mapOrphanTransactions[hash] = pTx;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pvMsg));
+        mapOrphanTransactionsByPrev[txin.prevout.hash].insert(make_pair(hash, pTx));
 
     printf("stored orphan tx %s (mapsz %u)\n", hash.ToString().substr(0,10).c_str(),
         mapOrphanTransactions.size());
@@ -198,16 +198,14 @@ void static EraseOrphanTx(uint256 hash)
 {
     if (!mapOrphanTransactions.count(hash))
         return;
-    const CDataStream* pvMsg = mapOrphanTransactions[hash];
-    CTransaction tx;
-    CDataStream(*pvMsg) >> tx;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    const CTransaction* pTx = mapOrphanTransactions[hash];
+    BOOST_FOREACH(const CTxIn& txin, pTx->vin)
     {
         mapOrphanTransactionsByPrev[txin.prevout.hash].erase(hash);
         if (mapOrphanTransactionsByPrev[txin.prevout.hash].empty())
             mapOrphanTransactionsByPrev.erase(txin.prevout.hash);
     }
-    delete pvMsg;
+    delete pTx;
     mapOrphanTransactions.erase(hash);
 }
 
@@ -218,7 +216,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     {
         // Evict a random orphan:
         uint256 randomhash = GetRandHash();
-        map<uint256, CDataStream*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
+        map<uint256, CTransaction*>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
         if (it == mapOrphanTransactions.end())
             it = mapOrphanTransactions.begin();
         EraseOrphanTx(it->first);
@@ -614,9 +612,75 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+bool CHub::EmitTransactionInner(CTransaction& tx, bool fCheckInputs)
 {
-    return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
+    uint256 hash = tx.GetHash();
+
+    CTxDB* ptxdb = NULL;
+    if (!fClient && fCheckInputs)
+        ptxdb = new CTxDB("r");
+
+    bool fMissingInputs = false;
+    if (mempool.accept(*ptxdb, tx, fCheckInputs, &fMissingInputs))
+    {
+        // Recursively process any orphan transactions that depended on this one
+        for (map<uint256, CTransaction*>::iterator mi = mapOrphanTransactionsByPrev[hash].begin();
+             mi != mapOrphanTransactionsByPrev[hash].end();
+             ++mi)
+        {
+            CTransaction& tx2 = *((*mi).second);
+            CInv inv(MSG_TX, tx2.GetHash());
+
+            if (phub->EmitTransaction(tx2))
+                printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
+        }
+
+        SubmitCallbackCommitTransactionToMemoryPool(tx);
+        return true;
+    }
+    else if (fMissingInputs)
+    {
+        AddOrphanTx(tx);
+
+        // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
+        unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
+        if (nEvicted > 0)
+            printf("mapOrphan overflow, removed %u tx\n", nEvicted);
+
+        return true;
+    }
+    else
+        EraseOrphanTx(hash);
+
+    return false;
+}
+
+bool CHub::EmitTransaction(CTransaction& tx, bool fCheckInputs)
+{
+    LOCK(cs_main);
+
+    if (!fClient && !IsInitialBlockDownload())
+        fCheckInputs = true;
+
+    if (fClient && fCheckInputs)
+        if (!tx.ClientConnectInputs())
+            return false;
+
+    return EmitTransactionInner(tx, fCheckInputs);
+}
+
+bool CHub::EmitTransaction(CMerkleTx& tx, bool fCheckInputs)
+{
+    LOCK(cs_main);
+
+    if (!fClient && !IsInitialBlockDownload())
+        fCheckInputs = true;
+
+    if (fClient)
+        if (!tx.IsInMainChain() && !tx.ClientConnectInputs())
+            return false;
+
+    return EmitTransactionInner(tx, fCheckInputs);
 }
 
 bool CTxMemPool::addUnchecked(CTransaction &tx)
@@ -691,53 +755,6 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs)
-{
-    if (fClient)
-    {
-        if (!IsInMainChain() && !ClientConnectInputs())
-            return false;
-        return CTransaction::AcceptToMemoryPool(txdb, false);
-    }
-    else
-    {
-        return CTransaction::AcceptToMemoryPool(txdb, fCheckInputs);
-    }
-}
-
-bool CMerkleTx::AcceptToMemoryPool()
-{
-    CTxDB txdb("r");
-    return AcceptToMemoryPool(txdb);
-}
-
-
-
-bool CWalletTx::AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs)
-{
-
-    {
-        LOCK(mempool.cs);
-        // Add previous supporting transactions first
-        BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
-        {
-            if (!tx.IsCoinBase())
-            {
-                uint256 hash = tx.GetHash();
-                if (!mempool.exists(hash) && !txdb.ContainsTx(hash))
-                    tx.AcceptToMemoryPool(txdb, fCheckInputs);
-            }
-        }
-        return AcceptToMemoryPool(txdb, fCheckInputs);
-    }
-    return false;
-}
-
-bool CWalletTx::AcceptWalletTransaction()
-{
-    CTxDB txdb("r");
-    return AcceptWalletTransaction(txdb);
-}
 
 int CTxIndex::GetDepthInMainChain() const
 {
@@ -960,7 +977,6 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     {
         bnBestInvalidWork = pindexNew->bnChainWork;
         CTxDB().WriteBestInvalidWork(bnBestInvalidWork);
-        uiInterface.NotifyBlocksChanged();
     }
     printf("InvalidChainFound: invalid block=%s  height=%d  work=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, pindexNew->bnChainWork.ToString().c_str());
     printf("InvalidChainFound:  current best=%s  height=%d  work=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainWork.ToString().c_str());
@@ -1489,7 +1505,7 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
     // Resurrect memory transactions that were in the disconnected branch
     BOOST_FOREACH(CTransaction& tx, vResurrect)
-        tx.AcceptToMemoryPool(txdb, false);
+        mempool.accept(txdb, tx, false, NULL);
 
     // Delete redundant memory transactions that are in the connected branch
     BOOST_FOREACH(CTransaction& tx, vDelete)
@@ -1663,7 +1679,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         hashPrevBestCoinBase = vtx[0].GetHash();
     }
 
-    uiInterface.NotifyBlocksChanged();
     return true;
 }
 
@@ -1765,73 +1780,63 @@ bool CBlock::AcceptBlock()
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
-    // Relay inventory, but don't relay old inventory during initial block download
-    int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
-    if (hashBestChain == hash)
-    {
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
-                pnode->PushInventory(CInv(MSG_BLOCK, hash));
-    }
-
     return true;
 }
 
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)
+bool CHub::EmitBlock(CBlock& block)
 {
     // Check for duplicate
-    uint256 hash = pblock->GetHash();
+    uint256 hash = block.GetHash();
+
+    LOCK(cs_main);
+
     if (mapBlockIndex.count(hash))
-        return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        return error("CHub::EmitBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
     if (mapOrphanBlocks.count(hash))
-        return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
+        return error("CHub::EmitBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
     // Preliminary checks
-    if (!pblock->CheckBlock())
-        return error("ProcessBlock() : CheckBlock FAILED");
+    if (!block.CheckBlock())
+        return error("CHub::EmitBlock() : CheckBlock FAILED");
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-    if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
+    if (pcheckpoint && block.hashPrevBlock != hashBestChain)
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
-        int64 deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
+        int64 deltaTime = block.GetBlockTime() - pcheckpoint->nTime;
         if (deltaTime < 0)
         {
-            if (pfrom)
-                pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with timestamp before last checkpoint");
+            return block.DoS(100, error("CHub::EmitBlock() : block with timestamp before last checkpoint"));
         }
         CBigNum bnNewBlock;
-        bnNewBlock.SetCompact(pblock->nBits);
+        bnNewBlock.SetCompact(block.nBits);
         CBigNum bnRequired;
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
-            if (pfrom)
-                pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with too little proof-of-work");
+            return block.DoS(100, error("CHub::EmitBlock() : block with too little proof-of-work"));
         }
     }
 
 
     // If don't already have its previous block, shunt it off to holding area until we get it
-    if (!mapBlockIndex.count(pblock->hashPrevBlock))
+    if (!mapBlockIndex.count(block.hashPrevBlock))
     {
-        printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
-        CBlock* pblock2 = new CBlock(*pblock);
-        mapOrphanBlocks.insert(make_pair(hash, pblock2));
-        mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
+        printf("CHub::EmitBlock: ORPHAN BLOCK, prev=%s\n", block.hashPrevBlock.ToString().substr(0,20).c_str());
+        CBlock* pblock = new CBlock(block);
+        mapOrphanBlocks.insert(make_pair(hash, pblock));
+        mapOrphanBlocksByPrev.insert(make_pair(pblock->hashPrevBlock, pblock));
 
         // Ask this guy to fill in what we're missing
-        if (pfrom)
-            pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
+        AskForBlocks(GetOrphanRoot(pblock), hash);
         return true;
     }
 
     // Store to disk
-    if (!pblock->AcceptBlock())
-        return error("ProcessBlock() : AcceptBlock FAILED");
+    if (!block.AcceptBlock())
+        return error("CHub::EmitBlock() : AcceptBlock FAILED");
+
+    SubmitCallbackCommitBlock(block);
 
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
@@ -1845,14 +1850,18 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         {
             CBlock* pblockOrphan = (*mi).second;
             if (pblockOrphan->AcceptBlock())
+            {
                 vWorkQueue.push_back(pblockOrphan->GetHash());
+                SubmitCallbackCommitBlock(*pblockOrphan);
+            }
             mapOrphanBlocks.erase(pblockOrphan->GetHash());
             delete pblockOrphan;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    printf("ProcessBlock: ACCEPTED\n");
+    printf("CHub::EmitBlock: ACCEPTED\n");
+
     return true;
 }
 
@@ -2114,7 +2123,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 {
                     CBlock block;
                     blkdat >> block;
-                    if (ProcessBlock(NULL,&block))
+                    if (phub->EmitBlock(block))
                     {
                         nLoaded++;
                         nPos += 4 + nSize;
@@ -2203,11 +2212,11 @@ CAlert CAlert::getAlertByHash(const uint256 &hash)
     return retval;
 }
 
-bool CAlert::ProcessAlert()
+bool CHub::EmitAlert(CAlert& alert)
 {
-    if (!CheckSignature())
+    if (!alert.CheckSignature())
         return false;
-    if (!IsInEffect())
+    if (!alert.IsInEffect())
         return false;
 
     {
@@ -2215,17 +2224,17 @@ bool CAlert::ProcessAlert()
         // Cancel previous alerts
         for (map<uint256, CAlert>::iterator mi = mapAlerts.begin(); mi != mapAlerts.end();)
         {
-            const CAlert& alert = (*mi).second;
-            if (Cancels(alert))
+            const CAlert& alert2 = (*mi).second;
+            if (alert.Cancels(alert2))
             {
-                printf("cancelling alert %d\n", alert.nID);
-                uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
+                printf("cancelling alert %d\n", alert2.nID);
+                SubmitCallbackRemoveAlert(alert2);
                 mapAlerts.erase(mi++);
             }
-            else if (!alert.IsInEffect())
+            else if (!alert2.IsInEffect())
             {
-                printf("expiring alert %d\n", alert.nID);
-                uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
+                printf("expiring alert %d\n", alert2.nID);
+                SubmitCallbackRemoveAlert(alert2);
                 mapAlerts.erase(mi++);
             }
             else
@@ -2235,22 +2244,20 @@ bool CAlert::ProcessAlert()
         // Check if this alert has been cancelled
         BOOST_FOREACH(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
         {
-            const CAlert& alert = item.second;
-            if (alert.Cancels(*this))
+            const CAlert& alert2 = item.second;
+            if (alert2.Cancels(alert))
             {
-                printf("alert already cancelled by %d\n", alert.nID);
+                printf("alert already cancelled by %d\n", alert2.nID);
                 return false;
             }
         }
 
         // Add to mapAlerts
-        mapAlerts.insert(make_pair(GetHash(), *this));
-        // Notify UI if it applies to me
-        if(AppliesToMe())
-            uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
+        mapAlerts.insert(make_pair(alert.GetHash(), alert));
     }
 
-    printf("accepted alert %d, AppliesToMe()=%d\n", nID, AppliesToMe());
+    printf("accepted alert %d, AppliesToMe()=%d\n", alert.nID, alert.AppliesToMe());
+    SubmitCallbackCommitAlert(alert);
     return true;
 }
 
@@ -2689,69 +2696,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "tx")
     {
-        vector<uint256> vWorkQueue;
-        vector<uint256> vEraseQueue;
-        CDataStream vMsg(vRecv);
-        CTxDB txdb("r");
         CTransaction tx;
         vRecv >> tx;
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        bool fMissingInputs = false;
-        if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs))
-        {
-            SyncWithWallets(tx, NULL, true);
-            RelayMessage(inv, vMsg);
-            mapAlreadyAskedFor.erase(inv);
-            vWorkQueue.push_back(inv.hash);
-            vEraseQueue.push_back(inv.hash);
-
-            // Recursively process any orphan transactions that depended on this one
-            for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-            {
-                uint256 hashPrev = vWorkQueue[i];
-                for (map<uint256, CDataStream*>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
-                     mi != mapOrphanTransactionsByPrev[hashPrev].end();
-                     ++mi)
-                {
-                    const CDataStream& vMsg = *((*mi).second);
-                    CTransaction tx;
-                    CDataStream(vMsg) >> tx;
-                    CInv inv(MSG_TX, tx.GetHash());
-                    bool fMissingInputs2 = false;
-
-                    if (tx.AcceptToMemoryPool(txdb, true, &fMissingInputs2))
-                    {
-                        printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-                        SyncWithWallets(tx, NULL, true);
-                        RelayMessage(inv, vMsg);
-                        mapAlreadyAskedFor.erase(inv);
-                        vWorkQueue.push_back(inv.hash);
-                        vEraseQueue.push_back(inv.hash);
-                    }
-                    else if (!fMissingInputs2)
-                    {
-                        // invalid orphan
-                        vEraseQueue.push_back(inv.hash);
-                        printf("   removed invalid orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-                    }
-                }
-            }
-
-            BOOST_FOREACH(uint256 hash, vEraseQueue)
-                EraseOrphanTx(hash);
-        }
-        else if (fMissingInputs)
-        {
-            AddOrphanTx(vMsg);
-
-            // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-            unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
-            if (nEvicted > 0)
-                printf("mapOrphan overflow, removed %u tx\n", nEvicted);
-        }
+        phub->EmitTransaction(tx);
         if (tx.nDoS) pfrom->Misbehaving(tx.nDoS);
     }
 
@@ -2767,8 +2718,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CInv inv(MSG_BLOCK, block.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if (ProcessBlock(pfrom, &block))
+        if (phub->EmitBlock(block))
+        {
+            LOCK(cs_mapAlreadyAskedFor);
             mapAlreadyAskedFor.erase(inv);
+        }
         if (block.nDoS) pfrom->Misbehaving(block.nDoS);
     }
 
@@ -2856,7 +2810,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAlert alert;
         vRecv >> alert;
 
-        if (alert.ProcessAlert())
+        if (phub->EmitAlert(alert))
         {
             // Relay
             pfrom->setKnown.insert(alert.GetHash());
@@ -3151,7 +3105,10 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     vGetData.clear();
                 }
             }
-            mapAlreadyAskedFor[inv] = nNow;
+            {
+                LOCK(cs_mapAlreadyAskedFor);
+                mapAlreadyAskedFor[inv] = nNow;
+            }
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
         if (!vGetData.empty())
@@ -3538,8 +3495,8 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         }
 
         // Process this block the same as if we had received it from another node
-        if (!ProcessBlock(NULL, pblock))
-            return error("BitcoinMiner : ProcessBlock, block not accepted");
+        if (!phub->EmitBlock(*pblock))
+            return error("BitcoinMiner : phub->EmitBlock, block not accepted");
     }
 
     return true;

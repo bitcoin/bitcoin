@@ -5,6 +5,7 @@
 #include "transactiontablemodel.h"
 
 #include "main.h"
+#include "hub.h"
 #include "ui_interface.h"
 
 #include <QDateTime>
@@ -136,7 +137,7 @@ QString ClientModel::formatClientStartupTime() const
 }
 
 // Handlers for core signals
-static void NotifyBlocksChanged(ClientModel *clientmodel)
+static void NotifyNewBlock(ClientModel *clientmodel, const CBlock& block)
 {
     // This notification is too frequent. Don't trigger a signal.
     // Don't remove it, though, as it might be useful later.
@@ -157,18 +158,30 @@ static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, Ch
                               Q_ARG(int, status));
 }
 
+static void NotifyAlertCommitted(ClientModel *clientmodel, const CAlert& alert)
+{
+    if (alert.AppliesToMe())
+        NotifyAlertChanged(clientmodel, alert.GetHash(), CT_NEW);
+}
+
+static void NotifyAlertRemoved(ClientModel *clientmodel, const CAlert& alert)
+{
+    if (alert.AppliesToMe())
+        NotifyAlertChanged(clientmodel, alert.GetHash(), CT_DELETED);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
-    uiInterface.NotifyBlocksChanged.connect(boost::bind(NotifyBlocksChanged, this));
+    phub->RegisterCommitBlock(boost::bind(NotifyNewBlock, this, _1));
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    phub->RegisterCommitAlert(boost::bind(NotifyAlertCommitted, this, _1));
+    phub->RegisterRemoveAlert(boost::bind(NotifyAlertRemoved, this, _1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.NotifyBlocksChanged.disconnect(boost::bind(NotifyBlocksChanged, this));
+    //  Note that CHub does not support disconnecting (yet)!
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
 }

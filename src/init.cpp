@@ -9,6 +9,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "hub.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -66,6 +67,7 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
+        if (phub) phub->StopProcessCallbacks();
         nTransactionsUpdated++;
         bitdb.Flush(false);
         StopNode();
@@ -541,6 +543,12 @@ bool AppInit2()
         return false;
     }
 
+    try {
+        phub = new CHub();
+    } catch (runtime_error& e) {
+        return InitError(_("Unable to create CHub."));
+    }
+
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
@@ -643,6 +651,7 @@ bool AppInit2()
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     RegisterWallet(pwalletMain);
+    pwalletMain->RegisterWithHub(phub);
 
     CBlockIndex *pindexRescan = pindexBest;
     if (GetBoolArg("-rescan"))

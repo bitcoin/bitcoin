@@ -418,6 +418,11 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
     return false;
 }
 
+void CWallet::HandleCommitTransactionToMemoryPool(const CTransaction& tx)
+{
+    AddToWalletIfInvolvingMe(tx, NULL, true);
+}
+
 bool CWallet::EraseFromWallet(uint256 hash)
 {
     if (!fFileBacked)
@@ -713,6 +718,15 @@ int CWallet::ScanForWalletTransaction(const uint256& hashTx)
     return 0;
 }
 
+bool CWalletTx::AcceptWalletTransaction()
+{
+    // Add previous supporting transactions first
+    BOOST_FOREACH(CMerkleTx& tx, vtxPrev)
+        phub->EmitTransaction(tx, false);
+    return phub->EmitTransaction(*this);
+}
+
+
 void CWallet::ReacceptWalletTransactions()
 {
     CTxDB txdb("r");
@@ -760,7 +774,7 @@ void CWallet::ReacceptWalletTransactions()
             {
                 // Reaccept any txes of ours that aren't already in a block
                 if (!wtx.IsCoinBase())
-                    wtx.AcceptWalletTransaction(txdb, false);
+                    wtx.AcceptWalletTransaction();
             }
         }
         if (!vMissingTx.empty())
@@ -1234,13 +1248,12 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool())
+        if (!wtxNew.AcceptWalletTransaction())
         {
             // This must not fail. The transaction has already been signed and recorded.
             printf("CommitTransaction() : Error: Transaction not valid");
             return false;
         }
-        wtxNew.RelayWalletTransaction();
     }
     return true;
 }
