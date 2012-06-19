@@ -1500,10 +1500,8 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 
 
 // Called from inside SetBestChain: attaches a block to the new best chain being built
-bool CBlockStore::SetBestChainInner(CBlock& block, CTxDB& txdb, CBlockIndex *pindexNew)
+bool CBlockStore::SetBestChainInner(CBlock& block, uint256& hash, CTxDB& txdb, CBlockIndex *pindexNew)
 {
-    uint256 hash = block.GetHash();
-
     // Adding to current best branch
     if (!ConnectBlock(block, txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
     {
@@ -1526,10 +1524,8 @@ bool CBlockStore::SetBestChainInner(CBlock& block, CTxDB& txdb, CBlockIndex *pin
     return true;
 }
 
-bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNew)
+bool CBlockStore::SetBestChain(CBlock& block, uint256& hash, CTxDB& txdb, CBlockIndex* pindexNew)
 {
-    uint256 hash = block.GetHash();
-
     if (!txdb.TxnBegin())
         return error("SetBestChain() : TxnBegin failed");
 
@@ -1542,7 +1538,7 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
     }
     else if (block.hashPrevBlock == hashBestChain)
     {
-        if (!SetBestChainInner(block, txdb, pindexNew))
+        if (!SetBestChainInner(block, hash, txdb, pindexNew))
             return error("SetBestChain() : SetBestChainInner failed");
     }
     else
@@ -1592,7 +1588,8 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
                 break;
             }
             // errors now are not fatal, we still did a reorganisation to a new chain in a valid way
-            if (!SetBestChainInner(block2, txdb, pindex))
+            uint256 hashblock2 = block2.GetHash();
+            if (!SetBestChainInner(block2, hashblock2, txdb, pindex))
                 break;
         }
     }
@@ -1618,10 +1615,9 @@ bool CBlockStore::SetBestChain(CBlock& block, CTxDB& txdb, CBlockIndex* pindexNe
 }
 
 
-bool CBlockStore::AddToBlockIndex(CBlock& block, unsigned int nFile, unsigned int nBlockPos)
+bool CBlockStore::AddToBlockIndex(CBlock& block, uint256& hash, unsigned int nFile, unsigned int nBlockPos)
 {
     // Check for duplicate
-    uint256 hash = block.GetHash();
     if (mapBlockIndex.count(hash))
         return error("AddToBlockIndex() : %s already exists", hash.ToString().substr(0,20).c_str());
 
@@ -1648,7 +1644,7 @@ bool CBlockStore::AddToBlockIndex(CBlock& block, unsigned int nFile, unsigned in
 
     // New best
     if (pindexNew->bnChainWork > bnBestChainWork)
-        if (!SetBestChain(block, txdb, pindexNew))
+        if (!SetBestChain(block, hash, txdb, pindexNew))
             return false;
 
     txdb.Close();
@@ -1713,10 +1709,9 @@ bool CBlock::CheckBlock() const
     return true;
 }
 
-bool CBlockStore::AcceptBlock(CBlock& block)
+bool CBlockStore::AcceptBlock(CBlock& block, uint256& hash)
 {
     // Check for duplicate
-    uint256 hash = block.GetHash();
     if (mapBlockIndex.count(hash))
         return error("AcceptBlock() : block already in mapBlockIndex");
 
@@ -1755,7 +1750,7 @@ bool CBlockStore::AcceptBlock(CBlock& block)
     unsigned int nBlockPos = 0;
     if (!block.WriteToDisk(nFile, nBlockPos))
         return error("AcceptBlock() : WriteToDisk failed");
-    if (!AddToBlockIndex(block, nFile, nBlockPos))
+    if (!AddToBlockIndex(block, hash, nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
     if (GetBoolArg("-autoprune", true))
@@ -1845,7 +1840,7 @@ bool CBlockStore::FinishEmitBlock(CBlock& block, CNode* pNodeDoS)
     }
 
     // Store to disk
-    if (!AcceptBlock(block))
+    if (!AcceptBlock(block, hash))
     {
         if (block.nDoS && pNodeDoS)
             CallbackDoS(pNodeDoS, block.nDoS);
@@ -1865,7 +1860,7 @@ bool CBlockStore::FinishEmitBlock(CBlock& block, CNode* pNodeDoS)
         {
             CBlock* pblockOrphan = (*mi).second;
             uint256 hashOrphan = pblockOrphan->GetHash();
-            if (AcceptBlock(*pblockOrphan))
+            if (AcceptBlock(*pblockOrphan, hashOrphan))
                 qWorkQueue.push(hashOrphan);
             mapOrphanBlocks.erase(hashOrphan);
             delete pblockOrphan;
@@ -2127,7 +2122,8 @@ bool CBlockStore::LoadBlockIndex(bool fReadOnly)
         if (!block.ReadFromDisk(pindexFork))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
         CTxDB txdb;
-        SetBestChain(block, txdb, pindexFork);
+        uint256 hashblock = block.GetHash();
+        SetBestChain(block, hashblock, txdb, pindexFork);
     }
 
     txdb.Close();
@@ -2183,7 +2179,7 @@ bool CBlockStore::LoadBlockIndex(bool fReadOnly)
         unsigned int nBlockPos;
         if (!block.WriteToDisk(nFile, nBlockPos))
             return error("LoadBlockIndex() : writing genesis block to disk failed");
-        if (!AddToBlockIndex(block, nFile, nBlockPos))
+        if (!AddToBlockIndex(block, hashGenesisBlock, nFile, nBlockPos))
             return error("LoadBlockIndex() : genesis block not accepted");
     }
 
