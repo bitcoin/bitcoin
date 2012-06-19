@@ -33,14 +33,14 @@ Dependencies
 miniupnpc may be used for UPnP port mapping.  It can be downloaded from
 http://miniupnp.tuxfamily.org/files/.  UPnP support is compiled in and
 turned off by default.  Set USE_UPNP to a different value to control this:
- USE_UPNP=     No UPnP support - miniupnp not required
+ USE_UPNP=-    No UPnP support - miniupnp not required
  USE_UPNP=0    (the default) UPnP support turned off by default at runtime
  USE_UPNP=1    UPnP support turned on by default at runtime
 
 libqrencode may be used for QRCode image generation. It can be downloaded
 from http://fukuchi.org/works/qrencode/index.html.en, or installed via
 your package manager. Set USE_QRCODE to control this:
- USE_QRCODE=0   (the default) No QRCode support - libarcode not required
+ USE_QRCODE=0   (the default) No QRCode support - libqrcode not required
  USE_QRCODE=1   QRCode support enabled
 
 Licenses of statically linked libraries:

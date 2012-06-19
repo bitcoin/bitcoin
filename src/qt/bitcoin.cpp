@@ -281,12 +281,14 @@ int main(int argc, char *argv[])
 #endif
                 app.exec();
 
+                window.hide();
                 window.setClientModel(0);
                 window.setWalletModel(0);
                 guiref = 0;
                 clientmodel = 0;
                 walletmodel = 0;
             }
+            // Shutdown the core and it's threads, but don't exit Bitcoin-Qt here
             Shutdown(NULL);
         }
         else
