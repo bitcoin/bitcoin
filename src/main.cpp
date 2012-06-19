@@ -1300,7 +1300,7 @@ bool CBlockStore::DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pinde
     {
         CDiskBlockIndex blockindexPrev(pindex->pprev);
         blockindexPrev.hashNext = 0;
-        if (!txdb.WriteBlockIndex(blockindexPrev))
+        if (!txdb.WriteBlockIndex(*(pindex->pprev->phashBlock), blockindexPrev))
             return error("DisconnectBlock() : WriteBlockIndex failed");
     }
 
@@ -1394,7 +1394,7 @@ bool CBlockStore::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
     {
         CDiskBlockIndex blockindexPrev(pindex->pprev);
         blockindexPrev.hashNext = pindex->GetBlockHash();
-        if (!txdb.WriteBlockIndex(blockindexPrev))
+        if (!txdb.WriteBlockIndex(*(pindex->pprev->phashBlock), blockindexPrev))
             return error("ConnectBlock() : WriteBlockIndex failed");
     }
 
@@ -1641,7 +1641,7 @@ bool CBlockStore::AddToBlockIndex(CBlock& block, uint256& hash, unsigned int nFi
     CTxDB txdb;
     if (!txdb.TxnBegin())
         return false;
-    txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
+    txdb.WriteBlockIndex(hash, CDiskBlockIndex(pindexNew));
     if (!txdb.TxnCommit())
         return false;
 

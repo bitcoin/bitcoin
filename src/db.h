@@ -313,7 +313,7 @@ public:
     bool ReadDiskTx(uint256 hash, CTransaction& tx);
     bool ReadDiskTx(COutPoint outpoint, CTransaction& tx, CTxIndex& txindex);
     bool ReadDiskTx(COutPoint outpoint, CTransaction& tx);
-    bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
+    bool WriteBlockIndex(const uint256& blockhash, const CDiskBlockIndex& blockindex);
     bool ReadHashBestChain(uint256& hashBestChain);
     bool WriteHashBestChain(uint256 hashBestChain);
     bool ReadHashBestCheckpoint(uint256& hashBestCheckpoint);
