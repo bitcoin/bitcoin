@@ -21,11 +21,16 @@ namespace Checkpoints
     // Return conservative estimate of total number of blocks, 0 if unknown
     int GetTotalBlocksEstimate();
 
+    // Return the hash of the most recent checkpoint (with height GetTotalBlocksEstimate())
+    uint256 GetLastCheckpointHash();
+
     // Used to keep last checkpoint cache up to date
     void HandleCommitBlock(const CBlock& block);
 
     // Returns last CBlockIndex* that is a checkpoint
     const CBlockIndex* GetLastCheckpoint();
+
+    bool IsCheckpoint(int nHeight);
 }
 
 #endif

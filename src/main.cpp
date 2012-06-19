@@ -1739,6 +1739,10 @@ bool CBlockStore::AcceptBlock(CBlock& block)
     if (!Checkpoints::CheckBlock(nHeight, hash))
         return block.DoS(100, error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight));
 
+    const CBlockIndex* pPrevCheckpoint = NULL;
+    if (GetBoolArg("-autoprune", true))
+        pPrevCheckpoint = Checkpoints::GetLastCheckpoint();
+
     // Write block to history file
     if (!CheckDiskSpace(GetSerializeSize(block, SER_DISK, CLIENT_VERSION)))
         return error("AcceptBlock() : out of disk space");
@@ -1748,6 +1752,18 @@ bool CBlockStore::AcceptBlock(CBlock& block)
         return error("AcceptBlock() : WriteToDisk failed");
     if (!AddToBlockIndex(block, nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
+
+    if (GetBoolArg("-autoprune", true))
+    {
+        if (Checkpoints::IsCheckpoint(nBestHeight))
+        {
+            CTxDB txdb;
+            if (!pPrevCheckpoint)
+                txdb.PruneBlockIndex(0, hash);
+            else
+                txdb.PruneBlockIndex(*(pPrevCheckpoint->phashBlock), hash);
+        }
+    }
 
     return true;
 }

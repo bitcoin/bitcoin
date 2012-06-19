@@ -58,6 +58,13 @@ namespace Checkpoints
         return checkpoints.rbegin()->first;
     }
 
+    uint256 GetLastCheckpointHash()
+    {
+        MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
+
+        return checkpoints.rbegin()->second;
+    }
+
     void HandleCommitBlock(const CBlock& block)
     {
         MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
@@ -81,5 +88,12 @@ namespace Checkpoints
     const CBlockIndex* GetLastCheckpoint()
     {
         return lastCheckpoint;
+    }
+
+    bool IsCheckpoint(int nHeight)
+    {
+        MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
+
+        return checkpoints.count(nHeight) > 0;
     }
 }
