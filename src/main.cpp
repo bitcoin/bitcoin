@@ -1314,19 +1314,7 @@ bool CBlockStore::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
     // already refuses previously-known transaction id's entirely.
     // This rule applies to all blocks whose timestamp is after March 15, 2012, 0:00 UTC.
     // On testnet it is enabled as of februari 20, 2012, 0:00 UTC.
-    if (pindex->nTime > 1331769600 || (fTestNet && pindex->nTime > 1329696000))
-    {
-        BOOST_FOREACH(CTransaction& tx, block.vtx)
-        {
-            CTxIndex txindexOld;
-            if (txdb.ReadTxIndex(tx.GetHash(), txindexOld))
-            {
-                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
-                    if (pos.IsNull())
-                        return false;
-            }
-        }
-    }
+    bool fEnforceBIP30 = pindex->nTime > 1331769600 || (fTestNet && pindex->nTime > 1329696000);
 
     // BIP16 didn't become active until Apr 1 2012 (Feb 15 on testnet)
     int64 nBIP16SwitchTime = fTestNet ? 1329264000 : 1333238400;
@@ -1340,6 +1328,20 @@ bool CBlockStore::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
     unsigned int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, block.vtx)
     {
+        // TODO: cache this value from when we check the merkle tree
+        uint256 hashTx = tx.GetHash();
+
+        if (fEnforceBIP30)
+        {
+            CTxIndex txindexOld;
+            if (txdb.ReadTxIndex(hashTx, txindexOld))
+            {
+                BOOST_FOREACH(CDiskTxPos &pos, txindexOld.vSpent)
+                    if (pos.IsNull())
+                        return false;
+            }
+        }
+
         nSigOps += tx.GetLegacySigOpCount();
         if (nSigOps > MAX_BLOCK_SIGOPS)
             return block.DoS(100, error("ConnectBlock() : too many sigops"));
@@ -1370,7 +1372,7 @@ bool CBlockStore::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
                 return false;
         }
 
-        mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
+        mapQueuedChanges[hashTx] = CTxIndex(posThisTx, tx.vout.size());
     }
 
     // Write queued txindex changes
