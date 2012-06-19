@@ -1125,7 +1125,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     return true;
 }
 
-bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
+bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
 {
     printf("REORGANIZE\n");
 
