@@ -9,6 +9,8 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "hub.h"
+#include "checkpoints.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -23,6 +25,7 @@ using namespace std;
 using namespace boost;
 
 CWallet* pwalletMain;
+CBlockStore* pblockstore;
 CClientUIInterface uiInterface;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -66,6 +69,8 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
+        if (phub) phub->StopProcessCallbacks();
+        if (pblockstore) pblockstore->StopProcessCallbacks();
         nTransactionsUpdated++;
         bitdb.Flush(false);
         StopNode();
@@ -273,6 +278,7 @@ std::string HelpMessage()
         "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-6, default: 1)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000?.dat file") + "\n" +
+        "  -blockbuffersize=<n>   " + _("The maximum number of blocks to buffer for committing to disk (default: 20)") + "\n";
         "  -?                     " + _("This help message") + "\n";
 
     strUsage += string() +
@@ -533,10 +539,18 @@ bool AppInit2()
 
     // ********************************************************* Step 6: load blockchain
 
+    try {
+        phub = new CHub();
+    } catch (runtime_error& e) {
+        return InitError(_("Unable to create CHub."));
+    }
+    pblockstore = new CBlockStore();
+    phub->ConnectToBlockStore(pblockstore);
+    phub->RegisterCommitBlock(&Checkpoints::HandleCommitBlock);
+
     if (GetBoolArg("-loadblockindextest"))
     {
-        CTxDB txdb("r");
-        txdb.LoadBlockIndex();
+        pblockstore->LoadBlockIndex(true);
         PrintBlockTree();
         return false;
     }
@@ -544,7 +558,7 @@ bool AppInit2()
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
-    if (!LoadBlockIndex())
+    if (!pblockstore->LoadBlockIndex())
         strErrors << _("Error loading blkindex.dat") << "\n";
 
     // as LoadBlockIndex can take several minutes, it's possible the user
@@ -643,6 +657,7 @@ bool AppInit2()
     printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
     RegisterWallet(pwalletMain);
+    pwalletMain->RegisterWithHub(phub);
 
     CBlockIndex *pindexRescan = pindexBest;
     if (GetBoolArg("-rescan"))
