@@ -1674,7 +1674,13 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
         // Ask this guy to fill in what we're missing
         if (pfrom)
+        {
             pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
+            // ppcoin: getblocks may not obtain the parent block rejected earlier
+            // by duplicate-stake check so we must ask for it again directly
+            if (!mapOrphanBlocks.count(pblock->hashPrevBlock))
+                pfrom->AskFor(CInv(MSG_BLOCK, pblock->hashPrevBlock));
+        }
         return true;
     }
 
