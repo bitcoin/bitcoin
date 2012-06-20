@@ -1595,15 +1595,18 @@ public:
 
 class CTxMemPool
 {
-public:
-    mutable CCriticalSection cs;
+private:
     std::map<uint256, CTransaction> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
+
+public:
+    mutable CCriticalSection cs;
 
     bool accept(CTxDB& txdb, CTransaction &tx,
                 bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(CTransaction &tx);
     bool remove(CTransaction &tx);
+    void copyFinal(std::vector<CTransaction> &vtx);
 
     unsigned long size()
     {

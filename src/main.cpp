@@ -652,6 +652,21 @@ bool CTxMemPool::remove(CTransaction &tx)
     return true;
 }
 
+void CTxMemPool::copyFinal(vector<CTransaction> &vtx)
+{
+    vtx.clear();
+
+    LOCK(cs);
+    vtx.reserve(mapTx.size());
+    for (map<uint256, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
+        CTransaction& tx = (*mi).second;
+        if (tx.IsCoinBase() || !tx.IsFinal())
+            continue;
+
+        vtx.push_back(tx);
+    }
+}
+
 
 
 
@@ -3296,18 +3311,20 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
     // Collect memory pool transactions into the block
     int64 nFees = 0;
     {
-        LOCK2(cs_main, mempool.cs);
+        // Copy finalized, non-coinbase mempool transactions
+        vector<CTransaction> txpool;
+        mempool.copyFinal(txpool);
+
+        LOCK(cs_main);
         CTxDB txdb("r");
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
         map<uint256, vector<COrphan*> > mapDependers;
         multimap<double, CTransaction*> mapPriority;
-        for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
+        for (vector<CTransaction>::iterator it = txpool.begin(); it != txpool.end(); ++it)
         {
-            CTransaction& tx = (*mi).second;
-            if (tx.IsCoinBase() || !tx.IsFinal())
-                continue;
+            CTransaction& tx = (*it);
 
             COrphan* porphan = NULL;
             double dPriority = 0;
@@ -3346,7 +3363,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             if (porphan)
                 porphan->dPriority = dPriority;
             else
-                mapPriority.insert(make_pair(-dPriority, &(*mi).second));
+                mapPriority.insert(make_pair(-dPriority, &(*it)));
 
             if (fDebug && GetBoolArg("-printpriority"))
             {
