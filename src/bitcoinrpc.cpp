@@ -2390,48 +2390,58 @@ string rfc1123Time()
     return string(buffer);
 }
 
+
+static const char * GetAccessControlOrigin() {
+    return GetArg("-rpcorigin", strprintf("%slocalhost:%d", GetBoolArg("-rpcssl") ? "https://" : "http://", GetArg("-rpcport", 8332))).c_str();
+}
+
 static string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
 {
     if (nStatus == 401)
         return strprintf("HTTP/1.0 401 Authorization Required\r\n"
-            "Date: %s\r\n"
-            "Server: bitcoin-json-rpc/%s\r\n"
-            "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: 296\r\n"
-            "\r\n"
-            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\r\n"
-            "\"http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd\">\r\n"
-            "<HTML>\r\n"
-            "<HEAD>\r\n"
-            "<TITLE>Error</TITLE>\r\n"
-            "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=ISO-8859-1'>\r\n"
-            "</HEAD>\r\n"
-            "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
-            "</HTML>\r\n", rfc1123Time().c_str(), FormatFullVersion().c_str());
+                         "Date: %s\r\n"
+                         "Server: bitcoin-json-rpc/%s\r\n"
+                         "Access-Control-Allow-Origin: %s\r\n"
+                         "Access-Control-Allow-Headers: Authorization\r\n"
+                         "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
+                         "Content-Type: text/html\r\n"
+                         "Content-Length: 296\r\n"
+                         "\r\n"
+                         "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\r\n"
+                         "\"http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd\">\r\n"
+                         "<HTML>\r\n"
+                         "<HEAD>\r\n"
+                         "<TITLE>Error</TITLE>\r\n"
+                         "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=ISO-8859-1'>\r\n"
+                         "</HEAD>\r\n"
+                         "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
+                         "</HTML>\r\n", rfc1123Time().c_str(), FormatFullVersion().c_str(), GetAccessControlOrigin());
     const char *cStatus;
-         if (nStatus == 200) cStatus = "OK";
+    if (nStatus == 200) cStatus = "OK";
     else if (nStatus == 400) cStatus = "Bad Request";
     else if (nStatus == 403) cStatus = "Forbidden";
     else if (nStatus == 404) cStatus = "Not Found";
     else if (nStatus == 500) cStatus = "Internal Server Error";
     else cStatus = "";
     return strprintf(
-            "HTTP/1.1 %d %s\r\n"
-            "Date: %s\r\n"
-            "Connection: %s\r\n"
-            "Content-Length: %d\r\n"
-            "Content-Type: application/json\r\n"
-            "Server: bitcoin-json-rpc/%s\r\n"
-            "\r\n"
-            "%s",
-        nStatus,
-        cStatus,
-        rfc1123Time().c_str(),
-        keepalive ? "keep-alive" : "close",
-        strMsg.size(),
-        FormatFullVersion().c_str(),
-        strMsg.c_str());
+                     "HTTP/1.1 %d %s\r\n"
+                     "Date: %s\r\n"
+                     "Connection: %s\r\n"
+                     "Content-Length: %d\r\n"
+                     "Content-Type: application/json\r\n"
+                     "Server: bitcoin-json-rpc/%s\r\n"
+                     "Access-Control-Allow-Origin: %s\r\n"
+                     "Access-Control-Allow-Headers: Authorization\r\n"
+                     "\r\n"
+                     "%s",
+                     nStatus,
+                     cStatus,
+                     rfc1123Time().c_str(),
+                     keepalive ? "keep-alive" : "close",
+                     strMsg.size(),
+                     FormatFullVersion().c_str(),
+                     GetAccessControlOrigin(),
+                     strMsg.c_str());
 }
 
 int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto)
