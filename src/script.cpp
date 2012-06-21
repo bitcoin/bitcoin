@@ -1590,19 +1590,17 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 }
 
 
-bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType)
+bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
-    assert(txin.prevout.n < txFrom.vout.size());
-    const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(txout.scriptPubKey, txTo, nIn, nHashType);
+    uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
 
     txnouttype whichType;
-    if (!Solver(keystore, txout.scriptPubKey, hash, nHashType, txin.scriptSig, whichType))
+    if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
         return false;
 
     if (whichType == TX_SCRIPTHASH)
@@ -1623,12 +1621,18 @@ bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTrans
     }
 
     // Test solution
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, true, 0))
-        return false;
-
-    return true;
+    return VerifyScript(txin.scriptSig, fromPubKey, txTo, nIn, true, 0);
 }
 
+bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType)
+{
+    assert(nIn < txTo.vin.size());
+    CTxIn& txin = txTo.vin[nIn];
+    assert(txin.prevout.n < txFrom.vout.size());
+    const CTxOut& txout = txFrom.vout[txin.prevout.n];
+
+    return SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
+}
 
 bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType)
 {
@@ -1641,10 +1645,7 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
 
-    if (!VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, nHashType))
-        return false;
-
-    return true;
+    return VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, nHashType);
 }
 
 unsigned int CScript::GetSigOpCount(bool fAccurate) const
