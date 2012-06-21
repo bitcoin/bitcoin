@@ -73,6 +73,8 @@ public:
     void Reset()
     {
         fCompressedPubKey = false;
+        if (pkey != NULL)
+            EC_KEY_free(pkey);
         pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
         if (pkey == NULL)
             throw key_error("CKey::CKey() : EC_KEY_new_by_curve_name failed");
@@ -81,6 +83,7 @@ public:
 
     CKey()
     {
+        pkey = NULL;
         Reset();
     }
 
