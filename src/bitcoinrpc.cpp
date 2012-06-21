@@ -2089,16 +2089,19 @@ Value getwork(const Array& params, bool fHelp)
             "  \"target\" : little endian hash target\n"
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
+    {
+    LOCK(cs_vNodes);
     if (vNodes.empty())
         throw JSONRPCError(-9, "Bitcoin is not connected!");
+    }
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     if (IsInitialBlockDownload())
         throw JSONRPCError(-10, "Bitcoin is downloading blocks...");
 
     typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
-    static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
+    static mapNewBlock_t mapNewBlock;
     static vector<CBlock*> vNewBlock;
     static CReserveKey reservekey(pwalletMain);
 
@@ -2201,12 +2204,15 @@ Value getmemorypool(const Array& params, bool fHelp)
             "  \"bits\" : compressed target of next block\n"
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
     if (params.size() == 0)
     {
+        {
+        LOCK(cs_vNodes);
         if (vNodes.empty())
             throw JSONRPCError(-9, "Bitcoin is not connected!");
+        }
+
+        LOCK2(cs_main, pwalletMain->cs_wallet);
 
         if (IsInitialBlockDownload())
             throw JSONRPCError(-10, "Bitcoin is downloading blocks...");
@@ -2268,6 +2274,7 @@ Value getmemorypool(const Array& params, bool fHelp)
         CBlock pblock;
         ssBlock >> pblock;
 
+        LOCK(cs_main);
         return ProcessBlock(NULL, &pblock);
     }
 }
@@ -2279,7 +2286,7 @@ Value getblockhash(const Array& params, bool fHelp)
             "getblockhash <index>\n"
             "Returns hash of block in best-block-chain at <index>.");
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK(cs_main);
 
     int nHeight = params[0].get_int();
     if (nHeight < 0 || nHeight > nBestHeight)
@@ -2302,7 +2309,7 @@ Value getblock(const Array& params, bool fHelp)
     std::string strHash = params[0].get_str();
     uint256 hash(strHash);
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK(cs_main);
 
     if (mapBlockIndex.count(hash) == 0)
         throw JSONRPCError(-5, "Block not found");
