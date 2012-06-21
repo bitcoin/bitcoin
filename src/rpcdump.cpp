@@ -34,8 +34,6 @@ public:
 
 Value importprivkey(const Array& params, bool fHelp)
 {
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "importprivkey <bitcoinprivkey> [label]\n"
@@ -49,6 +47,8 @@ Value importprivkey(const Array& params, bool fHelp)
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) throw JSONRPCError(-5,"Invalid private key");
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     CKey key;
     bool fCompressed;
@@ -73,12 +73,12 @@ Value importprivkey(const Array& params, bool fHelp)
 
 Value dumpprivkey(const Array& params, bool fHelp)
 {
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "dumpprivkey <bitcoinaddress>\n"
             "Reveals the private key corresponding to <bitcoinaddress>.");
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     string strAddress = params[0].get_str();
     CBitcoinAddress address;
