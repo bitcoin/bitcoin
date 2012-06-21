@@ -34,6 +34,8 @@ public:
 
 Value importprivkey(const Array& params, bool fHelp)
 {
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "importprivkey <bitcoinprivkey> [label]\n"
@@ -71,6 +73,8 @@ Value importprivkey(const Array& params, bool fHelp)
 
 Value dumpprivkey(const Array& params, bool fHelp)
 {
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "dumpprivkey <bitcoinaddress>\n"
