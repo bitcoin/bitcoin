@@ -652,8 +652,23 @@ bool CTxMemPool::remove(CTransaction &tx)
     return true;
 }
 
+void CTxMemPool::fillInv(std::vector<CInv> &vInv, unsigned int max_inv)
+{
+    LOCK(cs);
 
+    for (map<uint256, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+    {
+        CTransaction& tx = (*mi).second;
 
+        {
+            CInv inv(MSG_TX, tx.GetHash());
+            vInv.push_back(inv);
+        }
+
+        if (vInv.size() >= max_inv)
+            return;
+    }
+}
 
 
 
@@ -2866,6 +2881,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     alert.RelayTo(pnode);
             }
         }
+    }
+
+
+    else if (strCommand == "mempool")
+    {
+        vector<CInv> vInv;
+        mempool.fillInv(vInv, 49999);
+        pfrom->PushMessage("inv", vInv);
     }
 
 
