@@ -2194,6 +2194,23 @@ Value getmemorypool(const Array& params, bool fHelp)
     }
 }
 
+Value getrawmempool(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getrawmempool\n"
+            "Returns all transaction ids in memory pool.");
+
+    vector<uint256> vtxid;
+    mempool.queryHashes(vtxid);
+
+    Array a;
+    BOOST_FOREACH(const uint256& hash, vtxid)
+        a.push_back(hash.ToString());
+
+    return a;
+}
+
 Value getblockhash(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -2317,6 +2334,7 @@ static const CRPCCommand vRPCCommands[] =
     { "sendfrom",               &sendfrom,               false },
     { "sendmany",               &sendmany,               false },
     { "addmultisigaddress",     &addmultisigaddress,     false },
+    { "getrawmempool",          &getrawmempool,          true },
     { "getblock",               &getblock,               false },
     { "getblockhash",           &getblockhash,           false },
     { "gettransaction",         &gettransaction,         false },
