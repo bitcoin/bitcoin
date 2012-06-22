@@ -344,6 +344,13 @@ bool AppInit2()
     // ********************************************************* Step 3: parameter-to-internal-flags
 
     fDebug = GetBoolArg("-debug");
+
+    // -debug implies fDebug*
+    if (fDebug)
+        fDebugNet = true;
+    else
+        fDebugNet = GetBoolArg("-debugnet");
+
     bitdb.SetDetach(GetBoolArg("-detachdb", false));
 
 #if !defined(WIN32) && !defined(QT_GUI)
