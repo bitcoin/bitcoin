@@ -1979,6 +1979,12 @@ string GetWarnings(string strFor)
         strStatusBar = strRPC = "WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.";
     }
 
+    if (Checkpoints::hashInvalidCheckpoint != 0)
+    {
+        nPriority = 3000;
+        strStatusBar = strRPC = "WARNING: Invalid checkpoint found!  Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.";
+    }
+
     // Alerts
     CRITICAL_BLOCK(cs_mapAlerts)
     {

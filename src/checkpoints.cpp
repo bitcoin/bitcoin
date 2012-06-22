@@ -60,6 +60,7 @@ namespace Checkpoints
     uint256 hashSyncCheckpoint;
     CSyncCheckpoint checkpointMessage;
     CSyncCheckpoint checkpointMessagePending;
+    uint256 hashInvalidCheckpoint = 0;
     CCriticalSection cs_hashSyncCheckpoint;
 
     // ppcoin: only descendant of current sync-checkpoint is allowed
@@ -72,15 +73,36 @@ namespace Checkpoints
 
         CBlockIndex* pindexSyncCheckpoint = mapBlockIndex[hashSyncCheckpoint];
         CBlockIndex* pindexCheckpointRecv = mapBlockIndex[hashCheckpoint];
-        if (pindexCheckpointRecv->nHeight <= pindexSyncCheckpoint->nHeight)
-            return false;  // this is an older checkpoint, ignore
 
+        if (pindexCheckpointRecv->nHeight <= pindexSyncCheckpoint->nHeight)
+        {
+            // Received an older checkpoint, trace back from current checkpoint
+            // to the same height of the received checkpoint to verify
+            // that current checkpoint should be a descendant block
+            CBlockIndex* pindex = pindexSyncCheckpoint;
+            while (pindex->nHeight > pindexCheckpointRecv->nHeight)
+                if (!(pindex = pindex->pprev))
+                    return error("ValidateSyncCheckpoint: pprev1 null - block index structure failure");
+            if (pindex->GetBlockHash() != hashCheckpoint)
+            {
+                hashInvalidCheckpoint = hashCheckpoint;
+                return error("ValidateSyncCheckpoint: new sync-checkpoint %s is conflicting with current sync-checkpoint %s", hashCheckpoint.ToString().c_str(), hashSyncCheckpoint.ToString().c_str());
+            }
+            return false; // ignore older checkpoint
+        }
+
+        // Received checkpoint should be a descendant block of the current
+        // checkpoint. Trace back to the same height of current checkpoint
+        // to verify.
         CBlockIndex* pindex = pindexCheckpointRecv;
         while (pindex->nHeight > pindexSyncCheckpoint->nHeight)
             if (!(pindex = pindex->pprev))
-                return error("ValidateSyncCheckpoint: pprev null - block index structure failure");
+                return error("ValidateSyncCheckpoint: pprev2 null - block index structure failure");
         if (pindex->GetBlockHash() != hashSyncCheckpoint)
+        {
+            hashInvalidCheckpoint = hashCheckpoint;
             return error("ValidateSyncCheckpoint: new sync-checkpoint %s is not a descendant of current sync-checkpoint %s", hashCheckpoint.ToString().c_str(), hashSyncCheckpoint.ToString().c_str());
+        }
         return true;
     }
 
@@ -104,6 +126,7 @@ namespace Checkpoints
                     if (!Reorganize(txdb, pindexCheckpoint))
                     {
                         txdb.TxnAbort();
+                        hashInvalidCheckpoint = checkpointMessagePending.hashCheckpoint;
                         return error("ProcessSyncCheckpoint: Reorganize failed for sync checkpoint %s", checkpointMessagePending.hashCheckpoint.ToString().c_str());
                     }
                 }
@@ -321,6 +344,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
             if (!Reorganize(txdb, pindexCheckpoint))
             {
                 txdb.TxnAbort();
+                Checkpoints::hashInvalidCheckpoint = hashCheckpoint;
                 return error("ProcessSyncCheckpoint: Reorganize failed for sync checkpoint %s", hashCheckpoint.ToString().c_str());
             }
         }
