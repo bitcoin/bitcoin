@@ -155,6 +155,10 @@ public:
         return GetDirectory(base) / strprintf("%08u%s.blk", nHeight, GetAlternative().c_str());
     }
 
+    boost::filesystem::path GetUndoFile(const boost::filesystem::path &base) const {
+        return GetDirectory(base) / strprintf("%08u%s.und", nHeight, GetAlternative().c_str());
+    }
+
     // TODO: make thread-safe (lockfile, atomic file creation, ...?)
     void MakeUnique(const boost::filesystem::path &base) {
         while (boost::filesystem::exists(GetFileName(base)))
@@ -807,6 +811,17 @@ public:
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vprevout);
+    )
+};
+
+/** Undo information for a CBlock */
+class CBlockUndo
+{
+public:
+    std::vector<CTxUndo> vtxundo;
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(vtxundo);
     )
 };
 

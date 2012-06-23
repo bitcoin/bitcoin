@@ -1432,6 +1432,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     else
         nTxPos = ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - 1 + GetSizeOfCompactSize(vtx.size());
 
+    CBlockUndo blockundo;
+
     map<uint256, CTxIndex> mapQueuedChanges;
     int64 nFees = 0;
     unsigned int nSigOps = 0;
@@ -1461,6 +1463,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         MapPrevTx mapInputs;
         if (!tx.IsCoinBase())
         {
+            CTxUndo undo;
+
             bool fInvalid;
             if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
                 return false;
@@ -1477,8 +1481,14 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
             nFees += tx.GetValueIn(mapInputs)-tx.GetValueOut();
 
+            BOOST_FOREACH(const CTxIn &in, tx.vin) {
+                undo.vprevout.push_back(CTxInUndo(mapInputs[in.prevout.hash].second.vout[in.prevout.n], pindex->nHeight));
+            }
+
             if (!tx.ConnectInputs(mapInputs, mapQueuedChanges, posThisTx, pindex, true, false, fStrictPayToScriptHash))
                 return false;
+
+            blockundo.vtxundo.push_back(undo);
         }
 
         mapQueuedChanges[hashTx] = CTxIndex(posThisTx, tx.vout.size());
@@ -1505,6 +1515,13 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         blockindexPrev.hashNext = pindex->GetBlockHash();
         if (!txdb.WriteBlockIndex(blockindexPrev))
             return error("ConnectBlock() : WriteBlockIndex failed");
+    }
+
+    // Write undo information to disk
+    if (pindex->nHeight > Checkpoints::GetTotalBlocksEstimate())
+    {
+        CAutoFile fileUndo(fopen(pindex->GetBlockPos().GetUndoFile(GetDataDir()).string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
+        fileUndo << blockundo;
     }
 
     // Watch for transactions paying to me
