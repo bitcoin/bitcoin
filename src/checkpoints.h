@@ -139,6 +139,7 @@ namespace Checkpoints
     bool AcceptPendingSyncCheckpoint();
     uint256 AutoSelectSyncCheckpoint();
     bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev);
+    bool IsPendingSyncCheckpoint(uint256 hashBlock);
 
     // ppcoin: automatic checkpoint
     extern int nAutoCheckpoint;
