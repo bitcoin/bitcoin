@@ -195,6 +195,12 @@ namespace Checkpoints
         return true;
     }
 
+    bool IsPendingSyncCheckpoint(uint256 hashBlock)
+    {
+        CRITICAL_BLOCK(cs_hashSyncCheckpoint)
+            return ((!checkpointMessagePending.IsNull()) && hashBlock == checkpointMessagePending.hashCheckpoint);
+    }
+
     // ppcoin: automatic checkpoint (represented by height of checkpoint)
     int nAutoCheckpoint = 0;
     int nBranchPoint = 0;    // branch point to alternative branch
