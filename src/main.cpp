@@ -660,7 +660,7 @@ bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
     return true;
 }
 
-uint256 static GetOrphanRoot(const CBlock* pblock)
+uint256 GetOrphanRoot(const CBlock* pblock)
 {
     // Work back to the first block in the orphan chain
     while (mapOrphanBlocks.count(pblock->hashPrevBlock))
@@ -1676,10 +1676,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         if (pfrom)
         {
             pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
-            // ppcoin: getblocks may not obtain the parent block rejected earlier
-            // by duplicate-stake check so we must ask for it again directly
-            if (!mapOrphanBlocks.count(pblock->hashPrevBlock))
-                pfrom->AskFor(CInv(MSG_BLOCK, pblock->hashPrevBlock));
+            // ppcoin: getblocks may not obtain the ancestor block rejected
+            // earlier by duplicate-stake check so we ask for it again directly
+            pfrom->AskFor(CInv(MSG_BLOCK, GetOrphanRoot(pblock2)));
         }
         return true;
     }
