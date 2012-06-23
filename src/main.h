@@ -67,6 +67,7 @@ extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
+extern std::map<uint256, CBlock*> mapOrphanBlocks;
 
 // Settings
 extern int fGenerateBitcoins;
@@ -108,7 +109,7 @@ int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
 bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew);
-
+uint256 GetOrphanRoot(const CBlock* pblock);
 
 
 

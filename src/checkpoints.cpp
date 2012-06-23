@@ -328,7 +328,12 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
             printf("ProcessSyncCheckpoint: pending for sync-checkpoint %s\n", hashCheckpoint.ToString().c_str());
             // Ask this guy to fill in what we're missing
             if (pfrom)
+            {
                 pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
+                // ask directly as well in case rejected earlier by duplicate
+                // proof-of-stake because getblocks may not get it this time
+                pfrom->AskFor(CInv(MSG_BLOCK, mapOrphanBlocks.count(hashCheckpoint)? GetOrphanRoot(mapOrphanBlocks[hashCheckpoint]) : hashCheckpoint));
+            }
             return false;
         }
 
