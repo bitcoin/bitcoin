@@ -189,6 +189,10 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, CNetAddr& ipRet)
 void ThreadIRCSeed(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadIRCSeed(parg));
+
+    // Make this thread recognisable as the IRC seeding thread
+    RenameThread("bitcoin-ircseed");
+
     try
     {
         ThreadIRCSeed2(parg);
