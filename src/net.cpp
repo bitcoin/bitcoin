@@ -59,6 +59,7 @@ uint64 nLocalHostNonce = 0;
 array<int, THREAD_MAX> vnThreadsRunning;
 static std::vector<SOCKET> vhListenSocket;
 CAddrMan addrman;
+CNetStats netstats;
 
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
@@ -1949,3 +1950,18 @@ public:
     }
 }
 instance_of_cnetcleanup;
+
+
+void CNetStats::countPeers()
+{
+    nInbound = nOutbound = 0;
+
+    LOCK(cs_vNodes);
+    nConn = vNodes.size();
+    BOOST_FOREACH(CNode* pnode, vNodes) {
+        if (pnode->fInbound)
+            nInbound++;
+        else
+            nOutbound++;
+    }
+}
