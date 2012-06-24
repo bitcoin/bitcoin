@@ -621,9 +621,7 @@ inline void ExitThread(size_t nExitCode)
 }
 #endif
 
-
-
-
+void RenameThread(const char* name);
 
 inline uint32_t ByteReverse(uint32_t value)
 {

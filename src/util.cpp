@@ -51,6 +51,8 @@ namespace boost {
 #endif
 #include <io.h> /* for _commit */
 #include "shlobj.h"
+#elif defined(__linux__)
+# include <sys/prctl.h>
 #endif
 
 using namespace std;
@@ -1275,3 +1277,13 @@ void runCommand(std::string strCommand)
         printf("runCommand error: system(%s) returned %d\n", strCommand.c_str(), nErr);
 }
 
+void RenameThread(const char* name)
+{
+#if defined(__linux__) && defined(PR_SET_NAME)
+    // Only the first 15 characters are used (16 - NUL terminator)
+    ::prctl(PR_SET_NAME, name, 0, 0, 0);
+#else
+    // Prevent warnings for unused parameters...
+    (void)name;
+#endif
+}
