@@ -441,15 +441,21 @@ HelpMessageBox::HelpMessageBox(QWidget *parent) :
     setDetailedText(coreOptions + "\n" + uiOptions);
 }
 
-void HelpMessageBox::exec()
+void HelpMessageBox::printToConsole()
 {
-#if defined(WIN32)
-    // On windows, show a message box, as there is no stderr in windowed applications
-    QMessageBox::exec();
-#else
     // On other operating systems, the expected action is to print the message to the console.
     QString strUsage = header + "\n" + coreOptions + "\n" + uiOptions;
     fprintf(stderr, "%s", strUsage.toStdString().c_str());
+}
+
+void HelpMessageBox::showOrPrint()
+{
+#if defined(WIN32)
+        // On windows, show a message box, as there is no stderr/stdout in windowed applications
+        exec();
+#else
+        // On other operating systems, print help text to console
+        printToConsole();
 #endif
 }
 
