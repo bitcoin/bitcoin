@@ -200,4 +200,18 @@ private:
     bool LoadBlockIndexGuts();
 };
 
+// Called from the initialization code. Checks to see if there is an old
+// blkindex.dat file. If so, deletes it and begins re-importing the block
+// chain, which will create the new database.
+enum LevelDBMigrationResult {
+  NONE_NEEDED,
+  INSUFFICIENT_DISK_SPACE,
+  COMPLETED,
+  OTHER_ERROR,
+};
+
+typedef boost::signals2::signal<void (double progress)> LevelDBMigrationProgress;
+
+LevelDBMigrationResult MaybeMigrateToLevelDB(LevelDBMigrationProgress &progress);
+
 #endif // BITCOIN_DB_H

@@ -55,10 +55,11 @@ const string strMessageMagic = "Bitcoin Signed Message:\n";
 double dHashesPerSec;
 int64 nHPSTimerStart;
 
+// Used during database migration.
+bool fDisableSignatureChecking = false;
+
 // Settings
 int64 nTransactionFee = 0;
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1239,7 +1240,7 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
             // still computed and checked, and any change will be caught at the next checkpoint.
-            if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
+            if (!fDisableSignatureChecking && !(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
             {
                 // Verify signature
                 if (!VerifySignature(txPrev, *this, i, fStrictPayToScriptHash, 0))
@@ -1996,15 +1997,21 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
 
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode)
 {
-    if ((nFile < 1) || (nFile == (unsigned int) -1))
+    if ((nFile < 1) || (nFile == (unsigned int) -1)) {
+        printf("nFile is invalid: %d\n", nFile);
         return NULL;
-    FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
-    if (!file)
+    }
+    string filename = strprintf("blk%04d.dat", nFile);
+    FILE* file = fopen((GetDataDir() / filename).string().c_str(), pszMode);
+    if (!file) {
+        printf("Failed to open %s errno=%d\n", filename.c_str(), errno);
         return NULL;
+    }
     if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))
     {
         if (fseek(file, nBlockPos, SEEK_SET) != 0)
         {
+            printf("Failed to seek to %ud, errno=%d\n", nBlockPos, errno);
             fclose(file);
             return NULL;
         }
@@ -2035,7 +2042,7 @@ FILE* AppendBlockFile(unsigned int& nFileRet)
     }
 }
 
-bool LoadBlockIndex(bool fAllowNew)
+bool LoadBlockIndex()
 {
     if (fTestNet)
     {
@@ -2044,7 +2051,7 @@ bool LoadBlockIndex(bool fAllowNew)
         pchMessageStart[2] = 0x09;
         pchMessageStart[3] = 0x07;
         hashGenesisBlock = uint256("000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943");
-    }   
+    }
 
     //
     // Load block index
@@ -2058,9 +2065,6 @@ bool LoadBlockIndex(bool fAllowNew)
     //
     if (mapBlockIndex.empty())
     {
-        if (!fAllowNew)
-            return false;
-
         // Genesis Block:
         // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
         //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
@@ -2099,7 +2103,7 @@ bool LoadBlockIndex(bool fAllowNew)
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
 
-        // Start new block file
+        // Start new block file.
         unsigned int nFile;
         unsigned int nBlockPos;
         if (!block.WriteToDisk(nFile, nBlockPos))
@@ -2185,7 +2189,7 @@ void PrintBlockTree()
     }
 }
 
-bool LoadExternalBlockFile(FILE* fileIn)
+bool LoadExternalBlockFile(FILE* fileIn, ExternalBlockFileProgress *progress)
 {
     int64 nStart = GetTimeMillis();
 
@@ -2234,6 +2238,8 @@ bool LoadExternalBlockFile(FILE* fileIn)
                         nPos += 4 + nSize;
                     }
                 }
+                if (progress)
+                    (*progress)(4 + nSize);
             }
         }
         catch (std::exception &e) {
