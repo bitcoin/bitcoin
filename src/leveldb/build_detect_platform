@@ -1,0 +1,179 @@
+#!/bin/sh
+#
+# Detects OS we're compiling on and outputs a file specified by the first
+# argument, which in turn gets read while processing Makefile.
+#
+# The output will set the following variables:
+#   CC                          C Compiler path
+#   CXX                         C++ Compiler path
+#   PLATFORM_LDFLAGS            Linker flags
+#   PLATFORM_SHARED_EXT         Extension for shared libraries
+#   PLATFORM_SHARED_LDFLAGS     Flags for building shared library
+#   PLATFORM_SHARED_CFLAGS      Flags for compiling objects for shared library
+#   PLATFORM_CCFLAGS            C compiler flags
+#   PLATFORM_CXXFLAGS           C++ compiler flags.  Will contain:
+#   PLATFORM_SHARED_VERSIONED   Set to 'true' if platform supports versioned
+#                               shared libraries, empty otherwise.
+#
+# The PLATFORM_CCFLAGS and PLATFORM_CXXFLAGS might include the following:
+#
+#       -DLEVELDB_CSTDATOMIC_PRESENT if <cstdatomic> is present
+#       -DLEVELDB_PLATFORM_POSIX     for Posix-based platforms
+#       -DSNAPPY                     if the Snappy library is present
+#
+
+OUTPUT=$1
+if test -z "$OUTPUT"; then
+  echo "usage: $0 <output-filename>" >&2
+  exit 1
+fi
+
+# Delete existing output, if it exists
+rm -f $OUTPUT
+touch $OUTPUT
+
+if test -z "$CC"; then
+    CC=cc
+fi
+
+if test -z "$CXX"; then
+    CXX=g++
+fi
+
+# Detect OS
+if test -z "$TARGET_OS"; then
+    TARGET_OS=`uname -s`
+fi
+
+COMMON_FLAGS=
+CROSS_COMPILE=
+PLATFORM_CCFLAGS=
+PLATFORM_CXXFLAGS=
+PLATFORM_LDFLAGS=
+PLATFORM_SHARED_EXT="so"
+PLATFORM_SHARED_LDFLAGS="-shared -Wl,-soname -Wl,"
+PLATFORM_SHARED_CFLAGS="-fPIC"
+PLATFORM_SHARED_VERSIONED=true
+
+# On GCC, we pick libc's memcmp over GCC's memcmp via -fno-builtin-memcmp
+case "$TARGET_OS" in
+    Darwin)
+        PLATFORM=OS_MACOSX
+        COMMON_FLAGS="-fno-builtin-memcmp -DOS_MACOSX"
+        PLATFORM_SHARED_EXT=dylib
+        PLATFORM_SHARED_LDFLAGS="-dynamiclib -install_name "
+        PORT_FILE=port/port_posix.cc
+        ;;
+    Linux)
+        PLATFORM=OS_LINUX
+        COMMON_FLAGS="-fno-builtin-memcmp -pthread -DOS_LINUX"
+        PLATFORM_LDFLAGS="-pthread"
+        PORT_FILE=port/port_posix.cc
+        ;;
+    SunOS)
+        PLATFORM=OS_SOLARIS
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_SOLARIS"
+        PLATFORM_LDFLAGS="-lpthread -lrt"
+        PORT_FILE=port/port_posix.cc
+        ;;
+    FreeBSD)
+        PLATFORM=OS_FREEBSD
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_FREEBSD"
+        PLATFORM_LDFLAGS="-lpthread"
+        PORT_FILE=port/port_posix.cc
+        ;;
+    NetBSD)
+        PLATFORM=OS_NETBSD
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_NETBSD"
+        PLATFORM_LDFLAGS="-lpthread -lgcc_s"
+        PORT_FILE=port/port_posix.cc
+        ;;
+    OpenBSD)
+        PLATFORM=OS_OPENBSD
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_OPENBSD"
+        PLATFORM_LDFLAGS="-pthread"
+        PORT_FILE=port/port_posix.cc
+        ;;
+    DragonFly)
+        PLATFORM=OS_DRAGONFLYBSD
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_DRAGONFLYBSD"
+        PLATFORM_LDFLAGS="-lpthread"
+        PORT_FILE=port/port_posix.cc
+        ;;
+    OS_ANDROID_CROSSCOMPILE)
+        PLATFORM=OS_ANDROID
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_ANDROID -DLEVELDB_PLATFORM_POSIX"
+        PLATFORM_LDFLAGS=""  # All pthread features are in the Android C library
+        PORT_FILE=port/port_posix.cc
+        CROSS_COMPILE=true
+        ;;
+    *)
+        echo "Unknown platform!" >&2
+        exit 1
+esac
+
+# We want to make a list of all cc files within util, db, table, and helpers
+# except for the test and benchmark files. By default, find will output a list
+# of all files matching either rule, so we need to append -print to make the
+# prune take effect.
+DIRS="util db table"
+set -f # temporarily disable globbing so that our patterns aren't expanded
+PRUNE_TEST="-name *test*.cc -prune"
+PRUNE_BENCH="-name *_bench.cc -prune"
+PORTABLE_FILES=`find $DIRS $PRUNE_TEST -o $PRUNE_BENCH -o -name '*.cc' -print | sort | tr "\n" " "`
+set +f # re-enable globbing
+
+# The sources consist of the portable files, plus the platform-specific port
+# file.
+echo "SOURCES=$PORTABLE_FILES $PORT_FILE" >> $OUTPUT
+echo "MEMENV_SOURCES=helpers/memenv/memenv.cc" >> $OUTPUT
+
+if [ "$CROSS_COMPILE" = "true" ]; then
+    # Cross-compiling; do not try any compilation tests.
+    true
+else
+    # If -std=c++0x works, use <cstdatomic>.  Otherwise use port_posix.h.
+    $CXX $CFLAGS -std=c++0x -x c++ - -o /dev/null 2>/dev/null  <<EOF
+      #include <cstdatomic>
+      int main() {}
+EOF
+    if [ "$?" = 0 ]; then
+        COMMON_FLAGS="$COMMON_FLAGS -DLEVELDB_PLATFORM_POSIX -DLEVELDB_CSTDATOMIC_PRESENT"
+        PLATFORM_CXXFLAGS="-std=c++0x"
+    else
+        COMMON_FLAGS="$COMMON_FLAGS -DLEVELDB_PLATFORM_POSIX"
+    fi
+
+    # Test whether Snappy library is installed
+    # http://code.google.com/p/snappy/
+    $CXX $CFLAGS -x c++ - -o /dev/null 2>/dev/null  <<EOF
+      #include <snappy.h>
+      int main() {}
+EOF
+    if [ "$?" = 0 ]; then
+        COMMON_FLAGS="$COMMON_FLAGS -DSNAPPY"
+        PLATFORM_LDFLAGS="$PLATFORM_LDFLAGS -lsnappy"
+    fi
+
+    # Test whether tcmalloc is available
+    $CXX $CFLAGS -x c++ - -o /dev/null -ltcmalloc 2>/dev/null  <<EOF
+      int main() {}
+EOF
+    if [ "$?" = 0 ]; then
+        PLATFORM_LDFLAGS="$PLATFORM_LDFLAGS -ltcmalloc"
+    fi
+fi
+
+PLATFORM_CCFLAGS="$PLATFORM_CCFLAGS $COMMON_FLAGS"
+PLATFORM_CXXFLAGS="$PLATFORM_CXXFLAGS $COMMON_FLAGS"
+
+echo "CC=$CC" >> $OUTPUT
+echo "CXX=$CXX" >> $OUTPUT
+echo "PLATFORM=$PLATFORM" >> $OUTPUT
+echo "PLATFORM_LDFLAGS=$PLATFORM_LDFLAGS" >> $OUTPUT
+echo "PLATFORM_CCFLAGS=$PLATFORM_CCFLAGS" >> $OUTPUT
+echo "PLATFORM_CXXFLAGS=$PLATFORM_CXXFLAGS" >> $OUTPUT
+echo "PLATFORM_SHARED_CFLAGS=$PLATFORM_SHARED_CFLAGS" >> $OUTPUT
+echo "PLATFORM_SHARED_EXT=$PLATFORM_SHARED_EXT" >> $OUTPUT
+echo "PLATFORM_SHARED_LDFLAGS=$PLATFORM_SHARED_LDFLAGS" >> $OUTPUT
+echo "PLATFORM_SHARED_VERSIONED=$PLATFORM_SHARED_VERSIONED" >> $OUTPUT
