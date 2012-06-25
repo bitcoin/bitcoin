@@ -125,10 +125,11 @@ namespace Checkpoints
     extern uint256 hashInvalidCheckpoint;
     extern CCriticalSection cs_hashSyncCheckpoint;
 
+    CBlockIndex* GetLastSyncCheckpoint();
     bool AcceptPendingSyncCheckpoint();
     uint256 AutoSelectSyncCheckpoint();
     bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev);
-    bool IsPendingSyncCheckpoint(uint256 hashBlock);
+    bool WantedByPendingSyncCheckpoint(uint256 hashBlock);
 
     // ppcoin: automatic checkpoint
     extern int nAutoCheckpoint;

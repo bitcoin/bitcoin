@@ -63,6 +63,19 @@ namespace Checkpoints
     uint256 hashInvalidCheckpoint = 0;
     CCriticalSection cs_hashSyncCheckpoint;
 
+    // ppcoin: get last synchronized checkpoint
+    CBlockIndex* GetLastSyncCheckpoint()
+    {
+        CRITICAL_BLOCK(cs_hashSyncCheckpoint)
+        {
+            if (!mapBlockIndex.count(hashSyncCheckpoint))
+                error("GetSyncCheckpoint: block index missing for current sync-checkpoint %s", hashSyncCheckpoint.ToString().c_str());
+            else
+                return mapBlockIndex[hashSyncCheckpoint];
+        }
+        return NULL;
+    }
+
     // ppcoin: only descendant of current sync-checkpoint is allowed
     bool ValidateSyncCheckpoint(uint256 hashCheckpoint)
     {
@@ -195,10 +208,19 @@ namespace Checkpoints
         return true;
     }
 
-    bool IsPendingSyncCheckpoint(uint256 hashBlock)
+    bool WantedByPendingSyncCheckpoint(uint256 hashBlock)
     {
         CRITICAL_BLOCK(cs_hashSyncCheckpoint)
-            return ((!checkpointMessagePending.IsNull()) && hashBlock == checkpointMessagePending.hashCheckpoint);
+        {
+            if (checkpointMessagePending.IsNull())
+                return false;
+            if (hashBlock == checkpointMessagePending.hashCheckpoint)
+                return true;
+            if (mapOrphanBlocks.count(checkpointMessagePending.hashCheckpoint) 
+                && hashBlock == WantedByOrphan(mapOrphanBlocks[checkpointMessagePending.hashCheckpoint]))
+                return true;
+        }
+        return false;
     }
 
     // ppcoin: automatic checkpoint (represented by height of checkpoint)
@@ -356,7 +378,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
                 pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
                 // ask directly as well in case rejected earlier by duplicate
                 // proof-of-stake because getblocks may not get it this time
-                pfrom->AskFor(CInv(MSG_BLOCK, mapOrphanBlocks.count(hashCheckpoint)? GetOrphanRoot(mapOrphanBlocks[hashCheckpoint]) : hashCheckpoint));
+                pfrom->AskFor(CInv(MSG_BLOCK, mapOrphanBlocks.count(hashCheckpoint)? WantedByOrphan(mapOrphanBlocks[hashCheckpoint]) : hashCheckpoint));
             }
             return false;
         }
