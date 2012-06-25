@@ -1831,6 +1831,12 @@ bool CBlockStore::EmitBlock(CBlock& block)
     return true;
 }
 
+bool CBlockStore::HaveSeenBlock(const uint256& hash)
+{
+    LOCK(cs_main);
+    return mapBlockIndex.count(hash) ||
+           mapOrphanBlocks.count(hash);
+}
 
 
 
@@ -2366,28 +2372,33 @@ bool CHub::EmitAlert(CAlert& alert)
 //
 
 
-bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
+bool CHub::NeedInv(const CInv& inv)
 {
     switch (inv.type)
     {
     case MSG_TX:
         {
-        bool txInMap = false;
             {
-            LOCK(mempool.cs);
-            txInMap = (mempool.exists(inv.hash));
+                LOCK(mempool.cs);
+                if (mempool.exists(inv.hash))
+                    return false;
             }
-        return txInMap ||
-               mapOrphanTransactions.count(inv.hash) ||
-               txdb.ContainsTx(inv.hash);
+            {
+                LOCK(cs_main);
+                if (mapOrphanTransactions.count(inv.hash))
+                    return false;
+            }
+            CTxDB txdb("r");
+            return !txdb.ContainsTx(inv.hash);
         }
-
     case MSG_BLOCK:
-        return mapBlockIndex.count(inv.hash) ||
-               mapOrphanBlocks.count(inv.hash);
+        if (pblockstore)
+            return !pblockstore->HaveSeenBlock(inv.hash);
+        else
+            return false;
     }
-    // Don't know what it is, just say we already got one
-    return true;
+    // Don't know what it is, guess we don't need it
+    return false;
 }
 
 
@@ -2623,7 +2634,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 break;
             }
         }
-        CTxDB txdb("r");
+
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
@@ -2632,11 +2643,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 return true;
             pfrom->AddInventoryKnown(inv);
 
-            bool fAlreadyHave = AlreadyHave(txdb, inv);
+            bool fNeed = phub->NeedInv(inv);
             if (fDebug)
-                printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fAlreadyHave ? "have" : "new");
+                printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fNeed ? "need" : "have");
 
-            if (!fAlreadyHave)
+            if (fNeed)
                 pfrom->AskFor(inv);
             else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
                 pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
@@ -3182,11 +3193,10 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         vector<CInv> vGetData;
         int64 nNow = GetTime() * 1000000;
-        CTxDB txdb("r");
         while (!pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
-            if (!AlreadyHave(txdb, inv))
+            if (phub->NeedInv(inv))
             {
                 printf("sending getdata: %s\n", inv.ToString().c_str());
                 vGetData.push_back(inv);

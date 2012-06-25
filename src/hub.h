@@ -17,6 +17,7 @@ class CBlock;
 class CMerkleTx;
 class CTransaction;
 class CAlert;
+class CInv;
 
 class CHubSignalTable
 {
@@ -105,6 +106,9 @@ public:
     // Only set fCheckInputs when tx is a supporting transaction for one of our own
     bool EmitTransaction(CMerkleTx& tx, bool fCheckInputs=true);
     bool EmitTransaction(CTransaction& tx, bool fCheckInputs=true);
+
+    // Returns true if we haven't seen a given inv and want it
+    bool NeedInv(const CInv& inv);
 
 //Connected wallet/etc access methods
 

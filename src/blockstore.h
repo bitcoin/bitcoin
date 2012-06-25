@@ -60,6 +60,10 @@ public:
     // Emit methods will verify the object, commit it to memory/disk and then place it in queue to
     //   be handled by listeners
     bool EmitBlock(CBlock& block);
+
+    // Returns true if we have/have seen a block with the given hash
+    // Does not indicate whether the block is orphan/was invalid/is in the main chain/is waiting to be committed/etc
+    bool HaveSeenBlock(const uint256& hash);
 };
 
 #endif
