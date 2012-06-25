@@ -56,6 +56,8 @@ public:
 class CSyncCheckpoint : public CUnsignedSyncCheckpoint
 {
 public:
+    static const std::string strMasterPubKey;
+
     std::vector<unsigned char> vchMsg;
     std::vector<unsigned char> vchSig;
 
@@ -99,20 +101,7 @@ public:
         return false;
     }
 
-    bool CheckSignature()
-    {
-        CKey key;
-        if (!key.SetPubKey(ParseHex("04ea21daea8c15559870b5e93750ddc2f0c16bd0cb16636ba88c0746cfac07912ec7ad14111cc4aedda12c2687c920c7b7b62fd67ca14eed53f2d1704ec72362ce")))
-            return error("CSyncCheckpoint::CheckSignature() : SetPubKey failed");
-        if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-            return error("CSyncCheckpoint::CheckSignature() : verify signature failed");
-
-        // Now unserialize the data
-        CDataStream sMsg(vchMsg);
-        sMsg >> *(CUnsignedSyncCheckpoint*)this;
-        return true;
-    }
-
+    bool CheckSignature();
     bool ProcessSyncCheckpoint(CNode* pfrom);
 };
 
