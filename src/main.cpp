@@ -1450,7 +1450,7 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     }
 
     // Connect longer branch
-    list<CBlock> lCommitted;
+    list<pair<uint256, CBlock> > lCommitted;
     BOOST_FOREACH(CBlockIndex* pindex, lConnect)
     {
         CBlock block;
@@ -1466,7 +1466,7 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         }
 
         // Queue memory transactions to delete
-        lCommitted.push_back(block);
+        lCommitted.push_back(make_pair(*(pindex->phashBlock), block));
     }
     if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
         return error("CBlockStore::Reorganize() : WriteHashBestChain failed");
@@ -1490,11 +1490,11 @@ bool CBlockStore::Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
         mempool.accept(txdb, tx, false, NULL);
 
     // Delete redundant memory transactions that are in the connected branch
-    BOOST_FOREACH(CBlock& block, lCommitted)
+    for (list<pair<uint256, CBlock> >::iterator it = lCommitted.begin(); it != lCommitted.end(); it++)
     {
-        BOOST_FOREACH(CTransaction& tx, block.vtx)
+        BOOST_FOREACH(CTransaction& tx, it->second.vtx)
             mempool.remove(tx);
-        CallbackCommitBlock(block);
+        CallbackCommitBlock(it->second, it->first);
     }
 
     printf("REORGANIZE: done\n");
@@ -1526,7 +1526,7 @@ bool CBlockStore::SetBestChainInner(CBlock& block, uint256& hash, CTxDB& txdb, C
     for (unsigned int i = 0; i < nTxes; i++)
         mempool.remove(block.vtx[i], block.vMerkleTree[i]);
 
-    CallbackCommitBlock(block);
+    CallbackCommitBlock(block, hash);
 
     return true;
 }

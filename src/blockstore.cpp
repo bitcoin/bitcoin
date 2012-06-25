@@ -3,11 +3,11 @@
 #include "net.h"
 #include "main.h"
 
-void CBlockStore::CallbackCommitBlock(const CBlock &block)
+void CBlockStore::CallbackCommitBlock(const CBlock& block, const uint256& hash)
 {
     {
         LOCK(cs_mapGetBlockIndexWaits);
-        std::map<uint256, CSemaphore*>::iterator it = mapGetBlockIndexWaits.find(block.GetHash());
+        std::map<uint256, CSemaphore*>::iterator it = mapGetBlockIndexWaits.find(hash);
         if (it != mapGetBlockIndexWaits.end() && it->second != NULL)
             it->second->post_all();
     }

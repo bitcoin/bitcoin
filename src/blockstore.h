@@ -43,7 +43,7 @@ private:
 
     CBlockStoreSignalTable sigtable;
 
-    void CallbackCommitBlock(const CBlock &block);
+    void CallbackCommitBlock(const CBlock& block, const uint256& hash);
 
     void CallbackAskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)  { LOCK(sigtable.cs_sigAskForBlocks); sigtable.sigAskForBlocks(hashEnd, hashOriginator); }
 
