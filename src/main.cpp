@@ -660,12 +660,21 @@ bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
     return true;
 }
 
-uint256 GetOrphanRoot(const CBlock* pblock)
+uint256 static GetOrphanRoot(const CBlock* pblock)
 {
     // Work back to the first block in the orphan chain
     while (mapOrphanBlocks.count(pblock->hashPrevBlock))
         pblock = mapOrphanBlocks[pblock->hashPrevBlock];
     return pblock->GetHash();
+}
+
+// ppcoin: find block wanted by given orphan block
+uint256 WantedByOrphan(const CBlock* pblockOrphan)
+{
+    // Work back to the first block in the orphan chain
+    while (mapOrphanBlocks.count(pblockOrphan->hashPrevBlock))
+        pblockOrphan = mapOrphanBlocks[pblockOrphan->hashPrevBlock];
+    return pblockOrphan->hashPrevBlock;
 }
 
 int64 static GetProofOfWorkReward(unsigned int nBits)
@@ -723,12 +732,12 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 {
     CBigNum bnResult;
     bnResult.SetCompact(nBase);
+    bnResult *= 2;
     while (nTime > 0 && bnResult < bnProofOfWorkLimit)
     {
-        // Maximum 400% adjustment...
-        bnResult *= 4;
-        // ... in best-case exactly 4-times-normal target time
-        nTime -= nTargetTimespan*4;
+        // Maximum 200% adjustment per day...
+        bnResult *= 2;
+        nTime -= 24 * 60 * 60;
     }
     if (bnResult > bnProofOfWorkLimit)
         bnResult = bnProofOfWorkLimit;
@@ -1617,7 +1626,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // ppcoin: check proof-of-stake
     // Limited duplicity on stake: prevents block flood attack
     // Duplicate stake allowed only when there is orphan child block
-    if (pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::IsPendingSyncCheckpoint(hash))
+    if (pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
         return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for block %s", pblock->GetProofOfStake().first.ToString().c_str(), pblock->GetProofOfStake().second, hash.ToString().c_str());
 
     // Preliminary checks
@@ -1628,23 +1637,15 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (pblock->IsProofOfStake() && !pblock->vtx[1].CheckProofOfStake(pblock->nBits))
         return error("ProcessBlock() : check proof-of-stake failed for block %s", hash.ToString().c_str());
 
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-    if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
+    if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
         int64 deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
-        if (deltaTime < 0)
-        {
-            pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with timestamp before last checkpoint");
-        }
         CBigNum bnNewBlock;
         bnNewBlock.SetCompact(pblock->nBits);
         CBigNum bnRequired;
-        if (pblock->IsProofOfWork())
-            bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        else
-            bnRequired = bnNewBlock; // TODO: Computer Min Stake Target Allowed
+        bnRequired.SetCompact(ComputeMinWork(GetLastBlockIndex(pcheckpoint, pblock->IsProofOfStake())->nBits, deltaTime));
 
         if (bnNewBlock > bnRequired)
         {
@@ -1664,7 +1665,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         {
             // Limited duplicity on stake: prevents block flood attack
             // Duplicate stake allowed only when there is orphan child block
-            if (setStakeSeenOrphan.count(pblock2->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::IsPendingSyncCheckpoint(hash))
+            if (setStakeSeenOrphan.count(pblock2->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
                 return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for orphan block %s", pblock2->GetProofOfStake().first.ToString().c_str(), pblock2->GetProofOfStake().second, hash.ToString().c_str());
             else
                 setStakeSeenOrphan.insert(pblock2->GetProofOfStake());
@@ -1678,7 +1679,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
             // ppcoin: getblocks may not obtain the ancestor block rejected
             // earlier by duplicate-stake check so we ask for it again directly
-            pfrom->AskFor(CInv(MSG_BLOCK, GetOrphanRoot(pblock2)));
+            pfrom->AskFor(CInv(MSG_BLOCK, WantedByOrphan(pblock2)));
         }
         return true;
     }
