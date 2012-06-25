@@ -1,3 +1,9 @@
+bitcoin (0.6.3-natty1) natty; urgency=low
+
+  * New upstream release.
+
+ -- Matt Corallo <matt@bluematt.me>  Mon, 25 Jun 2012 23:47:00 +0200
+
 bitcoin (0.6.2-natty1) natty; urgency=low
 
   * Update package description and launch scripts.
