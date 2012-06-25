@@ -319,6 +319,24 @@ namespace Checkpoints
     }
 }
 
+// ppcoin: sync-checkpoint master key
+const std::string CSyncCheckpoint::strMasterPubKey = "0424f20205e5da98ba632bbd278a11a6499585f62bfb2c782377ef59f0251daab8085fc31471bcb8180bc75ed0fa41bb50c7c084511d54015a3a5241d645c7268a";
+
+// ppcoin: verify signature of sync-checkpoint message
+bool CSyncCheckpoint::CheckSignature()
+{
+    CKey key;
+    if (!key.SetPubKey(ParseHex(CSyncCheckpoint::strMasterPubKey)))
+        return error("CSyncCheckpoint::CheckSignature() : SetPubKey failed");
+    if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
+        return error("CSyncCheckpoint::CheckSignature() : verify signature failed");
+
+    // Now unserialize the data
+    CDataStream sMsg(vchMsg);
+    sMsg >> *(CUnsignedSyncCheckpoint*)this;
+    return true;
+}
+
 // ppcoin: process synchronized checkpoint
 bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
 {
