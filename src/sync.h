@@ -126,15 +126,18 @@ private:
     boost::condition_variable condition;
     boost::mutex mutex;
     int value;
+    int waiting;
 
 public:
-    CSemaphore(int init) : value(init) {}
+    CSemaphore(int init) : value(init), waiting(0) {}
 
     void wait() {
         boost::unique_lock<boost::mutex> lock(mutex);
+        waiting++;
         while (value < 1) {
             condition.wait(lock);
         }
+        waiting--;
         value--;
     }
 
@@ -152,6 +155,14 @@ public:
             value++;
         }
         condition.notify_one();
+    }
+
+    void post_all() {
+        {
+            boost::unique_lock<boost::mutex> lock(mutex);
+            value += waiting;
+        }
+        condition.notify_all();
     }
 };
 
