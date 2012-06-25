@@ -1853,6 +1853,42 @@ bool CBlockStore::HaveSeenBlock(const uint256& hash)
     return false;
 }
 
+const CBlockIndex* CBlockStore::GetBlockIndex(const uint256& hash, bool fBlocking)
+{
+    bool fHave;
+    {
+        LOCK(cs_setBlocksSeen);
+        fHave = setBlocksSeen.count(hash) > 0;
+    }
+    CSemaphore* psem;
+    {
+        LOCK(cs_main);
+        if (mapBlockIndex.count(hash) > 0)
+            return mapBlockIndex[hash];
+
+        if (!fBlocking || !fHave)
+            return NULL;
+        else
+        {
+            LOCK(cs_mapGetBlockIndexWaits);
+            std::map<uint256, CSemaphore*>::iterator it = mapGetBlockIndexWaits.find(hash);
+            if (it != mapGetBlockIndexWaits.end() && it->second != NULL)
+                psem = it->second;
+            else
+                psem = mapGetBlockIndexWaits[hash] = new CSemaphore(0);
+        }
+    }
+    psem->wait();
+    {
+        LOCK(cs_main);
+        std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(hash);
+        if (it != mapBlockIndex.end())
+            return it->second;
+        else
+            return NULL;
+    }
+}
+
 
 
 
@@ -2659,7 +2695,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             }
         }
 
-        LOCK(cs_main);
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
@@ -2672,16 +2707,23 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (fDebug)
                 printf("  got inventory: %s  %s\n", inv.ToString().c_str(), fNeed ? "need" : "have");
 
+            bool fOrphanBlock = false;
+            if (!fNeed && inv.type == MSG_BLOCK)
+            {
+                LOCK(cs_main);
+                fOrphanBlock = mapOrphanBlocks.count(inv.hash);
+            }
+
             if (fNeed)
                 pfrom->AskFor(inv);
-            else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
+            else if (fOrphanBlock) {
+                LOCK(cs_main);
                 pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(mapOrphanBlocks[inv.hash]));
             } else if (nInv == nLastBlock) {
                 // In case we are on a very long side-chain, it is possible that we already have
                 // the last block in an inv bundle sent in response to getblocks. Try to detect
                 // this situation and push another getblocks to continue.
-                std::vector<CInv> vGetData(1,inv);
-                pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0));
+                pfrom->PushGetBlocks(phub->GetBlockIndex(inv.hash, true), uint256(0));
                 if (fDebug)
                     printf("force request: %s\n", inv.ToString().c_str());
             }

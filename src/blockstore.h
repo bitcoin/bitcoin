@@ -38,9 +38,12 @@ private:
     CCriticalSection cs_setBlocksSeen;
     std::set<uint256> setBlocksSeen;
 
+    CCriticalSection cs_mapGetBlockIndexWaits;
+    std::map<uint256, CSemaphore*> mapGetBlockIndexWaits;
+
     CBlockStoreSignalTable sigtable;
 
-    void CallbackCommitBlock(const CBlock &block) { LOCK(sigtable.cs_sigCommitBlock); sigtable.sigCommitBlock(block); }
+    void CallbackCommitBlock(const CBlock &block);
 
     void CallbackAskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)  { LOCK(sigtable.cs_sigAskForBlocks); sigtable.sigAskForBlocks(hashEnd, hashOriginator); }
 
@@ -78,6 +81,12 @@ public:
     // Returns true if we have/have seen a block with the given hash
     // Does not indicate whether the block is orphan/was invalid/is in the main chain/is waiting to be committed/etc
     bool HaveSeenBlock(const uint256& hash);
+
+    // Return CBlockIndex* with *phashBlock == hash or NULL if we dont have one
+    // if (fBlocking) wait for the block to be committed (assuming it has already been emitted)
+    //   This can still return NULL even if the block has been emitted if the block is invalid
+    // WARNING: DO NOT call this with fBlocking == true if you are holding cs_main
+    const CBlockIndex* GetBlockIndex(const uint256& hash, bool fBlocking=false);
 };
 
 #endif

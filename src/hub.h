@@ -117,6 +117,12 @@ public:
     // Returns true if we haven't seen a given inv and want it
     bool NeedInv(const CInv& inv);
 
+    // Return CBlockIndex* with *phashBlock == hash or NULL if we dont have one
+    // if (fBlocking) wait for the block to be committed (assuming it has already been emitted)
+    //   This can still return NULL even if the block has been emitted if the block is invalid
+    // WARNING: DO NOT call this with fBlocking == true if you are holding cs_main
+    const CBlockIndex* GetBlockIndex(const uint256& hash, bool fBlocking=false) { if (!pblockstore) return NULL; return pblockstore->GetBlockIndex(hash, fBlocking); }
+
 //Connected wallet/etc access methods
 
     // Ask that any listeners who have access to ask other nodes for blocks

@@ -149,7 +149,7 @@ void AskForBlocks(const uint256 hashEnd, const uint256 hashOriginator)
     pnodeToAsk->Release();
 }
 
-void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
+void CNode::PushGetBlocks(const CBlockIndex* pindexBegin, uint256 hashEnd)
 {
     // Filter out duplicate requests
     if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)

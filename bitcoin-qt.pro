@@ -183,6 +183,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/script.cpp \
     src/main.cpp \
     src/hub.cpp \
+    src/blockstore.cpp \
     src/init.cpp \
     src/net.cpp \
     src/irc.cpp \
