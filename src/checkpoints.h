@@ -15,6 +15,34 @@
 
 class uint256;
 class CBlockIndex;
+class CSyncCheckpoint;
+
+//
+// Block-chain checkpoints are compiled-in sanity checks.
+// They are updated every release or three.
+//
+namespace Checkpoints
+{
+    // Returns true if block passes checkpoint checks
+    bool CheckHardened(int nHeight, const uint256& hash);
+
+    // Return conservative estimate of total number of blocks, 0 if unknown
+    int GetTotalBlocksEstimate();
+
+    // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
+    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
+
+    extern uint256 hashSyncCheckpoint;
+    extern CSyncCheckpoint checkpointMessage;
+    extern uint256 hashInvalidCheckpoint;
+    extern CCriticalSection cs_hashSyncCheckpoint;
+
+    CBlockIndex* GetLastSyncCheckpoint();
+    bool AcceptPendingSyncCheckpoint();
+    uint256 AutoSelectSyncCheckpoint();
+    bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev);
+    bool WantedByPendingSyncCheckpoint(uint256 hashBlock);
+}
 
 // ppcoin: synchronized checkpoint
 class CUnsignedSyncCheckpoint
@@ -104,42 +132,5 @@ public:
     bool CheckSignature();
     bool ProcessSyncCheckpoint(CNode* pfrom);
 };
-
-//
-// Block-chain checkpoints are compiled-in sanity checks.
-// They are updated every release or three.
-//
-namespace Checkpoints
-{
-    // Returns true if block passes checkpoint checks
-    bool CheckHardened(int nHeight, const uint256& hash);
-
-    // Return conservative estimate of total number of blocks, 0 if unknown
-    int GetTotalBlocksEstimate();
-
-    // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
-
-    extern uint256 hashSyncCheckpoint;
-    extern CSyncCheckpoint checkpointMessage;
-    extern uint256 hashInvalidCheckpoint;
-    extern CCriticalSection cs_hashSyncCheckpoint;
-
-    CBlockIndex* GetLastSyncCheckpoint();
-    bool AcceptPendingSyncCheckpoint();
-    uint256 AutoSelectSyncCheckpoint();
-    bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev);
-    bool WantedByPendingSyncCheckpoint(uint256 hashBlock);
-
-    // ppcoin: automatic checkpoint
-    extern int nAutoCheckpoint;
-    extern int nBranchPoint;
-
-    bool CheckAuto(const CBlockIndex *pindex);
-    int  GetNextChainCheckpoint(const CBlockIndex *pindex);
-    int  GetNextAutoCheckpoint(int nCheckpoint);
-    void AdvanceAutoCheckpoint(int nCheckpoint);
-    bool ResetAutoCheckpoint(int nCheckpoint);
-}
 
 #endif

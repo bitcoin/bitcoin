@@ -1132,7 +1132,6 @@ public:
     unsigned int nBlockPos;
     uint64 nChainTrust;// ppcoin: trust score of chain, in the unit of coin-days
     int nHeight;
-    int nCheckpoint;    // ppcoin: chain auto checkpoint height
     bool fProofOfStake; // ppcoin: is the block of proof-of-stake type
     COutPoint prevoutStake;
     unsigned int nStakeTime;
@@ -1154,7 +1153,6 @@ public:
         nBlockPos = 0;
         nHeight = 0;
         nChainTrust = 0;
-        nCheckpoint = 0;
         fProofOfStake = true;
         prevoutStake.SetNull();
         nStakeTime = 0;
@@ -1175,7 +1173,6 @@ public:
         nBlockPos = nBlockPosIn;
         nHeight = 0;
         nChainTrust = 0;
-        nCheckpoint = 0;
         fProofOfStake = block.IsProofOfStake();
         if (fProofOfStake)
         {
@@ -1288,8 +1285,8 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, nCheckpoint=%d, fProofOfStake=%d prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
-            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight, nCheckpoint,
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, fProofOfStake=%d prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight,
             fProofOfStake, prevoutStake.ToString().c_str(), nStakeTime,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
@@ -1334,7 +1331,6 @@ public:
         READWRITE(nBlockPos);
         READWRITE(nChainTrust);
         READWRITE(nHeight);
-        READWRITE(nCheckpoint);
         READWRITE(fProofOfStake);
         if (fProofOfStake)
         {
