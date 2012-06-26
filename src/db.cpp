@@ -470,17 +470,6 @@ bool CTxDB::WriteBestInvalidTrust(uint64 nBestInvalidTrust)
     return Write(string("nBestInvalidTrust"), nBestInvalidTrust);
 }
 
-bool CTxDB::ReadAutoCheckpoint(int& nAutoCheckpoint)
-{
-    return Read(string("nAutoCheckpoint"), nAutoCheckpoint);
-}
-
-bool CTxDB::WriteAutoCheckpoint(int nCheckpoint, bool fReset)
-{
-    nCheckpoint = fReset? nCheckpoint : max(Checkpoints::nAutoCheckpoint, nCheckpoint);
-    return Write(string("nAutoCheckpoint"), nCheckpoint);
-}
-
 bool CTxDB::ReadSyncCheckpoint(uint256& hashCheckpoint)
 {
     return Read(string("hashSyncCheckpoint"), hashCheckpoint);
@@ -550,7 +539,6 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->nBlockPos      = diskindex.nBlockPos;
             pindexNew->nChainTrust    = diskindex.nChainTrust;
             pindexNew->nHeight        = diskindex.nHeight;
-            pindexNew->nCheckpoint    = diskindex.nCheckpoint;
             pindexNew->fProofOfStake  = diskindex.fProofOfStake;
             pindexNew->prevoutStake   = diskindex.prevoutStake;
             pindexNew->nVersion       = diskindex.nVersion;
@@ -590,11 +578,6 @@ bool CTxDB::LoadBlockIndex()
     nBestHeight = pindexBest->nHeight;
     nBestChainTrust = pindexBest->nChainTrust;
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust);
-
-    // ppcoin: load nAutoCheckpoint
-    if (!ReadAutoCheckpoint(Checkpoints::nAutoCheckpoint))
-        return error("CTxDB::LoadBlockIndex() : nAutoCheckpoint not loaded");
-    printf("LoadBlockIndex(): automatic checkpoint at height=%d\n", Checkpoints::nAutoCheckpoint);
 
     // ppcoin: load hashSyncCheckpoint
     if (!ReadSyncCheckpoint(Checkpoints::hashSyncCheckpoint))

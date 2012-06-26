@@ -291,8 +291,6 @@ public:
     bool WriteHashBestChain(uint256 hashBestChain);
     bool ReadBestInvalidTrust(uint64& nBestInvalidTrust);
     bool WriteBestInvalidTrust(uint64 nBestInvalidTrust);
-    bool ReadAutoCheckpoint(int& nAutoCheckpoint);
-    bool WriteAutoCheckpoint(int nCheckpoint, bool fReset=false);
     bool ReadSyncCheckpoint(uint256& hashCheckpoint);
     bool WriteSyncCheckpoint(uint256 hashCheckpoint);
     bool LoadBlockIndex();

@@ -1200,8 +1200,6 @@ bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     }
     if (!txdb.WriteHashBestChain(pindexNew->GetBlockHash()))
         return error("Reorganize() : WriteHashBestChain failed");
-    if (!txdb.WriteAutoCheckpoint(Checkpoints::GetNextAutoCheckpoint(pindexNew->nCheckpoint)))
-        return error("Reorganize() : WriteAutoCheckpoint failed");
 
     // Make sure it's successfully written to disk before changing memory structure
     if (!txdb.TxnCommit())
@@ -1237,7 +1235,6 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     if (pindexGenesisBlock == NULL && hash == hashGenesisBlock)
     {
         txdb.WriteHashBestChain(hash);
-        txdb.WriteAutoCheckpoint(Checkpoints::GetNextAutoCheckpoint(pindexNew->nCheckpoint));
         if (!txdb.TxnCommit())
             return error("SetBestChain() : TxnCommit failed");
         pindexGenesisBlock = pindexNew;
@@ -1245,7 +1242,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     else if (hashPrevBlock == hashBestChain)
     {
         // Adding to current best branch
-        if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash) || !txdb.WriteAutoCheckpoint(Checkpoints::GetNextAutoCheckpoint(pindexNew->nCheckpoint)))
+        if (!ConnectBlock(txdb, pindexNew) || !txdb.WriteHashBestChain(hash))
         {
             txdb.TxnAbort();
             InvalidChainFound(pindexNew);
@@ -1286,7 +1283,6 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     nBestChainTrust = pindexNew->nChainTrust;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
-    Checkpoints::AdvanceAutoCheckpoint(pindexBest->nCheckpoint);
     printf("SetBestChain: new best=%s  height=%d  trust=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, CBigNum(nBestChainTrust).ToString().c_str());
 
     return true;
@@ -1446,10 +1442,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     {
         pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
-
-        // ppcoin: compute chain checkpoint
-        pindexNew->nCheckpoint = Checkpoints::GetNextChainCheckpoint(pindexNew->pprev);
-        assert (pindexNew->nCheckpoint >= pindexNew->pprev->nCheckpoint);
     }
 
     // ppcoin: compute chain trust score
@@ -1582,10 +1574,6 @@ bool CBlock::AcceptBlock()
     // Check that the block chain matches the known block chain up to a hardened checkpoint
     if (!Checkpoints::CheckHardened(nHeight, hash))
         return DoS(100, error("AcceptBlock() : rejected by hardened checkpoint lockin at %d", nHeight));
-
-    // ppcoin: check that the block satisfies automatic checkpoint
-    if (!Checkpoints::CheckAuto(pindexPrev))
-        return DoS(100, error("AcceptBlock() : rejected by automatic checkpoint at %d", Checkpoints::nAutoCheckpoint));
 
     // ppcoin: check that the block satisfies synchronized checkpoint
     if (!Checkpoints::CheckSync(hash, pindexPrev))
