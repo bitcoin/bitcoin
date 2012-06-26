@@ -1802,6 +1802,26 @@ Value getmemorypool(const Array& params, bool fHelp)
 }
 
 
+// ppcoin: get information of sync-checkpoint
+Value getcheckpoint(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getcheckpoint\n"
+            "Show info of synchronized checkpoint.\n");
+
+    Object result;
+    CBlockIndex* pindexCheckpoint;
+    
+    result.push_back(Pair("synccheckpoint", Checkpoints::hashSyncCheckpoint.ToString().c_str()));
+    pindexCheckpoint = mapBlockIndex[Checkpoints::hashSyncCheckpoint];        
+    result.push_back(Pair("height", pindexCheckpoint->nHeight));
+    result.push_back(Pair("timestamp", DateTimeStrFormat("%x %H:%M:%S", pindexCheckpoint->GetBlockTime()).c_str()));
+    
+    return result;
+}
+
+
 // ppcoin: reserve balance from being staked for network protection
 Value reservebalance(const Array& params, bool fHelp)
 {
@@ -2074,6 +2094,7 @@ pair<string, rpcfn_type> pCallTable[] =
     make_pair("settxfee",               &settxfee),
     make_pair("getmemorypool",          &getmemorypool),
     make_pair("listsinceblock",        &listsinceblock),
+    make_pair("getcheckpoint",         &getcheckpoint),
     make_pair("reservebalance",         &reservebalance),
     make_pair("checkwallet",            &checkwallet),
     make_pair("repairwallet",           &repairwallet),
@@ -2106,6 +2127,7 @@ string pAllowInSafeMode[] =
     "validateaddress",
     "getwork",
     "getmemorypool",
+    "getcheckpoint",
 };
 set<string> setAllowInSafeMode(pAllowInSafeMode, pAllowInSafeMode + sizeof(pAllowInSafeMode)/sizeof(pAllowInSafeMode[0]));
 
