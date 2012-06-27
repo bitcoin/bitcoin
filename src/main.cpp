@@ -2574,11 +2574,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             return error("message getdata size() = %d", vInv.size());
         }
 
+        if (fDebugNet || (vInv.size() != 1))
+            printf("received getdata (%d invsz)\n", vInv.size());
+
         BOOST_FOREACH(const CInv& inv, vInv)
         {
             if (fShutdown)
                 return true;
-            printf("received getdata for: %s\n", inv.ToString().c_str());
+            if (fDebugNet || (vInv.size() == 1))
+                printf("received getdata for: %s\n", inv.ToString().c_str());
 
             if (inv.type == MSG_BLOCK)
             {
