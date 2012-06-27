@@ -9,6 +9,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -40,13 +41,8 @@ void ExitTimeout(void* parg)
 
 void StartShutdown()
 {
-#ifdef QT_GUI
     // ensure we leave the Qt main loop for a clean GUI exit (Shutdown() is called in bitcoin.cpp afterwards)
     uiInterface.QueueShutdown();
-#else
-    // Without UI, Shutdown() can simply be started in a new thread
-    CreateThread(Shutdown, NULL);
-#endif
 }
 
 void Shutdown(void* parg)
@@ -153,6 +149,11 @@ bool AppInit(int argc, char* argv[])
             int ret = CommandLineRPC(argc, argv);
             exit(ret);
         }
+
+        // Create the shutdown thread when receiving a shutdown signal
+        boost::signals2::scoped_connection do_stop(
+                uiInterface.QueueShutdown.connect(boost::bind(
+                    &CreateThread, &Shutdown, static_cast<void*>(0), false)));
 
         fRet = AppInit2();
     }
