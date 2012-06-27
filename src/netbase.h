@@ -137,6 +137,7 @@ enum Network ParseNetwork(std::string net);
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
 bool SetProxy(enum Network net, CService addrProxy, int nSocksVersion = 5);
 bool GetProxy(enum Network net, CService &addrProxy);
+bool GetProxySocksVersion(enum Network net, int &nSocksVersion);
 bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(CService addrProxy, int nSocksVersion = 5);
 bool GetNameProxy();
