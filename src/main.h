@@ -831,7 +831,7 @@ class CBlock
 {
 public:
     // header
-    static const int CURRENT_VERSION=1;
+    static const int CURRENT_VERSION=2;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -1198,6 +1198,12 @@ public:
         return pindex->GetMedianTimePast();
     }
 
+    /**
+     * Returns true if there are nRequired or more blocks of minVersion or above
+     * in the last nToCheck blocks, starting at pstart and going backwards.
+     */
+    static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
+                                unsigned int nRequired, unsigned int nToCheck);
 
 
     std::string ToString() const
