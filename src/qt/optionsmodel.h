@@ -2,6 +2,7 @@
 #define OPTIONSMODEL_H
 
 #include <QAbstractListModel>
+#include <QNetworkProxy>
 
 /** Interface from Qt to configuration data structure for Bitcoin client.
    To Qt, the options are presented as a list with the different options
@@ -48,6 +49,7 @@ public:
     int getDisplayUnit();
     bool getDisplayAddresses();
     QString getLanguage() { return language; }
+    QNetworkProxy getProxy();
 private:
     int nDisplayUnit;
     bool bDisplayAddresses;

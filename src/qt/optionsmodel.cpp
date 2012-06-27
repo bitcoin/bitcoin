@@ -314,3 +314,30 @@ bool OptionsModel::getDisplayAddresses()
 {
     return bDisplayAddresses;
 }
+
+QNetworkProxy OptionsModel::getProxy()
+{
+    QNetworkProxy retVal;
+    CService addrProxy;
+    if (GetProxy(NET_IPV4, addrProxy))
+    {
+        int nSocksVersion;
+        if (GetProxySocksVersion(NET_IPV4, nSocksVersion))
+        {
+            if (nSocksVersion == 5)
+                retVal.setType(QNetworkProxy::Socks5Proxy);
+            else if (nSocksVersion == 4)
+                retVal.setType(QNetworkProxy::HttpProxy);//TODO: is this right?
+            else
+                retVal.setType(QNetworkProxy::NoProxy);
+        }
+
+        retVal.setHostName(QString::fromStdString(addrProxy.ToStringIP()));
+        retVal.setPort(addrProxy.GetPort());
+    }
+    else
+    {
+        retVal.setType(QNetworkProxy::NoProxy);
+    }
+    return retVal;
+}

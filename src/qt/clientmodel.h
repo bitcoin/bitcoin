@@ -38,6 +38,7 @@ public:
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
+    int clientVersion() const;
     QString formatFullVersion() const;
     QString formatBuildDate() const;
     QString clientName() const;
