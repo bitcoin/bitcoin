@@ -92,7 +92,7 @@ void UpdateDialog::accept()
     }
     process = new QProcess();
     QStringList args;
-    args << "-g" << gpgFile.filePath() << "-c" << basePath + "\\src\\contrib\\gitian-downloader\\win32-download-config" << "-d" << basePath;
+    args << "-g" << gpgFile.filePath() << "-c" << basePath + "\\src\\contrib\\gitian-downloader\\win32-download-config" << "-d" << basePath << "-p" << "regedit /s " + basePath + "\\src\\share\\update_reg.reg";
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(finishedUpgrade(int, QProcess::ExitStatus)));
     QMessageBox::warning(this, tr("Updating"),
                          tr("Bitcoin-Qt is now updating in the background."), QMessageBox::Ok);
