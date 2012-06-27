@@ -668,4 +668,27 @@ inline void RelayMessage<>(const CInv& inv, const CDataStream& ss)
 }
 
 
+
+
+
+class CNetStats
+{
+public:
+    std::map<std::string, uint64> mapCmdCount;
+    std::map<std::string, uint64> mapCmdBytes;
+    mutable CCriticalSection cs;
+
+    unsigned int nConn, nInbound, nOutbound;
+
+    void msg(std::string strCommand, unsigned long msgSize)
+    {
+       LOCK(cs);
+       mapCmdCount[strCommand]++;
+       mapCmdBytes[strCommand] += msgSize;
+    }
+    void countPeers();
+};
+
+extern CNetStats netstats;
+
 #endif

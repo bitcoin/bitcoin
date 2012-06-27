@@ -2966,6 +2966,9 @@ bool ProcessMessages(CNode* pfrom)
         CDataStream vMsg(vRecv.begin(), vRecv.begin() + nMessageSize, vRecv.nType, vRecv.nVersion);
         vRecv.ignore(nMessageSize);
 
+        // Collect statistics
+        netstats.msg(strCommand, nHeaderSize + nMessageSize);
+
         // Process message
         bool fRet = false;
         try
