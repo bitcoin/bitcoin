@@ -14,6 +14,7 @@
 #include <QIntValidator>
 #include <QLabel>
 #include <QLineEdit>
+#include <QLocale>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRegExp>
@@ -62,7 +63,19 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     foreach(const QString &langStr, translations.entryList())
     {
-        ui->lang->addItem(langStr, QVariant(langStr));
+        QLocale locale(langStr);
+
+        /** check if the locale name consists of 2 parts (language_country) */
+        if(langStr.contains("_"))
+        {
+            /** display language strings as "language - country (locale name)", e.g. "German - Germany (de)" */
+            ui->lang->addItem(QLocale::languageToString(locale.language()) + QString(" - ") + QLocale::countryToString(locale.country()) + QString(" (") + langStr + QString(")"), QVariant(langStr));
+        }
+        else
+        {
+            /** display language strings as "language (locale name)", e.g. "German (de)" */
+            ui->lang->addItem(QLocale::languageToString(locale.language()) + QString(" (") + langStr + QString(")"), QVariant(langStr));
+        }
     }
 
     ui->unit->setModel(new BitcoinUnits(this));
