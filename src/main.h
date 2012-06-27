@@ -396,6 +396,7 @@ typedef std::map<uint256, std::pair<CTxIndex, CTransaction> > MapPrevTx;
 class CTransaction
 {
 public:
+    static const int CURRENT_VERSION=1;
     int nVersion;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
@@ -418,7 +419,7 @@ public:
 
     void SetNull()
     {
-        nVersion = 1;
+        nVersion = CTransaction::CURRENT_VERSION;
         vin.clear();
         vout.clear();
         nLockTime = 0;
@@ -830,6 +831,7 @@ class CBlock
 {
 public:
     // header
+    static const int CURRENT_VERSION=1;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -868,7 +870,7 @@ public:
 
     void SetNull()
     {
-        nVersion = 1;
+        nVersion = CBlock::CURRENT_VERSION;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
         nTime = 0;
