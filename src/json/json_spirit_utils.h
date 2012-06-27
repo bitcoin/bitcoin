@@ -2,7 +2,7 @@
 #define JSON_SPIRIT_UTILS
 
 //          Copyright John W. Wilkinson 2007 - 2009.
-// Distributed under the MIT License, see accompanying file LICENSE.txt
+// Distributed under the MIT License, see accompanying file COPYING
 
 // json spirit version 4.03
 

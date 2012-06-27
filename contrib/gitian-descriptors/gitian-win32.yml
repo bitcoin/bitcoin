@@ -47,7 +47,7 @@ script: |
   mkdir -p $OUTDIR/src
   git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
-  cp $OUTDIR/src/COPYING $OUTDIR/license.txt
+  cp $OUTDIR/src/COPYING $OUTDIR/COPYING
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
