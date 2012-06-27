@@ -48,6 +48,9 @@ static CCriticalSection cs_nWalletUnlockTime;
 
 extern Value dumpprivkey(const Array& params, bool fHelp);
 extern Value importprivkey(const Array& params, bool fHelp);
+extern Value filterclearall(const Array& params, bool fHelp);
+extern Value filterclear(const Array& params, bool fHelp);
+extern Value filteradd(const Array& params, bool fHelp);
 
 const Object emptyobj;
 
@@ -2353,6 +2356,9 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpprivkey",            &dumpprivkey,            false },
     { "importprivkey",          &importprivkey,          false },
     { "sendrawtx",              &sendrawtx,              false },
+    { "filterclearall",         &filterclearall,         false },
+    { "filterclear",            &filterclear,            false },
+    { "filteradd",              &filteradd,              false },
 };
 
 CRPCTable::CRPCTable()
