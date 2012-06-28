@@ -2858,6 +2858,8 @@ void ThreadRPCServer2(void* parg)
     asio::ip::address bindAddress = loopback ? asio::ip::address_v6::loopback() : asio::ip::address_v6::any();
     ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
 
+    boost::signals2::signal<void ()> StopRequests;
+
     try
     {
         boost::shared_ptr<ip::tcp::acceptor> acceptor(new ip::tcp::acceptor(io_service));
@@ -2873,7 +2875,7 @@ void ThreadRPCServer2(void* parg)
 
         RPCListen(acceptor, context, fUseSSL);
         // Cancel outstanding listen-requests for this acceptor when shutting down
-        uiInterface.QueueShutdown.connect(signals2::slot<void ()>(
+        StopRequests.connect(signals2::slot<void ()>(
                     static_cast<void (ip::tcp::acceptor::*)()>(&ip::tcp::acceptor::close), acceptor.get())
                 .track(acceptor));
 
@@ -2891,7 +2893,7 @@ void ThreadRPCServer2(void* parg)
 
             RPCListen(acceptor, context, fUseSSL);
             // Cancel outstanding listen-requests for this acceptor when shutting down
-            uiInterface.QueueShutdown.connect(signals2::slot<void ()>(
+            StopRequests.connect(signals2::slot<void ()>(
                         static_cast<void (ip::tcp::acceptor::*)()>(&ip::tcp::acceptor::close), acceptor.get())
                     .track(acceptor));
         }
@@ -2908,6 +2910,7 @@ void ThreadRPCServer2(void* parg)
     while (!fShutdown)
         io_service.run_one();
     vnThreadsRunning[THREAD_RPCLISTENER]++;
+    StopRequests();
 }
 
 void ThreadRPCServer3(void* parg)
