@@ -2768,7 +2768,7 @@ static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, 
     vnThreadsRunning[THREAD_RPCLISTENER]++;
 
     // Immediately start accepting new connections, except when we're canceled or our socket is closed.
-    if (error != error::operation_aborted
+    if (error != asio::error::operation_aborted
      && acceptor->is_open())
         RPCListen(acceptor, context, fUseSSL);
 
@@ -2858,6 +2858,8 @@ void ThreadRPCServer2(void* parg)
     asio::ip::address bindAddress = loopback ? asio::ip::address_v6::loopback() : asio::ip::address_v6::any();
     ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
 
+    boost::signals2::signal<void ()> StopRequests;
+
     try
     {
         boost::shared_ptr<ip::tcp::acceptor> acceptor(new ip::tcp::acceptor(io_service));
@@ -2873,7 +2875,7 @@ void ThreadRPCServer2(void* parg)
 
         RPCListen(acceptor, context, fUseSSL);
         // Cancel outstanding listen-requests for this acceptor when shutting down
-        uiInterface.QueueShutdown.connect(signals2::slot<void ()>(
+        StopRequests.connect(signals2::slot<void ()>(
                     static_cast<void (ip::tcp::acceptor::*)()>(&ip::tcp::acceptor::close), acceptor.get())
                 .track(acceptor));
 
@@ -2891,7 +2893,7 @@ void ThreadRPCServer2(void* parg)
 
             RPCListen(acceptor, context, fUseSSL);
             // Cancel outstanding listen-requests for this acceptor when shutting down
-            uiInterface.QueueShutdown.connect(signals2::slot<void ()>(
+            StopRequests.connect(signals2::slot<void ()>(
                         static_cast<void (ip::tcp::acceptor::*)()>(&ip::tcp::acceptor::close), acceptor.get())
                     .track(acceptor));
         }
@@ -2905,14 +2907,21 @@ void ThreadRPCServer2(void* parg)
     }
 
     vnThreadsRunning[THREAD_RPCLISTENER]--;
-    io_service.run();
+    while (!fShutdown)
+        io_service.run_one();
     vnThreadsRunning[THREAD_RPCLISTENER]++;
+    StopRequests();
 }
+
+static CCriticalSection cs_THREAD_RPCHANDLER;
 
 void ThreadRPCServer3(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer3(parg));
-    vnThreadsRunning[THREAD_RPCHANDLER]++;
+    {
+        LOCK(cs_THREAD_RPCHANDLER);
+        vnThreadsRunning[THREAD_RPCHANDLER]++;
+    }
     AcceptedConnection *conn = (AcceptedConnection *) parg;
 
     bool fRun = true;
@@ -2921,7 +2930,10 @@ void ThreadRPCServer3(void* parg)
         {
             conn->close();
             delete conn;
-            --vnThreadsRunning[THREAD_RPCHANDLER];
+            {
+                LOCK(cs_THREAD_RPCHANDLER);
+                --vnThreadsRunning[THREAD_RPCHANDLER];
+            }
             return;
         }
         map<string, string> mapHeaders;
@@ -3001,7 +3013,10 @@ void ThreadRPCServer3(void* parg)
     }
 
     delete conn;
-    vnThreadsRunning[THREAD_RPCHANDLER]--;
+    {
+        LOCK(cs_THREAD_RPCHANDLER);
+        vnThreadsRunning[THREAD_RPCHANDLER]--;
+    }
 }
 
 json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_spirit::Array &params) const
