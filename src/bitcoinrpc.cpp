@@ -2768,7 +2768,7 @@ static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, 
     vnThreadsRunning[THREAD_RPCLISTENER]++;
 
     // Immediately start accepting new connections, except when we're canceled or our socket is closed.
-    if (error != error::operation_aborted
+    if (error != asio::error::operation_aborted
      && acceptor->is_open())
         RPCListen(acceptor, context, fUseSSL);
 
