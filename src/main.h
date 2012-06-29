@@ -110,6 +110,7 @@ bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
 bool Reorganize(CTxDB& txdb, CBlockIndex* pindexNew);
 uint256 WantedByOrphan(const CBlock* pblockOrphan);
+const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake);
 
 
 
