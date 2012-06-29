@@ -117,7 +117,7 @@ inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
 }
 
 // Decode a base58-encoded string str into byte vector vchRet
-// returns true if decoding is succesful
+// returns true if decoding is successful
 inline bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet)
 {
     return DecodeBase58(str.c_str(), vchRet);
@@ -137,7 +137,7 @@ inline std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
 }
 
 // Decode a base58-encoded string psz that includes a checksum, into byte vector vchRet
-// returns true if decoding is succesful
+// returns true if decoding is successful
 inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet)
 {
     if (!DecodeBase58(psz, vchRet))
@@ -158,7 +158,7 @@ inline bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRe
 }
 
 // Decode a base58-encoded string str that includes a checksum, into byte vector vchRet
-// returns true if decoding is succesful
+// returns true if decoding is successful
 inline bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet)
 {
     return DecodeBase58Check(str.c_str(), vchRet);
