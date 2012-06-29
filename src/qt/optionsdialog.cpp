@@ -219,8 +219,8 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
 
     layout->addLayout(fee_hbox);
 
-    bitcoin_at_startup = new QCheckBox(tr("&Start Bitcoin on system login"));
-    bitcoin_at_startup->setToolTip(tr("Automatically start Bitcoin after logging in to the system"));
+    bitcoin_at_startup = new QCheckBox(tr("&Start Litecoin on system login"));
+    bitcoin_at_startup->setToolTip(tr("Automatically start Litecoin after logging in to the system"));
     layout->addWidget(bitcoin_at_startup);
 
     detach_database = new QCheckBox(tr("&Detach databases at shutdown"));
@@ -260,7 +260,7 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
         lang->addItem(langStr, QVariant(langStr));
     }
 
-    lang->setToolTip(tr("The user interface language can be set here. This setting will only take effect after restarting Bitcoin."));
+    lang->setToolTip(tr("The user interface language can be set here. This setting will only take effect after restarting Litecoin."));
     connect(lang, SIGNAL(activated(int)), this, SLOT(showRestartWarning()));
 
     lang_label->setBuddy(lang);
@@ -282,7 +282,7 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
     layout->addLayout(unit_hbox);
 
     display_addresses = new QCheckBox(tr("&Display addresses in transaction list"), this);
-    display_addresses->setToolTip(tr("Whether to show Bitcoin addresses in the transaction list"));
+    display_addresses->setToolTip(tr("Whether to show Litecoin addresses in the transaction list"));
     layout->addWidget(display_addresses);
 
     layout->addStretch();
@@ -300,7 +300,7 @@ void DisplayOptionsPage::showRestartWarning()
 {
     if(!restart_warning_displayed)
     {
-        QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting Bitcoin."), QMessageBox::Ok);
+        QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting Litecoin."), QMessageBox::Ok);
         restart_warning_displayed = true;
     }
 }
@@ -345,7 +345,7 @@ NetworkOptionsPage::NetworkOptionsPage(QWidget *parent):
     setWindowTitle(tr("Network"));
 
     map_port_upnp = new QCheckBox(tr("Map port using &UPnP"));
-    map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled."));
+    map_port_upnp->setToolTip(tr("Automatically open the Litecoin client port on the router. This only works when your router supports UPnP and it is enabled."));
     layout->addWidget(map_port_upnp);
 
     connect_socks4 = new QCheckBox(tr("&Connect through SOCKS4 proxy:"));

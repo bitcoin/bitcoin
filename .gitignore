@@ -1,7 +1,7 @@
 src/*.exe
-src/bitcoin
-src/bitcoind
-src/test_bitcoin
+src/litecoin
+src/litecoind
+src/test_litecoin
 src/build.h
 .*.swp
 *.*~*
@@ -14,7 +14,7 @@ src/build.h
 #compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
+litecoin-qt
 #resources cpp
 qrc_*.cpp
 #qt creator

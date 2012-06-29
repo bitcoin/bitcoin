@@ -928,7 +928,9 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, int nConfMine, int nConfThe
 
                 int64 n = pcoin->vout[i].nValue;
 
-                if (n <= 0)
+                // If output is less than minimum value, then don't include transaction.
+                // This is to help deal with dust spam clogging up create transactions.
+                if (n <= 0 || n < nMinimumInputValue)
                     continue;
 
                 pair<int64,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin,i));

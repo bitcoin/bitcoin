@@ -46,7 +46,7 @@ void ipcThread(void* parg)
 void ipcInit()
 {
 #ifdef MAC_OSX
-    // TODO: implement bitcoin: URI handling the Mac Way
+    // TODO: implement litecoin: URI handling the Mac Way
     return;
 #endif
 #ifdef WIN32
@@ -63,7 +63,7 @@ void ipcInit()
     try {
         mq = new message_queue(open_or_create, BITCOINURI_QUEUE_NAME, 2, 256);
 
-        // Make sure we don't lose any bitcoin: URIs
+        // Make sure we don't lose any litecoin: URIs
         for (int i = 0; i < 2; i++)
         {
             ptime d = boost::posix_time::microsec_clock::universal_time() + millisec(1);
@@ -75,7 +75,7 @@ void ipcInit()
                 break;
         }
 
-        // Make sure only one bitcoin instance is listening
+        // Make sure only one litecoin instance is listening
         message_queue::remove(BITCOINURI_QUEUE_NAME);
         mq = new message_queue(open_or_create, BITCOINURI_QUEUE_NAME, 2, 256);
     }

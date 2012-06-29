@@ -326,9 +326,9 @@
          </property>
          <property name="text">
           <string>&amp;Show</string>
-          <property name="autoDefault">
-           <bool>false</bool>
-          </property> 
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
