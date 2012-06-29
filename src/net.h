@@ -128,6 +128,24 @@ extern std::map<CInv, int64> mapAlreadyAskedFor;
 
 
 
+class CNodeStats
+{
+public:
+    uint64 nServices;
+    int64 nLastSend;
+    int64 nLastRecv;
+    int64 nTimeConnected;
+    std::string addrName;
+    int nVersion;
+    std::string strSubVer;
+    bool fInbound;
+    int64 nReleaseTime;
+    int nStartingHeight;
+    int nMisbehavior;
+};
+
+
+
 
 
 /** Information about a peer */
@@ -617,6 +635,7 @@ public:
     static void ClearBanned(); // needed for unit testing
     static bool IsBanned(CNetAddr ip);
     bool Misbehaving(int howmuch); // 1 == a little, 100 == a lot
+    void copyStats(CNodeStats &stats);
 };
 
 
