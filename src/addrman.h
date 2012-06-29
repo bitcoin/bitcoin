@@ -23,13 +23,13 @@ private:
     // where knowledge about this address first came from
     CNetAddr source;
 
-    // last succesfull connection by us
+    // last successfull connection by us
     int64 nLastSuccess;
 
     // last try whatsoever by us:
     // int64 CAddress::nLastTry
 
-    // connection attempts since last succesful attempt
+    // connection attempts since last successful attempt
     int nAttempts;
 
     // reference count in new sets (memory only)
