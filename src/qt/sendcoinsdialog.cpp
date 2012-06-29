@@ -46,10 +46,11 @@ void SendCoinsDialog::setModel(WalletModel *model)
             entry->setModel(model);
         }
     }
-    if(model)
+    if(model && model->getOptionsModel())
     {
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     }
 }
 
@@ -202,7 +203,7 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
     ui->scrollAreaWidgetContents->resize(ui->scrollAreaWidgetContents->sizeHint());
     QCoreApplication::instance()->processEvents();
     QScrollBar* bar = ui->scrollArea->verticalScrollBar();
-    if (bar)
+    if(bar)
         bar->setSliderPosition(bar->maximum());
     return entry;
 }
@@ -245,7 +246,7 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
 
 void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
 {
-    if (!fNewRecipientAllowed)
+    if(!fNewRecipientAllowed)
         return;
 
     SendCoinsEntry *entry = 0;
@@ -266,15 +267,17 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     entry->setValue(rv);
 }
 
-
-void SendCoinsDialog::handleURI(const QString &uri)
+bool SendCoinsDialog::handleURI(const QString &uri)
 {
     SendCoinsRecipient rv;
-    if(!GUIUtil::parseBitcoinURI(uri, &rv))
+    // URI has to be valid
+    if (GUIUtil::parseBitcoinURI(uri, &rv))
     {
-        return;
+        pasteEntry(rv);
+        return true;
     }
-    pasteEntry(rv);
+
+    return false;
 }
 
 void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
@@ -286,4 +289,13 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
 
     int unit = model->getOptionsModel()->getDisplayUnit();
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
+}
+
+void SendCoinsDialog::updateDisplayUnit()
+{
+    if(model && model->getOptionsModel())
+    {
+        // Update labelBalance with the current balance and the current unit
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->getBalance()));
+    }
 }

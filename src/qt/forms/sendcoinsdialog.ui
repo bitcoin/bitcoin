@@ -70,6 +70,9 @@
         <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -93,6 +96,9 @@
        <property name="autoRepeatDelay">
         <number>300</number>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -109,6 +115,9 @@
        </item>
        <item>
         <widget class="QLabel" name="labelBalance">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
          <property name="text">
           <string>123.456 LTC</string>
          </property>

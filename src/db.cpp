@@ -404,66 +404,6 @@ bool CTxDB::ContainsTx(uint256 hash)
     return Exists(make_pair(string("tx"), hash));
 }
 
-bool CTxDB::ReadOwnerTxes(uint160 hash160, int nMinHeight, vector<CTransaction>& vtx)
-{
-    assert(!fClient);
-    vtx.clear();
-
-    // Get cursor
-    Dbc* pcursor = GetCursor();
-    if (!pcursor)
-        return false;
-
-    unsigned int fFlags = DB_SET_RANGE;
-    loop
-    {
-        // Read next record
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (fFlags == DB_SET_RANGE)
-            ssKey << string("owner") << hash160 << CDiskTxPos(0, 0, 0);
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
-        fFlags = DB_NEXT;
-        if (ret == DB_NOTFOUND)
-            break;
-        else if (ret != 0)
-        {
-            pcursor->close();
-            return false;
-        }
-
-        // Unserialize
-        string strType;
-        uint160 hashItem;
-        CDiskTxPos pos;
-        int nItemHeight;
-
-        try {
-            ssKey >> strType >> hashItem >> pos;
-            ssValue >> nItemHeight;
-        }
-        catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-        }
-
-        // Read transaction
-        if (strType != "owner" || hashItem != hash160)
-            break;
-        if (nItemHeight >= nMinHeight)
-        {
-            vtx.resize(vtx.size()+1);
-            if (!vtx.back().ReadFromDisk(pos))
-            {
-                pcursor->close();
-                return false;
-            }
-        }
-    }
-
-    pcursor->close();
-    return true;
-}
-
 bool CTxDB::ReadDiskTx(uint256 hash, CTransaction& tx, CTxIndex& txindex)
 {
     assert(!fClient);

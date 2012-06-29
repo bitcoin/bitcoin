@@ -15,14 +15,18 @@
 
 #undef printf
 #include <boost/asio.hpp>
+#include <boost/asio/ip/v6_only.hpp>
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/asio/ssl.hpp> 
+#include <boost/asio/ssl.hpp>
 #include <boost/filesystem/fstream.hpp>
-typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
+#include <boost/shared_ptr.hpp>
+#include <list>
 
 #define printf OutputDebugStringF
 // MinGW 3.4.5 gets "fatal error: had to relocate PCH" if the json headers are
@@ -436,7 +440,7 @@ Value stop(const Array& params, bool fHelp)
             "stop\n"
             "Stop Litecoin server.");
     // Shutdown will take long enough that the response should get back
-    uiInterface.QueueShutdown();
+    StartShutdown();
     return "Litecoin server stopping";
 }
 
@@ -1200,7 +1204,7 @@ Value sendmany(const Array& params, bool fHelp)
 
         CScript scriptPubKey;
         scriptPubKey.SetDestination(address.Get());
-        int64 nAmount = AmountFromValue(s.value_); 
+        int64 nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 
         vecSend.push_back(make_pair(scriptPubKey, nAmount));
@@ -1576,7 +1580,7 @@ Value listtransactions(const Array& params, bool fHelp)
         if ((int)ret.size() >= (nCount+nFrom)) break;
     }
     // ret is newest to oldest
-    
+
     if (nFrom > (int)ret.size())
         nFrom = ret.size();
     if ((nFrom + nCount) > (int)ret.size())
@@ -1987,7 +1991,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys.  So:
-    uiInterface.QueueShutdown();
+    StartShutdown();
     return "wallet encrypted; Litecoin server stopping, restart to run with encrypted wallet";
 }
 
@@ -2374,6 +2378,23 @@ Value getmemorypool(const Array& params, bool fHelp)
     }
 }
 
+Value getrawmempool(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getrawmempool\n"
+            "Returns all transaction ids in memory pool.");
+
+    vector<uint256> vtxid;
+    mempool.queryHashes(vtxid);
+
+    Array a;
+    BOOST_FOREACH(const uint256& hash, vtxid)
+        a.push_back(hash.ToString());
+
+    return a;
+}
+
 Value getblockhash(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -2498,6 +2519,7 @@ static const CRPCCommand vRPCCommands[] =
     { "sendfrom",               &sendfrom,               false },
     { "sendmany",               &sendmany,               false },
     { "addmultisigaddress",     &addmultisigaddress,     false },
+    { "getrawmempool",          &getrawmempool,          true },
     { "getblock",               &getblock,               false },
     { "getblockhash",           &getblockhash,           false },
     { "gettransaction",         &gettransaction,         false },
@@ -2744,10 +2766,22 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     stream << HTTPReply(nStatus, strReply, false) << std::flush;
 }
 
-bool ClientAllowed(const string& strAddress)
+bool ClientAllowed(const boost::asio::ip::address& address)
 {
-    if (strAddress == asio::ip::address_v4::loopback().to_string())
+    // Make sure that IPv4-compatible and IPv4-mapped IPv6 addresses are treated as IPv4 addresses
+    if (address.is_v6()
+     && (address.to_v6().is_v4_compatible()
+      || address.to_v6().is_v4_mapped()))
+        return ClientAllowed(address.to_v6().to_v4());
+
+    if (address == asio::ip::address_v4::loopback()
+     || address == asio::ip::address_v6::loopback()
+     || (address.is_v4()
+         // Chech whether IPv4 addresses match 127.0.0.0/8 (loopback subnet)
+      && (address.to_v4().to_ulong() & 0xff000000) == 0x7f000000))
         return true;
+
+    const string strAddress = address.to_string();
     const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
     BOOST_FOREACH(string strAllow, vAllow)
         if (WildcardMatch(strAddress, strAllow))
@@ -2758,9 +2792,10 @@ bool ClientAllowed(const string& strAddress)
 //
 // IOStream device that speaks SSL but can also speak non-SSL
 //
+template <typename Protocol>
 class SSLIOStreamDevice : public iostreams::device<iostreams::bidirectional> {
 public:
-    SSLIOStreamDevice(SSLStream &streamIn, bool fUseSSLIn) : stream(streamIn)
+    SSLIOStreamDevice(asio::ssl::stream<typename Protocol::socket> &streamIn, bool fUseSSLIn) : stream(streamIn)
     {
         fUseSSL = fUseSSLIn;
         fNeedHandshake = fUseSSLIn;
@@ -2804,21 +2839,54 @@ public:
 private:
     bool fNeedHandshake;
     bool fUseSSL;
-    SSLStream& stream;
+    asio::ssl::stream<typename Protocol::socket>& stream;
 };
 
 class AcceptedConnection
 {
-    public:
-    SSLStream sslStream;
-    SSLIOStreamDevice d;
-    iostreams::stream<SSLIOStreamDevice> stream;
+public:
+    virtual ~AcceptedConnection() {}
 
-    ip::tcp::endpoint peer;
+    virtual std::iostream& stream() = 0;
+    virtual std::string peer_address_to_string() const = 0;
+    virtual void close() = 0;
+};
 
-    AcceptedConnection(asio::io_service &io_service, ssl::context &context,
-     bool fUseSSL) : sslStream(io_service, context), d(sslStream, fUseSSL),
-     stream(d) { ; }
+template <typename Protocol>
+class AcceptedConnectionImpl : public AcceptedConnection
+{
+public:
+    AcceptedConnectionImpl(
+            asio::io_service& io_service,
+            ssl::context &context,
+            bool fUseSSL) :
+        sslStream(io_service, context),
+        _d(sslStream, fUseSSL),
+        _stream(_d)
+    {
+    }
+
+    virtual std::iostream& stream()
+    {
+        return _stream;
+    }
+
+    virtual std::string peer_address_to_string() const
+    {
+        return peer.address().to_string();
+    }
+
+    virtual void close()
+    {
+        _stream.close();
+    }
+
+    typename Protocol::endpoint peer;
+    asio::ssl::stream<typename Protocol::socket> sslStream;
+
+private:
+    SSLIOStreamDevice<Protocol> _d;
+    iostreams::stream< SSLIOStreamDevice<Protocol> > _stream;
 };
 
 void ThreadRPCServer(void* parg)
@@ -2838,6 +2906,82 @@ void ThreadRPCServer(void* parg)
         PrintException(NULL, "ThreadRPCServer()");
     }
     printf("ThreadRPCServer exited\n");
+}
+
+// Forward declaration required for RPCListen
+template <typename Protocol, typename SocketAcceptorService>
+static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, SocketAcceptorService> > acceptor,
+                             ssl::context& context,
+                             bool fUseSSL,
+                             AcceptedConnection* conn,
+                             const boost::system::error_code& error);
+
+/**
+ * Sets up I/O resources to accept and handle a new connection.
+ */
+template <typename Protocol, typename SocketAcceptorService>
+static void RPCListen(boost::shared_ptr< basic_socket_acceptor<Protocol, SocketAcceptorService> > acceptor,
+                   ssl::context& context,
+                   const bool fUseSSL)
+{
+    // Accept connection
+    AcceptedConnectionImpl<Protocol>* conn = new AcceptedConnectionImpl<Protocol>(acceptor->get_io_service(), context, fUseSSL);
+
+    acceptor->async_accept(
+            conn->sslStream.lowest_layer(),
+            conn->peer,
+            boost::bind(&RPCAcceptHandler<Protocol, SocketAcceptorService>,
+                acceptor,
+                boost::ref(context),
+                fUseSSL,
+                conn,
+                boost::asio::placeholders::error));
+}
+
+/**
+ * Accept and handle incoming connection.
+ */
+template <typename Protocol, typename SocketAcceptorService>
+static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, SocketAcceptorService> > acceptor,
+                             ssl::context& context,
+                             const bool fUseSSL,
+                             AcceptedConnection* conn,
+                             const boost::system::error_code& error)
+{
+    vnThreadsRunning[THREAD_RPCLISTENER]++;
+
+    // Immediately start accepting new connections, except when we're canceled or our socket is closed.
+    if (error != asio::error::operation_aborted
+     && acceptor->is_open())
+        RPCListen(acceptor, context, fUseSSL);
+
+    AcceptedConnectionImpl<ip::tcp>* tcp_conn = dynamic_cast< AcceptedConnectionImpl<ip::tcp>* >(conn);
+
+    // TODO: Actually handle errors
+    if (error)
+    {
+        delete conn;
+    }
+
+    // Restrict callers by IP.  It is important to
+    // do this before starting client thread, to filter out
+    // certain DoS and misbehaving clients.
+    else if (tcp_conn
+          && !ClientAllowed(tcp_conn->peer.address()))
+    {
+        // Only send a 403 if we're not using SSL to prevent a DoS during the SSL handshake.
+        if (!fUseSSL)
+            conn->stream() << HTTPReply(403, "", false) << std::flush;
+        delete conn;
+    }
+
+    // start HTTP client thread
+    else if (!CreateThread(ThreadRPCServer3, conn)) {
+        printf("Failed to create RPC server client thread\n");
+        delete conn;
+    }
+
+    vnThreadsRunning[THREAD_RPCLISTENER]--;
 }
 
 void ThreadRPCServer2(void* parg)
@@ -2865,30 +3009,13 @@ void ThreadRPCServer2(void* parg)
                 GetConfigFile().string().c_str(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32).c_str()),
             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
+        StartShutdown();
         return;
     }
 
-    bool fUseSSL = GetBoolArg("-rpcssl");
-    asio::ip::address bindAddress = mapArgs.count("-rpcallowip") ? asio::ip::address_v4::any() : asio::ip::address_v4::loopback();
+    const bool fUseSSL = GetBoolArg("-rpcssl");
 
     asio::io_service io_service;
-    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 9332));
-    ip::tcp::acceptor acceptor(io_service);
-    try
-    {
-        acceptor.open(endpoint.protocol());
-        acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-        acceptor.bind(endpoint);
-        acceptor.listen(socket_base::max_connections);
-    }
-    catch(boost::system::system_error &e)
-    {
-        uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
-                             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
-        uiInterface.QueueShutdown();
-        return;
-    }
 
     ssl::context context(io_service, ssl::context::sslv23);
     if (fUseSSL)
@@ -2909,77 +3036,110 @@ void ThreadRPCServer2(void* parg)
         SSL_CTX_set_cipher_list(context.impl(), strCiphers.c_str());
     }
 
-    loop
+    // Try a dual IPv6/IPv4 socket, falling back to separate IPv4 and IPv6 sockets
+    const bool loopback = !mapArgs.count("-rpcallowip");
+    asio::ip::address bindAddress = loopback ? asio::ip::address_v6::loopback() : asio::ip::address_v6::any();
+    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", 8332));
+
+    boost::signals2::signal<void ()> StopRequests;
+
+    try
     {
-        // Accept connection
-        AcceptedConnection *conn =
-                    new AcceptedConnection(io_service, context, fUseSSL);
+        boost::shared_ptr<ip::tcp::acceptor> acceptor(new ip::tcp::acceptor(io_service));
+        acceptor->open(endpoint.protocol());
+        acceptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
 
-        vnThreadsRunning[THREAD_RPCLISTENER]--;
-        acceptor.accept(conn->sslStream.lowest_layer(), conn->peer);
-        vnThreadsRunning[THREAD_RPCLISTENER]++;
+        // Try making the socket dual IPv6/IPv4 (if listening on the "any" address)
+        boost::system::error_code v6_only_error;
+        acceptor->set_option(boost::asio::ip::v6_only(loopback), v6_only_error);
 
-        if (fShutdown)
+        acceptor->bind(endpoint);
+        acceptor->listen(socket_base::max_connections);
+
+        RPCListen(acceptor, context, fUseSSL);
+        // Cancel outstanding listen-requests for this acceptor when shutting down
+        StopRequests.connect(signals2::slot<void ()>(
+                    static_cast<void (ip::tcp::acceptor::*)()>(&ip::tcp::acceptor::close), acceptor.get())
+                .track(acceptor));
+
+        // If dual IPv6/IPv4 failed (or we're opening loopback interfaces only), open IPv4 separately
+        if (loopback || v6_only_error)
         {
-            delete conn;
-            return;
-        }
+            bindAddress = loopback ? asio::ip::address_v4::loopback() : asio::ip::address_v4::any();
+            endpoint.address(bindAddress);
 
-        // Restrict callers by IP.  It is important to
-        // do this before starting client thread, to filter out
-        // certain DoS and misbehaving clients.
-        if (!ClientAllowed(conn->peer.address().to_string()))
-        {
-            // Only send a 403 if we're not using SSL to prevent a DoS during the SSL handshake.
-            if (!fUseSSL)
-                conn->stream << HTTPReply(403, "", false) << std::flush;
-            delete conn;
-        }
+            acceptor.reset(new ip::tcp::acceptor(io_service));
+            acceptor->open(endpoint.protocol());
+            acceptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+            acceptor->bind(endpoint);
+            acceptor->listen(socket_base::max_connections);
 
-        // start HTTP client thread
-        else if (!CreateThread(ThreadRPCServer3, conn)) {
-            printf("Failed to create RPC server client thread\n");
-            delete conn;
+            RPCListen(acceptor, context, fUseSSL);
+            // Cancel outstanding listen-requests for this acceptor when shutting down
+            StopRequests.connect(signals2::slot<void ()>(
+                        static_cast<void (ip::tcp::acceptor::*)()>(&ip::tcp::acceptor::close), acceptor.get())
+                    .track(acceptor));
         }
     }
+    catch(boost::system::system_error &e)
+    {
+        uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
+                             _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
+        StartShutdown();
+        return;
+    }
+
+    vnThreadsRunning[THREAD_RPCLISTENER]--;
+    while (!fShutdown)
+        io_service.run_one();
+    vnThreadsRunning[THREAD_RPCLISTENER]++;
+    StopRequests();
 }
+
+static CCriticalSection cs_THREAD_RPCHANDLER;
 
 void ThreadRPCServer3(void* parg)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer3(parg));
-    vnThreadsRunning[THREAD_RPCHANDLER]++;
+    {
+        LOCK(cs_THREAD_RPCHANDLER);
+        vnThreadsRunning[THREAD_RPCHANDLER]++;
+    }
     AcceptedConnection *conn = (AcceptedConnection *) parg;
 
     bool fRun = true;
     loop {
         if (fShutdown || !fRun)
         {
-            conn->stream.close();
+            conn->close();
             delete conn;
-            --vnThreadsRunning[THREAD_RPCHANDLER];
+            {
+                LOCK(cs_THREAD_RPCHANDLER);
+                --vnThreadsRunning[THREAD_RPCHANDLER];
+            }
             return;
         }
         map<string, string> mapHeaders;
         string strRequest;
 
-        ReadHTTP(conn->stream, mapHeaders, strRequest);
+        ReadHTTP(conn->stream(), mapHeaders, strRequest);
 
         // Check authorization
         if (mapHeaders.count("authorization") == 0)
         {
-            conn->stream << HTTPReply(401, "", false) << std::flush;
+            conn->stream() << HTTPReply(401, "", false) << std::flush;
             break;
         }
         if (!HTTPAuthorized(mapHeaders))
         {
-            printf("ThreadRPCServer incorrect password attempt from %s\n", conn->peer.address().to_string().c_str());
+            printf("ThreadRPCServer incorrect password attempt from %s\n", conn->peer_address_to_string().c_str());
             /* Deter brute-forcing short passwords.
                If this results in a DOS the user really
                shouldn't have their RPC port exposed.*/
             if (mapArgs["-rpcpassword"].size() < 20)
                 Sleep(250);
 
-            conn->stream << HTTPReply(401, "", false) << std::flush;
+            conn->stream() << HTTPReply(401, "", false) << std::flush;
             break;
         }
         if (mapHeaders["connection"] == "close")
@@ -3021,22 +3181,25 @@ void ThreadRPCServer3(void* parg)
 
             // Send reply
             string strReply = JSONRPCReply(result, Value::null, id);
-            conn->stream << HTTPReply(200, strReply, fRun) << std::flush;
+            conn->stream() << HTTPReply(200, strReply, fRun) << std::flush;
         }
         catch (Object& objError)
         {
-            ErrorReply(conn->stream, objError, id);
+            ErrorReply(conn->stream(), objError, id);
             break;
         }
         catch (std::exception& e)
         {
-            ErrorReply(conn->stream, JSONRPCError(-32700, e.what()), id);
+            ErrorReply(conn->stream(), JSONRPCError(-32700, e.what()), id);
             break;
         }
     }
 
     delete conn;
-    vnThreadsRunning[THREAD_RPCHANDLER]--;
+    {
+        LOCK(cs_THREAD_RPCHANDLER);
+        vnThreadsRunning[THREAD_RPCHANDLER]--;
+    }
 }
 
 json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_spirit::Array &params) const
@@ -3082,10 +3245,10 @@ Object CallRPC(const string& strMethod, const Array& params)
     asio::io_service io_service;
     ssl::context context(io_service, ssl::context::sslv23);
     context.set_options(ssl::context::no_sslv2);
-    SSLStream sslStream(io_service, context);
-    SSLIOStreamDevice d(sslStream, fUseSSL);
-    iostreams::stream<SSLIOStreamDevice> stream(d);
-    if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", "9332")))
+    asio::ssl::stream<asio::ip::tcp::socket> sslStream(io_service, context);
+    SSLIOStreamDevice<asio::ip::tcp> d(sslStream, fUseSSL);
+    iostreams::stream< SSLIOStreamDevice<asio::ip::tcp> > stream(d);
+    if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", "8332")))
         throw runtime_error("couldn't connect to server");
 
     // HTTP basic authentication

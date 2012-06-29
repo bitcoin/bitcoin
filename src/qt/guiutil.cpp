@@ -4,6 +4,7 @@
 #include "bitcoinunits.h"
 #include "util.h"
 #include "init.h"
+#include "base58.h"
 
 #include <QString>
 #include <QDateTime>
@@ -78,6 +79,11 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     if(uri.scheme() != QString("litecoin"))
+        return false;
+
+    // check if the address is valid
+    CBitcoinAddress addressFromUri(uri.path().toStdString());
+    if (!addressFromUri.IsValid())
         return false;
 
     SendCoinsRecipient rv;
@@ -222,19 +228,18 @@ Qt::ConnectionType blockingGUIThreadConnection()
 
 bool checkPoint(const QPoint &p, const QWidget *w)
 {
-  QWidget *atW = qApp->widgetAt(w->mapToGlobal(p));
-  if(!atW) return false;
-  return atW->topLevelWidget() == w;
+    QWidget *atW = qApp->widgetAt(w->mapToGlobal(p));
+    if (!atW) return false;
+    return atW->topLevelWidget() == w;
 }
 
 bool isObscured(QWidget *w)
 {
-
-  return !(checkPoint(QPoint(0, 0), w)
-           && checkPoint(QPoint(w->width() - 1, 0), w)
-           && checkPoint(QPoint(0, w->height() - 1), w)
-           && checkPoint(QPoint(w->width() - 1, w->height() - 1), w)
-           && checkPoint(QPoint(w->width()/2, w->height()/2), w));
+    return !(checkPoint(QPoint(0, 0), w)
+        && checkPoint(QPoint(w->width() - 1, 0), w)
+        && checkPoint(QPoint(0, w->height() - 1), w)
+        && checkPoint(QPoint(w->width() - 1, w->height() - 1), w)
+        && checkPoint(QPoint(w->width() / 2, w->height() / 2), w));
 }
 
 void openDebugLogfile()
@@ -436,15 +441,21 @@ HelpMessageBox::HelpMessageBox(QWidget *parent) :
     setDetailedText(coreOptions + "\n" + uiOptions);
 }
 
-void HelpMessageBox::exec()
+void HelpMessageBox::printToConsole()
 {
-#if defined(WIN32)
-    // On windows, show a message box, as there is no stderr in windowed applications
-    QMessageBox::exec();
-#else
     // On other operating systems, the expected action is to print the message to the console.
     QString strUsage = header + "\n" + coreOptions + "\n" + uiOptions;
     fprintf(stderr, "%s", strUsage.toStdString().c_str());
+}
+
+void HelpMessageBox::showOrPrint()
+{
+#if defined(WIN32)
+        // On windows, show a message box, as there is no stderr/stdout in windowed applications
+        exec();
+#else
+        // On other operating systems, print help text to console
+        printToConsole();
 #endif
 }
 

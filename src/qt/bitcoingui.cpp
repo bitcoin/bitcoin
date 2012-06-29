@@ -427,17 +427,17 @@ void BitcoinGUI::createTrayIcon()
 
     // Configuration of the tray icon (or dock icon) icon menu
     trayIconMenu->addAction(toggleHideAction);
-    trayIconMenu->addAction(openRPCConsoleAction);
     trayIconMenu->addSeparator();
-    trayIconMenu->addAction(messageAction);
-    trayIconMenu->addAction(verifyMessageAction);
+    trayIconMenu->addAction(sendCoinsAction);
+    trayIconMenu->addAction(receiveCoinsAction);
 #ifndef FIRST_CLASS_MESSAGING
     trayIconMenu->addSeparator();
 #endif
-    trayIconMenu->addAction(sendCoinsAction);
-    trayIconMenu->addAction(receiveCoinsAction);
+    trayIconMenu->addAction(messageAction);
+    trayIconMenu->addAction(verifyMessageAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(openRPCConsoleAction);
 #ifndef Q_WS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
@@ -456,28 +456,6 @@ void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 #endif
-
-void BitcoinGUI::toggleHidden()
-{
-    // activateWindow() (sometimes) helps with keyboard focus on Windows
-    if (isHidden())
-    {
-        show();
-        activateWindow();
-    }
-    else if (isMinimized())
-    {
-        showNormal();
-        activateWindow();
-    }
-    else if (GUIUtil::isObscured(this))
-    {
-        raise();
-        activateWindow();
-    }
-    else
-        hide();
-}
 
 void BitcoinGUI::optionsClicked()
 {
@@ -807,12 +785,19 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
 {
     if(event->mimeData()->hasUrls())
     {
-        gotoSendCoinsPage();
+        int nValidUrisFound = 0;
         QList<QUrl> uris = event->mimeData()->urls();
         foreach(const QUrl &uri, uris)
         {
-            sendCoinsPage->handleURI(uri.toString());
+            if (sendCoinsPage->handleURI(uri.toString()))
+                nValidUrisFound++;
         }
+
+        // if valid URIs were found
+        if (nValidUrisFound)
+            gotoSendCoinsPage();
+        else
+            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."));
     }
 
     event->acceptProposedAction();
@@ -820,13 +805,14 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
 
 void BitcoinGUI::handleURI(QString strURI)
 {
-    gotoSendCoinsPage();
-    sendCoinsPage->handleURI(strURI);
-
-    if(!isActiveWindow())
-        activateWindow();
-
-    showNormalIfMinimized();
+    // URI has to be valid
+    if (sendCoinsPage->handleURI(strURI))
+    {
+        showNormalIfMinimized();
+        gotoSendCoinsPage();
+    }
+    else
+        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."));
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)
@@ -908,10 +894,29 @@ void BitcoinGUI::unlockWallet()
     }
 }
 
-void BitcoinGUI::showNormalIfMinimized()
+void BitcoinGUI::showNormalIfMinimized(bool fToggleHidden)
 {
-    if(!isVisible()) // Show, if hidden
+    // activateWindow() (sometimes) helps with keyboard focus on Windows
+    if (isHidden())
+    {
         show();
-    if(isMinimized()) // Unminimize, if minimized
+        activateWindow();
+    }
+    else if (isMinimized())
+    {
         showNormal();
+        activateWindow();
+    }
+    else if (GUIUtil::isObscured(this))
+    {
+        raise();
+        activateWindow();
+    }
+    else if(fToggleHidden)
+        hide();
+}
+
+void BitcoinGUI::toggleHidden()
+{
+    showNormalIfMinimized(true);
 }

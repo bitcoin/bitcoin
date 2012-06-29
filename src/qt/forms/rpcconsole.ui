@@ -303,7 +303,7 @@
          </property>
          <property name="autoDefault">
           <bool>false</bool>
-         </property> 
+         </property>
         </widget>
        </item>
        <item row="15" column="0">

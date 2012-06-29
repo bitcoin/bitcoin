@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
     if (mapArgs.count("-?") || mapArgs.count("--help"))
     {
         GUIUtil::HelpMessageBox help;
-        help.exec();
+        help.showOrPrint();
         return 1;
     }
 
@@ -290,6 +290,7 @@ int main(int argc, char *argv[])
                 window.setWalletModel(0);
                 guiref = 0;
             }
+            // Shutdown the core and it's threads, but don't exit Bitcoin-Qt here
             Shutdown(NULL);
         }
         else

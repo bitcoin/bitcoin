@@ -30,7 +30,7 @@ public:
     QWidget *setupTabChain(QWidget *prev);
 
     void pasteEntry(const SendCoinsRecipient &rv);
-    void handleURI(const QString &uri);
+    bool handleURI(const QString &uri);
 
 public slots:
     void clear();
@@ -47,8 +47,8 @@ private:
 
 private slots:
     void on_sendButton_clicked();
-
     void removeEntry(SendCoinsEntry* entry);
+    void updateDisplayUnit();
 };
 
 #endif // SENDCOINSDIALOG_H
