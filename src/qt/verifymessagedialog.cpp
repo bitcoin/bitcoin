@@ -24,8 +24,8 @@ VerifyMessageDialog::VerifyMessageDialog(QWidget *parent) :
 
 #if (QT_VERSION >= 0x040700)
     /* Do not move this to the XML file, Qt before 4.7 will choke on it */
-    ui->lnAddress->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
-    ui->lnSig->setPlaceholderText(tr("Enter Bitcoin signature"));
+    ui->lnAddress->setPlaceholderText(tr("Enter a Litecoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)"));
+    ui->lnSig->setPlaceholderText(tr("Enter Litecoin signature"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->lnAddress, this);

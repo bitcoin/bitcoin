@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Bitcoin debug window</string>
+   <string>Litecoin debug window</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -296,7 +296,7 @@
        <item row="14" column="0">
         <widget class="QPushButton" name="openDebugLogfileButton">
          <property name="toolTip">
-          <string>Open the Bitcoin debug logfile from the current data directory. This can take a few seconds for large logfiles.</string>
+          <string>Open the Litecoin debug logfile from the current data directory. This can take a few seconds for large logfiles.</string>
          </property>
          <property name="text">
           <string>&amp;Open</string>
@@ -322,7 +322,7 @@
        <item row="16" column="0">
         <widget class="QPushButton" name="showCLOptionsButton">
          <property name="toolTip">
-          <string>Show the Bitcoin-Qt help message to get a list with possible Bitcoin command-line options.</string>
+          <string>Show the Litecoin-Qt help message to get a list with possible Litecoin command-line options.</string>
          </property>
          <property name="text">
           <string>&amp;Show</string>

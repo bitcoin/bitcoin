@@ -49,7 +49,7 @@
      <item>
       <widget class="QPushButton" name="verifyMessage">
        <property name="toolTip">
-        <string>Verify a message to ensure it was signed with the specified Bitcoin address</string>
+        <string>Verify a message to ensure it was signed with the specified Litecoin address</string>
        </property>
        <property name="text">
         <string>&amp;Verify Message</string>
