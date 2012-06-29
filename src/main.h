@@ -307,8 +307,11 @@ public:
  */
 class CTxOut
 {
+
+private:
+	int64 nValue;
+
 public:
-    int64 nValue;
     CScript scriptPubKey;
 
     CTxOut()
@@ -365,6 +368,16 @@ public:
     void print() const
     {
         printf("%s\n", ToString().c_str());
+    }
+
+    int64 GetPresentValue() const
+    {
+    	return nValue;
+    }
+
+    void SetPresentValue(int64 presentValue)
+    {
+    	nValue = presentValue;
     }
 };
 
@@ -513,8 +526,8 @@ public:
         int64 nValueOut = 0;
         BOOST_FOREACH(const CTxOut& txout, vout)
         {
-            nValueOut += txout.nValue;
-            if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
+            nValueOut += txout.GetPresentValue();
+            if (!MoneyRange(txout.GetPresentValue()) || !MoneyRange(nValueOut))
                 throw std::runtime_error("CTransaction::GetValueOut() : value out of range");
         }
         return nValueOut;
@@ -567,7 +580,7 @@ public:
         if (nMinFee < nBaseFee)
         {
             BOOST_FOREACH(const CTxOut& txout, vout)
-                if (txout.nValue < CENT)
+                if (txout.GetPresentValue() < CENT)
                     nMinFee = nBaseFee;
         }
 
