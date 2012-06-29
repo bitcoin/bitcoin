@@ -1,4 +1,4 @@
-Litecoin 0.6.99 BETA
+Litecoin 0.6 BETA
 
 Copyright (c) 2009-2012 Bitcoin Developers
 Copyright (c) 2011-2012 Litecoin Developers
