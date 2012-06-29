@@ -46,6 +46,7 @@ static std::string strRPCUserColonPass;
 static int64 nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
+extern Value getconnectioncount(const Array& params, bool fHelp);
 extern Value dumpprivkey(const Array& params, bool fHelp);
 extern Value importprivkey(const Array& params, bool fHelp);
 
@@ -453,17 +454,6 @@ Value getblockcount(const Array& params, bool fHelp)
             "Returns the number of blocks in the longest block chain.");
 
     return nBestHeight;
-}
-
-
-Value getconnectioncount(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "getconnectioncount\n"
-            "Returns the number of connections to other nodes.");
-
-    return (int)vNodes.size();
 }
 
 
