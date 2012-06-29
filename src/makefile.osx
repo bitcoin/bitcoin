@@ -108,7 +108,11 @@ all: litecoind
 -include obj-test/*.P
 
 obj/scrypt.o: scrypt.c
-	gcc -c -o $@ $^
+	gcc -c $(CFLAGS) -MMD -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
 obj/build.h: FORCE
 	/bin/sh ../share/genbuild.sh obj/build.h
