@@ -172,16 +172,16 @@ public:
     }
     int64 GetCredit(const CTxOut& txout) const
     {
-        if (!MoneyRange(txout.nValue))
+        if (!MoneyRange(txout.GetPresentValue()))
             throw std::runtime_error("CWallet::GetCredit() : value out of range");
-        return (IsMine(txout) ? txout.nValue : 0);
+        return (IsMine(txout) ? txout.GetPresentValue() : 0);
     }
     bool IsChange(const CTxOut& txout) const;
     int64 GetChange(const CTxOut& txout) const
     {
-        if (!MoneyRange(txout.nValue))
+        if (!MoneyRange(txout.GetPresentValue()))
             throw std::runtime_error("CWallet::GetChange() : value out of range");
-        return (IsChange(txout) ? txout.nValue : 0);
+        return (IsChange(txout) ? txout.GetPresentValue() : 0);
     }
     bool IsMine(const CTransaction& tx) const
     {
@@ -621,7 +621,7 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString().substr(0,10).c_str(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
+        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString().substr(0,10).c_str(), i, nDepth, FormatMoney(tx->vout[i].GetPresentValue()).c_str());
     }
 
     void print() const

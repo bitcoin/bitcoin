@@ -437,11 +437,11 @@ bool CTransaction::CheckTransaction() const
     int64 nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
-        if (txout.nValue < 0)
+        if (txout.GetPresentValue() < 0)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue negative"));
-        if (txout.nValue > MAX_MONEY)
+        if (txout.GetPresentValue() > MAX_MONEY)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
-        nValueOut += txout.nValue;
+        nValueOut += txout.GetPresentValue();
         if (!MoneyRange(nValueOut))
             return DoS(100, error("CTransaction::CheckTransaction() : txout total out of range"));
     }
@@ -1127,7 +1127,7 @@ int64 CTransaction::GetValueIn(const MapPrevTx& inputs) const
     int64 nResult = 0;
     for (unsigned int i = 0; i < vin.size(); i++)
     {
-        nResult += GetOutputFor(vin[i], inputs).nValue;
+        nResult += GetOutputFor(vin[i], inputs).GetPresentValue();
     }
     return nResult;
 
@@ -1177,8 +1177,8 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
 
             // Check for negative or overflow input values
-            nValueIn += txPrev.vout[prevout.n].nValue;
-            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            nValueIn += txPrev.vout[prevout.n].GetPresentValue();
+            if (!MoneyRange(txPrev.vout[prevout.n].GetPresentValue()) || !MoneyRange(nValueIn))
                 return DoS(100, error("ConnectInputs() : txin values out of range"));
 
         }
@@ -1275,9 +1275,9 @@ bool CTransaction::ClientConnectInputs()
             // // Flag outpoints as used
             // txPrev.vout[prevout.n].posNext = posThisTx;
 
-            nValueIn += txPrev.vout[prevout.n].nValue;
+            nValueIn += txPrev.vout[prevout.n].GetPresentValue();
 
-            if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            if (!MoneyRange(txPrev.vout[prevout.n].GetPresentValue()) || !MoneyRange(nValueIn))
                 return error("ClientConnectInputs() : txin values out of range");
         }
         if (GetValueOut() > nValueIn)
@@ -1969,7 +1969,7 @@ bool LoadBlockIndex(bool fAllowNew)
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = 50 * COIN;
+        txNew.vout[0].SetPresentValue(50 * COIN);
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
         CBlock block;
         block.vtx.push_back(txNew);
@@ -3341,7 +3341,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                     porphan->setDependsOn.insert(txin.prevout.hash);
                     continue;
                 }
-                int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
+                int64 nValueIn = txPrev.vout[txin.prevout.n].GetPresentValue();
 
                 // Read block header
                 int nConf = txindex.GetDepthInMainChain();
@@ -3444,7 +3444,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
         printf("CreateNewBlock(): total size %lu\n", nBlockSize);
 
     }
-    pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+    pblock->vtx[0].vout[0].SetPresentValue(GetBlockValue(pindexPrev->nHeight+1, nFees));
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -3532,7 +3532,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     printf("BitcoinMiner:\n");
     printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
-    printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());
+    printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].GetPresentValue()).c_str());
 
     // Found a solution
     {
