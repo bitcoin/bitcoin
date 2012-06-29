@@ -216,10 +216,11 @@ double GetDifficulty()
 
     if (pindexBest == NULL)
         return 1.0;
-    int nShift = (pindexBest->nBits >> 24) & 0xff;
+    const CBlockIndex* pindexLastProofOfWork = GetLastBlockIndex(pindexBest, false);
+    int nShift = (pindexLastProofOfWork->nBits >> 24) & 0xff;
 
     double dDiff =
-        (double)0x0000ffff / (double)(pindexBest->nBits & 0x00ffffff);
+        (double)0x0000ffff / (double)(pindexLastProofOfWork->nBits & 0x00ffffff);
 
     while (nShift < 29)
     {
