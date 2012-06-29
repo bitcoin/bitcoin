@@ -1,6 +1,53 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
+# Copyright (c) 2012 The PPCoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+# Windows commandline build procedure:
+# - Install MinGW following http://www.mingw.org/wiki/Getting_Started.
+#   Install with the C++ and MSYS options checked
+#
+# - Add/edit 'MAKE' environment variable with value '/c/MinGW32/bin/mingw32-make.exe'
+#
+# - Build openssl library version: 1.0.1b
+#   download from  http://www.openssl.org/source/
+#   Extract to c:\openssl-1.0.1b-mgw
+#   In MinGW MSYS:
+#     ./config
+#     make
+#
+# - Build Berkeley DB library version: 4.8.30.NC
+#   download from  http://www.oracle.com/technology/software/products/berkeley-db/index.html
+#   Extract to c:\db-4.8.30.NC-mgw
+#   In MinGW MSYS:
+#     cd build_unix
+#     sh ../dist/configure --disable-replication --enable-mingw --enable-cxx --prefix=/usr/local
+#   Edit db.h@113 in build_unix
+#   from
+#     typedef pthread_t db_threadid_t;
+#   to 
+#     typedef u_int32_t db_threadid_t;
+#   Then
+#     make
+#
+# - Build Boost C++ library version: 1.47.0
+#   download from http://www.boost.org/users/download/
+#   Extract to c:\boost-1.47.0-mgw
+#   Install Boost.Build:
+#     cd tools\build\v2
+#     bootstrap.bat
+#     b2 install --prefix=BOOST_BUILD_INSTALL_DIR
+#   Add BOOST_BUILD_INSTALL_DIR to your PATH system environment variable
+#   Build boost library in MSDOS:
+#     cd c:\boost-1.47.0-mgw
+#     bjam toolset=gcc --build-type=complete stage
+#
+# - Build ppcoind.exe
+#   in MinGW MSYS
+#     cd ppcoin/src
+#     make ppcoind.exe -f makefile.mingw USE_UPNP=
+#
+#
 
 USE_UPNP:=0
 
@@ -15,10 +62,10 @@ LIBPATHS= \
  -L"C:\openssl-1.0.0d-mgw"
 
 LIBS= \
- -l boost_system-mgw45-mt-s-1_47 \
- -l boost_filesystem-mgw45-mt-s-1_47 \
- -l boost_program_options-mgw45-mt-s-1_47 \
- -l boost_thread-mgw45-mt-s-1_47 \
+ -l boost_system-mgw46-mt-s-1_47 \
+ -l boost_filesystem-mgw46-mt-s-1_47 \
+ -l boost_program_options-mgw46-mt-s-1_47 \
+ -l boost_thread-mgw46-mt-s-1_47 \
  -l db_cxx \
  -l ssl \
  -l crypto
@@ -74,12 +121,12 @@ OBJS= \
     obj/wallet.o
 
 
-all: bitcoind.exe
+all: ppcoind.exe
 
 obj/nogui/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/nogui/%)
+ppcoind.exe: $(OBJS:obj/%=obj/nogui/%)
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 obj/test/test_bitcoin.o: $(wildcard test/*.cpp) $(HEADERS)
@@ -89,7 +136,7 @@ test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:o
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
-	-del /Q bitcoind test_bitcoin
+	-del /Q ppcoind test_bitcoin
 	-del /Q obj\*
 	-del /Q obj\nogui\*
 	-del /Q obj\test\*
