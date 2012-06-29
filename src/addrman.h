@@ -23,7 +23,7 @@ private:
     // where knowledge about this address first came from
     CNetAddr source;
 
-    // last succesfull connection by us
+    // last succesful connection by us
     int64 nLastSuccess;
 
     // last try whatsoever by us:
