@@ -641,7 +641,7 @@ void ThreadSocketHandler(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadSocketHandler(parg));
 
     // Make this thread recognisable as the networking thread
-    RenameThread("bitcoind [net]");
+    RenameThread("bitcoin-net");
 
     try
     {
@@ -997,7 +997,7 @@ void ThreadMapPort(void* parg)
     IMPLEMENT_RANDOMIZE_STACK(ThreadMapPort(parg));
 
     // Make this thread recognisable as the UPnP thread
-    RenameThread("bitcoind [UPnP]");
+    RenameThread("bitcoin-UPnP");
 
     try
     {
@@ -1884,7 +1884,7 @@ void static Discover()
 void StartNode(void* parg)
 {
     // Make this thread recognisable as the startup thread
-    RenameThread("bitcoin [start]");
+    RenameThread("bitcoin-start");
 
     if (semOutbound == NULL) {
         // initialize semaphore
