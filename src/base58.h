@@ -69,7 +69,7 @@ inline std::string EncodeBase58(const std::vector<unsigned char>& vch)
 }
 
 // Decode a base58-encoded string psz into byte vector vchRet
-// returns true if decoding is succesful
+// returns true if decoding is successful
 inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
 {
     CAutoBN_CTX pctx;
