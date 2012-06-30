@@ -60,6 +60,7 @@ OBJS= \
     obj/protocol.o \
     obj/bitcoinrpc.o \
     obj/rpcdump.o \
+    obj/rpcnet.o \
     obj/script.o \
     obj/sync.o \
     obj/util.o \
