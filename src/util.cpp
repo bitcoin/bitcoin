@@ -1279,7 +1279,7 @@ void runCommand(std::string strCommand)
 
 void RenameThread(const char* name)
 {
-#if defined(__linux__) && defined(PR_SET_NAME)
+#if defined(PR_SET_NAME)
     // Only the first 15 characters are used (16 - NUL terminator)
     ::prctl(PR_SET_NAME, name, 0, 0, 0);
 #elif 0 && (defined(__FreeBSD__) || defined(__OpenBSD__))
