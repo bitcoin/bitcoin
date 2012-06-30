@@ -52,6 +52,8 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("lastsend", (boost::int64_t)stats.nLastSend));
         obj.push_back(Pair("lastrecv", (boost::int64_t)stats.nLastRecv));
         obj.push_back(Pair("conntime", (boost::int64_t)stats.nTimeConnected));
+        obj.push_back(Pair("recvbytes", (boost::uint64_t)stats.nRecvBytes));
+        obj.push_back(Pair("sendbytes", (boost::uint64_t)stats.nSendBytes));
         obj.push_back(Pair("version", stats.nVersion));
         obj.push_back(Pair("subver", stats.strSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));

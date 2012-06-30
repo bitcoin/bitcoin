@@ -2955,6 +2955,8 @@ bool ProcessMessages(CNode* pfrom)
             break;
         }
 
+        pfrom->nRecvBytes += nHeaderSize + nMessageSize;
+
         // Checksum
         uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
         unsigned int nChecksum = 0;

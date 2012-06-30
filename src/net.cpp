@@ -614,6 +614,8 @@ void CNode::copyStats(CNodeStats &stats)
     X(nLastSend);
     X(nLastRecv);
     X(nTimeConnected);
+    X(nRecvBytes);
+    X(nSendBytes);
     X(addrName);
     X(nVersion);
     X(strSubVer);

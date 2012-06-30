@@ -135,6 +135,8 @@ public:
     int64 nLastSend;
     int64 nLastRecv;
     int64 nTimeConnected;
+    uint64 nRecvBytes;
+    uint64 nSendBytes;
     std::string addrName;
     int nVersion;
     std::string strSubVer;
@@ -163,6 +165,8 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
+    uint64 nRecvBytes;
+    uint64 nSendBytes;
     int nHeaderStart;
     unsigned int nMessageStart;
     CAddress addr;
@@ -215,6 +219,8 @@ public:
         nLastRecv = 0;
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
+        nRecvBytes = 0;
+        nSendBytes = 0;
         nHeaderStart = -1;
         nMessageStart = -1;
         addr = addrIn;
@@ -379,6 +385,8 @@ public:
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
         assert(nMessageStart - nHeaderStart >= offsetof(CMessageHeader, nChecksum) + sizeof(nChecksum));
         memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
+
+        nSendBytes += nSize;
 
         if (fDebug) {
             printf("(%d bytes)\n", nSize);
