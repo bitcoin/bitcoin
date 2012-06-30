@@ -32,6 +32,28 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
     }
 }
 
+static Object CmdStatToJSON(const map<string, uint64>& mapMsgs,
+                            const map<string, uint64>& mapMsgBytes_)
+{
+    Object ret;
+
+    map<string, uint64> mapMsgBytes(mapMsgBytes_);
+
+    for (map<string, uint64>::const_iterator mi = mapMsgs.begin(); mi != mapMsgs.end(); ++mi) {
+        Array a;
+
+        string strCommand = mi->first;
+        boost::uint64_t msgCount = mi->second;
+        boost::uint64_t msgBytes = mapMsgBytes[strCommand];
+
+        a.push_back(msgCount);
+        a.push_back(msgBytes);
+        ret.push_back(Pair(strCommand, a));
+    }
+
+    return ret;
+}
+
 Value getpeerinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -58,6 +80,10 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("subver", stats.strSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));
         obj.push_back(Pair("releasetime", (boost::int64_t)stats.nReleaseTime));
+        obj.push_back(Pair("recvmsgs",
+            CmdStatToJSON(stats.mapRecvMsgs, stats.mapRecvMsgBytes)));
+        obj.push_back(Pair("sendmsgs",
+            CmdStatToJSON(stats.mapSendMsgs, stats.mapSendMsgBytes)));
         obj.push_back(Pair("height", stats.nStartingHeight));
         obj.push_back(Pair("banscore", stats.nMisbehavior));
 

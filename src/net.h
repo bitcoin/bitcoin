@@ -144,6 +144,10 @@ public:
     int64 nReleaseTime;
     int nStartingHeight;
     int nMisbehavior;
+    std::map<std::string, uint64> mapRecvMsgs;
+    std::map<std::string, uint64> mapRecvMsgBytes;
+    std::map<std::string, uint64> mapSendMsgs;
+    std::map<std::string, uint64> mapSendMsgBytes;
 };
 
 
@@ -169,6 +173,7 @@ public:
     uint64 nSendBytes;
     int nHeaderStart;
     unsigned int nMessageStart;
+    std::string strSendCmd;
     CAddress addr;
     std::string addrName;
     CService addrLocal;
@@ -181,6 +186,11 @@ public:
     bool fSuccessfullyConnected;
     bool fDisconnect;
     CSemaphoreGrant grantOutbound;
+    std::map<std::string, uint64> mapRecvMsgs;
+    std::map<std::string, uint64> mapRecvMsgBytes;
+    std::map<std::string, uint64> mapSendMsgs;
+    std::map<std::string, uint64> mapSendMsgBytes;
+
 protected:
     int nRefCount;
 
@@ -346,6 +356,7 @@ public:
         nHeaderStart = vSend.size();
         vSend << CMessageHeader(pszCommand, 0);
         nMessageStart = vSend.size();
+        strSendCmd = pszCommand;
         if (fDebug)
             printf("sending: %s ", pszCommand);
     }
@@ -357,6 +368,7 @@ public:
         vSend.resize(nHeaderStart);
         nHeaderStart = -1;
         nMessageStart = -1;
+        strSendCmd = "";
         LEAVE_CRITICAL_SECTION(cs_vSend);
 
         if (fDebug)
@@ -387,6 +399,8 @@ public:
         memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
 
         nSendBytes += nSize;
+        mapSendMsgs[strSendCmd]++;
+        mapSendMsgBytes[strSendCmd] += (nMessageStart - nHeaderStart) + nSize;
 
         if (fDebug) {
             printf("(%d bytes)\n", nSize);
