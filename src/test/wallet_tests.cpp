@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         BOOST_CHECK_EQUAL(nValueRet, 10 * CENT);
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 1);
 
-        // now clear out the wallet and start again to test chosing between subsets of smaller coins and the next biggest coin
+        // now clear out the wallet and start again to test choosing between subsets of smaller coins and the next biggest coin
         empty_wallet();
 
         add_coin( 6*CENT);
