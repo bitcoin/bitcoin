@@ -31,6 +31,7 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
+static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 static const int64 MIN_TX_FEE = 50000;
 static const int64 MIN_RELAY_TX_FEE = 10000;
 static const int64 MAX_MONEY = 21000000 * COIN;
@@ -81,9 +82,12 @@ static const uint64 nMinDiskSpace = 52428800;
 
 
 class CReserveKey;
-class CTxDB;
-class CTxIndex;
+class CCoinsDB;
+class CChainDB;
 class CDiskBlockPos;
+class CCoins;
+class CTxUndo;
+class CCoinsView;
 
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
@@ -108,8 +112,7 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
-bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock);
-
+bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 
 
 
@@ -143,62 +146,8 @@ public:
 
     void SetNull() { nFile = -1; nPos = 0; }
     bool IsNull() const { return (nFile == -1); }
-
-    void SetMemPool() { nFile = -2; nPos = 0; }
-    bool IsMemPool() const { return (nFile == -2); }
 };
 
-/** Position on disk for a particular transaction. */
-class CDiskTxPos
-{
-public:
-    CDiskBlockPos blockPos;
-    unsigned int nTxPos;
-
-    CDiskTxPos(bool fInMemPool = false)
-    {
-        SetNull();
-        if (fInMemPool)
-            blockPos.SetMemPool();
-    }
-
-    CDiskTxPos(const CDiskBlockPos &block, unsigned int nTxPosIn) : blockPos(block), nTxPos(nTxPosIn) { }
-
-    IMPLEMENT_SERIALIZE( 
-        READWRITE(blockPos);
-        READWRITE(VARINT(nTxPos));
-    )
-
-    void SetNull() { blockPos.SetNull(); nTxPos = 0; }
-    bool IsNull() const { return (nTxPos == 0); }
-    bool IsMemPool() const { return blockPos.IsMemPool(); }
-
-    friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
-    {
-        return (a.blockPos  == b.blockPos &&
-                a.nTxPos    == b.nTxPos);
-    }
-
-    friend bool operator!=(const CDiskTxPos& a, const CDiskTxPos& b)
-    {
-        return !(a == b);
-    }
-
-    std::string ToString() const
-    {
-        if (IsNull())
-            return "null";
-        else if (blockPos.IsMemPool())
-            return "mempool";
-        else
-            return strprintf("\"blk%05i.dat:0x%x\"", blockPos.nFile, nTxPos);
-    }
-
-    void print() const
-    {
-        printf("%s", ToString().c_str());
-    }
-};
 
 
 
@@ -413,7 +362,13 @@ enum GetMinFee_mode
     GMF_SEND,
 };
 
-typedef std::map<uint256, std::pair<CTxIndex, CTransaction> > MapPrevTx;
+// Modes for script/signature checking
+enum CheckSig_mode
+{
+    CS_NEVER,             // never validate scripts
+    CS_AFTER_CHECKPOINT,  // validate scripts after the last checkpoint
+    CS_ALWAYS             // always validate scripts
+};
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
@@ -525,7 +480,7 @@ public:
         @return True if all inputs (scriptSigs) use only standard transaction forms
         @see CTransaction::FetchInputs
     */
-    bool AreInputsStandard(const MapPrevTx& mapInputs) const;
+    bool AreInputsStandard(CCoinsView& mapInputs) const;
 
     /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
         @return number of sigops this transaction's outputs will produce when spent
@@ -539,7 +494,7 @@ public:
         @return maximum number of sigops required to validate this transaction's inputs
         @see CTransaction::FetchInputs
      */
-    unsigned int GetP2SHSigOpCount(const MapPrevTx& mapInputs) const;
+    unsigned int GetP2SHSigOpCount(CCoinsView& mapInputs) const;
 
     /** Amount of bitcoins spent by this transaction.
         @return sum of all outputs (note: does not include fees)
@@ -564,7 +519,7 @@ public:
         @return	Sum of value of all inputs (scriptSigs)
         @see CTransaction::FetchInputs
      */
-    int64 GetValueIn(const MapPrevTx& mapInputs) const;
+    int64 GetValueIn(CCoinsView& mapInputs) const;
 
     static bool AllowFree(double dPriority)
     {
@@ -574,33 +529,6 @@ public:
     }
 
     int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const;
-
-    bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
-    {
-        CAutoFile filein = CAutoFile(OpenBlockFile(pos.blockPos, pfileRet==NULL), SER_DISK, CLIENT_VERSION);
-        if (!filein)
-            return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
-
-        // Read transaction
-        if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
-            return error("CTransaction::ReadFromDisk() : fseek failed");
-
-        try {
-            filein >> *this;
-        }
-        catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
-        }
-
-        // Return file pointer
-        if (pfileRet)
-        {
-            if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
-                return error("CTransaction::ReadFromDisk() : second fseek failed");
-            *pfileRet = filein.release();
-        }
-        return true;
-    }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
@@ -638,45 +566,27 @@ public:
     }
 
 
-    bool ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txindexRet);
-    bool ReadFromDisk(CTxDB& txdb, COutPoint prevout);
-    bool ReadFromDisk(COutPoint prevout);
-    bool DisconnectInputs(CTxDB& txdb);
+    // Do all possible client-mode checks
+    bool ClientCheckInputs() const;
 
-    /** Fetch from memory and/or disk. inputsRet keys are transaction hashes.
+    // Check whether all prevouts of this transaction are present in the UTXO set represented by view
+    bool HaveInputs(CCoinsView &view) const;
 
-     @param[in] txdb	Transaction database
-     @param[in] mapTestPool	List of pending changes to the transaction index database
-     @param[in] fBlock	True if being called to add a new best-block to the chain
-     @param[in] fMiner	True if being called by CreateNewBlock
-     @param[out] inputsRet	Pointers to this transaction's inputs
-     @param[out] fInvalid	returns true if transaction is invalid
-     @return	Returns true if all inputs are in txdb or mapTestPool
-     */
-    bool FetchInputs(CTxDB& txdb, const std::map<uint256, CTxIndex>& mapTestPool,
-                     bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid);
+    // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
+    // This does not modify the UTXO set
+    bool CheckInputs(CCoinsView &view, enum CheckSig_mode csmode, bool fStrictPayToScriptHash=true, bool fStrictEncodings=true) const;
 
-    /** Sanity check previous transactions, then, if all checks succeed,
-        mark them as spent by this transaction.
+    // Apply the effects of this transaction on the UTXO set represented by view
+    bool UpdateCoins(CCoinsView &view, CTxUndo &txundo, int nHeight) const;
 
-        @param[in] inputs	Previous transactions (from FetchInputs)
-        @param[out] mapTestPool	Keeps track of inputs that need to be updated on disk
-        @param[in] posThisTx	Position of this transaction on disk
-        @param[in] pindexBlock
-        @param[in] fBlock	true if called from ConnectBlock
-        @param[in] fMiner	true if called from CreateNewBlock
-        @param[in] fStrictPayToScriptHash	true if fully validating p2sh transactions
-        @return Returns true if all checks succeed
-     */
-    bool ConnectInputs(MapPrevTx inputs,
-                       std::map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                       const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash=true);
-    bool ClientConnectInputs();
+    // Context-independent validity checks
     bool CheckTransaction() const;
-    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
+
+    // Try to accept this transaction into the memory pool
+    bool AcceptToMemoryPool(CCoinsDB& coinsdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
 
 protected:
-    const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
+    static CTxOut GetOutputFor(const CTxIn& input, CCoinsView& mapInputs);
 };
 
 /** wrapper for CTxOut that provides a more compact serialization */
@@ -752,6 +662,7 @@ public:
 class CTxUndo
 {
 public:
+    // undo information for all txins
     std::vector<CTxInUndo> vprevout;
 
     IMPLEMENT_SERIALIZE(
@@ -763,7 +674,7 @@ public:
 class CBlockUndo
 {
 public:
-    std::vector<CTxUndo> vtxundo;
+    std::vector<CTxUndo> vtxundo; // for all but the coinbase
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vtxundo);
@@ -789,7 +700,7 @@ public:
 
         // Flush stdio buffers and commit to disk before returning
         fflush(fileout);
-        if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+        if (!IsInitialBlockDownload())
             FileCommit(fileout);
 
         return true;
@@ -1084,66 +995,16 @@ public:
     int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
     int GetBlocksToMaturity() const;
-    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true);
+    bool AcceptToMemoryPool(CCoinsDB& coinsdb, bool fCheckInputs=true);
     bool AcceptToMemoryPool();
 };
 
 
 
 
-/**  A txdb record that contains the disk location of a transaction and the
- * locations of transactions that spend its outputs.  vSpent is really only
- * used as a flag, but having the location is very helpful for debugging.
- */
-class CTxIndex
-{
-public:
-    CDiskTxPos pos;
-    std::vector<CDiskTxPos> vSpent;
 
-    CTxIndex()
-    {
-        SetNull();
-    }
 
-    CTxIndex(const CDiskTxPos& posIn, unsigned int nOutputs)
-    {
-        pos = posIn;
-        vSpent.resize(nOutputs);
-    }
 
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(pos);
-        READWRITE(vSpent);
-    )
-
-    void SetNull()
-    {
-        pos.SetNull();
-        vSpent.clear();
-    }
-
-    bool IsNull()
-    {
-        return pos.IsNull();
-    }
-
-    friend bool operator==(const CTxIndex& a, const CTxIndex& b)
-    {
-        return (a.pos    == b.pos &&
-                a.vSpent == b.vSpent);
-    }
-
-    friend bool operator!=(const CTxIndex& a, const CTxIndex& b)
-    {
-        return !(a == b);
-    }
-    int GetDepthInMainChain() const;
-
-};
 
 
 
@@ -1155,9 +1016,6 @@ public:
  * to everyone and the block is added to the block chain.  The first transaction
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
- *
- * Blocks are appended to blk0001.dat files on disk.  Their location on disk
- * is indexed by CBlockIndex objects in memory.
  */
 class CBlock
 {
@@ -1305,7 +1163,7 @@ public:
 
         // Flush stdio buffers and commit to disk before returning
         fflush(fileout);
-        if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+        if (!IsInitialBlockDownload())
             FileCommit(fileout);
 
         return true;
@@ -1360,16 +1218,26 @@ public:
     }
 
 
-    bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
-    bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck=false);
-    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
-    bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
-    bool AddToBlockIndex(const CDiskBlockPos &pos);
-    bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true) const;
-    bool AcceptBlock();
+    // Undo the effects of this block (with given index) on the UTXO set represented by coins
+    bool DisconnectBlock(CBlockIndex *pindex, CCoinsView &coins);
 
-private:
-    bool SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew);
+    // Apply the effects of this block (with given index) on the UTXO set represented by coins
+    bool ConnectBlock(CBlockIndex *pindex, CCoinsView &coins, bool fJustCheck=false);
+
+    // Read a block from disk
+    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
+
+    // Make this block (with given index) the new tip of the active block chain
+    bool SetBestChain(CBlockIndex* pindexNew);
+
+    // Add this block to the block index, and if necessary, switch the active block chain to this
+    bool AddToBlockIndex(const CDiskBlockPos &pos);
+
+    // Context-independent validity checks
+    bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true) const;
+
+    // Store block on disk
+    bool AcceptBlock();
 };
 
 
@@ -1412,7 +1280,7 @@ public:
      }
 
      std::string ToString() const {
-         return strprintf("CBlockFileInfo(blocks=%u, size=%lu, heights=%u..%u, time=%s..%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
+         return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u..%u, time=%s..%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
      }
 
      // update statistics (does not update nSize)
@@ -1466,7 +1334,7 @@ public:
         pnext = NULL;
         nHeight = 0;
         pos.SetNull();
-        nUndoPos = (unsigned int)(-1);
+        nUndoPos = 0;
         bnChainWork = 0;
 
         nVersion       = 0;
@@ -1499,10 +1367,10 @@ public:
 
     CDiskBlockPos GetUndoPos() const {
         CDiskBlockPos ret = pos;
-        if (nUndoPos == (unsigned int)(-1))
+        if (nUndoPos == 0)
             ret.SetNull();
         else
-            ret.nPos = nUndoPos;
+            ret.nPos = nUndoPos - 1;
         return ret;
     }
 
@@ -1604,18 +1472,13 @@ class CDiskBlockIndex : public CBlockIndex
 {
 public:
     uint256 hashPrev;
-    uint256 hashNext;
 
-    CDiskBlockIndex()
-    {
+    CDiskBlockIndex() {
         hashPrev = 0;
-        hashNext = 0;
     }
 
-    explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
-    {
+    explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : 0);
-        hashNext = (pnext ? pnext->GetBlockHash() : 0);
     }
 
     IMPLEMENT_SERIALIZE
@@ -1623,7 +1486,6 @@ public:
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
 
-        READWRITE(hashNext);
         READWRITE(nHeight);
         READWRITE(pos);
         READWRITE(nUndoPos);
@@ -1654,10 +1516,9 @@ public:
     {
         std::string str = "CDiskBlockIndex(";
         str += CBlockIndex::ToString();
-        str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashNext=%s)",
+        str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
             GetBlockHash().ToString().c_str(),
-            hashPrev.ToString().substr(0,20).c_str(),
-            hashNext.ToString().substr(0,20).c_str());
+            hashPrev.ToString().substr(0,20).c_str());
         return str;
     }
 
@@ -1815,12 +1676,13 @@ public:
     std::map<uint256, CTransaction> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
 
-    bool accept(CTxDB& txdb, CTransaction &tx,
+    bool accept(CCoinsDB& coinsdb, CTransaction &tx,
                 bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(const uint256& hash, CTransaction &tx);
     bool remove(CTransaction &tx);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
+    void pruneSpent(const uint256& hash, CCoins &coins);
 
     unsigned long size()
     {
@@ -1840,5 +1702,87 @@ public:
 };
 
 extern CTxMemPool mempool;
+
+/** Abstract view on the open txout dataset. */
+class CCoinsView
+{
+public:
+    // Retrieve the CCoins (unspent transaction outputs) for a given txid
+    virtual bool GetCoins(uint256 txid, CCoins &coins);
+
+    // Modify the CCoins for a given txid
+    virtual bool SetCoins(uint256 txid, const CCoins &coins);
+
+    // Just check whether we have data for a given txid.
+    // This may (but cannot always) return true for fully spent transactions
+    virtual bool HaveCoins(uint256 txid);
+
+    // Retrieve the block index whose state this CCoinsView currently represents
+    virtual CBlockIndex *GetBestBlock();
+
+    // Modify the currently active block index
+    virtual bool SetBestBlock(CBlockIndex *pindex);
+};
+
+/** CCoinsView backed by another CCoinsView */
+class CCoinsViewBacked : public CCoinsView
+{
+protected:
+    CCoinsView *base;
+
+public:
+    CCoinsViewBacked(CCoinsView &viewIn);
+    bool GetCoins(uint256 txid, CCoins &coins);
+    bool SetCoins(uint256 txid, const CCoins &coins);
+    bool HaveCoins(uint256 txid);
+    CBlockIndex *GetBestBlock();
+    bool SetBestBlock(CBlockIndex *pindex);
+    void SetBackend(CCoinsView &viewIn);
+};
+
+
+/** CCoinsView backed by a CCoinsDB */
+class CCoinsViewDB : public CCoinsView
+{
+protected:
+    CCoinsDB &db;
+public:
+    CCoinsViewDB(CCoinsDB &dbIn);
+    bool GetCoins(uint256 txid, CCoins &coins);
+    bool SetCoins(uint256 txid, const CCoins &coins);
+    bool HaveCoins(uint256 txid);
+    CBlockIndex *GetBestBlock();
+    bool SetBestBlock(CBlockIndex *pindex);
+};
+
+/** CCoinsView that adds a memory cache for transactions to another CCoinsView */
+class CCoinsViewCache : public CCoinsViewBacked
+{
+protected:
+    CBlockIndex *pindexTip;
+    std::map<uint256,CCoins> cacheCoins;
+
+public:
+    CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
+    bool GetCoins(uint256 txid, CCoins &coins);
+    bool SetCoins(uint256 txid, const CCoins &coins);
+    bool HaveCoins(uint256 txid);
+    CBlockIndex *GetBestBlock();
+    bool SetBestBlock(CBlockIndex *pindex);
+    bool Flush();
+};
+
+/** CCoinsView that brings transactions from a memorypool into view.
+    It does not check for spendings by memory pool transactions. */
+class CCoinsViewMemPool : public CCoinsViewBacked
+{
+protected:
+    CTxMemPool &mempool;
+
+public:
+    CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn);
+    bool GetCoins(uint256 txid, CCoins &coins);
+    bool HaveCoins(uint256 txid);
+};
 
 #endif
