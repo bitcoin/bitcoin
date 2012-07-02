@@ -4,6 +4,7 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
+#include "version.h"
 #include "main.h"
 #include "ui_interface.h"
 
@@ -113,6 +114,11 @@ QString ClientModel::getStatusBarWarnings() const
 OptionsModel *ClientModel::getOptionsModel()
 {
     return optionsModel;
+}
+
+int ClientModel::clientVersion() const
+{
+    return CLIENT_VERSION;
 }
 
 QString ClientModel::formatFullVersion() const

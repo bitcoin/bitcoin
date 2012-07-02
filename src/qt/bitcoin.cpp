@@ -7,6 +7,7 @@
 #include "optionsmodel.h"
 #include "guiutil.h"
 #include "guiconstants.h"
+#include "updatedialog.h"
 
 #include "init.h"
 #include "ui_interface.h"
@@ -283,6 +284,11 @@ int main(int argc, char *argv[])
                     }
                 }
 #endif
+
+#ifdef WIN32
+                UpdateDialog* dlg = new UpdateDialog(clientModel);
+#endif
+
                 app.exec();
 
                 window.hide();

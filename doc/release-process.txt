@@ -4,6 +4,7 @@
   bitcoin-qt.pro
   src/version.h
   share/setup.nsi
+  share/update_reg.reg (save with Windows line-endings)
   doc/README*
 
 * tag version in git
@@ -94,6 +95,7 @@
 
 * update bitcoin.org version
   make sure all OS download links go to the right versions
+  include bitcoin.org/latestversion.txt
 
 * update forum version
 

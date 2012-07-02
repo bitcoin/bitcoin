@@ -139,13 +139,23 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case MinimizeToTray:
             return QVariant(fMinimizeToTray);
         case MapPortUPnP:
-            return settings.value("fUseUPnP", GetBoolArg("-upnp", true));
+            return QVariant(fUseUPnP);
         case MinimizeOnClose:
             return QVariant(fMinimizeOnClose);
-        case ProxyUse:
-            return settings.value("fUseProxy", false);
-        case ProxySocksVersion:
-            return settings.value("nSocksVersion", 5);
+        case ProxyUse: {
+            int nSocksVersion;
+            if (GetProxySocksVersion(NET_IPV4, nSocksVersion))
+                return QVariant(true);
+            else
+                return QVariant(false);
+        }
+        case ProxySocksVersion: {
+            int nSocksVersion;
+            if (GetProxySocksVersion(NET_IPV4, nSocksVersion))
+                return QVariant(nSocksVersion);
+            else
+                return settings.value("nSocksVersion", 5);
+        }
         case ProxyIP: {
             CService addrProxy;
             if (GetProxy(NET_IPV4, addrProxy))
@@ -303,4 +313,31 @@ int OptionsModel::getDisplayUnit()
 bool OptionsModel::getDisplayAddresses()
 {
     return bDisplayAddresses;
+}
+
+QNetworkProxy OptionsModel::getProxy()
+{
+    QNetworkProxy retVal;
+    CService addrProxy;
+    if (GetProxy(NET_IPV4, addrProxy))
+    {
+        int nSocksVersion;
+        if (GetProxySocksVersion(NET_IPV4, nSocksVersion))
+        {
+            if (nSocksVersion == 5)
+                retVal.setType(QNetworkProxy::Socks5Proxy);
+            else if (nSocksVersion == 4)
+                retVal.setType(QNetworkProxy::HttpProxy);//TODO: is this right?
+            else
+                retVal.setType(QNetworkProxy::NoProxy);
+        }
+
+        retVal.setHostName(QString::fromStdString(addrProxy.ToStringIP()));
+        retVal.setPort(addrProxy.GetPort());
+    }
+    else
+    {
+        retVal.setType(QNetworkProxy::NoProxy);
+    }
+    return retVal;
 }

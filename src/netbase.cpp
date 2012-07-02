@@ -444,6 +444,14 @@ bool GetProxy(enum Network net, CService &addrProxy) {
     return true;
 }
 
+bool GetProxySocksVersion(enum Network net, int &nSocksVersion) {
+    assert(net >= 0 && net < NET_MAX);
+    if (!proxyInfo[net].second)
+        return false;
+    nSocksVersion = proxyInfo[net].second;
+    return true;
+}
+
 bool SetNameProxy(CService addrProxy, int nSocksVersion) {
     if (nSocksVersion != 0 && nSocksVersion != 5)
         return false;
