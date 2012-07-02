@@ -1491,12 +1491,14 @@ void ThreadOpenConnections2(void* parg)
         CAddress addrConnect;
         int64 nBest = std::numeric_limits<int64>::min();
 
-        // Only connect to one address per a.b.?.? range.
+        // Only connect out to one peer per network group (/16 for IPv4).
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
         set<unsigned int> setConnected;
         CRITICAL_BLOCK(cs_vNodes)
             BOOST_FOREACH(CNode* pnode, vNodes)
-                setConnected.insert(pnode->addr.ip & 0x0000ffff);
+                if (!pnode->fInbound) {
+                    setConnected.insert(pnode->addr.ip & 0x0000ffff);
+                }
 
         CRITICAL_BLOCK(cs_mapAddresses)
         {
