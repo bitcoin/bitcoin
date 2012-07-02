@@ -1333,12 +1333,14 @@ void ThreadOpenConnections2(void* parg)
         //
         CAddress addrConnect;
 
-        // Only connect to one address per a.b.?.? range.
+        // Only connect out to one peer per network group (/16 for IPv4).
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
         set<vector<unsigned char> > setConnected;
         CRITICAL_BLOCK(cs_vNodes)
             BOOST_FOREACH(CNode* pnode, vNodes)
-                setConnected.insert(pnode->addr.GetGroup());
+                if (!pnode->fInbound) {
+                    setConnected.insert(pnode->addr.GetGroup());
+                }
 
         int64 nANow = GetAdjustedTime();
 
