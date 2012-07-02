@@ -65,3 +65,45 @@ Value getpeerinfo(const Array& params, bool fHelp)
     return ret;
 }
 
+Value addnode(const Array& params, bool fHelp)
+{
+    string strCommand;
+    if (params.size() == 2)
+        strCommand = params[1].get_str();
+    if (fHelp || params.size() != 2 ||
+        (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
+        throw runtime_error(
+            "addnode <node> <add|remove|onetry>\n"
+            "Attempts add or remove <node> from the addnode list or try a connection to <node> once.");
+
+    string strNode = params[0].get_str();
+
+    if (strCommand == "onetry")
+    {
+        CAddress addr;
+        ConnectNode(addr, strNode.c_str());
+        return Value::null;
+    }
+
+    LOCK(cs_vAddedNodes);
+    vector<string>::iterator it = vAddedNodes.begin();
+    for(; it != vAddedNodes.end(); it++)
+        if (strNode == *it)
+            break;
+
+    if (strCommand == "add")
+    {
+        if (it != vAddedNodes.end())
+            throw JSONRPCError(-23, "Error: Node already added");
+        vAddedNodes.push_back(strNode);
+    }
+    else if(strCommand == "remove")
+    {
+        if (it == vAddedNodes.end())
+            throw JSONRPCError(-24, "Error: Node has not been added.");
+        vAddedNodes.erase(it);
+    }
+
+    return Value::null;
+}
+
