@@ -7,12 +7,12 @@
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
-extern bool fPrintToConsole;
+extern bool fDontPrint;
 extern void noui_connect();
 
 struct TestingSetup {
     TestingSetup() {
-        fPrintToConsole = true; // don't want to write to debug.log file
+        fDontPrint = true; // don't want to write to debug.log file
         noui_connect();
         pwalletMain = new CWallet();
         RegisterWallet(pwalletMain);
