@@ -188,7 +188,7 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 //printf(" %12"PRI64d"  %s  %s  %s\n",
                 //    wtx.vout[0].nValue,
                 //    DateTimeStrFormat("%x %H:%M:%S", wtx.GetBlockTime()).c_str(),
-                //    wtx.hashBlock.ToString().substr(0,20).c_str(),
+                //    wtx.hashBlock.ToString().substr(10,15).c_str(),
                 //    wtx.mapValue["message"].c_str());
             }
             else if (strType == "acentry")

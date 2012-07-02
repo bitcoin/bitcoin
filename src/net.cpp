@@ -49,6 +49,7 @@ struct LocalServiceInfo {
 bool fClient = false;
 bool fDiscover = true;
 bool fUseUPnP = false;
+bool fProxyToo = false;
 uint64 nLocalServices = (fClient ? 0 : NODE_NETWORK);
 static CCriticalSection cs_mapLocalHost;
 static map<CNetAddr, LocalServiceInfo> mapLocalHost;
@@ -66,6 +67,7 @@ map<CInv, CDataStream> mapRelay;
 deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 map<CInv, int64> mapAlreadyAskedFor;
+map<CInv, int64> mapWaitingFor;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -86,15 +88,16 @@ unsigned short GetListenPort()
     return (unsigned short)(GetArg("-port", GetDefaultPort()));
 }
 
-void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
+bool CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 {
     // Filter out duplicate requests
     if (pindexBegin == pindexLastGetBlocksBegin && hashEnd == hashLastGetBlocksEnd)
-        return;
+        return false;
     pindexLastGetBlocksBegin = pindexBegin;
     hashLastGetBlocksEnd = hashEnd;
 
     PushMessage("getblocks", CBlockLocator(pindexBegin), hashEnd);
+    return true;
 }
 
 // find 'best' local address for a particular peer
@@ -173,7 +176,7 @@ bool RecvLine(SOCKET hSocket, string& strLine)
             if (nBytes == 0)
             {
                 // socket closed
-                printf("socket closed\n");
+                if (fDebug) printf("socket closed\n");
                 return false;
             }
             else
@@ -426,8 +429,19 @@ void AddressCurrentlyConnected(const CService& addr)
 
 
 
-
-
+void NodeSummary()
+{
+    printf("Nodes=%d: AskedFor=%d", vNodes.size(), nAskedForBlocks);
+    if (nWaitingForBlocks) printf(", WaitingFor=%d", nWaitingForBlocks);
+    if (nReceivingBlocks) printf(", Receiving=%d", nReceivingBlocks);
+    if (nInvShyNodes) printf(", InvShy=%d", nInvShyNodes);
+    if (nBlockShyNodes) printf(", BlockShy=%d", nBlockShyNodes);
+    if (nBlockStuckNodes) printf(", BlockStuck=%d", nBlockStuckNodes);
+    if (nWasInvShyNodes) printf(", WasInvShy=%d", nWasInvShyNodes);
+    if (nWasBlockShyNodes) printf(", WasBlockShy=%d", nWasBlockShyNodes);
+    if (nWasBlockStuckNodes) printf(", WasBlockStuck=%d", nWasBlockStuckNodes);
+    printf("\n");
+}
 
 
 CNode* FindNode(const CNetAddr& ip)
@@ -492,7 +506,8 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, int64 nTimeout)
         addrman.Attempt(addrConnect);
 
         /// debug print
-        printf("connected %s\n", pszDest ? pszDest : addrConnect.ToString().c_str());
+        if (CaughtUp() || !fQuietInitial)
+            printf("connected %s\n", pszDest ? pszDest : addrConnect.ToString().c_str());
 
         // Set to nonblocking
 #ifdef WIN32
@@ -530,7 +545,46 @@ void CNode::CloseSocketDisconnect()
     fDisconnect = true;
     if (hSocket != INVALID_SOCKET)
     {
-        printf("disconnecting node %s\n", addrName.c_str());
+        printf("disconnecting node %s [", addrName.c_str());
+        if (fAskedForBlocks) {
+            nAskedForBlocks--;
+            printf("ASK.");
+        }
+        if (fWaitingForBlock) {
+            nWaitingForBlocks--;
+            mapWaitingFor.erase(WaitingForBlock);
+            printf("GETDATA(%ds)", GetTime() - tGetdataBlock);
+        }
+        if (fReceivingBlock) {
+            nReceivingBlocks--;
+            printf("BLOCK(%ds)", GetTime() - tBlockRecving);
+        }
+        if (fInvShy) {
+            nInvShyNodes--;
+            printf("IS.");
+        }
+        if (fBlockShy) {
+            nBlockShyNodes--;
+            printf("BS.");
+        }
+        if (nStuckDB >= 3) {
+            nBlockStuckNodes--;
+            printf("ST.");
+        }
+        if (fWasInvShy) {
+            nWasInvShyNodes--;
+            printf("WIS.");
+        }
+        if (fWasBlockShy) {
+            nWasBlockShyNodes--;
+            printf("WBS.");
+        }
+        if (nWasStuckDB) {
+            nWasBlockStuckNodes--;
+            printf("WST.");
+        }
+        printf("]\n");
+        NodeSummary();
         closesocket(hSocket);
         hSocket = INVALID_SOCKET;
         vRecv.clear();

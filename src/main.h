@@ -67,6 +67,16 @@ extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
+extern int nAskedForBlocks;    // Nodes sent a getblocks 0
+extern int nWaitingForBlocks;  // Nodes sent a getdata block
+extern int nReceivingBlocks;   // Nodes that have started sending a block
+extern int nInvShyNodes;       // Nodes that take too long to respond to getblocks
+extern int nBlockShyNodes;     // Nodes that take too long to respond to getdata block
+extern int nBlockStuckNodes;   // Nodes that have paused while sending a block
+extern int nUnreliableNodes;   // Total count of shy and stuck nodes
+extern int nWasInvShyNodes;    // Node that responded to getblocks after the timeout
+extern int nWasBlockShyNodes;  // Node that responded to getdata block after the timeout
+extern int nWasBlockStuckNodes;// Node that paused during block download and later resumed
 
 // Settings
 extern int64 nTransactionFee;
@@ -995,9 +1005,9 @@ public:
     void print() const
     {
         printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%d)\n",
-            GetHash().ToString().substr(0,20).c_str(),
+            GetHash().ToString().substr(10,15).c_str(),
             nVersion,
-            hashPrevBlock.ToString().substr(0,20).c_str(),
+            hashPrevBlock.ToString().substr(10,15).c_str(),
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             nTime, nBits, nNonce,
             vtx.size());
@@ -1167,7 +1177,7 @@ public:
         return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nHeight,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
-            GetBlockHash().ToString().substr(0,20).c_str());
+            GetBlockHash().ToString().substr(10,15).c_str());
     }
 
     void print() const
@@ -1235,8 +1245,8 @@ public:
         str += CBlockIndex::ToString();
         str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashNext=%s)",
             GetBlockHash().ToString().c_str(),
-            hashPrev.ToString().substr(0,20).c_str(),
-            hashNext.ToString().substr(0,20).c_str());
+            hashPrev.ToString().substr(10,15).c_str(),
+            hashNext.ToString().substr(10,15).c_str());
         return str;
     }
 
