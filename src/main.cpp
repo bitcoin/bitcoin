@@ -2007,7 +2007,7 @@ bool LoadBlockIndex(bool fAllowNew)
             // creating a different genesis block:
             uint256 hashTarget = CBigNum().SetCompact(block.nBits).getuint256();
             uint256 thash;
-            char scratchpad[scrypt_scratchpad_size];
+            char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
 
             loop
             {
@@ -3665,7 +3665,7 @@ void static BitcoinMiner(CWallet *pwallet)
             unsigned int nNonceFound;
 
             uint256 thash;
-            char scratchpad[scrypt_scratchpad_size];
+            char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
             loop
             {
                 scrypt_1024_1_1_256_sp(BEGIN(pblock->nVersion), BEGIN(thash), scratchpad);
