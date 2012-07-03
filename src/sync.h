@@ -38,65 +38,22 @@ public:
     void unlock_shared();
 };
 
-#ifdef DEBUG_LOCKORDER
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
-void LeaveCritical();
-#else
-void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
-void static inline LeaveCritical() {}
-#endif
-
-#ifdef DEBUG_LOCKCONTENTION
-void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
-#endif
-
-/** Wrapper around boost::interprocess::scoped_lock */
-template<typename Mutex>
-class CMutexLock
+/** RAII wrapper around CCriticalSection */
+class CCriticalBlock
 {
-private:
-    boost::unique_lock<Mutex> lock;
 public:
+    enum LockType { UNIQUE, UPGRADE, SHARED };
+private:
+    CCriticalSection* pmutex;
+    bool fOwnsLock;
+    LockType lockType;
+public:
+    void Enter(const char* pszName, const char* pszFile, int nLine);
+    void Leave();
+    bool TryEnter(const char* pszName, const char* pszFile, int nLine);
 
-    void Enter(const char* pszName, const char* pszFile, int nLine)
-    {
-        if (!lock.owns_lock())
-        {
-            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()));
-#ifdef DEBUG_LOCKCONTENTION
-            if (!lock.try_lock())
-            {
-                PrintLockContention(pszName, pszFile, nLine);
-#endif
-            lock.lock();
-#ifdef DEBUG_LOCKCONTENTION
-            }
-#endif
-        }
-    }
-
-    void Leave()
-    {
-        if (lock.owns_lock())
-        {
-            lock.unlock();
-            LeaveCritical();
-        }
-    }
-
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine)
-    {
-        if (!lock.owns_lock())
-        {
-            EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()), true);
-            lock.try_lock();
-            if (!lock.owns_lock())
-                LeaveCritical();
-        }
-        return lock.owns_lock();
-    }
-
-    CMutexLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) : lock(mutexIn, boost::defer_lock)
+    CCriticalBlock(CCriticalSection& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false, LockType lockTypeIn = UNIQUE)
+        : pmutex(&mutexIn), fOwnsLock(false), lockType(lockTypeIn)
     {
         if (fTry)
             TryEnter(pszName, pszFile, nLine);
@@ -104,28 +61,34 @@ public:
             Enter(pszName, pszFile, nLine);
     }
 
-    ~CMutexLock()
+    ~CCriticalBlock()
     {
-        if (lock.owns_lock())
-            LeaveCritical();
+        if (fOwnsLock)
+            Leave();
     }
 
     operator bool()
     {
-        return lock.owns_lock();
-    }
-
-    boost::unique_lock<Mutex> &GetLock()
-    {
-        return lock;
+        return fOwnsLock;
     }
 };
-
-typedef CMutexLock<CCriticalSection> CCriticalBlock;
 
 #define LOCK(cs) CCriticalBlock criticalblock(cs, #cs, __FILE__, __LINE__)
 #define LOCK2(cs1,cs2) CCriticalBlock criticalblock1(cs1, #cs1, __FILE__, __LINE__),criticalblock2(cs2, #cs2, __FILE__, __LINE__)
 #define TRY_LOCK(cs,name) CCriticalBlock name(cs, #cs, __FILE__, __LINE__, true)
+
+#define SHARED_LOCK(cs) CCriticalBlock shared_criticalblock(cs, #cs, __FILE__, __LINE__, false, CCriticalBlock::SHARED)
+#define TRY_SHARED_LOCK(cs,name) CCriticalBlock name(cs, #cs, __FILE__, __LINE__, true, CCriticalBlock::SHARED)
+
+#define UPGRADE_LOCK(cs) CCriticalBlock shared_criticalblock(cs, #cs, __FILE__, __LINE__, false, CCriticalBlock::UPGRADE)
+
+#ifdef DEBUG_LOCKORDER
+void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
+void LeaveCritical();
+#else
+void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
+void static inline LeaveCritical() {}
+#endif
 
 #define ENTER_CRITICAL_SECTION(cs) \
     { \

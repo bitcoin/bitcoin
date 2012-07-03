@@ -357,3 +357,93 @@ void CCriticalSection::unlock_shared()
     nHasShared.reset((int*) 0);
 }
 
+
+
+
+void CCriticalBlock::Enter(const char* pszName, const char* pszFile, int nLine)
+{
+    if (!fOwnsLock)
+    {
+        EnterCritical(pszName, pszFile, nLine, (void*)pmutex);
+#ifdef DEBUG_LOCKCONTENTION
+        bool fLocked;
+        switch (lockType)
+        {
+        case UNIQUE:
+            fLocked = pmutex->try_lock();
+            break;
+        case UPGRADE:
+            pmutex->lock_upgrade();
+            fLocked = true;
+            break;
+        case SHARED:
+            fLocked = pmutex->try_lock_shared();
+            break;
+        }
+        if (!fLocked)
+        {
+            PrintLockContention(pszName, pszFile, nLine);
+#endif
+        switch (lockType)
+        {
+        case UNIQUE:
+            pmutex->lock();
+            break;
+        case UPGRADE:
+            pmutex->lock_upgrade();
+            break;
+        case SHARED:
+            pmutex->lock_shared();
+            break;
+        }
+#ifdef DEBUG_LOCKCONTENTION
+        }
+#endif
+        fOwnsLock = true;
+    }
+}
+
+void CCriticalBlock::Leave()
+{
+    if (fOwnsLock)
+    {
+        switch (lockType)
+        {
+        case UNIQUE:
+            pmutex->unlock();
+            break;
+        case UPGRADE:
+            pmutex->unlock_upgrade();
+            break;
+        case SHARED:
+            pmutex->unlock_shared();
+            break;
+        }
+        LeaveCritical();
+    }
+}
+
+bool CCriticalBlock::TryEnter(const char* pszName, const char* pszFile, int nLine)
+{
+    if (!fOwnsLock)
+    {
+        EnterCritical(pszName, pszFile, nLine, (void*)pmutex, true);
+        switch (lockType)
+        {
+        case UNIQUE:
+            fOwnsLock = pmutex->try_lock();
+            break;
+        case UPGRADE:
+            pmutex->lock_upgrade();
+            fOwnsLock = true;
+            break;
+        case SHARED:
+            fOwnsLock = pmutex->try_lock_shared();
+            break;
+        }
+        if (!fOwnsLock)
+            LeaveCritical();
+    }
+    return fOwnsLock;
+}
+
