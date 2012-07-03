@@ -293,6 +293,8 @@ public:
     bool WriteBestInvalidTrust(uint64 nBestInvalidTrust);
     bool ReadSyncCheckpoint(uint256& hashCheckpoint);
     bool WriteSyncCheckpoint(uint256 hashCheckpoint);
+    bool ReadCheckpointPubKey(std::string& strPubKey);
+    bool WriteCheckpointPubKey(const std::string& strPubKey);
     bool LoadBlockIndex();
 };
 

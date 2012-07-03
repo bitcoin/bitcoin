@@ -38,10 +38,12 @@ namespace Checkpoints
     extern CCriticalSection cs_hashSyncCheckpoint;
 
     CBlockIndex* GetLastSyncCheckpoint();
+    bool WriteSyncCheckpoint(const uint256& hashCheckpoint);
     bool AcceptPendingSyncCheckpoint();
     uint256 AutoSelectSyncCheckpoint();
     bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev);
     bool WantedByPendingSyncCheckpoint(uint256 hashBlock);
+    bool ResetSyncCheckpoint();
 }
 
 // ppcoin: synchronized checkpoint
