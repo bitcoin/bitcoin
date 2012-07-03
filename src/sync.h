@@ -36,6 +36,9 @@ public:
     void lock_shared();
     bool try_lock_shared();
     void unlock_shared();
+
+    // Temporary function to allow useful warnings when upgrading shared->exclusive
+    bool has_shared();
 };
 
 /** RAII wrapper around CCriticalSection */
@@ -90,9 +93,12 @@ void static inline EnterCritical(const char* pszName, const char* pszFile, int n
 void static inline LeaveCritical() {}
 #endif
 
+void CheckLockUpgrade(const char* pszfile, int nLine, CCriticalSection& cs);
+
 #define ENTER_CRITICAL_SECTION(cs) \
     { \
         EnterCritical(#cs, __FILE__, __LINE__, (void*)(&cs)); \
+        CheckLockUpgrade(__FILE__, __LINE__, cs); \
         (cs).lock(); \
     }
 

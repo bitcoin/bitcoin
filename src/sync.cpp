@@ -128,6 +128,14 @@ void LeaveCritical()
 #endif /* DEBUG_LOCKORDER */
 
 
+void CheckLockUpgrade(const char* pszFile, int nLine, CCriticalSection& cs)
+{
+    if (cs.has_shared())
+        printf("WARNING: Upgrading directly from shared to exclusive mutex, something is wrong here: %s:%d\n", pszFile, nLine);
+
+}
+
+
 static void do_nothing (int* pBool) {}
 
 CCriticalSection::CCriticalSection() : nHasExclusive(&do_nothing), 
@@ -357,6 +365,11 @@ void CCriticalSection::unlock_shared()
     nHasShared.reset((int*) 0);
 }
 
+bool CCriticalSection::has_shared()
+{
+    return nHasShared.get() > (int*)0;
+}
+
 
 
 
@@ -370,6 +383,7 @@ void CCriticalBlock::Enter(const char* pszName, const char* pszFile, int nLine)
         switch (lockType)
         {
         case UNIQUE:
+            CheckLockUpgrade(pszFile, nLine, *pmutex);
             fLocked = pmutex->try_lock();
             break;
         case UPGRADE:
@@ -387,6 +401,7 @@ void CCriticalBlock::Enter(const char* pszName, const char* pszFile, int nLine)
         switch (lockType)
         {
         case UNIQUE:
+            CheckLockUpgrade(pszFile, nLine, *pmutex);
             pmutex->lock();
             break;
         case UPGRADE:
@@ -431,6 +446,7 @@ bool CCriticalBlock::TryEnter(const char* pszName, const char* pszFile, int nLin
         switch (lockType)
         {
         case UNIQUE:
+            CheckLockUpgrade(pszFile, nLine, *pmutex);
             fOwnsLock = pmutex->try_lock();
             break;
         case UPGRADE:
