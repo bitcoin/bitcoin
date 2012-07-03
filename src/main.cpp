@@ -1843,11 +1843,8 @@ bool LoadBlockIndex(bool fAllowNew)
             return error("LoadBlockIndex() : genesis block not accepted");
 
         // ppcoin: initialize synchronized checkpoint
-        CTxDB txdbc;
-        if (!txdbc.WriteSyncCheckpoint(hashGenesisBlock))
+        if (!Checkpoints::WriteSyncCheckpoint(hashGenesisBlock))
             return error("LoadBlockIndex() : failed to init sync checkpoint");
-        txdbc.Close();
-        Checkpoints::hashSyncCheckpoint = hashGenesisBlock;
     }
 
     return true;
