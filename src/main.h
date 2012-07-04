@@ -1602,7 +1602,7 @@ public:
 
     bool accept(CTxDB& txdb, CTransaction &tx,
                 bool fCheckInputs, bool* pfMissingInputs);
-    bool addUnchecked(CTransaction &tx);
+    bool addUnchecked(const uint256& hash, CTransaction &tx);
     bool remove(CTransaction &tx);
     void queryHashes(std::vector<uint256>& vtxid);
 

@@ -600,7 +600,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
             printf("CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
             remove(*ptxOld);
         }
-        addUnchecked(tx);
+        addUnchecked(hash, tx);
     }
 
     ///// are we sure this is ok when loading transactions or restoring block txes
@@ -619,13 +619,11 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
 }
 
-bool CTxMemPool::addUnchecked(CTransaction &tx)
+bool CTxMemPool::addUnchecked(const uint256& hash, CTransaction &tx)
 {
     // Add to memory pool without checking anything.  Don't call this directly,
     // call CTxMemPool::accept to properly check the transaction first.
     {
-        LOCK(cs);
-        uint256 hash = tx.GetHash();
         mapTx[hash] = tx;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
             mapNextTx[tx.vin[i].prevout] = CInPoint(&mapTx[hash], i);
