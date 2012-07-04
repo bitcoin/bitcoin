@@ -66,13 +66,14 @@ LIBS+= \
     # Make some important things such as the global offset table read only as soon as
     # the dynamic linker is finished building it. This will prevent overwriting of addresses
     # which would later be jumped to.
-    HARDENING+=-Wl,-z,relro -Wl,-z,now
+    LDHARDENING+=-Wl,-z,relro -Wl,-z,now
 
     # Build position independent code to take advantage of Address Space Layout Randomization
     # offered by some kernels.
     # see doc/build-unix.txt for more information.
     ifdef PIE
-        HARDENING+=-fPIE -pie
+        HARDENING+=-fPIE
+        LDHARDENING+=-pie
     endif
 
     # -D_FORTIFY_SOURCE=2 does some checking for potentially exploitable code patterns in
@@ -87,6 +88,10 @@ DEBUGFLAGS=-g
 # adds some defaults in front. Unfortunately, CXXFLAGS=... $(CXXFLAGS) does not work.
 xCXXFLAGS=-O2 -pthread -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
+
+# LDFLAGS can be specified on the make command line, so we use xLDFLAGS that only
+# adds some defaults in front. Unfortunately, LDFLAGS=... $(LDFLAGS) does not work.
+xLDFLAGS=$(LDHARDENING) $(LDFLAGS)
 
 OBJS= \
     obj/version.o \
@@ -132,7 +137,7 @@ obj/%.o: %.cpp
 	  rm -f $(@:%.o=%.d)
 
 bitcoind: $(OBJS:obj/%=obj/%)
-	$(CXX) $(xCXXFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+	$(CXX) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -144,7 +149,7 @@ obj-test/%.o: test/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
+	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(xLDFLAGS) $(LIBS)
 
 clean:
 	-rm -f bitcoind test_bitcoin

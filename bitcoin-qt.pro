@@ -76,8 +76,30 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 !windows {
     # for extra security against potential buffer overflows
     QMAKE_CXXFLAGS += -fstack-protector
-    QMAKE_LFLAGS += -fstack-protector
+    !contains(USE_CLANG, 1) {
+        # llvm-ld doesn't have a -fstack-protector
+        QMAKE_LFLAGS += -fstack-protector
+    }
     # do not enable this on windows, as it will result in a non-working executable!
+}
+
+contains(USE_CLANG, 1) {
+    QMAKE_CC = clang
+    QMAKE_CXX = clang++
+    QMAKE_LINK = llvm-ld
+    QMAKE_LFLAGS = -native
+    QMAKE_LFLAGS_RELEASE =
+}
+
+contains(USE_LTO, 1) {
+    contains(USE_CLANG, 1) {
+        QMAKE_CFLAGS += -emit-llvm
+        QMAKE_CXXFLAGS += -emit-llvm
+    } else {
+        QMAKE_CFLAGS += -flto
+        QMAKE_CXXFLAGS += -flto
+        QMAKE_LFLAGS += -flto
+    }
 }
 
 # regenerate src/build.h
