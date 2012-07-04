@@ -371,14 +371,14 @@ public:
 
         // Set the size
         unsigned int nSize = vSend.size() - nMessageStart;
-        memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nMessageSize), &nSize, sizeof(nSize));
+        memcpy((char*)&vSend[nHeaderStart] + CMessageHeader::MESSAGE_SIZE_OFFSET, &nSize, sizeof(nSize));
 
         // Set the checksum
         uint256 hash = Hash(vSend.begin() + nMessageStart, vSend.end());
         unsigned int nChecksum = 0;
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
-        assert(nMessageStart - nHeaderStart >= offsetof(CMessageHeader, nChecksum) + sizeof(nChecksum));
-        memcpy((char*)&vSend[nHeaderStart] + offsetof(CMessageHeader, nChecksum), &nChecksum, sizeof(nChecksum));
+        assert(nMessageStart - nHeaderStart >= CMessageHeader::CHECKSUM_OFFSET + sizeof(nChecksum));
+        memcpy((char*)&vSend[nHeaderStart] + CMessageHeader::CHECKSUM_OFFSET, &nChecksum, sizeof(nChecksum));
 
         if (fDebug) {
             printf("(%d bytes)\n", nSize);
