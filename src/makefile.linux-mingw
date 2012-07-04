@@ -72,7 +72,7 @@ OBJS= \
 all: litecoind.exe
 
 obj/scrypt.o: scrypt.c
-	gcc -c -o $@ $^
+	i586-mingw32msvc-gcc -c -o $@ $^
 
 obj/build.h: FORCE
 	/bin/sh ../share/genbuild.sh obj/build.h
