@@ -29,10 +29,6 @@
 #include <list>
 
 #define printf OutputDebugStringF
-// MinGW 3.4.5 gets "fatal error: had to relocate PCH" if the json headers are
-// precompiled in headers.h.  The problem might be when the pch file goes over
-// a certain size around 145MB.  If we need access to json_spirit outside this
-// file, we could use the compiled json_spirit option.
 
 using namespace std;
 using namespace boost;
