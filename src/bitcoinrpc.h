@@ -7,6 +7,7 @@
 #define _BITCOINRPC_H_ 1
 
 #include <string>
+#include <list>
 #include <map>
 
 #include "json/json_spirit_reader_template.h"
@@ -20,6 +21,20 @@ int CommandLineRPC(int argc, char *argv[]);
 
 /** Convert parameter values for RPC call from strings to command-specific JSON objects. */
 json_spirit::Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams);
+
+/*
+  Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
+  the right number of arguments are passed, just that any passed are the correct type.
+  Use like:  RPCTypeCheck(params, boost::assign::list_of(str_type)(int_type)(obj_type));
+*/
+void RPCTypeCheck(const json_spirit::Array& params,
+                  const std::list<json_spirit::Value_type>& typesExpected);
+/*
+  Check for expected keys/value types in an Object.
+  Use like: RPCTypeCheck(object, boost::assign::map_list_of("name", str_type)("value", int_type));
+*/
+void RPCTypeCheck(const json_spirit::Object& o,
+                  const std::map<std::string, json_spirit::Value_type>& typesExpected);
 
 typedef json_spirit::Value(*rpcfn_type)(const json_spirit::Array& params, bool fHelp);
 
