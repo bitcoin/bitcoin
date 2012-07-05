@@ -1,26 +1,63 @@
 Description: Use system JSON Spirit library
 Author: Jonas Smedegaard <dr@jones.dk>
-Last-Update: 2011-05-17
---- a/src/rpc.cpp
-+++ b/src/rpc.cpp
-@@ -12,9 +12,7 @@
- #include <boost/asio/ssl.hpp> 
- typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
- #endif
+Last-Update: 2012-07-05
+--- a/src/bitcoinrpc.h
++++ b/src/bitcoinrpc.h
+@@ -9,9 +9,7 @@
+ #include <string>
+ #include <map>
+ 
 -#include "json/json_spirit_reader_template.h"
 -#include "json/json_spirit_writer_template.h"
 -#include "json/json_spirit_utils.h"
 +#include <json_spirit.h>
- #define printf OutputDebugStringF
- // MinGW 3.4.5 gets "fatal error: had to relocate PCH" if the json headers are
- // precompiled in headers.h.  The problem might be when the pch file goes over
+ 
+ void ThreadRPCServer(void* parg);
+ int CommandLineRPC(int argc, char *argv[]);
 --- a/src/makefile.unix
 +++ b/src/makefile.unix
-@@ -23,6 +23,7 @@
-    -l boost_thread \
-    -l db_cxx \
+@@ -31,6 +31,7 @@ LIBS += \
+    -l boost_thread$(BOOST_LIB_SUFFIX) \
+    -l db_cxx$(BDB_LIB_SUFFIX) \
     -l ssl \
 +   -l json_spirit \
     -l crypto
  
- ifdef USE_UPNP
+ ifndef USE_UPNP
+--- a/src/rpcdump.cpp
++++ b/src/rpcdump.cpp
+@@ -8,9 +8,7 @@
+ 
+ #include <boost/lexical_cast.hpp>
+ 
+-#include "json/json_spirit_reader_template.h"
+-#include "json/json_spirit_writer_template.h"
+-#include "json/json_spirit_utils.h"
++#include <json_spirit.h>
+ 
+ #define printf OutputDebugStringF
+ 
+--- a/src/test/rpc_tests.cpp
++++ b/src/test/rpc_tests.cpp
+@@ -1,6 +1,8 @@
+ #include <boost/test/unit_test.hpp>
+ #include <boost/foreach.hpp>
+ 
++#include <json_spirit.h>
++
+ #include "base58.h"
+ #include "util.h"
+ #include "bitcoinrpc.h"
+--- a/src/test/script_tests.cpp
++++ b/src/test/script_tests.cpp
+@@ -8,9 +8,7 @@
+ #include <boost/foreach.hpp>
+ #include <boost/preprocessor/stringize.hpp>
+ #include <boost/test/unit_test.hpp>
+-#include "json/json_spirit_reader_template.h"
+-#include "json/json_spirit_writer_template.h"
+-#include "json/json_spirit_utils.h"
++#include <json_spirit.h>
+ 
+ #include "main.h"
+ #include "wallet.h"
