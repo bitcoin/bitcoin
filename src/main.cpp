@@ -3052,7 +3052,7 @@ public:
 };
 
 
-CBlock* CreateNewBlock(CWallet* pwallet)
+CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfWorkOnly)
 {
     CReserveKey reservekey(pwallet);
 
@@ -3074,24 +3074,28 @@ CBlock* CreateNewBlock(CWallet* pwallet)
     // ppcoin: if coinstake available add coinstake tx
     static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift + 60;  // only initialized at startup
     CBlockIndex* pindexPrev = pindexBest;
-    while (nLastCoinStakeCheckTime < GetAdjustedTime())
+
+    if (!fProofOfWorkOnly)
     {
-        pindexPrev = pindexBest;  // get best block again to avoid getting stale
-        pblock->nBits = GetNextTargetRequired(pindexPrev, true);
-        static CCriticalSection cs;
-        CTransaction txCoinStake;
-        CRITICAL_BLOCK(cs)
+        while (nLastCoinStakeCheckTime < GetAdjustedTime())
         {
-            // mining may have been suspended for a while so 
-            // need to take max to satisfy the timestamp protocol
-            nLastCoinStakeCheckTime = max(++nLastCoinStakeCheckTime, (unsigned int) (GetAdjustedTime() - nMaxClockDrift + 60));
-            txCoinStake.nTime = nLastCoinStakeCheckTime;
-        }
-        if (pwallet->CreateCoinStake(pblock->nBits, txCoinStake))
-        {
-            pblock->vtx.push_back(txCoinStake);
-            pblock->vtx[0].vout[0].SetEmpty();
-            break;
+            pindexPrev = pindexBest;  // get best block again to avoid getting stale
+            pblock->nBits = GetNextTargetRequired(pindexPrev, true);
+            static CCriticalSection cs;
+            CTransaction txCoinStake;
+            CRITICAL_BLOCK(cs)
+            {
+                // mining may have been suspended for a while so 
+                // need to take max to satisfy the timestamp protocol
+                nLastCoinStakeCheckTime = max(++nLastCoinStakeCheckTime, (unsigned int) (GetAdjustedTime() - nMaxClockDrift + 60));
+                txCoinStake.nTime = nLastCoinStakeCheckTime;
+            }
+            if (pwallet->CreateCoinStake(pblock->nBits, txCoinStake))
+            {
+                pblock->vtx.push_back(txCoinStake);
+                pblock->vtx[0].vout[0].SetEmpty();
+                break;
+            }
         }
     }
 
@@ -3370,8 +3374,11 @@ void static BitcoinMiner(CWallet *pwallet)
         // ppcoin: if proof-of-stake block found then process block
         if (pblock->IsProofOfStake())
         {
-            // should be able to sign block - assert here for now
-            assert(pblock->SignBlock(*pwalletMain));
+            if (!pblock->SignBlock(*pwalletMain))
+            {
+                error("BitcoinMiner: Unable to sign new proof-of-stake block");
+                return;
+            }
             printf("BitcoinMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
             SetThreadPriority(THREAD_PRIORITY_NORMAL);
             CheckWork(pblock.get(), *pwalletMain, reservekey);
@@ -3422,8 +3429,11 @@ void static BitcoinMiner(CWallet *pwallet)
                     // Found a solution
                     pblock->nNonce = ByteReverse(nNonceFound);
                     assert(hash == pblock->GetHash());
-                    // should be able to sign block - assert here for now
-                    assert(pblock->SignBlock(*pwalletMain));
+                    if (!pblock->SignBlock(*pwalletMain))
+                    {
+                        error("BitcoinMiner: Unable to sign new proof-of-work block");
+                        return;
+                    }
 
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock.get(), *pwalletMain, reservekey);
