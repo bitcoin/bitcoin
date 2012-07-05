@@ -46,7 +46,7 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
 //    }
 //    miningThreads = nLimitProcessors;
 
-    pollTimer = new QTimer();
+    pollTimer = new QTimer(this);
     pollTimer->setInterval(MODEL_UPDATE_DELAY);
     pollTimer->start();
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
