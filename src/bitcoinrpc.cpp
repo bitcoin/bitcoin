@@ -72,7 +72,7 @@ Object JSONRPCError(int code, const string& message)
 void RPCTypeCheck(const Array& params,
                   const list<Value_type>& typesExpected)
 {
-    int i = 0;
+    unsigned int i = 0;
     BOOST_FOREACH(Value_type t, typesExpected)
     {
         if (params.size() <= i)

@@ -75,12 +75,12 @@ TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     }
     entry.push_back(Pair("vin", vin));
     Array vout;
-    for (int i = 0; i < tx.vout.size(); i++)
+    for (unsigned int i = 0; i < tx.vout.size(); i++)
     {
         const CTxOut& txout = tx.vout[i];
         Object out;
         out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
-        out.push_back(Pair("n", i));
+        out.push_back(Pair("n", (boost::int64_t)i));
         Object o;
         ScriptPubKeyToJSON(txout.scriptPubKey, o);
         out.push_back(Pair("scriptPubKey", o));
@@ -402,7 +402,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     const CKeyStore& keystore = (fGivenKeys ? tempKeystore : *pwalletMain);
 
     // Sign what we can:
-    for (int i = 0; i < mergedTx.vin.size(); i++)
+    for (unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
         CTxIn& txin = mergedTx.vin[i];
         if (mapPrevOut.count(txin.prevout) == 0)
