@@ -594,19 +594,6 @@ bool CTxDB::LoadBlockIndex()
         return error("CTxDB::LoadBlockIndex() : hashSyncCheckpoint not loaded");
     printf("LoadBlockIndex(): synchronized checkpoint %s\n", Checkpoints::hashSyncCheckpoint.ToString().c_str());
 
-    // ppcoin: if checkpoint master key changed must reset sync-checkpoint
-    string strPubKey = "";
-    if (!ReadCheckpointPubKey(strPubKey) || strPubKey != CSyncCheckpoint::strMasterPubKey)
-    {
-        // write checkpoint master key to db
-        TxnBegin();
-        WriteCheckpointPubKey(CSyncCheckpoint::strMasterPubKey);
-        if (!TxnCommit())
-            return error("CTxDB::LoadBlockIndex() : failed to write new checkpoint master key");
-        if (!Checkpoints::ResetSyncCheckpoint())
-            return error("CTxDB::LoadBlockIndex() : failed to reset sync-checkpoint");
-    }
-
     // Load nBestInvalidTrust, OK if it doesn't exist
     ReadBestInvalidTrust(nBestInvalidTrust);
 
