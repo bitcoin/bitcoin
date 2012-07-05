@@ -116,23 +116,33 @@ static void handleRunawayException(std::exception *e)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
+#if !defined(MAC_OSX)
+// TODO: implement qtipcserver.cpp for Mac
 
     // Do this early as we don't want to bother initializing if we are just calling IPC
     for (int i = 1; i < argc; i++)
     {
         if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
         {
-            const char *strURI = argv[i];
+            std::string strURI = argv[i];
             try {
-                boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
-                if(mq.try_send(strURI, strlen(strURI), 0))
+                boost::interprocess::message_queue mq(boost::interprocess::open_only, IPC_MQ_NAME);
+                if (mq.try_send(strURI.data(), strURI.length(), 0))
                     exit(0);
                 else
                     break;
             }
             catch (boost::interprocess::interprocess_exception &ex) {
+                // don't log the "file not found" exception, because that's normal for
+                // the first start of the first instance
+                if (ex.get_error_code() != boost::interprocess::not_found_error)
+                {
+                    printf("boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+
+                    // without this every clicked bitcoin: URI would show the datadir locked error in the case of an exception,
+                    // while the client is already running (perhaps this should be shown as message box?)
+                    exit(0);
+                }
                 break;
             }
         }
@@ -262,8 +272,8 @@ int main(int argc, char *argv[])
                 {
                     window.show();
                 }
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
+#if !defined(MAC_OSX)
+// TODO: implement qtipcserver.cpp for Mac
 
                 // Place this here as guiref has to be defined if we dont want to lose URIs
                 ipcInit();
@@ -271,14 +281,17 @@ int main(int argc, char *argv[])
                 // Check for URI in argv
                 for (int i = 1; i < argc; i++)
                 {
-                    if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+                    // only bother with this if IPC is initialized
+                    if (globalIpcState == IPC_INITIALIZED && boost::algorithm::istarts_with(argv[i], "bitcoin:"))
                     {
-                        const char *strURI = argv[i];
+                        std::string strURI = argv[i];
                         try {
-                            boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
-                            mq.try_send(strURI, strlen(strURI), 0);
+                            boost::interprocess::message_queue mq(boost::interprocess::open_only, IPC_MQ_NAME);
+                            mq.try_send(strURI.data(), strURI.length(), 0);
                         }
                         catch (boost::interprocess::interprocess_exception &ex) {
+                            printf("boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+                            break;
                         }
                     }
                 }
