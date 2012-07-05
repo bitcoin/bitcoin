@@ -1,8 +1,8 @@
 Description: Use system JSON Spirit library
 Author: Jonas Smedegaard <dr@jones.dk>
-Last-Update: 2011-05-17
---- a/src/rpc.cpp
-+++ b/src/rpc.cpp
+Last-Update: 2012-07-05
+--- a/src/bitcoinrpc.cpp
++++ b/src/bitcoinrpc.cpp
 @@ -12,9 +12,7 @@
  #include <boost/asio/ssl.hpp> 
  typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SSLStream;
