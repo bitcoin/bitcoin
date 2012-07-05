@@ -73,16 +73,23 @@ void WalletModel::updateTransaction(const QString &hash, int status)
     qint64 newImmatureBalance = getImmatureBalance();
     int newNumTransactions = getNumTransactions();
 
+    // only update cached values and emit a SIGNAL, when a balance changed
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
+    {
+        cachedBalance = newBalance;
+        cachedUnconfirmedBalance = newUnconfirmedBalance;
+        cachedImmatureBalance = newImmatureBalance;
+
         emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance);
+    }
 
+    // only update cached value and emit a SIGNAL, when transaction number changed
     if(cachedNumTransactions != newNumTransactions)
-        emit numTransactionsChanged(newNumTransactions);
+    {
+        cachedNumTransactions = newNumTransactions;
 
-    cachedBalance = newBalance;
-    cachedUnconfirmedBalance = newUnconfirmedBalance;
-    cachedImmatureBalance = newImmatureBalance;
-    cachedNumTransactions = newNumTransactions;
+        emit numTransactionsChanged(newNumTransactions);
+    }
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label, bool isMine, int status)
