@@ -1331,7 +1331,7 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 {
     int nSigned = 0;
     int nRequired = multisigdata.front()[0];
-    for (int i = 1; i < multisigdata.size()-1 && nSigned < nRequired; i++)
+    for (unsigned int i = 1; i < multisigdata.size()-1 && nSigned < nRequired; i++)
     {
         const valtype& pubkey = multisigdata[i];
         CKeyID keyID = CPubKey(pubkey).GetID();
@@ -1672,12 +1672,13 @@ static CScript CombineMultisig(CScript scriptPubKey, const CTransaction& txTo, u
     }
 
     // Build a map of pubkey -> signature by matching sigs to pubkeys:
-    int nSigsRequired = vSolutions.front()[0];
-    int nPubKeys = vSolutions.size()-2;
+    assert(vSolutions.size() > 1);
+    unsigned int nSigsRequired = vSolutions.front()[0];
+    unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
-        for (int i = 0; i < nPubKeys; i++)
+        for (unsigned int i = 0; i < nPubKeys; i++)
         {
             const valtype& pubkey = vSolutions[i+1];
             if (sigs.count(pubkey))
@@ -1693,7 +1694,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CTransaction& txTo, u
     // Now build a merged CScript:
     unsigned int nSigsHave = 0;
     CScript result; result << OP_0; // pop-one-too-many workaround
-    for (int i = 0; i < nPubKeys && nSigsHave < nSigsRequired; i++)
+    for (unsigned int i = 0; i < nPubKeys && nSigsHave < nSigsRequired; i++)
     {
         if (sigs.count(vSolutions[i+1]))
         {
@@ -1702,7 +1703,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CTransaction& txTo, u
         }
     }
     // Fill any missing with OP_0:
-    for (int i = nSigsHave; i < nSigsRequired; i++)
+    for (unsigned int i = nSigsHave; i < nSigsRequired; i++)
         result << OP_0;
 
     return result;
