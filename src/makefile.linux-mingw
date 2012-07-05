@@ -7,14 +7,14 @@ DEPSDIR:=/usr/i586-mingw32msvc
 USE_UPNP:=0
 
 INCLUDEPATHS= \
- -I"$(DEPSDIR)/boost_1_47_0" \
+ -I"$(DEPSDIR)/boost_1_49_0" \
  -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
  -I"$(DEPSDIR)/openssl-1.0.1b/include" \
  -I"$(DEPSDIR)" \
  -I"$(CURDIR)"/obj \
 
 LIBPATHS= \
- -L"$(DEPSDIR)/boost_1_47_0/stage/lib" \
+ -L"$(DEPSDIR)/boost_1_49_0/stage/lib" \
  -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
  -L"$(DEPSDIR)/openssl-1.0.1b"
 
