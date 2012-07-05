@@ -9,7 +9,11 @@
 
 #include "main.h"
 #include "uint256.h"
-
+this;
+wont;
+build;
+no;
+way;
 namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;
