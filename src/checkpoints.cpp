@@ -22,7 +22,7 @@ namespace Checkpoints
     //
     static MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
-        ( 0, hashGenesisBlock )
+        ( 0, hashGenesisBlockOfficial )
         ; // ppcoin: no checkpoint yet; to be created in future releases
 
     bool CheckHardened(int nHeight, const uint256& hash)
