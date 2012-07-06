@@ -50,6 +50,8 @@ void StartShutdown()
 #endif
 }
 
+static CCoinsViewDB *pcoinsdbview;
+
 void Shutdown(void* parg)
 {
     static CCriticalSection cs_Shutdown;
@@ -74,6 +76,12 @@ void Shutdown(void* parg)
         nTransactionsUpdated++;
         bitdb.Flush(false);
         StopNode();
+        {
+            LOCK(cs_main);
+            pcoinsTip->Flush();
+            delete pcoinsTip;
+            delete pcoinsdbview;
+        }
         bitdb.Flush(true);
         boost::filesystem::remove(GetPidFile());
         UnregisterWallet(pwalletMain);
@@ -297,6 +305,7 @@ std::string HelpMessage()
 
     return strUsage;
 }
+
 
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
@@ -641,6 +650,9 @@ bool AppInit2()
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
+    pcoinsdbview = new CCoinsViewDB();
+    pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
+
     if (!LoadBlockIndex())
         return InitError(_("Error loading blkindex.dat"));
 
