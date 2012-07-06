@@ -74,6 +74,8 @@ private:
 
 private slots:
     void update();
+public slots:
+    void updateDisplayUnit();
 
     friend class TransactionTablePriv;
 };
