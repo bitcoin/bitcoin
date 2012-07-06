@@ -281,9 +281,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
-    CCoinsDB coindb("r");
-    CCoinsViewDB viewdb(coindb);
-    CCoinsViewCache view(viewdb);
+    CCoinsViewCache &view = *pcoinsTip;
     BOOST_FOREACH (CTransaction& tx, pblock->vtx)
     {
         uint256 txHash = tx.GetHash();
