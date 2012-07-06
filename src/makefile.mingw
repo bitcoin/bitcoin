@@ -69,7 +69,7 @@ OBJS= \
 
 all: litecoind.exe
 
-obj/nogui/scrypt.o: scrypt.c
+obj/scrypt.o: scrypt.c
 	gcc -c -o $@ $^
 
 obj/%.o: %.cpp $(HEADERS)
