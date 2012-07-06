@@ -339,9 +339,8 @@ Value signrawtransaction(const Array& params, bool fHelp)
     CCoinsViewCache view(viewDummy);
     {
         LOCK(mempool.cs);
-        CCoinsDB coinsdb("r");
-        CCoinsViewDB viewDB(coinsdb);
-        CCoinsViewMemPool viewMempool(viewDB, mempool);
+        CCoinsViewCache &viewChain = *pcoinsTip;
+        CCoinsViewMemPool viewMempool(viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         BOOST_FOREACH(const CTxIn& txin, mergedTx.vin) {
@@ -350,7 +349,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             view.GetCoins(prevHash, coins); // this is certainly allowed to fail
         }
 
-        view.SetBackend(viewDummy); // switch back to avoid locking db/mempool too long
+        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
     }
 
     // Add previous txouts given in the RPC call:
@@ -502,17 +501,13 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     uint256 hashTx = tx.GetHash();
 
     bool fHave = false;
+    CCoinsViewCache &view = *pcoinsTip;
     CCoins existingCoins;
     {
-        CCoinsDB coinsdb("r");
-        {
-            CCoinsViewDB coinsviewDB(coinsdb);
-            CCoinsViewMemPool coinsview(coinsviewDB, mempool);
-            fHave = coinsview.GetCoins(hashTx, existingCoins);
-        }
+        fHave = view.GetCoins(hashTx, existingCoins);
         if (!fHave) {
             // push to local node
-            if (!tx.AcceptToMemoryPool(coinsdb))
+            if (!tx.AcceptToMemoryPool())
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX rejected");
         }
     }
