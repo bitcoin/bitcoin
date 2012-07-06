@@ -22,7 +22,7 @@ public:
         MinimizeOnClose, // bool
         ConnectSOCKS4, // bool
         ProxyIP, // QString
-        ProxyPort, // QString
+        ProxyPort, // int
         Fee, // qint64
         DisplayUnit, // BitcoinUnits::Unit
         DisplayAddresses, // bool

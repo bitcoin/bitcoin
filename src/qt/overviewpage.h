@@ -40,7 +40,7 @@ private:
     TxViewDelegate *txdelegate;
 
 private slots:
-    void displayUnitChanged();
+    void updateDisplayUnit();
 };
 
 #endif // OVERVIEWPAGE_H

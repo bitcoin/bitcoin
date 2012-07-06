@@ -407,7 +407,7 @@ bool AppInit2(int argc, char* argv[])
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = GetArg("-upgradewallet", 0);
-        if (nMaxVersion == 0) // the -walletupgrade without argument case
+        if (nMaxVersion == 0) // the -upgradewallet without argument case
         {
             printf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
             nMaxVersion = CLIENT_VERSION;

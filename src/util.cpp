@@ -994,7 +994,7 @@ void ShrinkDebugFile()
 // "Never go to sea with two chronometers; take one or three."
 // Our three time sources are:
 //  - System clock
-//  - Median of other nodes's clocks
+//  - Median of other nodes clocks
 //  - The user (asking the user to fix the system clock if the first two disagree)
 //
 static int64 nMockTime = 0;  // For unit testing
@@ -1257,7 +1257,7 @@ bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
 //     --> may result in deadlock between the two threads, depending on when they run.
 // Solution implemented here:
 // Keep track of pairs of locks: (A before B), (A before C), etc.
-// Complain if any thread trys to lock in a different order.
+// Complain if any thread tries to lock in a different order.
 //
 
 struct CLockLocation

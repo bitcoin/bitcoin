@@ -187,7 +187,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     layout->addWidget(map_port_upnp);
 
     connect_socks4 = new QCheckBox(tr("&Connect through SOCKS4 proxy:"));
-    connect_socks4->setToolTip(tr("Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)"));
+    connect_socks4->setToolTip(tr("Connect to the Bitcoin network through a SOCKS4 proxy (e.g. when connecting through Tor)"));
     layout->addWidget(connect_socks4);
 
     QHBoxLayout *proxy_hbox = new QHBoxLayout();

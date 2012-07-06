@@ -122,16 +122,22 @@ public:
             return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
     }
 
-    void setint64(int64 n)
+    void setint64(int64 sn)
     {
-        unsigned char pch[sizeof(n) + 6];
+        unsigned char pch[sizeof(sn) + 6];
         unsigned char* p = pch + 4;
-        bool fNegative = false;
-        if (n < (int64)0)
+        bool fNegative;
+        uint64 n;
+
+        if (sn < (int64)0)
         {
-            n = -n;
+            n = -sn;
             fNegative = true;
+        } else {
+            n = sn;
+            fNegative = false;
         }
+
         bool fLeadingZeroes = true;
         for (int i = 0; i < 8; i++)
         {
