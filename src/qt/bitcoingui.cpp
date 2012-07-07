@@ -8,8 +8,7 @@
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
 #include "sendcoinsdialog.h"
-#include "messagepage.h"
-#include "verifymessagedialog.h"
+#include "signverifymessagedialog.h"
 #include "optionsdialog.h"
 #include "aboutdialog.h"
 #include "clientmodel.h"
@@ -108,7 +107,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     sendCoinsPage = new SendCoinsDialog(this);
 
-    messagePage = new MessagePage(this);
+    signVerifyMessageDialog = new SignVerifyMessageDialog(this);
 
     centralWidget = new QStackedWidget(this);
     centralWidget->addWidget(overviewPage);
@@ -117,7 +116,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(sendCoinsPage);
 #ifdef FIRST_CLASS_MESSAGING
-    centralWidget->addWidget(messagePage);
+    centralWidget->addWidget(signVerifyMessageDialog);
 #endif
     setCentralWidget(centralWidget);
 
@@ -212,12 +211,20 @@ void BitcoinGUI::createActions()
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
-    messageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
-    messageAction->setToolTip(tr("Prove you control an address"));
+    signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
+    signMessageAction->setToolTip(tr("Sign a message to prove you own a Bitcoin address"));
+    tabGroup->addAction(signMessageAction);
+
+    verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
+    verifyMessageAction->setToolTip(tr("Verify a message to ensure it was signed with a specified Bitcoin address"));
+    tabGroup->addAction(verifyMessageAction);
+
 #ifdef FIRST_CLASS_MESSAGING
-    messageAction->setCheckable(true);
+    firstClassMessagingAction = new QAction(QIcon(":/icons/edit"), tr("S&ignatures"), this);
+    firstClassMessagingAction->setToolTip(signMessageAction->toolTip() + QString(". / ") + verifyMessageAction->toolTip() + QString("."));
+    firstClassMessagingAction->setCheckable(true);
+    tabGroup->addAction(firstClassMessagingAction);
 #endif
-    tabGroup->addAction(messageAction);
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
@@ -229,8 +236,15 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
-    connect(messageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(messageAction, SIGNAL(triggered()), this, SLOT(gotoMessagePage()));
+    connect(signMessageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
+    connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
+#ifdef FIRST_CLASS_MESSAGING
+    connect(firstClassMessagingAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    // Always start with the sign message tab for FIRST_CLASS_MESSAGING
+    connect(firstClassMessagingAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
+#endif
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setToolTip(tr("Quit application"));
@@ -258,8 +272,6 @@ void BitcoinGUI::createActions()
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
     openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug window"), this);
     openRPCConsoleAction->setToolTip(tr("Open debugging and diagnostic console"));
-    verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
-    verifyMessageAction->setToolTip(tr("Verify a message signature"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
@@ -269,7 +281,6 @@ void BitcoinGUI::createActions()
     connect(encryptWalletAction, SIGNAL(triggered(bool)), this, SLOT(encryptWallet(bool)));
     connect(backupWalletAction, SIGNAL(triggered()), this, SLOT(backupWallet()));
     connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
-    connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(verifyMessage()));
 }
 
 void BitcoinGUI::createMenuBar()
@@ -287,9 +298,9 @@ void BitcoinGUI::createMenuBar()
     file->addAction(backupWalletAction);
     file->addAction(exportAction);
 #ifndef FIRST_CLASS_MESSAGING
-    file->addAction(messageAction);
-#endif
+    file->addAction(signMessageAction);
     file->addAction(verifyMessageAction);
+#endif
     file->addSeparator();
     file->addAction(quitAction);
 
@@ -316,7 +327,7 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(historyAction);
     toolbar->addAction(addressBookAction);
 #ifdef FIRST_CLASS_MESSAGING
-    toolbar->addAction(messageAction);
+    toolbar->addAction(firstClassMessagingAction);
 #endif
 
     QToolBar *toolbar2 = addToolBar(tr("Actions toolbar"));
@@ -377,7 +388,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
-        messagePage->setModel(walletModel);
+        signVerifyMessageDialog->setModel(walletModel);
 
         setEncryptionStatus(walletModel->getEncryptionStatus());
         connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
@@ -417,7 +428,7 @@ void BitcoinGUI::createTrayIcon()
 #ifndef FIRST_CLASS_MESSAGING
     trayIconMenu->addSeparator();
 #endif
-    trayIconMenu->addAction(messageAction);
+    trayIconMenu->addAction(signMessageAction);
     trayIconMenu->addAction(verifyMessageAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
@@ -719,20 +730,42 @@ void BitcoinGUI::gotoSendCoinsPage()
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
-void BitcoinGUI::gotoMessagePage(QString addr)
+void BitcoinGUI::gotoSignMessageTab(QString addr)
 {
-    if(!addr.isEmpty())
-        messagePage->setAddress(addr);
-
 #ifdef FIRST_CLASS_MESSAGING
-    messageAction->setChecked(true);
-    centralWidget->setCurrentWidget(messagePage);
+    firstClassMessagingAction->setChecked(true);
+    centralWidget->setCurrentWidget(signVerifyMessageDialog);
 
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+
+    signVerifyMessageDialog->showTab_SM(false);
 #else
-    messagePage->show();
+    // call show() in showTab_SM()
+    signVerifyMessageDialog->showTab_SM(true);
 #endif
+
+    if(!addr.isEmpty())
+        signVerifyMessageDialog->setAddress_SM(addr);
+}
+
+void BitcoinGUI::gotoVerifyMessageTab(QString addr)
+{
+#ifdef FIRST_CLASS_MESSAGING
+    firstClassMessagingAction->setChecked(true);
+    centralWidget->setCurrentWidget(signVerifyMessageDialog);
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+
+    signVerifyMessageDialog->showTab_VM(false);
+#else
+    // call show() in showTab_VM()
+    signVerifyMessageDialog->showTab_VM(true);
+#endif
+
+    if(!addr.isEmpty())
+        signVerifyMessageDialog->setAddress_VM(addr);
 }
 
 void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
@@ -833,13 +866,6 @@ void BitcoinGUI::changePassphrase()
     AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);
     dlg.setModel(walletModel);
     dlg.exec();
-}
-
-void BitcoinGUI::verifyMessage()
-{
-    VerifyMessageDialog *dlg = new VerifyMessageDialog(this);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-    dlg->show();
 }
 
 void BitcoinGUI::unlockWallet()
