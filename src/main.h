@@ -91,7 +91,7 @@ class CCoinsView;
 
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
-void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
+void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
 bool ProcessBlock(CNode* pfrom, CBlock* pblock);
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
@@ -577,7 +577,7 @@ public:
     bool CheckInputs(CCoinsView &view, enum CheckSig_mode csmode, bool fStrictPayToScriptHash=true, bool fStrictEncodings=true) const;
 
     // Apply the effects of this transaction on the UTXO set represented by view
-    bool UpdateCoins(CCoinsView &view, CTxUndo &txundo, int nHeight) const;
+    bool UpdateCoins(CCoinsView &view, CTxUndo &txundo, int nHeight, const uint256 &txhash) const;
 
     // Context-independent validity checks
     bool CheckTransaction() const;
@@ -1109,6 +1109,12 @@ public:
             j += nSize;
         }
         return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
+    }
+
+    const uint256 &GetTxHash(unsigned int nIndex) const {
+        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
+        assert(nIndex < vtx.size());
+        return vMerkleTree[nIndex];
     }
 
     std::vector<uint256> GetMerkleBranch(int nIndex) const
