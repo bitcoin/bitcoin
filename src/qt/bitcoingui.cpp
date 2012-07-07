@@ -357,6 +357,8 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         connect(clientModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
 
         rpcConsole->setClientModel(clientModel);
+        addressBookPage->setOptionsModel(clientModel->getOptionsModel());
+        receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
     }
 }
 
