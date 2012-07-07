@@ -224,7 +224,7 @@ bool static Socks5(string strDest, int port, SOCKET& hSocket)
     }
     char pszSocks5Init[] = "\5\1\0";
     char *pszSocks5 = pszSocks5Init;
-    ssize_t nSize = sizeof(pszSocks5Init);
+    ssize_t nSize = sizeof(pszSocks5Init) - 1;
 
     ssize_t ret = send(hSocket, pszSocks5, nSize, MSG_NOSIGNAL);
     if (ret != nSize)
