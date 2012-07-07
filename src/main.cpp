@@ -111,10 +111,10 @@ void static EraseFromWallets(uint256 hash)
 }
 
 // make sure all wallets know about the given transaction, in the given block
-void SyncWithWallets(const CTransaction& tx, const CBlock* pblock, bool fUpdate)
+void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
-        pwallet->AddToWalletIfInvolvingMe(tx, pblock, fUpdate);
+        pwallet->AddToWalletIfInvolvingMe(hash, tx, pblock, fUpdate);
 }
 
 // notify wallets about a new best chain
@@ -1197,10 +1197,8 @@ unsigned int CTransaction::GetP2SHSigOpCount(CCoinsView& inputs) const
     return nSigOps;
 }
 
-bool CTransaction::UpdateCoins(CCoinsView &inputs, CTxUndo &txundo, int nHeight) const
+bool CTransaction::UpdateCoins(CCoinsView &inputs, CTxUndo &txundo, int nHeight, const uint256 &txhash) const
 {
-    uint256 hash = GetHash();
-
     // mark inputs spent
     if (!IsCoinBase()) {
         BOOST_FOREACH(const CTxIn &txin, vin) {
@@ -1217,7 +1215,7 @@ bool CTransaction::UpdateCoins(CCoinsView &inputs, CTxUndo &txundo, int nHeight)
     }
 
     // add outputs
-    if (!inputs.SetCoins(hash, CCoins(*this, nHeight)))
+    if (!inputs.SetCoins(txhash, CCoins(*this, nHeight)))
         return error("UpdateCoins() : cannot update output");
 
     return true;
@@ -1467,8 +1465,8 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsView &view, bool fJustCheck
     bool fEnforceBIP30 = !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
                            (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
     if (fEnforceBIP30) {
-        BOOST_FOREACH(CTransaction& tx, vtx) {
-            uint256 hash = tx.GetHash();
+        for (unsigned int i=0; i<vtx.size(); i++) {
+            uint256 hash = GetTxHash(i);
             CCoins coins;
             if (view.GetCoins(hash, coins) && !coins.IsPruned())
                 return error("ConnectBlock() : tried to overwrite transaction");
@@ -1483,8 +1481,10 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsView &view, bool fJustCheck
 
     int64 nFees = 0;
     unsigned int nSigOps = 0;
-    BOOST_FOREACH(CTransaction& tx, vtx)
+    for (unsigned int i=0; i<vtx.size(); i++)
     {
+        const CTransaction &tx = vtx[i];
+
         nSigOps += tx.GetLegacySigOpCount();
         if (nSigOps > MAX_BLOCK_SIGOPS)
             return DoS(100, error("ConnectBlock() : too many sigops"));
@@ -1511,7 +1511,7 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsView &view, bool fJustCheck
         }
 
         CTxUndo txundo;
-        if (!tx.UpdateCoins(view, txundo, pindex->nHeight))
+        if (!tx.UpdateCoins(view, txundo, pindex->nHeight, GetTxHash(i)))
             return error("ConnectBlock() : UpdateInputs failed");
         if (!tx.IsCoinBase())
             blockundo.vtxundo.push_back(txundo);
@@ -1542,8 +1542,8 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsView &view, bool fJustCheck
         return false;
 
     // Watch for transactions paying to me
-    BOOST_FOREACH(CTransaction& tx, vtx)
-        SyncWithWallets(tx, this, true);
+    for (unsigned int i=0; i<vtx.size(); i++)
+        SyncWithWallets(GetTxHash(i), vtx[i], this, true);
 
     return true;
 }
@@ -1755,7 +1755,7 @@ bool CBlock::AddToBlockIndex(const CDiskBlockPos &pos)
         // Notify UI to display prev block's coinbase if it was ours
         static uint256 hashPrevBestCoinBase;
         UpdatedTransaction(hashPrevBestCoinBase);
-        hashPrevBestCoinBase = vtx[0].GetHash();
+        hashPrevBestCoinBase = GetTxHash(0);
     }
 
     uiInterface.NotifyBlocksChanged();
@@ -1876,10 +1876,10 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
 
     // Check for duplicate txids. This is caught by ConnectInputs(),
     // but catching it earlier avoids a potential DoS attack:
+    BuildMerkleTree();
     set<uint256> uniqueTx;
-    BOOST_FOREACH(const CTransaction& tx, vtx)
-    {
-        uniqueTx.insert(tx.GetHash());
+    for (unsigned int i=0; i<vtx.size(); i++) {
+        uniqueTx.insert(GetTxHash(i));
     }
     if (uniqueTx.size() != vtx.size())
         return DoS(100, error("CheckBlock() : duplicate transaction"));
@@ -2914,7 +2914,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         bool fMissingInputs = false;
         if (tx.AcceptToMemoryPool(true, &fMissingInputs))
         {
-            SyncWithWallets(tx, NULL, true);
+            SyncWithWallets(inv.hash, tx, NULL, true);
             RelayMessage(inv, vMsg);
             mapAlreadyAskedFor.erase(inv);
             vWorkQueue.push_back(inv.hash);
@@ -2937,7 +2937,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     if (tx.AcceptToMemoryPool(true, &fMissingInputs2))
                     {
                         printf("   accepted orphan tx %s\n", inv.hash.ToString().substr(0,10).c_str());
-                        SyncWithWallets(tx, NULL, true);
+                        SyncWithWallets(inv.hash, tx, NULL, true);
                         RelayMessage(inv, vMsg);
                         mapAlreadyAskedFor.erase(inv);
                         vWorkQueue.push_back(inv.hash);
@@ -3729,7 +3729,8 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 continue;
 
             CTxUndo txundo;
-            if (!tx.UpdateCoins(viewTemp, txundo, pindexPrev->nHeight+1))
+            uint256 hash = tx.GetHash();
+            if (!tx.UpdateCoins(viewTemp, txundo, pindexPrev->nHeight+1, hash))
                 continue;
 
             // push changes from the second layer cache to the first one
@@ -3749,7 +3750,6 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             }
 
             // Add transactions that depend on this one to the priority queue
-            uint256 hash = tx.GetHash();
             if (mapDependers.count(hash))
             {
                 BOOST_FOREACH(COrphan* porphan, mapDependers[hash])
