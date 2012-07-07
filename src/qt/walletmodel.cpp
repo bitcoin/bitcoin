@@ -10,16 +10,26 @@
 #include "base58.h"
 
 #include <QSet>
+#include <QTimer>
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
     transactionTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
     cachedNumTransactions(0),
-    cachedEncryptionStatus(Unencrypted)
+    cachedEncryptionStatus(Unencrypted),
+    cachedNumBlocks(0)
 {
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
+
+    // This single-shot timer will be fired from the 'checkBalancedChanged'
+    // method repeatedly while either of the unconfirmed or immature balances
+    // are non-zero
+    pollTimer = new QTimer(this);
+    pollTimer->setInterval(MODEL_UPDATE_DELAY);
+    pollTimer->setSingleShot(true);
+    connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
 
     subscribeToCoreSignals();
 }
@@ -62,27 +72,47 @@ void WalletModel::updateStatus()
         emit encryptionStatusChanged(newEncryptionStatus);
 }
 
+void WalletModel::pollBalanceChanged()
+{
+    if(nBestHeight != cachedNumBlocks) {
+        cachedNumBlocks = nBestHeight;
+        checkBalanceChanged();
+    }
+
+    if(cachedUnconfirmedBalance || cachedImmatureBalance)
+        pollTimer->start();
+}
+
+void WalletModel::checkBalanceChanged()
+{
+    qint64 newBalance = getBalance();
+    qint64 newUnconfirmedBalance = getUnconfirmedBalance();
+    qint64 newImmatureBalance = getImmatureBalance();
+
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance) {
+        cachedBalance = newBalance;
+        cachedUnconfirmedBalance = newUnconfirmedBalance;
+        cachedImmatureBalance = newImmatureBalance;
+        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance);
+    }
+}
+
 void WalletModel::updateTransaction(const QString &hash, int status)
 {
     if(transactionTableModel)
         transactionTableModel->updateTransaction(hash, status);
 
     // Balance and number of transactions might have changed
-    qint64 newBalance = getBalance();
-    qint64 newUnconfirmedBalance = getUnconfirmedBalance();
-    qint64 newImmatureBalance = getImmatureBalance();
+    checkBalanceChanged();
+
+    if(cachedUnconfirmedBalance || cachedImmatureBalance)
+        pollTimer->start();
+
     int newNumTransactions = getNumTransactions();
-
-    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
-        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance);
-
-    if(cachedNumTransactions != newNumTransactions)
+    if(cachedNumTransactions != newNumTransactions) {
         emit numTransactionsChanged(newNumTransactions);
-
-    cachedBalance = newBalance;
-    cachedUnconfirmedBalance = newUnconfirmedBalance;
-    cachedImmatureBalance = newImmatureBalance;
-    cachedNumTransactions = newNumTransactions;
+        cachedNumTransactions = newNumTransactions;
+    }
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label, bool isMine, int status)
