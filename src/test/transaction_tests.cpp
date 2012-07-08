@@ -256,9 +256,6 @@ BOOST_AUTO_TEST_CASE(test_GetThrow)
     t1.vout.resize(2);
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
-
-    BOOST_CHECK_THROW(t1.AreInputsStandard(coinsDummy), runtime_error);
-    BOOST_CHECK_THROW(t1.GetValueIn(coinsDummy), runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
