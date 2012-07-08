@@ -190,10 +190,7 @@ void AddressBookPage::on_signMessage_clicked()
         addr = address.toString();
     }
 
-    QObject *qoGUI = parent()->parent();
-    BitcoinGUI *gui = qobject_cast<BitcoinGUI *>(qoGUI);
-    if (gui)
-        gui->gotoSignMessageTab(addr);
+    emit signMessage(addr);
 }
 
 void AddressBookPage::on_verifyMessage_clicked()
@@ -208,10 +205,7 @@ void AddressBookPage::on_verifyMessage_clicked()
         addr = address.toString();
     }
 
-    QObject *qoGUI = parent()->parent();
-    BitcoinGUI *gui = qobject_cast<BitcoinGUI *>(qoGUI);
-    if (gui)
-        gui->gotoVerifyMessageTab(addr);
+    emit verifyMessage(addr);
 }
 
 void AddressBookPage::on_newAddressButton_clicked()
