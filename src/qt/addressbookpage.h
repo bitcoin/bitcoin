@@ -76,6 +76,10 @@ private slots:
 
     /** New entry/entries were added to address table */
     void selectNewAddress(const QModelIndex &parent, int begin, int end);
+
+signals:
+    void signMessage(QString addr);
+    void verifyMessage(QString addr);
 };
 
 #endif // ADDRESSBOOKDIALOG_H
