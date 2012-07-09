@@ -12,23 +12,24 @@
 class OptionsModel : public QAbstractListModel
 {
     Q_OBJECT
+
 public:
     explicit OptionsModel(QObject *parent = 0);
 
     enum OptionID {
-        StartAtStartup, // bool
-        MinimizeToTray, // bool
-        MapPortUPnP, // bool
-        MinimizeOnClose, // bool
-        ProxyUse, // bool
+        StartAtStartup,    // bool
+        MinimizeToTray,    // bool
+        MapPortUPnP,       // bool
+        MinimizeOnClose,   // bool
+        ProxyUse,          // bool
+        ProxyIP,           // QString
+        ProxyPort,         // int
         ProxySocksVersion, // int
-        ProxyIP, // QString
-        ProxyPort, // int
-        Fee, // qint64
-        DisplayUnit, // BitcoinUnits::Unit
-        DisplayAddresses, // bool
-        DetachDatabases, // bool
-        Language, // QString
+        Fee,               // qint64
+        DisplayUnit,       // BitcoinUnits::Unit
+        DisplayAddresses,  // bool
+        DetachDatabases,   // bool
+        Language,          // QString
         OptionIDRowCount,
     };
 
@@ -48,17 +49,16 @@ public:
     int getDisplayUnit();
     bool getDisplayAddresses();
     QString getLanguage() { return language; }
+
 private:
     int nDisplayUnit;
     bool bDisplayAddresses;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
+
 signals:
     void displayUnitChanged(int unit);
-
-public slots:
-
 };
 
 #endif // OPTIONSMODEL_H
