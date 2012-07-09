@@ -283,6 +283,13 @@ namespace Checkpoints
             return false;
         }
     }
+
+    void AskForPendingSyncCheckpoint(CNode* pfrom)
+    {
+        CRITICAL_BLOCK(cs_hashSyncCheckpoint)
+            if (pfrom && hashPendingCheckpoint != 0 && (!mapBlockIndex.count(hashPendingCheckpoint)) && (!mapOrphanBlocks.count(hashPendingCheckpoint)))
+                pfrom->AskFor(CInv(MSG_BLOCK, hashPendingCheckpoint));
+    }
 }
 
 // ppcoin: sync-checkpoint master key
