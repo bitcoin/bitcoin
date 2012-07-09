@@ -44,6 +44,7 @@ namespace Checkpoints
     bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev);
     bool WantedByPendingSyncCheckpoint(uint256 hashBlock);
     bool ResetSyncCheckpoint();
+    void AskForPendingSyncCheckpoint(CNode* pfrom);
 }
 
 // ppcoin: synchronized checkpoint
