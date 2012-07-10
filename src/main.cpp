@@ -1338,8 +1338,8 @@ bool CTransaction::CheckProofOfStake(unsigned int nBits) const
     CBlock block;
     if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
         return false; // unable to read block of previous transaction
-    if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > nTime)
-        return false; // only count coins from at least one week ago
+    if (block.GetBlockTime() + STAKE_MIN_AGE > nTime)
+        return false; // only count coins meeting min age requirement
 
     int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
     CBigNum bnCoinDay = CBigNum(nValueIn) * (nTime-txPrev.nTime) / COIN / (24 * 60 * 60);
@@ -1353,10 +1353,10 @@ bool CTransaction::CheckProofOfStake(unsigned int nBits) const
 }
 
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
-// Only those coins last spent at least a week ago count. As those
+// Only those coins meeting minimum age requirement counts. As those
 // transactions not in main chain are not currently indexed so we
 // might not find out about their coin age. Older transactions are 
-// guaranteed to be in main chain by auto checkpoint. This rule is
+// guaranteed to be in main chain by sync-checkpoint. This rule is
 // introduced to help nodes establish a consistent view of the coin
 // age (trust score) of competing branches.
 bool CTransaction::GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const
@@ -1381,8 +1381,8 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const
         CBlock block;
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
             return false; // unable to read block of previous transaction
-        if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > nTime)
-            continue; // only count coins from at least one week ago
+        if (block.GetBlockTime() + STAKE_MIN_AGE > nTime)
+            continue; // only count coins meeting min age requirement
 
         int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
         bnCentSecond += CBigNum(nValueIn) * (nTime-txPrev.nTime) / CENT;

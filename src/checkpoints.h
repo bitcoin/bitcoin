@@ -8,10 +8,8 @@
 #include <map>
 #include "util.h"
 
-// ppcoin: auto checkpoint min at 8 hours; max at 16 hours
-#define AUTO_CHECKPOINT_MIN_SPAN   (60 * 60 * 8)
-#define AUTO_CHECKPOINT_MAX_SPAN   (60 * 60 * 16)
-#define AUTO_CHECKPOINT_TRUST_SPAN (60 * 60 * 24)
+#define STAKE_MIN_AGE (60 * 60 * 24)      // minimum age for coin age
+#define CHECKPOINT_MIN_SPAN (60 * 60 * 4) // 4 hours checkpoint
 
 class uint256;
 class CBlockIndex;

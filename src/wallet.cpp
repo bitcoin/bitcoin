@@ -1115,8 +1115,8 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
             CBlock block;
             if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
                 continue;
-            if (block.GetBlockTime() + AUTO_CHECKPOINT_TRUST_SPAN > txNew.nTime)
-                continue; // only count coins from at least one week ago
+            if (block.GetBlockTime() + STAKE_MIN_AGE > txNew.nTime)
+                continue; // only count coins meeting min age requirement
 
             int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
             CBigNum bnCoinDay = CBigNum(nValueIn) * (txNew.nTime-pcoin.first->nTime) / COIN / (24 * 60 * 60);

@@ -188,9 +188,9 @@ namespace Checkpoints
 
     uint256 AutoSelectSyncCheckpoint()
     {
-        // select block roughly 8 hours ago
+        // select a block some time ago
         CBlockIndex *pindex = mapBlockIndex[hashSyncCheckpoint];
-        while (pindex->pnext && pindex->pnext->GetBlockTime() + AUTO_CHECKPOINT_MIN_SPAN <= GetAdjustedTime())
+        while (pindex->pnext && pindex->pnext->GetBlockTime() + CHECKPOINT_MIN_SPAN <= GetAdjustedTime())
             pindex = pindex->pnext;
         return pindex->GetBlockHash();
     }
@@ -265,7 +265,6 @@ namespace Checkpoints
                 hashPendingCheckpoint = hash;
                 checkpointMessagePending.SetNull();
                 printf("ResetSyncCheckpoint: pending for sync-checkpoint %s\n", hashPendingCheckpoint.ToString().c_str());
-                // TODO: when to ask for the checkpoint chain?
             }
 
             BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, mapCheckpoints)
