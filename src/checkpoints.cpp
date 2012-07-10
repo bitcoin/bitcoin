@@ -81,4 +81,18 @@ namespace Checkpoints
         }
         return NULL;
     }
+
+    bool HaveCheckpoint(int nHeight)
+    {
+        assert(nHeight >= 0);
+
+        if (!fTestNet && (unsigned int)nHeight < sizeof(LSBCheckpoints)/sizeof(int))
+            return true;
+
+        MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
+
+        MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
+        if (i == checkpoints.end()) return false;
+        return true;
+    }
 }
