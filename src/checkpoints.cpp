@@ -12,6 +12,8 @@
 
 namespace Checkpoints
 {
+    #include "checkpoints_def.cpp"
+
     typedef std::map<int, uint256> MapCheckpoints;
 
     //
@@ -39,10 +41,16 @@ namespace Checkpoints
 
     bool CheckBlock(int nHeight, const uint256& hash)
     {
+        assert(nHeight >= 0);
         MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
 
         MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
-        if (i == checkpoints.end()) return true;
+        if (i == checkpoints.end())
+        {
+            if (!fTestNet && (unsigned int)nHeight < sizeof(LSBCheckpoints)/sizeof(int))
+                return hash.first() == LSBCheckpoints[nHeight];
+            return true;
+        }
         return hash == i->second;
     }
 
