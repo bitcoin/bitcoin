@@ -65,6 +65,8 @@ static const int VERSION = 50100;
 static const char* pszSubVer = "";
 static const bool VERSION_IS_BETA = true;
 
+static const int PPCOIN_VERSION = 100;
+
 // Used to bypass the rule against non-const reference to temporary
 // where it makes sense with wrappers such as CFlatData or CTxDB
 template<typename T>

@@ -1017,7 +1017,7 @@ string FormatVersion(int nVersion)
 
 string FormatFullVersion()
 {
-    string s = FormatVersion(VERSION) + pszSubVer;
+    string s = FormatVersion(PPCOIN_VERSION) + pszSubVer;
     if (VERSION_IS_BETA) {
         s += "-";
         s += _("beta");
