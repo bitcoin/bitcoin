@@ -9,6 +9,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "checkpoints.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -609,6 +610,30 @@ bool AppInit2()
         if (nFound == 0)
             printf("No blocks matching %s were found\n", strMatch.c_str());
         return false;
+    }
+
+    if (mapArgs.count("-saveblockcheckpointfile"))
+    {
+        int nBlocksTo = GetArg("-saveblockcheckpointfileto", Checkpoints::GetTotalBlocksEstimate());
+        if (nBestHeight <= nBlocksTo)
+            printf("Not enough blocks to save block checkpoint file.\n");
+        else
+        {
+            FILE* file = fopen(mapArgs["-saveblockcheckpointfile"].c_str(), "wb");
+            if (!file)
+                printf("Failed to open file to save block checkpoint file.\n");
+            else
+            {
+                fputs("const unsigned int LSBCheckpoints[] = {", file);
+                for (CBlockIndex* pindex = pindexGenesisBlock; pindex->nHeight <= nBlocksTo; pindex = pindex->pnext)
+                    if (fprintf(file, "%u,\n", pindex->phashBlock->first()) < 1)
+                    {
+                        printf("Error writing block hash data to save block checkpoint file.\n");
+                        break;
+                    }
+                fputs("};", file);
+            }
+        }
     }
 
     // ********************************************************* Step 7: load wallet
