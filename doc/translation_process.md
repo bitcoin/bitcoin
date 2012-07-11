@@ -32,8 +32,14 @@ This directory contains all translations. Filenames must adhere to this format:
 
 `src/qt/locale/bitcoin_en.ts` is treated in a special way. It is used as the
 source for all other translations. Whenever a string in the code is changed
-this file must be updated to reflect those changes. Usually, this can be
-accomplished by running `lupdate` (included in the Qt SDK).
+this file must be updated to reflect those changes. This can be
+accomplished by running `lupdate` (included in the Qt SDK). Also, a custom
+script is used to extract strings from the non-Qt parts:
+
+    python share/qt/extract_strings_qt.py
+    lupdate bitcoin-qt.pro -no-obsolete -locations none -ts src/qt/locale/bitcoin_en.ts
+    git add src/qt/bitcoinstrings.cpp src/qt/locale/bitcoin_en.ts
+    git commit
 
 An updated source file should be merged to github and transifex will pick it
 up from there. Afterwards the new strings show up as "Remaining" in transifex
