@@ -1810,6 +1810,20 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
+
+Value prioritisetransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "prioritisetransaction <txid> <priority delta> <fee delta>\n"
+            "Accepts the transaction into mined blocks at a higher (or lower) priority");
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+    return PrioritiseTransaction(hash, params[0].get_str(), params[1].get_real(), params[2].get_int64());
+}
+
+
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -2130,6 +2144,7 @@ static const CRPCCommand vRPCCommands[] =
     { "settxfee",               &settxfee,               false },
     { "getmemorypool",          &getmemorypool,          true },
     { "listsinceblock",         &listsinceblock,         false },
+    { "prioritisetransaction",  &prioritisetransaction,  true },
     { "dumpprivkey",            &dumpprivkey,            false },
     { "importprivkey",          &importprivkey,          false },
     { "listunspent",            &listunspent,            false },
@@ -3027,6 +3042,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "createrawtransaction"   && n > 1) ConvertTo<Object>(params[1]);
     if (strMethod == "signrawtransaction"     && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "signrawtransaction"     && n > 2) ConvertTo<Array>(params[2]);
+    if (strMethod == "prioritisetransaction"  && n > 1) ConvertTo<double>(params[1]);
+    if (strMethod == "prioritisetransaction"  && n > 2) ConvertTo<boost::int64_t>(params[2]);
 
     return params;
 }
