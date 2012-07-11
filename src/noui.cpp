@@ -7,6 +7,7 @@
 #include "bitcoinrpc.h"
 
 #include <string>
+#include "main.h"
 
 static int noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
 {
@@ -17,7 +18,7 @@ static int noui_ThreadSafeMessageBox(const std::string& message, const std::stri
 
 static bool noui_ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption)
 {
-    return true;
+    return nFeeRequired == nTransactionFee || nFeeRequired <= nTransactionFeeMax;
 }
 
 void noui_connect()
