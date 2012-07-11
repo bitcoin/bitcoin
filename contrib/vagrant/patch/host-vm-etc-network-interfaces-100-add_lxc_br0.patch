@@ -1,0 +1,20 @@
+diff -rupN a/interfaces b/interfaces
+--- a/interfaces	2012-06-27 18:06:52.832120820 +0000
++++ b/interfaces	2012-06-27 18:07:50.211791421 +0000
+@@ -5,7 +5,15 @@
+ auto lo
+ iface lo inet loopback
+ 
++# LXC bridge
++auto br0
++iface br0 inet dhcp
++    bridge_ports eth0
++    bridge_stp off
++    bridge_fd 0
++    bridge_maxwait 0
++
+ # The primary network interface
+ auto eth0
+-iface eth0 inet dhcp
++iface eth0 inet manual
+ pre-up sleep 2

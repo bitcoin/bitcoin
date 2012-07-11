@@ -1,0 +1,48 @@
+diff --git a/contrib/gitian-descriptors/gitian-win32.yml b/contrib/gitian-descriptors/gitian-win32.yml
+--- a/contrib/gitian-descriptors/gitian-win32.yml
++++ b/contrib/gitian-descriptors/gitian-win32.yml
+@@ -11,13 +11,12 @@ packages:
+ - "nsis"
+ - "faketime"
+ reference_datetime: "2011-01-30 00:00:00"
+-remotes:
+-- "url": "https://github.com/bitcoin/bitcoin.git"
+-  "dir": "bitcoin"
++remotes: []
+ files:
+ - "qt-win32-4.7.4-gitian.zip"
+ - "boost-win32-1.49.0-gitian2.zip"
+ - "bitcoin-deps-0.0.4.zip"
++- "src-local.tar.xz"
+ script: |
+   #
+   mkdir $HOME/qt
+@@ -43,15 +42,17 @@ script: |
+   #
+   find -type f | xargs touch --date="$REFERENCE_DATETIME"
+   #
++  mkdir -p bitcoin
++  tar -C bitcoin -xf src-local.tar.xz
+   cd bitcoin
+   mkdir -p $OUTDIR/src
+-  git archive HEAD | tar -x -C $OUTDIR/src
++  tar -C $OUTDIR/src -xf ../src-local.tar.xz
+   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
+   cp $OUTDIR/src/COPYING $OUTDIR/license.txt
+   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+   export FAKETIME=$REFERENCE_DATETIME
+   export TZ=UTC
+-  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1b OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1b/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
++  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_49_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_49_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1b OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1b/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
+   make $MAKEOPTS
+   cp release/bitcoin-qt.exe $OUTDIR/
+   #
+@@ -65,7 +66,7 @@ script: |
+   cp bitcoind.exe $OUTDIR/daemon
+   cd ..
+   mkdir nsis
+-  git archive HEAD | tar -x -C nsis
++  tar -C nsis -xf $HOME/build/src-local.tar.xz
+   cd nsis/src
+   mkdir ../release
+   cp ../../release/* ../release/

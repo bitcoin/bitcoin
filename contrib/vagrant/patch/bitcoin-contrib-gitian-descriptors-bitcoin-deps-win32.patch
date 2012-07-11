@@ -1,0 +1,31 @@
+diff --git a/contrib/gitian-descriptors/deps-win32.yml b/contrib/gitian-descriptors/deps-win32.yml
+--- a/contrib/gitian-descriptors/deps-win32.yml
++++ b/contrib/gitian-descriptors/deps-win32.yml
+@@ -40,7 +40,10 @@ script: |
+   tar xzf miniupnpc-1.6.tar.gz
+   cd miniupnpc-1.6
+   sed 's/dllwrap -k --driver-name gcc/$(DLLWRAP) -k --driver-name $(CC)/' -i Makefile.mingw
+-  sed 's|wingenminiupnpcstrings $< $@|./wingenminiupnpcstrings $< $@|' -i Makefile.mingw
++  cp miniupnpcstrings.h.in miniupnpcstrings.h
++  sed 's|"OS/version"|"MSWindows/5.1.2600"|' -i miniupnpcstrings.h
++  sed 's|"version"|"1.6"|' -i miniupnpcstrings.h
++  sed 's|wingenminiupnpcstrings $< $@|true|' -i Makefile.mingw
+   make -f Makefile.mingw DLLWRAP=i586-mingw32msvc-dllwrap CC=i586-mingw32msvc-gcc AR=i586-mingw32msvc-ar
+   cd ..
+   mv miniupnpc-1.6 miniupnpc
+@@ -52,13 +55,13 @@ script: |
+   #
+   tar xzf libpng-1.5.9.tar.gz
+   cd libpng-1.5.9
+-  ./configure -disable-shared CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld LDFLAGS="-L../zlib-1.2.6/" CFLAGS="-I../zlib-1.2.6/"
++  ./configure -disable-shared --host=i586-mingw32msvc LDFLAGS="-L../zlib-1.2.6/" CFLAGS="-I../zlib-1.2.6/"
+   make $MAKEOPTS
+   cd ..
+   #
+   tar xjf qrencode-3.2.0.tar.bz2
+   cd qrencode-3.2.0
+-  ./configure CC=i586-mingw32msvc-cc AR=i586-mingw32msvc-ar STRIP=i586-mingw32msvc-strip RANLIB=i586-mingw32msvc-ranlib OBJDUMP=i586-mingw32msvc-objdump LD=i586-mingw32msvc-ld png_LIBS="../libpng-1.5.9/.libs/libpng15.a ../zlib-1.2.6/libz.a" png_CFLAGS="-I../libpng-1.5.9"
++  ./configure --host=i586-mingw32msvc png_LIBS="../libpng-1.5.9/.libs/libpng15.a ../zlib-1.2.6/libz.a" png_CFLAGS="-I../libpng-1.5.9"
+   make $MAKEOPTS
+   cd ..
+   #

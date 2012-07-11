@@ -1,0 +1,5 @@
+cache/*
+output/*
+.stamp-*
+.*.manifest
+.vagrant

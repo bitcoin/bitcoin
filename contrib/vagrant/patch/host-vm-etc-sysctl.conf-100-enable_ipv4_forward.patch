@@ -1,0 +1,12 @@
+diff -rupN a/sysctl.conf b/sysctl.conf
+--- a/sysctl.conf	2012-06-27 21:59:24.588545751 +0000
++++ b/sysctl.conf	2012-06-27 21:59:40.640017010 +0000
+@@ -25,7 +25,7 @@
+ #net.ipv4.tcp_syncookies=1
+ 
+ # Uncomment the next line to enable packet forwarding for IPv4
+-#net.ipv4.ip_forward=1
++net.ipv4.ip_forward=1
+ 
+ # Uncomment the next line to enable packet forwarding for IPv6
+ #  Enabling this option disables Stateless Address Autoconfiguration
