@@ -297,6 +297,11 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
     return retval;
 }
 
+void WalletModel::setSendFromAddressRestriction(std::string addresses)
+{
+    wallet->setSendFromAddressRestriction(addresses);
+}
+
 bool WalletModel::backupWallet(const QString &filename)
 {
     return BackupWallet(*wallet, filename.toLocal8Bit().data());
