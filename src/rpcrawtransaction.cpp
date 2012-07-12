@@ -10,6 +10,7 @@
 #include "db.h"
 #include "init.h"
 #include "main.h"
+#include "net.h"
 #include "wallet.h"
 
 using namespace std;
@@ -454,17 +455,29 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     catch (std::exception &e) {
         throw JSONRPCError(-22, "TX decode failed");
     }
+    uint256 hashTx = tx.GetHash();
 
-    // push to local node
-    CTxDB txdb("r");
-    if (!tx.AcceptToMemoryPool(txdb))
-        throw JSONRPCError(-22, "TX rejected");
+    // See if the transaction is already in a block
+    // or in the memory pool:
+    CTransaction existingTx;
+    uint256 hashBlock = 0;
+    if (GetTransaction(hashTx, existingTx, hashBlock))
+    {
+        if (hashBlock != 0)
+            throw JSONRPCError(-5, string("transaction already in block ")+hashBlock.GetHex());
+        // Not in block, but already in the memory pool; will drop
+        // through to re-relay it.
+    }
+    else
+    {
+        // push to local node
+        CTxDB txdb("r");
+        if (!tx.AcceptToMemoryPool(txdb))
+            throw JSONRPCError(-22, "TX rejected");
 
-    SyncWithWallets(tx, NULL, true);
+        SyncWithWallets(tx, NULL, true);
+    }
+    RelayMessage(CInv(MSG_TX, hashTx), tx);
 
-    // relay to network
-    CInv inv(MSG_TX, tx.GetHash());
-    RelayInventory(inv);
-
-    return tx.GetHash().GetHex();
+    return hashTx.GetHex();
 }
