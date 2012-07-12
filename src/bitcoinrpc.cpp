@@ -1923,10 +1923,15 @@ Value makekeypair(const Array& params, bool fHelp)
         strPrefix = params[0].get_str();
  
     CKey key;
+    int nCount = 0;
     do
     {
         key.MakeNewKey();
-    } while (strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()));
+        nCount++;
+    } while (nCount < 10000 && strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()));
+
+    if (strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()))
+        return Value::null;
 
     CPrivKey vchPrivKey = key.GetPrivKey();
     Object result;
