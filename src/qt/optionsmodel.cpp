@@ -5,6 +5,7 @@
 #include "init.h"
 #include "walletdb.h"
 #include "guiutil.h"
+#include "sync.h"
 
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)
@@ -17,6 +18,9 @@ bool static ApplyProxySettings()
     QSettings settings;
     CService addrProxy(settings.value("addrProxy", "127.0.0.1:9050").toString().toStdString());
     int nSocksVersion(settings.value("nSocksVersion", 5).toInt());
+
+    CCriticalSection cs_proxysettings;
+
     if (!settings.value("fUseProxy", false).toBool()) {
         addrProxy = CService();
         nSocksVersion = 0;
@@ -24,15 +28,21 @@ bool static ApplyProxySettings()
     }
     if (nSocksVersion && !addrProxy.IsValid())
         return false;
-    if (!IsLimited(NET_IPV4))
-        SetProxy(NET_IPV4, addrProxy, nSocksVersion);
-    if (nSocksVersion > 4) {
+
+    {
+        LOCK(cs_proxysettings);
+
+        if (!IsLimited(NET_IPV4))
+            SetProxy(NET_IPV4, addrProxy, nSocksVersion);
+        if (nSocksVersion > 4) {
 #ifdef USE_IPV6
-        if (!IsLimited(NET_IPV6))
-            SetProxy(NET_IPV6, addrProxy, nSocksVersion);
+            if (!IsLimited(NET_IPV6))
+                SetProxy(NET_IPV6, addrProxy, nSocksVersion);
 #endif
-        SetNameProxy(addrProxy, nSocksVersion);
+            SetNameProxy(addrProxy, nSocksVersion);
+        }
     }
+
     return true;
 }
 
