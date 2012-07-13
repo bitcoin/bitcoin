@@ -23,13 +23,10 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 
-    // This single-shot timer will be fired from the 'checkBalancedChanged'
-    // method repeatedly while either of the unconfirmed or immature balances
-    // are non-zero
+    // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
-    pollTimer->setInterval(MODEL_UPDATE_DELAY);
-    pollTimer->setSingleShot(true);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
+    pollTimer->start(MODEL_UPDATE_DELAY);
 
     subscribeToCoreSignals();
 }
@@ -74,13 +71,12 @@ void WalletModel::updateStatus()
 
 void WalletModel::pollBalanceChanged()
 {
-    if(nBestHeight != cachedNumBlocks) {
+    if(nBestHeight != cachedNumBlocks)
+    {
+        // Balance and number of transactions might have changed
         cachedNumBlocks = nBestHeight;
         checkBalanceChanged();
     }
-
-    if(cachedUnconfirmedBalance || cachedImmatureBalance)
-        pollTimer->start();
 }
 
 void WalletModel::checkBalanceChanged()
@@ -89,7 +85,8 @@ void WalletModel::checkBalanceChanged()
     qint64 newUnconfirmedBalance = getUnconfirmedBalance();
     qint64 newImmatureBalance = getImmatureBalance();
 
-    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance) {
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
+    {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
@@ -105,13 +102,11 @@ void WalletModel::updateTransaction(const QString &hash, int status)
     // Balance and number of transactions might have changed
     checkBalanceChanged();
 
-    if(cachedUnconfirmedBalance || cachedImmatureBalance)
-        pollTimer->start();
-
     int newNumTransactions = getNumTransactions();
-    if(cachedNumTransactions != newNumTransactions) {
-        emit numTransactionsChanged(newNumTransactions);
+    if(cachedNumTransactions != newNumTransactions)
+    {
         cachedNumTransactions = newNumTransactions;
+        emit numTransactionsChanged(newNumTransactions);
     }
 }
 
