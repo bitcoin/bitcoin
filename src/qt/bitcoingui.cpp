@@ -501,6 +501,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         return;
     }
 
+    QString strStatusBarWarnings = clientModel->getStatusBarWarnings();
     QString tooltip;
 
     if(count < nTotalBlocks)
@@ -508,7 +509,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         int nRemainingBlocks = nTotalBlocks - count;
         float nPercentageDone = count / (nTotalBlocks * 0.01f);
 
-        if (clientModel->getStatusBarWarnings() == "")
+        if (strStatusBarWarnings.isEmpty())
         {
             progressBarLabel->setText(tr("Synchronizing with network..."));
             progressBarLabel->setVisible(true);
@@ -517,30 +518,28 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
             progressBar->setValue(count);
             progressBar->setVisible(true);
         }
-        else
-        {
-            progressBarLabel->setText(clientModel->getStatusBarWarnings());
-            progressBarLabel->setVisible(true);
-            progressBar->setVisible(false);
-        }
+
         tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
     }
     else
     {
-        if (clientModel->getStatusBarWarnings() == "")
+        if (strStatusBarWarnings.isEmpty())
             progressBarLabel->setVisible(false);
-        else
-        {
-            progressBarLabel->setText(clientModel->getStatusBarWarnings());
-            progressBarLabel->setVisible(true);
-        }
+
         progressBar->setVisible(false);
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
 
-    QDateTime now = QDateTime::currentDateTime();
+    // Override progressBarLabel text and hide progressBar, when we have warnings to display
+    if (!strStatusBarWarnings.isEmpty())
+    {
+        progressBarLabel->setText(strStatusBarWarnings);
+        progressBarLabel->setVisible(true);
+        progressBar->setVisible(false);
+    }
+
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
-    int secs = lastBlockDate.secsTo(now);
+    int secs = lastBlockDate.secsTo(QDateTime::currentDateTime());
     QString text;
 
     // Represent time from last generated block in human readable text
