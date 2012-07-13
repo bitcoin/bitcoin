@@ -91,7 +91,7 @@ void MiningPage::startPoolMining()
     args << "--userpass" << userpassLine.toAscii();
     args << "--threads" << ui->threadsBox->text().toAscii();
     args << "--retries" << "-1"; // Retry forever.
-    args << "-P"; // This is need for this to work correctly on Windows. Extra protocol dump helps flush the buffer quicker.
+    args << "-P"; // This is needed for this to work correctly on Windows. Extra protocol dump helps flush the buffer quicker.
 
     threadSpeed.clear();
 
@@ -212,7 +212,7 @@ void MiningPage::minerError(QProcess::ProcessError error)
 {
     if (error == QProcess::FailedToStart)
     {
-        reportToList("Miner failed to start. Make sure you have the minerd executable and libraries in the same directory as Litecoin-QT.", ERROR, NULL);
+        reportToList("Miner failed to start. Make sure you have the minerd executable and libraries in the same directory as Litecoin-Qt.", ERROR, NULL);
     }
 }
 
@@ -234,7 +234,7 @@ void MiningPage::minerStarted()
         if (getMiningType() == ClientModel::SoloMining)
             reportToList("Solo mining started.", ERROR, NULL);
         else
-            reportToList("Miner started. It usually takes a minute until the program starts reporting information.", STARTED, NULL);
+            reportToList("Miner started. You might not see any output for a few minutes.", STARTED, NULL);
     minerActive = true;
     resetMiningButton();
     model->setMining(getMiningType(), true, initThreads, 0);
@@ -355,7 +355,7 @@ ClientModel::MiningType MiningPage::getMiningType()
     {
         return ClientModel::SoloMining;
     }
-    else if (ui->typeBox->currentIndex() == 1)  // Pool Minig
+    else if (ui->typeBox->currentIndex() == 1)  // Pool Mining
     {
         return ClientModel::PoolMining;
     }
@@ -368,7 +368,7 @@ void MiningPage::typeChanged(int index)
     {
         enablePoolMiningControls(false);
     }
-    else if (index == 1)  // Pool Minig
+    else if (index == 1)  // Pool Mining
     {
         enablePoolMiningControls(true);
     }
