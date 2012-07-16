@@ -51,6 +51,8 @@ namespace boost {
 #endif
 #include <io.h> /* for _commit */
 #include "shlobj.h"
+#elif defined(__linux__)
+# include <sys/prctl.h>
 #endif
 
 using namespace std;
@@ -1275,3 +1277,18 @@ void runCommand(std::string strCommand)
         printf("runCommand error: system(%s) returned %d\n", strCommand.c_str(), nErr);
 }
 
+void RenameThread(const char* name)
+{
+#if defined(PR_SET_NAME)
+    // Only the first 15 characters are used (16 - NUL terminator)
+    ::prctl(PR_SET_NAME, name, 0, 0, 0);
+#elif 0 && (defined(__FreeBSD__) || defined(__OpenBSD__))
+    // TODO: This is currently disabled because it needs to be verified to work
+    //       on FreeBSD or OpenBSD first. When verified the '0 &&' part can be
+    //       removed.
+    pthread_set_name_np(pthread_self(), name);
+#else
+    // Prevent warnings for unused parameters...
+    (void)name;
+#endif
+}

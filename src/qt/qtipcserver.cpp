@@ -14,6 +14,7 @@
 
 #include "ui_interface.h"
 #include "qtipcserver.h"
+#include "util.h"
 
 using namespace boost::interprocess;
 using namespace boost::posix_time;
@@ -35,6 +36,9 @@ void ipcShutdown()
 
 void ipcThread(void* parg)
 {
+    // Make this thread recognisable as the GUI-IPC thread
+    RenameThread("bitcoin-gui-ipc");
+
     message_queue* mq = (message_queue*)parg;
     char strBuf[257];
     size_t nSize;
