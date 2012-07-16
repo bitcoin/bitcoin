@@ -33,13 +33,11 @@ contains(RELEASE, 1) {
     }
 }
 
-!win32 {
+# on Windows: use static linking
+win32:QMAKE_LFLAGS *= -static
 # for extra security against potential buffer overflows: enable GCCs Stack Smashing Protection
 QMAKE_CXXFLAGS *= -fstack-protector-all
 QMAKE_LFLAGS *= -fstack-protector-all
-# We need to exclude this for Windows cross compile with MinGW 4.2.x, as it will result in a non-working executable!
-# This can be enabled for Windows, when we switch to MinGW >= 4.4.x.
-}
 # for extra security (see: https://wiki.debian.org/Hardening)
 QMAKE_CXXFLAGS *= -D_FORTIFY_SOURCE=2 -Wl,-z,relro -Wl,-z,now
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
