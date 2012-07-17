@@ -126,13 +126,21 @@ int main(int argc, char *argv[])
             const char *strURI = argv[i];
             try {
                 boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
-                if(mq.try_send(strURI, strlen(strURI), 0))
+                if (mq.try_send(strURI, strlen(strURI), 0))
+                    // if URI could be sent to the message queue exit here
                     exit(0);
                 else
+                    // if URI could not be sent to the message queue do a normal Bitcoin-Qt startup
                     break;
             }
             catch (boost::interprocess::interprocess_exception &ex) {
-                break;
+                // don't log the "file not found" exception, because that's normal for
+                // the first start of the first instance
+                if (ex.get_error_code() != boost::interprocess::not_found_error)
+                {
+                    printf("main() - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+                    break;
+                }
             }
         }
     }
@@ -278,6 +286,8 @@ int main(int argc, char *argv[])
                             mq.try_send(strURI, strlen(strURI), 0);
                         }
                         catch (boost::interprocess::interprocess_exception &ex) {
+                            printf("main() - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+                            break;
                         }
                     }
                 }
