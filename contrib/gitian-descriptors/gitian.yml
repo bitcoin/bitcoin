@@ -52,4 +52,4 @@ script: |
   cd ..
   qmake INCLUDEPATH="$INSTDIR/include" LIBS="-L$INSTDIR/lib" RELEASE=1 USE_QRCODE=1
   make $MAKEOPTS
-  install litecoin-qt $OUTDIR/bin/$GBUILD_BITS
+  install -s litecoin-qt $OUTDIR/bin/$GBUILD_BITS
