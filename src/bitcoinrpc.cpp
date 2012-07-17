@@ -2957,8 +2957,9 @@ void ConvertTo(Value& value)
     {
         // reinterpret string as unquoted json value
         Value value2;
-        if (!read_string(value.get_str(), value2))
-            throw runtime_error("type mismatch");
+        string strJSON = value.get_str();
+        if (!read_string(strJSON, value2))
+            throw runtime_error(string("Error parsing JSON:")+strJSON);
         value = value2.get_value<T>();
     }
     else
