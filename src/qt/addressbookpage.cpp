@@ -113,6 +113,8 @@ void AddressBookPage::setModel(AddressTableModel *model)
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
     proxyModel->setDynamicSortFilter(true);
+    proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     switch(tab)
     {
     case ReceivingTab:
