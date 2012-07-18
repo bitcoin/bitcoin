@@ -1,4 +1,4 @@
-Compiling/runing bitcoind unit tests
+Compiling/running bitcoind unit tests
 ------------------------------------
 
 bitcoind unit tests are in the src/test/ directory; they
