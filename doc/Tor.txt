@@ -36,7 +36,7 @@ outgoing connections be anonimized, but more is possible.
                 to run a hidden service (see next section), you'll need to enable
                 it explicitly.
 
--connect=X      When behing a Tor proxy, you can specify .onion addresses instead
+-connect=X      When behind a Tor proxy, you can specify .onion addresses instead
 -addnode=X      of IP addresses or hostnames in these parameters. It requires
 -seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
                 other P2P nodes.
@@ -59,7 +59,7 @@ config file):
 The directory can be different of course, but (both) 8333's should be equal to your
 bitcoind's P2P listen port (8333 by default).
 
--externalip=X   You can tell bitcoin about its publically reachable address using
+-externalip=X   You can tell bitcoin about its publicly reachable address using
                 this option, and this can be a .onion address. Given the above
                 configuration, you can find your onion address in
                 /var/lib/tor/bitcoin-service/hostname. Onion addresses are given
