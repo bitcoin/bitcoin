@@ -42,7 +42,7 @@ Description: peer-to-peer network based digital currency - daemon
 Package: bitcoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: peer-to-peer network based digital currency - QT GUI
+Description: peer-to-peer network based digital currency - Qt GUI
  Bitcoin is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
@@ -54,4 +54,4 @@ Description: peer-to-peer network based digital currency - QT GUI
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
  .
- This package provides bitcoin-qt, a GUI for Bitcoin based on QT.
+ This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
