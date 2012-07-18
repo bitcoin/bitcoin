@@ -25,6 +25,7 @@ remotes:
 files:
 - "miniupnpc-1.6.tar.gz"
 - "qrencode-3.2.0.tar.bz2"
+- "checkpoints_def.cpp"
 script: |
   INSTDIR="$HOME/install"
   export LIBRARY_PATH="$INSTDIR/lib"
@@ -45,6 +46,7 @@ script: |
   git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README $OUTDIR
   cp $OUTDIR/src/COPYING $OUTDIR
+  cp ../checkpoints_def.cpp ./src/
   cd src
   make -f makefile.unix STATIC=1 OPENSSL_INCLUDE_PATH="$INSTDIR/include" OPENSSL_LIB_PATH="$INSTDIR/lib" $MAKEOPTS bitcoind USE_UPNP=0 DEBUGFLAGS=
   mkdir -p $OUTDIR/bin/$GBUILD_BITS

@@ -334,14 +334,14 @@ public:
         return (GetHex());
     }
 
-    unsigned char* begin()
+    unsigned int first() const
     {
-        return (unsigned char*)&pn[0];
+        return pn[0];
     }
 
-    unsigned char* end()
+    unsigned int last() const
     {
-        return (unsigned char*)&pn[WIDTH];
+        return pn[WIDTH];
     }
 
     unsigned int size()

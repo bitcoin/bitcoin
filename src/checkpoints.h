@@ -22,6 +22,9 @@ namespace Checkpoints
 
     // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
+
+    // Returns true if we have a checkpoint lock-in for the given height
+    bool HaveCheckpoint(int nHeight);
 }
 
 #endif
