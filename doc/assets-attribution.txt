@@ -26,7 +26,7 @@ Site: http://findicons.com/icon/93743/blocks_gnome_netstatus_0
 
 Icon: src/qt/res/icons/transaction*.png
 Designer: md2k7
-Site: https://forum.bitcoin.org/index.php?topic=15276.0
+Site: https://bitcointalk.org/index.php?topic=15276.0
 License: You are free to do with these icons as you wish, including selling,
  copying, modifying etc.
 
@@ -41,7 +41,7 @@ License: LGPL
 Icon: src/qt/res/icons/bitcoin.png, src/qt/res/icons/toolbar.png
 Designer: Bitboy (optimized for 16x16 by Wladimir van der Laan)
 License: Public Domain
-Site: http://forum.bitcoin.org/?topic=1756.0
+Site: https://bitcointalk.org/?topic=1756.0
 
 Icon:  scripts/img/reload.xcf (modified),src/qt/res/movies/update_spinner.mng
 Icon Pack: Kids
