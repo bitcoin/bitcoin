@@ -341,6 +341,15 @@ int64 GetArg(const std::string& strArg, int64 nDefault);
 bool GetBoolArg(const std::string& strArg, bool fDefault=false);
 
 /**
+ * Return floating-point argument or default value
+ *
+ * @param strArg Argument to get (e.g. "-foo")
+ * @param default (e.g. 1.)
+ * @return command-line argument (0 if invalid number) or default value
+ */
+double GetFloatArg(const std::string& strArg, double nDefault);
+
+/**
  * Set an argument if it doesn't already have a value
  *
  * @param strArg Argument to set (e.g. "-foo")
