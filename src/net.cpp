@@ -1878,7 +1878,9 @@ void static Discover()
     }
 #endif
 
-    CreateThread(ThreadGetMyExternalIP, NULL);
+    // Don't use external IPv4 discovery, when -onlynet="IPv6"
+    if (!IsLimited(NET_IPV4))
+        CreateThread(ThreadGetMyExternalIP, NULL);
 }
 
 void StartNode(void* parg)
