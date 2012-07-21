@@ -97,7 +97,15 @@ contains(USE_LEVELDB, -) {
     INCLUDEPATH += src/leveldb-1.5.0/include src/leveldb-1.5.0/helpers
     LIBS += $$PWD/src/leveldb-1.5.0/libleveldb.a $$PWD/src/leveldb-1.5.0/libmemenv.a
     SOURCES += src/txdb-leveldb.cpp
-    genleveldb.commands = cd $$PWD/src/leveldb-1.5.0; make
+    !windows {
+        genleveldb.commands = cd $$PWD/src/leveldb-1.5.0 ; make
+    } else {
+        # make an educated guess about what the ranlib command is called
+        isEmpty(QMAKE_RANLIB) {
+            QMAKE_RANLIB = $$replace(QMAKE_STRIP, strip, ranlib)
+        }
+        genleveldb.commands = cd $$PWD/src/leveldb-1.5.0 ; CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=OS_WINDOWS_CROSSCOMPILE CXXFLAGS="-I$$BOOST_INCLUDE_PATH" LDFLAGS="-L$$BOOST_LIB_PATH" make ; $$QMAKE_RANLIB $$PWD/src/leveldb-1.5.0/libleveldb.a
+    }
     genleveldb.target = $$PWD/src/leveldb-1.5.0/libleveldb.a
     genleveldb.depends = FORCE
     PRE_TARGETDEPS += $$PWD/src/leveldb-1.5.0/libleveldb.a

@@ -50,6 +50,8 @@ CROSS_COMPILE=
 PLATFORM_CCFLAGS=
 PLATFORM_CXXFLAGS=
 PLATFORM_LDFLAGS=
+PLATFORM_EXTRALIBS=
+PLATFORM_SOURCES=
 PLATFORM_SHARED_EXT="so"
 PLATFORM_SHARED_LDFLAGS="-shared -Wl,-soname -Wl,"
 PLATFORM_SHARED_CFLAGS="-fPIC"
@@ -57,61 +59,64 @@ PLATFORM_SHARED_VERSIONED=true
 
 # On GCC, we pick libc's memcmp over GCC's memcmp via -fno-builtin-memcmp
 case "$TARGET_OS" in
-    BitcoinCrossCompileMingW)
-	PLATFORM=OS_WIN32
-	PLATFORM_SHARED_EXT=lib
-	CROSS_COMPILE=true
-	CXX=i586-mingw32msvc-g++
-	CC=i586-mingw32msvc-gcc
-	;;
     Darwin)
         PLATFORM=OS_MACOSX
         COMMON_FLAGS="-fno-builtin-memcmp -DOS_MACOSX"
         PLATFORM_SHARED_EXT=dylib
         PLATFORM_SHARED_LDFLAGS="-dynamiclib -install_name "
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
         ;;
     Linux)
         PLATFORM=OS_LINUX
         COMMON_FLAGS="-fno-builtin-memcmp -pthread -DOS_LINUX"
         PLATFORM_LDFLAGS="-pthread"
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
         ;;
     SunOS)
         PLATFORM=OS_SOLARIS
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_SOLARIS"
         PLATFORM_LDFLAGS="-lpthread -lrt"
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
         ;;
     FreeBSD)
         PLATFORM=OS_FREEBSD
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_FREEBSD"
         PLATFORM_LDFLAGS="-lpthread"
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
         ;;
     NetBSD)
         PLATFORM=OS_NETBSD
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_NETBSD"
         PLATFORM_LDFLAGS="-lpthread -lgcc_s"
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
         ;;
     OpenBSD)
         PLATFORM=OS_OPENBSD
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_OPENBSD"
         PLATFORM_LDFLAGS="-pthread"
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
         ;;
     DragonFly)
         PLATFORM=OS_DRAGONFLYBSD
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_DRAGONFLYBSD"
         PLATFORM_LDFLAGS="-lpthread"
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
         ;;
     OS_ANDROID_CROSSCOMPILE)
         PLATFORM=OS_ANDROID
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_ANDROID -DLEVELDB_PLATFORM_POSIX"
         PLATFORM_LDFLAGS=""  # All pthread features are in the Android C library
-        PORT_FILE=port/port_posix.cc
+        PLATFORM_SOURCES="port/port_posix.cc util/env_posix.cc"
+        CROSS_COMPILE=true
+        ;;
+    OS_WINDOWS_CROSSCOMPILE)
+        PLATFORM=OS_WINDOWS
+        COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS -DBOOST_THREAD_USE_LIB"
+        PLATFORM_CXXFLAGS="-std=c++0x"
+        PLATFORM_LDFLAGS=""
+        PLATFORM_SHARED_CFLAGS=""
+        PLATFORM_SOURCES="port/port_win.cc util/env_boost.cc util/win_logger.cc"
+        PLATFORM_EXTRALIBS="-lboost_system-mt-s -lboost_filesystem-mt-s -lboost_thread_win32-mt-s"
         CROSS_COMPILE=true
         ;;
     *)
@@ -127,12 +132,12 @@ DIRS="util db table"
 set -f # temporarily disable globbing so that our patterns aren't expanded
 PRUNE_TEST="-name *test*.cc -prune"
 PRUNE_BENCH="-name *_bench.cc -prune"
-PORTABLE_FILES=`find $DIRS $PRUNE_TEST -o $PRUNE_BENCH -o -name '*.cc' -print | sort | tr "\n" " "`
+PORTABLE_FILES=`find $DIRS $PRUNE_TEST -o $PRUNE_BENCH -o -name '*.cc' -not -name 'env_*.cc' -not -name '*_logger.cc' -print | sort | tr "\n" " "`
 set +f # re-enable globbing
 
 # The sources consist of the portable files, plus the platform-specific port
 # file.
-echo "SOURCES=$PORTABLE_FILES $PORT_FILE" >> $OUTPUT
+echo "SOURCES=$PORTABLE_FILES $PLATFORM_SOURCES" >> $OUTPUT
 echo "MEMENV_SOURCES=helpers/memenv/memenv.cc" >> $OUTPUT
 
 if [ "$CROSS_COMPILE" = "true" ]; then
@@ -180,6 +185,7 @@ echo "PLATFORM=$PLATFORM" >> $OUTPUT
 echo "PLATFORM_LDFLAGS=$PLATFORM_LDFLAGS" >> $OUTPUT
 echo "PLATFORM_CCFLAGS=$PLATFORM_CCFLAGS" >> $OUTPUT
 echo "PLATFORM_CXXFLAGS=$PLATFORM_CXXFLAGS" >> $OUTPUT
+echo "PLATFORM_EXTRALIBS=$PLATFORM_EXTRALIBS" >> $OUTPUT
 echo "PLATFORM_SHARED_CFLAGS=$PLATFORM_SHARED_CFLAGS" >> $OUTPUT
 echo "PLATFORM_SHARED_EXT=$PLATFORM_SHARED_EXT" >> $OUTPUT
 echo "PLATFORM_SHARED_LDFLAGS=$PLATFORM_SHARED_LDFLAGS" >> $OUTPUT
