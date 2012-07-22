@@ -131,7 +131,9 @@ public:
 
         if (sn < (int64)0)
         {
-            n = -sn;
+            // Since the minimum signed integer cannot be represented as positive so long as its type is signed, and it's not well-defined what happens if you make it unsigned before negating it, we instead increment the negative integer by 1, convert it, then increment the (now positive) unsigned integer by 1 to compensate
+            n = -(sn + 1);
+            ++n;
             fNegative = true;
         } else {
             n = sn;
@@ -414,7 +416,7 @@ public:
     CBigNum& operator>>=(unsigned int shift)
     {
         // Note: BN_rshift segfaults on 64-bit if 2^shift is greater than the number
-        //   if built on ubuntu 9.04 or 9.10, probably depends on version of openssl
+        //   if built on ubuntu 9.04 or 9.10, probably depends on version of OpenSSL
         CBigNum a = 1;
         a <<= shift;
         if (BN_cmp(&a, this) > 0)
