@@ -72,7 +72,7 @@ bool fNoListen = false;
 bool fLogTimestamps = false;
 CMedianFilter<int64> vTimeOffsets(200,0);
 
-// Init openssl library multithreading support
+// Init OpenSSL library multithreading support
 static boost::interprocess::interprocess_mutex** ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line)
 {
@@ -88,7 +88,7 @@ class CInit
 public:
     CInit()
     {
-        // Init openssl library multithreading support
+        // Init OpenSSL library multithreading support
         ppmutexOpenSSL = (boost::interprocess::interprocess_mutex**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(boost::interprocess::interprocess_mutex*));
         for (int i = 0; i < CRYPTO_num_locks(); i++)
             ppmutexOpenSSL[i] = new boost::interprocess::interprocess_mutex();
@@ -104,7 +104,7 @@ public:
     }
     ~CInit()
     {
-        // Shutdown openssl library multithreading support
+        // Shutdown OpenSSL library multithreading support
         CRYPTO_set_locking_callback(NULL);
         for (int i = 0; i < CRYPTO_num_locks(); i++)
             delete ppmutexOpenSSL[i];
@@ -1239,7 +1239,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 #else
 
 // TODO: OSX startup stuff; see:
-// http://developer.apple.com/mac/library/documentation/MacOSX/Conceptual/BPSystemStartup/Articles/CustomLogin.html
+// https://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPSystemStartup/Articles/CustomLogin.html
 
 bool GetStartOnSystemStartup() { return false; }
 bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
