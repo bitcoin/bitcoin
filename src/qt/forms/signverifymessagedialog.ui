@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Signatures - Sign / Verify a Message</string>
+   <string>Bitcoin-Qt - Signatures</string>
   </property>
   <property name="modal">
    <bool>true</bool>

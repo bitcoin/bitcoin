@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Passphrase Dialog</string>
+   <string>Bitcoin-Qt - Passphrase Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
