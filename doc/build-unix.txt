@@ -1,5 +1,4 @@
-Copyright (c) 2009-2010 Satoshi Nakamoto
-Copyright (c) 2011 Bitcoin Developers
+Copyright (c) 2009-2012 Bitcoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -23,19 +22,26 @@ the graphical bitcoin.
 Dependencies
 ------------
 
- Library    Purpose       Description
- -------    -------       -----------
- libssl     SSL Support   Secure communications
- libdb4.8   Berkeley DB   Blockchain & wallet storage
- libboost   Boost         C++ Library
- miniupnpc  UPnP Support  Optional firewall-jumping support
+ Library     Purpose           Description
+ -------     -------           -----------
+ libssl      SSL Support       Secure communications
+ libdb4.8    Berkeley DB       Blockchain & wallet storage
+ libboost    Boost             C++ Library
+ miniupnpc   UPnP Support      Optional firewall-jumping support
+ libqrencode QRCode generation Optional QRCode generation
 
 miniupnpc may be used for UPnP port mapping.  It can be downloaded from
 http://miniupnp.tuxfamily.org/files/.  UPnP support is compiled in and
 turned off by default.  Set USE_UPNP to a different value to control this:
- USE_UPNP=     No UPnP support - miniupnp not required
+ USE_UPNP=-    No UPnP support - miniupnp not required
  USE_UPNP=0    (the default) UPnP support turned off by default at runtime
  USE_UPNP=1    UPnP support turned on by default at runtime
+
+libqrencode may be used for QRCode image generation. It can be downloaded
+from http://fukuchi.org/works/qrencode/index.html.en, or installed via
+your package manager. Set USE_QRCODE to control this:
+ USE_QRCODE=0   (the default) No QRCode support - libqrcode not required
+ USE_QRCODE=1   QRCode support enabled
 
 Licenses of statically linked libraries:
  Berkeley DB   New BSD license with additional requirement that linked
@@ -50,7 +56,6 @@ Versions used in this release:
  Boost         1.37
  miniupnpc     1.6
 
-
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 sudo apt-get install build-essential
@@ -59,6 +64,7 @@ sudo apt-get install libdb4.8-dev
 sudo apt-get install libdb4.8++-dev
  Boost 1.40+: sudo apt-get install libboost-all-dev
  or Boost 1.37: sudo apt-get install libboost1.37-dev
+sudo apt-get install libqrencode-dev
 
 If using Boost 1.37, append -mt to the boost libraries in the makefile.
 

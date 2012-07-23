@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Bitcoin Developers
+// Copyright (c) 2009-2012 The Bitcoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,14 +6,11 @@
 #include <openssl/evp.h>
 #include <vector>
 #include <string>
-#include "headers.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
 
 #include "crypter.h"
-#include "main.h"
-#include "util.h"
 
 bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod)
 {
@@ -31,7 +28,7 @@ bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::v
         i = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha512(), &chSalt[0],
                           (unsigned char *)&strKeyData[0], strKeyData.size(), nRounds, chKey, chIV);
 
-    if (i != WALLET_CRYPTO_KEY_SIZE)
+    if (i != (int)WALLET_CRYPTO_KEY_SIZE)
     {
         memset(&chKey, 0, sizeof chKey);
         memset(&chIV, 0, sizeof chIV);
@@ -73,13 +70,15 @@ bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned
 
     EVP_CIPHER_CTX ctx;
 
+    bool fOk = true;
+
     EVP_CIPHER_CTX_init(&ctx);
-    EVP_EncryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
-
-    EVP_EncryptUpdate(&ctx, &vchCiphertext[0], &nCLen, &vchPlaintext[0], nLen);
-    EVP_EncryptFinal_ex(&ctx, (&vchCiphertext[0])+nCLen, &nFLen);
-
+    if (fOk) fOk = EVP_EncryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
+    if (fOk) fOk = EVP_EncryptUpdate(&ctx, &vchCiphertext[0], &nCLen, &vchPlaintext[0], nLen);
+    if (fOk) fOk = EVP_EncryptFinal_ex(&ctx, (&vchCiphertext[0])+nCLen, &nFLen);
     EVP_CIPHER_CTX_cleanup(&ctx);
+
+    if (!fOk) return false;
 
     vchCiphertext.resize(nCLen + nFLen);
     return true;
@@ -98,13 +97,15 @@ bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingM
 
     EVP_CIPHER_CTX ctx;
 
+    bool fOk = true;
+
     EVP_CIPHER_CTX_init(&ctx);
-    EVP_DecryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
-
-    EVP_DecryptUpdate(&ctx, &vchPlaintext[0], &nPLen, &vchCiphertext[0], nLen);
-    EVP_DecryptFinal_ex(&ctx, (&vchPlaintext[0])+nPLen, &nFLen);
-
+    if (fOk) fOk = EVP_DecryptInit_ex(&ctx, EVP_aes_256_cbc(), NULL, chKey, chIV);
+    if (fOk) fOk = EVP_DecryptUpdate(&ctx, &vchPlaintext[0], &nPLen, &vchCiphertext[0], nLen);
+    if (fOk) fOk = EVP_DecryptFinal_ex(&ctx, (&vchPlaintext[0])+nPLen, &nFLen);
     EVP_CIPHER_CTX_cleanup(&ctx);
+
+    if (!fOk) return false;
 
     vchPlaintext.resize(nPLen + nFLen);
     return true;

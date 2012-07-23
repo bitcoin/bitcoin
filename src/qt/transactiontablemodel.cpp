@@ -8,7 +8,7 @@
 #include "addresstablemodel.h"
 #include "bitcoinunits.h"
 
-#include "headers.h"
+#include "wallet.h"
 
 #include <QLocale>
 #include <QList>
@@ -45,8 +45,9 @@ struct TxLessThan
 };
 
 // Private implementation
-struct TransactionTablePriv
+class TransactionTablePriv
 {
+public:
     TransactionTablePriv(CWallet *wallet, TransactionTableModel *parent):
             wallet(wallet),
             parent(parent)
@@ -69,8 +70,8 @@ struct TransactionTablePriv
         qDebug() << "refreshWallet";
 #endif
         cachedWallet.clear();
-        CRITICAL_BLOCK(wallet->cs_wallet)
         {
+            LOCK(wallet->cs_wallet);
             for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
                 cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
@@ -95,8 +96,8 @@ struct TransactionTablePriv
         QList<uint256> updated_sorted = updated;
         qSort(updated_sorted);
 
-        CRITICAL_BLOCK(wallet->cs_wallet)
         {
+            LOCK(wallet->cs_wallet);
             for(int update_idx = updated_sorted.size()-1; update_idx >= 0; --update_idx)
             {
                 const uint256 &hash = updated_sorted.at(update_idx);
@@ -171,8 +172,8 @@ struct TransactionTablePriv
             // simply re-use the cached status.
             if(rec->statusUpdateNeeded())
             {
-                CRITICAL_BLOCK(wallet->cs_wallet)
                 {
+                    LOCK(wallet->cs_wallet);
                     std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
 
                     if(mi != wallet->mapWallet.end())
@@ -191,8 +192,8 @@ struct TransactionTablePriv
 
     QString describe(TransactionRecord *rec)
     {
-        CRITICAL_BLOCK(wallet->cs_wallet)
         {
+            LOCK(wallet->cs_wallet);
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
@@ -229,9 +230,9 @@ void TransactionTableModel::update()
     QList<uint256> updated;
 
     // Check if there are changes to wallet map
-    TRY_CRITICAL_BLOCK(wallet->cs_wallet)
     {
-        if(!wallet->vWalletUpdated.empty())
+        TRY_LOCK(wallet->cs_wallet, lockWallet);
+        if (lockWallet && !wallet->vWalletUpdated.empty())
         {
             BOOST_FOREACH(uint256 hash, wallet->vWalletUpdated)
             {
@@ -288,20 +289,19 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
     }
     if(wtx->type == TransactionRecord::Generated)
     {
-        status += "\n";
         switch(wtx->status.maturity)
         {
         case TransactionStatus::Immature:
-            status += tr("Mined balance will be available in %n more blocks", "",
+            status += "\n" + tr("Mined balance will be available in %n more blocks", "",
                            wtx->status.matures_in);
             break;
         case TransactionStatus::Mature:
             break;
         case TransactionStatus::MaturesWarning:
-            status += tr("This block was not received by any other nodes and will probably not be accepted!");
+            status += "\n" + tr("This block was not received by any other nodes and will probably not be accepted!");
             break;
         case TransactionStatus::NotAccepted:
-            status += tr("Generated but not accepted");
+            status += "\n" + tr("Generated but not accepted");
             break;
         }
     }
@@ -345,12 +345,11 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     {
     case TransactionRecord::RecvWithAddress:
         return tr("Received with");
-    case TransactionRecord::RecvFromIP:
-        return tr("Received from IP");
+    case TransactionRecord::RecvFromOther:
+        return tr("Received from");
     case TransactionRecord::SendToAddress:
+    case TransactionRecord::SendToOther:
         return tr("Sent to");
-    case TransactionRecord::SendToIP:
-        return tr("Sent to IP");
     case TransactionRecord::SendToSelf:
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
@@ -367,10 +366,10 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     case TransactionRecord::Generated:
         return QIcon(":/icons/tx_mined");
     case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::RecvFromIP:
+    case TransactionRecord::RecvFromOther:
         return QIcon(":/icons/tx_input");
     case TransactionRecord::SendToAddress:
-    case TransactionRecord::SendToIP:
+    case TransactionRecord::SendToOther:
         return QIcon(":/icons/tx_output");
     default:
         return QIcon(":/icons/tx_inout");
@@ -382,12 +381,12 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
 {
     switch(wtx->type)
     {
-    case TransactionRecord::RecvFromIP:
+    case TransactionRecord::RecvFromOther:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
         return lookupAddress(wtx->address, tooltip);
-    case TransactionRecord::SendToIP:
+    case TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::SendToSelf:
     case TransactionRecord::Generated:
@@ -478,7 +477,7 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
-    if(rec->type==TransactionRecord::RecvFromIP || rec->type==TransactionRecord::SendToIP ||
+    if(rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
        rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);

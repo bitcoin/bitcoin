@@ -1,6 +1,8 @@
+* update translations (ping tcatm on IRC for now)
+
 * update (commit) version in sources
   bitcoin-qt.pro
-  src/serialize.h
+  src/version.h
   share/setup.nsi
   doc/README*
 
@@ -22,8 +24,11 @@
   * Fetch and build inputs:
    mkdir -p inputs; cd inputs/
    wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.6.tar.gz' -O miniupnpc-1.6.tar.gz
-   wget 'http://www.openssl.org/source/openssl-1.0.0e.tar.gz'
+   wget 'http://www.openssl.org/source/openssl-1.0.1b.tar.gz'
    wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
+   wget 'http://zlib.net/zlib-1.2.6.tar.gz'
+   wget 'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng-1.5.9.tar.gz'
+   wget 'http://fukuchi.org/works/qrencode/qrencode-3.2.0.tar.bz2'
    wget 'http://downloads.sourceforge.net/project/boost/boost/1.47.0/boost_1_47_0.tar.bz2'
    wget 'http://download.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.4.tar.gz'
    cd ..
@@ -31,6 +36,8 @@
    cp build/out/boost-win32-1.47.0-gitian.zip inputs/
    ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
    cp build/out/qt-win32-4.7.4-gitian.zip inputs/
+   ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
+   cp build/out/bitcoin-deps-0.0.3.zip inputs/
 
   * Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
    ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian.yml
@@ -65,27 +72,33 @@
    rm -rf bitcoin-${VERSION}-win32
 
 * perform Mac build
-  See this blog post for how Gavin set up his build environment and
-  patched macdeployqt to build the OSX release:
+  See this blog post for how Gavin set up his build environment to build the OSX
+  release; note that a patched version of macdeployqt is not needed anymore, as
+  the required functionality and fixes are implemented directly in macdeployqtplus:
     http://gavintech.blogspot.com/2011/11/deploying-bitcoin-qt-on-osx.html
-  qmake USE_SSL=1 USE_UPNP=1 bitcoin-qt.pro
+  Gavin also had trouble with the macports py27-appscript package; he
+  ended up installing a version that worked with: /usr/bin/easy_install-2.7 appscript
+
+  qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-qt.pro
   make
   export QTDIR=/opt/local/share/qt4  # needed to find translations/qt_*.qm files
   T=$(contrib/qt_translations.py $QTDIR/translations src/qt/locale)
-  contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist  
+  python2.7 contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist
 
  Build output expected:
   Bitcoin-Qt.dmg
 
-* upload source and builds to SourceForge
+* upload builds to SourceForge
 
-* create SHA1SUMS for builds, and PGP-sign it
+* create SHA256SUMS for builds, and PGP-sign it
 
 * update bitcoin.org version
 
 * update forum version
 
 * update wiki download links
+
+* update wiki changelog: https://en.bitcoin.it/wiki/Changelog
 
 * Commit your signature to gitian.sigs:
   pushd gitian.sigs

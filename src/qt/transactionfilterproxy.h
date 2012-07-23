@@ -31,7 +31,7 @@ public:
     /** Set maximum number of rows returned, -1 if unlimited. */
     void setLimit(int limit);
 
-    int	rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
