@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Send Coins</string>
+   <string>Bitcoin-Qt - Send Coins</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
