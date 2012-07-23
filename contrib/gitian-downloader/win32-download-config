@@ -15,9 +15,13 @@ signers:
     weight: 40
     name: Devrandom
     key: devrandom
+  E463A93F5F3117EEDE6C7316BD02942421F4889F:
+    weight: 40
+    name: Luke-Jr
+    key: luke-jr
   D762373D24904A3E42F33B08B9A408E71DAAC974:
     weight: 40
-    name: Sipa
+    name: "Pieter Wuille"
     key: sipa
   77E72E69DA7EE0A148C06B21B34821D4944DE5F7:
     weight: 40
@@ -27,4 +31,8 @@ signers:
     weight: 40
     name: "Gavin Andresen"
     key: gavinandresen
+  71A3B16735405025D447E8F274810B012346C9A6:
+    weight: 40
+    name: "Wladimir J. van der Laan"
+    key: laanwj
 minimum_weight: 120

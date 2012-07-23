@@ -37,12 +37,14 @@ public:
     QString getStatusBarWarnings() const;
 
     QString formatFullVersion() const;
+    QString formatBuildDate() const;
 
 private:
     OptionsModel *optionsModel;
 
     int cachedNumConnections;
     int cachedNumBlocks;
+    QString cachedStatusBar;
 
     int numBlocksAtStartup;
 
@@ -51,7 +53,7 @@ signals:
     void numBlocksChanged(int count);
 
     //! Asynchronous error notification
-    void error(const QString &title, const QString &message);
+    void error(const QString &title, const QString &message, bool modal);
 
 public slots:
 

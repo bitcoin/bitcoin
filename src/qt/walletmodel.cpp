@@ -4,9 +4,10 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
-#include "headers.h"
+#include "ui_interface.h"
+#include "wallet.h"
+#include "walletdb.h" // for BackupWallet
 
-#include <QTimer>
 #include <QSet>
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
@@ -15,12 +16,6 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedNumTransactions(0),
     cachedEncryptionStatus(Unencrypted)
 {
-    // Until signal notifications is built into the bitcoin core,
-    //  simply update everything after polling using a timer.
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start(MODEL_UPDATE_DELAY);
-
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 }
@@ -38,8 +33,8 @@ qint64 WalletModel::getUnconfirmedBalance() const
 int WalletModel::getNumTransactions() const
 {
     int numTransactions = 0;
-    CRITICAL_BLOCK(wallet->cs_wallet)
     {
+        LOCK(wallet->cs_wallet);
         numTransactions = wallet->mapWallet.size();
     }
     return numTransactions;
@@ -64,7 +59,10 @@ void WalletModel::update()
     cachedBalance = newBalance;
     cachedUnconfirmedBalance = newUnconfirmedBalance;
     cachedNumTransactions = newNumTransactions;
+}
 
+void WalletModel::updateAddressList()
+{
     addressTableModel->update();
 }
 
@@ -116,9 +114,9 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
     }
 
-    CRITICAL_BLOCK(cs_main)
-    CRITICAL_BLOCK(wallet->cs_wallet)
     {
+        LOCK2(cs_main, wallet->cs_wallet);
+
         // Sendmany
         std::vector<std::pair<CScript, int64> > vecSend;
         foreach(const SendCoinsRecipient &rcp, recipients)
@@ -141,7 +139,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             }
             return TransactionCreationFailed;
         }
-        if(!ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString(), NULL))
+        if(!ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString()))
         {
             return Aborted;
         }
@@ -152,19 +150,23 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         hex = QString::fromStdString(wtx.GetHash().GetHex());
     }
 
-    // Add addresses that we've sent to to the address book
+    // Add addresses / update labels that we've sent to to the address book
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         std::string strAddress = rcp.address.toStdString();
-        CRITICAL_BLOCK(wallet->cs_wallet)
+        std::string strLabel = rcp.label.toStdString();
         {
-            if (!wallet->mapAddressBook.count(strAddress))
-                wallet->SetAddressBookName(strAddress, rcp.label.toStdString());
+            LOCK(wallet->cs_wallet);
+
+            std::map<CBitcoinAddress, std::string>::iterator mi = wallet->mapAddressBook.find(strAddress);
+
+            // Check if we have a new address or an updated label
+            if (mi == wallet->mapAddressBook.end() || mi->second != strLabel)
+            {
+                wallet->SetAddressBookName(strAddress, strLabel);
+            }
         }
     }
-
-    // Update our model of the address table
-    addressTableModel->updateList();
 
     return SendCoinsReturn(OK, 0, hex);
 }
@@ -231,12 +233,17 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
 bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureString &newPass)
 {
     bool retval;
-    CRITICAL_BLOCK(wallet->cs_wallet)
     {
+        LOCK(wallet->cs_wallet);
         wallet->Lock(); // Make sure wallet is locked before attempting pass change
         retval = wallet->ChangeWalletPassphrase(oldPass, newPass);
     }
     return retval;
+}
+
+bool WalletModel::backupWallet(const QString &filename)
+{
+    return BackupWallet(*wallet, filename.toLocal8Bit().data());
 }
 
 // WalletModel::UnlockContext implementation

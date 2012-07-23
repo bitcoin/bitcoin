@@ -1,19 +1,95 @@
 #include "optionsmodel.h"
 #include "bitcoinunits.h"
+#include <QSettings>
 
-#include "headers.h"
+#include "init.h"
+#include "walletdb.h"
 
-OptionsModel::OptionsModel(CWallet *wallet, QObject *parent) :
-    QAbstractListModel(parent),
-    wallet(wallet),
-    nDisplayUnit(BitcoinUnits::BTC),
-    bDisplayAddresses(false)
+OptionsModel::OptionsModel(QObject *parent) :
+    QAbstractListModel(parent)
 {
-    // Read our specific settings from the wallet db
-    CWalletDB walletdb(wallet->strWalletFile);
-    walletdb.ReadSetting("nDisplayUnit", nDisplayUnit);
-    walletdb.ReadSetting("bDisplayAddresses", bDisplayAddresses);
+    Init();
 }
+
+void OptionsModel::Init()
+{
+    QSettings settings;
+
+    // These are QT-only settings:
+    nDisplayUnit = settings.value("nDisplayUnit", BitcoinUnits::BTC).toInt();
+    bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
+    fMinimizeToTray = settings.value("fMinimizeToTray", false).toBool();
+    fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
+    nTransactionFee = settings.value("nTransactionFee").toLongLong();
+
+    // These are shared with core bitcoin; we want
+    // command-line options to override the GUI settings:
+    if (settings.contains("fUseUPnP"))
+        SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool());
+    if (settings.contains("addrProxy") && settings.value("fUseProxy").toBool())
+        SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
+    if (settings.contains("detachDB"))
+        SoftSetBoolArg("-detachdb", settings.value("detachDB").toBool());
+}
+
+bool OptionsModel::Upgrade()
+{
+    QSettings settings;
+
+    if (settings.contains("bImportFinished"))
+        return false; // Already upgraded
+
+    settings.setValue("bImportFinished", true);
+
+    // Move settings from old wallet.dat (if any):
+    CWalletDB walletdb("wallet.dat");
+
+    QList<QString> intOptions;
+    intOptions << "nDisplayUnit" << "nTransactionFee";
+    foreach(QString key, intOptions)
+    {
+        int value = 0;
+        if (walletdb.ReadSetting(key.toStdString(), value))
+        {
+            settings.setValue(key, value);
+            walletdb.EraseSetting(key.toStdString());
+        }
+    }
+    QList<QString> boolOptions;
+    boolOptions << "bDisplayAddresses" << "fMinimizeToTray" << "fMinimizeOnClose" << "fUseProxy" << "fUseUPnP";
+    foreach(QString key, boolOptions)
+    {
+        bool value = false;
+        if (walletdb.ReadSetting(key.toStdString(), value))
+        {
+            settings.setValue(key, value);
+            walletdb.EraseSetting(key.toStdString());
+        }
+    }
+    try
+    {
+        CAddress addrProxyAddress;
+        if (walletdb.ReadSetting("addrProxy", addrProxyAddress))
+        {
+            addrProxy = addrProxyAddress;
+            settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
+            walletdb.EraseSetting("addrProxy");
+        }
+    }
+    catch (std::ios_base::failure &e)
+    {
+        // 0.6.0rc1 saved this as a CService, which causes failure when parsing as a CAddress
+        if (walletdb.ReadSetting("addrProxy", addrProxy))
+        {
+            settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
+            walletdb.EraseSetting("addrProxy");
+        }
+    }
+    Init();
+
+    return true;
+}
+
 
 int OptionsModel::rowCount(const QModelIndex & parent) const
 {
@@ -24,28 +100,31 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 {
     if(role == Qt::EditRole)
     {
+        QSettings settings;
         switch(index.row())
         {
         case StartAtStartup:
-            return QVariant();
+            return QVariant(GetStartOnSystemStartup());
         case MinimizeToTray:
             return QVariant(fMinimizeToTray);
         case MapPortUPnP:
-            return QVariant(fUseUPnP);
+            return settings.value("fUseUPnP", GetBoolArg("-upnp", true));
         case MinimizeOnClose:
             return QVariant(fMinimizeOnClose);
         case ConnectSOCKS4:
-            return QVariant(fUseProxy);
+            return settings.value("fUseProxy", false);
         case ProxyIP:
             return QVariant(QString::fromStdString(addrProxy.ToStringIP()));
         case ProxyPort:
-            return QVariant(QString::fromStdString(addrProxy.ToStringPort()));
+            return QVariant(addrProxy.GetPort());
         case Fee:
             return QVariant(nTransactionFee);
         case DisplayUnit:
             return QVariant(nDisplayUnit);
         case DisplayAddresses:
             return QVariant(bDisplayAddresses);
+        case DetachDatabases:
+            return QVariant(fDetachDB);
         default:
             return QVariant();
         }
@@ -58,39 +137,39 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     bool successful = true; /* set to false on parse error */
     if(role == Qt::EditRole)
     {
-        CWalletDB walletdb(wallet->strWalletFile);
+        QSettings settings;
         switch(index.row())
         {
         case StartAtStartup:
-            successful = false; /*TODO*/
+            successful = SetStartOnSystemStartup(value.toBool());
             break;
         case MinimizeToTray:
             fMinimizeToTray = value.toBool();
-            walletdb.WriteSetting("fMinimizeToTray", fMinimizeToTray);
+            settings.setValue("fMinimizeToTray", fMinimizeToTray);
             break;
         case MapPortUPnP:
-            fUseUPnP = value.toBool();
-            walletdb.WriteSetting("fUseUPnP", fUseUPnP);
-#ifdef USE_UPNP
-            MapPort(fUseUPnP);
-#endif
+            {
+                bool bUseUPnP = value.toBool();
+                settings.setValue("fUseUPnP", bUseUPnP);
+                MapPort(bUseUPnP);
+            }
             break;
         case MinimizeOnClose:
             fMinimizeOnClose = value.toBool();
-            walletdb.WriteSetting("fMinimizeOnClose", fMinimizeOnClose);
+            settings.setValue("fMinimizeOnClose", fMinimizeOnClose);
             break;
         case ConnectSOCKS4:
             fUseProxy = value.toBool();
-            walletdb.WriteSetting("fUseProxy", fUseProxy);
+            settings.setValue("fUseProxy", fUseProxy);
             break;
         case ProxyIP:
             {
                 // Use CAddress to parse and check IP
-                CAddress addr(value.toString().toStdString() + ":1");
-                if (addr.ip != INADDR_NONE)
+                CNetAddr addr(value.toString().toStdString());
+                if (addr.IsValid())
                 {
-                    addrProxy.ip = addr.ip;
-                    walletdb.WriteSetting("addrProxy", addrProxy);
+                    addrProxy.SetIP(addr);
+                    settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
                 }
                 else
                 {
@@ -101,10 +180,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case ProxyPort:
             {
                 int nPort = atoi(value.toString().toAscii().data());
-                if (nPort > 0 && nPort < USHRT_MAX)
+                if (nPort > 0 && nPort < std::numeric_limits<unsigned short>::max())
                 {
-                    addrProxy.port = htons(nPort);
-                    walletdb.WriteSetting("addrProxy", addrProxy);
+                    addrProxy.SetPort(nPort);
+                    settings.setValue("addrProxy", addrProxy.ToStringIPPort().c_str());
                 }
                 else
                 {
@@ -114,19 +193,26 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case Fee: {
             nTransactionFee = value.toLongLong();
-            walletdb.WriteSetting("nTransactionFee", nTransactionFee);
+            settings.setValue("nTransactionFee", nTransactionFee);
             }
             break;
         case DisplayUnit: {
             int unit = value.toInt();
             nDisplayUnit = unit;
-            walletdb.WriteSetting("nDisplayUnit", nDisplayUnit);
+            settings.setValue("nDisplayUnit", nDisplayUnit);
             emit displayUnitChanged(unit);
             }
+            break;
         case DisplayAddresses: {
             bDisplayAddresses = value.toBool();
-            walletdb.WriteSetting("bDisplayAddresses", bDisplayAddresses);
+            settings.setValue("bDisplayAddresses", bDisplayAddresses);
             }
+            break;
+        case DetachDatabases: {
+            fDetachDB = value.toBool();
+            settings.setValue("detachDB", fDetachDB);
+            }
+            break;
         default:
             break;
         }

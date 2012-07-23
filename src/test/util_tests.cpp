@@ -2,7 +2,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/foreach.hpp>
 
-#include "../util.h"
+#include "main.h"
+#include "wallet.h"
+#include "util.h"
 
 using namespace std;
 
@@ -13,14 +15,15 @@ BOOST_AUTO_TEST_CASE(util_criticalsection)
     CCriticalSection cs;
 
     do {
-        CRITICAL_BLOCK(cs)
-            break;
+        LOCK(cs);
+        break;
 
         BOOST_ERROR("break was swallowed!");
     } while(0);
 
     do {
-        TRY_CRITICAL_BLOCK(cs)
+        TRY_LOCK(cs, lockTest);
+        if (lockTest)
             break;
 
         BOOST_ERROR("break was swallowed!");
@@ -85,7 +88,18 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
     BOOST_CHECK_EQUAL(
         HexStr(ParseHex_expected, ParseHex_expected + 5, true),
         "04 67 8a fd b0");
+
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_expected, ParseHex_expected, true),
+        "");
+
+    std::vector<unsigned char> ParseHex_vec(ParseHex_expected, ParseHex_expected + 5);
+
+    BOOST_CHECK_EQUAL(
+        HexStr(ParseHex_vec, true),
+        "04 67 8a fd b0");
 }
+
 
 BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
 {
@@ -228,6 +242,21 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
 
     // Attempted 63 bit overflow should fail
     BOOST_CHECK(!ParseMoney("92233720368.54775808", ret));
+}
+
+BOOST_AUTO_TEST_CASE(util_IsHex)
+{
+    BOOST_CHECK(IsHex("00"));
+    BOOST_CHECK(IsHex("00112233445566778899aabbccddeeffAABBCCDDEEFF"));
+    BOOST_CHECK(IsHex("ff"));
+    BOOST_CHECK(IsHex("FF"));
+
+    BOOST_CHECK(!IsHex(""));
+    BOOST_CHECK(!IsHex("0"));
+    BOOST_CHECK(!IsHex("a"));
+    BOOST_CHECK(!IsHex("eleven"));
+    BOOST_CHECK(!IsHex("00xx00"));
+    BOOST_CHECK(!IsHex("0x0000"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

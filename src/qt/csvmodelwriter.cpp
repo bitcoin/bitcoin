@@ -6,7 +6,7 @@
 
 CSVModelWriter::CSVModelWriter(const QString &filename, QObject *parent) :
     QObject(parent),
-    filename(filename)
+    filename(filename), model(0)
 {
 }
 
@@ -27,8 +27,9 @@ void CSVModelWriter::addColumn(const QString &title, int column, int role)
 
 static void writeValue(QTextStream &f, const QString &value)
 {
-    // TODO: quoting if " or \n in string
-    f << "\"" << value << "\"";
+    QString escaped = value;
+    escaped.replace('"', "\"\"");
+    f << "\"" << escaped << "\"";
 }
 
 static void writeSep(QTextStream &f)

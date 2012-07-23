@@ -1,11 +1,12 @@
-// Copyright (c) 2011 The Bitcoin developers
+// Copyright (c) 2009-2012 The Bitcoin developers
 // Copyright (c) 2011-2012 The PPCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
-// file license.txt or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_CHECKPOINT_H
 #define  BITCOIN_CHECKPOINT_H
 
 #include <map>
+#include "net.h"
 #include "util.h"
 
 #define STAKE_MIN_AGE (60 * 60 * 24)      // minimum age for coin age
@@ -15,10 +16,9 @@ class uint256;
 class CBlockIndex;
 class CSyncCheckpoint;
 
-//
-// Block-chain checkpoints are compiled-in sanity checks.
-// They are updated every release or three.
-//
+/** Block-chain checkpoints are compiled-in sanity checks.
+ * They are updated every release or three.
+ */
 namespace Checkpoints
 {
     // Returns true if block passes checkpoint checks

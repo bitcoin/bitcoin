@@ -38,6 +38,7 @@ private:
     QCheckBox *minimize_on_close;
 #endif
     QCheckBox *connect_socks4;
+    QCheckBox *detach_database;
     QLineEdit *proxy_ip;
     QLineEdit *proxy_port;
     BitcoinAmountField *fee_edit;
@@ -175,17 +176,15 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     minimize_to_tray = new QCheckBox(tr("&Minimize to the tray instead of the taskbar"));
     minimize_to_tray->setToolTip(tr("Show only a tray icon after minimizing the window"));
     layout->addWidget(minimize_to_tray);
+
+    minimize_on_close = new QCheckBox(tr("M&inimize on close"));
+    minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu."));
+    layout->addWidget(minimize_on_close);
 #endif
 
     map_port_upnp = new QCheckBox(tr("Map port using &UPnP"));
     map_port_upnp->setToolTip(tr("Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled."));
     layout->addWidget(map_port_upnp);
-
-#ifndef Q_WS_MAC
-    minimize_on_close = new QCheckBox(tr("M&inimize on close"));
-    minimize_on_close->setToolTip(tr("Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu."));
-    layout->addWidget(minimize_on_close);
-#endif
 
     connect_socks4 = new QCheckBox(tr("&Connect through SOCKS4 proxy:"));
     connect_socks4->setToolTip(tr("Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)"));
@@ -214,7 +213,7 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     proxy_hbox->addStretch(1);
 
     layout->addLayout(proxy_hbox);
-    QLabel *fee_help = new QLabel(tr("Optional transaction fee per KB that helps make sure your transactions are processed quickly.  Most transactions are 1KB.  Fee 0.01 recommended."));
+    QLabel *fee_help = new QLabel(tr("Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended."));
     fee_help->setWordWrap(true);
     layout->addWidget(fee_help);
 
@@ -223,13 +222,16 @@ MainOptionsPage::MainOptionsPage(QWidget *parent):
     QLabel *fee_label = new QLabel(tr("Pay transaction &fee"));
     fee_hbox->addWidget(fee_label);
     fee_edit = new BitcoinAmountField();
-    fee_edit->setToolTip(tr("Optional transaction fee per KB that helps make sure your transactions are processed quickly. Most transactions are 1KB. Fee 0.01 recommended."));
 
     fee_label->setBuddy(fee_edit);
     fee_hbox->addWidget(fee_edit);
     fee_hbox->addStretch(1);
 
     layout->addLayout(fee_hbox);
+
+    detach_database = new QCheckBox(tr("Detach databases at shutdown"));
+    detach_database->setToolTip(tr("Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached."));
+    layout->addWidget(detach_database);
 
     layout->addStretch(1); // Extra space at bottom
 
@@ -258,6 +260,7 @@ void MainOptionsPage::setMapper(MonitoredDataMapper *mapper)
     mapper->addMapping(proxy_ip, OptionsModel::ProxyIP);
     mapper->addMapping(proxy_port, OptionsModel::ProxyPort);
     mapper->addMapping(fee_edit, OptionsModel::Fee);
+    mapper->addMapping(detach_database, OptionsModel::DetachDatabases);
 }
 
 DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
@@ -278,7 +281,8 @@ DisplayOptionsPage::DisplayOptionsPage(QWidget *parent):
 
     layout->addLayout(unit_hbox);
 
-    display_addresses = new QCheckBox(tr("Display addresses in transaction list"), this);
+    display_addresses = new QCheckBox(tr("&Display addresses in transaction list"), this);
+    display_addresses->setToolTip(tr("Whether to show Bitcoin addresses in the transaction list"));
     layout->addWidget(display_addresses);
 
     layout->addStretch();

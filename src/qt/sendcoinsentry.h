@@ -31,6 +31,8 @@ public:
      */
     QWidget *setupTabChain(QWidget *prev);
 
+    void setFocus();
+
 public slots:
     void setRemoveEnabled(bool enabled);
     void clear();

@@ -106,6 +106,9 @@ void EditAddressDialog::accept()
                 tr("New key generation failed."),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
+        case AddressTableModel::OK:
+            // Failed with unknown reason. Just reject.
+            break;
         }
 
         return;

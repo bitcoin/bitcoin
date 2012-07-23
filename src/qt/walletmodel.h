@@ -3,15 +3,16 @@
 
 #include <QObject>
 
-#include "util.h"
+#include "allocators.h" /* for SecureString */
 
 class OptionsModel;
 class AddressTableModel;
 class TransactionTableModel;
 class CWallet;
 
-struct SendCoinsRecipient
+class SendCoinsRecipient
 {
+public:
     QString address;
     QString label;
     qint64 amount;
@@ -34,8 +35,7 @@ public:
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
-        Aborted,
-        MiscError
+        Aborted
     };
 
     enum EncryptionStatus
@@ -77,6 +77,8 @@ public:
     // Passphrase only needed when unlocking
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+    // Wallet backup
+    bool backupWallet(const QString &filename);
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
@@ -132,12 +134,11 @@ signals:
     void requireUnlock();
 
     // Asynchronous error notification
-    void error(const QString &title, const QString &message);
+    void error(const QString &title, const QString &message, bool modal);
 
 public slots:
-
-private slots:
     void update();
+    void updateAddressList();
 };
 
 

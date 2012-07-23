@@ -10,7 +10,6 @@ packages:
 - "unzip"
 - "nsis"
 - "faketime"
-- "wine"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
@@ -18,9 +17,7 @@ remotes:
 files:
 - "qt-win32-4.7.4-gitian.zip"
 - "boost-win32-1.47.0-gitian.zip"
-- "openssl-1.0.0e.tar.gz"
-- "db-4.8.30.NC.tar.gz"
-- "miniupnpc-1.6.tar.gz"
+- "bitcoin-deps-0.0.4.zip"
 script: |
   #
   mkdir $HOME/qt
@@ -42,47 +39,36 @@ script: |
   mv include/boost .
   cd ..
   #
-  tar xzf openssl-1.0.0e.tar.gz
-  cd openssl-1.0.0e
-  ./Configure --cross-compile-prefix=i586-mingw32msvc- mingw
-  make
-  cd ..
+  unzip bitcoin-deps-0.0.4.zip
   #
-  tar xzf db-4.8.30.NC.tar.gz
-  cd db-4.8.30.NC/build_unix
-  ../dist/configure --enable-mingw --enable-cxx --host=i586-mingw32msvc CFLAGS="-I/usr/i586-mingw32msvc/include"
-  make $MAKEOPTS
-  cd ../..
-  #
-  tar xzf miniupnpc-1.6.tar.gz
-  cd miniupnpc-1.6
-  sed 's/dllwrap -k --driver-name gcc/$(DLLWRAP) -k --driver-name $(CC)/' -i Makefile.mingw
-  sed 's|wingenminiupnpcstrings $< $@|./wingenminiupnpcstrings $< $@|' -i Makefile.mingw
-  make -f Makefile.mingw DLLWRAP=i586-mingw32msvc-dllwrap CC=i586-mingw32msvc-gcc AR=i586-mingw32msvc-ar
-  cd ..
-  mv miniupnpc-1.6 miniupnpc
+  find -type f | xargs touch --date="$REFERENCE_DATETIME"
   #
   cd bitcoin
   mkdir -p $OUTDIR/src
-  cp -a . $OUTDIR/src
-  rm -rf $OUTDIR/src/.git
+  git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
   cp $OUTDIR/src/COPYING $OUTDIR/license.txt
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross USE_SSL=1 MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.0e OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.0e/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin
+  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_47_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_47_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1b OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1b/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin QMAKE_LFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
   make $MAKEOPTS
   cp release/bitcoin-qt.exe $OUTDIR/
   #
   cd src
-  sed 's/$(DEBUGFLAGS)/-frandom-seed=bitcoin/' -i makefile.linux-mingw
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoind.exe USE_SSL=1 USE_UPNP=0
+  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build bitcoind.exe USE_UPNP=0 DEBUGFLAGS="-frandom-seed=bitcoin"
   i586-mingw32msvc-strip bitcoind.exe
-  makensis ../share/setup.nsi
-  cp ../share/bitcoin-*-win32-setup.exe $OUTDIR/
   mkdir $OUTDIR/daemon
   cp bitcoind.exe $OUTDIR/daemon
+  cd ..
+  mkdir nsis
+  git archive HEAD | tar -x -C nsis
+  cd nsis/src
+  mkdir ../release
+  cp ../../release/* ../release/
+  cp ../../src/*.exe .
+  makensis ../share/setup.nsi
+  cp ../share/bitcoin-*-win32-setup.exe $OUTDIR/

@@ -10,6 +10,7 @@
 #include "transactiondescdialog.h"
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
+#include "guiutil.h"
 
 #include <QScrollBar>
 #include <QComboBox>
@@ -20,7 +21,6 @@
 #include <QTableView>
 #include <QHeaderView>
 #include <QPushButton>
-#include <QFileDialog>
 #include <QMessageBox>
 #include <QPoint>
 #include <QMenu>
@@ -70,9 +70,9 @@ TransactionView::TransactionView(QWidget *parent) :
 
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
     typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(TransactionRecord::RecvWithAddress) |
-                                        TransactionFilterProxy::TYPE(TransactionRecord::RecvFromIP));
+                                        TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
-                                  TransactionFilterProxy::TYPE(TransactionRecord::SendToIP));
+                                  TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
@@ -100,7 +100,6 @@ TransactionView::TransactionView(QWidget *parent) :
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
-    //vlayout->addLayout(hlayout2);
 
     QTableView *view = new QTableView(this);
     vlayout->addLayout(hlayout);
@@ -124,12 +123,14 @@ TransactionView::TransactionView(QWidget *parent) :
     // Actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
+    QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
     QAction *editLabelAction = new QAction(tr("Edit label"), this);
     QAction *showDetailsAction = new QAction(tr("Show details..."), this);
 
     contextMenu = new QMenu();
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
+    contextMenu->addAction(copyAmountAction);
     contextMenu->addAction(editLabelAction);
     contextMenu->addAction(showDetailsAction);
 
@@ -140,14 +141,11 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(amountWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAmount(QString)));
 
     connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
-
-    connect(view,
-            SIGNAL(customContextMenuRequested(QPoint)),
-            this,
-            SLOT(contextualMenu(QPoint)));
+    connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
+    connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
 }
@@ -265,10 +263,9 @@ void TransactionView::changedAmount(const QString &amount)
 void TransactionView::exportClicked()
 {
     // CSV is currently the only supported format
-    QString filename = QFileDialog::getSaveFileName(
+    QString filename = GUIUtil::getSaveFileName(
             this,
-            tr("Export Transaction Data"),
-            QDir::currentPath(),
+            tr("Export Transaction Data"), QString(),
             tr("Comma separated file (*.csv)"));
 
     if (filename.isNull()) return;
@@ -303,24 +300,17 @@ void TransactionView::contextualMenu(const QPoint &point)
 
 void TransactionView::copyAddress()
 {
-    if(!transactionView->selectionModel())
-        return;
-    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
-    if(!selection.isEmpty())
-    {
-        QApplication::clipboard()->setText(selection.at(0).data(TransactionTableModel::AddressRole).toString());
-    }
+    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::AddressRole);
 }
 
 void TransactionView::copyLabel()
 {
-    if(!transactionView->selectionModel())
-        return;
-    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
-    if(!selection.isEmpty())
-    {
-        QApplication::clipboard()->setText(selection.at(0).data(TransactionTableModel::LabelRole).toString());
-    }
+    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::LabelRole);
+}
+
+void TransactionView::copyAmount()
+{
+    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::FormattedAmountRole);
 }
 
 void TransactionView::editLabel()

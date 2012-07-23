@@ -9,13 +9,14 @@ USE_UPNP:=0
 INCLUDEPATHS= \
  -I"$(DEPSDIR)/boost_1_47_0" \
  -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -I"$(DEPSDIR)/openssl-1.0.0e/include" \
- -I"$(DEPSDIR)"
+ -I"$(DEPSDIR)/openssl-1.0.1b/include" \
+ -I"$(DEPSDIR)" \
+ -I"$(CURDIR)"/obj \
 
 LIBPATHS= \
  -L"$(DEPSDIR)/boost_1_47_0/stage/lib" \
  -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
- -L"$(DEPSDIR)/openssl-1.0.0e"
+ -L"$(DEPSDIR)/openssl-1.0.1b"
 
 LIBS= \
  -l boost_system-mt-s \
@@ -26,32 +27,11 @@ LIBS= \
  -l ssl \
  -l crypto
 
-DEFS=-D_MT -DWIN32 -D_WINDOWS -DNOPCH -DUSE_SSL -DBOOST_THREAD_USE_LIB
+DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
 CFLAGS=-O2 -w -Wno-invalid-offsetof -Wformat $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-HEADERS = \
-    base58.h \
-    bignum.h \
-    checkpoints.h \
-    crypter.h \
-    db.h \
-    headers.h \
-    init.h \
-    irc.h \
-    key.h \
-    keystore.h \
-    main.h \
-    net.h \
-    noui.h \
-    protocol.h \
-    bitcoinrpc.h \
-    script.h \
-    serialize.h \
-    strlcpy.h \
-    uint256.h \
-    util.h \
-    wallet.h
 
+TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
 ifdef USE_UPNP
 	LIBPATHS += -L"$(DEPSDIR)/miniupnpc"
@@ -61,9 +41,16 @@ endif
 
 LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l shlwapi
 
+# TODO: make the mingw builds smarter about dependencies, like the linux/osx builds are
+HEADERS = $(wildcard *.h)
+
 OBJS= \
+    obj/version.o \
     obj/checkpoints.o \
+    obj/netbase.o \
+    obj/addrman.o \
     obj/crypter.o \
+    obj/key.o \
     obj/db.o \
     obj/init.o \
     obj/irc.o \
@@ -72,31 +59,40 @@ OBJS= \
     obj/net.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
+    obj/rpcdump.o \
     obj/script.o \
     obj/util.o \
-    obj/wallet.o
+    obj/wallet.o \
+    obj/walletdb.o \
+    obj/noui.o
 
 all: bitcoind.exe
 
-obj/nogui/%.o: %.cpp $(HEADERS)
+obj/build.h: FORCE
+	/bin/sh ../share/genbuild.sh obj/build.h
+version.cpp: obj/build.h
+DEFS += -DHAVE_BUILD_INFO
+
+obj/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
-bitcoind.exe: $(OBJS:obj/%=obj/nogui/%)
+bitcoind.exe: $(OBJS:obj/%=obj/%)
 	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
+TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
-obj/test/%.o: obj/test/%.cpp $(HEADERS)
-	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
+obj-test/%.o: test/%.cpp $(HEADERS)
+	i586-mingw32msvc-g++ -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
-test_bitcoin.exe: obj/test/test_bitcoin.o $(filter-out obj/nogui/init.o,$(OBJS:obj/%=obj/nogui/%))
-	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lboost_unit_test_framework-mt-s
+test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+	i586-mingw32msvc-g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework $(LIBS)
 
 
 clean:
 	-rm -f obj/*.o
-	-rm -f obj/nogui/*.o
-	-rm -f obj/test/*.o
-	-rm -f test/*.o
-	-rm -f headers.h.gch
 	-rm -f bitcoind.exe
+	-rm -f obj-test/*.o
 	-rm -f test_bitcoin.exe
+	-rm -f src/build.h
+
+FORCE:
