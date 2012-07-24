@@ -58,7 +58,7 @@ double dHashesPerSec;
 int64 nHPSTimerStart;
 
 // Settings
-int64 nTransactionFee = 0;
+int64 nTransactionFee = MIN_TX_FEE;
 int64 nBalanceReserve = 0;
 
 
