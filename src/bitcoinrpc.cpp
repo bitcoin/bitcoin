@@ -2051,25 +2051,22 @@ Value reservebalance(const Array& params, bool fHelp)
             nAmount = (nAmount / CENT) * CENT;  // round to cent
             if (nAmount < 0)
                 throw runtime_error("amount cannot be negative.\n");
-            // TODO: handle persistence of nBalanceReserve
-            // settings removed since bitcoin 0.6
-            // WriteSetting("nBalanceReserve", nBalanceReserve = nAmount);
-            nBalanceReserve = nAmount;
+            mapArgs["-reservebalance"] = FormatMoney(nAmount).c_str();
         }
         else
         {
             if (params.size() > 1)
                 throw runtime_error("cannot specify amount to turn off reserve.\n");
-            // TODO: handle persistence of nBalanceReserve
-            // settings removed since bitcoin 0.6
-            // WriteSetting("nBalanceReserve", nBalanceReserve = 0);
-            nBalanceReserve = 0;
+            mapArgs["-reservebalance"] = "0";
         }
     }
 
     Object result;
-    result.push_back(Pair("reserve", (nBalanceReserve > 0)));
-    result.push_back(Pair("amount", ValueFromAmount(nBalanceReserve)));
+    int64 nReserveBalance = 0;
+    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
+        throw runtime_error("invalid reserve balance amount\n");
+    result.push_back(Pair("reserve", (nReserveBalance > 0)));
+    result.push_back(Pair("amount", ValueFromAmount(nReserveBalance)));
     return result;
 }
 
