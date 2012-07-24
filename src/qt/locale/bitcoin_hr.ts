@@ -270,7 +270,7 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="160"/>
-        <source>Wallet passphrase was succesfully changed.</source>
+        <source>Wallet passphrase was successfully changed.</source>
         <translation>Lozinka novčanika je uspješno promijenjena.</translation>
     </message>
 </context>
