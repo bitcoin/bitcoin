@@ -1207,12 +1207,15 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
     txNew.vout.push_back(CTxOut(0, scriptEmpty));
     // Choose coins to use
     int64 nBalance = GetBalance();
-    if (nBalance <= nBalanceReserve)
+    int64 nReserveBalance = 0;
+    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
+        return error("CreateCoinStake : invalid reserve balance amount");
+    if (nBalance <= nReserveBalance)
         return false;
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     vector<const CWalletTx*> vwtxPrev;
     int64 nValueIn = 0;
-    if (!SelectCoins(nBalance - nBalanceReserve, txNew.nTime, setCoins, nValueIn))
+    if (!SelectCoins(nBalance - nReserveBalance, txNew.nTime, setCoins, nValueIn))
         return false;
     if (setCoins.empty())
         return false;
@@ -1246,13 +1249,13 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
             break;
         }
     }
-    if (nCredit == 0 || nCredit > nBalance - nBalanceReserve)
+    if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         if (pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
         {
-            if (nCredit + pcoin.first->vout[pcoin.second].nValue > nBalance - nBalanceReserve)
+            if (nCredit + pcoin.first->vout[pcoin.second].nValue > nBalance - nReserveBalance)
                 break;
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
             nCredit += pcoin.first->vout[pcoin.second].nValue;
