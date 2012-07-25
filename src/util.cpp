@@ -155,7 +155,7 @@ void RandAddSeedPerfmon()
     {
         RAND_add(pdata, nSize, nSize/100.0);
         memset(pdata, 0, nSize);
-        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat("%x %H:%M", GetTime()).c_str(), nSize);
+        printf("%s RandAddSeed() %d bytes\n", DateTimeStrFormat(GetTime()).c_str(), nSize);
     }
 #endif
 }
@@ -224,7 +224,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
 
             // Debug print useful for profiling
             if (fLogTimestamps && fStartedNewLine)
-                fprintf(fileout, "%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+                fprintf(fileout, "%s ", DateTimeStrFormat(GetTime()).c_str());
             if (pszFormat[strlen(pszFormat) - 1] == '\n')
                 fStartedNewLine = true;
             else
@@ -777,7 +777,7 @@ void FormatException(char* pszMessage, std::exception* pex, const char* pszThrea
     pszModule[0] = '\0';
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "bitcoin";
+    const char* pszModule = "ppcoin";
 #endif
     if (pex)
         snprintf(pszMessage, 1000,
@@ -1071,10 +1071,10 @@ void AddTimeData(const CNetAddr& ip, int64 nTime)
                 if (!fMatch)
                 {
                     fDone = true;
-                    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong Bitcoin will not work properly.");
+                    string strMessage = _("Warning: Please check that your computer's date and time are correct.  If your clock is wrong PPCoin will not work properly.");
                     strMiscWarning = strMessage;
                     printf("*** %s\n", strMessage.c_str());
-                    ThreadSafeMessageBox(strMessage+" ", string("Bitcoin"), wxOK | wxICON_EXCLAMATION);
+                    ThreadSafeMessageBox(strMessage+" ", string("PPCoin"), wxOK | wxICON_EXCLAMATION);
                 }
             }
         }
@@ -1122,7 +1122,7 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "Bitcoin.lnk";
+    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "PPCoin.lnk";
 }
 
 bool GetStartOnSystemStartup()
@@ -1203,7 +1203,7 @@ boost::filesystem::path static GetAutostartDir()
 
 boost::filesystem::path static GetAutostartFilePath()
 {
-    return GetAutostartDir() / "bitcoin.desktop";
+    return GetAutostartDir() / "ppcoin.desktop";
 }
 
 bool GetStartOnSystemStartup()
@@ -1219,7 +1219,6 @@ bool GetStartOnSystemStartup()
         if (line.find("Hidden") != string::npos &&
             line.find("true") != string::npos)
             return false;
->>>>>>> bitcoin
     }
     optionFile.close();
 
@@ -1245,7 +1244,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         // Write a bitcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
-        optionFile << "Name=Bitcoin\n";
+        optionFile << "Name=PPCoin\n";
         optionFile << "Exec=" << pszExePath << " -min\n";
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

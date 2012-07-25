@@ -450,6 +450,12 @@ inline std::string DateTimeStrFormat(const char* pszFormat, int64 nTime)
     return pszTime;
 }
 
+static const std::string strTimestampFormat = "%F %H:%M:%S";
+inline std::string DateTimeStrFormat(int64 nTime)
+{
+    return DateTimeStrFormat(strTimestampFormat.c_str(), nTime);
+}
+
 template<typename T>
 void skipspaces(T& it)
 {
