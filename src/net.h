@@ -294,7 +294,7 @@ public:
         vSend << CMessageHeader(pszCommand, 0);
         nMessageStart = vSend.size();
         if (fDebug) {
-            printf("%s ", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+            printf("%s ", DateTimeStrFormat(GetTime()).c_str());
             printf("sending: %s ", pszCommand);
         }
     }
