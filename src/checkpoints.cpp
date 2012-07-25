@@ -185,16 +185,6 @@ namespace Checkpoints
         return false;
     }
 
-    uint256 AutoSelectSyncCheckpoint()
-    {
-        // select a block some time ago
-        CBlockIndex *pindex = mapBlockIndex[hashSyncCheckpoint];
-        while (pindex->pnext && pindex->pnext->GetBlockTime() + CHECKPOINT_MIN_SPAN <= GetAdjustedTime())
-            pindex = pindex->pnext;
-        return pindex->GetBlockHash();
-    }
-
-    // Check against synchronized checkpoint
     bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev)
     {
         if (fTestNet) return true; // Testnet has no checkpoints
@@ -282,10 +272,39 @@ namespace Checkpoints
         if (pfrom && hashPendingCheckpoint != 0 && (!mapBlockIndex.count(hashPendingCheckpoint)) && (!mapOrphanBlocks.count(hashPendingCheckpoint)))
             pfrom->AskFor(CInv(MSG_BLOCK, hashPendingCheckpoint));
     }
+
+    bool SendSyncCheckpoint(uint256 hashCheckpoint)
+    {
+        CSyncCheckpoint checkpoint;
+        checkpoint.hashCheckpoint = hashCheckpoint;
+        CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
+        sMsg << (CUnsignedSyncCheckpoint)checkpoint;
+        checkpoint.vchMsg = std::vector<unsigned char>(sMsg.begin(), sMsg.end());
+
+        if (CSyncCheckpoint::strMasterPrivKey.empty())
+            return error("SendSyncCheckpoint: Checkpoint master key unavailable.");
+        std::vector<unsigned char> vchPrivKey = ParseHex(CSyncCheckpoint::strMasterPrivKey);
+        CKey key;
+        key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+        if (!key.Sign(Hash(checkpoint.vchMsg.begin(), checkpoint.vchMsg.end()), checkpoint.vchSig))
+            return error("SendSyncCheckpoint: Unable to sign checkpoint, check private key?");
+
+        if(!checkpoint.ProcessSyncCheckpoint(NULL))
+            return error("SendSyncCheckpoint: Failed to process checkpoint.");
+        // Relay checkpoint
+        {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                checkpoint.RelayTo(pnode);
+        }
+        return true;
+    }
 }
 
 // ppcoin: sync-checkpoint master key
 const std::string CSyncCheckpoint::strMasterPubKey = "0424f20205e5da98ba632bbd278a11a6499585f62bfb2c782377ef59f0251daab8085fc31471bcb8180bc75ed0fa41bb50c7c084511d54015a3a5241d645c7268a";
+
+std::string CSyncCheckpoint::strMasterPrivKey = "";
 
 // ppcoin: verify signature of sync-checkpoint message
 bool CSyncCheckpoint::CheckSignature()

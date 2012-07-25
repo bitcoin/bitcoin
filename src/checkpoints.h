@@ -10,7 +10,6 @@
 #include "util.h"
 
 #define STAKE_MIN_AGE (60 * 60 * 24)      // minimum age for coin age
-#define CHECKPOINT_MIN_SPAN (60 * 60 * 4) // 4 hours checkpoint
 
 class uint256;
 class CBlockIndex;
@@ -38,11 +37,11 @@ namespace Checkpoints
     CBlockIndex* GetLastSyncCheckpoint();
     bool WriteSyncCheckpoint(const uint256& hashCheckpoint);
     bool AcceptPendingSyncCheckpoint();
-    uint256 AutoSelectSyncCheckpoint();
     bool CheckSync(const uint256& hashBlock, const CBlockIndex* pindexPrev);
     bool WantedByPendingSyncCheckpoint(uint256 hashBlock);
     bool ResetSyncCheckpoint();
     void AskForPendingSyncCheckpoint(CNode* pfrom);
+    bool SendSyncCheckpoint(uint256 hashCheckpoint);
 }
 
 // ppcoin: synchronized checkpoint
@@ -86,6 +85,7 @@ class CSyncCheckpoint : public CUnsignedSyncCheckpoint
 {
 public:
     static const std::string strMasterPubKey;
+    static std::string strMasterPrivKey;
 
     std::vector<unsigned char> vchMsg;
     std::vector<unsigned char> vchSig;
