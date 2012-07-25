@@ -271,7 +271,7 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="160"/>
-        <source>Wallet passphrase was succesfully changed.</source>
+        <source>Wallet passphrase was successfully changed.</source>
         <translation>Portemonneewachtwoord is succesvol gewijzigd</translation>
     </message>
 </context>

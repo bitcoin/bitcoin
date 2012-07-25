@@ -270,7 +270,7 @@ Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="160"/>
-        <source>Wallet passphrase was succesfully changed.</source>
+        <source>Wallet passphrase was successfully changed.</source>
         <translation>Cüzdan parolası başarılı bir şekilde değiştirildi.</translation>
     </message>
 </context>

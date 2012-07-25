@@ -269,7 +269,7 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="160"/>
-        <source>Wallet passphrase was succesfully changed.</source>
+        <source>Wallet passphrase was successfully changed.</source>
         <translation>Die Passphrase der Brieftasche wurde erfolgreich geändert.</translation>
     </message>
 </context>
