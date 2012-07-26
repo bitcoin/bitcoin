@@ -543,7 +543,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         nClass = 1;
         nStartByte = 12;
     }
-    // for 6to4 tunneled addresses, use the encapsulated IPv4 address
+    // for 6to4 tunnelled addresses, use the encapsulated IPv4 address
     else if (IsRFC3964())
     {
         nClass = 1;
