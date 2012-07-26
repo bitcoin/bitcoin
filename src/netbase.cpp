@@ -549,7 +549,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         nClass = 1;
         nStartByte = 2;
     }
-    // for Teredo-tunneled IPv6 addresses, use the encapsulated IPv4 address
+    // for Teredo-tunnelled IPv6 addresses, use the encapsulated IPv4 address
     else if (IsRFC4380())
     {
         vchRet.push_back(1);

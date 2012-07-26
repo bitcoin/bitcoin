@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
                     window.show();
                 }
 
-                // Place this here as guiref has to be defined if we dont want to lose URIs
+                // Place this here as guiref has to be defined if we don't want to lose URIs
                 ipcInit();
 
 #if !defined(MAC_OSX) && !defined(WIN32)
