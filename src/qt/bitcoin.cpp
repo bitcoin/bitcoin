@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 // TODO: implement URI support on the Mac.
 #if !defined(MAC_OSX)
 
-                // Place this here as guiref has to be defined if we dont want to lose URIs
+                // Place this here as guiref has to be defined if we don't want to lose URIs
                 ipcInit();
 
                 // Check for URI in argv
