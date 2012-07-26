@@ -462,7 +462,7 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
 
         // Continuously rate-limit free transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        // be annoying or make other's transactions take longer to confirm.
+        // be annoying or make others' transactions take longer to confirm.
         if (nFees < MIN_RELAY_TX_FEE)
         {
             static CCriticalSection cs;
@@ -944,7 +944,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
         }
     }
 
-    // Make sure all prevout.n's are valid:
+    // Make sure all prevout.n indexes are valid:
     for (unsigned int i = 0; i < vin.size(); i++)
     {
         const COutPoint prevout = vin[i].prevout;
@@ -1172,7 +1172,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     // being sent to another address.
     // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
     // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
-    // already refuses previously-known transaction id's entirely.
+    // already refuses previously-known transaction ids entirely.
     // This rule applies to all blocks whose timestamp is after March 15, 2012, 0:00 UTC.
     // On testnet it is enabled as of februari 20, 2012, 0:00 UTC.
     if (pindex->nTime > 1331769600 || (fTestNet && pindex->nTime > 1329696000))
