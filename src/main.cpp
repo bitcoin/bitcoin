@@ -3425,6 +3425,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             COrphan* porphan = NULL;
             double dPriority = 0;
             int64 nTotalIn = 0;
+            bool fMissingInputs = false;
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
                 // Read prev transaction
@@ -3432,6 +3433,19 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 CTxIndex txindex;
                 if (!txPrev.ReadFromDisk(txdb, txin.prevout, txindex))
                 {
+                    // This should never happen; all transactions in the memory
+                    // pool should connect to either transactions in the chain
+                    // or other transactions in the memory pool.
+                    if (!mempool.mapTx.count(txin.prevout.hash))
+                    {
+                        printf("ERROR: mempool transaction missing input\n");
+                        if (fDebug) assert("mempool transaction missing input" == 0);
+                        fMissingInputs = true;
+                        if (porphan)
+                            vOrphan.pop_back();
+                        break;
+                    }
+
                     // Has to wait for dependencies
                     if (!porphan)
                     {
@@ -3450,6 +3464,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 int nConf = txindex.GetDepthInMainChain();
                 dPriority += (double)nValueIn * nConf;
             }
+            if (fMissingInputs) continue;
 
             // Priority is sum(valuein * age) / txsize
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
