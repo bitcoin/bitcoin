@@ -78,7 +78,7 @@ void Shutdown(void* parg)
         printf("Bitcoin exiting\n\n");
         fExit = true;
 #ifndef QT_GUI
-        // ensure non-UI client get's exited here, but let Bitcoin-Qt reach return 0; in bitcoin.cpp
+        // ensure non-UI client gets exited here, but let Bitcoin-Qt reach 'return 0;' in bitcoin.cpp
         exit(0);
 #endif
     }
