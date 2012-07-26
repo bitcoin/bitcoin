@@ -2390,6 +2390,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->fDisconnect = true;
             return false;
         }
+        if (fTestNet && pfrom->nVersion < TESTNET3_VERSION)
+        {
+            printf("partner %s using obsolete version %i; banning\n", pfrom->addr.ToString().c_str(), pfrom->nVersion);
+            pfrom->Misbehaving(100);
+            return false;
+        }
 
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;

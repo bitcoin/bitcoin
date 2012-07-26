@@ -46,4 +46,7 @@ static const int NOBLKS_VERSION_END = 32400;
 // BIP 0031, pong message, is enabled for all versions AFTER this one
 static const int BIP0031_VERSION = 60000;
 
+// testnet3 minimum version
+static const int TESTNET3_VERSION = 60001;
+
 #endif
