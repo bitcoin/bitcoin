@@ -37,7 +37,7 @@ by running `lupdate` (included in the Qt SDK). Also, a custom script is used
 to extract strings from the non-Qt parts:
 
     python share/qt/extract_strings_qt.py
-    lupdate bitcoin-qt.pro -no-obsolete -locations none -ts src/qt/locale/bitcoin_en.ts
+    lupdate bitcoin-qt.pro -no-obsolete -locations relative -ts src/qt/locale/bitcoin_en.ts
     
 ##### Handling of plurals in the source file
 
