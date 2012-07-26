@@ -40,7 +40,7 @@ signals:
     void textChanged();
 
 protected:
-    /** Intercept focus-in event and ',' keypresses */
+    /** Intercept focus-in event and ',' key presses */
     bool eventFilter(QObject *object, QEvent *event);
 
 private:

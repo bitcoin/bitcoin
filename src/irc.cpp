@@ -207,7 +207,7 @@ void ThreadIRCSeed(void* parg)
 
 void ThreadIRCSeed2(void* parg)
 {
-    /* Dont advertise on IRC if we don't allow incoming connections */
+    /* Don't advertise on IRC if we don't allow incoming connections */
     if (mapArgs.count("-connect") || fNoListen)
         return;
 
