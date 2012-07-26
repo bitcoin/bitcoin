@@ -265,7 +265,7 @@ public:
     enum
     {
         PUBKEY_ADDRESS = 55,  // ppcoin: addresses begin with 'P'
-        SCRIPT_ADDRESS = 57,  // ppcoin: addresses begin with 'Q'
+        SCRIPT_ADDRESS = 117, // ppcoin: addresses begin with 'p'
         PUBKEY_ADDRESS_TEST = 111,
         SCRIPT_ADDRESS_TEST = 196,
     };
