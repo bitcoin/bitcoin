@@ -33,7 +33,7 @@ public:
     static bool parseBitcoinURI(const QUrl *, SendCoinsRecipient *out);
     static bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
 
-    /** Get save file name, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
+    /** Get save filename, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
         when no suffix is provided by the user.
 
       @param[in] parent  Parent window (or 0)

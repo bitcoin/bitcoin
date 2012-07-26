@@ -23,7 +23,7 @@ public:
     virtual bool HaveKey(const CBitcoinAddress &address) const =0;
 
     // Retrieve a key corresponding to a given address from the store.
-    // Return true if succesful.
+    // Return true if successful.
     virtual bool GetKey(const CBitcoinAddress &address, CKey& keyOut) const =0;
 
     // Retrieve only the public key corresponding to a given address.

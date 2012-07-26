@@ -80,7 +80,7 @@ bool GUIUtil::parseBitcoinURI(QString uri, SendCoinsRecipient *out)
     // Convert bitcoin:// to bitcoin:
     //
     //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
-    //    which will lowercase it (and thus invalidate the address).
+    //    which will lower-case it (and thus invalidate the address).
     if(uri.startsWith("bitcoin://"))
     {
         uri.replace(0, 10, "bitcoin:");
