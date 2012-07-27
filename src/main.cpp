@@ -2845,8 +2845,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         // Bypass PushInventory, this must send even if redundant,
                         // and we want it right after the last block so they don't
                         // wait for other stuff first.
+                        // ppcoin: send latest proof-of-work block to allow the
+                        // download node to accept as orphan (proof-of-stake 
+                        // block might be rejected by stake connection check)
                         vector<CInv> vInv;
-                        vInv.push_back(CInv(MSG_BLOCK, hashBestChain));
+                        vInv.push_back(CInv(MSG_BLOCK, GetLastBlockIndex(pindexBest, false)->GetBlockHash()));
                         pfrom->PushMessage("inv", vInv);
                         pfrom->hashContinue = 0;
                     }
