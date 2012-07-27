@@ -98,7 +98,7 @@ void AskPassphraseDialog::accept()
             break;
         }
         QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm wallet encryption"),
-                 tr("WARNING: If you encrypt your wallet and lose your passphrase, you will <b>LOSE ALL OF YOUR BITCOINS</b>!\nAre you sure you wish to encrypt your wallet?"),
+                 tr("Warning: If you encrypt your wallet and lose your passphrase, you will <b>LOSE ALL OF YOUR BITCOINS</b>!") + "<br><br>" + tr("Are you sure you wish to encrypt your wallet?"),
                  QMessageBox::Yes|QMessageBox::Cancel,
                  QMessageBox::Cancel);
         if(retval == QMessageBox::Yes)
@@ -204,7 +204,7 @@ bool AskPassphraseDialog::event(QEvent *event)
             fCapsLock = !fCapsLock;
         }
         if (fCapsLock) {
-            ui->capsLabel->setText(tr("Warning: The Caps Lock key is on."));
+            ui->capsLabel->setText(tr("Warning: The Caps Lock key is on!"));
         } else {
             ui->capsLabel->clear();
         }
@@ -228,7 +228,7 @@ bool AskPassphraseDialog::eventFilter(QObject *, QEvent *event)
             bool fShift = (ke->modifiers() & Qt::ShiftModifier) != 0;
             if ((fShift && psz->isLower()) || (!fShift && psz->isUpper())) {
                 fCapsLock = true;
-                ui->capsLabel->setText(tr("Warning: The Caps Lock key is on."));
+                ui->capsLabel->setText(tr("Warning: The Caps Lock key is on!"));
             } else if (psz->isLetter()) {
                 fCapsLock = false;
                 ui->capsLabel->clear();
