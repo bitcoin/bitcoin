@@ -8,6 +8,7 @@ class OptionsDialog;
 }
 class OptionsModel;
 class MonitoredDataMapper;
+class QValidatedLineEdit;
 
 /** Preferences dialog. */
 class OptionsDialog : public QDialog
@@ -38,9 +39,10 @@ private slots:
     void showRestartWarning_Proxy();
     void showRestartWarning_Lang();
     void updateDisplayUnit();
+    void handleProxyIpValid(QValidatedLineEdit *object, bool fState);
 
 signals:
-    void proxyIpValid(bool fValid);
+    void proxyIpValid(QValidatedLineEdit *object, bool fValid);
 
 private:
     Ui::OptionsDialog *ui;
