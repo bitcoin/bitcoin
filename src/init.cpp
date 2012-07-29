@@ -10,6 +10,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "checkpoints.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -593,6 +594,12 @@ bool AppInit2(int argc, char* argv[])
             ThreadSafeMessageBox(_("Invalid amount for -reservebalance=<amount>"), _("PPCoin"), wxOK | wxMODAL);
             return false;
         }
+    }
+
+    if (mapArgs.count("-checkpointkey")) // ppcoin: checkpoint master priv key
+    {
+        if (!Checkpoints::SetCheckpointPrivKey(GetArg("-checkpointkey", "")))
+            ThreadSafeMessageBox(_("Unable to sign checkpoint, wrong checkpointkey?\n"), _("PPCoin"), wxOK | wxMODAL);
     }
 
     //

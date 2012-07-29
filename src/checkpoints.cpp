@@ -288,6 +288,26 @@ namespace Checkpoints
             pfrom->AskFor(CInv(MSG_BLOCK, hashPendingCheckpoint));
     }
 
+    bool SetCheckpointPrivKey(std::string strPrivKey)
+    {
+        // Test signing a sync-checkpoint with genesis block
+        CSyncCheckpoint checkpoint;
+        checkpoint.hashCheckpoint = hashGenesisBlock;
+        CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
+        sMsg << (CUnsignedSyncCheckpoint)checkpoint;
+        checkpoint.vchMsg = std::vector<unsigned char>(sMsg.begin(), sMsg.end());
+
+        std::vector<unsigned char> vchPrivKey = ParseHex(strPrivKey);
+        CKey key;
+        key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+        if (!key.Sign(Hash(checkpoint.vchMsg.begin(), checkpoint.vchMsg.end()), checkpoint.vchSig))
+            return false;
+
+        // Test signing successful, proceed
+        CSyncCheckpoint::strMasterPrivKey = strPrivKey;
+        return true;
+    }
+
     bool SendSyncCheckpoint(uint256 hashCheckpoint)
     {
         CSyncCheckpoint checkpoint;
