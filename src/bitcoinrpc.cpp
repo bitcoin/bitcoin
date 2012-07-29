@@ -2024,7 +2024,9 @@ Value getcheckpoint(const Array& params, bool fHelp)
     pindexCheckpoint = mapBlockIndex[Checkpoints::hashSyncCheckpoint];        
     result.push_back(Pair("height", pindexCheckpoint->nHeight));
     result.push_back(Pair("timestamp", DateTimeStrFormat(pindexCheckpoint->GetBlockTime()).c_str()));
-    
+    if (mapArgs.count("-checkpointkey"))
+        result.push_back(Pair("checkpointmaster", true));
+
     return result;
 }
 
@@ -2211,31 +2213,6 @@ Value sendalert(const Array& params, bool fHelp)
     return result;
 }
 
-// ppcoin: set checkpoint key
-Value setcheckpointkey(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "setcheckpointkey <privatekey>\n"
-            "<privatekey> is hex string of checkpoint master private key\n");
-
-    CSyncCheckpoint checkpoint;
-    checkpoint.hashCheckpoint = hashGenesisBlock;
-    CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
-    sMsg << (CUnsignedSyncCheckpoint)checkpoint;
-    checkpoint.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
-
-    vector<unsigned char> vchPrivKey = ParseHex(params[0].get_str());
-    CKey key;
-    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
-    if (!key.Sign(Hash(checkpoint.vchMsg.begin(), checkpoint.vchMsg.end()), checkpoint.vchSig))
-        throw runtime_error(
-            "Unable to sign checkpoint, check private key?\n");
-
-    CSyncCheckpoint::strMasterPrivKey = params[0].get_str();
-
-    return "checkpoint master key has been set.";
-}
 
 
 //
@@ -2298,7 +2275,6 @@ static const CRPCCommand vRPCCommands[] =
     { "repairwallet",           &repairwallet,           false},
     { "makekeypair",            &makekeypair,            false},
     { "sendalert",              &sendalert,              false},
-    { "setcheckpointkey",       &setcheckpointkey,       false},
 };
 
 CRPCTable::CRPCTable()
