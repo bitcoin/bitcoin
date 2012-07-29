@@ -2094,7 +2094,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     // ppcoin: if responsible for sync-checkpoint send it
     if (pfrom && !CSyncCheckpoint::strMasterPrivKey.empty())
-        Checkpoints::SendSyncCheckpoint(hashBestChain);
+        Checkpoints::SendSyncCheckpoint(Checkpoints::AutoSelectSyncCheckpoint());
 
     return true;
 }
