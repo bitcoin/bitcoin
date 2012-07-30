@@ -492,7 +492,7 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 {
-    // don't show / hide progressBar and it's label if we have no connection(s) to the network
+    // don't show / hide progress bar and it's label if we have no connection to the network
     if (!clientModel || clientModel->getNumConnections() == 0)
     {
         progressBarLabel->setVisible(false);
@@ -514,8 +514,21 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
             progressBarLabel->setText(tr("Synchronizing with network..."));
             progressBarLabel->setVisible(true);
             progressBar->setFormat(tr("~%n block(s) remaining", "", nRemainingBlocks));
-            progressBar->setMaximum(nTotalBlocks);
-            progressBar->setValue(count);
+            if (clientModel && clientModel->getOptionsModel()->getDisplayRelProgressbar())
+            {
+                // Remaining block count based on own nodes startup block count, used for relative progress bar display
+                int nRemainingBlocksStartup = nTotalBlocks - clientModel->getNumBlocksAtStartup();
+
+                // Use relative progress bar display
+                progressBar->setMaximum(nRemainingBlocksStartup);
+                progressBar->setValue(-1 * (nRemainingBlocks - nRemainingBlocksStartup));
+            }
+            else
+            {
+                // Use absolute progress bar display (default)
+                progressBar->setMaximum(nTotalBlocks);
+                progressBar->setValue(count);
+            }
             progressBar->setVisible(true);
         }
 
@@ -530,7 +543,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
 
-    // Override progressBarLabel text and hide progressBar, when we have warnings to display
+    // Override progressBarLabel text and hide progress bar, when we have warnings to display
     if (!strStatusBarWarnings.isEmpty())
     {
         progressBarLabel->setText(strStatusBarWarnings);

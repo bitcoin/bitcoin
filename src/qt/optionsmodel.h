@@ -17,19 +17,20 @@ public:
     explicit OptionsModel(QObject *parent = 0);
 
     enum OptionID {
-        StartAtStartup,    // bool
-        MinimizeToTray,    // bool
-        MapPortUPnP,       // bool
-        MinimizeOnClose,   // bool
-        ProxyUse,          // bool
-        ProxyIP,           // QString
-        ProxyPort,         // int
-        ProxySocksVersion, // int
-        Fee,               // qint64
-        DisplayUnit,       // BitcoinUnits::Unit
-        DisplayAddresses,  // bool
-        DetachDatabases,   // bool
-        Language,          // QString
+        StartAtStartup,        // bool
+        MinimizeToTray,        // bool
+        MapPortUPnP,           // bool
+        MinimizeOnClose,       // bool
+        ProxyUse,              // bool
+        ProxyIP,               // QString
+        ProxyPort,             // int
+        ProxySocksVersion,     // int
+        Fee,                   // qint64
+        DisplayUnit,           // BitcoinUnits::Unit
+        DisplayAddresses,      // bool
+        DetachDatabases,       // bool
+        Language,              // QString
+        DisplayRelProgressbar, // bool
         OptionIDRowCount,
     };
 
@@ -49,6 +50,7 @@ public:
     int getDisplayUnit();
     bool getDisplayAddresses();
     QString getLanguage() { return language; }
+    bool getDisplayRelProgressbar() { return fDisplayRelProgressbar; }
 
 private:
     int nDisplayUnit;
@@ -56,6 +58,7 @@ private:
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
+    bool fDisplayRelProgressbar;
 
 signals:
     void displayUnitChanged(int unit);
