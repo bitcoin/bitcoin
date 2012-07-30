@@ -1965,8 +1965,11 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    printf("ProcessBlock: ACCEPTED %d transactions in %ld msec\n",
-           pblock->vtx.size(), GetTimeMillis() - now);
+    int nTxCount = pblock->vtx.size();
+    int nElapsed = GetTimeMillis() - now;
+    double dTxPerSec = (double) nTxCount / ((double)nElapsed / 1000.0);
+    printf("ProcessBlock: ACCEPTED %d transactions in %ld msec (%.2f tx/sec)\n",
+           nTxCount, nElapsed, dTxPerSec);
     return true;
 }
 
