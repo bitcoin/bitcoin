@@ -194,7 +194,7 @@ namespace Checkpoints
         // Select the last proof-of-work block
         const CBlockIndex *pindex = GetLastBlockIndex(pindexBest, false);
         // Search forward for a block within max span and maturity window
-        while (pindex->pnext && (pindex->GetBlockTime() + CHECKPOINT_MAX_SPAN <= pindexBest->GetBlockTime() || pindex->nHeight + COINBASE_MATURITY <= pindexBest->nHeight))
+        while (pindex->pnext && (pindex->GetBlockTime() + CHECKPOINT_MAX_SPAN <= pindexBest->GetBlockTime() || pindex->nHeight + COINBASE_MATURITY - 20 <= pindexBest->nHeight))
             pindex = pindex->pnext;
         return pindex->GetBlockHash();
     }
@@ -325,7 +325,11 @@ namespace Checkpoints
             return error("SendSyncCheckpoint: Unable to sign checkpoint, check private key?");
 
         if(!checkpoint.ProcessSyncCheckpoint(NULL))
-            return error("SendSyncCheckpoint: Failed to process checkpoint.");
+        {
+            printf("WARNING: SendSyncCheckpoint: Failed to process checkpoint.\n");
+            return false;
+        }
+
         // Relay checkpoint
         {
             LOCK(cs_vNodes);
@@ -333,6 +337,16 @@ namespace Checkpoints
                 checkpoint.RelayTo(pnode);
         }
         return true;
+    }
+
+    // Is the sync-checkpoint outside maturity window?
+    bool IsMatureSyncCheckpoint()
+    {
+        LOCK(cs_hashSyncCheckpoint);
+        // sync-checkpoint should always be accepted block
+        assert(mapBlockIndex.count(hashSyncCheckpoint));
+        const CBlockIndex* pindexSync = mapBlockIndex[hashSyncCheckpoint];
+        return (nBestHeight >= pindexSync->nHeight + COINBASE_MATURITY);
     }
 }
 

@@ -971,8 +971,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
     }
     printf("InvalidChainFound: invalid block=%s  height=%d  trust=%s\n", pindexNew->GetBlockHash().ToString().substr(0,20).c_str(), pindexNew->nHeight, CBigNum(pindexNew->nChainTrust).ToString().c_str());
     printf("InvalidChainFound:  current best=%s  height=%d  trust=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, CBigNum(nBestChainTrust).ToString().c_str());
-    if (pindexBest && nBestInvalidTrust > nBestChainTrust + pindexBest->GetBlockTrust() * 6)
-        printf("InvalidChainFound: WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.\n");
+    // ppcoin: should not enter safe mode for longer invalid chain
 }
 
 void CBlock::UpdateTime(const CBlockIndex* pindexPrev)
@@ -2013,7 +2012,10 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     // ppcoin: verify hash target and signature of coinstake tx
     if (pblock->IsProofOfStake() && !pblock->vtx[1].CheckProofOfStake(pblock->nBits))
-        return error("ProcessBlock() : check proof-of-stake failed for block %s", hash.ToString().c_str());
+    {
+        printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
+        return false; // do not error here as we expect this during initial block download
+    }
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
@@ -2420,17 +2422,19 @@ string GetWarnings(string strFor)
         strStatusBar = strMiscWarning;
     }
 
-    // Longer invalid proof-of-work chain
-    if (pindexBest && nBestInvalidTrust > nBestChainTrust + pindexBest->GetBlockTrust() * 6)
+    // ppcoin: should not enter safe mode for longer invalid chain
+    // ppcoin: if sync-checkpoint too old enter safe mode
+    if (Checkpoints::IsMatureSyncCheckpoint())
     {
         nPriority = 2000;
-        strStatusBar = strRPC = "WARNING: Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.";
+        strStatusBar = strRPC = "WARNING: Checkpoint is too old. Wait for block chain to download, or notify developers of the issue.";
     }
 
+    // ppcoin: if detected invalid checkpoint enter safe mode
     if (Checkpoints::hashInvalidCheckpoint != 0)
     {
         nPriority = 3000;
-        strStatusBar = strRPC = "WARNING: Invalid checkpoint found!  Displayed transactions may not be correct!  You may need to upgrade, or other nodes may need to upgrade.";
+        strStatusBar = strRPC = "WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers of the issue.";
     }
 
     // Alerts
@@ -2443,6 +2447,8 @@ string GetWarnings(string strFor)
             {
                 nPriority = alert.nPriority;
                 strStatusBar = alert.strStatusBar;
+                if (nPriority > 1000)
+                    strRPC = strStatusBar;  // ppcoin: safe mode for high alert
             }
         }
     }

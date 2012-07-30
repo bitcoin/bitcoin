@@ -2158,16 +2158,17 @@ extern map<uint256, CAlert> mapAlerts;
 // ThreadRPCServer: holds cs_main and acquiring cs_vSend in alert.RelayTo()/PushMessage()/BeginMessage()
 Value sendalert(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 5)
+    if (fHelp || params.size() < 6)
 	throw runtime_error(
-            "sendalert <message> <privatekey> <minver> <maxver> <id> [cancelupto]\n"
+            "sendalert <message> <privatekey> <minver> <maxver> <priority> <id> [cancelupto]\n"
             "<message> is the alert text message\n"
             "<privatekey> is hex string of alert master private key\n"
-            "<minver> is the minimum applicable client version\n"
-            "<maxver> is the maximum applicable client version\n"
+            "<minver> is the minimum applicable internal client version\n"
+            "<maxver> is the maximum applicable internal client version\n"
+            "<priority> is integer priority number\n"
             "<id> is the alert id\n"
             "[cancelupto] cancels all alert id's up to this number\n"
-            "Returns true or false.");    
+            "Returns true or false.");
 
     CAlert alert;
     CKey key;
@@ -2175,13 +2176,13 @@ Value sendalert(const Array& params, bool fHelp)
     alert.strStatusBar = params[0].get_str();
     alert.nMinVer = params[2].get_int();
     alert.nMaxVer = params[3].get_int();
-    alert.nID = params[4].get_int();
-    if (params.size() > 5)
-        alert.nCancel = params[5].get_int();
+    alert.nPriority = params[4].get_int();
+    alert.nID = params[5].get_int();
+    if (params.size() > 6)
+        alert.nCancel = params[6].get_int();
     alert.nVersion = PROTOCOL_VERSION;
     alert.nRelayUntil = GetAdjustedTime() + 365*24*60*60;
     alert.nExpiration = GetAdjustedTime() + 365*24*60*60;
-    alert.nPriority = 1;
 
     CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
     sMsg << (CUnsignedAlert)alert;
@@ -2207,6 +2208,7 @@ Value sendalert(const Array& params, bool fHelp)
     result.push_back(Pair("nVersion", alert.nVersion));
     result.push_back(Pair("nMinVer", alert.nMinVer));
     result.push_back(Pair("nMaxVer", alert.nMaxVer));
+    result.push_back(Pair("nPriority", alert.nPriority));
     result.push_back(Pair("nID", alert.nID));
     if (alert.nCancel > 0)
         result.push_back(Pair("nCancel", alert.nCancel));
@@ -2892,6 +2894,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "sendalert"              && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "sendalert"              && n > 4) ConvertTo<boost::int64_t>(params[4]);
         if (strMethod == "sendalert"              && n > 5) ConvertTo<boost::int64_t>(params[5]);
+        if (strMethod == "sendalert"              && n > 6) ConvertTo<boost::int64_t>(params[6]);
         if (strMethod == "sendmany"               && n > 1)
         {
             string s = params[1].get_str();
