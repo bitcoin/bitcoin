@@ -42,10 +42,20 @@
 #     cd c:\boost-1.47.0-mgw
 #     bjam toolset=gcc --build-type=complete stage
 #
+# - Build Miniupnp library version: 1.6
+#   download from http://miniupnp.free.fr/files/
+#   file name is miniupnpc-1.6.20120509.tar.gz
+#   Extract to c:\miniupnpc-1.6-mgw
+#   In MinGW MSYS shell:
+#     cd /c/miniupnpc-1.6-mgw
+#     make -f Makefile.mingw
+#     mkdir miniupnpc
+#     cp *.h miniupnpc/
+#
 # - Build ppcoind.exe
 #   in MinGW MSYS
 #     cd ppcoin/src
-#     make ppcoind.exe -f makefile.mingw USE_UPNP=
+#     make ppcoind.exe -f makefile.mingw USE_UPNP=1
 #
 #
 
