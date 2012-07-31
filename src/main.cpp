@@ -822,7 +822,7 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
 
 int64 static GetProofOfWorkReward(unsigned int nBits)
 {
-    CBigNum bnSubsidyLimit = 9999 * COIN; // subsidy amount for difficulty 1
+    CBigNum bnSubsidyLimit = MAX_MINT_PROOF_OF_WORK;
     CBigNum bnTarget;
     bnTarget.SetCompact(nBits);
     CBigNum bnTargetLimit = bnProofOfWorkLimit;

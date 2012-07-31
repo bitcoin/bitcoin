@@ -1256,10 +1256,18 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
         return false;
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
+        // Attempt to add more inputs of the same key
         if (pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
         {
+            // Stop adding more inputs if value is already pretty significant
+            if (nCredit > MAX_MINT_PROOF_OF_WORK)
+                break;
+            // Stop adding inputs if reached reserve limit
             if (nCredit + pcoin.first->vout[pcoin.second].nValue > nBalance - nReserveBalance)
                 break;
+            // Do not add additional significant input
+            if (pcoin.first->vout[pcoin.second].nValue > MAX_MINT_PROOF_OF_WORK)
+                continue;
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
             nCredit += pcoin.first->vout[pcoin.second].nValue;
             vwtxPrev.push_back(pcoin.first);
@@ -1283,6 +1291,13 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
         if (!SignSignature(*this, *pcoin, txNew, nIn++))
             return error("CreateCoinStake : failed to sign coinstake");
     }
+
+    // Limit size
+    unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+    if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
+        return false;
+
+    // Successfully generated coinstake
     return true;
 }
 
