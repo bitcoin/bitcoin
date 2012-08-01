@@ -95,9 +95,10 @@ void Shutdown(void* parg)
     }
 }
 
-void HandleSIGTERM(int)
+void HandleSIGTERM(int signal)
 {
     fRequestShutdown = true;
+    printf("HandleSIGTERM(%d)\n", signal);
 }
 
 void HandleSIGHUP(int)
