@@ -47,6 +47,7 @@ void OptionsModel::Init()
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
     language = settings.value("language", "").toString();
+    fDisplayRelProgressbar = settings.value("fDisplayRelProgressbar", false).toBool();
 
     // These are shared with core Bitcoin; we want
     // command-line options to override the GUI settings:
@@ -170,6 +171,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(bitdb.GetDetach());
         case Language:
             return settings.value("language", "");
+        case DisplayRelProgressbar:
+            return QVariant(fDisplayRelProgressbar);
         default:
             return QVariant();
         }
@@ -248,6 +251,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case Language:
             settings.setValue("language", value);
+            break;
+        case DisplayRelProgressbar:
+            fDisplayRelProgressbar = value.toBool();
+            settings.setValue("fDisplayRelProgressbar", fDisplayRelProgressbar);
             break;
         default:
             break;

@@ -25,6 +25,7 @@
 #include "notificator.h"
 #include "guiutil.h"
 #include "rpcconsole.h"
+#include "util.h"
 
 #ifdef Q_WS_MAC
 #include "macdockiconhandler.h"
@@ -492,7 +493,7 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 {
-    // don't show / hide progressBar and it's label if we have no connection(s) to the network
+    // don't show / hide progress bar and it's label if we have no connection to the network
     if (!clientModel || clientModel->getNumConnections() == 0)
     {
         progressBarLabel->setVisible(false);
@@ -506,16 +507,44 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
     if(count < nTotalBlocks)
     {
+        static QDateTime startTime = QDateTime::currentDateTime();
+        static CMedianFilter<int> cSecsondsLeft(10, 0);
+
         int nRemainingBlocks = nTotalBlocks - count;
         float nPercentageDone = count / (nTotalBlocks * 0.01f);
 
+        int nProcessedBlocks = count - clientModel->getNumBlocksAtStartup();
+        // Prevent division by 0
+        if(!nProcessedBlocks)
+            nProcessedBlocks++;
+        // Passed time in seconds / processed blocks
+        int nMsecsPerBlock = (int)(startTime.msecsTo(QDateTime::currentDateTime()) / nProcessedBlocks);
+        // Prevent division by 0
+        if(!nMsecsPerBlock)
+            nMsecsPerBlock++;
+        // use a CMedianFilter to smooth the last 10 values
+        cSecsondsLeft.input((nRemainingBlocks * nMsecsPerBlock) / 1000);
+
         if (strStatusBarWarnings.isEmpty())
         {
-            progressBarLabel->setText(tr("Synchronizing with network..."));
+            progressBarLabel->setText(tr("Synchronizing with network (") + GUIUtil::secondsToDHMS(cSecsondsLeft.median()) + ")...");
             progressBarLabel->setVisible(true);
             progressBar->setFormat(tr("~%n block(s) remaining", "", nRemainingBlocks));
-            progressBar->setMaximum(nTotalBlocks);
-            progressBar->setValue(count);
+            if (clientModel->getOptionsModel()->getDisplayRelProgressbar())
+            {
+                // Remaining block count based on own nodes startup block count, used for relative progress bar display
+                int nRemainingBlocksStartup = nTotalBlocks - clientModel->getNumBlocksAtStartup();
+
+                // Use relative progress bar display
+                progressBar->setMaximum(nRemainingBlocksStartup);
+                progressBar->setValue(-1 * (nRemainingBlocks - nRemainingBlocksStartup));
+            }
+            else
+            {
+                // Use absolute progress bar display (default)
+                progressBar->setMaximum(nTotalBlocks);
+                progressBar->setValue(count);
+            }
             progressBar->setVisible(true);
         }
 
@@ -530,7 +559,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
     }
 
-    // Override progressBarLabel text and hide progressBar, when we have warnings to display
+    // Override progressBarLabel text and hide progress bar, when we have warnings to display
     if (!strStatusBarWarnings.isEmpty())
     {
         progressBarLabel->setText(strStatusBarWarnings);

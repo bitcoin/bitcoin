@@ -459,5 +459,23 @@ void HelpMessageBox::showOrPrint()
 #endif
 }
 
+QString secondsToDHMS(int nDuration)
+{
+    QString strResult;
+
+    int nSeconds = (int)(nDuration % 60);
+    nDuration /= 60;
+    int nMinutes = (int)(nDuration % 60);
+    nDuration /= 60;
+    int nHours = (int)(nDuration % 24);
+    int nDays = (int)(nDuration / 24);
+    if((nHours == 0) && (nDays == 0))
+        return strResult.sprintf("%02d:%02d", nMinutes, nSeconds);
+    if (nDays == 0)
+        return strResult.sprintf("%02d:%02d:%02d", nHours, nMinutes, nSeconds);
+
+    return strResult.sprintf("%dd%02d:%02d:%02d", nDays, nHours, nMinutes, nSeconds);
+}
+
 } // namespace GUIUtil
 
