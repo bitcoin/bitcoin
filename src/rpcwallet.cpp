@@ -274,6 +274,33 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
+Value listaddressgroupings(const Array& params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error("listaddressgroupings");
+
+    Array jsonGroupings;
+    map<string, int64> balances = pwalletMain->GetAddressBalances();
+    BOOST_FOREACH(set<string> grouping, pwalletMain->GetAddressGroupings())
+    {
+        Array jsonGrouping;
+        BOOST_FOREACH(string address, grouping)
+        {
+            Array addressInfo;
+            addressInfo.push_back(address);
+            addressInfo.push_back(ValueFromAmount(balances[address]));
+            {
+                LOCK(pwalletMain->cs_wallet);
+                if (pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
+                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second);
+            }
+            jsonGrouping.push_back(addressInfo);
+        }
+        jsonGroupings.push_back(jsonGrouping);
+    }
+    return jsonGroupings;
+}
+
 Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
