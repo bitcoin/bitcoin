@@ -60,10 +60,12 @@ void ClientModel::updateTimer()
     int newNumBlocksOfPeers = getNumBlocksOfPeers();
 
     if(cachedNumBlocks != newNumBlocks || cachedNumBlocksOfPeers != newNumBlocksOfPeers)
-        emit numBlocksChanged(newNumBlocks, newNumBlocksOfPeers);
+    {
+        cachedNumBlocks = newNumBlocks;
+        cachedNumBlocksOfPeers = newNumBlocksOfPeers;
 
-    cachedNumBlocks = newNumBlocks;
-    cachedNumBlocksOfPeers = newNumBlocksOfPeers;
+        emit numBlocksChanged(newNumBlocks, newNumBlocksOfPeers);
+    }
 }
 
 void ClientModel::updateNumConnections(int numConnections)
