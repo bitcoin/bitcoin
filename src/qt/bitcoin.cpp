@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 // TODO: implement URI support on the Mac.
 #if !defined(MAC_OSX)
 
-                // Place this here as guiref has to be defined if we dont want to lose URIs
+                // Place this here as guiref has to be defined if we don't want to lose URIs
                 ipcInit();
 
                 // Check for URI in argv
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
                 window.setWalletModel(0);
                 guiref = 0;
             }
-            // Shutdown the core and it's threads, but don't exit Bitcoin-Qt here
+            // Shutdown the core and its threads, but don't exit Bitcoin-Qt here
             Shutdown(NULL);
         }
         else

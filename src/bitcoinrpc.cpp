@@ -1881,7 +1881,7 @@ Value getwork(const Array& params, bool fHelp)
         // Save
         mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
 
-        // Prebuild hash buffers
+        // Pre-build hash buffers
         char pmidstate[32];
         char pdata[128];
         char phash1[64];
@@ -2194,7 +2194,7 @@ string rfc1123Time()
     time(&now);
     struct tm* now_gmt = gmtime(&now);
     string locale(setlocale(LC_TIME, NULL));
-    setlocale(LC_TIME, "C"); // we want posix (aka "C") weekday/month strings
+    setlocale(LC_TIME, "C"); // we want POSIX (aka "C") weekday/month strings
     strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S +0000", now_gmt);
     setlocale(LC_TIME, locale.c_str());
     return string(buffer);
@@ -2388,7 +2388,7 @@ bool ClientAllowed(const boost::asio::ip::address& address)
     if (address == asio::ip::address_v4::loopback()
      || address == asio::ip::address_v6::loopback()
      || (address.is_v4()
-         // Chech whether IPv4 addresses match 127.0.0.0/8 (loopback subnet)
+         // Check whether IPv4 addresses match 127.0.0.0/8 (loopback subnet)
       && (address.to_v4().to_ulong() & 0xff000000) == 0x7f000000))
         return true;
 
@@ -2565,7 +2565,7 @@ static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, 
 {
     vnThreadsRunning[THREAD_RPCLISTENER]++;
 
-    // Immediately start accepting new connections, except when we're canceled or our socket is closed.
+    // Immediately start accepting new connections, except when we're cancelled or our socket is closed.
     if (error != asio::error::operation_aborted
      && acceptor->is_open())
         RPCListen(acceptor, context, fUseSSL);
@@ -2698,7 +2698,7 @@ void ThreadRPCServer2(void* parg)
     }
     catch(boost::system::system_error &e)
     {
-        uiInterface.ThreadSafeMessageBox(strprintf(_("An error occured while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
+        uiInterface.ThreadSafeMessageBox(strprintf(_("An error occurred while setting up the RPC port %i for listening: %s"), endpoint.port(), e.what()),
                              _("Error"), CClientUIInterface::OK | CClientUIInterface::MODAL);
         StartShutdown();
         return;
@@ -3105,7 +3105,7 @@ int CommandLineRPC(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 #ifdef _MSC_VER
-    // Turn off microsoft heap dump noise
+    // Turn off Microsoft heap dump noise
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_WARN, CreateFile("NUL", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0));
 #endif

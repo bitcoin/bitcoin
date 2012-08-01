@@ -27,7 +27,7 @@ public:
     {
         Information,         /**< Informational message */
         Warning,             /**< Notify user of potential problem */
-        Critical             /**< An error occured */
+        Critical             /**< An error occurred */
     };
 
 public slots:

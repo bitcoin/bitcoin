@@ -5,8 +5,8 @@
 
   This is:
   - All numbers except for '0'
-  - All uppercase letters except for 'I' and 'O'
-  - All lowercase letters except for 'l'
+  - All upper-case letters except for 'I' and 'O'
+  - All lower-case letters except for 'l'
 
   User friendly Base58 input can map
   - 'l' and 'I' to '1'

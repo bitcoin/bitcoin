@@ -1070,7 +1070,7 @@ uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int
     }
     else if ((nHashType & 0x1f) == SIGHASH_SINGLE)
     {
-        // Only lockin the txout payee at same index as txin
+        // Only lock-in the txout payee at same index as txin
         unsigned int nOut = nIn;
         if (nOut >= txTmp.vout.size())
         {
@@ -1272,7 +1272,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 if (!script2.GetOp(pc2, opcode2, vch2))
                     break;
                 // Normal situation is to fall through
-                // to other if/else statments
+                // to other if/else statements
             }
 
             if (opcode2 == OP_PUBKEY)
@@ -1345,7 +1345,7 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
 // Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
 // Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
 // unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
-// Returns false if scriptPubKey could not be completely satisified.
+// Returns false if scriptPubKey could not be completely satisfied.
 //
 bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType,
                   CScript& scriptSigRet, txnouttype& whichTypeRet)
@@ -1733,7 +1733,7 @@ static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo,
             return PushAll(sigs1);
         else
         {
-            // Recurse to combine:
+            // Recur to combine:
             valtype spk = sigs1.back();
             CScript pubKey2(spk.begin(), spk.end());
 
@@ -1811,7 +1811,7 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
             return 0;
     }
 
-    /// ... and return it's opcount:
+    /// ... and return its opcount:
     CScript subscript(data.begin(), data.end());
     return subscript.GetSigOpCount(true);
 }

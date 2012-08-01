@@ -177,7 +177,7 @@ void AskPassphraseDialog::accept()
 
 void AskPassphraseDialog::textChanged()
 {
-    // Validate input, set Ok button to enabled when accepable
+    // Validate input, set Ok button to enabled when acceptable
     bool acceptable = false;
     switch(mode)
     {
