@@ -25,6 +25,7 @@
 #include "notificator.h"
 #include "guiutil.h"
 #include "rpcconsole.h"
+#include "util.h"
 
 #ifdef Q_WS_MAC
 #include "macdockiconhandler.h"
@@ -506,15 +507,30 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
     if(count < nTotalBlocks)
     {
+        static QDateTime startTime = QDateTime::currentDateTime();
+        static CMedianFilter<int> cSecsondsLeft(10, 0);
+
         int nRemainingBlocks = nTotalBlocks - count;
         float nPercentageDone = count / (nTotalBlocks * 0.01f);
 
+        int nProcessedBlocks = count - clientModel->getNumBlocksAtStartup();
+        // Prevent division by 0
+        if(!nProcessedBlocks)
+            nProcessedBlocks++;
+        // Passed time in seconds / processed blocks
+        int nMsecsPerBlock = (int)(startTime.msecsTo(QDateTime::currentDateTime()) / nProcessedBlocks);
+        // Prevent division by 0
+        if(!nMsecsPerBlock)
+            nMsecsPerBlock++;
+        // use a CMedianFilter to smooth the last 10 values
+        cSecsondsLeft.input((nRemainingBlocks * nMsecsPerBlock) / 1000);
+
         if (strStatusBarWarnings.isEmpty())
         {
-            progressBarLabel->setText(tr("Synchronizing with network..."));
+            progressBarLabel->setText(tr("Synchronizing with network (") + GUIUtil::secondsToDHMS(cSecsondsLeft.median()) + ")...");
             progressBarLabel->setVisible(true);
             progressBar->setFormat(tr("~%n block(s) remaining", "", nRemainingBlocks));
-            if (clientModel && clientModel->getOptionsModel()->getDisplayRelProgressbar())
+            if (clientModel->getOptionsModel()->getDisplayRelProgressbar())
             {
                 // Remaining block count based on own nodes startup block count, used for relative progress bar display
                 int nRemainingBlocksStartup = nTotalBlocks - clientModel->getNumBlocksAtStartup();

@@ -115,6 +115,9 @@ namespace GUIUtil
         QString uiOptions;
     };
 
+    // Convert seconds to DD:HH:MM:SS format
+    QString secondsToDHMS(int nDuration);
+
 } // namespace GUIUtil
 
 #endif // GUIUTIL_H
