@@ -1,0 +1,71 @@
+
+(note: this is a temporary file, to be added-to by anybody, and deleted at
+release time)
+
+Building this from
+
+	$ git shortlog --no-merges v0.6.3..
+
+
+
+Core bitcoin handling and blockchain database
+---------------------------------------------
+* Reduced CPU usage, by eliminating some redundant hash calculations
+* Cache signature verifications, to eliminate redundant signature checks
+* Mining: when creating new blocks, sort 'paid' area by fee-per-kb
+* Database: better validation of on-disk stored data
+* Database: minor optimizations and reliability improvements
+* -loadblock=FILE will import an external block file
+
+
+JSON-RPC API
+------------
+* Internal HTTP server is now thread-per-connection, rather than
+  a single-threaded queue that would stall on network I/O.
+* Internal HTTP server supports HTTP/1.1, pipelined requests and
+  connection keep-alive.
+* Support JSON-RPC 2.0 batches, to encapsulate multiple JSON-RPC requests
+  within a single HTTP request.
+* IPv6 support
+* Added raw transaction API.  See https://gist.github.com/2839617
+* Added 'getrawmempool', to list contents of TX memory pool
+* Added 'getpeerinfo', to list data about each connected network peer
+* Rework gettransaction, getblock calls. 'gettransaction' responds for
+  non-wallet TXs now.
+* Remove deprecated RPC 'getblocknumber'
+
+
+P2P networking
+--------------
+* IPv6 support
+* Tor/I2P hidden service support
+* Attempts to fix "stuck blockchain download" problems
+* Replace BDB database "addr.dat" with internally-managed "peers.dat"
+  file containing peer address data.
+* Lower default send buffer from 10MB to 1MB
+* proxy: SOCKS5 by default
+* Support connecting by hostnames passed to proxy (-proxydns)
+* Add -seednode connections, and use this for -dnsseed + -proxydns
+* Added -externalip and -discover
+* Add -onlynet to prevent connections to a given network
+* Separate listening sockets, -bind=<addr>
+
+
+Qt GUI
+---------------------
+?????
+
+
+Internal codebase
+-----------------
+* Additional unit tests
+* Compile warning fixes
+
+
+Miscellaneous
+-------------
+* Reopen debug.log upon SIGHUP
+* Bash programmable completion for bitcoind(1)
+* On supported OS's, each thread is given a useful name
+
+
