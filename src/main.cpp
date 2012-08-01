@@ -3553,7 +3553,7 @@ public:
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
 
-CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfWorkOnly)
+CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 {
     CReserveKey reservekey(pwallet);
 
@@ -3573,10 +3573,10 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfWorkOnly)
     pblock->vtx.push_back(txNew);
 
     // ppcoin: if coinstake available add coinstake tx
-    static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift + 60;  // only initialized at startup
+    static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift / 2;  // only initialized at startup
     CBlockIndex* pindexPrev = pindexBest;
 
-    if (!fProofOfWorkOnly)
+    if (fProofOfStake)
     {
         while (nLastCoinStakeCheckTime < GetAdjustedTime())
         {
@@ -3589,7 +3589,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfWorkOnly)
                 // mining may have been suspended for a while so 
                 // need to take max to satisfy the timestamp protocol
                 nLastCoinStakeCheckTime++;
-                nLastCoinStakeCheckTime = max(nLastCoinStakeCheckTime, (unsigned int) (GetAdjustedTime() - nMaxClockDrift + 60));
+                nLastCoinStakeCheckTime = max(nLastCoinStakeCheckTime, (unsigned int) (GetAdjustedTime() - nMaxClockDrift / 2));
                 txCoinStake.nTime = nLastCoinStakeCheckTime;
             }
             if (pwallet->CreateCoinStake(pblock->nBits, txCoinStake))
@@ -3867,9 +3867,9 @@ static bool fGenerateBitcoins = false;
 static bool fLimitProcessors = false;
 static int nLimitProcessors = -1;
 
-void static BitcoinMiner(CWallet *pwallet)
+void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 {
-    printf("BitcoinMiner started\n");
+    printf("CPUMiner started for proof-of-%s\n", fProofOfStake? "stake" : "work");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
     // Each thread has its own key and counter
@@ -3896,7 +3896,7 @@ void static BitcoinMiner(CWallet *pwallet)
         unsigned int nTransactionsUpdatedLast = nTransactionsUpdated;
         CBlockIndex* pindexPrev = pindexBest;
 
-        auto_ptr<CBlock> pblock(CreateNewBlock(pwallet));
+        auto_ptr<CBlock> pblock(CreateNewBlock(pwallet, fProofOfStake));
         if (!pblock.get())
             return;
 
@@ -3907,13 +3907,14 @@ void static BitcoinMiner(CWallet *pwallet)
         {
             if (!pblock->SignBlock(*pwalletMain))
             {
-                error("BitcoinMiner: Unable to sign new proof-of-stake block");
+                error("CPUMiner: Unable to sign new proof-of-stake block");
                 return;
             }
-            printf("BitcoinMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
+            printf("CPUMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
             SetThreadPriority(THREAD_PRIORITY_NORMAL);
             CheckWork(pblock.get(), *pwalletMain, reservekey);
             SetThreadPriority(THREAD_PRIORITY_LOWEST);
+            Sleep(500);
             continue;
         }
 
@@ -4037,7 +4038,7 @@ void static ThreadBitcoinMiner(void* parg)
     try
     {
         vnThreadsRunning[THREAD_MINER]++;
-        BitcoinMiner(pwallet);
+        BitcoinMiner(pwallet, false);
         vnThreadsRunning[THREAD_MINER]--;
     }
     catch (std::exception& e) {

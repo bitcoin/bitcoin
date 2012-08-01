@@ -1412,6 +1412,27 @@ void ThreadMessageHandler2(void* parg)
     }
 }
 
+// ppcoin: stake minter thread
+void static ThreadStakeMinter(void* parg)
+{
+    printf("ThreadStakeMinter started\n");
+    CWallet* pwallet = (CWallet*)parg;
+    try
+    {
+        vnThreadsRunning[THREAD_MINTER]++;
+        BitcoinMiner(pwallet, true);
+        vnThreadsRunning[THREAD_MINTER]--;
+    }
+    catch (std::exception& e) {
+        vnThreadsRunning[THREAD_MINTER]--;
+        PrintException(&e, "ThreadStakeMinter()");
+    } catch (...) {
+        vnThreadsRunning[THREAD_MINTER]--;
+        PrintException(NULL, "ThreadStakeMinter()");
+    }
+    printf("ThreadStakeMinter exiting, %d threads remaining\n", vnThreadsRunning[THREAD_MINTER]);
+}
+
 
 
 
@@ -1625,6 +1646,10 @@ void StartNode(void* parg)
 
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
+
+    // ppcoin: mint proof-of-stake blocks in the background
+    if (!CreateThread(ThreadStakeMinter, pwalletMain))
+        printf("Error: CreateThread(ThreadStakeMinter) failed\n");
 }
 
 bool StopNode()
@@ -1656,6 +1681,7 @@ bool StopNode()
     if (vnThreadsRunning[THREAD_DNSSEED] > 0) printf("ThreadDNSAddressSeed still running\n");
     if (vnThreadsRunning[THREAD_ADDEDCONNECTIONS] > 0) printf("ThreadOpenAddedConnections still running\n");
     if (vnThreadsRunning[THREAD_DUMPADDRESS] > 0) printf("ThreadDumpAddresses still running\n");
+    if (vnThreadsRunning[THREAD_MINTER] > 0) printf("ThreadStakeMinter still running\n");
     while (vnThreadsRunning[THREAD_MESSAGEHANDLER] > 0 || vnThreadsRunning[THREAD_RPCSERVER] > 0)
         Sleep(20);
     Sleep(50);
