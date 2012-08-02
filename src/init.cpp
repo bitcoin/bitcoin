@@ -255,7 +255,7 @@ bool AppInit2(int argc, char* argv[])
         // Remove tabs
         strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
 #if defined(QT_GUI) && defined(WIN32)
-        // On windows, show a message box, as there is no stderr
+        // On Windows, show a message box, as there is no stderr
         ThreadSafeMessageBox(strUsage, _("Usage"), wxOK | wxMODAL);
 #else
         fprintf(stderr, "%s", strUsage.c_str());
