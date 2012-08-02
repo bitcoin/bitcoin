@@ -391,6 +391,8 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    obj.push_back(Pair("maxtxfee",      ValueFromAmount(nTransactionFeeMax)));
+    obj.push_back(Pair("forcetxfee",    fForceFee));
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
@@ -578,17 +580,44 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
 Value settxfee(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 1)
+    if (GetBoolArg("-nosafefees"))
+    {
+        if (fHelp || params.size() < 1 || params.size() > 3)
+            throw runtime_error(
+                "settxfee <default amount> [maximum amount] [force]\n"
+                "<default amount> specifies the transaction fee to include in all transactions\n"
+                "[maximum amount] specifies the upper limit of how high the client will automatically\n"
+                "                 adjust your fee as it deems necessary\n"
+                "[force] is a boolean that enables sending less than the safe minimum fee");
+    }
+    else
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "settxfee <amount>\n"
-            "<amount> is a real and is rounded to the nearest 0.00000001");
+            "settxfee <default amount> [maximum amount]\n"
+            "<default amount> specifies the transaction fee to include in all transactions\n"
+            "[maximum amount] specifies the upper limit of how high the client will automatically\n"
+            "                 adjust your fee as it deems necessary");
 
-    // Amount
+    // Amounts
     int64 nAmount = 0;
     if (params[0].get_real() != 0.0)
         nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
 
+    if (params.size() > 1)
+    {
+        int64 nAmountMax;
+        if (params[1].get_real() == 0.0)
+            nAmountMax = 0;
+        else
+            nAmountMax = AmountFromValue(params[1]);
+        if (nAmountMax < nAmount)
+            throw runtime_error("Maximum fee, if provided, should be at least the amount of the default fee");
+        nTransactionFeeMax = nAmountMax;
+    }
     nTransactionFee = nAmount;
+    if (params.size() > 2)
+        fForceFee = params[2].get_bool();
+
     return true;
 }
 
@@ -617,7 +646,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (pwalletMain->IsLocked())
         throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, true, fForceFee ? nTransactionFeeMax : MAX_MONEY);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -949,7 +978,7 @@ Value sendfrom(const Array& params, bool fHelp)
         throw JSONRPCError(-6, "Account has insufficient funds");
 
     // Send
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, true, fForceFee ? nTransactionFeeMax : MAX_MONEY);
     if (strError != "")
         throw JSONRPCError(-4, strError);
 
@@ -1008,7 +1037,7 @@ Value sendmany(const Array& params, bool fHelp)
     // Send
     CReserveKey keyChange(pwalletMain);
     int64 nFeeRequired = 0;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired);
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, fForceFee ? nTransactionFeeMax : MAX_MONEY);
     if (!fCreated)
     {
         if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
@@ -2999,6 +3028,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
+    if (strMethod == "settxfee"               && n > 1) ConvertTo<double>(params[1]);
+    if (strMethod == "settxfee"               && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "listreceivedbyaddress"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
