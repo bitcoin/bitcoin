@@ -12,8 +12,8 @@ BOOST_AUTO_TEST_SUITE(bignum_tests)
 // You should use it like this:
 //   NOINLINE void function() {...}
 #if defined(__GNUC__)
-// This also works and will be defined for any compiler implementing gcc
-// extensions, such as clang and icc.
+// This also works and will be defined for any compiler implementing GCC
+// extensions, such as Clang and ICC.
 #define NOINLINE __attribute__((noinline))
 #elif defined(_MSC_VER)
 #define NOINLINE __declspec(noinline)
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_SUITE(bignum_tests)
 // that -ftrapv will detect overflows.
 NOINLINE void mysetint64(CBigNum& num, int64 n)
 {
-	num.setint64(n);
+    num.setint64(n);
 }
 
 // For each number, we do 2 tests: one with inline code, then we reset the
