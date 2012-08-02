@@ -451,7 +451,7 @@ void HelpMessageBox::printToConsole()
 void HelpMessageBox::showOrPrint()
 {
 #if defined(WIN32)
-        // On windows, show a message box, as there is no stderr/stdout in windowed applications
+        // On Windows, show a message box, as there is no stderr/stdout in windowed applications
         exec();
 #else
         // On other operating systems, print help text to console
