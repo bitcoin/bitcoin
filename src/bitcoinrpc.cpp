@@ -972,8 +972,8 @@ Value sendmany(const Array& params, bool fHelp)
 
     if (pwalletMain->IsLocked())
         throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-    if (fWalletUnlockStakeOnly)
-        throw JSONRPCError(-13, "Error: Wallet unlocked for coinstake only.");
+    if (fWalletUnlockMintOnly)
+        throw JSONRPCError(-13, "Error: Wallet unlocked for block minting only.");
 
     // Check funds
     int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
@@ -1601,9 +1601,9 @@ Value walletpassphrase(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 3))
         throw runtime_error(
-            "walletpassphrase <passphrase> <timeout> [stakeonly]\n"
+            "walletpassphrase <passphrase> <timeout> [mintonly]\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.\n"
-            "stakeonly is optional true/false allowing only stake creation.");
+            "mintonly is optional true/false allowing only block minting.");
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
@@ -1635,9 +1635,9 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
     // ppcoin: if user OS account compromised prevent trivial sendmoney commands
     if (params.size() > 2)
-        fWalletUnlockStakeOnly = params[2].get_bool();
+        fWalletUnlockMintOnly = params[2].get_bool();
     else
-        fWalletUnlockStakeOnly = false;
+        fWalletUnlockMintOnly = false;
 
     return Value::null;
 }
@@ -1886,7 +1886,7 @@ Value getwork(const Array& params, bool fHelp)
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
         if (!pblock->SignBlock(*pwalletMain))
-            throw JSONRPCError(-100, "Unable to sign block");
+            throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
 
         return CheckWork(pblock, *pwalletMain, reservekey);
     }

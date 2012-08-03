@@ -2408,6 +2408,9 @@ void PrintBlockTree()
 map<uint256, CAlert> mapAlerts;
 CCriticalSection cs_mapAlerts;
 
+static string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
+static string strMintWarning;
+
 string GetWarnings(string strFor)
 {
     int nPriority = 0;
@@ -2415,6 +2418,13 @@ string GetWarnings(string strFor)
     string strRPC;
     if (GetBoolArg("-testsafemode"))
         strRPC = "test";
+
+    // ppcoin: wallet lock warning for minting
+    if (strMintWarning != "")
+    {
+        nPriority = 0;
+        strStatusBar = strMintWarning;
+    }
 
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
@@ -3554,6 +3564,8 @@ public:
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
 
+// CreateNewBlock:
+//   fProofOfStake: try (best effort) to make a proof-of-stake block
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 {
     CReserveKey reservekey(pwallet);
@@ -3577,7 +3589,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift / 2;  // only initialized at startup
     CBlockIndex* pindexPrev = pindexBest;
 
-    if (fProofOfStake)
+    if (fProofOfStake)  // attemp to find a coinstake
     {
         while (nLastCoinStakeCheckTime < GetAdjustedTime())
         {
@@ -3751,8 +3763,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-    pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-    pblock->nTime          = max(pblock->GetBlockTime(), pblock->GetMaxTransactionTime());
+    pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
     pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
     pblock->UpdateTime(pindexPrev);
     pblock->nNonce         = 0;
@@ -3877,7 +3888,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-    while (fGenerateBitcoins)
+    while (fGenerateBitcoins || fProofOfStake)
     {
         if (fShutdown)
             return;
@@ -3886,10 +3897,16 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             Sleep(1000);
             if (fShutdown)
                 return;
-            if (!fGenerateBitcoins)
+            if ((!fGenerateBitcoins) && !fProofOfStake)
                 return;
         }
 
+        while (pwallet->IsLocked())
+        {
+            strMintWarning = strMintMessage;
+            Sleep(1000);
+        }
+        strMintWarning = "";
 
         //
         // Create new block
@@ -3904,17 +3921,21 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
 
         // ppcoin: if proof-of-stake block found then process block
-        if (pblock->IsProofOfStake())
+        if (fProofOfStake)
         {
-            if (!pblock->SignBlock(*pwalletMain))
+            if (pblock->IsProofOfStake())
             {
-                error("CPUMiner: Unable to sign new proof-of-stake block");
-                return;
+                if (!pblock->SignBlock(*pwalletMain))
+                {
+                    strMintWarning = strMintMessage;
+                    continue;
+                }
+                strMintWarning = "";
+                printf("CPUMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
+                SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                CheckWork(pblock.get(), *pwalletMain, reservekey);
+                SetThreadPriority(THREAD_PRIORITY_LOWEST);
             }
-            printf("CPUMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str()); 
-            SetThreadPriority(THREAD_PRIORITY_NORMAL);
-            CheckWork(pblock.get(), *pwalletMain, reservekey);
-            SetThreadPriority(THREAD_PRIORITY_LOWEST);
             Sleep(500);
             continue;
         }
@@ -3964,10 +3985,10 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                     assert(hash == pblock->GetHash());
                     if (!pblock->SignBlock(*pwalletMain))
                     {
-                        error("BitcoinMiner: Unable to sign new proof-of-work block");
-                        return;
+                        strMintWarning = strMintMessage;
+                        break;
                     }
-
+                    strMintWarning = "";
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     CheckWork(pblock.get(), *pwalletMain, reservekey);
                     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -4022,8 +4043,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                 break;
 
             // Update nTime every few seconds
-            pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-            pblock->nTime = max(pblock->GetBlockTime(), pblock->GetMaxTransactionTime()); 
+            pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
             pblock->nTime = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
             pblock->UpdateTime(pindexPrev);
             nBlockTime = ByteReverse(pblock->nTime);
