@@ -11,7 +11,7 @@
 #include "keystore.h"
 #include "script.h"
 
-extern bool fWalletUnlockStakeOnly;
+extern bool fWalletUnlockMintOnly;
 
 class CWalletTx;
 class CReserveKey;

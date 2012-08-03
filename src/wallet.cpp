@@ -73,7 +73,7 @@ bool CWallet::AddCScript(const CScript& redeemScript)
 
 // ppcoin: optional setting to create coinstake only when unlocked;
 //         serves to disable the trivial sendmoney when OS account compromised
-bool fWalletUnlockStakeOnly = false;
+bool fWalletUnlockMintOnly = false;
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)
 {
@@ -1365,9 +1365,9 @@ string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew,
         printf("SendMoney() : %s", strError.c_str());
         return strError;
     }
-    if (fWalletUnlockStakeOnly)
+    if (fWalletUnlockMintOnly)
     {
-        string strError = _("Error: Wallet unlocked for coinstake only, unable to create transaction.");
+        string strError = _("Error: Wallet unlocked for block minting only, unable to create transaction.");
         printf("SendMoney() : %s", strError.c_str());
         return strError;
     }
