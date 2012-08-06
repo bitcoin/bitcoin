@@ -647,7 +647,7 @@ public:
         return true;
     }
 
-    std::string GetAddressOfTxOut(int n)
+    std::string GetAddressOfTxOut(int n) const
     {
         CTxDestination addr;
         ExtractDestination(vout[n].scriptPubKey, addr);
