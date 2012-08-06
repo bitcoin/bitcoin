@@ -321,18 +321,23 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     // Fetch previous transactions (inputs):
     map<COutPoint, CScript> mapPrevOut;
+    for (unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
+        CTransaction tempTx;
         MapPrevTx mapPrevTx;
         CTxDB txdb("r");
         map<uint256, CTxIndex> unused;
         bool fInvalid;
-        mergedTx.FetchInputs(txdb, unused, false, false, mapPrevTx, fInvalid);
+
+        // FetchInputs aborts on failure, so we go one at a time.
+        tempTx.vin.push_back(mergedTx.vin[i]);
+        tempTx.FetchInputs(txdb, unused, false, false, mapPrevTx, fInvalid);
 
         // Copy results into mapPrevOut:
-        BOOST_FOREACH(const CTxIn& txin, mergedTx.vin)
+        BOOST_FOREACH(const CTxIn& txin, tempTx.vin)
         {
             const uint256& prevHash = txin.prevout.hash;
-            if (mapPrevTx.count(prevHash))
+            if (mapPrevTx.count(prevHash) && mapPrevTx[prevHash].second.vout.size()>txin.prevout.n)
                 mapPrevOut[txin.prevout] = mapPrevTx[prevHash].second.vout[txin.prevout.n].scriptPubKey;
         }
     }
