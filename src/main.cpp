@@ -3754,7 +3754,8 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
-        printf("CreateNewBlock(): total size %lu\n", nBlockSize);
+        if (fDebug && GetBoolArg("-printpriority"))
+            printf("CreateNewBlock(): total size %lu\n", nBlockSize);
 
     }
     if (pblock->IsProofOfWork())
