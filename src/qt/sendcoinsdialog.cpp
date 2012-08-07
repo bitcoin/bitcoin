@@ -7,6 +7,7 @@
 #include "sendcoinsentry.h"
 #include "guiutil.h"
 #include "askpassphrasedialog.h"
+#include "base58.h"
 
 #include <QMessageBox>
 #include <QLocale>
@@ -273,6 +274,9 @@ bool SendCoinsDialog::handleURI(const QString &uri)
     // URI has to be valid
     if (GUIUtil::parseBitcoinURI(uri, &rv))
     {
+        CBitcoinAddress address(rv.address.toStdString());
+        if (!address.IsValid())
+            return false;
         pasteEntry(rv);
         return true;
     }
