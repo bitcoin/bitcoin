@@ -1593,7 +1593,8 @@ void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
         if (!HaveKey(Hash160(keypool.vchPubKey)))
             throw runtime_error("ReserveKeyFromKeyPool() : unknown key in key pool");
         assert(!keypool.vchPubKey.empty());
-        printf("keypool reserve %"PRI64d"\n", nIndex);
+        if (fDebug && GetBoolArg("-printkeypool"))
+            printf("keypool reserve %"PRI64d"\n", nIndex);
     }
 }
 
@@ -1630,7 +1631,8 @@ void CWallet::ReturnKey(int64 nIndex)
         LOCK(cs_wallet);
         setKeyPool.insert(nIndex);
     }
-    printf("keypool return %"PRI64d"\n", nIndex);
+    if (fDebug && GetBoolArg("-printkeypool"))
+        printf("keypool return %"PRI64d"\n", nIndex);
 }
 
 bool CWallet::GetKeyFromPool(vector<unsigned char>& result, bool fAllowReuse)
