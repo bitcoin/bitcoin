@@ -4,7 +4,6 @@
 #include "bitcoinunits.h"
 #include "util.h"
 #include "init.h"
-#include "base58.h"
 
 #include <QString>
 #include <QDateTime>
@@ -79,11 +78,6 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     if(uri.scheme() != QString("bitcoin"))
-        return false;
-
-    // check if the address is valid
-    CBitcoinAddress addressFromUri(uri.path().toStdString());
-    if (!addressFromUri.IsValid())
         return false;
 
     SendCoinsRecipient rv;
