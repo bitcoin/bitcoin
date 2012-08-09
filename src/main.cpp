@@ -32,6 +32,7 @@ map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 uint256 hashGenesisBlock = hashGenesisBlockOfficial;
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
+static CBigNum bnInitialHashTarget(~uint256(0) >> 36);
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 uint64 nBestChainTrust = 0;
@@ -898,16 +899,17 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    // Genesis block and first block
+    // Genesis block
     if (pindexLast == NULL || pindexLast->pprev == NULL)
         return bnProofOfWorkLimit.GetCompact();
 
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
-    if (pindexPrev == NULL) 
-        return bnProofOfWorkLimit.GetCompact();
+    if (pindexPrev->pprev == NULL)
+        return bnInitialHashTarget.GetCompact(); // first block
     const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
-    if (pindexPrevPrev == NULL)
-        return bnProofOfWorkLimit.GetCompact();
+    if (pindexPrevPrev->pprev == NULL)
+        return bnInitialHashTarget.GetCompact(); // second block
+
     int64 nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
 
     // ppcoin: target change every block
