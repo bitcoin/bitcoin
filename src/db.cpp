@@ -636,7 +636,6 @@ bool LoadBlockIndex(CChainDB &chaindb)
     {
         if (pindexGenesisBlock == NULL)
             return true;
-        return error("CTxDB::LoadBlockIndex() : hashBestChain not loaded");
     }
     hashBestChain = pindexBest->GetBlockHash();
     nBestHeight = pindexBest->nHeight;
