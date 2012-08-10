@@ -899,9 +899,8 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    // Genesis block
-    if (pindexLast == NULL || pindexLast->pprev == NULL)
-        return bnProofOfWorkLimit.GetCompact();
+    if (pindexLast == NULL)
+        return bnProofOfWorkLimit.GetCompact(); // genesis block
 
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
     if (pindexPrev->pprev == NULL)
