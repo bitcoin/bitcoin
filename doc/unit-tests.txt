@@ -12,7 +12,7 @@ make -f makefile.unix test_bitcoin  # Replace makefile.unix if you're not on uni
 If all tests succeed the last line of output will be:
 *** No errors detected
 
-To add more tests, add BOOST_AUTO_TEST_CASE's to the existing
+To add more tests, add BOOST_AUTO_TEST_CASE functions to the existing
 .cpp files in the test/ directory or add new .cpp files that
-implement new BOOST_AUTO_TEST_SUITE's (and add them to the
+implement new BOOST_AUTO_TEST_SUITE sections (and add them to the
 list of includes in test_bitcoin.cpp).
