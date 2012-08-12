@@ -82,7 +82,7 @@ public:
 
     static int metaType();
 
-    // Image to variant that can be marshaled over DBus
+    // Image to variant that can be marshalled over DBus
     static QVariant toVariant(const QImage &img);
 
 private:
@@ -294,7 +294,7 @@ void Notificator::notify(Class cls, const QString &title, const QString &text, c
     default:
         if(cls == Critical)
         {
-            // Fall back to old fashioned popup dialog if critical and no other notification available
+            // Fall back to old fashioned pop-up dialog if critical and no other notification available
             QMessageBox::critical(parent, title, text, QMessageBox::Ok, QMessageBox::Ok);
         }
         break;

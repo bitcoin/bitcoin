@@ -44,7 +44,7 @@ err:
 
 // Perform ECDSA key recovery (see SEC1 4.1.6) for curves over (mod p)-fields
 // recid selects which key is recovered
-// if check is nonzero, additional checks are performed
+// if check is non-zero, additional checks are performed
 int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned char *msg, int msglen, int recid, int check)
 {
     if (!eckey) return 0;

@@ -134,7 +134,7 @@ protected:
     int nRefCount;
 
     // Denial-of-service detection/prevention
-    // Key is ip address, value is banned-until-time
+    // Key is IP address, value is banned-until-time
     static std::map<CNetAddr, int64> setBanned;
     static CCriticalSection cs_setBanned;
     int nMisbehavior;

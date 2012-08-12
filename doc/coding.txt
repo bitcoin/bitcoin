@@ -22,8 +22,8 @@ bool Function(char* psz, int n)
 - No extra spaces inside parenthesis; please don't do ( this )
 - No space after function names, one space after if, for and while
 
-Variable names begin with the type in lowercase, like nSomeVariable.
-Please don't put the first word of the variable name in lowercase like
+Variable names begin with the type in lower-case, like nSomeVariable.
+Please don't put the first word of the variable name in lower-case like
 someVariable.
 
 Common types:

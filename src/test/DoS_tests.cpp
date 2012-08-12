@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     CNode dummyNode1(INVALID_SOCKET, addr1, true);
     dummyNode1.Misbehaving(100); // Should get banned
     BOOST_CHECK(CNode::IsBanned(addr1));
-    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different ip, not banned
+    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002));
     CNode dummyNode2(INVALID_SOCKET, addr2, true);
