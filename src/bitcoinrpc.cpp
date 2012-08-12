@@ -1012,7 +1012,7 @@ Value sendmany(const Array& params, bool fHelp)
     if (!fCreated)
     {
         if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
-            throw JSONRPCError(-6, "Account has insufficient funds");
+            throw JSONRPCError(-6, "Insufficient funds");
         throw JSONRPCError(-4, "Transaction creation failed");
     }
     if (!pwalletMain->CommitTransaction(wtx, keyChange))
