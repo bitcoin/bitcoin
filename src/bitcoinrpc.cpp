@@ -1814,8 +1814,13 @@ Value getwork(const Array& params, bool fHelp)
                     delete pblock;
                 vNewBlock.clear();
             }
+
+            // Clear pindexPrev so future getworks make a new block, despite any failures from here on
+            pindexPrev = NULL;
+
+            // Store the pindexBest used before CreateNewBlock, to avoid races
             nTransactionsUpdatedLast = nTransactionsUpdated;
-            pindexPrev = pindexBest;
+            CBlockIndex* pindexPrevNew = pindexBest;
             nStart = GetTime();
 
             // Create new block
@@ -1823,6 +1828,9 @@ Value getwork(const Array& params, bool fHelp)
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
             vNewBlock.push_back(pblock);
+
+            // Need to update only after we know CreateNewBlock succeeded
+            pindexPrev = pindexPrevNew;
         }
 
         // Update nTime
@@ -1913,16 +1921,26 @@ Value getmemorypool(const Array& params, bool fHelp)
         if (pindexPrev != pindexBest ||
             (nTransactionsUpdated != nTransactionsUpdatedLast && GetTime() - nStart > 5))
         {
+            // Clear pindexPrev so future calls make a new block, despite any failures from here on
+            pindexPrev = NULL;
+
+            // Store the pindexBest used before CreateNewBlock, to avoid races
             nTransactionsUpdatedLast = nTransactionsUpdated;
-            pindexPrev = pindexBest;
+            CBlockIndex* pindexPrevNew = pindexBest;
             nStart = GetTime();
 
             // Create new block
             if(pblock)
+            {
                 delete pblock;
+                pblock = NULL;
+            }
             pblock = CreateNewBlock(reservekey);
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
+
+            // Need to update only after we know CreateNewBlock succeeded
+            pindexPrev = pindexPrevNew;
         }
 
         // Update nTime
