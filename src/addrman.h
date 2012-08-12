@@ -173,13 +173,13 @@ private:
     // last used nId
     int nIdCount;
 
-    // table with information about all nId's
+    // table with information about all nIds
     std::map<int, CAddrInfo> mapInfo;
 
     // find an nId based on its network address
     std::map<CNetAddr, int> mapAddr;
 
-    // randomly-ordered vector of all nId's
+    // randomly-ordered vector of all nIds
     std::vector<int> vRandom;
 
     // number of "tried" entries
@@ -252,8 +252,8 @@ public:
         // * nNew
         // * nTried
         // * number of "new" buckets
-        // * all nNew addrinfo's in vvNew
-        // * all nTried addrinfo's in vvTried
+        // * all nNew addrinfos in vvNew
+        // * all nTried addrinfos in vvTried
         // * for each bucket:
         //   * number of elements
         //   * for each element: index
