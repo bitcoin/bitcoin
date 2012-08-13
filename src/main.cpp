@@ -1862,18 +1862,17 @@ bool CBlock::AcceptBlock()
     return true;
 }
 
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)
+bool ProcessBlockHeader(CNode* pfrom, CBlock* pblock, const uint256& hash, bool& fEnablePreview)
 {
     // Check for duplicate
-    uint256 hash = pblock->GetHash();
     if (mapBlockIndex.count(hash))
-        return error("ProcessBlock() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
+        return error("ProcessBlockHeader() : already have block %d %s", mapBlockIndex[hash]->nHeight, hash.ToString().substr(0,20).c_str());
     if (mapOrphanBlocks.count(hash))
-        return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
+        return error("ProcessBlockHeader() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
     // Preliminary checks
     if (!pblock->CheckBlockHeader(true))
-        return error("ProcessBlock() : CheckBlockHeader FAILED");
+        return error("ProcessBlockHeader() : CheckBlockHeader FAILED");
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
@@ -1884,7 +1883,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         {
             if (pfrom)
                 pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with timestamp before last checkpoint");
+            return error("ProcessBlockHeader() : block with timestamp before last checkpoint");
         }
         CBigNum bnNewBlock;
         bnNewBlock.SetCompact(pblock->nBits);
@@ -1894,11 +1893,10 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         {
             if (pfrom)
                 pfrom->Misbehaving(100);
-            return error("ProcessBlock() : block with too little proof-of-work");
+            return error("ProcessBlockHeader() : block with too little proof-of-work");
         }
     }
 
-    bool fEnablePreview;
     // Only enable block preview broadcasts when the difficulty in making them is high enough that it's not worth DoSing with them
     {
         double dDiff = (double)0x0000ffff / (double)(pblock->nBits & 0x00ffffff);
@@ -1911,27 +1909,32 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     {
         // We can check the immediate next block's time and bits headers earlier
         if (pblock->GetBlockTime() <= pindexBest->GetMedianTimePast())
-            return error("ProcessBlock() : block's timestamp is too early");
+            return error("ProcessBlockHeader() : block's timestamp is too early");
 
         if (pblock->nBits != GetNextWorkRequired(pindexBest, pblock))
-            return pblock->DoS(100, error("ProcessBlock() : incorrect proof of work"));
+            return pblock->DoS(100, error("ProcessBlockHeader() : incorrect proof of work"));
 
         if (fEnablePreview)
+        {
             // Relay blocks after only checking their header, so we don't bias them against including transactions too much
+            pblock->csBlockDownload = new std::pair<boost::mutex, boost::condition_variable>();
+            pblock->fBlockDownloading = true;
             RelayMessage(CInv(MSG_BLOCK_PREVIEW, hash), *pblock);
+        }
     }
 
+    return true;
+}
+
+bool ProcessBlockBody(CNode* pfrom, CBlock* pblock, const uint256& hash)
+{
     if (!pblock->CheckBlockBody(true))
-    {
-        if (fEnablePreview)
-            pblock->nDoS = 0;
-        return error("ProcessBlock() : CheckBlockBody FAILED");
-    }
+        return error("ProcessBlockBody() : CheckBlockBody FAILED");
 
     // If don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
+        printf("ProcessBlockBody: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
         CBlock* pblock2 = new CBlock(*pblock);
         mapOrphanBlocks.insert(make_pair(hash, pblock2));
         mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
@@ -1944,11 +1947,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
     // Store to disk
     if (!pblock->AcceptBlock())
-    {
-        if (fEnablePreview)
-            pblock->nDoS = 0;
-        return error("ProcessBlock() : AcceptBlock FAILED");
-    }
+        return error("ProcessBlockBody() : AcceptBlock FAILED");
 
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
@@ -1969,7 +1968,22 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    printf("ProcessBlock: ACCEPTED\n");
+    printf("ProcessBlockBody: ACCEPTED\n");
+    return true;
+}
+
+bool ProcessBlock(CNode* pfrom, CBlock* pblock)
+{
+    uint256 hash = pblock->GetHash();
+    bool fEnablePreview;
+    if (!ProcessBlockHeader(pfrom, pblock, hash, fEnablePreview))
+        return false;
+    if (!ProcessBlockBody(pfrom, pblock, hash))
+    {
+        if (fEnablePreview)
+            pblock->nDoS = 0;
+        return false;
+    }
     return true;
 }
 
@@ -2877,18 +2891,55 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "block")
     {
+        bool fFullBlock = vRecv.nType & SER_BLOCKHEADERONLY;
+        if (!fFullBlock)
+            // FIXME: Do we need to support this?
+            printf("received block with SER_BLOCKHEADERONLY already set; this is not supported!\n");
+
         CBlock block;
+        vRecv.nType |= SER_BLOCKHEADERONLY;
         vRecv >> block;
+        if (fFullBlock)
+            vRecv.nType &= ~SER_BLOCKHEADERONLY;
+        uint256 hashBlock = block.GetHash();
+        printf("received block header %s\n", hashBlock.ToString().substr(0,20).c_str());
+        bool fEnablePreview;
+        // NOTE: ProcessBlockHeader potentially begins this block relaying as a preview.
+        if (!ProcessBlockHeader(pfrom, &block, hashBlock, fEnablePreview))
+        {
+            // We don't want this block. Can we skip the download? TODO
+            if (block.nDoS) pfrom->Misbehaving(block.nDoS);
+            {
+                boost::lock_guard<boost::mutex> lock(block.csBlockDownload->first);
+                block.fBlockDownloading = false;
+            }
+            block.csBlockDownload->second.notify_all();
+        }
+        else
+        {
+            // Download the block contents
+            vRecv >> block.vtx;
+            {
+                boost::lock_guard<boost::mutex> lock(block.csBlockDownload->first);
+                block.fBlockDownloading = false;
+            }
+            block.csBlockDownload->second.notify_all();
+            printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
 
-        printf("received block %s\n", block.GetHash().ToString().substr(0,20).c_str());
-        // block.print();
+            CInv inv(MSG_BLOCK, block.GetHash());
+            pfrom->AddInventoryKnown(inv);
 
-        CInv inv(MSG_BLOCK, block.GetHash());
-        pfrom->AddInventoryKnown(inv);
+            if (ProcessBlockBody(pfrom, &block, hashBlock))
+                mapAlreadyAskedFor.erase(inv);
 
-        if (ProcessBlock(pfrom, &block))
-            mapAlreadyAskedFor.erase(inv);
-        if (block.nDoS) pfrom->Misbehaving(block.nDoS);
+            /* Ignore DoS if block previewing is enabled:
+             * - We might have been relayed the body before or without
+             *   checking it.
+             * - Previewing is only enabled when the block difficulty is
+             *   sufficiently high to make it costly for a DoS.
+             */
+            if (block.nDoS && !fEnablePreview) pfrom->Misbehaving(block.nDoS);
+        }
     }
 
 
