@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     std::vector<CTransaction*>txFirst;
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
     {
+        pblock->nVersion = 1;
         pblock->nTime = pindexBest->GetMedianTimePast()+1;
         pblock->vtx[0].vin[0].scriptSig = CScript();
         pblock->vtx[0].vin[0].scriptSig.push_back(blockinfo[i].extranonce);
