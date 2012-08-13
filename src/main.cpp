@@ -3396,6 +3396,23 @@ public:
 };
 
 
+bool PrioritiseTransaction(const uint256 hash, const string strHash, double dPriorityDelta, int64 nFeeDelta)
+{
+    if (!mempool.mapTx.count(hash))
+    {
+        printf("PrioritiseTransaction: cannot find %s\n", strHash.c_str());
+        return false;
+    }
+
+    CTransaction &txn = mempool.mapTx[hash];
+    txn.dPriorityDelta += dPriorityDelta;
+    txn.nFeeDelta += nFeeDelta;
+    printf("PrioritiseTransaction: %s priority += %f, fee += %"PRI64d"\n", strHash.c_str(), dPriorityDelta, nFeeDelta);
+
+    return true;
+}
+
+
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
 
@@ -3535,10 +3552,12 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
             // Priority is sum(valuein * age) / txsize
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
             dPriority /= nTxSize;
+            dPriority += tx.dPriorityDelta;
 
             // This is a more accurate fee-per-kilobyte than is used by the client code, because the
             // client code rounds up the size to the nearest 1K. That's good, because it gives an
             // incentive to create smaller transactions.
+            nTotalIn += tx.nFeeDelta;
             double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
 
             if (porphan)
@@ -3581,10 +3600,10 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 continue;
 
             // Skip free transactions if we're past the minimum block size:
-            if (fSortedByFee && (dFeePerKb < nMinTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
+            if (fSortedByFee && (tx.dPriorityDelta <= 0) && (tx.nFeeDelta <= 0) && (dFeePerKb < nMinTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
                 continue;
 
-            // Prioritize by fee once past the priority size or we run out of high-priority
+            // Prioritise by fee once past the priority size or we run out of high-priority
             // transactions:
             if (!fSortedByFee &&
                 ((nBlockSize + nTxSize >= nBlockPrioritySize) || (dPriority < COIN * 144 / 250)))
