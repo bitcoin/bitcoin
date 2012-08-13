@@ -5,6 +5,9 @@
 #ifndef BITCOIN_MAIN_H
 #define BITCOIN_MAIN_H
 
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include "bignum.h"
 #include "sync.h"
 #include "net.h"
@@ -64,6 +67,8 @@ extern const std::string strMessageMagic;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
+extern boost::mutex csBestBlock;
+extern boost::condition_variable cvBlockChange;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
@@ -93,6 +98,7 @@ bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 bool LoadExternalBlockFile(FILE* fileIn);
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
+bool PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, int64 nFeeDelta);
 CBlock* CreateNewBlock(CReserveKey& reservekey);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
@@ -397,6 +403,10 @@ public:
     mutable int nDoS;
     bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
 
+    double dPriorityDelta;
+    int64 nFeeDelta;
+
+
     CTransaction()
     {
         SetNull();
@@ -418,6 +428,8 @@ public:
         vout.clear();
         nLockTime = 0;
         nDoS = 0;  // Denial-of-service prevention
+        dPriorityDelta = 0;
+        nFeeDelta = 0;
     }
 
     bool IsNull() const
@@ -541,6 +553,9 @@ public:
 
     int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const
     {
+        if (dPriorityDelta > 0 || nFeeDelta > 0)
+            return 0;
+
         // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
         int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 
@@ -819,7 +834,7 @@ class CBlock
 {
 public:
     // header
-    static const int CURRENT_VERSION=1;
+    static const int CURRENT_VERSION=2;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -1163,6 +1178,12 @@ public:
         return pindex->GetMedianTimePast();
     }
 
+    /**
+     * Returns true if there are nRequired or more blocks of minVersion or above
+     * in the last nToCheck blocks, starting at pstart and going backwards.
+     */
+    static bool IsSuperMajority(unsigned int minVersion, const CBlockIndex* pstart,
+                                unsigned int nRequired, unsigned int nToCheck);
 
 
     std::string ToString() const
