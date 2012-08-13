@@ -1399,6 +1399,8 @@ bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     return true;
 }
 
+bool FindUndoPos(CTxDB &txdb, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
+
 bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 {
     // Check it again in case a previous version let a bad block in
@@ -1430,7 +1432,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         // Since we're just checking the block and not actually connecting it, it might not (and probably shouldn't) be on the disk to get the transaction from
         nTxPos = 1;
     else
-        nTxPos = ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - 1 + GetSizeOfCompactSize(vtx.size());
+        nTxPos = pindex->pos.nPos + ::GetSerializeSize(CBlock(), SER_DISK, CLIENT_VERSION) - 1 + GetSizeOfCompactSize(vtx.size());
 
     CBlockUndo blockundo;
 
@@ -1507,6 +1509,17 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             return error("ConnectBlock() : UpdateTxIndex failed");
     }
 
+    // Write undo information to disk
+    if (pindex->GetUndoPos().IsNull() && pindex->nHeight > Checkpoints::GetTotalBlocksEstimate())
+    {
+        CDiskBlockPos pos;
+        if (!FindUndoPos(txdb, pindex->pos.nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 8))
+            return error("ConnectBlock() : FindUndoPos failed");
+        if (!blockundo.WriteToDisk(pos))
+            return error("ConnectBlock() : CBlockUndo::WriteToDisk failed");
+        pindex->nUndoPos = pos.nPos;
+    }
+
     // Update block index on disk without changing it in memory.
     // The memory index structure will be changed after the db commits.
     if (pindex->pprev)
@@ -1515,13 +1528,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         blockindexPrev.hashNext = pindex->GetBlockHash();
         if (!txdb.WriteBlockIndex(blockindexPrev))
             return error("ConnectBlock() : WriteBlockIndex failed");
-    }
-
-    // Write undo information to disk
-    if (pindex->nHeight > Checkpoints::GetTotalBlocksEstimate())
-    {
-        CAutoFile fileUndo(fopen(pindex->GetBlockPos().GetUndoFile(GetDataDir()).string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
-        fileUndo << blockundo;
     }
 
     // Watch for transactions paying to me
@@ -1788,8 +1794,8 @@ bool CBlock::AddToBlockIndex(const CDiskBlockPos &pos)
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
     }
     pindexNew->bnChainWork = (pindexNew->pprev ? pindexNew->pprev->bnChainWork : 0) + pindexNew->GetBlockWork();
-    assert(pos.nHeight == pindexNew->nHeight);
-    pindexNew->nAlternative = pos.nAlternative;
+    pindexNew->pos = pos;
+    pindexNew->nUndoPos = 0;
 
     CTxDB txdb;
     if (!txdb.TxnBegin())
@@ -1818,6 +1824,57 @@ bool CBlock::AddToBlockIndex(const CDiskBlockPos &pos)
 }
 
 
+
+bool FindBlockPos(CTxDB &txdb, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64 nTime)
+{
+    bool fUpdatedLast = false;
+
+    LOCK(cs_LastBlockFile);
+
+    while (infoLastBlockFile.nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
+        printf("Leaving block file %i: %s\n", nLastBlockFile, infoLastBlockFile.ToString().c_str());
+        nLastBlockFile++;
+        infoLastBlockFile.SetNull();
+        txdb.ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile); // check whether data for the new file somehow already exist; can fail just fine
+        fUpdatedLast = true;
+    }
+
+    pos.nFile = nLastBlockFile;
+    pos.nPos = infoLastBlockFile.nSize;
+    infoLastBlockFile.nSize += nAddSize;
+    infoLastBlockFile.AddBlock(nHeight, nTime);
+
+    if (!txdb.WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
+        return error("FindBlockPos() : cannot write updated block info");
+    if (fUpdatedLast)
+        txdb.WriteLastBlockFile(nLastBlockFile);
+
+    return true;
+}
+
+bool FindUndoPos(CTxDB &txdb, int nFile, CDiskBlockPos &pos, unsigned int nAddSize)
+{
+    pos.nFile = nFile;
+
+    LOCK(cs_LastBlockFile);
+
+    if (nFile == nLastBlockFile) {
+        pos.nPos = infoLastBlockFile.nUndoSize;
+        infoLastBlockFile.nUndoSize += nAddSize;
+        if (!txdb.WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
+            return error("FindUndoPos() : cannot write updated block info");
+        return true;
+    }
+
+    CBlockFileInfo info;
+    if (!txdb.ReadBlockFileInfo(nFile, info))
+        return error("FindUndoPos() : cannot read block info");
+    pos.nPos = info.nUndoSize;
+    info.nUndoSize += nAddSize;
+    if (!txdb.WriteBlockFileInfo(nFile, info))
+        return error("FindUndoPos() : cannot write updated block info");
+    return true;
+}
 
 
 bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
@@ -1928,9 +1985,15 @@ bool CBlock::AcceptBlock()
     }
 
     // Write block to history file
-    CDiskBlockPos blockPos = CDiskBlockPos(nHeight);
+    unsigned int nBlockSize = ::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION);
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
         return error("AcceptBlock() : out of disk space");
+    CDiskBlockPos blockPos;
+    {
+        CTxDB txdb;
+        if (!FindBlockPos(txdb, blockPos, nBlockSize+8, nHeight, nTime))
+            return error("AcceptBlock() : FindBlockPos failed");
+    }
     if (!WriteToDisk(blockPos))
         return error("AcceptBlock() : WriteToDisk failed");
     if (!AddToBlockIndex(blockPos))
@@ -2067,16 +2130,37 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
     return true;
 }
 
-FILE* OpenBlockFile(const CDiskBlockPos &pos, const char* pszMode)
+CCriticalSection cs_LastBlockFile;
+CBlockFileInfo infoLastBlockFile;
+int nLastBlockFile = 0;
+
+FILE* OpenDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fReadOnly)
 {
-    boost::filesystem::path path = pos.GetFileName(GetDataDir());
-    boost::filesystem::create_directories(path.parent_path());
     if (pos.IsNull() || pos.IsMemPool())
         return NULL;
-    FILE* file = fopen(path.string().c_str(), pszMode);
+    boost::filesystem::path path = GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, pos.nFile);
+    boost::filesystem::create_directories(path.parent_path());
+    FILE* file = fopen(path.string().c_str(), "rb+");
+    if (!file && !fReadOnly)
+        file = fopen(path.string().c_str(), "wb+");
     if (!file)
         return NULL;
+    if (pos.nPos) {
+        if (fseek(file, pos.nPos, SEEK_SET)) {
+            printf("Unable to seek to position %u of %s\n", pos.nPos, path.string().c_str());
+            fclose(file);
+            return NULL;
+        }
+    }
     return file;
+}
+
+FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly) {
+    return OpenDiskFile(pos, "blk", fReadOnly);
+}
+
+FILE *OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
+    return OpenDiskFile(pos, "rev", fReadOnly);
 }
 
 bool LoadBlockIndex(bool fAllowNew)
@@ -2146,7 +2230,13 @@ bool LoadBlockIndex(bool fAllowNew)
         assert(hash == hashGenesisBlock);
 
         // Start new block file
-        CDiskBlockPos blockPos(0);
+        unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
+        CDiskBlockPos blockPos;
+        {
+            CTxDB txdb;
+            if (!FindBlockPos(txdb, blockPos, nBlockSize+8, 0, block.nTime))
+                return error("AcceptBlock() : FindBlockPos failed");
+        }
         if (!block.WriteToDisk(blockPos))
             return error("LoadBlockIndex() : writing genesis block to disk failed");
         if (!block.AddToBlockIndex(blockPos))
@@ -2203,9 +2293,9 @@ void PrintBlockTree()
         // print item
         CBlock block;
         block.ReadFromDisk(pindex);
-        printf("%d (%s)  %s  tx %"PRIszu"",
+        printf("%d (blk%05u.dat:0x%lx)  %s  tx %"PRIszu"",
             pindex->nHeight,
-            pindex->GetBlockPos().GetFileName("").string().c_str(),
+            pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
             DateTimeStrFormat("%x %H:%M:%S", block.GetBlockTime()).c_str(),
             block.vtx.size());
 
