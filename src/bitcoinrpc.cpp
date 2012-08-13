@@ -44,6 +44,8 @@ static CCriticalSection cs_nWalletUnlockTime;
 
 extern Value getconnectioncount(const Array& params, bool fHelp); // in rpcnet.cpp
 extern Value getpeerinfo(const Array& params, bool fHelp);
+extern Value addnode(const Array& params, bool fHelp);
+extern Value getaddednodeinfo(const Array& params, bool fHelp);
 extern Value dumpprivkey(const Array& params, bool fHelp); // in rpcdump.cpp
 extern Value importprivkey(const Array& params, bool fHelp);
 extern Value getrawtransaction(const Array& params, bool fHelp); // in rcprawtransaction.cpp
@@ -2164,6 +2166,8 @@ static const CRPCCommand vRPCCommands[] =
     { "getblockcount",          &getblockcount,          true },
     { "getconnectioncount",     &getconnectioncount,     true },
     { "getpeerinfo",            &getpeerinfo,            true },
+    { "addnode",                &addnode,                true },
+    { "getaddednodeinfo",       &getaddednodeinfo,       true },
     { "getdifficulty",          &getdifficulty,          true },
     { "getgenerate",            &getgenerate,            true },
     { "setgenerate",            &setgenerate,            true },
@@ -3069,6 +3073,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     //
     // Special case non-string parameter types
     //
+    if (strMethod == "getaddednodeinfo"       && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
