@@ -28,6 +28,7 @@ static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const unsigned int MAX_INV_SZ = 50000;
+static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 static const int64 MIN_TX_FEE = 50000;
 static const int64 MIN_RELAY_TX_FEE = 10000;
 static const int64 MAX_MONEY = 21000000 * COIN;
@@ -87,7 +88,8 @@ void UnregisterWallet(CWallet* pwalletIn);
 void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
 bool ProcessBlock(CNode* pfrom, CBlock* pblock);
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
-FILE* OpenBlockFile(const CDiskBlockPos &pos, const char* pszMode="rb");
+FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
 CBlockIndex* FindBlockByHeight(int nHeight);
@@ -121,86 +123,27 @@ bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 class CDiskBlockPos
 {
 public:
-    int nHeight;
-    int nAlternative;
+    int nFile;
+    unsigned int nPos;
 
-    CDiskBlockPos() {
-        SetNull();
-    }
-
-    CDiskBlockPos(int nHeightIn, int nAlternativeIn = 0) {
-        nHeight = nHeightIn;
-        nAlternative = nAlternativeIn;
-    }
-
-    std::string GetAlternative() const {
-        char c[9]={0,0,0,0,0,0,0,0,0};
-        char *cp = &c[8];
-        unsigned int n = nAlternative;
-        while (n > 0 && cp>c) {
-            n--;
-            *(--cp) = 'a' + (n % 26);
-            n /= 26;
-        }
-        return std::string(cp);
-    }
-
-    boost::filesystem::path GetDirectory(const boost::filesystem::path &base) const {
-        assert(nHeight != -1);
-        return base / strprintf("era%02u", nHeight / 210000) / 
-                      strprintf("cycle%04u", nHeight / 2016);
-    }
-
-    boost::filesystem::path GetFileName(const boost::filesystem::path &base) const {
-        return GetDirectory(base) / strprintf("%08u%s.blk", nHeight, GetAlternative().c_str());
-    }
-
-    boost::filesystem::path GetUndoFile(const boost::filesystem::path &base) const {
-        return GetDirectory(base) / strprintf("%08u%s.und", nHeight, GetAlternative().c_str());
-    }
-
-    // TODO: make thread-safe (lockfile, atomic file creation, ...?)
-    void MakeUnique(const boost::filesystem::path &base) {
-        while (boost::filesystem::exists(GetFileName(base)))
-            nAlternative++;
-    }
-
-    IMPLEMENT_SERIALIZE(({
-        CDiskBlockPos *me = const_cast<CDiskBlockPos*>(this);
-        if (!fRead) {
-            unsigned int nCode = (nHeight + 1) * 2 + (nAlternative > 0);
-            READWRITE(VARINT(nCode));
-            if (nAlternative > 0) {
-                unsigned int nAlt = nAlternative - 1;
-                READWRITE(VARINT(nAlt));
-            }
-        } else {
-            unsigned int nCode = 0;
-            READWRITE(VARINT(nCode));
-            me->nHeight = (nCode / 2) - 1;
-            if (nCode & 1) {
-                unsigned int nAlt = 0;
-                READWRITE(VARINT(nAlt));
-                me->nAlternative = 1 + nAlt;
-            } else {
-                me->nAlternative = 0;
-            }
-        }
-    });)
+    IMPLEMENT_SERIALIZE(
+        READWRITE(VARINT(nFile));
+        READWRITE(VARINT(nPos));
+    )
 
     friend bool operator==(const CDiskBlockPos &a, const CDiskBlockPos &b) {
-        return ((a.nHeight == b.nHeight) && (a.nAlternative == b.nAlternative));
+        return (a.nFile == b.nFile && a.nPos == b.nPos);
     }
 
     friend bool operator!=(const CDiskBlockPos &a, const CDiskBlockPos &b) {
         return !(a == b);
     }
 
-    void SetNull() { nHeight = -1; nAlternative = 0; }
-    bool IsNull() const { return ((nHeight == -1) && (nAlternative == 0)); }
+    void SetNull() { nFile = -1; nPos = 0; }
+    bool IsNull() const { return (nFile == -1); }
 
-    void SetMemPool() { nHeight = -1; nAlternative = -1; }
-    bool IsMemPool() const { return ((nHeight == -1) && (nAlternative == -1)); }
+    void SetMemPool() { nFile = -2; nPos = 0; }
+    bool IsMemPool() const { return (nFile == -2); }
 };
 
 /** Position on disk for a particular transaction. */
@@ -225,7 +168,7 @@ public:
     )
 
     void SetNull() { blockPos.SetNull(); nTxPos = 0; }
-    bool IsNull() const { return blockPos.IsNull(); }
+    bool IsNull() const { return (nTxPos == 0); }
     bool IsMemPool() const { return blockPos.IsMemPool(); }
 
     friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
@@ -246,7 +189,7 @@ public:
         else if (blockPos.IsMemPool())
             return "mempool";
         else
-            return strprintf("(%s, nTxPos=%u)", blockPos.GetFileName("").string().c_str(), nTxPos);
+            return strprintf("\"blk%05i.dat:0x%x\"", blockPos.nFile, nTxPos);
     }
 
     void print() const
@@ -632,7 +575,7 @@ public:
 
     bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
     {
-        CAutoFile filein = CAutoFile(OpenBlockFile(pos.blockPos, pfileRet ? "rb+" : "rb"), SER_DISK, CLIENT_VERSION);
+        CAutoFile filein = CAutoFile(OpenBlockFile(pos.blockPos, pfileRet==NULL), SER_DISK, CLIENT_VERSION);
         if (!filein)
             return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
 
@@ -823,6 +766,33 @@ public:
     IMPLEMENT_SERIALIZE(
         READWRITE(vtxundo);
     )
+
+    bool WriteToDisk(CDiskBlockPos &pos)
+    {
+        // Open history file to append
+        CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
+        if (!fileout)
+            return error("CBlockUndo::WriteToDisk() : OpenUndoFile failed");
+
+        // Write index header
+        unsigned int nSize = fileout.GetSerializeSize(*this);
+        fileout << FLATDATA(pchMessageStart) << nSize;
+
+        // Write undo data
+        long fileOutPos = ftell(fileout);
+        if (fileOutPos < 0)
+            return error("CBlock::WriteToDisk() : ftell failed");
+        pos.nPos = (unsigned int)fileOutPos;
+        fileout << *this;
+
+        // Flush stdio buffers and commit to disk before returning
+        fflush(fileout);
+        if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+            FileCommit(fileout);
+
+        return true;
+    }
+
 };
 
 /** pruned version of CTransaction: only retains metadata and unspent transaction outputs
@@ -1316,12 +1286,19 @@ public:
     bool WriteToDisk(CDiskBlockPos &pos)
     {
         // Open history file to append
-        pos.MakeUnique(GetDataDir());
-        CAutoFile fileout = CAutoFile(OpenBlockFile(pos, "ab"), SER_DISK, CLIENT_VERSION);
+        CAutoFile fileout = CAutoFile(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
         if (!fileout)
-            return error("CBlock::WriteToDisk() : AppendBlockFile failed");
+            return error("CBlock::WriteToDisk() : OpenBlockFile failed");
+
+        // Write index header
+        unsigned int nSize = fileout.GetSerializeSize(*this);
+        fileout << FLATDATA(pchMessageStart) << nSize;
 
         // Write block
+        long fileOutPos = ftell(fileout);
+        if (fileOutPos < 0)
+            return error("CBlock::WriteToDisk() : ftell failed");
+        pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
         // Flush stdio buffers and commit to disk before returning
@@ -1337,7 +1314,7 @@ public:
         SetNull();
 
         // Open history file to read
-        CAutoFile filein = CAutoFile(OpenBlockFile(pos, "rb"), SER_DISK, CLIENT_VERSION);
+        CAutoFile filein = CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
         if (!filein)
             return error("CBlock::ReadFromDisk() : OpenBlockFile failed");
         if (!fReadTransactions)
@@ -1397,6 +1374,62 @@ private:
 
 
 
+class CBlockFileInfo
+{
+public:
+    unsigned int nBlocks;      // number of blocks stored in file
+    unsigned int nSize;        // number of used bytes of block file
+    unsigned int nUndoSize;    // number of used bytes in the undo file
+    unsigned int nHeightFirst; // lowest height of block in file
+    unsigned int nHeightLast;  // highest height of block in file
+    uint64 nTimeFirst;         // earliest time of block in file
+    uint64 nTimeLast;          // latest time of block in file
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(VARINT(nBlocks));
+        READWRITE(VARINT(nSize));
+        READWRITE(VARINT(nUndoSize));
+        READWRITE(VARINT(nHeightFirst));
+        READWRITE(VARINT(nHeightLast));
+        READWRITE(VARINT(nTimeFirst));
+        READWRITE(VARINT(nTimeLast));
+     )
+
+     void SetNull() {
+         nBlocks = 0;
+         nSize = 0;
+         nUndoSize = 0;
+         nHeightFirst = 0;
+         nHeightLast = 0;
+         nTimeFirst = 0;
+         nTimeLast = 0;
+     }
+
+     CBlockFileInfo() {
+         SetNull();
+     }
+
+     std::string ToString() const {
+         return strprintf("CBlockFileInfo(blocks=%u, size=%lu, heights=%u..%u, time=%s..%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
+     }
+
+     // update statistics (does not update nSize)
+     void AddBlock(unsigned int nHeightIn, uint64 nTimeIn) {
+         if (nBlocks==0 || nHeightFirst > nHeightIn)
+             nHeightFirst = nHeightIn;
+         if (nBlocks==0 || nTimeFirst > nTimeIn)
+             nTimeFirst = nTimeIn;
+         nBlocks++;
+         if (nHeightIn > nHeightFirst)
+             nHeightLast = nHeightIn;
+         if (nTimeIn > nTimeLast)
+             nTimeLast = nTimeIn;
+     }
+};
+
+extern CCriticalSection cs_LastBlockFile;
+extern CBlockFileInfo infoLastBlockFile;
+extern int nLastBlockFile;
 
 /** The block chain is a tree shaped structure starting with the
  * genesis block at the root, with each block potentially having multiple
@@ -1412,7 +1445,8 @@ public:
     CBlockIndex* pprev;
     CBlockIndex* pnext;
     int nHeight;
-    unsigned int nAlternative;
+    CDiskBlockPos pos;
+    unsigned int nUndoPos;
     CBigNum bnChainWork;
 
     // block header
@@ -1429,8 +1463,9 @@ public:
         pprev = NULL;
         pnext = NULL;
         nHeight = 0;
+        pos.SetNull();
+        nUndoPos = (unsigned int)(-1);
         bnChainWork = 0;
-        nAlternative = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1445,8 +1480,9 @@ public:
         pprev = NULL;
         pnext = NULL;
         nHeight = 0;
+        pos.SetNull();
+        nUndoPos = 0;
         bnChainWork = 0;
-        nAlternative = 0;
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -1456,7 +1492,16 @@ public:
     }
 
     CDiskBlockPos GetBlockPos() const {
-        return CDiskBlockPos(nHeight, nAlternative);
+        return pos;
+    }
+
+    CDiskBlockPos GetUndoPos() const {
+        CDiskBlockPos ret = pos;
+        if (nUndoPos == (unsigned int)(-1))
+            ret.SetNull();
+        else
+            ret.nPos = nUndoPos;
+        return ret;
     }
 
     CBlock GetBlockHeader() const
@@ -1578,7 +1623,8 @@ public:
 
         READWRITE(hashNext);
         READWRITE(nHeight);
-        READWRITE(nAlternative);
+        READWRITE(pos);
+        READWRITE(nUndoPos);
 
         // block header
         READWRITE(this->nVersion);
