@@ -19,6 +19,7 @@
 #include "protocol.h"
 #include "addrman.h"
 #include "hash.h"
+#include "bloom.h"
 
 class CNode;
 class CBlockIndex;
@@ -152,6 +153,8 @@ public:
     bool fSuccessfullyConnected;
     bool fDisconnect;
     CSemaphoreGrant grantOutbound;
+    CCriticalSection cs_filter;
+    CBloomFilter* pfilter;
 protected:
     int nRefCount;
 
@@ -209,6 +212,7 @@ public:
         fGetAddr = false;
         nMisbehavior = 0;
         setInventoryKnown.max_size(SendBufferSize() / 1000);
+        pfilter = NULL;
 
         // Be shy and don't send version until we hear
         if (!fInbound)
@@ -222,6 +226,8 @@ public:
             closesocket(hSocket);
             hSocket = INVALID_SOCKET;
         }
+        if (pfilter)
+            delete pfilter;
     }
 
 private:
