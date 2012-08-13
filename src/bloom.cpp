@@ -88,11 +88,11 @@ bool CBloomFilter::IsWithinSizeConstraints() const
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
-bool CBloomFilter::IsTransactionRelevantToFilter(const CTransaction& tx) const
+bool CBloomFilter::IsTransactionRelevantToFilter(const CTransaction& tx, const uint256& hash) const
 {
     // Match if the filter contains the hash of tx
     //  for finding tx when they appear in a block
-    if (contains(tx.GetHash()))
+    if (contains(hash))
         return true;
 
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
