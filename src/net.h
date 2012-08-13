@@ -67,12 +67,6 @@ void SetReachable(enum Network net, bool fFlag = true);
 CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
 
 
-enum
-{
-    MSG_TX = 1,
-    MSG_BLOCK,
-};
-
 /** Thread types */
 enum threadId
 {
