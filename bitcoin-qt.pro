@@ -155,6 +155,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/script.h \
     src/init.h \
     src/irc.h \
+    src/bloom.h \
     src/mruset.h \
     src/json/json_spirit_writer_template.h \
     src/json/json_spirit_writer.h \
@@ -223,6 +224,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/init.cpp \
     src/net.cpp \
     src/irc.cpp \
+    src/bloom.cpp \
     src/checkpoints.cpp \
     src/addrman.cpp \
     src/db.cpp \

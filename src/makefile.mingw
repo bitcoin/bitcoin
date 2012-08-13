@@ -79,6 +79,7 @@ OBJS= \
     obj/wallet.o \
     obj/walletdb.o \
     obj/hash.o \
+    obj/bloom.o \
     obj/noui.o \
     obj/leveldb.o \
     obj/txdb.o
