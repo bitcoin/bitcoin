@@ -339,6 +339,10 @@ public:
     bool WriteHashBestChain(uint256 hashBestChain);
     bool ReadBestInvalidWork(CBigNum& bnBestInvalidWork);
     bool WriteBestInvalidWork(CBigNum bnBestInvalidWork);
+    bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
+    bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
+    bool ReadLastBlockFile(int &nFile);
+    bool WriteLastBlockFile(int nFile);
     bool LoadBlockIndex();
 private:
     bool LoadBlockIndexGuts();
