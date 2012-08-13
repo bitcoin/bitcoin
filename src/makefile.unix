@@ -3,8 +3,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 USE_UPNP:=0
+USE_IPV6:=1
 
-DEFS=-DUSE_IPV6 -DBOOST_SPIRIT_THREADSAFE
+DEFS=-DBOOST_SPIRIT_THREADSAFE
 
 DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
 LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
@@ -39,6 +40,10 @@ endif
 ifneq (${USE_UPNP}, -)
 	LIBS += -l miniupnpc
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
+endif
+
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
 LIBS+= \
