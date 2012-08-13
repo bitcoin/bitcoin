@@ -56,6 +56,8 @@ int64 nHPSTimerStart;
 
 // Settings
 int64 nTransactionFee = 0;
+int64 nMinFeeBase = 0;
+int64 nMinFeePer = 1000;
 
 
 
