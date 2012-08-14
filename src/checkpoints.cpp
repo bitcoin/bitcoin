@@ -158,12 +158,13 @@ namespace Checkpoints
             CBlockIndex* pindexCheckpoint = mapBlockIndex[hashPendingCheckpoint];
             if (!pindexCheckpoint->IsInMainChain())
             {
-                txdb.TxnBegin();
-                if (!Reorganize(txdb, pindexCheckpoint))
+                CBlock block;
+                if (!block.ReadFromDisk(pindexCheckpoint))
+                    return error("AcceptPendingSyncCheckpoint: ReadFromDisk failed for sync checkpoint %s", hashPendingCheckpoint.ToString().c_str());
+                if (!block.SetBestChain(txdb, pindexCheckpoint))
                 {
-                    txdb.TxnAbort();
                     hashInvalidCheckpoint = hashPendingCheckpoint;
-                    return error("AcceptPendingSyncCheckpoint: Reorganize failed for sync checkpoint %s", hashPendingCheckpoint.ToString().c_str());
+                    return error("AcceptPendingSyncCheckpoint: SetBestChain failed for sync checkpoint %s", hashPendingCheckpoint.ToString().c_str());
                 }
             }
             txdb.Close();
@@ -248,13 +249,14 @@ namespace Checkpoints
         if (mapBlockIndex.count(hash) && !mapBlockIndex[hash]->IsInMainChain())
         {
             // checkpoint block accepted but not yet in main chain
-            printf("ResetSyncCheckpoint: Reorganize to hardened checkpoint %s\n", hash.ToString().c_str());
+            printf("ResetSyncCheckpoint: SetBestChain to hardened checkpoint %s\n", hash.ToString().c_str());
             CTxDB txdb;
-            txdb.TxnBegin();
-            if (!Reorganize(txdb, mapBlockIndex[hash]))
+            CBlock block;
+            if (!block.ReadFromDisk(mapBlockIndex[hash]))
+                return error("ResetSyncCheckpoint: ReadFromDisk failed for hardened checkpoint %s", hash.ToString().c_str());
+            if (!block.SetBestChain(txdb, mapBlockIndex[hash]))
             {
-                txdb.TxnAbort();
-                return error("ResetSyncCheckpoint: Reorganize failed for hardened checkpoint %s", hash.ToString().c_str());
+                return error("ResetSyncCheckpoint: SetBestChain failed for hardened checkpoint %s", hash.ToString().c_str());
             }
             txdb.Close();
         }
@@ -402,12 +404,13 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
     if (!pindexCheckpoint->IsInMainChain())
     {
         // checkpoint chain received but not yet main chain
-        txdb.TxnBegin();
-        if (!Reorganize(txdb, pindexCheckpoint))
+        CBlock block;
+        if (!block.ReadFromDisk(pindexCheckpoint))
+            return error("ProcessSyncCheckpoint: ReadFromDisk failed for sync checkpoint %s", hashCheckpoint.ToString().c_str());
+        if (!block.SetBestChain(txdb, pindexCheckpoint))
         {
-            txdb.TxnAbort();
             Checkpoints::hashInvalidCheckpoint = hashCheckpoint;
-            return error("ProcessSyncCheckpoint: Reorganize failed for sync checkpoint %s", hashCheckpoint.ToString().c_str());
+            return error("ProcessSyncCheckpoint: SetBestChain failed for sync checkpoint %s", hashCheckpoint.ToString().c_str());
         }
     }
     txdb.Close();
