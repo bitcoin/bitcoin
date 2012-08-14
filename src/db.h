@@ -33,31 +33,31 @@ bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 class CDBEnv
 {
 private:
-    bool fDetachDB;
-    bool fDbEnvInit;
-    bool fMockDb;
-    boost::filesystem::path pathEnv;
+    bool fDetachDB GUARDED_BY(cs_db);
+    bool fDbEnvInit GUARDED_BY(cs_db);
+    bool fMockDb GUARDED_BY(cs_db);
+    boost::filesystem::path pathEnv GUARDED_BY(cs_db);
 
     void EnvShutdown();
 
 public:
     mutable CCriticalSection cs_db;
-    DbEnv dbenv;
-    std::map<std::string, int> mapFileUseCount;
-    std::map<std::string, Db*> mapDb;
+    DbEnv dbenv GUARDED_BY(cs_db);
+    std::map<std::string, int> mapFileUseCount GUARDED_BY(cs_db);
+    std::map<std::string, Db*> mapDb GUARDED_BY(cs_db);
 
     CDBEnv();
     ~CDBEnv();
     void MakeMock();
     bool IsMock() { return fMockDb; };
     bool Open(boost::filesystem::path pathEnv_);
-    void Close();
-    void Flush(bool fShutdown);
+    void Close(); // LOCKS_EXCLUDED(bitdb.cs_db);
+    void Flush(bool fShutdown); // LOCKS_EXCLUDED(bitdb.cs_db);
     void CheckpointLSN(std::string strFile);
     void SetDetach(bool fDetachDB_) { fDetachDB = fDetachDB_; }
     bool GetDetach() { return fDetachDB; }
 
-    void CloseDb(const std::string& strFile);
+    void CloseDb(const std::string& strFile); // LOCKS_EXCLUDED(bitdb.cs_db);
 
     DbTxn *TxnBegin(int flags=DB_TXN_WRITE_NOSYNC)
     {
@@ -81,7 +81,8 @@ protected:
     DbTxn *activeTxn;
     bool fReadOnly;
 
-    explicit CDB(const char* pszFile, const char* pszMode="r+");
+    explicit CDB(const char* pszFile, const char* pszMode="r+")
+      LOCKS_EXCLUDED(bitdb.cs_db);
     ~CDB() { Close(); }
 public:
     void Close();
@@ -287,7 +288,8 @@ public:
         return Write(std::string("version"), nVersion);
     }
 
-    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
+    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL)
+      LOCKS_EXCLUDED(bitdb.cs_db);
 };
 
 

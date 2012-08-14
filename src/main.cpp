@@ -20,14 +20,14 @@ using namespace boost;
 //
 
 CCriticalSection cs_setpwalletRegistered;
-set<CWallet*> setpwalletRegistered;
+set<CWallet*> setpwalletRegistered GUARDED_BY(cs_setpwalletRegistered);
 
 CCriticalSection cs_main;
 
 CTxMemPool mempool;
 unsigned int nTransactionsUpdated = 0;
 
-map<uint256, CBlockIndex*> mapBlockIndex;
+map<uint256, CBlockIndex*> mapBlockIndex GUARDED_BY(cs_main);
 uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -40,19 +40,19 @@ int64 nTimeBestReceived = 0;
 
 CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes claim to have
 
-map<uint256, CBlock*> mapOrphanBlocks;
-multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
+map<uint256, CBlock*> mapOrphanBlocks GUARDED_BY(cs_main);
+multimap<uint256, CBlock*> mapOrphanBlocksByPrev GUARDED_BY(cs_main);
 
-map<uint256, CDataStream*> mapOrphanTransactions;
-map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
+map<uint256, CDataStream*> mapOrphanTransactions GUARDED_BY(cs_main);
+map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);
 
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
-double dHashesPerSec;
-int64 nHPSTimerStart;
+double dHashesPerSec;  // GUARDED_BY(BictoinMiner::cs mostly);
+int64 nHPSTimerStart;  // GUARDED_BY(BictoinMiner::cs mostly);
 
 // Settings
 int64 nTransactionFee = 0;
@@ -67,7 +67,7 @@ int64 nTransactionFee = 0;
 // These functions dispatch to one or all registered wallets
 
 
-void RegisterWallet(CWallet* pwalletIn)
+void RegisterWallet(CWallet* pwalletIn) LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
     {
         LOCK(cs_setpwalletRegistered);
@@ -75,7 +75,7 @@ void RegisterWallet(CWallet* pwalletIn)
     }
 }
 
-void UnregisterWallet(CWallet* pwalletIn)
+void UnregisterWallet(CWallet* pwalletIn)  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
     {
         LOCK(cs_setpwalletRegistered);
@@ -84,7 +84,7 @@ void UnregisterWallet(CWallet* pwalletIn)
 }
 
 // check whether the passed transaction is from us
-bool static IsFromMe(CTransaction& tx)
+bool static IsFromMe(CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         if (pwallet->IsFromMe(tx))
@@ -93,7 +93,7 @@ bool static IsFromMe(CTransaction& tx)
 }
 
 // get the wallet transaction with the given hash (if it exists)
-bool static GetTransaction(const uint256& hashTx, CWalletTx& wtx)
+bool static GetTransaction(const uint256& hashTx, CWalletTx& wtx)  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         if (pwallet->GetTransaction(hashTx,wtx))
@@ -102,7 +102,7 @@ bool static GetTransaction(const uint256& hashTx, CWalletTx& wtx)
 }
 
 // erases transaction with the given hash from all wallets
-void static EraseFromWallets(uint256 hash)
+void static EraseFromWallets(uint256 hash)  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->EraseFromWallet(hash);
@@ -110,6 +110,7 @@ void static EraseFromWallets(uint256 hash)
 
 // make sure all wallets know about the given transaction, in the given block
 void SyncWithWallets(const CTransaction& tx, const CBlock* pblock, bool fUpdate)
+   EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->AddToWalletIfInvolvingMe(tx, pblock, fUpdate);
@@ -117,6 +118,7 @@ void SyncWithWallets(const CTransaction& tx, const CBlock* pblock, bool fUpdate)
 
 // notify wallets about a new best chain
 void static SetBestChain(const CBlockLocator& loc)
+  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->SetBestChain(loc);
@@ -124,6 +126,7 @@ void static SetBestChain(const CBlockLocator& loc)
 
 // notify wallets about an updated transaction
 void static UpdatedTransaction(const uint256& hashTx)
+  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->UpdatedTransaction(hashTx);
@@ -131,6 +134,7 @@ void static UpdatedTransaction(const uint256& hashTx)
 
 // dump all wallets
 void static PrintWallets(const CBlock& block)
+  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->PrintWallet(block);
@@ -138,6 +142,7 @@ void static PrintWallets(const CBlock& block)
 
 // notify wallets about an incoming inventory (for request counts)
 void static Inventory(const uint256& hash)
+  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->Inventory(hash);
@@ -145,6 +150,7 @@ void static Inventory(const uint256& hash)
 
 // ask wallets to resend their transactions
 void static ResendWalletTransactions()
+  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
 {
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->ResendWalletTransactions();
@@ -161,7 +167,7 @@ void static ResendWalletTransactions()
 // mapOrphanTransactions
 //
 
-bool AddOrphanTx(const CDataStream& vMsg)
+bool AddOrphanTx(const CDataStream& vMsg) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CTransaction tx;
     CDataStream(vMsg) >> tx;
@@ -368,7 +374,7 @@ CTransaction::GetLegacySigOpCount() const
 }
 
 
-int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
+int CMerkleTx::SetMerkleBranch(const CBlock* pblock) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (fClient)
     {
@@ -675,7 +681,7 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
 
 
 
-int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
+int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (hashBlock == 0 || nIndex == -1)
         return 0;
@@ -757,7 +763,7 @@ bool CWalletTx::AcceptWalletTransaction()
     return AcceptWalletTransaction(txdb);
 }
 
-int CTxIndex::GetDepthInMainChain() const
+int CTxIndex::GetDepthInMainChain() const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Read block header
     CBlock block;
@@ -843,7 +849,7 @@ bool CBlock::ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions)
     return true;
 }
 
-uint256 static GetOrphanRoot(const CBlock* pblock)
+uint256 static GetOrphanRoot(const CBlock* pblock) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Work back to the first block in the orphan chain
     while (mapOrphanBlocks.count(pblock->hashPrevBlock))
@@ -1691,7 +1697,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 }
 
 
-bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
+bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Check for duplicate
     uint256 hash = GetHash();
@@ -1795,7 +1801,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
     return true;
 }
 
-bool CBlock::AcceptBlock()
+bool CBlock::AcceptBlock() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Check for duplicate
     uint256 hash = GetHash();
@@ -1849,7 +1855,7 @@ bool CBlock::AcceptBlock()
     return true;
 }
 
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)
+bool ProcessBlock(CNode* pfrom, CBlock* pblock)  EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Check for duplicate
     uint256 hash = pblock->GetHash();
@@ -1993,7 +1999,7 @@ FILE* AppendBlockFile(unsigned int& nFileRet)
     }
 }
 
-bool LoadBlockIndex(bool fAllowNew)
+bool LoadBlockIndex(bool fAllowNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (fTestNet)
     {
@@ -2072,7 +2078,7 @@ bool LoadBlockIndex(bool fAllowNew)
 
 
 
-void PrintBlockTree()
+void PrintBlockTree() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // pre-compute tree structure
     map<CBlockIndex*, vector<CBlockIndex*> > mapNext;
@@ -2215,8 +2221,8 @@ bool LoadExternalBlockFile(FILE* fileIn)
 // CAlert
 //
 
-map<uint256, CAlert> mapAlerts;
 CCriticalSection cs_mapAlerts;
+map<uint256, CAlert> mapAlerts GUARDED_BY(cs_mapAlerts);
 
 string GetWarnings(string strFor)
 {
@@ -2338,7 +2344,7 @@ bool CAlert::ProcessAlert()
 //
 
 
-bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
+bool static AlreadyHave(CTxDB& txdb, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(mempool.cs)
 {
     switch (inv.type)
     {
@@ -2372,6 +2378,8 @@ unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
+  EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+  LOCKS_EXCLUDED(cs_mapAlerts, cs_vNodes, cs_mapRelay, pfrom->cs_mapRequests)
 {
     static map<CService, CPubKey> mapReuseKey;
     RandAddSeedPerfmon();
@@ -2955,7 +2963,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     return true;
 }
 
-bool ProcessMessages(CNode* pfrom)
+bool ProcessMessages(CNode* pfrom) LOCKS_EXCLUDED(cs_main)
 {
     CDataStream& vRecv = pfrom->vRecv;
     if (vRecv.empty())
@@ -3077,7 +3085,7 @@ bool ProcessMessages(CNode* pfrom)
 }
 
 
-bool SendMessages(CNode* pto, bool fSendTrickle)
+bool SendMessages(CNode* pto, bool fSendTrickle) LOCKS_EXCLUDED(cs_main, cs_vNodes, pto->cs_inventory)
 {
     TRY_LOCK(cs_main, lockMain);
     if (lockMain) {
@@ -3379,7 +3387,7 @@ public:
 const char* pszDummy = "\0\0";
 CScript scriptDummy(std::vector<unsigned char>(pszDummy, pszDummy + sizeof(pszDummy)));
 
-CBlock* CreateNewBlock(CReserveKey& reservekey)
+CBlock* CreateNewBlock(CReserveKey& reservekey) LOCKS_EXCLUDED(cs_main)
 {
     CBlockIndex* pindexPrev = pindexBest;
 
@@ -3686,6 +3694,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 
 
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
+  LOCKS_EXCLUDED(cs_main, wallet.cs_wallet)
 {
     uint256 hash = pblock->GetHash();
     uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();

@@ -118,11 +118,11 @@ extern uint64 nLocalHostNonce;
 extern boost::array<int, THREAD_MAX> vnThreadsRunning;
 extern CAddrMan addrman;
 
-extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
-extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
+extern std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
 extern CCriticalSection cs_mapRelay;
+extern std::map<CInv, CDataStream> mapRelay GUARDED_BY(cs_mapRelay);
+extern std::deque<std::pair<int64, CInv> > vRelayExpiration;
 extern std::map<CInv, int64> mapAlreadyAskedFor;
 
 
@@ -155,10 +155,10 @@ public:
     // socket
     uint64 nServices;
     SOCKET hSocket;
-    CDataStream vSend;
-    CDataStream vRecv;
-    CCriticalSection cs_vSend;
-    CCriticalSection cs_vRecv;
+    CDataStream vSend GUARDED_BY(cs_vSend);
+    CDataStream vRecv GUARDED_BY(cs_vRecv);
+    CCriticalSection cs_vSend ACQUIRED_BEFORE(cs_vRecv) ACQUIRED_AFTER(cs_vNodes);
+    CCriticalSection cs_vRecv ACQUIRED_BEFORE(cs_mapRequests);
     int64 nLastSend;
     int64 nLastRecv;
     int64 nLastSendEmpty;
@@ -182,14 +182,14 @@ protected:
 
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
-    static std::map<CNetAddr, int64> setBanned;
+    static std::map<CNetAddr, int64> setBanned GUARDED_BY(cs_setBanned);
     static CCriticalSection cs_setBanned;
     int nMisbehavior;
 
 public:
     int64 nReleaseTime;
-    std::map<uint256, CRequestTracker> mapRequests;
-    CCriticalSection cs_mapRequests;
+    std::map<uint256, CRequestTracker> mapRequests GUARDED_BY(cs_mapRequests);
+    CCriticalSection cs_mapRequests ACQUIRED_BEFORE(cs_inventory);
     uint256 hashContinue;
     CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;

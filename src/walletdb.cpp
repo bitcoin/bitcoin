@@ -102,7 +102,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 }
 
 
-int CWalletDB::LoadWallet(CWallet* pwallet)
+int CWalletDB::LoadWallet(CWallet* pwallet) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     pwallet->vchDefaultKey = CPubKey();
     int nFileVersion = 0;

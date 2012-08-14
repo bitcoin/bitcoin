@@ -49,7 +49,7 @@ extern CScript COINBASE_FLAGS;
 
 
 extern CCriticalSection cs_main;
-extern std::map<uint256, CBlockIndex*> mapBlockIndex;
+extern std::map<uint256, CBlockIndex*> mapBlockIndex GUARDED_BY(cs_main);
 extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
@@ -65,7 +65,7 @@ extern double dHashesPerSec;
 extern int64 nHPSTimerStart;
 extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
-extern std::set<CWallet*> setpwalletRegistered;
+extern std::set<CWallet*> setpwalletRegistered GUARDED_BY(cs_setpwalletRegistered);
 extern unsigned char pchMessageStart[4];
 
 // Settings
@@ -1599,9 +1599,9 @@ public:
 class CTxMemPool
 {
 public:
-    mutable CCriticalSection cs;
-    std::map<uint256, CTransaction> mapTx;
-    std::map<COutPoint, CInPoint> mapNextTx;
+    mutable CCriticalSection cs ACQUIRED_AFTER(cs_main);
+    std::map<uint256, CTransaction> mapTx GUARDED_BY(cs);
+    std::map<COutPoint, CInPoint> mapNextTx GUARDED_BY(cs);
 
     bool accept(CTxDB& txdb, CTransaction &tx,
                 bool fCheckInputs, bool* pfMissingInputs);

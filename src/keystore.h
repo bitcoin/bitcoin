@@ -21,7 +21,7 @@ public:
     virtual ~CKeyStore() {}
 
     // Add a key to the store.
-    virtual bool AddKey(const CKey& key) =0;
+    virtual bool AddKey(const CKey& key) LOCKS_EXCLUDED(cs_KeyStore) = 0;
 
     // Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
@@ -30,9 +30,10 @@ public:
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 
     // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
-    virtual bool AddCScript(const CScript& redeemScript) =0;
-    virtual bool HaveCScript(const CScriptID &hash) const =0;
-    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
+    virtual bool AddCScript(const CScript& redeemScript) LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool HaveCScript(const CScriptID &hash) const LOCKS_EXCLUDED(cs_KeyStore) =0;
+    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
+      const LOCKS_EXCLUDED(cs_KeyStore) =0;
 
     virtual bool GetSecret(const CKeyID &address, CSecret& vchSecret, bool &fCompressed) const
     {
@@ -51,8 +52,8 @@ typedef std::map<CScriptID, CScript > ScriptMap;
 class CBasicKeyStore : public CKeyStore
 {
 protected:
-    KeyMap mapKeys;
-    ScriptMap mapScripts;
+    KeyMap mapKeys GUARDED_BY(cs_KeyStore);
+    ScriptMap mapScripts GUARDED_BY(cs_KeyStore);
 
 public:
     bool AddKey(const CKey& key);
@@ -105,13 +106,13 @@ typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > Crypt
 class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
-    CryptedKeyMap mapCryptedKeys;
+    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
 
-    CKeyingMaterial vMasterKey;
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
     // if fUseCrypto is true, mapKeys must be empty
     // if fUseCrypto is false, vMasterKey must be empty
-    bool fUseCrypto;
+    bool fUseCrypto GUARDED_BY(cs_KeyStore);
 
 protected:
     bool SetCrypted();

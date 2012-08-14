@@ -169,31 +169,31 @@ private:
     mutable CCriticalSection cs;
 
     // secret key to randomize bucket select with
-    std::vector<unsigned char> nKey;
+    std::vector<unsigned char> nKey GUARDED_BY(cs);
 
     // last used nId
-    int nIdCount;
+    int nIdCount GUARDED_BY(cs);
 
     // table with information about all nIds
-    std::map<int, CAddrInfo> mapInfo;
+    std::map<int, CAddrInfo> mapInfo GUARDED_BY(cs);
 
     // find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr;
+    std::map<CNetAddr, int> mapAddr GUARDED_BY(cs);
 
     // randomly-ordered vector of all nIds
-    std::vector<int> vRandom;
+    std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
-    int nTried;
+    int nTried GUARDED_BY(cs);
 
     // list of "tried" buckets
-    std::vector<std::vector<int> > vvTried;
+    std::vector<std::vector<int> > vvTried GUARDED_BY(cs);
 
     // number of (unique) "new" entries
-    int nNew;
+    int nNew GUARDED_BY(cs);
 
     // list of "new" buckets
-    std::vector<std::set<int> > vvNew;
+    std::vector<std::set<int> > vvNew GUARDED_BY(cs);
 
 protected:
 
@@ -396,7 +396,7 @@ public:
     }
 
     // Consistency check
-    void Check()
+    void Check() LOCKS_EXCLUDED(cs)
     {
 #ifdef DEBUG_ADDRMAN
         {
@@ -410,6 +410,7 @@ public:
 
     // Add a single address.
     bool Add(const CAddress &addr, const CNetAddr& source, int64 nTimePenalty = 0)
+      LOCKS_EXCLUDED(cs)
     {
         bool fRet = false;
         {
@@ -425,6 +426,7 @@ public:
 
     // Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64 nTimePenalty = 0)
+      LOCKS_EXCLUDED(cs)
     {
         int nAdd = 0;
         {
@@ -441,6 +443,7 @@ public:
 
     // Mark an entry as accessible.
     void Good(const CService &addr, int64 nTime = GetAdjustedTime())
+      LOCKS_EXCLUDED(cs)
     {
         {
             LOCK(cs);
@@ -452,6 +455,7 @@ public:
 
     // Mark an entry as connection attempted to.
     void Attempt(const CService &addr, int64 nTime = GetAdjustedTime())
+      LOCKS_EXCLUDED(cs)
     {
         {
             LOCK(cs);
@@ -463,7 +467,7 @@ public:
 
     // Choose an address to connect to.
     // nUnkBias determines how much "new" entries are favored over "tried" ones (0-100).
-    CAddress Select(int nUnkBias = 50)
+    CAddress Select(int nUnkBias = 50) LOCKS_EXCLUDED(cs)
     {
         CAddress addrRet;
         {
@@ -476,7 +480,7 @@ public:
     }
 
     // Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr()
+    std::vector<CAddress> GetAddr() LOCKS_EXCLUDED(cs)
     {
         Check();
         std::vector<CAddress> vAddr;
@@ -490,6 +494,7 @@ public:
 
     // Mark an entry as currently-connected-to.
     void Connected(const CService &addr, int64 nTime = GetAdjustedTime())
+      LOCKS_EXCLUDED(cs)
     {
         {
             LOCK(cs);

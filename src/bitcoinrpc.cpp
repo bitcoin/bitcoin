@@ -1691,7 +1691,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 }
 
 
-Value walletlock(const Array& params, bool fHelp)
+Value walletlock(const Array& params, bool fHelp) LOCKS_EXCLUDED(cs_nWalletUnlockTime)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
         throw runtime_error(
@@ -2784,7 +2784,7 @@ static string JSONRPCExecBatch(const Array& vReq)
 
 static CCriticalSection cs_THREAD_RPCHANDLER;
 
-void ThreadRPCServer3(void* parg)
+void ThreadRPCServer3(void* parg) LOCKS_EXCLUDED(cs_THREAD_RPCHANDLER)
 {
     IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer3(parg));
 
