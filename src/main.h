@@ -12,6 +12,9 @@
 
 #include <list>
 
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
+
 class CWallet;
 class CBlock;
 class CBlockIndex;
@@ -837,6 +840,10 @@ public:
     mutable int nDoS;
     bool DoS(int nDoSIn, bool fIn) const { nDoS += nDoSIn; return fIn; }
 
+    // Fast block relay
+    bool fBlockDownloading;
+    std::pair<boost::mutex, boost::condition_variable> *csBlockDownload;
+
     CBlock()
     {
         SetNull();
@@ -854,7 +861,15 @@ public:
 
         // ConnectBlock depends on vtx being last so it can calculate offset
         if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
+        {
+            if (fBlockDownloading)
+            {
+                boost::unique_lock<boost::mutex> lock(csBlockDownload->first);
+                while (fBlockDownloading)
+                    csBlockDownload->second.wait(lock);
+            }
             READWRITE(vtx);
+        }
         else if (fRead)
             const_cast<CBlock*>(this)->vtx.clear();
     )
@@ -870,6 +885,7 @@ public:
         vtx.clear();
         vMerkleTree.clear();
         nDoS = 0;
+        fBlockDownloading = false;
     }
 
     bool IsNull() const
@@ -1021,6 +1037,8 @@ public:
     bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
     bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
     bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
+    bool CheckBlockHeader(bool fCheckPOW) const;
+    bool CheckBlockBody(bool fCheckMerkleRoot) const;
     bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true) const;
     bool AcceptBlock();
 
