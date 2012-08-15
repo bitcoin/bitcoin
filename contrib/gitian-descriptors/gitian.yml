@@ -46,7 +46,7 @@ script: |
   cp $OUTDIR/src/doc/README $OUTDIR
   cp $OUTDIR/src/COPYING $OUTDIR
   cd src
-  make -f makefile.unix STATIC=1 OPENSSL_INCLUDE_PATH="$INSTDIR/include" OPENSSL_LIB_PATH="$INSTDIR/lib" $MAKEOPTS ppcoind USE_UPNP=0 DEBUGFLAGS=
+  make -f makefile.unix STATIC=1 OPENSSL_INCLUDE_PATH="$INSTDIR/include" OPENSSL_LIB_PATH="$INSTDIR/lib" $MAKEOPTS ppcoind USE_UPNP=1 DEBUGFLAGS=
   mkdir -p $OUTDIR/bin/$GBUILD_BITS
   install -s ppcoind $OUTDIR/bin/$GBUILD_BITS
 #Do not build qt gui client for now
