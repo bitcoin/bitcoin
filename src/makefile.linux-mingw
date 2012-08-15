@@ -87,12 +87,13 @@ all: bitcoind.exe
 # LevelDB support
 #
 ifdef USE_LEVELDB
-LIBS += $(CURDIR)/leveldb-1.5.0/libleveldb.lib
+LIBS += $(CURDIR)/leveldb-1.5.0/libleveldb.lib $(CURDIR)/leveldb-1.5.0/libmemenv.lib
 DEFS += -I"$(CURDIR)/leveldb-1.5.0/include" -DUSE_LEVELDB
+DEFS += -I"$(CURDIR)/leveldb-1.5.0/helpers"
 OBJS += obj/txdb-leveldb.o
 leveldb-1.5.0/libleveldb.lib:
 	@echo "Building LevelDB ..."; cd leveldb-1.5.0; TARGET_OS=BitcoinCrossCompileMingW make; cd ..
-obj/txdb-leveldb.o: leveldb-1.5.0/libleveldb.a
+obj/txdb-leveldb.o: leveldb-1.5.0/libleveldb.lib
 else
 OBJS += obj/txdb-bdb.o
 endif
