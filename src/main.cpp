@@ -1844,6 +1844,17 @@ bool FindBlockPos(CTxDB &txdb, CDiskBlockPos &pos, unsigned int nAddSize, unsign
     infoLastBlockFile.nSize += nAddSize;
     infoLastBlockFile.AddBlock(nHeight, nTime);
 
+    unsigned int nOldChunks = (pos.nPos + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
+    unsigned int nNewChunks = (infoLastBlockFile.nSize + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
+    if (nNewChunks > nOldChunks) {
+        FILE *file = OpenBlockFile(pos);
+        if (file) {
+            printf("Pre-allocating up to position 0x%x in blk%05u.dat\n", nNewChunks * BLOCKFILE_CHUNK_SIZE, pos.nFile);
+            AllocateFileRange(file, pos.nPos, nNewChunks * BLOCKFILE_CHUNK_SIZE - pos.nPos);
+        }
+        fclose(file);
+    }
+
     if (!txdb.WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
         return error("FindBlockPos() : cannot write updated block info");
     if (fUpdatedLast)
@@ -1858,21 +1869,33 @@ bool FindUndoPos(CTxDB &txdb, int nFile, CDiskBlockPos &pos, unsigned int nAddSi
 
     LOCK(cs_LastBlockFile);
 
+    unsigned int nNewSize;
     if (nFile == nLastBlockFile) {
         pos.nPos = infoLastBlockFile.nUndoSize;
-        infoLastBlockFile.nUndoSize += nAddSize;
+        nNewSize = (infoLastBlockFile.nUndoSize += nAddSize);
         if (!txdb.WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
             return error("FindUndoPos() : cannot write updated block info");
-        return true;
+    } else {
+        CBlockFileInfo info;
+        if (!txdb.ReadBlockFileInfo(nFile, info))
+            return error("FindUndoPos() : cannot read block info");
+        pos.nPos = info.nUndoSize;
+        nNewSize = (info.nUndoSize += nAddSize);
+        if (!txdb.WriteBlockFileInfo(nFile, info))
+            return error("FindUndoPos() : cannot write updated block info");
     }
 
-    CBlockFileInfo info;
-    if (!txdb.ReadBlockFileInfo(nFile, info))
-        return error("FindUndoPos() : cannot read block info");
-    pos.nPos = info.nUndoSize;
-    info.nUndoSize += nAddSize;
-    if (!txdb.WriteBlockFileInfo(nFile, info))
-        return error("FindUndoPos() : cannot write updated block info");
+    unsigned int nOldChunks = (pos.nPos + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
+    unsigned int nNewChunks = (nNewSize + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
+    if (nNewChunks > nOldChunks) {
+        FILE *file = OpenUndoFile(pos);
+        if (file) {
+            printf("Pre-allocating up to position 0x%x in rev%05u.dat\n", nNewChunks * UNDOFILE_CHUNK_SIZE, pos.nFile);
+            AllocateFileRange(file, pos.nPos, nNewChunks * UNDOFILE_CHUNK_SIZE - pos.nPos);
+        }
+        fclose(file);
+    }
+
     return true;
 }
 
