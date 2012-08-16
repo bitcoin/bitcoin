@@ -32,7 +32,7 @@ map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 uint256 hashGenesisBlock = hashGenesisBlockOfficial;
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
-static CBigNum bnInitialHashTarget(~uint256(0) >> 36);
+static CBigNum bnInitialHashTarget(~uint256(0) >> 40);
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 uint64 nBestChainTrust = 0;

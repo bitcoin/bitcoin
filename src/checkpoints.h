@@ -9,7 +9,7 @@
 #include "net.h"
 #include "util.h"
 
-#define STAKE_MIN_AGE (60 * 60 * 24)      // minimum age for coin age
+#define STAKE_MIN_AGE (60 * 60 * 24 * 30) // minimum age 30 days for coin age
 #define CHECKPOINT_MAX_SPAN (60 * 60 * 4) // max 4 hours before latest block
 
 class uint256;
