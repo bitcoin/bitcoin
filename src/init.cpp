@@ -106,7 +106,6 @@ void HandleSIGTERM(int)
 // Start
 //
 #if !defined(QT_GUI)
-#if !defined(PPCOIN_GENESIS)
 int main(int argc, char* argv[])
 {
     bool fRet = false;
@@ -117,7 +116,6 @@ int main(int argc, char* argv[])
 
     return 1;
 }
-#endif
 #endif
 
 bool AppInit(int argc, char* argv[])

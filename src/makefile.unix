@@ -144,21 +144,11 @@ test_ppcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
 
 clean:
-	-rm -f ppcoind test_ppcoin genesis
+	-rm -f ppcoind test_ppcoin
 	-rm -f obj/*.o
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P
 	-rm -f obj-test/*.P
 	-rm -f src/build.h
-	-rm -f ppcoin/obj/*
-
-ppcoin/obj/genesis.o: ppcoin/genesis.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-	$(CXX) -c $(xCXXFLAGS) -MMD -DPPCOIN_GENESIS -o obj/init.o init.cpp
-
-genesis: ppcoin/obj/genesis.o $(OBJS:obj/%=obj/%)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
-	-rm -f obj/init.*
-	-rm -f ppcoin/obj/genesis.*
 
 FORCE:
