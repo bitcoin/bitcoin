@@ -2252,34 +2252,33 @@ bool LoadBlockIndex(bool fAllowNew)
         //   vMerkleTree: 4a5e1e
 
         // Genesis block
-        const char* pszTimestamp = "MarketWatch 07/Nov/2011 Gold tops $1,790 to end at over six-week high";
+        const char* pszTimestamp = "Matonis 07-AUG-2012 Parallel Currencies And The Roadmap To Monetary Freedom";
         CTransaction txNew;
-        txNew.nTime = 1339538219;
+        txNew.nTime = 1345083810;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
-        txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(9999) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].SetEmpty();
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1339540307;
+        block.nTime    = 1345084287;
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 1281822831;
+        block.nNonce   = 2179302059;
 
         if (fTestNet)
         {
-            block.nTime    = 1296688602;
-            block.nBits    = 0x1d07fff8;
-            block.nNonce   = 384568319;
+            block.nTime    = 1345090000;
+            block.nNonce   = 122894938;
         }
 
         //// debug print
         printf("%s\n", block.GetHash().ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x1557f46a17fcf8843dbe4c0c0edfd1d17eeff2c3c48d73a59d11f5d176e4b54d"));
+        assert(block.hashMerkleRoot == uint256("0x3c2d8f85fab4d17aac558cc648a1a58acff0de6deb890c29985690052c5993c2"));
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
         assert(block.CheckBlock());
