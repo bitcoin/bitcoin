@@ -68,7 +68,7 @@ script: |
   git archive HEAD | tar -x -C nsis
   cd nsis/src
   mkdir ../release
-  cp ../../release/* ../release/
+  #cp ../../release/* ../release/
   cp ../../src/*.exe .
   makensis ../share/setup.nsi
   cp ../share/ppcoin-*-win32-setup.exe $OUTDIR/
