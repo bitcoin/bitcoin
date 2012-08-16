@@ -154,9 +154,9 @@ clean:
 
 ppcoin/obj/genesis.o: ppcoin/genesis.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-	$(CXX) -c $(xCXXFLAGS) -MMD -DPPCOIN_GENESIS -o obj/nogui/init.o init.cpp
+	$(CXX) -c $(xCXXFLAGS) -MMD -DPPCOIN_GENESIS -o obj/init.o init.cpp
 
-genesis: ppcoin/obj/genesis.o $(OBJS:obj/%=obj/nogui/%)
+genesis: ppcoin/obj/genesis.o $(OBJS:obj/%=obj/%)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 	-rm -f obj/init.*
 	-rm -f ppcoin/obj/genesis.*
