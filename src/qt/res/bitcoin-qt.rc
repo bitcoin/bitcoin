@@ -1,1 +1,27 @@
 IDI_ICON1 ICON DISCARDABLE "icons/bitcoin.ico"
+
+#include <windows.h> // needed for VERSIONINFO
+
+VS_VERSION_INFO VERSIONINFO
+FILEOS         	VOS_NT_WINDOWS32
+FILETYPE       	VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4" // U.S. English - multilingual (hex)
+        BEGIN
+            VALUE "CompanyName",        "Bitcoin"
+            VALUE "FileDescription",    "Bitcoin-Qt (OSS GUI client for Bitcoin)"
+            VALUE "InternalName",       "bitcoin-qt"
+            VALUE "LegalCopyright",     "2009-2012 The Bitcoin developers"
+            VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
+            VALUE "OriginalFilename",   "bitcoin-qt.exe"
+            VALUE "ProductName",        "Bitcoin-Qt"
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1252 // language neutral - multilingual (decimal)
+    END
+END
