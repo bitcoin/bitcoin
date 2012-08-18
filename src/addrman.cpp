@@ -410,7 +410,7 @@ CAddress CAddrMan::Select_(int nUnkBias)
             fChanceFactor *= 1.2;
         }
     } else {
-        // use an new node
+        // use a new node
         double fChanceFactor = 1.0;
         while(1)
         {
