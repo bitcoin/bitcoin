@@ -781,38 +781,9 @@ bool AppInit2()
     // ********************************************************* Step 9: import blocks
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    CBlockIndex *pindexFoundBest = pindexBest;
-    for (std::map<uint256,CBlockIndex*>::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++) {
-        CBlockIndex *pindex = it->second;
-        if (pindexFoundBest==NULL || pindex->bnChainWork > pindexFoundBest->bnChainWork)
-            pindexFoundBest = pindex;
-    }
-    if (pindexFoundBest != pindexBest) {
-        uiInterface.InitMessage(_("Importing blocks from block database..."));
-        uint64 nTxs = 0;
-        uint64 nBlocks = 0;
-        std::vector<CBlockIndex*> vAttach;
-        vAttach.reserve(pindexFoundBest->nHeight - (pindexBest==NULL ? 0 : pindexBest->nHeight));
-        while (pindexFoundBest && pindexFoundBest->bnChainWork > (pindexBest==NULL ? 0 : pindexBest->bnChainWork)) {
-            vAttach.push_back(pindexFoundBest);
-            pindexFoundBest = pindexFoundBest->pprev;
-        }
-        for (std::vector<CBlockIndex*>::reverse_iterator it = vAttach.rbegin(); it != vAttach.rend(); it++) {
-            CBlockIndex *pindex = *it;
-            CBlock block;
-            if (!block.ReadFromDisk(pindex))
-                break;
-            nTxs += block.vtx.size();
-            nBlocks++;
-            if (pindex->nHeight == 0 || nTxs + nBlocks*3 > 500) {
-                nTxs=0;
-                nBlocks=0;
-                block.SetBestChain(pindex);
-            }
-            if (fRequestShutdown)
-                break;
-        }
-    }
+    uiInterface.InitMessage(_("Importing blocks from block database..."));
+    if (!ConnectBestBlock())
+        strErrors << "Failed to connect best block";
 
     std::vector<boost::filesystem::path> *vPath = new std::vector<boost::filesystem::path>();
     if (mapArgs.count("-loadblock"))
