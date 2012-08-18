@@ -126,3 +126,340 @@ void LeaveCritical()
 }
 
 #endif /* DEBUG_LOCKORDER */
+
+
+void CheckLockUpgrade(const char* pszFile, int nLine, CCriticalSection& cs)
+{
+    if (cs.has_shared())
+        printf("WARNING: Upgrading directly from shared to exclusive mutex, something is wrong here: %s:%d\n", pszFile, nLine);
+
+}
+
+
+static void do_nothing (int* pBool) {}
+
+CCriticalSection::CCriticalSection() : nHasExclusive(&do_nothing), 
+nHasUpgrade(&do_nothing), nHadUpgrade(&do_nothing), 
+nHasShared(&do_nothing), nHadShared(&do_nothing) {}
+
+void CCriticalSection::lock()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        nHasExclusive.reset(nHasExclusive.get() + 1);
+        return;
+    }
+
+    if (nHasShared.get() > (int*)0)
+    {
+        mutex.unlock_shared();
+        mutex.lock();
+
+        nHadShared.reset(nHasShared.get());
+        nHasShared.reset((int*) 0);
+    }
+    else if (nHasUpgrade.get() > (int*)0)
+    {
+        mutex.unlock_upgrade_and_lock();
+
+        nHadUpgrade.reset(nHasUpgrade.get());
+        nHasUpgrade.reset((int*) 0);
+    }
+    else
+        mutex.lock();
+
+    nHasExclusive.reset((int*) 1);
+}
+
+bool CCriticalSection::try_lock()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        nHasExclusive.reset(nHasExclusive.get() + 1);
+        return true;
+    }
+
+    if (nHasShared.get() > (int*)0)
+    {
+        mutex.unlock_shared();
+        if (mutex.try_lock())
+        {
+            nHadShared.reset(nHasShared.get());
+            nHasShared.reset((int*) 0);
+            nHasExclusive.reset((int*) 1);
+            return true;
+        }
+        else
+        {
+            mutex.lock_shared();
+            return false;
+        }
+    }
+    else if (nHasUpgrade.get() > (int*)0)
+    {
+        mutex.unlock_upgrade();
+        if (mutex.try_lock())
+        {
+            nHadUpgrade.reset(nHasUpgrade.get());
+            nHasUpgrade.reset((int*) 0);
+            nHasExclusive.reset((int*) 1);
+            return true;
+        }
+        else
+        {
+            mutex.lock_upgrade();
+            return false;
+        }
+    }
+    else
+    {
+        if (mutex.try_lock())
+        {
+            nHasExclusive.reset((int*) 1);
+            return true;
+        }
+        else
+            return false;
+    }
+}
+
+void CCriticalSection::unlock()
+{
+    if (nHasExclusive.get() == (int*)0)
+        return;
+    else if (nHasExclusive.get() > (int*)1)
+    {
+        nHasExclusive.reset(nHasExclusive.get() - 1);
+        return;
+    }
+
+    if (nHadUpgrade.get() > (int*)0)
+    {
+        mutex.unlock_and_lock_upgrade();
+
+        nHasUpgrade.reset(nHadUpgrade.get());
+        nHadUpgrade.reset((int*) 0);
+    }
+    else if (nHadShared.get() > (int*)0)
+    {
+        mutex.unlock();
+        mutex.lock_shared();
+
+        nHasShared.reset(nHadShared.get());
+        nHadShared.reset((int*) 0);
+    }
+    else
+        mutex.unlock();
+
+    nHasExclusive.reset((int*) 0);
+}
+
+void CCriticalSection::lock_upgrade()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        nHadUpgrade.reset(nHadUpgrade.get() + 1);
+        return;
+    }
+    else if (nHasUpgrade.get() > (int*)0)
+    {
+        nHasUpgrade.reset(nHasUpgrade.get() + 1);
+        return;
+    }
+
+    if (nHasShared.get() > (int*)0)
+    {
+        mutex.unlock_shared();
+        mutex.lock_upgrade();
+
+        nHadShared.reset(nHasShared.get());
+        nHasShared.reset((int*) 0);
+    }
+    else
+        mutex.lock_upgrade();
+
+    nHasUpgrade.reset((int*) 1);
+}
+
+void CCriticalSection::unlock_upgrade()
+{
+    if (nHasExclusive.get() > (int*)0)
+    {
+        if (nHadUpgrade.get() > (int*)0)
+            nHadUpgrade.reset(nHadUpgrade.get() - 1);
+        return;
+    }
+    else if (nHasUpgrade.get() > (int*)1)
+    {
+        nHasUpgrade.reset(nHasUpgrade.get() - 1);
+        return;
+    }
+
+    if (nHadShared.get() > (int*)0)
+    {
+        mutex.unlock_upgrade_and_lock_shared();
+
+        nHasShared.reset(nHadShared.get());
+        nHadShared.reset((int*) 0);
+    }
+    else
+        mutex.unlock_upgrade();
+
+    nHasUpgrade.reset((int*) 0);
+}
+
+void CCriticalSection::lock_shared()
+{
+    if (nHasExclusive.get() > (int*)0 || nHasUpgrade.get() > (int*)0)
+    {
+        nHadShared.reset(nHadShared.get() + 1);
+        return;
+    }
+    else if (nHasShared.get() > (int*)0)
+    {
+        nHasShared.reset(nHasShared.get() + 1);
+        return;
+    }
+
+    mutex.lock_shared();
+    nHasShared.reset((int*) 1);
+}
+
+bool CCriticalSection::try_lock_shared()
+{
+    if (nHasExclusive.get() > (int*)0 || nHasUpgrade.get() > (int*)0)
+    {
+        nHadShared.reset(nHadShared.get() + 1);
+        return true;
+    }
+    else if (nHasShared.get() > (int*)0)
+    {
+        nHasShared.reset(nHasShared.get() + 1);
+        return true;
+    }
+
+    if (mutex.try_lock_shared())
+    {
+        nHasShared.reset((int*) 1);
+        return true;
+    }
+    else
+        return false;
+}
+
+void CCriticalSection::unlock_shared()
+{
+    if (nHasExclusive.get() > (int*)0 || nHasUpgrade.get() > (int*)0)
+    {
+        if (nHadShared.get() > (int*)0)
+            nHadShared.reset(nHadShared.get() - 1);
+        return;
+    }
+    else if (nHasShared.get() > (int*)1)
+    {
+        nHasShared.reset(nHasShared.get() - 1);
+        return;
+    }
+
+    mutex.unlock_shared();
+    nHasShared.reset((int*) 0);
+}
+
+bool CCriticalSection::has_shared()
+{
+    return nHasShared.get() > (int*)0;
+}
+
+
+
+
+void CCriticalBlock::Enter(const char* pszName, const char* pszFile, int nLine)
+{
+    if (!fOwnsLock)
+    {
+        EnterCritical(pszName, pszFile, nLine, (void*)pmutex);
+#ifdef DEBUG_LOCKCONTENTION
+        bool fLocked;
+        switch (lockType)
+        {
+        case UNIQUE:
+            CheckLockUpgrade(pszFile, nLine, *pmutex);
+            fLocked = pmutex->try_lock();
+            break;
+        case UPGRADE:
+            pmutex->lock_upgrade();
+            fLocked = true;
+            break;
+        case SHARED:
+            fLocked = pmutex->try_lock_shared();
+            break;
+        }
+        if (!fLocked)
+        {
+            PrintLockContention(pszName, pszFile, nLine);
+#endif
+        switch (lockType)
+        {
+        case UNIQUE:
+            CheckLockUpgrade(pszFile, nLine, *pmutex);
+            pmutex->lock();
+            break;
+        case UPGRADE:
+            pmutex->lock_upgrade();
+            break;
+        case SHARED:
+            pmutex->lock_shared();
+            break;
+        }
+#ifdef DEBUG_LOCKCONTENTION
+        }
+#endif
+        fOwnsLock = true;
+    }
+}
+
+void CCriticalBlock::Leave()
+{
+    if (fOwnsLock)
+    {
+        switch (lockType)
+        {
+        case UNIQUE:
+            pmutex->unlock();
+            break;
+        case UPGRADE:
+            pmutex->unlock_upgrade();
+            break;
+        case SHARED:
+            pmutex->unlock_shared();
+            break;
+        }
+        LeaveCritical();
+    }
+}
+
+bool CCriticalBlock::TryEnter(const char* pszName, const char* pszFile, int nLine)
+{
+    if (!fOwnsLock)
+    {
+        EnterCritical(pszName, pszFile, nLine, (void*)pmutex, true);
+        switch (lockType)
+        {
+        case UNIQUE:
+            CheckLockUpgrade(pszFile, nLine, *pmutex);
+            fOwnsLock = pmutex->try_lock();
+            break;
+        case UPGRADE:
+            pmutex->lock_upgrade();
+            fOwnsLock = true;
+            break;
+        case SHARED:
+            fOwnsLock = pmutex->try_lock_shared();
+            break;
+        }
+        if (!fOwnsLock)
+            LeaveCritical();
+    }
+    return fOwnsLock;
+}
+

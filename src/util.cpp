@@ -62,6 +62,7 @@ map<string, vector<string> > mapMultiArgs;
 bool fDebug = false;
 bool fDebugNet = false;
 bool fPrintToConsole = false;
+bool fDontPrint = false;
 bool fPrintToDebugger = false;
 bool fRequestShutdown = false;
 bool fShutdown = false;
@@ -204,7 +205,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
         ret = vprintf(pszFormat, arg_ptr);
         va_end(arg_ptr);
     }
-    else
+    else if (!fDontPrint)
     {
         // print to debug.log
         static FILE* fileout = NULL;
