@@ -622,6 +622,9 @@ bool LoadBlockIndex(CChainDB &chaindb)
     {
         CBlockIndex* pindex = item.second;
         pindex->bnChainWork = (pindex->pprev ? pindex->pprev->bnChainWork : 0) + pindex->GetBlockWork();
+        pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
+        if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS && !(pindex->nStatus & BLOCK_FAILED_MASK))
+            setBlockIndexValid.insert(pindex);
     }
 
     // Load block file info
@@ -727,20 +730,23 @@ bool CChainDB::LoadBlockIndexGuts()
             CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
             pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
             pindexNew->nHeight        = diskindex.nHeight;
-            pindexNew->pos            = diskindex.pos;
+            pindexNew->nFile          = diskindex.nFile;
+            pindexNew->nDataPos       = diskindex.nDataPos;
             pindexNew->nUndoPos       = diskindex.nUndoPos;
             pindexNew->nVersion       = diskindex.nVersion;
             pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
             pindexNew->nTime          = diskindex.nTime;
             pindexNew->nBits          = diskindex.nBits;
             pindexNew->nNonce         = diskindex.nNonce;
+            pindexNew->nStatus        = diskindex.nStatus;
+            pindexNew->nTx            = diskindex.nTx;
 
             // Watch for genesis block
             if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
                 pindexGenesisBlock = pindexNew;
 
             if (!pindexNew->CheckIndex())
-                return error("LoadBlockIndex() : CheckIndex failed at %d", pindexNew->nHeight);
+                return error("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString().c_str());
         }
         else
         {
