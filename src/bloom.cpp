@@ -88,16 +88,21 @@ bool CBloomFilter::IsWithinSizeConstraints() const
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
-bool CBloomFilter::IsTransactionRelevantToFilter(const CTransaction& tx, const uint256& hash) const
+bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& hash)
 {
+    bool fFound = false;
     // Match if the filter contains the hash of tx
     //  for finding tx when they appear in a block
     if (contains(hash))
-        return true;
+        fFound = true;
 
-    BOOST_FOREACH(const CTxOut& txout, tx.vout)
+    for (unsigned int i = 0; i < tx.vout.size(); i++)
     {
+        const CTxOut& txout = tx.vout[i];
         // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
+        // If this matches, also add the specific output that was matched.
+        // This means clients don't have to update the filter themselves when a new relevant tx 
+        // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
         CScript::const_iterator pc = txout.scriptPubKey.begin();
         vector<unsigned char> data;
         while (pc < txout.scriptPubKey.end())
@@ -106,9 +111,16 @@ bool CBloomFilter::IsTransactionRelevantToFilter(const CTransaction& tx, const u
             if (!txout.scriptPubKey.GetOp(pc, opcode, data))
                 break;
             if (data.size() != 0 && contains(data))
-                return true;
+            {
+                fFound = true;
+                insert(COutPoint(hash, i));
+                break;
+            }
         }
     }
+
+    if (fFound)
+        return true;
 
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
