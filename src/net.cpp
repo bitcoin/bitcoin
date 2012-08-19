@@ -2034,7 +2034,7 @@ void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataSt
         LOCK(pnode->cs_filter);
         if (pnode->pfilter)
         {
-            if (pnode->pfilter->IsTransactionRelevantToFilter(tx, hash))
+            if (pnode->pfilter->IsRelevantAndUpdate(tx, hash))
                 pnode->PushInventory(inv);
         } else
             pnode->PushInventory(inv);
