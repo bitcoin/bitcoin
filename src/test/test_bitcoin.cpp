@@ -13,7 +13,7 @@ extern void noui_connect();
 
 struct TestingSetup {
     TestingSetup() {
-        fPrintToConsole = true; // don't want to write to debug.log file
+        fPrintToDebugger = true; // don't want to write to debug.log file
         noui_connect();
         bitdb.MakeMock();
         LoadBlockIndex(true);
