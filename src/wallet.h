@@ -10,7 +10,6 @@
 
 #include <stdlib.h>
 
-#include "base58.h"
 #include "main.h"
 #include "key.h"
 #include "keystore.h"
@@ -177,8 +176,8 @@ public:
     int64 GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress);
 
-    std::set< std::set<std::string> > GetAddressGroupings();
-    std::map<std::string, int64> GetAddressBalances();
+    std::set< std::set<CTxDestination> > GetAddressGroupings();
+    std::map<CTxDestination, int64> GetAddressBalances();
 
     bool IsMine(const CTxIn& txin) const;
     int64 GetDebit(const CTxIn& txin) const;
@@ -645,13 +644,6 @@ public:
             }
         }
         return true;
-    }
-
-    std::string GetAddressOfTxOut(int n) const
-    {
-        CTxDestination addr;
-        ExtractDestination(vout[n].scriptPubKey, addr);
-        return CBitcoinAddress(addr).ToString();
     }
 
     bool WriteToDisk();
