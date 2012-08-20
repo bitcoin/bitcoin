@@ -428,6 +428,8 @@ Value signrawtransaction(const Array& params, bool fHelp)
             throw JSONRPCError(-8, "Invalid sighash param");
     }
 
+    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
+
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
@@ -440,7 +442,9 @@ Value signrawtransaction(const Array& params, bool fHelp)
         const CScript& prevPubKey = mapPrevOut[txin.prevout];
 
         txin.scriptSig.clear();
-        SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
+        // Only sign SIGHASH_SINGLE if there's a corresponding output:
+        if (!fHashSingle || (i < mergedTx.vout.size()))
+            SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CTransaction& txv, txVariants)
