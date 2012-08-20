@@ -92,7 +92,7 @@ DEFS += -I"$(CURDIR)/leveldb-1.5.0/include" -DUSE_LEVELDB
 DEFS += -I"$(CURDIR)/leveldb-1.5.0/helpers"
 OBJS += obj/txdb-leveldb.o
 leveldb-1.5.0/libleveldb.lib:
-	@echo "Building LevelDB ..."; cd leveldb-1.5.0; TARGET_OS=BitcoinCrossCompileMingW make; cd ..
+	@echo "Building LevelDB ..."; cd leveldb-1.5.0; TARGET_OS=OS_WINDOWS_CROSSCOMPILE make; cd ..
 obj/txdb-leveldb.o: leveldb-1.5.0/libleveldb.lib
 else
 OBJS += obj/txdb-bdb.o
