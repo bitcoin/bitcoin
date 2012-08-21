@@ -74,7 +74,8 @@ Object JSONRPCError(int code, const string& message)
 }
 
 void RPCTypeCheck(const Array& params,
-                  const list<Value_type>& typesExpected)
+                  const list<Value_type>& typesExpected,
+                  bool fAllowNull)
 {
     unsigned int i = 0;
     BOOST_FOREACH(Value_type t, typesExpected)
@@ -82,8 +83,8 @@ void RPCTypeCheck(const Array& params,
         if (params.size() <= i)
             break;
 
-       const Value& v = params[i];
-        if (v.type() != t)
+        const Value& v = params[i];
+        if (!((v.type() == t) || (fAllowNull && (v.type() == null_type))))
         {
             string err = strprintf("Expected type %s, got %s",
                                    Value_type_name[t], Value_type_name[v.type()]);
@@ -94,14 +95,16 @@ void RPCTypeCheck(const Array& params,
 }
 
 void RPCTypeCheck(const Object& o,
-                  const map<string, Value_type>& typesExpected)
+                  const map<string, Value_type>& typesExpected,
+                  bool fAllowNull)
 {
     BOOST_FOREACH(const PAIRTYPE(string, Value_type)& t, typesExpected)
     {
         const Value& v = find_value(o, t.first);
-        if (v.type() == null_type)
+        if (!fAllowNull && v.type() == null_type)
             throw JSONRPCError(-3, strprintf("Missing %s", t.first.c_str()));
-        if (v.type() != t.second)
+
+        if (!((v.type() == t.second) || (fAllowNull && (v.type() == null_type))))
         {
             string err = strprintf("Expected type %s for %s, got %s",
                                    Value_type_name[t.second], t.first.c_str(), Value_type_name[v.type()]);
@@ -2694,8 +2697,10 @@ Object CallRPC(const string& strMethod, const Array& params)
 
 
 template<typename T>
-void ConvertTo(Value& value)
+void ConvertTo(Value& value, bool fAllowNull=false)
 {
+    if (fAllowNull && value.type() == null_type)
+        return;
     if (value.type() == str_type)
     {
         // reinterpret string as unquoted json value
@@ -2703,7 +2708,8 @@ void ConvertTo(Value& value)
         string strJSON = value.get_str();
         if (!read_string(strJSON, value2))
             throw runtime_error(string("Error parsing JSON:")+strJSON);
-        value = value2.get_value<T>();
+        ConvertTo<T>(value2, fAllowNull);
+        value = value2;
     }
     else
     {
@@ -2754,8 +2760,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "getrawtransaction"      && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "createrawtransaction"   && n > 0) ConvertTo<Array>(params[0]);
     if (strMethod == "createrawtransaction"   && n > 1) ConvertTo<Object>(params[1]);
-    if (strMethod == "signrawtransaction"     && n > 1) ConvertTo<Array>(params[1]);
-    if (strMethod == "signrawtransaction"     && n > 2) ConvertTo<Array>(params[2]);
+    if (strMethod == "signrawtransaction"     && n > 1) ConvertTo<Array>(params[1], true);
+    if (strMethod == "signrawtransaction"     && n > 2) ConvertTo<Array>(params[2], true);
 
     return params;
 }
