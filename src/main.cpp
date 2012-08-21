@@ -2838,6 +2838,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vRecv >> pfrom->strSubVer;
         if (!vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
+        if (!vRecv.empty())
+            vRecv >> pfrom->fRelayTxes; // set to true after we get the first filter* message
+        else
+            pfrom->fRelayTxes = true;
 
         if (pfrom->fInbound && addrMe.IsRoutable())
         {
@@ -3391,6 +3395,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             delete pfrom->pfilter;
             pfrom->pfilter = new CBloomFilter(filter);
         }
+        pfrom->fRelayTxes = true;
     }
 
 
@@ -3419,6 +3424,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         LOCK(pfrom->cs_filter);
         delete pfrom->pfilter;
         pfrom->pfilter = NULL;
+        pfrom->fRelayTxes = true;
     }
 
 
