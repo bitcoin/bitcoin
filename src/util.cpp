@@ -1287,8 +1287,11 @@ void RenameThread(const char* name)
     //       on FreeBSD or OpenBSD first. When verified the '0 &&' part can be
     //       removed.
     pthread_set_name_np(pthread_self(), name);
-#elif defined(MAC_OSX)
-    pthread_setname_np(name);
+
+// This is XCode 10.6-and-later; bring back if we drop 10.5 support:
+// #elif defined(MAC_OSX)
+//    pthread_setname_np(name);
+
 #else
     // Prevent warnings for unused parameters...
     (void)name;
