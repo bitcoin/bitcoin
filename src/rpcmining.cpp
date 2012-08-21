@@ -11,9 +11,6 @@
 using namespace json_spirit;
 using namespace std;
 
-extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
-extern std::string HexBits(unsigned int nBits);
-
 Value getgenerate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
