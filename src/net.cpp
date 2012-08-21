@@ -2031,6 +2031,8 @@ void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataSt
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
+        if(!pnode->fRelayTxes)
+            continue;
         LOCK(pnode->cs_filter);
         if (pnode->pfilter)
         {
