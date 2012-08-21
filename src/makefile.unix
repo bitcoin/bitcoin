@@ -4,6 +4,8 @@
 
 USE_UPNP:=0
 
+LINK:=$(CXX)
+
 DEFS=-DUSE_IPV6 -DBOOST_SPIRIT_THREADSAFE
 
 DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
@@ -141,7 +143,7 @@ obj/%.o: %.cpp
 	  rm -f $(@:%.o=%.d)
 
 bitcoind: $(OBJS:obj/%=obj/%)
-	$(CXX) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
+	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -153,7 +155,7 @@ obj-test/%.o: test/%.cpp
 	  rm -f $(@:%.o=%.d)
 
 test_bitcoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
-	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(xLDFLAGS) $(LIBS)
+	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(xLDFLAGS) $(LIBS)
 
 clean:
 	-rm -f bitcoind test_bitcoin
