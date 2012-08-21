@@ -53,6 +53,37 @@ string AccountFromValue(const Value& value)
     return strAccount;
 }
 
+Value getinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getinfo\n"
+            "Returns an object containing various state info.");
+
+    CService addrProxy;
+    GetProxy(NET_IPV4, addrProxy);
+
+    Object obj;
+    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
+    obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
+    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+    obj.push_back(Pair("blocks",        (int)nBestHeight));
+    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("proxy",         (addrProxy.IsValid() ? addrProxy.ToStringIPPort() : string())));
+    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
+    obj.push_back(Pair("testnet",       fTestNet));
+    obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoolsize",   pwalletMain->GetKeyPoolSize()));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+    if (pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
+    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    return obj;
+}
+
+
+
 Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
