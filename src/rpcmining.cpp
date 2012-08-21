@@ -373,8 +373,8 @@ Value submitblock(const Array& params, bool fHelp)
 
     bool fAccepted = ProcessBlock(NULL, &block);
     if (!fAccepted)
-        throw JSONRPCError(-23, "Block rejected");
+        return "rejected";
 
-    return true;
+    return Value::null;
 }
 
