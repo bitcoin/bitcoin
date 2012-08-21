@@ -1925,10 +1925,10 @@ Value getwork(const Array& params, bool fHelp)
 
 Value getblocktemplate(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
             "getblocktemplate [params]\n"
-            "If [params] does not contain a \"data\" key, returns data needed to construct a block to work on:\n"
+            "Returns data needed to construct a block to work on:\n"
             "  \"version\" : block version\n"
             "  \"previousblockhash\" : hash of current highest block\n"
             "  \"transactions\" : contents of non-coinbase transactions that should be included in the next block\n"
@@ -1943,23 +1943,22 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "  \"sizelimit\" : limit of block size\n"
             "  \"bits\" : compressed target of next block\n"
             "  \"height\" : height of the next block\n"
-            "If [params] does contain a \"data\" key, tries to solve the block and returns null if it was successful (and \"rejected\" if not)\n"
             "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.");
 
-    const Object& oparam = params[0].get_obj();
-    std::string strMode;
+    std::string strMode = "template";
+    if (params.size() > 0)
     {
+        const Object& oparam = params[0].get_obj();
         const Value& modeval = find_value(oparam, "mode");
         if (modeval.type() == str_type)
             strMode = modeval.get_str();
         else
-        if (find_value(oparam, "data").type() == null_type)
-            strMode = "template";
-        else
-            strMode = "submit";
+            throw JSONRPCError(-8, "Invalid mode");
     }
 
-    if (strMode == "template")
+    if (strMode != "template")
+        throw JSONRPCError(-8, "Invalid mode");
+
     {
         if (vNodes.empty())
             throw JSONRPCError(-9, "Bitcoin is not connected!");
@@ -2077,20 +2076,32 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
         return result;
     }
-    else
-    if (strMode == "submit")
-    {
-        // Parse parameters
-        CDataStream ssBlock(ParseHex(find_value(oparam, "data").get_str()), SER_NETWORK, PROTOCOL_VERSION);
-        CBlock pblock;
-        ssBlock >> pblock;
+}
 
-        bool fAccepted = ProcessBlock(NULL, &pblock);
+Value submitblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "submitblock <hex data> [optional-params-obj]\n"
+            "[optional-params-obj] parameter is currently ignored.\n"
+            "Attempts to submit new block to network.\n"
+            "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.");
 
-        return fAccepted ? Value::null : "rejected";
+    vector<unsigned char> blockData(ParseHex(params[0].get_str()));
+    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
+    CBlock block;
+    try {
+        ssBlock >> block;
+    }
+    catch (std::exception &e) {
+        throw JSONRPCError(-22, "Block decode failed");
     }
 
-    throw JSONRPCError(-8, "Invalid mode");
+    bool fAccepted = ProcessBlock(NULL, &block);
+    if (!fAccepted)
+        throw JSONRPCError(-23, "Block rejected");
+
+    return true;
 }
 
 Value getrawmempool(const Array& params, bool fHelp)
@@ -2203,6 +2214,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listaccounts",           &listaccounts,           false },
     { "settxfee",               &settxfee,               false },
     { "getblocktemplate",       &getblocktemplate,       true },
+    { "submitblock",            &submitblock,            false },
     { "listsinceblock",         &listsinceblock,         false },
     { "dumpprivkey",            &dumpprivkey,            false },
     { "importprivkey",          &importprivkey,          false },
