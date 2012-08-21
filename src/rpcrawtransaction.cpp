@@ -18,13 +18,6 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-// These are all in bitcoinrpc.cpp:
-extern Object JSONRPCError(int code, const string& message);
-extern int64 AmountFromValue(const Value& value);
-extern Value ValueFromAmount(int64 amount);
-extern std::string HelpRequiringPassphrase();
-extern void EnsureWalletIsUnlocked();
-
 void
 ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
 {

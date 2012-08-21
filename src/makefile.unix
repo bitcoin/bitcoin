@@ -112,6 +112,7 @@ OBJS= \
     obj/rpcnet.o \
     obj/rpcmining.o \
     obj/rpcwallet.o \
+    obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
     obj/script.o \
     obj/sync.o \
