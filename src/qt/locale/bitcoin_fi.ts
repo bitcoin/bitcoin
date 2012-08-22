@@ -214,13 +214,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+1"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation>VAROITUS: Mikäli salaat lompakkosi ja unohdat tunnuslauseen, &lt;b&gt;MENETÄT LOMPAKON KOKO SISÄLLÖN&lt;/b&gt;!
-Tahdotko varmasti salata lompakon?</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+0"/>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+106"/>
+        <location line="+24"/>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-121"/>
         <location line="+49"/>
         <source>Wallet encrypted</source>
         <translation>Lompakko salattu</translation>
@@ -231,13 +240,7 @@ Tahdotko varmasti salata lompakon?</translation>
         <translation>Bitcoin sulkeutuu lopettaakseen salausprosessin. Muista, että salattu lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
     </message>
     <message>
-        <location line="+96"/>
-        <location line="+24"/>
-        <source>Warning: The Caps Lock key is on.</source>
-        <translation>Varoitus: Caps Lock on päällä.</translation>
-    </message>
-    <message>
-        <location line="-115"/>
+        <location line="+5"/>
         <location line="+7"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -291,12 +294,12 @@ Tahdotko varmasti salata lompakon?</translation>
         <translation>Näytä/Kätke &amp;Bitcoin</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+248"/>
         <source>Synchronizing with network...</source>
         <translation>Synkronoidaan verkon kanssa...</translation>
     </message>
     <message>
-        <location line="-325"/>
+        <location line="-326"/>
         <source>&amp;Overview</source>
         <translation>&amp;Yleisnäkymä</translation>
     </message>
@@ -386,17 +389,17 @@ Tahdotko varmasti salata lompakon?</translation>
         <translation>&amp;Vaihda Tunnuslause...</translation>
     </message>
     <message numerus="yes">
-        <location line="+240"/>
+        <location line="+241"/>
         <source>~%n block(s) remaining</source>
         <translation><numerusform>~%n lohko jäljellä</numerusform><numerusform>~%n lohkoja jäljellä</numerusform></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+6"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
         <translation>Ladattu %1 / %2 lohkoista rahansiirtohistoriasta (%3% suoritettu).</translation>
     </message>
     <message>
-        <location line="-258"/>
+        <location line="-254"/>
         <source>&amp;Export...</source>
         <translation>&amp;Vie...</translation>
     </message>
@@ -523,12 +526,12 @@ Tahdotko varmasti salata lompakon?</translation>
         <translation><numerusform>%n aktiivinen yhteys Bitcoin-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä Bitcoin-verkkoon</numerusform></translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+40"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Ladattu %1 lohkoa rahansiirron historiasta.</translation>
     </message>
     <message numerus="yes">
-        <location line="+15"/>
+        <location line="+22"/>
         <source>%n second(s) ago</source>
         <translation><numerusform>%n sekunti sitten</numerusform><numerusform>%n sekuntia sitten</numerusform></translation>
     </message>
@@ -645,7 +648,7 @@ Osoite: %4</translation>
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+84"/>
+        <location filename="../clientmodel.cpp" line="+86"/>
         <source>Network Alert</source>
         <translation>Verkkohälytys</translation>
     </message>
@@ -935,12 +938,12 @@ Osoite: %4</translation>
         <translation>&amp;Hyväksy</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+63"/>
+        <location filename="../optionsdialog.cpp" line="+55"/>
         <source>default</source>
         <translation>oletus</translation>
     </message>
     <message>
-        <location line="+133"/>
+        <location line="+134"/>
         <location line="+9"/>
         <source>Warning</source>
         <translation>Varoitus</translation>
@@ -952,7 +955,7 @@ Osoite: %4</translation>
         <translation>Tämä asetus astuu voimaan seuraavalla kerralla, kun Bitcoin käynnistetään.</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Antamasi proxy-osoite on virheellinen.</translation>
     </message>
@@ -1541,7 +1544,7 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="-73"/>
-        <source>Wallet unlock was canceled.</source>
+        <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -2066,22 +2069,22 @@ Osoite: %4</translation>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+62"/>
+        <location filename="../bitcoinstrings.cpp" line="+65"/>
         <source>Bitcoin version</source>
         <translation>Bitcoinin versio</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+81"/>
         <source>Usage:</source>
         <translation>Käyttö:</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-25"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Lähetä käsky palvelimelle tai bitcoind:lle</translation>
     </message>
     <message>
-        <location line="-19"/>
+        <location line="-20"/>
         <source>List commands</source>
         <translation>Lista komennoista</translation>
     </message>
@@ -2096,7 +2099,7 @@ Osoite: %4</translation>
         <translation>Asetukset:</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+23"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Määritä asetustiedosto (oletus: bitcoin.conf)</translation>
     </message>
@@ -2106,7 +2109,7 @@ Osoite: %4</translation>
         <translation>Määritä pid-tiedosto (oletus: bitcoin.pid)</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-46"/>
         <source>Generate coins</source>
         <translation>Generoi kolikoita</translation>
     </message>
@@ -2116,12 +2119,12 @@ Osoite: %4</translation>
         <translation>Älä generoi kolikoita</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+59"/>
         <source>Specify data directory</source>
         <translation>Määritä data-hakemisto</translation>
     </message>
     <message>
-        <location line="-5"/>
+        <location line="-8"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Aseta tietokannan välimuistin koko megatavuina (oletus: 25)</translation>
     </message>
@@ -2131,12 +2134,12 @@ Osoite: %4</translation>
         <translation>Aseta tietokannan lokitiedoston koko megatavuina (oletus: 100)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Specify connection timeout (in milliseconds)</source>
         <translation>Määritä yhteyden aikakatkaisu (millisekunneissa)</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-32"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Kuuntele yhteyksiä portista &lt;port&gt; (oletus: 8333 tai testnet: 18333)</translation>
     </message>
@@ -2151,22 +2154,22 @@ Osoite: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+63"/>
         <source>Specify your own public address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-74"/>
         <source>Bind to given address. Use [host]:port notation for IPv6</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+76"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Kynnysarvo aikakatkaisulle heikosti toimiville verkoille (oletus: 100)</translation>
     </message>
     <message>
-        <location line="-96"/>
+        <location line="-104"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Sekuntien määrä, kuinka kauan uudelleenkytkeydytään verkkoihin (oletus: 86400)</translation>
     </message>
@@ -2176,27 +2179,57 @@ Osoite: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Hyväksy merkkipohjaiset- ja JSON-RPC-käskyt</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Aja taustalla daemonina ja hyväksy komennot</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+33"/>
         <source>Use the test network</source>
         <translation>Käytä test -verkkoa</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-92"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation type="unfinished"/>
     </message>
     <message>
+        <location line="-20"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+13"/>
+        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Block creation options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Connect only to the specified node(s)</source>
         <translation type="unfinished"/>
     </message>
@@ -2252,6 +2285,11 @@ Osoite: %4</translation>
     </message>
     <message>
         <location line="+4"/>
+        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Select the version of socks proxy to use (4-5, default: 5)</source>
         <translation type="unfinished"/>
     </message>
@@ -2266,7 +2304,22 @@ Osoite: %4</translation>
         <translation>Lähetä jäljitys/debug-tieto debuggeriin</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+7"/>
+        <source>Set maximum block size in bytes (default: 250000)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set minimum block size in bytes (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation type="unfinished"/>
     </message>
@@ -2286,12 +2339,17 @@ Osoite: %4</translation>
         <translation>Käyttäjätunnus JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Warning: this version is obsolete, upgrade required</source>
+        <location line="+2"/>
+        <source>Warning: Disk space is low!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="+1"/>
+        <source>Warning: This version is obsolete, upgrade required!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-41"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Salasana JSON-RPC-yhteyksille</translation>
     </message>
@@ -2301,32 +2359,32 @@ Osoite: %4</translation>
         <translation>Kuuntele JSON-RPC -yhteyksiä portista &lt;port&gt; (oletus: 8332)</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-40"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Salli JSON-RPC yhteydet tietystä ip-osoitteesta</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+60"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Lähetä käskyjä solmuun osoitteessa &lt;ip&gt; (oletus: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-89"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Suorita käsky kun paras lohko muuttuu (%s cmd on vaihdettu block hashin kanssa)</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+112"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Päivitä lompakko uusimpaan formaattiin</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-15"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Aseta avainpoolin koko arvoon &lt;n&gt; (oletus: 100)</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Skannaa uudelleen lohkoketju lompakon puuttuvien rahasiirtojen vuoksi</translation>
     </message>
@@ -2346,18 +2404,12 @@ Osoite: %4</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-39"/>
-        <source>
-SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>SSL-asetukset: (lisätietoja Bitcoin-Wikistä)</translation>
-    </message>
-    <message>
-        <location line="+87"/>
+        <location line="+52"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Käytä OpenSSL:ää (https) JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location line="-18"/>
+        <location line="-21"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Palvelimen sertifikaatti-tiedosto (oletus: server.cert)</translation>
     </message>
@@ -2367,48 +2419,43 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Palvelimen yksityisavain (oletus: server.pem)</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-109"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Hyväksyttävä salaus (oletus:
 TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+128"/>
-        <source>Warning: Disk space is low</source>
-        <translation>Varoitus: Levytila on vähissä</translation>
-    </message>
-    <message>
-        <location line="-15"/>
+        <location line="+121"/>
         <source>This help message</source>
         <translation>Tämä ohjeviesti</translation>
     </message>
     <message>
-        <location line="-110"/>
+        <location line="-118"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>En pääse käsiksi data-hakemiston lukitukseen %s. Bitcoin on todennäköisesti jo käynnistetty.</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+76"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-68"/>
         <source>Connect through socks proxy</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-13"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Loading addresses...</source>
         <translation>Ladataan osoitteita...</translation>
     </message>
@@ -2428,12 +2475,12 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version Bitcoinista</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+71"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä Bitcoin uudelleen</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-73"/>
         <source>Error loading wallet.dat</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa</translation>
     </message>
@@ -2443,7 +2490,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+47"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -2453,7 +2500,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-73"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -2478,27 +2525,27 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Virhe: Lompakko on lukittu, rahansiirtoa ei voida luoda</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-55"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
         <translation>Virhe: Tämä rahansiirto vaatii rahansiirtopalkkion vähintään %s johtuen sen määrästä, monimutkaisuudesta tai hiljattain vastaanotettujen summien käytöstä</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+54"/>
         <source>Error: Transaction creation failed  </source>
         <translation>Virhe: Rahansiirron luonti epäonnistui</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+41"/>
         <source>Sending...</source>
         <translation>Lähetetään...</translation>
     </message>
     <message>
-        <location line="-94"/>
+        <location line="-99"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Virhe: Rahansiirto hylättiin.  Tämä voi tapahtua jos jotkin bitcoineistasi on jo käytetty, esimerkiksi jos olet käyttänyt kopiota wallet.dat-lompakkotiedostosta ja bitcoinit on merkitty käytetyksi vain kopiossa.</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+74"/>
         <source>Invalid amount</source>
         <translation>Virheellinen määrä</translation>
     </message>
@@ -2513,7 +2560,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Ladataan lohkoindeksiä...</translation>
     </message>
     <message>
-        <location line="-44"/>
+        <location line="-45"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Linää solmu mihin liittyä pitääksesi yhteyden auki</translation>
     </message>
@@ -2523,7 +2570,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+48"/>
         <source>Find peers using internet relay chat (default: 0)</source>
         <translation>Etsi solmuja käyttäen internet relay chatia (oletus: 0)</translation>
     </message>
@@ -2533,12 +2580,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Rahansiirtopalkkio per KB lisätään lähettämääsi rahansiirtoon</translation>
     </message>
     <message>
-        <location line="-43"/>
-        <source>Warning: -paytxfee is set very high. This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+61"/>
+        <location line="+18"/>
         <source>Loading wallet...</source>
         <translation>Ladataan lompakkoa...</translation>
     </message>
@@ -2568,12 +2610,12 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Lataus on valmis</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+63"/>
         <source>To use the %s option</source>
         <translation>Käytä %s optiota</translation>
     </message>
     <message>
-        <location line="-124"/>
+        <location line="-132"/>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:
@@ -2592,28 +2634,18 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.
 </translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+74"/>
         <source>Error</source>
         <translation>Virhe</translation>
     </message>
     <message>
-        <location line="-19"/>
-        <source>An error occured while setting up the RPC port %i for listening: %s</source>
-        <translation>Virhe asetettaessa RCP-porttia %i kuunteluun: %s</translation>
-    </message>
-    <message>
-        <location line="-13"/>
+        <location line="-30"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
         <translation>Sinun täytyy asettaa rpcpassword=&lt;password&gt; asetustiedostoon:
 %s
 Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</translation>
-    </message>
-    <message>
-        <location line="-3"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>Varoitus: Tarkista, ovatko tietokoneesi päivämäärä ja aika oikein.  Mikäli aika on väärin, Bitcoin-ohjelma ei toimi oikein.</translation>
     </message>
 </context>
 </TS>

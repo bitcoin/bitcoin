@@ -220,12 +220,22 @@ Dieses Produkt enthält Software, die vom OpenSSL Projekt zur Verwendung im Open
     </message>
     <message>
         <location line="+1"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation>WARNUNG: Wenn Sie Ihre Brieftasche verschlüsseln und Ihre Passphrase verlieren, werden Sie &lt;b&gt;ALLE IHRE BITCOINS VERLIEREN&lt;/b&gt;!&lt;br&gt;&lt;br&gt;Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Warnung: Wenn Sie Ihre Brieftasche verschlüsseln und Ihre Passphrase verlieren, werden Sie &lt;b&gt;ALLE IHRE BITCOINS VERLIEREN&lt;/b&gt;!</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+0"/>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</translation>
+    </message>
+    <message>
+        <location line="+106"/>
+        <location line="+24"/>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Warnung: Die Feststelltaste ist aktiviert!</translation>
+    </message>
+    <message>
+        <location line="-121"/>
         <location line="+49"/>
         <source>Wallet encrypted</source>
         <translation>Brieftasche verschlüsselt</translation>
@@ -236,13 +246,7 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Bitcoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer Bitcoins durch Schadsoftware schützt, die Ihren Computer befällt.</translation>
     </message>
     <message>
-        <location line="+96"/>
-        <location line="+24"/>
-        <source>Warning: The Caps Lock key is on.</source>
-        <translation>Warnung: Die Feststelltaste ist aktiviert.</translation>
-    </message>
-    <message>
-        <location line="-115"/>
+        <location line="+5"/>
         <location line="+7"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -296,12 +300,12 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Zeige/Verstecke &amp;Bitcoin</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+248"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronisiere mit Netzwerk...</translation>
     </message>
     <message>
-        <location line="-325"/>
+        <location line="-326"/>
         <source>&amp;Overview</source>
         <translation>&amp;Übersicht</translation>
     </message>
@@ -391,17 +395,17 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Passphrase &amp;ändern...</translation>
     </message>
     <message numerus="yes">
-        <location line="+240"/>
+        <location line="+241"/>
         <source>~%n block(s) remaining</source>
         <translation><numerusform>~%n Block verbleibend</numerusform><numerusform>~%n Blöcke verbleibend</numerusform></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+6"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
         <translation>%1 von %2 Blöcken des Transaktionsverlaufs heruntergeladen (%3% fertig).</translation>
     </message>
     <message>
-        <location line="-258"/>
+        <location line="-254"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportieren...</translation>
     </message>
@@ -528,12 +532,12 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation><numerusform>%n aktive Verbindung zum Bitcoin-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Bitcoin-Netzwerk</numerusform></translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+40"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>%1 Blöcke des Transaktionsverlaufs heruntergeladen.</translation>
     </message>
     <message numerus="yes">
-        <location line="+15"/>
+        <location line="+22"/>
         <source>%n second(s) ago</source>
         <translation><numerusform>vor %n Sekunde</numerusform><numerusform>vor %n Sekunden</numerusform></translation>
     </message>
@@ -650,7 +654,7 @@ Adresse: %4</translation>
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+84"/>
+        <location filename="../clientmodel.cpp" line="+86"/>
         <source>Network Alert</source>
         <translation>Netzwerkalarm</translation>
     </message>
@@ -940,12 +944,12 @@ Adresse: %4</translation>
         <translation>&amp;Übernehmen</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+63"/>
+        <location filename="../optionsdialog.cpp" line="+55"/>
         <source>default</source>
         <translation>Standard</translation>
     </message>
     <message>
-        <location line="+133"/>
+        <location line="+134"/>
         <location line="+9"/>
         <source>Warning</source>
         <translation>Warnung</translation>
@@ -957,7 +961,7 @@ Adresse: %4</translation>
         <translation>Diese Einstellung wird erst nach einem Neustart von Bitcoin aktiv.</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Die eingegebene Proxyadresse ist ungültig.</translation>
     </message>
@@ -1546,8 +1550,8 @@ Adresse: %4</translation>
     </message>
     <message>
         <location line="-73"/>
-        <source>Wallet unlock was canceled.</source>
-        <translation>Entsperrung der Brieftasche fehlgeschlagen</translation>
+        <source>Wallet unlock was cancelled.</source>
+        <translation>Entsperrung der Brieftasche wurde abgebrochen.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2071,22 +2075,22 @@ Adresse: %4</translation>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+62"/>
+        <location filename="../bitcoinstrings.cpp" line="+65"/>
         <source>Bitcoin version</source>
         <translation>Bitcoin Version</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+81"/>
         <source>Usage:</source>
         <translation>Benutzung:</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-25"/>
         <source>Send command to -server or bitcoind</source>
         <translation>Befehl an -server oder bitcoind senden</translation>
     </message>
     <message>
-        <location line="-19"/>
+        <location line="-20"/>
         <source>List commands</source>
         <translation>Befehle auflisten</translation>
     </message>
@@ -2101,7 +2105,7 @@ Adresse: %4</translation>
         <translation>Optionen:</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+23"/>
         <source>Specify configuration file (default: bitcoin.conf)</source>
         <translation>Konfigurationsdatei angeben (Standard: bitcoin.conf)</translation>
     </message>
@@ -2111,7 +2115,7 @@ Adresse: %4</translation>
         <translation>PID-Datei angeben (Standard: bitcoind.pid)</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-46"/>
         <source>Generate coins</source>
         <translation>Bitcoins generieren</translation>
     </message>
@@ -2121,12 +2125,12 @@ Adresse: %4</translation>
         <translation>Keine Bitcoins generieren</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+59"/>
         <source>Specify data directory</source>
         <translation>Datenverzeichnis angeben</translation>
     </message>
     <message>
-        <location line="-5"/>
+        <location line="-8"/>
         <source>Set database cache size in megabytes (default: 25)</source>
         <translation>Größe des Datenbankcaches in MB festlegen (Standard: 25)</translation>
     </message>
@@ -2136,12 +2140,12 @@ Adresse: %4</translation>
         <translation>Größe des Datenbankprotokolls auf der Festplatte in MB festlegen (Standard: 100)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Specify connection timeout (in milliseconds)</source>
         <translation>Verbindungstimeout angeben (in Millisekunden)</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-32"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>&lt;port&gt; nach Verbindungen abhören (Standard: 8333 oder Testnetz: 18333)</translation>
     </message>
@@ -2156,22 +2160,22 @@ Adresse: %4</translation>
         <translation>Mit dem Knoten verbinden um Adressen von Gegenstellen abzufragen, danach trennen</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+63"/>
         <source>Specify your own public address</source>
         <translation>Die eigene öffentliche Adresse angeben</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-74"/>
         <source>Bind to given address. Use [host]:port notation for IPv6</source>
         <translation>An die angegebene Adresse binden. Benutze [Host]:Port Schreibweise für IPv6</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+76"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Schwellenwert, um Verbindungen zu sich nicht konform verhaltenden Gegenstellen zu beenden (Standard: 100)</translation>
     </message>
     <message>
-        <location line="-96"/>
+        <location line="-104"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Anzahl Sekunden, während denen sich nicht konform verhaltenden Gegenstellen die Wiederverbindung verweigert wird (Standard: 86400)</translation>
     </message>
@@ -2181,27 +2185,57 @@ Adresse: %4</translation>
         <translation>Block- und Adressdatenbank beim Beenden trennen. Verlängert, die zum Beenden benötigte Zeit (Standard: 0)</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+34"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Kommandozeilenbefehle und JSON-RPC Befehle annehmen</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Als Hintergrunddienst starten und Befehle annehmen</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+33"/>
         <source>Use the test network</source>
         <translation>Das Testnetz verwenden</translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-92"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Eingehende Verbindungen annehmen (Standard: 1, wenn nicht -proxy oder -connect)</translation>
     </message>
     <message>
+        <location line="-20"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
+        <translation>Maximale Größe von high-priority/low-fee Transaktionen in Byte festlegen (Standard: 27000)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Warnung: -paytxfee ist auf einen sehr hohen Wert festgelegt! Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation>Warnung: Angezeigte Transaktionen sind evtl. nicht korrekt! Sie oder die anderen Knoten müssen unter Umständen (den Client) aktualisieren.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <translation>Warnung: Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da Bitcoin ansonsten nicht ordnungsgemäß funktionieren wird!</translation>
+    </message>
+    <message>
         <location line="+13"/>
+        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
+        <translation>Beim Einrichten des abzuhörenden RPC-Ports %i ist ein Fehler aufgetreten: %s</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Block creation options:</source>
+        <translation>Blockerzeugungsoptionen:</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Nur mit dem/den angegebenen Knoten verbinden</translation>
     </message>
@@ -2257,6 +2291,11 @@ Adresse: %4</translation>
     </message>
     <message>
         <location line="+4"/>
+        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Select the version of socks proxy to use (4-5, default: 5)</source>
         <translation>SOCKS-Version des Proxies festlegen (4-5, Standard: 5)</translation>
     </message>
@@ -2271,7 +2310,22 @@ Adresse: %4</translation>
         <translation>Rückverfolgungs- und Debuginformationen an den Debugger senden</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+7"/>
+        <source>Set maximum block size in bytes (default: 250000)</source>
+        <translation>Maximale Blockgröße in Byte festlegen (Standard: 250000)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set minimum block size in bytes (default: 0)</source>
+        <translation>Minimale Blockgröße in Byte festlegen (Standard: 0)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
+        <translation>Verkleinere debug.log Datei beim Start des Clients (Standard: 1, wenn kein -debug)</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>UPnP verwenden, um die Portweiterleitung einzurichten (Standard: 0)</translation>
     </message>
@@ -2291,12 +2345,17 @@ Adresse: %4</translation>
         <translation>Benutzername für JSON-RPC Verbindungen</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Warning: this version is obsolete, upgrade required</source>
-        <translation>Warnung: Diese Version is veraltet, Aktualisierung erforderlich</translation>
+        <location line="+2"/>
+        <source>Warning: Disk space is low!</source>
+        <translation>Warnung: Nicht mehr genügend Festplattenplatz verfügbar!</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="+1"/>
+        <source>Warning: This version is obsolete, upgrade required!</source>
+        <translation>Warnung: Diese Version is veraltet, Aktualisierung erforderlich!</translation>
+    </message>
+    <message>
+        <location line="-41"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Passwort für JSON-RPC Verbindungen</translation>
     </message>
@@ -2306,32 +2365,32 @@ Adresse: %4</translation>
         <translation>&lt;port&gt; nach JSON-RPC Verbindungen abhören (Standard: 8332)</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-40"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>JSON-RPC Verbindungen von der angegebenen IP-Adresse erlauben</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+60"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Sende Befehle an Knoten &lt;ip&gt; (Standard: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-89"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Kommando ausführen wenn der beste Block wechselt (%s im Kommando wird durch den Hash des Blocks ersetzt)</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+112"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Brieftasche auf das neueste Format aktualisieren</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-15"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Größe des Schlüsselpools festlegen auf &lt;n&gt; (Standard: 100)</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Blockkette erneut nach fehlenden Transaktionen der Brieftasche durchsuchen</translation>
     </message>
@@ -2351,19 +2410,12 @@ Adresse: %4</translation>
         <translation>Blöcke aus einer externen blk000?.dat Datei importieren</translation>
     </message>
     <message>
-        <location line="-39"/>
-        <source>
-SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>
-SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translation>
-    </message>
-    <message>
-        <location line="+87"/>
+        <location line="+52"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>OpenSSL (https) für JSON-RPC Verbindungen verwenden</translation>
     </message>
     <message>
-        <location line="-18"/>
+        <location line="-21"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Serverzertifikat (Standard: server.cert)</translation>
     </message>
@@ -2373,47 +2425,42 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Privater Serverschlüssel (Standard: server.pem)</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-109"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Akzeptierte Chiffren (Standard: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+128"/>
-        <source>Warning: Disk space is low</source>
-        <translation>Warnung: Nicht mehr genügend Festplattenplatz verfügbar</translation>
-    </message>
-    <message>
-        <location line="-15"/>
+        <location line="+121"/>
         <source>This help message</source>
         <translation>Dieser Hilfetext</translation>
     </message>
     <message>
-        <location line="-110"/>
+        <location line="-118"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Datenverzeichnis %s kann nicht gesperrt werden. Evtl. wurde Bitcoin bereits gestartet.</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+76"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Kann auf diesem Computer nicht an %s binden (von bind zurückgegebener Fehler %d, %s)</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-68"/>
         <source>Connect through socks proxy</source>
         <translation>Über einen SOCKS-Proxy verbinden</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-13"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Erlaube DNS-Namensauflösung für -addnode, -seednode und -connect</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Loading addresses...</source>
         <translation>Lade Adressen...</translation>
     </message>
@@ -2433,12 +2480,12 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Fehler beim Laden von wallet.dat: Brieftasche benötigt neuere Version von Bitcoin</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+71"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Brieftasche muss neu geschrieben werden: Starten Sie Bitcoin zur Fertigstellung neu</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-73"/>
         <source>Error loading wallet.dat</source>
         <translation>Fehler beim Laden von wallet.dat (Brieftasche)</translation>
     </message>
@@ -2448,7 +2495,7 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Ungültige Adresse in -proxy: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+47"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Unbekannter Netztyp in -onlynet angegeben: &apos;%s&apos;</translation>
     </message>
@@ -2458,7 +2505,7 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Unbekannte Proxyversion in -socks angefordert: %i</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-73"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kann Adresse in -bind nicht auflösen: &apos;%s&apos;</translation>
     </message>
@@ -2483,27 +2530,27 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Fehler: Brieftasche gesperrt, Transaktion kann nicht erstellt werden</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-55"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
         <translation>Fehler: Diese Transaktion benötigt aufgrund ihres Betrags, ihrer Komplexität oder der Nutzung kürzlich erhaltener Zahlungen eine Transaktionsgebühr in Höhe von mindestens %s.</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+54"/>
         <source>Error: Transaction creation failed  </source>
         <translation>Fehler: Transaktionserstellung fehlgeschlagen</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+41"/>
         <source>Sending...</source>
         <translation>Senden...</translation>
     </message>
     <message>
-        <location line="-94"/>
+        <location line="-99"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Fehler: Die Transaktion wurde abgelehnt. Dies kann passieren, wenn einige Bitcoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+74"/>
         <source>Invalid amount</source>
         <translation>Ungültige Angabe</translation>
     </message>
@@ -2518,7 +2565,7 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Lade Blockindex...</translation>
     </message>
     <message>
-        <location line="-44"/>
+        <location line="-45"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Mit dem Knoten verbinden und versuchen die Verbindung aufrecht zu halten</translation>
     </message>
@@ -2528,7 +2575,7 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Kann auf diesem Computer nicht an %s binden. Evtl. wurde Bitcoin bereits gestartet.</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+48"/>
         <source>Find peers using internet relay chat (default: 0)</source>
         <translation>Gegenstellen via Internet Relay Chat finden (Standard: 0)</translation>
     </message>
@@ -2538,12 +2585,7 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Gebühr pro KB, die gesendeten Transaktionen hinzugefügt wird</translation>
     </message>
     <message>
-        <location line="-43"/>
-        <source>Warning: -paytxfee is set very high. This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Warnung: -paytxfee ist auf einen sehr hohen Wert festgelegt. Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
-    </message>
-    <message>
-        <location line="+61"/>
+        <location line="+18"/>
         <source>Loading wallet...</source>
         <translation>Lade Brieftasche...</translation>
     </message>
@@ -2573,12 +2615,12 @@ SSL-Optionen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translatio
         <translation>Laden abgeschlossen</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+63"/>
         <source>To use the %s option</source>
         <translation>Zur Nutzung der %s Option</translation>
     </message>
     <message>
-        <location line="-124"/>
+        <location line="-132"/>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:
@@ -2597,28 +2639,18 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
 </translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+74"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location line="-19"/>
-        <source>An error occured while setting up the RPC port %i for listening: %s</source>
-        <translation>Fehler beim Einrichten des RPC-Ports %i: %s</translation>
-    </message>
-    <message>
-        <location line="-13"/>
+        <location line="-30"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
         <translation>Sie müssen den Wert rpcpassword=&lt;passwort&gt; in der Konfigurationsdatei angeben:
 %s
 Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Leserechten nur für den Dateibesitzer.</translation>
-    </message>
-    <message>
-        <location line="-3"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>Warnung: Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da Bitcoin ansonsten nicht ordnungsgemäß funktionieren wird.</translation>
     </message>
 </context>
 </TS>
