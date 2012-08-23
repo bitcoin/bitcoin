@@ -20,6 +20,7 @@ LIBPATHS= \
  -L"$(DEPSDIR)/lib/db48"
 
 USE_UPNP:=1
+USE_IPV6:=1
 
 LIBS= -dead_strip
 
@@ -53,7 +54,7 @@ LIBS += \
 TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
-DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE -DUSE_IPV6
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE
 
 ifdef RELEASE
 # Compile for maximum compatibility and smallest size.
@@ -96,13 +97,20 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o
 
-ifdef USE_UPNP
+ifndef USE_UPNP
+	override USE_UPNP = -
+endif
+ifneq (${USE_UPNP}, -)
 	DEFS += -DUSE_UPNP=$(USE_UPNP)
 ifdef STATIC
 	LIBS += $(DEPSDIR)/lib/libminiupnpc.a
 else
 	LIBS += -lminiupnpc
 endif
+endif
+
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
 all: bitcoind
