@@ -632,7 +632,7 @@ Value sendmany(const Array& params, bool fHelp)
     {
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
-            throw JSONRPCError(-5, string("Invalid Bitcoin address:")+s.name_);
+            throw JSONRPCError(-5, string("Invalid Bitcoin address: ")+s.name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+s.name_);
@@ -1389,7 +1389,7 @@ Value encryptwallet(const Array& params, bool fHelp)
 
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
-    // unencrypted private keys.  So:
+    // unencrypted private keys. So:
     StartShutdown();
     return "wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet";
 }
