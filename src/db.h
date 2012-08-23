@@ -294,8 +294,8 @@ public:
     bool EraseBlockIndex(uint256 hash);
     bool ReadHashBestChain(uint256& hashBestChain);
     bool WriteHashBestChain(uint256 hashBestChain);
-    bool ReadBestInvalidTrust(uint64& nBestInvalidTrust);
-    bool WriteBestInvalidTrust(uint64 nBestInvalidTrust);
+    bool ReadBestInvalidTrust(CBigNum& bnBestInvalidTrust);
+    bool WriteBestInvalidTrust(CBigNum bnBestInvalidTrust);
     bool ReadSyncCheckpoint(uint256& hashCheckpoint);
     bool WriteSyncCheckpoint(uint256 hashCheckpoint);
     bool ReadCheckpointPubKey(std::string& strPubKey);

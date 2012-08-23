@@ -63,8 +63,8 @@ extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
-extern uint64 nBestChainTrust;
-extern uint64 nBestInvalidTrust;
+extern CBigNum bnBestChainTrust;
+extern CBigNum bnBestInvalidTrust;
 extern uint256 hashBestChain;
 extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
@@ -1126,7 +1126,7 @@ public:
     CBlockIndex* pnext;
     unsigned int nFile;
     unsigned int nBlockPos;
-    uint64 nChainTrust;// ppcoin: trust score of chain, in the unit of coin-days
+    CBigNum bnChainTrust; // ppcoin: trust score of block chain
     int nHeight;
     bool fProofOfStake; // ppcoin: is the block of proof-of-stake type
     COutPoint prevoutStake;
@@ -1148,7 +1148,7 @@ public:
         nFile = 0;
         nBlockPos = 0;
         nHeight = 0;
-        nChainTrust = 0;
+        bnChainTrust = 0;
         fProofOfStake = true;
         prevoutStake.SetNull();
         nStakeTime = 0;
@@ -1168,7 +1168,7 @@ public:
         nFile = nFileIn;
         nBlockPos = nBlockPosIn;
         nHeight = 0;
-        nChainTrust = 0;
+        bnChainTrust = 0;
         fProofOfStake = block.IsProofOfStake();
         if (fProofOfStake)
         {
@@ -1211,9 +1211,13 @@ public:
         return (int64)nTime;
     }
 
-    int64 GetBlockTrust() const
+    CBigNum GetBlockTrust() const
     {
-        return (nChainTrust - (pprev? pprev->nChainTrust : 0));
+        CBigNum bnTarget;
+        bnTarget.SetCompact(nBits);
+        if (bnTarget <= 0)
+            return 0;
+        return (fProofOfStake? (CBigNum(1)<<256) / (bnTarget+1) : 1);
     }
 
     bool IsInMainChain() const
@@ -1281,8 +1285,8 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nChainTrust=%"PRI64d" nHeight=%d, fProofOfStake=%d prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
-            pprev, pnext, nFile, nBlockPos, nChainTrust, nHeight,
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, fProofOfStake=%d prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+            pprev, pnext, nFile, nBlockPos, nHeight,
             fProofOfStake, prevoutStake.ToString().c_str(), nStakeTime,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
@@ -1323,7 +1327,6 @@ public:
         READWRITE(hashNext);
         READWRITE(nFile);
         READWRITE(nBlockPos);
-        READWRITE(nChainTrust);
         READWRITE(nHeight);
         READWRITE(fProofOfStake);
         if (fProofOfStake)

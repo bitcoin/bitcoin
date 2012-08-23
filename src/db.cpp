@@ -488,14 +488,14 @@ bool CTxDB::WriteHashBestChain(uint256 hashBestChain)
     return Write(string("hashBestChain"), hashBestChain);
 }
 
-bool CTxDB::ReadBestInvalidTrust(uint64& nBestInvalidTrust)
+bool CTxDB::ReadBestInvalidTrust(CBigNum& bnBestInvalidTrust)
 {
-    return Read(string("nBestInvalidTrust"), nBestInvalidTrust);
+    return Read(string("bnBestInvalidTrust"), bnBestInvalidTrust);
 }
 
-bool CTxDB::WriteBestInvalidTrust(uint64 nBestInvalidTrust)
+bool CTxDB::WriteBestInvalidTrust(CBigNum bnBestInvalidTrust)
 {
-    return Write(string("nBestInvalidTrust"), nBestInvalidTrust);
+    return Write(string("bnBestInvalidTrust"), bnBestInvalidTrust);
 }
 
 bool CTxDB::ReadSyncCheckpoint(uint256& hashCheckpoint)
@@ -577,7 +577,6 @@ bool CTxDB::LoadBlockIndex()
             pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
             pindexNew->nFile          = diskindex.nFile;
             pindexNew->nBlockPos      = diskindex.nBlockPos;
-            pindexNew->nChainTrust    = diskindex.nChainTrust;
             pindexNew->nHeight        = diskindex.nHeight;
             pindexNew->fProofOfStake  = diskindex.fProofOfStake;
             pindexNew->prevoutStake   = diskindex.prevoutStake;
@@ -612,6 +611,21 @@ bool CTxDB::LoadBlockIndex()
     if (fRequestShutdown)
         return true;
 
+    // Calculate bnChainTrust
+    vector<pair<int, CBlockIndex*> > vSortedByHeight;
+    vSortedByHeight.reserve(mapBlockIndex.size());
+    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
+    {
+        CBlockIndex* pindex = item.second;
+        vSortedByHeight.push_back(make_pair(pindex->nHeight, pindex));
+    }
+    sort(vSortedByHeight.begin(), vSortedByHeight.end());
+    BOOST_FOREACH(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
+    {
+        CBlockIndex* pindex = item.second;
+        pindex->bnChainTrust = (pindex->pprev ? pindex->pprev->bnChainTrust : 0) + pindex->GetBlockTrust();
+    }
+
     // Load hashBestChain pointer to end of best chain
     if (!ReadHashBestChain(hashBestChain))
     {
@@ -623,16 +637,16 @@ bool CTxDB::LoadBlockIndex()
         return error("CTxDB::LoadBlockIndex() : hashBestChain not found in the block index");
     pindexBest = mapBlockIndex[hashBestChain];
     nBestHeight = pindexBest->nHeight;
-    nBestChainTrust = pindexBest->nChainTrust;
-    printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%d\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, nBestChainTrust);
+    bnBestChainTrust = pindexBest->bnChainTrust;
+    printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainTrust.ToString().c_str());
 
     // ppcoin: load hashSyncCheckpoint
     if (!ReadSyncCheckpoint(Checkpoints::hashSyncCheckpoint))
         return error("CTxDB::LoadBlockIndex() : hashSyncCheckpoint not loaded");
     printf("LoadBlockIndex(): synchronized checkpoint %s\n", Checkpoints::hashSyncCheckpoint.ToString().c_str());
 
-    // Load nBestInvalidTrust, OK if it doesn't exist
-    ReadBestInvalidTrust(nBestInvalidTrust);
+    // Load bnBestInvalidTrust, OK if it doesn't exist
+    ReadBestInvalidTrust(bnBestInvalidTrust);
 
     // Verify blocks in the best chain
     int nCheckLevel = GetArg("-checklevel", 1);
