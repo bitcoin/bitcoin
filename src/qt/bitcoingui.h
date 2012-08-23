@@ -80,7 +80,6 @@ private:
     QAction *addressBookAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
-    QAction *firstClassMessagingAction;
     QAction *aboutAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
