@@ -1382,14 +1382,8 @@ bool CTransaction::CheckInputs(CCoinsViewCache &inputs, enum CheckSig_mode csmod
                 const CCoins &coins = inputs.GetCoins(prevout.hash);
 
                 // Verify signature
-                if (!VerifySignature(coins, *this, i, fStrictPayToScriptHash, fStrictEncodings, 0)) {
-                    // only during transition phase for P2SH: do not invoke anti-DoS code for
-                    // potentially old clients relaying bad P2SH transactions
-                    if (fStrictPayToScriptHash && VerifySignature(coins, *this, i, false, fStrictEncodings, 0))
-                        return error("CheckInputs() : %s P2SH VerifySignature failed", GetHash().ToString().substr(0,10).c_str());
-
+                if (!VerifySignature(coins, *this, i, fStrictPayToScriptHash, fStrictEncodings, 0))
                     return DoS(100,error("CheckInputs() : %s VerifySignature failed", GetHash().ToString().substr(0,10).c_str()));
-                }
             }
         }
     }
