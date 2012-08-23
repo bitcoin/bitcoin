@@ -115,9 +115,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(addressBookPage);
     centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(sendCoinsPage);
-#ifdef FIRST_CLASS_MESSAGING
-    centralWidget->addWidget(signVerifyMessageDialog);
-#endif
     setCentralWidget(centralWidget);
 
     // Create status bar
@@ -233,13 +230,6 @@ void BitcoinGUI::createActions()
     verifyMessageAction->setToolTip(tr("Verify a message to ensure it was signed with a specified Bitcoin address"));
     tabGroup->addAction(verifyMessageAction);
 
-#ifdef FIRST_CLASS_MESSAGING
-    firstClassMessagingAction = new QAction(QIcon(":/icons/edit"), tr("S&ignatures"), this);
-    firstClassMessagingAction->setToolTip(signMessageAction->toolTip() + QString(". / ") + verifyMessageAction->toolTip() + QString("."));
-    firstClassMessagingAction->setCheckable(true);
-    tabGroup->addAction(firstClassMessagingAction);
-#endif
-
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -254,11 +244,6 @@ void BitcoinGUI::createActions()
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
-#ifdef FIRST_CLASS_MESSAGING
-    connect(firstClassMessagingAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    // Always start with the sign message tab for FIRST_CLASS_MESSAGING
-    connect(firstClassMessagingAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
-#endif
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setToolTip(tr("Quit application"));
@@ -310,10 +295,8 @@ void BitcoinGUI::createMenuBar()
     QMenu *file = appMenuBar->addMenu(tr("&File"));
     file->addAction(backupWalletAction);
     file->addAction(exportAction);
-#ifndef FIRST_CLASS_MESSAGING
     file->addAction(signMessageAction);
     file->addAction(verifyMessageAction);
-#endif
     file->addSeparator();
     file->addAction(quitAction);
 
@@ -339,9 +322,6 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
     toolbar->addAction(addressBookAction);
-#ifdef FIRST_CLASS_MESSAGING
-    toolbar->addAction(firstClassMessagingAction);
-#endif
 
     QToolBar *toolbar2 = addToolBar(tr("Actions toolbar"));
     toolbar2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -441,9 +421,7 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(sendCoinsAction);
     trayIconMenu->addAction(receiveCoinsAction);
-#ifndef FIRST_CLASS_MESSAGING
     trayIconMenu->addSeparator();
-#endif
     trayIconMenu->addAction(signMessageAction);
     trayIconMenu->addAction(verifyMessageAction);
     trayIconMenu->addSeparator();
@@ -747,18 +725,8 @@ void BitcoinGUI::gotoSendCoinsPage()
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)
 {
-#ifdef FIRST_CLASS_MESSAGING
-    firstClassMessagingAction->setChecked(true);
-    centralWidget->setCurrentWidget(signVerifyMessageDialog);
-
-    exportAction->setEnabled(false);
-    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
-
-    signVerifyMessageDialog->showTab_SM(false);
-#else
     // call show() in showTab_SM()
     signVerifyMessageDialog->showTab_SM(true);
-#endif
 
     if(!addr.isEmpty())
         signVerifyMessageDialog->setAddress_SM(addr);
@@ -766,18 +734,8 @@ void BitcoinGUI::gotoSignMessageTab(QString addr)
 
 void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 {
-#ifdef FIRST_CLASS_MESSAGING
-    firstClassMessagingAction->setChecked(true);
-    centralWidget->setCurrentWidget(signVerifyMessageDialog);
-
-    exportAction->setEnabled(false);
-    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
-
-    signVerifyMessageDialog->showTab_VM(false);
-#else
     // call show() in showTab_VM()
     signVerifyMessageDialog->showTab_VM(true);
-#endif
 
     if(!addr.isEmpty())
         signVerifyMessageDialog->setAddress_VM(addr);
