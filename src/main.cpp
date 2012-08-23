@@ -1369,6 +1369,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     map<uint256, CTxIndex> mapQueuedChanges;
     int64 nFees = 0;
+    int64 nValueIn = 0;
+    int64 nValueOut = 0;
     unsigned int nSigOps = 0;
     BOOST_FOREACH(CTransaction& tx, vtx)
     {
@@ -1380,7 +1382,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         nTxPos += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
 
         MapPrevTx mapInputs;
-        if (!tx.IsCoinBase())
+        if (tx.IsCoinBase())
+            nValueOut += tx.GetValueOut();
+        else
         {
             bool fInvalid;
             if (!tx.FetchInputs(txdb, mapQueuedChanges, true, false, mapInputs, fInvalid))
@@ -1396,8 +1400,12 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
                     return DoS(100, error("ConnectBlock() : too many sigops"));
             }
 
+            int64 nTxValueIn = tx.GetValueIn(mapInputs);
+            int64 nTxValueOut = tx.GetValueOut();
+            nValueIn += nTxValueIn;
+            nValueOut += nTxValueOut;
             if (!tx.IsCoinStake())
-                nFees += tx.GetValueIn(mapInputs)-tx.GetValueOut();
+                nFees += nTxValueIn - nTxValueOut;
 
             if (!tx.ConnectInputs(txdb, mapInputs, mapQueuedChanges, posThisTx, pindex, true, false, fStrictPayToScriptHash))
                 return false;
@@ -1405,6 +1413,10 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
         mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
     }
+
+    // ppcoin: track money supply
+    pindex->nMint = nValueOut - nValueIn + nFees;
+    pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
 
     // Write queued txindex changes
     for (map<uint256, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
@@ -1415,8 +1427,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 
     // ppcoin: fees are not collected by miners as in bitcoin
     // ppcoin: fees are destroyed to compensate the entire network
-    if (IsProofOfWork() && vtx[0].GetValueOut() > GetProofOfWorkReward(nBits))
-        return false;
     if (fDebug && GetBoolArg("-printcreation"))
         printf("ConnectBlock() : destroy=%s nFees=%"PRI64d"\n", FormatMoney(nFees).c_str(), nFees);
 
@@ -1648,7 +1658,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     bnBestChainTrust = pindexNew->bnChainTrust;
     nTimeBestReceived = GetTime();
     nTransactionsUpdated++;
-    printf("SetBestChain: new best=%s  height=%d  trust=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainTrust.ToString().c_str());
+    printf("SetBestChain: new best=%s  height=%d  trust=%s  moneysupply=%s\n", hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainTrust.ToString().c_str(), FormatMoney(pindexBest->nMoneySupply).c_str());
 
     std::string strCmd = GetArg("-blocknotify", "");
 
@@ -1832,6 +1842,13 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         if (!SetBestChain(txdb, pindexNew))
             return false;
 
+    // ppcoin: got mint/moneysupply info in block index, write to db
+    if (!txdb.TxnBegin())
+        return false;
+    txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
+    if (!txdb.TxnCommit())
+        return false;
+
     txdb.Close();
 
     if (pindexNew == pindexBest)
@@ -1879,7 +1896,7 @@ bool CBlock::CheckBlock() const
             return DoS(100, error("CheckBlock() : coinstake in wrong position"));
 
     // ppcoin: coinbase output should be empty if proof-of-stake block
-    if (IsProofOfStake() && !vtx[0].vout[0].IsEmpty())
+    if (IsProofOfStake() && (vtx[0].vout.size() != 1 || !vtx[0].vout[0].IsEmpty()))
         return error("CheckBlock() : coinbase output not empty for proof-of-stake block");
 
     // Check coinbase timestamp
@@ -1889,6 +1906,12 @@ bool CBlock::CheckBlock() const
     // Check coinstake timestamp
     if (IsProofOfStake() && GetBlockTime() > (int64)vtx[1].nTime + nMaxClockDrift)
         return DoS(50, error("CheckBlock() : coinstake timestamp is too early"));
+
+    // Check coinbase reward
+    if (vtx[0].GetValueOut() > (IsProofOfWork()? GetProofOfWorkReward(nBits) : 0))
+        return DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
+                   FormatMoney(vtx[0].GetValueOut()).c_str(),
+                   FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
@@ -2361,13 +2384,14 @@ void PrintBlockTree()
         // print item
         CBlock block;
         block.ReadFromDisk(pindex);
-        printf("%d (%u,%u) %s  %08lx  %s  tx %d",
+        printf("%d (%u,%u) %s  %08lx  %s  mint %s  tx %d",
             pindex->nHeight,
             pindex->nFile,
             pindex->nBlockPos,
             block.GetHash().ToString().substr(0,20).c_str(),
             block.nBits,
             DateTimeStrFormat(block.GetBlockTime()).c_str(),
+            FormatMoney(pindex->nMint).c_str(),
             block.vtx.size());
 
         PrintWallets(block);
