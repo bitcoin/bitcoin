@@ -93,6 +93,7 @@ TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
             {
                 entry.push_back(Pair("confirmations", 1 + nBestHeight - pindex->nHeight));
                 entry.push_back(Pair("time", (boost::int64_t)pindex->nTime));
+                entry.push_back(Pair("blocktime", (boost::int64_t)pindex->nTime));
             }
             else
                 entry.push_back(Pair("confirmations", 0));
