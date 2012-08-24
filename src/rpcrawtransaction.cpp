@@ -18,8 +18,7 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-void
-ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
+void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
 {
     txnouttype type;
     vector<CTxDestination> addresses;
@@ -43,8 +42,7 @@ ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
     out.push_back(Pair("addresses", a));
 }
 
-void
-TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));

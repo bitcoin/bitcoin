@@ -1127,8 +1127,7 @@ public:
         return false;
     }
 
-    void
-    Set(uint256 hash, const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& pubKey)
+    void Set(uint256 hash, const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& pubKey)
     {
         // DoS prevention: limit cache size to less than 10MB
         // (~200 bytes per cache entry times 50,000 entries)
