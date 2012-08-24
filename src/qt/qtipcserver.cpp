@@ -7,6 +7,7 @@
 #include "ui_interface.h"
 #include "util.h"
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/version.hpp>
@@ -24,9 +25,46 @@ static void ipcThread2(void* pArg);
 #ifdef MAC_OSX
 // URI handling not implemented on OSX yet
 
-void ipcInit() { }
+void ipcScanRelay(int argc, char *argv[]) { }
+void ipcInit(int argc, char *argv[]) { }
 
 #else
+
+static bool ipcScanCmd(int argc, char *argv[], bool fRelay)
+{
+    // Check for URI in argv
+    bool fSent = false;
+    for (int i = 1; i < argc; i++)
+    {
+        if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+        {
+            const char *strURI = argv[i];
+            try {
+                boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
+                if (mq.try_send(strURI, strlen(strURI), 0))
+                    fSent = true;
+                else if (fRelay)
+                    break;
+            }
+            catch (boost::interprocess::interprocess_exception &ex) {
+                // don't log the "file not found" exception, because that's normal for
+                // the first start of the first instance
+                if (ex.get_error_code() != boost::interprocess::not_found_error || !fRelay)
+                {
+                    printf("main() - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
+                    break;
+                }
+            }
+        }
+    }
+    return fSent;
+}
+
+void ipcScanRelay(int argc, char *argv[])
+{
+    if (ipcScanCmd(argc, argv, true))
+        exit(0);
+}
 
 static void ipcThread(void* pArg)
 {
@@ -75,7 +113,7 @@ static void ipcThread2(void* pArg)
     delete mq;
 }
 
-void ipcInit()
+void ipcInit(int argc, char *argv[])
 {
     message_queue* mq = NULL;
     char buffer[MAX_URI_LENGTH + 1] = "";
@@ -113,6 +151,8 @@ void ipcInit()
         delete mq;
         return;
     }
+
+    ipcScanCmd(argc, argv, false);
 }
 
 #endif
