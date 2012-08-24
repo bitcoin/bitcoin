@@ -1232,7 +1232,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             if (!GetCoinAge(txdb, nCoinAge))
                 return error("ConnectInputs() : %s unable to get coin age for coinstake", GetHash().ToString().substr(0,10).c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
-            if (nStakeReward > GetProofOfStakeReward(nCoinAge))
+            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + MIN_TX_FEE)
                 return DoS(100, error("ConnectInputs() : %s stake reward exceeded", GetHash().ToString().substr(0,10).c_str()));
         }
         else
@@ -1908,7 +1908,7 @@ bool CBlock::CheckBlock() const
         return DoS(50, error("CheckBlock() : coinstake timestamp is too early"));
 
     // Check coinbase reward
-    if (vtx[0].GetValueOut() > (IsProofOfWork()? GetProofOfWorkReward(nBits) : 0))
+    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + MIN_TX_FEE) : 0))
         return DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
                    FormatMoney(vtx[0].GetValueOut()).c_str(),
                    FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));
