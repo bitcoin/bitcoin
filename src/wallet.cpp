@@ -1203,7 +1203,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 }
 
 // ppcoin: create coin stake transaction
-bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
+bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTransaction& txNew)
 {
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -1230,6 +1230,7 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
     if (setCoins.empty())
         return false;
     int64 nCredit = 0;
+    CScript scriptPubKeyKernel;
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         CTxDB txdb("r");
@@ -1251,11 +1252,48 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
         ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin.first->nTime << pcoin.second << txNew.nTime;
         if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
         {
+            // Found a kernel
+            if (fDebug && GetBoolArg("-printcoinstake"))
+                printf("CreateCoinStake : kernel found\n");
+            vector<valtype> vSolutions;
+            txnouttype whichType;
+            CScript scriptPubKeyOut;
+            scriptPubKeyKernel = pcoin.first->vout[pcoin.second].scriptPubKey;
+            if (!Solver(scriptPubKeyKernel, whichType, vSolutions))
+            {
+                if (fDebug && GetBoolArg("-printcoinstake"))
+                    printf("CreateCoinStake : failed to parse kernel\n", whichType);
+                continue;
+            }
+            if (fDebug && GetBoolArg("-printcoinstake"))
+                printf("CreateCoinStake : parsed kernel type=%d\n", whichType);
+            if (whichType != TX_PUBKEY && whichType != TX_PUBKEYHASH)
+            {
+                if (fDebug && GetBoolArg("-printcoinstake"))
+                    printf("CreateCoinStake : no support for kernel type=%d\n", whichType);
+                continue;  // only support pay to public key and pay to address
+            }
+            if (whichType == TX_PUBKEYHASH) // pay to address type
+            {
+                // convert to pay to public key type
+                CKey key;
+                if (!keystore.GetKey(uint160(vSolutions[0]), key))
+                {
+                    if (fDebug && GetBoolArg("-printcoinstake"))
+                        printf("CreateCoinStake : failed to get key for kernel type=%d\n", whichType);
+                    continue;  // unable to find corresponding public key
+                }
+                scriptPubKeyOut << key.GetPubKey() << OP_CHECKSIG;
+            }
+            else
+                scriptPubKeyOut = scriptPubKeyKernel;
+
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
             nCredit += pcoin.first->vout[pcoin.second].nValue;
             vwtxPrev.push_back(pcoin.first);
-            // Set output scriptPubKey
-            txNew.vout.push_back(CTxOut(0, pcoin.first->vout[pcoin.second].scriptPubKey));
+            txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+            if (fDebug && GetBoolArg("-printcoinstake"))
+                printf("CreateCoinStake : added kernel type=%d\n", whichType);
             break;
         }
     }
@@ -1263,8 +1301,9 @@ bool CWallet::CreateCoinStake(unsigned int nBits, CTransaction& txNew)
         return false;
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        // Attempt to add more inputs of the same key
-        if (pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
+        // Attempt to add more inputs
+        // Only add coins of the same key/address as kernel
+        if (pcoin.first->vout[pcoin.second].scriptPubKey == scriptPubKeyKernel && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
         {
             // Stop adding more inputs if value is already pretty significant
             if (nCredit > MAX_MINT_PROOF_OF_WORK)

@@ -3631,7 +3631,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
                 nLastCoinStakeCheckTime = max(nLastCoinStakeCheckTime, (unsigned int) (GetAdjustedTime() - nMaxClockDrift / 2));
                 txCoinStake.nTime = nLastCoinStakeCheckTime;
             }
-            if (pwallet->CreateCoinStake(pblock->nBits, txCoinStake))
+            if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, txCoinStake))
             {
                 pblock->vtx.push_back(txCoinStake);
                 pblock->vtx[0].vout[0].SetEmpty();
