@@ -281,9 +281,12 @@ bool CTransaction::IsStandard() const
         if (!txin.scriptSig.IsPushOnly())
             return false;
     }
-    BOOST_FOREACH(const CTxOut& txout, vout)
+    BOOST_FOREACH(const CTxOut& txout, vout) {
         if (!::IsStandard(txout.scriptPubKey))
             return false;
+        if (txout.nValue == 0)
+            return false;
+    }
     return true;
 }
 
