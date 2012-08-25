@@ -822,7 +822,7 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
     return pblockOrphan->hashPrevBlock;
 }
 
-int64 static GetProofOfWorkReward(unsigned int nBits)
+int64 GetProofOfWorkReward(unsigned int nBits)
 {
     CBigNum bnSubsidyLimit = MAX_MINT_PROOF_OF_WORK;
     CBigNum bnTarget;
@@ -1673,7 +1673,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 
 
 // ppcoin: coinstake must meet hash target according to the protocol:
-// input 0 must meet the formula
+// kernel (input 0) must meet the formula
 //     hash(nBits + txPrev.block.nTime + txPrev.offset + txPrev.nTime + txPrev.vout.n + nTime) < bnTarget * nCoinDay
 // this ensures that the chance of getting a coinstake is proportional to the
 // amount of coin age one owns.
@@ -1700,7 +1700,7 @@ bool CTransaction::CheckProofOfStake(unsigned int nBits) const
     if (!IsCoinStake())
         return true;
 
-    // Input 0 must match the stake hash target per coin age (nBits)
+    // Kernel (input 0) must match the stake hash target per coin age (nBits)
     const CTxIn& txin = vin[0];
 
     // First try finding the previous transaction in database
