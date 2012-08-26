@@ -1901,6 +1901,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             "  \"mintime\" : minimum timestamp appropriate for next block\n"
             "  \"curtime\" : current timestamp\n"
             "  \"bits\" : compressed target of next block\n"
+            "  \"height\" : height of the next block (backported, required by BIP 34)\n"
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
     if (params.size() == 0)
@@ -1936,6 +1937,12 @@ Value getmemorypool(const Array& params, bool fHelp)
                 pblock = NULL;
             }
             pblock = CreateNewBlock(reservekey);
+            if (!((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexBest, 950, 1000)) ||
+                   (fTestNet && CBlockIndex::IsSuperMajority(2, pindexBest, 75, 100))))
+            {
+                // As long as version 1 blocks are valid at all, use them to be more compatible with old implementations
+                pblock->nVersion = 1;
+            }
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
 
@@ -1968,6 +1975,7 @@ Value getmemorypool(const Array& params, bool fHelp)
         result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
         result.push_back(Pair("curtime", (int64_t)GetAdjustedTime()));
         result.push_back(Pair("bits", HexBits(pblock->nBits)));
+        result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
         return result;
     }
