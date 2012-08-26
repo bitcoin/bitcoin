@@ -257,6 +257,14 @@ public:
 class CBitcoinAddress : public CBase58Data
 {
 public:
+    enum
+    {
+        PUBKEY_ADDRESS = 0,
+        SCRIPT_ADDRESS = 5,
+        PUBKEY_ADDRESS_TEST = 111,
+        SCRIPT_ADDRESS_TEST = 196,
+    };
+
     bool SetHash160(const uint160& hash160)
     {
         SetData(fTestNet ? 111 : 0, &hash160, 20);
@@ -275,9 +283,11 @@ public:
         switch(nVersion)
         {
             case 0:
+            case SCRIPT_ADDRESS:
                 break;
 
             case 111:
+            case SCRIPT_ADDRESS_TEST:
                 fExpectTestNet = true;
                 break;
 
@@ -285,6 +295,14 @@ public:
                 return false;
         }
         return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
+    }
+    bool IsScript() const
+    {
+        if (!IsValid())
+            return false;
+        if (fTestNet)
+            return nVersion == SCRIPT_ADDRESS_TEST;
+        return nVersion == SCRIPT_ADDRESS;
     }
 
     CBitcoinAddress()
