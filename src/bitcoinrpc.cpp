@@ -1744,6 +1744,7 @@ Value getmemorypool(const Array& params, bool fHelp)
             "  \"coinbasevalue\" : maximum allowable input to coinbase transaction, including the generation award and transaction fees\n"
             "  \"time\" : timestamp appropriate for next block\n"
             "  \"bits\" : compressed target of next block\n"
+            "  \"height\" : height of the next block (backported, required by BIP 34)\n"
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
     if (params.size() == 0)
@@ -1779,6 +1780,12 @@ Value getmemorypool(const Array& params, bool fHelp)
                 pblock = NULL;
             }
             pblock = CreateNewBlock(reservekey);
+            if (!((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexBest, 950, 1000)) ||
+                   (fTestNet && CBlockIndex::IsSuperMajority(2, pindexBest, 75, 100))))
+            {
+                // As long as version 1 blocks are valid at all, use them to be more compatible with old implementations
+                pblock->nVersion = 1;
+            }
             if (!pblock)
                 throw JSONRPCError(-7, "Out of memory");
 
@@ -1814,6 +1821,7 @@ Value getmemorypool(const Array& params, bool fHelp)
         } uBits;
         uBits.nBits = htonl((int32_t)pblock->nBits);
         result.push_back(Pair("bits", HexStr(BEGIN(uBits.cBits), END(uBits.cBits))));
+        result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
         return result;
     }
