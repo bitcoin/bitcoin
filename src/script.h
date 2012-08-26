@@ -654,7 +654,10 @@ public:
     void SetBitcoinAddress(const CBitcoinAddress& address)
     {
         this->clear();
-        *this << OP_DUP << OP_HASH160 << address.GetHash160() << OP_EQUALVERIFY << OP_CHECKSIG;
+        if (address.IsScript())
+            *this << OP_HASH160 << address.GetHash160() << OP_EQUAL;
+        else
+            *this << OP_DUP << OP_HASH160 << address.GetHash160() << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
     void SetBitcoinAddress(const std::vector<unsigned char>& vchPubKey)
