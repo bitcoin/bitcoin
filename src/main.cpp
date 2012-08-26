@@ -2796,14 +2796,27 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAlert alert;
         vRecv >> alert;
 
-        if (alert.ProcessAlert())
+        uint256 alertHash = alert.GetHash();
+        if (pfrom->setKnown.count(alertHash) == 0)
         {
-            // Relay
-            pfrom->setKnown.insert(alert.GetHash());
+            if (alert.ProcessAlert())
             {
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    alert.RelayTo(pnode);
+                // Relay
+                pfrom->setKnown.insert(alertHash);
+                {
+                    LOCK(cs_vNodes);
+                    BOOST_FOREACH(CNode* pnode, vNodes)
+                        alert.RelayTo(pnode);
+                }
+            }
+            else {
+                // Small DoS penalty so peers that send us lots of
+                // duplicate/expired/invalid-signature/whatever alerts
+                // eventually get banned.
+                // This isn't a Misbehaving(100) (immediate ban) because the
+                // peer might be an older or different implementation with
+                // a different signature key, etc.
+                pfrom->Misbehaving(10);
             }
         }
     }
