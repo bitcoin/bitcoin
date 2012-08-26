@@ -1748,8 +1748,17 @@ bool CBlock::AcceptBlock()
     if (!Checkpoints::CheckBlock(nHeight, hash))
         return DoS(100, error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight));
 
+    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
+    if (nVersion < 2)
+    {
+        if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000)) ||
+            (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 75, 100)))
+        {
+            return error("AcceptBlock() : rejected nVersion=1 block");
+        }
+    }
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    if (nVersion > 1)
+    if (nVersion >= 2)
     {
         // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
         if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
