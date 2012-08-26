@@ -136,7 +136,7 @@ string AccountFromValue(const Value& value)
     return strAccount;
 }
 
-Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
+Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPrintTransactionDetail)
 {
     Object result;
     result.push_back(Pair("hash", block.GetHash().GetHex()));
@@ -148,15 +148,25 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("nonce", (boost::uint64_t)block.nNonce));
     result.push_back(Pair("bits", HexBits(block.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
-    Array txhashes;
-    BOOST_FOREACH (const CTransaction&tx, block.vtx)
-        txhashes.push_back(tx.GetHash().GetHex());
-    result.push_back(Pair("tx", txhashes));
-
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
     if (blockindex->pnext)
         result.push_back(Pair("nextblockhash", blockindex->pnext->GetBlockHash().GetHex()));
+    Array txinfo;
+    BOOST_FOREACH (const CTransaction& tx, block.vtx)
+    {
+        if (fPrintTransactionDetail)
+        {
+            txinfo.push_back(tx.ToStringShort());
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+                txinfo.push_back(txin.ToStringShort());
+            BOOST_FOREACH(const CTxOut& txout, tx.vout)
+                txinfo.push_back(txout.ToStringShort());
+        }
+        else
+            txinfo.push_back(tx.GetHash().GetHex());
+    }
+    result.push_back(Pair("tx", txinfo));
     return result;
 }
 
@@ -2000,9 +2010,10 @@ Value getblockhash(const Array& params, bool fHelp)
 
 Value getblock(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getblock <hash>\n"
+            "getblock <hash> [txinfo]\n"
+            "txinfo optional to print more detailed tx info\n"
             "Returns details of a block with given block-hash.");
 
     std::string strHash = params[0].get_str();
@@ -2015,7 +2026,7 @@ Value getblock(const Array& params, bool fHelp)
     CBlockIndex* pblockindex = mapBlockIndex[hash];
     block.ReadFromDisk(pblockindex, true);
 
-    return blockToJSON(block, pblockindex);
+    return blockToJSON(block, pblockindex, params.size() > 1 ? params[1].get_bool() : false);
 }
 
 
@@ -2890,6 +2901,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listreceivedbyaccount"  && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "getbalance"             && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getblockhash"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+        if (strMethod == "getblock"               && n > 1) ConvertTo<bool>(params[1]);
         if (strMethod == "move"                   && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "move"                   && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
