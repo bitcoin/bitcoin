@@ -1242,7 +1242,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTr
         CBlock block;
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
             continue;
-        if (block.GetBlockTime() + STAKE_MIN_AGE > txNew.nTime)
+        if (block.GetBlockTime() + nStakeMinAge > txNew.nTime)
             continue; // only count coins meeting min age requirement
 
         int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
