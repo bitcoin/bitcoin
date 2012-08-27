@@ -65,9 +65,25 @@ P2P networking
 
 
 Qt GUI
----------------------
-?????
-
+------
+* Add UI RPC console / debug window
+* Re-Enable URI handling on Windows, add safety checks and tray-notifications
+* Harmonize the use of ellipsis ("...") to be used in menus, but not on buttons
+* Add 2 labels to the overviewpage that display Wallet and Transaction status (obsolete or current)
+* Extend the optionsdialog (e.g. language selection) and re-work it to a tabbed UI
+* Merge sign/verify message into a single window with tabbed UI
+* Ensure a changed bitcoin unit immediately updates all GUI elements that use units
+* Update QR Code dialog
+* Improve error reporting at startup
+* Fine-grained UI updates for a much smoother UI during block downloads
+* Remove autocorrection of 0/i in addresses in UI
+* Reorganize tray icon menu into more logical order
+* Persistently poll for balance change when number of blocks changed
+* Much better translations
+* Override progress bar design on platforms with segmented progress bars to assist with readability
+* Added 'immature balance' display on the overview page
+* (Windows only): enable ASLR and DEP for bitcoin-qt.exe
+* (Windows only): add meta-data to bitcoin-qt.exe (e.g. description)
 
 Internal codebase
 -----------------
@@ -80,5 +96,3 @@ Miscellaneous
 * Reopen debug.log upon SIGHUP
 * Bash programmable completion for bitcoind(1)
 * On supported OS's, each thread is given a useful name
-
-
