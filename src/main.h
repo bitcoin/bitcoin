@@ -1535,7 +1535,7 @@ public:
 
     uint256 GetHash() const
     {
-        return SerializeHash(*this);
+        return Hash(this->vchMsg.begin(), this->vchMsg.end());
     }
 
     bool IsInEffect() const
