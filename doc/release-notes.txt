@@ -8,14 +8,23 @@ Building this from
 
 
 
+Bitcoin Improvement Proposals implemented
+-----------------------------------------
+BIP 22 - 'getblocktemplate', 'submitblock' RPCs
+BIP 34 - block version 2, height in coinbase
+BIP 35 - 'mempool' message, extended 'getdata' message behavior
+
+
 Core bitcoin handling and blockchain database
 ---------------------------------------------
 * Reduced CPU usage, by eliminating some redundant hash calculations
 * Cache signature verifications, to eliminate redundant signature checks
+* Transactions with zero-value outputs are considered non-standard
 * Mining: when creating new blocks, sort 'paid' area by fee-per-kb
 * Database: better validation of on-disk stored data
 * Database: minor optimizations and reliability improvements
 * -loadblock=FILE will import an external block file
+* Additional DoS prevention measures
 
 
 JSON-RPC API
@@ -30,9 +39,13 @@ JSON-RPC API
 * Added raw transaction API.  See https://gist.github.com/2839617
 * Added 'getrawmempool', to list contents of TX memory pool
 * Added 'getpeerinfo', to list data about each connected network peer
+* Added 'listaddressgroupings' for better coin control
 * Rework gettransaction, getblock calls. 'gettransaction' responds for
   non-wallet TXs now.
 * Remove deprecated RPC 'getblocknumber'
+* New blockchain checkpoint at block 193,000
+* listtransactions output now displays "smart" times for transactions,
+  and 'blocktime' and 'timereceived' fields were added
 
 
 P2P networking
