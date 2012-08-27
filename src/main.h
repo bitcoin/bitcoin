@@ -26,7 +26,7 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int CLIENT_VERSION = 60009;
+static const int CLIENT_VERSION = 60010;
 static const bool VERSION_IS_BETA = true;
 extern const std::string CLIENT_NAME;
 
@@ -1565,7 +1565,7 @@ public:
 
     uint256 GetHash() const
     {
-        return SerializeHash(*this);
+        return Hash(this->vchMsg.begin(), this->vchMsg.end());
     }
 
     bool IsInEffect() const
