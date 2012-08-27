@@ -195,10 +195,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
             {
                 delete pdb;
                 pdb = NULL;
-                {
-                     LOCK(bitdb.cs_db);
-                    --bitdb.mapFileUseCount[strFile];
-                }
+                --bitdb.mapFileUseCount[strFile];
                 strFile = "";
                 throw runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
             }
