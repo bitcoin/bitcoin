@@ -26,8 +26,6 @@ using namespace boost;
 using namespace boost::interprocess;
 using namespace boost::posix_time;
 
-static void ipcThread2(void* pArg);
-
 #ifdef MAC_OSX
 // URI handling not implemented on OSX yet
 
@@ -35,6 +33,8 @@ void ipcScanRelay(int argc, char *argv[]) { }
 void ipcInit(int argc, char *argv[]) { }
 
 #else
+
+static void ipcThread2(void* pArg);
 
 static bool ipcScanCmd(int argc, char *argv[], bool fRelay)
 {
