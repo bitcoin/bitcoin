@@ -2161,6 +2161,28 @@ bool CAlert::ProcessAlert()
     if (!IsInEffect())
         return false;
 
+    // alert.nID=max is reserved for if the alert key is
+    // compromised. It must have a pre-defined message,
+    // must never expire, must apply to all versions,
+    // and must cancel all previous
+    // alerts or it will be ignored (so an attacker can't
+    // send an "everything is OK, don't panic" version that
+    // cannot be overridden):
+    int maxInt = std::numeric_limits<int>::max();
+    if (nID == maxInt)
+    {
+        if (!(
+                nExpiration == maxInt &&
+                nCancel == (maxInt-1) &&
+                nMinVer == 0 &&
+                nMaxVer == maxInt &&
+                setSubVer.empty() &&
+                nPriority == maxInt &&
+                strStatusBar == "URGENT: Alert key compromised, upgrade required"
+                ))
+            return false;
+    }
+
     {
         LOCK(cs_mapAlerts);
         // Cancel previous alerts
