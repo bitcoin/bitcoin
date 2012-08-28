@@ -109,22 +109,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Zmazať</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="281"/>
+        <location filename="../addressbookpage.cpp" line="278"/>
         <source>Export Address Book Data</source>
         <translation>Exportovať dáta z adresára</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="282"/>
+        <location filename="../addressbookpage.cpp" line="279"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Čiarkou oddelený súbor (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="295"/>
+        <location filename="../addressbookpage.cpp" line="292"/>
         <source>Error exporting</source>
         <translation>Chyba exportu.</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="295"/>
+        <location filename="../addressbookpage.cpp" line="292"/>
         <source>Could not write to file %1.</source>
         <translation>Nedalo sa zapisovať do súboru %1.</translation>
     </message>
@@ -155,23 +155,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Dialóg</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="32"/>
-        <location filename="../forms/askpassphrasedialog.ui" line="97"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
         <source>TextLabel</source>
         <translation>TextovýPopis</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="50"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
         <translation>Zadajte heslo</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="64"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
         <translation>Nové heslo</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="78"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
         <translation>Zopakujte nové heslo</translation>
     </message>
@@ -234,9 +233,9 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
         <translation>Peňaženka zašifrovaná</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"></translation>
+        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Heslo k peňaženke bolo úspešne zmenené.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -281,296 +280,291 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
         <translation>Zlyhalo šifrovanie peňaženky.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
-        <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Heslo k peňaženke bolo úspešne zmenené.</translation>
+        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin sa teraz ukončí pre dokončenie procesu šifrovania. Pamätaj že šifrovanie peňaženky Ťa nemôže úplne ochrániť pred kráďežou bitcoinov pomocou škodlivého software.</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="72"/>
+        <location filename="../bitcoingui.cpp" line="73"/>
         <source>Bitcoin Wallet</source>
         <translation>Bitcoin peňaženka</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="145"/>
-        <location filename="../bitcoingui.cpp" line="467"/>
+        <location filename="../bitcoingui.cpp" line="146"/>
+        <location filename="../bitcoingui.cpp" line="478"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizácia so sieťou...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="148"/>
+        <location filename="../bitcoingui.cpp" line="149"/>
         <source>Block chain synchronization in progress</source>
         <translation>Prebieha synchronizácia blockchain.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="179"/>
+        <location filename="../bitcoingui.cpp" line="187"/>
         <source>&amp;Overview</source>
         <translation>&amp;Prehľad</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="180"/>
+        <location filename="../bitcoingui.cpp" line="188"/>
         <source>Show general overview of wallet</source>
         <translation>Zobraziť celkový prehľad o peňaženke</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="185"/>
+        <location filename="../bitcoingui.cpp" line="193"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Preklady</translation>
+        <translation>&amp;Transakcie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="186"/>
+        <location filename="../bitcoingui.cpp" line="194"/>
         <source>Browse transaction history</source>
         <translation>Prechádzať históriu transakcií</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="191"/>
+        <location filename="../bitcoingui.cpp" line="199"/>
         <source>&amp;Address Book</source>
         <translation>&amp;Adresár</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="192"/>
+        <location filename="../bitcoingui.cpp" line="200"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Editovať zoznam uložených adries a popisov</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="197"/>
+        <location filename="../bitcoingui.cpp" line="205"/>
         <source>&amp;Receive coins</source>
         <translation>&amp;Prijať bitcoins</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="198"/>
+        <location filename="../bitcoingui.cpp" line="206"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Zobraziť zoznam adries pre prijímanie platieb.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="203"/>
+        <location filename="../bitcoingui.cpp" line="211"/>
         <source>&amp;Send coins</source>
         <translation>&amp;Poslať bitcoins</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="204"/>
+        <location filename="../bitcoingui.cpp" line="212"/>
         <source>Send coins to a bitcoin address</source>
         <translation>Poslať bitcoins na adresu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="209"/>
+        <location filename="../bitcoingui.cpp" line="217"/>
         <source>Sign &amp;message</source>
         <translation>Podpísať &amp;správu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="210"/>
+        <location filename="../bitcoingui.cpp" line="218"/>
         <source>Prove you control an address</source>
         <translation>Dokázať že kontrolujete adresu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="229"/>
+        <location filename="../bitcoingui.cpp" line="237"/>
         <source>E&amp;xit</source>
         <translation>U&amp;končiť</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="230"/>
+        <location filename="../bitcoingui.cpp" line="238"/>
         <source>Quit application</source>
         <translation>Ukončiť program</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="233"/>
+        <location filename="../bitcoingui.cpp" line="241"/>
         <source>&amp;About %1</source>
         <translation>&amp;O %1</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="242"/>
         <source>Show information about Bitcoin</source>
         <translation>Zobraziť informácie o Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
+        <location filename="../bitcoingui.cpp" line="244"/>
         <source>About &amp;Qt</source>
         <translation>O &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
+        <location filename="../bitcoingui.cpp" line="245"/>
         <source>Show information about Qt</source>
         <translation>Zobrazit informácie o Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
+        <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Options...</source>
         <translation>&amp;Možnosti...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="240"/>
+        <location filename="../bitcoingui.cpp" line="248"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Upraviť možnosti nastavenia pre bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
+        <location filename="../bitcoingui.cpp" line="250"/>
         <source>Open &amp;Bitcoin</source>
         <translation>Otvoriť &amp;Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
+        <location filename="../bitcoingui.cpp" line="251"/>
         <source>Show the Bitcoin window</source>
         <translation>Zobraziť okno Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="244"/>
+        <location filename="../bitcoingui.cpp" line="252"/>
         <source>&amp;Export...</source>
         <translation>&amp;Export...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="245"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="246"/>
+        <location filename="../bitcoingui.cpp" line="254"/>
         <source>&amp;Encrypt Wallet</source>
         <translation>&amp;Zašifrovať Peňaženku</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="247"/>
+        <location filename="../bitcoingui.cpp" line="255"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Zašifrovať alebo dešifrovať peňaženku</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="257"/>
         <source>&amp;Backup Wallet</source>
         <translation type="unfinished">&amp;Backup peňaženku</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
-        <source>Backup wallet to another location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="251"/>
+        <location filename="../bitcoingui.cpp" line="259"/>
         <source>&amp;Change Passphrase</source>
         <translation>&amp;Zmena Hesla</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="252"/>
+        <location filename="../bitcoingui.cpp" line="260"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Zmeniť heslo použité na šifrovanie peňaženky</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="275"/>
+        <location filename="../bitcoingui.cpp" line="283"/>
         <source>&amp;File</source>
         <translation>&amp;Súbor</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="284"/>
+        <location filename="../bitcoingui.cpp" line="292"/>
         <source>&amp;Settings</source>
         <translation>&amp;Nastavenia</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="290"/>
+        <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Help</source>
         <translation>&amp;Pomoc</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="297"/>
+        <location filename="../bitcoingui.cpp" line="305"/>
         <source>Tabs toolbar</source>
         <translation>Lišta záložiek</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="308"/>
+        <location filename="../bitcoingui.cpp" line="316"/>
         <source>Actions toolbar</source>
         <translation>Lišta aktvivít</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="320"/>
+        <location filename="../bitcoingui.cpp" line="329"/>
         <source>[testnet]</source>
         <translation>[testovacia sieť]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="410"/>
+        <location filename="../bitcoingui.cpp" line="421"/>
         <source>bitcoin-qt</source>
         <translation>bitcoin-qt</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="452"/>
+        <location filename="../bitcoingui.cpp" line="463"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n aktívne spojenie v Bitcoin sieti</numerusform>
+            <numerusform>%n aktívne spojenia v Bitcoin sieti</numerusform>
+            <numerusform>%n aktívnych spojení v Bitconi sieti</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="478"/>
+        <location filename="../bitcoingui.cpp" line="489"/>
         <source>Downloaded %1 of %2 blocks of transaction history.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="490"/>
-        <source>Downloaded %1 blocks of transaction history.</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="505"/>
+        <location filename="../bitcoingui.cpp" line="516"/>
         <source>%n second(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>pred %n sekundou</numerusform>
+            <numerusform>pred %n sekundami</numerusform>
+            <numerusform>pred %n sekundami</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="509"/>
+        <location filename="../bitcoingui.cpp" line="520"/>
         <source>%n minute(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>pred %n minútou</numerusform>
+            <numerusform>pred %n minútami</numerusform>
+            <numerusform>pred %n minútami</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="513"/>
+        <location filename="../bitcoingui.cpp" line="524"/>
         <source>%n hour(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>pred hodinou</numerusform>
+            <numerusform>pred %n hodinami</numerusform>
+            <numerusform>pred %n hodinami</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="517"/>
+        <location filename="../bitcoingui.cpp" line="528"/>
         <source>%n day(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>včera</numerusform>
+            <numerusform>pred %n dňami</numerusform>
+            <numerusform>pred %n dňami</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="523"/>
+        <location filename="../bitcoingui.cpp" line="534"/>
         <source>Up to date</source>
         <translation>Aktualizovaný</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="528"/>
+        <location filename="../bitcoingui.cpp" line="539"/>
         <source>Catching up...</source>
-        <translation type="unfinished"></translation>
+        <translation>Sťahujem...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="536"/>
+        <location filename="../bitcoingui.cpp" line="547"/>
         <source>Last received block was generated %1.</source>
         <translation>Posledný prijatý blok bol generovaný %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="609"/>
+        <location filename="../bitcoingui.cpp" line="616"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation type="unfinished"></translation>
+        <translation>Veľkosť tejto transakcie prekračuje limit. Stále ju však môžete odoslať za poplatok %1 ktorý bude pripísaný uzlu spracúvajúcemu vašu transakciu. Chcete zaplatiť poplatok?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="614"/>
+        <location filename="../bitcoingui.cpp" line="621"/>
         <source>Sending...</source>
-        <translation>Odosielanie...</translation>
+        <translation type="unfinished">Odosielanie...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="641"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Sent transaction</source>
         <translation>Odoslané transakcie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="642"/>
+        <location filename="../bitcoingui.cpp" line="649"/>
         <source>Incoming transaction</source>
         <translation>Prijaté transakcie</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="643"/>
+        <location filename="../bitcoingui.cpp" line="650"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -582,60 +576,75 @@ Typ: %3
 Adresa: %4</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="768"/>
+        <location filename="../bitcoingui.cpp" line="775"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálne &lt;b&gt;odomknutá&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="776"/>
+        <location filename="../bitcoingui.cpp" line="783"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálne &lt;b&gt;zamknutá&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="799"/>
+        <location filename="../bitcoingui.cpp" line="806"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Zálohovať peňaženku</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="799"/>
+        <location filename="../bitcoingui.cpp" line="806"/>
         <source>Wallet Data (*.dat)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="802"/>
+        <location filename="../bitcoingui.cpp" line="809"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation>Nastala chyba pri pokuse uložiť peňaženku na nové miesto.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="809"/>
         <source>Backup Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="802"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation type="unfinished"></translation>
+        <location filename="../bitcoingui.cpp" line="253"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportovať tento náhľad do súboru</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="139"/>
-        <source>A fatal error occured. Bitcoin can no longer continue safely and will quit.</source>
+        <location filename="../bitcoingui.cpp" line="258"/>
+        <source>Backup wallet to another location</source>
+        <translation>Zálohovať peňaženku na iné miesto</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="501"/>
+        <source>Downloaded %1 blocks of transaction history.</source>
+        <translation>Stiahnutých %1 blokov transakčnej histórie</translation>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="144"/>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>DisplayOptionsPage</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="270"/>
+        <location filename="../optionsdialog.cpp" line="269"/>
         <source>&amp;Unit to show amounts in: </source>
         <translation>&amp;Zobrazovať hodnoty v jednotkách:</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="274"/>
+        <location filename="../optionsdialog.cpp" line="273"/>
         <source>Choose the default subdivision unit to show in the interface, and when sending coins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="281"/>
+        <location filename="../optionsdialog.cpp" line="280"/>
         <source>&amp;Display addresses in transaction list</source>
         <translation>&amp;Zobraziť adresy zo zoznamu transakcií</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="282"/>
+        <location filename="../optionsdialog.cpp" line="281"/>
         <source>Whether to show Bitcoin addresses in the transaction list</source>
         <translation type="unfinished"></translation>
     </message>
@@ -665,7 +674,7 @@ Adresa: %4</translation>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresa spojená s týmto záznamom v adresári. Možno upravovať len pre odosielajúce adresy.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="20"/>
@@ -723,7 +732,7 @@ Adresa: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="175"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Zobraziť len ikonu na lište po minimalizovaní okna.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="176"/>
@@ -757,7 +766,7 @@ Adresa: %4</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="191"/>
-        <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
+        <source>Connect to the Bitcoin network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
         <translation>Pripojiť do siete Bitcoin cez SOCKS4 proxy (napr. keď sa pripájate cez Tor)</translation>
     </message>
     <message>
@@ -781,17 +790,12 @@ Adresa: %4</translation>
         <translation>Port proxy (napr. 1234)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="217"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>Voliteľný transakčný poplatok za kB ktorý pomôže rýchlemu spracovaniu transakcie. Väčšina transakcií má 1 kB. Poplatok 0.01 je odporúčaný.</translation>
-    </message>
-    <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Zaplatiť transakčné &amp;poplatky</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="226"/>
+        <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
         <translation>Voliteľný transakčný poplatok za kB ktorý pomôže rýchlemu spracovaniu transakcie. Väčšina transakcií má 1 kB. Poplatok 0.01 je odporúčaný.</translation>
     </message>
@@ -806,7 +810,7 @@ Adresa: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Môžete podpísať správy svojou adresou a dokázať, že ju vlastníte. Buďte opatrní a podpíšte len prehlásenia s ktorými plne súhlasíte, nakoľko útoky typu &quot;phishing&quot; Vás môžu lákať k ich podpísaniu.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
@@ -917,11 +921,6 @@ Adresa: %4</translation>
         <translation>Zostatok:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="47"/>
-        <source>123.456 BTC</source>
-        <translation>123.456 BTC</translation>
-    </message>
-    <message>
         <location filename="../forms/overviewpage.ui" line="54"/>
         <source>Number of transactions:</source>
         <translation>Počet transakcií:</translation>
@@ -937,14 +936,9 @@ Adresa: %4</translation>
         <translation>Nepotvrdené:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="75"/>
-        <source>0 BTC</source>
-        <translation>0 BTC</translation>
-    </message>
-    <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Peňaženka</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1029,13 +1023,13 @@ Adresa: %4</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="122"/>
-        <location filename="../sendcoinsdialog.cpp" line="127"/>
-        <location filename="../sendcoinsdialog.cpp" line="132"/>
-        <location filename="../sendcoinsdialog.cpp" line="137"/>
-        <location filename="../sendcoinsdialog.cpp" line="143"/>
-        <location filename="../sendcoinsdialog.cpp" line="148"/>
-        <location filename="../sendcoinsdialog.cpp" line="153"/>
+        <location filename="../sendcoinsdialog.cpp" line="123"/>
+        <location filename="../sendcoinsdialog.cpp" line="128"/>
+        <location filename="../sendcoinsdialog.cpp" line="133"/>
+        <location filename="../sendcoinsdialog.cpp" line="138"/>
+        <location filename="../sendcoinsdialog.cpp" line="144"/>
+        <location filename="../sendcoinsdialog.cpp" line="149"/>
+        <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Send Coins</source>
         <translation>Poslať Bitcoins</translation>
     </message>
@@ -1080,59 +1074,59 @@ Adresa: %4</translation>
         <translation>&amp;Odoslať</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="94"/>
+        <location filename="../sendcoinsdialog.cpp" line="95"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; do %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="99"/>
+        <location filename="../sendcoinsdialog.cpp" line="100"/>
         <source>Confirm send coins</source>
         <translation>Potvrdiť odoslanie bitcoins</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="100"/>
+        <location filename="../sendcoinsdialog.cpp" line="101"/>
         <source>Are you sure you want to send %1?</source>
         <translation>Ste si istí, že chcete odoslať %1?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="100"/>
+        <location filename="../sendcoinsdialog.cpp" line="101"/>
         <source> and </source>
         <translation> a</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="123"/>
-        <source>The recepient address is not valid, please recheck.</source>
+        <location filename="../sendcoinsdialog.cpp" line="124"/>
+        <source>The recipient address is not valid, please recheck.</source>
         <translation>Adresa príjemcu je neplatná, prosím, overte ju.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="128"/>
+        <location filename="../sendcoinsdialog.cpp" line="129"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Suma na úhradu musí byť väčšia ako 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="133"/>
-        <source>Amount exceeds your balance</source>
-        <translation>Suma je vyššia ako Váš zostatok</translation>
+        <location filename="../sendcoinsdialog.cpp" line="134"/>
+        <source>The amount exceeds your balance.</source>
+        <translation>Suma je vyššia ako Váš zostatok.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="138"/>
-        <source>Total exceeds your balance when the %1 transaction fee is included</source>
-        <translation>Suma celkom prevyšuje Váš zostatok ak sú započítané %1 transakčné poplatky</translation>
+        <location filename="../sendcoinsdialog.cpp" line="139"/>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>Suma celkom prevyšuje Váš zostatok ak sú započítané %1 transakčné poplatky.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="144"/>
-        <source>Duplicate address found, can only send to each address once in one send operation</source>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Duplikát adresy objavený, je možné poslať na každú adresu len raz v jednej odchádzajúcej transakcii.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="149"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Chyba: Zlyhalo vytvorenie transakcie</translation>
+        <location filename="../sendcoinsdialog.cpp" line="150"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation>Chyba: Zlyhalo vytvorenie transakcie.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="154"/>
-        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"></translation>
+        <location filename="../sendcoinsdialog.cpp" line="155"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Chyba: Transakcia bola odmietnutá. Toto sa môže stať ak niektoré z mincí vo vašej peňaženke boli už utratené, napríklad ak používaš kópiu wallet.dat a mince označené v druhej kópií neboli označené ako utratené v tejto.</translation>
     </message>
 </context>
 <context>
@@ -1202,19 +1196,9 @@ Adresa: %4</translation>
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="18"/>
-        <source>Open for %1 blocks</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="20"/>
         <source>Open until %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="26"/>
-        <source>%1/offline?</source>
-        <translation type="unfinished"></translation>
+        <translation>Otvorené do %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="28"/>
@@ -1245,6 +1229,16 @@ Adresa: %4</translation>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>, broadcast through %1 nodes</source>
         <translation>, odoslaná cez %1 nód</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="18"/>
+        <source>Open for %1 blocks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="26"/>
+        <source>%1/offline?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="60"/>
@@ -1375,102 +1369,102 @@ Adresa: %4</translation>
         <source>Amount</source>
         <translation>Hodnota</translation>
     </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="280"/>
+        <source>Open until %1</source>
+        <translation>Otvorené do %1</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="283"/>
+        <source>Offline (%1 confirmations)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="286"/>
+        <source>Unconfirmed (%1 of %2 confirmations)</source>
+        <translation>Nepotvrdené (%1 z %2 potvrdení)</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="289"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Potvrdené (%1 potvrdení)</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>Ten blok nebol prijatý žiadnou inou nódou a pravdepodobne nebude akceptovaný!</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <source>Generated but not accepted</source>
+        <translation>Vypočítané ale neakceptované</translation>
+    </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="275"/>
+        <location filename="../transactiontablemodel.cpp" line="277"/>
         <source>Open for %n block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="278"/>
-        <source>Open until %1</source>
-        <translation type="unfinished"></translation>
+        <location filename="../transactiontablemodel.cpp" line="349"/>
+        <source>Received with</source>
+        <translation>Prijaté s</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="281"/>
-        <source>Offline (%1 confirmations)</source>
-        <translation type="unfinished"></translation>
+        <location filename="../transactiontablemodel.cpp" line="351"/>
+        <source>Received from</source>
+        <translation>Prijaté od:</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="284"/>
-        <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>Nepotvrdené (%1 z %2 potvrdení)</translation>
+        <location filename="../transactiontablemodel.cpp" line="354"/>
+        <source>Sent to</source>
+        <translation>Odoslané na</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="287"/>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Potvrdené (%1 potvrdení)</translation>
+        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <source>Payment to yourself</source>
+        <translation>Platba sebe samému</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="295"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Mined balance will be available in %n more blocks</source>
         <translation type="unfinished">
             <numerusform></numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="301"/>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Ten blok nebol prijatý žiadnou inou nódou a pravdepodobne nebude akceptovaný!</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="304"/>
-        <source>Generated but not accepted</source>
-        <translation>Vypočítané ale neakceptované</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="347"/>
-        <source>Received with</source>
-        <translation>Prijaté s</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="349"/>
-        <source>Received from</source>
-        <translation>Prijaté od:</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="352"/>
-        <source>Sent to</source>
-        <translation>Odoslané na</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="354"/>
-        <source>Payment to yourself</source>
-        <translation>Platba sebe samému</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Mined</source>
         <translation>Vyfárané</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="394"/>
+        <location filename="../transactiontablemodel.cpp" line="396"/>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="593"/>
+        <location filename="../transactiontablemodel.cpp" line="595"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Status transakcie. Pohybujte myšou nad týmto poľom a zjaví sa počet potvrdení.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="595"/>
+        <location filename="../transactiontablemodel.cpp" line="597"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Dátum a čas prijatia transakcie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="597"/>
+        <location filename="../transactiontablemodel.cpp" line="599"/>
         <source>Type of transaction.</source>
         <translation>Typ transakcie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="599"/>
+        <location filename="../transactiontablemodel.cpp" line="601"/>
         <source>Destination address of transaction.</source>
         <translation>Cieľová adresa transakcie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="601"/>
+        <location filename="../transactiontablemodel.cpp" line="603"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Suma pridaná alebo odobraná k zostatku.</translation>
     </message>
@@ -1574,67 +1568,67 @@ Adresa: %4</translation>
         <translation>Ukázať detaily...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="268"/>
+        <location filename="../transactionview.cpp" line="270"/>
         <source>Export Transaction Data</source>
         <translation>Exportovať transakčné dáta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="269"/>
+        <location filename="../transactionview.cpp" line="271"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Čiarkou oddelovaný súbor (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="277"/>
+        <location filename="../transactionview.cpp" line="279"/>
         <source>Confirmed</source>
         <translation>Potvrdené</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="278"/>
+        <location filename="../transactionview.cpp" line="280"/>
         <source>Date</source>
         <translation>Dátum</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="279"/>
+        <location filename="../transactionview.cpp" line="281"/>
         <source>Type</source>
         <translation>Typ</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
+        <location filename="../transactionview.cpp" line="282"/>
         <source>Label</source>
         <translation>Popis</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="281"/>
+        <location filename="../transactionview.cpp" line="283"/>
         <source>Address</source>
         <translation>Adresa</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="282"/>
+        <location filename="../transactionview.cpp" line="284"/>
         <source>Amount</source>
         <translation>Suma</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="283"/>
+        <location filename="../transactionview.cpp" line="285"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="287"/>
+        <location filename="../transactionview.cpp" line="289"/>
         <source>Error exporting</source>
         <translation>Chyba exportu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="287"/>
+        <location filename="../transactionview.cpp" line="289"/>
         <source>Could not write to file %1.</source>
         <translation>Nedalo sa zapisovať do súboru %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="382"/>
+        <location filename="../transactionview.cpp" line="384"/>
         <source>Range:</source>
         <translation>Rozsah:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="390"/>
+        <location filename="../transactionview.cpp" line="392"/>
         <source>to</source>
         <translation>do</translation>
     </message>
@@ -1706,287 +1700,342 @@ Adresa: %4</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="20"/>
         <source>Specify data directory</source>
         <translation>Určiť priečinok s dátami</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="20"/>
+        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="22"/>
         <source>Specify connection timeout (in milliseconds)</source>
         <translation>Určiť aut spojenia (v milisekundách)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Connect through socks4 proxy</source>
         <translation>Pripojenie cez socks4 proxy</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="22"/>
+        <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Allow DNS lookups for addnode and connect</source>
         <translation>Povoliť vyhľadávanie DNS pre pridanie nódy a spojenie</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="23"/>
+        <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Načúvať spojeniam na &lt;port&gt; (prednastavené: 8333 alebo testovacia sieť: 18333)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="24"/>
+        <location filename="../bitcoinstrings.cpp" line="26"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Udržiavať maximálne &lt;n&gt; spojení (predvolené: 125)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="25"/>
-        <source>Add a node to connect to</source>
-        <translation>Pridať nódu a pripojiť sa</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="26"/>
+        <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Connect only to the specified node</source>
         <translation>Pripojiť sa len k určenej nóde</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="27"/>
-        <source>Don&apos;t accept connections from outside</source>
-        <translation>Neprijímať spojenia z vonku</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="28"/>
-        <source>Don&apos;t bootstrap list of peers using DNS</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="29"/>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="30"/>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="34"/>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="35"/>
-        <source>Don&apos;t attempt to use UPnP to map the listening port</source>
-        <translation>Neskúsiť použiť UPnP pre mapovanie počúvajúceho portu</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="36"/>
-        <source>Attempt to use UPnP to map the listening port</source>
-        <translation>Skúsiť použiť UPnP pre mapovanie počúvajúceho portu</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="37"/>
-        <source>Fee per kB to add to transactions you send</source>
-        <translation>Poplatok za kB ktorý treba pridať k odoslanej transakcii</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="38"/>
+        <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Prijímať príkazy z príkazového riadku a JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Bežať na pozadí ako démon a prijímať príkazy</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="40"/>
+        <location filename="../bitcoinstrings.cpp" line="44"/>
         <source>Use the test network</source>
         <translation>Použiť testovaciu sieť</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <location filename="../bitcoinstrings.cpp" line="45"/>
         <source>Output extra debugging information</source>
         <translation>Produkovať extra ladiace informácie</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Prepend debug output with timestamp</source>
         <translation>Pridať na začiatok ladiaceho výstupu časový údaj</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="43"/>
+        <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Odoslať trace/debug informácie na konzolu namiesto debug.info žurnálu</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
         <source>Send trace/debug info to debugger</source>
         <translation>Odoslať trace/debug informácie do ladiaceho programu</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="45"/>
+        <location filename="../bitcoinstrings.cpp" line="49"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Užívateľské meno pre JSON-RPC spojenia</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <location filename="../bitcoinstrings.cpp" line="50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Heslo pre JSON-rPC spojenia</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="47"/>
+        <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
         <translation>Počúvať JSON-RPC spojeniam na &lt;port&gt; (predvolené: 8332)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="48"/>
+        <location filename="../bitcoinstrings.cpp" line="52"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Povoliť JSON-RPC spojenia z určenej IP adresy.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="49"/>
+        <location filename="../bitcoinstrings.cpp" line="53"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Poslať príkaz nóde bežiacej na &lt;ip&gt; (predvolené: 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="50"/>
+        <location filename="../bitcoinstrings.cpp" line="54"/>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Nastaviť zásobu adries na &lt;n&gt; (predvolené: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="51"/>
-        <source>Rescan the block chain for missing wallet transactions</source>
+        <location filename="../bitcoinstrings.cpp" line="60"/>
+        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="52"/>
+        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <source>How thorough the block verification is (0-6, default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="62"/>
         <source>
 SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL možnosť: (pozrite Bitcoin Wiki pre návod na nastavenie SSL)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="55"/>
+        <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Použiť OpenSSL (https) pre JSON-RPC spojenia</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="56"/>
+        <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Súbor s certifikátom servra (predvolené: server.cert)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Server private key (default: server.pem)</source>
         <translation>Súkromný kľúč servra (predvolené: server.pem)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="58"/>
+        <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Prijateľné šifry (predvolené: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>This help message</source>
         <translation>Táto pomocná správa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="62"/>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="65"/>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Loading addresses...</source>
         <translation>Načítavanie adries...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="66"/>
+        <location filename="../bitcoinstrings.cpp" line="76"/>
         <source>Error loading addr.dat</source>
         <translation>Chyba načítania addr.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Error loading blkindex.dat</source>
         <translation>Chyba načítania blkindex.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="70"/>
+        <location filename="../bitcoinstrings.cpp" line="80"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Chyba načítania wallet.dat: Peňaženka je poškodená</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
         <translation>Chyba načítania wallet.dat: Peňaženka vyžaduje novšiu verziu Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <location filename="../bitcoinstrings.cpp" line="82"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Bolo potrebné prepísať peňaženku: dokončite reštartovaním Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="73"/>
+        <location filename="../bitcoinstrings.cpp" line="83"/>
         <source>Error loading wallet.dat</source>
         <translation>Chyba načítania wallet.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Loading block index...</source>
-        <translation>Načítavanie zoznamu blokov...</translation>
+        <location filename="../bitcoinstrings.cpp" line="95"/>
+        <source>Warning: Disk space is low</source>
+        <translation>Varovanie: Málo voľného miesta na disku</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="69"/>
-        <source>Loading wallet...</source>
-        <translation>Načítavam peňaženku...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="74"/>
-        <source>Rescanning...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="75"/>
-        <source>Done loading</source>
-        <translation>Dokončené načítavanie</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="76"/>
-        <source>Invalid -proxy address</source>
-        <translation>Neplatná adresa proxy</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
-        <translation>Neplatná suma pre -paytxfee=&lt;amount&gt;</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Varovanie: -paytxfee je nastavené veľmi vysoko. Toto sú transakčné poplatky ktoré zaplatíte ak odošlete transakciu.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Error: CreateThread(StartNode) failed</source>
-        <translation>Chyba: zlyhalo CreateThread(StartNode)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="82"/>
-        <source>Warning: Disk space is low  </source>
-        <translation>Varovanie: Málo voľného miesta na disku </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="83"/>
+        <location filename="../bitcoinstrings.cpp" line="96"/>
         <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="86"/>
+        <location filename="../bitcoinstrings.cpp" line="99"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="59"/>
+        <source>Rescan the block chain for missing wallet transactions</source>
+        <translation>Znovu skenovať reťaz blokov pre chýbajúce transakcie</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="27"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="29"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="30"/>
+        <source>Accept connections from outside (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="31"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="34"/>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="37"/>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="38"/>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <source>Use Universal Plug and Play to map the listening port (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="40"/>
+        <source>Use Universal Plug and Play to map the listening port (default: 0)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <source>Fee per KB to add to transactions you send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="84"/>
+        <source>Cannot downgrade wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <source>Cannot initialize keypool</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="86"/>
+        <source>Cannot write default address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="87"/>
+        <source>Rescanning...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="88"/>
+        <source>Done loading</source>
+        <translation>Dokončené načítavanie</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <source>Loading block index...</source>
+        <translation>Načítavanie zoznamu blokov...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="79"/>
+        <source>Loading wallet...</source>
+        <translation>Načítavam peňaženku...</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="89"/>
+        <source>Invalid -proxy address</source>
+        <translation>Neplatná adresa proxy</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="90"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
+        <translation>Neplatná suma pre -paytxfee=&lt;amount&gt;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="91"/>
+        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Varovanie: -paytxfee je nastavené veľmi vysoko. Toto sú transakčné poplatky ktoré zaplatíte ak odošlete transakciu.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="94"/>
+        <source>Error: CreateThread(StartNode) failed</source>
+        <translation>Chyba: zlyhalo CreateThread(StartNode)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="102"/>
         <source>beta</source>
         <translation>beta</translation>
     </message>

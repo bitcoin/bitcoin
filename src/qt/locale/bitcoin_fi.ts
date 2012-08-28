@@ -77,7 +77,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="96"/>
         <source>Sign a message to prove you own this address</source>
-        <translation>Allekirjoita viesti millä todistat omistavasi tämän osoitteen</translation>
+        <translation type="unfinished">Allekirjoita viesti millä todistat omistavasi tämän osoitteen</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="99"/>
@@ -102,12 +102,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="62"/>
         <source>Copy label</source>
-        <translation>Kopioi nimi</translation>
+        <translation type="unfinished">Kopioi nimi</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="63"/>
         <source>Edit</source>
-        <translation>Muokkaa</translation>
+        <translation type="unfinished">Muokkaa</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
@@ -115,22 +115,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Poista</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="281"/>
+        <location filename="../addressbookpage.cpp" line="278"/>
         <source>Export Address Book Data</source>
         <translation>Vie osoitekirja</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="282"/>
+        <location filename="../addressbookpage.cpp" line="279"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="295"/>
+        <location filename="../addressbookpage.cpp" line="292"/>
         <source>Error exporting</source>
         <translation>Virhe viedessä osoitekirjaa</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="295"/>
+        <location filename="../addressbookpage.cpp" line="292"/>
         <source>Could not write to file %1.</source>
         <translation>Ei voida kirjoittaa tiedostoon %1.</translation>
     </message>
@@ -158,28 +158,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Dialog</source>
-        <translation>Dialogi</translation>
+        <translation type="unfinished">Dialogi</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="32"/>
-        <location filename="../forms/askpassphrasedialog.ui" line="97"/>
-        <source>TextLabel</source>
-        <translation>TekstiMerkki</translation>
-    </message>
-    <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="50"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
         <translation>Anna tunnuslause</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="64"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
         <translation>Uusi tunnuslause</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="78"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
         <translation>Toista uusi tunnuslause</translation>
+    </message>
+    <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
+        <source>TextLabel</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="34"/>
@@ -227,13 +226,6 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Hyväksy lompakon salaus</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation>VAROITUS: Mikäli salaat lompakkosi ja unohdat tunnuslauseen, &lt;b&gt;MENETÄT LOMPAKON KOKO SISÄLLÖN&lt;/b&gt;!
-Tahdotko varmasti salata lompakon?</translation>
-    </message>
-    <message>
         <location filename="../askpassphrasedialog.cpp" line="111"/>
         <location filename="../askpassphrasedialog.cpp" line="160"/>
         <source>Wallet encrypted</source>
@@ -242,13 +234,25 @@ Tahdotko varmasti salata lompakon?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin sulkeutuu lopettaessaan salausprosessin. Muista että salattu lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
+        <translation>Bitcoin sulkeutuu lopettaakseen salausprosessin. Muista, että salattu lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Lompakon tunnuslause on vaihdettu.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
         <location filename="../askpassphrasedialog.cpp" line="232"/>
         <source>Warning: The Caps Lock key is on.</source>
         <translation>Varoitus: Caps Lock on päällä.</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="102"/>
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
+Are you sure you wish to encrypt your wallet?</source>
+        <translation>VAROITUS: Mikäli salaat lompakkosi ja unohdat tunnuslauseen, &lt;b&gt;MENETÄT LOMPAKON KOKO SISÄLLÖN&lt;/b&gt;!
+Tahdotko varmasti salata lompakon?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
@@ -286,217 +290,142 @@ Tahdotko varmasti salata lompakon?</translation>
         <source>Wallet decryption failed</source>
         <translation>Lompakon salauksen purku epäonnistui.</translation>
     </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
-        <source>Wallet passphrase was succesfully changed.</source>
-        <translation>Lompakon tunnuslause on vaihdettu.</translation>
-    </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="72"/>
-        <source>Bitcoin Wallet</source>
-        <translation>Bitcoin-lompakko</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="145"/>
-        <location filename="../bitcoingui.cpp" line="467"/>
+        <location filename="../bitcoingui.cpp" line="146"/>
+        <location filename="../bitcoingui.cpp" line="478"/>
         <source>Synchronizing with network...</source>
         <translation>Synkronoidaan verkon kanssa...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="148"/>
-        <source>Block chain synchronization in progress</source>
-        <translation>Block chainin synkronointi kesken</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="179"/>
+        <location filename="../bitcoingui.cpp" line="187"/>
         <source>&amp;Overview</source>
         <translation>&amp;Yleisnäkymä</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="180"/>
+        <location filename="../bitcoingui.cpp" line="188"/>
         <source>Show general overview of wallet</source>
         <translation>Näyttää kokonaiskatsauksen lompakon tilanteesta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="185"/>
+        <location filename="../bitcoingui.cpp" line="193"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Rahansiirrot</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="186"/>
+        <location filename="../bitcoingui.cpp" line="194"/>
         <source>Browse transaction history</source>
         <translation>Selaa rahansiirtohistoriaa</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="191"/>
+        <location filename="../bitcoingui.cpp" line="199"/>
         <source>&amp;Address Book</source>
         <translation>&amp;Osoitekirja</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="192"/>
+        <location filename="../bitcoingui.cpp" line="200"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Muokkaa tallennettujen nimien ja osoitteiden listaa</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="197"/>
+        <location filename="../bitcoingui.cpp" line="205"/>
         <source>&amp;Receive coins</source>
-        <translation>&amp;Bitcoinien vastaanottaminen</translation>
+        <translation>&amp;Vastaanota Bitcoineja</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="198"/>
+        <location filename="../bitcoingui.cpp" line="206"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Näytä Bitcoinien vastaanottamiseen käytetyt osoitteet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="203"/>
+        <location filename="../bitcoingui.cpp" line="211"/>
         <source>&amp;Send coins</source>
         <translation>&amp;Lähetä Bitcoineja</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="204"/>
-        <source>Send coins to a bitcoin address</source>
-        <translation>Lähetä Bitcoin-osoitteeseen</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="209"/>
-        <source>Sign &amp;message</source>
-        <translation>Allekirjoita &amp;viesti</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="210"/>
-        <source>Prove you control an address</source>
-        <translation>Todista että hallitset osoitetta</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="229"/>
+        <location filename="../bitcoingui.cpp" line="237"/>
         <source>E&amp;xit</source>
         <translation>L&amp;opeta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="230"/>
+        <location filename="../bitcoingui.cpp" line="238"/>
         <source>Quit application</source>
         <translation>Lopeta ohjelma</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="233"/>
-        <source>&amp;About %1</source>
-        <translation>&amp;Tietoja %1</translation>
+        <location filename="../bitcoingui.cpp" line="218"/>
+        <source>Prove you control an address</source>
+        <translation>Todista että hallitset osoitetta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="242"/>
         <source>Show information about Bitcoin</source>
         <translation>Näytä tietoa Bitcoin-projektista</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
+        <location filename="../bitcoingui.cpp" line="244"/>
         <source>About &amp;Qt</source>
         <translation>Tietoja &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
+        <location filename="../bitcoingui.cpp" line="245"/>
         <source>Show information about Qt</source>
         <translation>Näytä tietoja QT:ta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
+        <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Options...</source>
         <translation>&amp;Asetukset...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Modify configuration options for bitcoin</source>
-        <translation>Muokkaa asetuksia</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
-        <source>Open &amp;Bitcoin</source>
-        <translation>Avaa &amp;Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
-        <source>Show the Bitcoin window</source>
-        <translation>Näytä Bitcoin-ikkuna</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="244"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Vie...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="245"/>
+        <location filename="../bitcoingui.cpp" line="253"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Vie aukiolevan välilehden tiedot tiedostoon</translation>
+        <translation>Vie auki olevan välilehden tiedot tiedostoon</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="246"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation>&amp;Salaa lompakko</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="247"/>
+        <location filename="../bitcoingui.cpp" line="255"/>
         <source>Encrypt or decrypt wallet</source>
-        <translation>Kryptaa tai dekryptaa lompakko</translation>
+        <translation>Salaa tai poista salaus lompakosta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
-        <source>&amp;Backup Wallet</source>
-        <translation>&amp;Varmuuskopioi lompakko</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
+        <location filename="../bitcoingui.cpp" line="258"/>
         <source>Backup wallet to another location</source>
         <translation>Varmuuskopioi lompakko toiseen sijaintiin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="251"/>
-        <source>&amp;Change Passphrase</source>
-        <translation>&amp;Vaihda tunnuslause</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="252"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Vaihda lompakon salaukseen käytettävä tunnuslause</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="275"/>
+        <location filename="../bitcoingui.cpp" line="283"/>
         <source>&amp;File</source>
         <translation>&amp;Tiedosto</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="284"/>
+        <location filename="../bitcoingui.cpp" line="292"/>
         <source>&amp;Settings</source>
         <translation>&amp;Asetukset</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="290"/>
+        <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Help</source>
         <translation>&amp;Apua</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="297"/>
+        <location filename="../bitcoingui.cpp" line="305"/>
         <source>Tabs toolbar</source>
         <translation>Välilehtipalkki</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="308"/>
+        <location filename="../bitcoingui.cpp" line="316"/>
         <source>Actions toolbar</source>
         <translation>Toimintopalkki</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="320"/>
+        <location filename="../bitcoingui.cpp" line="329"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="410"/>
-        <source>bitcoin-qt</source>
-        <translation>bitcoin-qt</translation>
-    </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="452"/>
+        <location filename="../bitcoingui.cpp" line="463"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation>
             <numerusform>%n aktiivinen yhteys Bitcoin-verkkoon</numerusform>
@@ -504,17 +433,82 @@ Tahdotko varmasti salata lompakon?</translation>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="478"/>
+        <location filename="../bitcoingui.cpp" line="257"/>
+        <source>&amp;Backup Wallet</source>
+        <translation>&amp;Varmuuskopioi lompakko</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="73"/>
+        <source>Bitcoin Wallet</source>
+        <translation>Bitcoin-lompakko</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="149"/>
+        <source>Block chain synchronization in progress</source>
+        <translation>Block chainin synkronointi kesken</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="212"/>
+        <source>Send coins to a bitcoin address</source>
+        <translation>Lähetä kolikoita Bitcoin-osoitteeseen</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="217"/>
+        <source>Sign &amp;message</source>
+        <translation>Allekirjoita &amp;viesti</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="241"/>
+        <source>&amp;About %1</source>
+        <translation>&amp;Tietoja %1</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="248"/>
+        <source>Modify configuration options for bitcoin</source>
+        <translation>Muuta Bitcoinin konfiguraatioasetuksia</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="250"/>
+        <source>Open &amp;Bitcoin</source>
+        <translation>Avaa &amp;Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="251"/>
+        <source>Show the Bitcoin window</source>
+        <translation>Näytä Bitcoin-ikkuna</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="252"/>
+        <source>&amp;Export...</source>
+        <translation>&amp;Vie...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="254"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation>&amp;Salaa lompakko</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="259"/>
+        <source>&amp;Change Passphrase</source>
+        <translation>&amp;Vaihda tunnuslause</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="260"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Vaihda lompakon salaukseen käytettävä tunnuslause</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="489"/>
         <source>Downloaded %1 of %2 blocks of transaction history.</source>
         <translation>Ladattu %1 of %2 rahansiirtohistorian lohkoa.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="490"/>
+        <location filename="../bitcoingui.cpp" line="501"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Ladattu %1 lohkoa rahansiirron historiasta.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="505"/>
+        <location filename="../bitcoingui.cpp" line="516"/>
         <source>%n second(s) ago</source>
         <translation>
             <numerusform>%n sekunti sitten</numerusform>
@@ -522,7 +516,7 @@ Tahdotko varmasti salata lompakon?</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="509"/>
+        <location filename="../bitcoingui.cpp" line="520"/>
         <source>%n minute(s) ago</source>
         <translation>
             <numerusform>%n minuutti sitten</numerusform>
@@ -530,7 +524,7 @@ Tahdotko varmasti salata lompakon?</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="513"/>
+        <location filename="../bitcoingui.cpp" line="524"/>
         <source>%n hour(s) ago</source>
         <translation>
             <numerusform>%n tunti sitten</numerusform>
@@ -538,7 +532,7 @@ Tahdotko varmasti salata lompakon?</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="517"/>
+        <location filename="../bitcoingui.cpp" line="528"/>
         <source>%n day(s) ago</source>
         <translation>
             <numerusform>%n päivä sitten</numerusform>
@@ -546,42 +540,42 @@ Tahdotko varmasti salata lompakon?</translation>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="523"/>
+        <location filename="../bitcoingui.cpp" line="534"/>
         <source>Up to date</source>
-        <translation>Ohjelmisto on ajan tasalla</translation>
+        <translation>Rahansiirtohistoria on ajan tasalla</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="528"/>
+        <location filename="../bitcoingui.cpp" line="539"/>
         <source>Catching up...</source>
         <translation>Kurotaan kiinni...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="536"/>
+        <location filename="../bitcoingui.cpp" line="547"/>
         <source>Last received block was generated %1.</source>
         <translation>Viimeisin vastaanotettu lohko tuotettu %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="609"/>
+        <location filename="../bitcoingui.cpp" line="616"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Tämä rahansiirto ylittää kokorajoituksen. Voit siitä huolimatta lähettää sen %1 siirtopalkkion mikä menee solmuille jotka  käsittelevät rahansiirtosi tämä auttaa myös verkostoa. Haluatko maksaa siirtopalkkion? </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="614"/>
-        <source>Sending...</source>
-        <translation>Lähetetään...</translation>
+        <location filename="../bitcoingui.cpp" line="421"/>
+        <source>bitcoin-qt</source>
+        <translation>bitcoin-qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="641"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>Sent transaction</source>
         <translation>Lähetetyt rahansiirrot</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="642"/>
+        <location filename="../bitcoingui.cpp" line="649"/>
         <source>Incoming transaction</source>
         <translation>Saapuva rahansiirto</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="643"/>
+        <location filename="../bitcoingui.cpp" line="650"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -593,60 +587,65 @@ Tyyppi: %3
 Osoite: %4</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="768"/>
+        <location filename="../bitcoingui.cpp" line="775"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;avoinna&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="776"/>
+        <location filename="../bitcoingui.cpp" line="783"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittuna&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="799"/>
+        <location filename="../bitcoingui.cpp" line="806"/>
         <source>Backup Wallet</source>
         <translation>Varmuuskopioi lompakko</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="799"/>
+        <location filename="../bitcoingui.cpp" line="806"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Lompakkodata (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="802"/>
+        <location filename="../bitcoingui.cpp" line="809"/>
         <source>Backup Failed</source>
         <translation>Varmuuskopio epäonnistui</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="802"/>
+        <location filename="../bitcoingui.cpp" line="809"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>Virhe tallennettaessa lompakkodataa uuteen sijaintiin.</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="139"/>
-        <source>A fatal error occured. Bitcoin can no longer continue safely and will quit.</source>
+        <location filename="../bitcoingui.cpp" line="621"/>
+        <source>Sending...</source>
+        <translation>Lähetetään...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="144"/>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>DisplayOptionsPage</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="270"/>
+        <location filename="../optionsdialog.cpp" line="269"/>
         <source>&amp;Unit to show amounts in: </source>
         <translation>&amp;Yksikkö, jossa määrät näytetään: </translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="274"/>
+        <location filename="../optionsdialog.cpp" line="273"/>
         <source>Choose the default subdivision unit to show in the interface, and when sending coins</source>
         <translation>Valitse oletus lisämääre mikä näkyy käyttöliittymässä ja kun lähetät kolikoita</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="281"/>
+        <location filename="../optionsdialog.cpp" line="280"/>
         <source>&amp;Display addresses in transaction list</source>
         <translation>&amp;Näytä osoitteet rahansiirtoluettelossa</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="282"/>
+        <location filename="../optionsdialog.cpp" line="281"/>
         <source>Whether to show Bitcoin addresses in the transaction list</source>
         <translation type="unfinished"></translation>
     </message>
@@ -768,7 +767,7 @@ Osoite: %4</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="191"/>
-        <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
+        <source>Connect to the Bitcoin network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
         <translation>Yhdistä Bitcoin-verkkoon SOCKS4-välityspalvelimen kautta (esimerkiksi käyttäessä Tor:ia)</translation>
     </message>
     <message>
@@ -792,17 +791,12 @@ Osoite: %4</translation>
         <translation>Portti, johon Bitcoin-asiakasohjelma yhdistää (esim. 1234)</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="217"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly.  Most transactions are 1 kB.  Fee 0.01 recommended.</source>
-        <translation>Vapaaehtoinen rahansiirtopalkkio per kB auttaa nopeuttamaan siirtoja. Useimmat rahansiirrot ovat 1 kB. 0.01 palkkio on suositeltava.</translation>
-    </message>
-    <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Maksa rahansiirtopalkkio</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="226"/>
+        <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
         <translation>Vapaaehtoinen rahansiirtopalkkio per kB auttaa nopeuttamaan siirtoja. Useimmat rahansiirrot ovat 1 kB. 0.01 palkkio on suositeltava.</translation>
     </message>
@@ -867,7 +861,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Kopioi tämänhetkinen allekirjoitus leikepöydälle</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
@@ -928,11 +922,6 @@ Osoite: %4</translation>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="47"/>
-        <source>123.456 BTC</source>
-        <translation>123.456 BTC</translation>
-    </message>
-    <message>
         <location filename="../forms/overviewpage.ui" line="54"/>
         <source>Number of transactions:</source>
         <translation>Rahansiirtojen lukumäärä:</translation>
@@ -946,16 +935,6 @@ Osoite: %4</translation>
         <location filename="../forms/overviewpage.ui" line="68"/>
         <source>Unconfirmed:</source>
         <translation>Vahvistamatta:</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="75"/>
-        <source>0 BTC</source>
-        <translation>0 BTC</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="88"/>
-        <source>Wallet</source>
-        <translation>Lompakko</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -976,6 +955,11 @@ Osoite: %4</translation>
         <location filename="../overviewpage.cpp" line="111"/>
         <source>Total number of transactions in wallet</source>
         <translation>Lompakolla tehtyjen rahansiirtojen yhteismäärä</translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <source>Wallet</source>
+        <translation>Lompakko</translation>
     </message>
 </context>
 <context>
@@ -1023,7 +1007,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../qrcodedialog.cpp" line="48"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"></translation>
+        <translation>Virhe käännettäessä URI:a QR-koodiksi.</translation>
     </message>
     <message>
         <location filename="../qrcodedialog.cpp" line="113"/>
@@ -1040,13 +1024,13 @@ Osoite: %4</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="122"/>
-        <location filename="../sendcoinsdialog.cpp" line="127"/>
-        <location filename="../sendcoinsdialog.cpp" line="132"/>
-        <location filename="../sendcoinsdialog.cpp" line="137"/>
-        <location filename="../sendcoinsdialog.cpp" line="143"/>
-        <location filename="../sendcoinsdialog.cpp" line="148"/>
-        <location filename="../sendcoinsdialog.cpp" line="153"/>
+        <location filename="../sendcoinsdialog.cpp" line="123"/>
+        <location filename="../sendcoinsdialog.cpp" line="128"/>
+        <location filename="../sendcoinsdialog.cpp" line="133"/>
+        <location filename="../sendcoinsdialog.cpp" line="138"/>
+        <location filename="../sendcoinsdialog.cpp" line="144"/>
+        <location filename="../sendcoinsdialog.cpp" line="149"/>
+        <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Send Coins</source>
         <translation>Lähetä Bitcoineja</translation>
     </message>
@@ -1091,58 +1075,58 @@ Osoite: %4</translation>
         <translation>&amp;Lähetä</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="94"/>
+        <location filename="../sendcoinsdialog.cpp" line="95"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="99"/>
+        <location filename="../sendcoinsdialog.cpp" line="100"/>
         <source>Confirm send coins</source>
         <translation>Hyväksy Bitcoinien lähettäminen</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="100"/>
+        <location filename="../sendcoinsdialog.cpp" line="101"/>
         <source>Are you sure you want to send %1?</source>
         <translation>Haluatko varmasti lähettää %1?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="100"/>
+        <location filename="../sendcoinsdialog.cpp" line="101"/>
         <source> and </source>
         <translation> ja </translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="123"/>
-        <source>The recepient address is not valid, please recheck.</source>
-        <translation>Vastaanottajan osoite ei kelpaa, ole hyvä ja tarkista</translation>
+        <location filename="../sendcoinsdialog.cpp" line="124"/>
+        <source>The recipient address is not valid, please recheck.</source>
+        <translation>Vastaanottajan osoite ei kelpaa, ole hyvä ja tarkista.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="128"/>
+        <location filename="../sendcoinsdialog.cpp" line="129"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Maksettavan summan tulee olla suurempi kuin 0 Bitcoinia.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="133"/>
-        <source>Amount exceeds your balance</source>
+        <location filename="../sendcoinsdialog.cpp" line="134"/>
+        <source>The amount exceeds your balance.</source>
         <translation>Määrä on suurempi kuin tilisi tämänhetkinen saldo.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="138"/>
-        <source>Total exceeds your balance when the %1 transaction fee is included</source>
+        <location filename="../sendcoinsdialog.cpp" line="139"/>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Kokonaissumma ylittäää tilisi saldon, kun siihen lisätään %1 BTC rahansiirtomaksu.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="144"/>
-        <source>Duplicate address found, can only send to each address once in one send operation</source>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Tuplaosite löytynyt, voit ainoastaan lähettää kunkin osoitteen kerran yhdessä lähetysoperaatiossa.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="149"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Virhe: Rahansiirron luonti epäonnistui</translation>
+        <location filename="../sendcoinsdialog.cpp" line="150"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation>Virhe: Rahansiirron luonti epäonnistui.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="154"/>
-        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <location filename="../sendcoinsdialog.cpp" line="155"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Virhe: Rahansiirto hylättiin.  Tämä voi tapahtua jos jotkin bitcoineistasi on jo käytetty, esimerkiksi jos olet käyttänyt kopiota wallet.dat-lompakkotiedostosta ja bitcoinit on merkitty käytetyksi vain kopiossa.</translation>
     </message>
 </context>
@@ -1223,11 +1207,6 @@ Osoite: %4</translation>
         <translation>Avoinna %1 asti</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="26"/>
-        <source>%1/offline?</source>
-        <translation>%1/ei linjalla?</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>%1/unconfirmed</source>
         <translation>%1/vahvistamaton</translation>
@@ -1236,6 +1215,11 @@ Osoite: %4</translation>
         <location filename="../transactiondesc.cpp" line="30"/>
         <source>%1 confirmations</source>
         <translation>%1 vahvistusta</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="26"/>
+        <source>%1/offline?</source>
+        <translation>%1/ei linjalla?</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
@@ -1387,7 +1371,7 @@ Osoite: %4</translation>
         <translation>Määrä</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="275"/>
+        <location filename="../transactiontablemodel.cpp" line="277"/>
         <source>Open for %n block(s)</source>
         <translation>
             <numerusform>Auki %n lohkolle</numerusform>
@@ -1395,27 +1379,27 @@ Osoite: %4</translation>
         </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="278"/>
+        <location filename="../transactiontablemodel.cpp" line="280"/>
         <source>Open until %1</source>
         <translation>Avoinna %1 asti</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="281"/>
+        <location filename="../transactiontablemodel.cpp" line="283"/>
         <source>Offline (%1 confirmations)</source>
         <translation>Ei yhteyttä verkkoon (%1 vahvistusta)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="284"/>
+        <location filename="../transactiontablemodel.cpp" line="286"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
         <translation>Vahvistamatta (%1/%2 vahvistusta)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="289"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Vahvistettu (%1 vahvistusta)</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="295"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Mined balance will be available in %n more blocks</source>
         <translation>
             <numerusform>Louhittu saldo tulee saataville %n lohkossa</numerusform>
@@ -1423,67 +1407,67 @@ Osoite: %4</translation>
         </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="301"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Tätä lohkoa ei vastaanotettu mistään muusta solmusta ja sitä ei mahdollisesti hyväksytty!</translation>
+        <translation>Tätä lohkoa ei vastaanotettu mistään muusta solmusta ja sitä ei mahdollisesti hyväksytä!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="304"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Generated but not accepted</source>
         <translation>Generoitu mutta ei hyväksytty</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="347"/>
+        <location filename="../transactiontablemodel.cpp" line="349"/>
         <source>Received with</source>
         <translation>Vastaanotettu osoitteella</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="349"/>
+        <location filename="../transactiontablemodel.cpp" line="351"/>
         <source>Received from</source>
         <translation>Vastaanotettu</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="352"/>
+        <location filename="../transactiontablemodel.cpp" line="354"/>
         <source>Sent to</source>
         <translation>Saaja</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="354"/>
+        <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Payment to yourself</source>
         <translation>Maksu itsellesi</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Mined</source>
         <translation>Louhittu</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="394"/>
+        <location filename="../transactiontablemodel.cpp" line="396"/>
         <source>(n/a)</source>
         <translation>(ei saatavilla)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="593"/>
+        <location filename="../transactiontablemodel.cpp" line="595"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Rahansiirron tila. Siirrä osoitin kentän päälle nähdäksesi vahvistusten lukumäärä.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="595"/>
+        <location filename="../transactiontablemodel.cpp" line="597"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Rahansiirron vastaanottamisen päivämäärä ja aika.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="597"/>
+        <location filename="../transactiontablemodel.cpp" line="599"/>
         <source>Type of transaction.</source>
         <translation>Rahansiirron laatu.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="599"/>
+        <location filename="../transactiontablemodel.cpp" line="601"/>
         <source>Destination address of transaction.</source>
         <translation>Rahansiirron kohteen Bitcoin-osoite</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="601"/>
+        <location filename="../transactiontablemodel.cpp" line="603"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Saldoon lisätty tai siitä vähennetty määrä.</translation>
     </message>
@@ -1587,67 +1571,67 @@ Osoite: %4</translation>
         <translation>Näytä tarkemmat tiedot...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="268"/>
+        <location filename="../transactionview.cpp" line="270"/>
         <source>Export Transaction Data</source>
         <translation>Vie transaktion tiedot</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="269"/>
+        <location filename="../transactionview.cpp" line="271"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="277"/>
+        <location filename="../transactionview.cpp" line="279"/>
         <source>Confirmed</source>
         <translation>Vahvistettu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="278"/>
+        <location filename="../transactionview.cpp" line="280"/>
         <source>Date</source>
         <translation>Aika</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="279"/>
+        <location filename="../transactionview.cpp" line="281"/>
         <source>Type</source>
         <translation>Laatu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
+        <location filename="../transactionview.cpp" line="282"/>
         <source>Label</source>
         <translation>Nimi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="281"/>
+        <location filename="../transactionview.cpp" line="283"/>
         <source>Address</source>
         <translation>Osoite</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="282"/>
+        <location filename="../transactionview.cpp" line="284"/>
         <source>Amount</source>
         <translation>Määrä</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="283"/>
+        <location filename="../transactionview.cpp" line="285"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="287"/>
+        <location filename="../transactionview.cpp" line="289"/>
         <source>Error exporting</source>
         <translation>Virhe tietojen viennissä</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="287"/>
+        <location filename="../transactionview.cpp" line="289"/>
         <source>Could not write to file %1.</source>
         <translation>Ei voida kirjoittaa tiedostoon %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="382"/>
+        <location filename="../transactionview.cpp" line="384"/>
         <source>Range:</source>
         <translation>Alue:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="390"/>
+        <location filename="../transactionview.cpp" line="392"/>
         <source>to</source>
         <translation>kenelle</translation>
     </message>
@@ -1719,288 +1703,343 @@ Osoite: %4</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation type="unfinished">Näytä aloitusruutu käynnistettäessä (oletus: 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="20"/>
         <source>Specify data directory</source>
         <translation>Määritä data-hakemisto</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="20"/>
+        <location filename="../bitcoinstrings.cpp" line="22"/>
         <source>Specify connection timeout (in milliseconds)</source>
         <translation>Määritä yhteyden aikakatkaisu (millisekunneissa)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>Connect through socks4 proxy</source>
         <translation>Yhteys socks4-proxyn kautta</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="22"/>
+        <location filename="../bitcoinstrings.cpp" line="24"/>
         <source>Allow DNS lookups for addnode and connect</source>
         <translation>Salli DNS haut lisäsolmulle ja yhdistä</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="23"/>
+        <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Kuuntele yhteyksiä portista &lt;port&gt; (oletus: 8333 tai testnet: 18333)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="24"/>
+        <location filename="../bitcoinstrings.cpp" line="26"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Pidä enintään &lt;n&gt; yhteyttä verkkoihin (oletus: 125)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="25"/>
-        <source>Add a node to connect to</source>
-        <translation>Lisää solmu mihin yhdistetään</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="26"/>
+        <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Connect only to the specified node</source>
         <translation>Ota yhteys vain tiettyyn solmuun</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="27"/>
-        <source>Don&apos;t accept connections from outside</source>
-        <translation>Älä hyväksy ulkopuolisia yhteyksiä</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="28"/>
-        <source>Don&apos;t bootstrap list of peers using DNS</source>
-        <translation>Älä alkulataa listaa verkoista DNS:ää käyttäen</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="29"/>
+        <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Kynnysarvo aikakatkaisulle heikosti toimiville verkoille (oletus: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="30"/>
+        <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Sekuntien määrä, kuinka kauan uudelleenkytkeydytään verkkoihin (oletus: 86400)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
         <translation>Maksimi verkkoyhteyden vastaanottopuskuri, &lt;n&gt;*1000 tavua (oletus: 10000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="34"/>
+        <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
         <translation>Maksimi verkkoyhteyden lähetyspuskuri, &lt;n&gt;*1000 tavua (oletus: 10000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="35"/>
-        <source>Don&apos;t attempt to use UPnP to map the listening port</source>
-        <translation>Älä käytä UPnP toimintoa kartoittamaan avointa porttia</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="36"/>
-        <source>Attempt to use UPnP to map the listening port</source>
-        <translation>Yritä käyttää UPnP toimintoa kartoittamaan avointa porttia</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="37"/>
-        <source>Fee per kB to add to transactions you send</source>
-        <translation>palkkio per kB lisätty lähettämiisi rahansiirtoihin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="38"/>
+        <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Hyväksy merkkipohjaiset- ja JSON-RPC-käskyt</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Aja taustalla daemonina ja hyväksy komennot</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="40"/>
+        <location filename="../bitcoinstrings.cpp" line="44"/>
         <source>Use the test network</source>
         <translation>Käytä test -verkkoa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <location filename="../bitcoinstrings.cpp" line="45"/>
         <source>Output extra debugging information</source>
         <translation>Tulosta ylimääräistä debuggaustietoa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Prepend debug output with timestamp</source>
         <translation>Lisää debuggaustiedon tulostukseen aikaleima</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="43"/>
+        <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Lähetä jäljitys/debug-tieto konsoliin, debug.log-tiedoston sijaan</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
         <source>Send trace/debug info to debugger</source>
         <translation>Lähetä jäljitys/debug-tieto debuggeriin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="45"/>
+        <location filename="../bitcoinstrings.cpp" line="49"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Käyttäjätunnus JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <location filename="../bitcoinstrings.cpp" line="50"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Salasana JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="47"/>
+        <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
         <translation>Kuuntele JSON-RPC -yhteyksiä portista &lt;port&gt; (oletus: 8332)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="48"/>
+        <location filename="../bitcoinstrings.cpp" line="52"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Salli JSON-RPC yhteydet tietystä ip-osoitteesta</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="49"/>
+        <location filename="../bitcoinstrings.cpp" line="53"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Lähetä käskyjä solmuun osoitteessa &lt;ip&gt; (oletus: 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="50"/>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Aseta avainpoolin koko arvoon &lt;n&gt; (oletus: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="51"/>
+        <location filename="../bitcoinstrings.cpp" line="59"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Skannaa uudelleen lohkoketju lompakon puuttuvien rahasiirtojen vuoksi</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="52"/>
+        <location filename="../bitcoinstrings.cpp" line="62"/>
         <source>
 SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL-asetukset: (lisätietoja Bitcoin-Wikistä)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="55"/>
+        <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Käytä OpenSSL:ää (https) JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="56"/>
+        <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Palvelimen sertifikaatti-tiedosto (oletus: server.cert)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Server private key (default: server.pem)</source>
         <translation>Palvelimen yksityisavain (oletus: server.pem)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="58"/>
+        <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Hyväksyttävä salaus (oletus:
 TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>This help message</source>
         <translation>Tämä ohjeviesti</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="62"/>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>En pääse käsiksi data-hakemiston lukitukseen %s. Bitcoin on todennäköisesti jo käynnistetty.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="65"/>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Loading addresses...</source>
         <translation>Ladataan osoitteita...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="66"/>
+        <location filename="../bitcoinstrings.cpp" line="76"/>
         <source>Error loading addr.dat</source>
         <translation>Virhe ladattaessa addr.dat-tiedostoa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Error loading blkindex.dat</source>
         <translation>Virhe ladattaessa blkindex.dat-tiedostoa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="70"/>
+        <location filename="../bitcoinstrings.cpp" line="80"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Lompakko vioittunut</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version Bitcoinista</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <location filename="../bitcoinstrings.cpp" line="82"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä Bitcoin uudelleen</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="73"/>
+        <location filename="../bitcoinstrings.cpp" line="83"/>
         <source>Error loading wallet.dat</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Loading block index...</source>
-        <translation>Ladataan lohkoindeksiä...</translation>
+        <location filename="../bitcoinstrings.cpp" line="95"/>
+        <source>Warning: Disk space is low</source>
+        <translation>Varoitus: Kiintolevytila on loppumassa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="69"/>
-        <source>Loading wallet...</source>
-        <translation>Ladataan lompakkoa...</translation>
+        <location filename="../bitcoinstrings.cpp" line="54"/>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation>Suorita käsky kun paras lohko muuttuu (%s cmd on vaihdettu block hashin kanssa)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="74"/>
-        <source>Rescanning...</source>
-        <translation>Skannataan uudelleen...</translation>
+        <location filename="../bitcoinstrings.cpp" line="27"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>Linää solmu mihin liittyä pitääksesi yhteyden auki</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="75"/>
+        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>Aseta tietokannan välimuistin koko megatavuina (oletus: 25)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="84"/>
+        <source>Cannot downgrade wallet</source>
+        <translation>Et voi päivittää lompakkoasi vanhempaan versioon</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <source>Cannot initialize keypool</source>
+        <translation>Avainvarastoa ei voi alustaa</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="86"/>
+        <source>Cannot write default address</source>
+        <translation>Oletusosoitetta ei voi kirjoittaa</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="60"/>
+        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
+        <translation>Kuinka monta lohkoa tarkistetaan käynnistettäessä (oletus: 2500, 0 = kaikki)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <source>How thorough the block verification is (0-6, default: 1)</source>
+        <translation>Kuinka tiukka lohkovarmistus on (0-6, oletus: 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="88"/>
         <source>Done loading</source>
         <translation>Lataus on valmis</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="76"/>
+        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <source>Loading block index...</source>
+        <translation>Ladataan lohkoindeksiä...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <source>Fee per KB to add to transactions you send</source>
+        <translation>Rahansiirtopalkkio per KB lisätään lähettämääsi rahansiirtoon</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="29"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation>Etsi solmuja käyttäen internet relay chatia (oletus: 0)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="30"/>
+        <source>Accept connections from outside (default: 1)</source>
+        <translation type="unfinished">Älä hyväksy ulkopuolisia yhteyksiä</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="31"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <source>Use Universal Plug and Play to map the listening port (default: 1)</source>
+        <translation type="unfinished">Yritä käyttää UPnP toimintoa kartoittamaan avointa porttia (default: 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="40"/>
+        <source>Use Universal Plug and Play to map the listening port (default: 0)</source>
+        <translation type="unfinished">Yritä käyttää UPnP toimintoa kartoittamaan avointa porttia (default: 0)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="79"/>
+        <source>Loading wallet...</source>
+        <translation>Ladataan lompakkoa...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="87"/>
+        <source>Rescanning...</source>
+        <translation>Skannataan uudelleen...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation>Päivitä lompakko uusimpaan formaattiin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="89"/>
         <source>Invalid -proxy address</source>
         <translation>Virheellinen proxy-osoite</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
         <translation>Virheellinen määrä -paytxfee=&lt;amount&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <location filename="../bitcoinstrings.cpp" line="91"/>
         <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Varoitus:-paytxfee on erittäin korkea. Tämä on palkkio siirrosta minkä suoritat rahansiirrosta.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="81"/>
+        <location filename="../bitcoinstrings.cpp" line="94"/>
         <source>Error: CreateThread(StartNode) failed</source>
         <translation>Virhe: CreateThread(StartNode) epäonnistui</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="82"/>
-        <source>Warning: Disk space is low  </source>
-        <translation>Varoitus: Kiintolevytila on loppumassa  </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="83"/>
+        <location filename="../bitcoinstrings.cpp" line="96"/>
         <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
         <translation>En pysty varaamaan porttia %d tähän koneeseen. Ehkä Bitcoin on jo käynnissä.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="86"/>
+        <location filename="../bitcoinstrings.cpp" line="99"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Varoitus: Tarkista, ovatko tietokoneesi päivämäärä ja aika oikein.  Mikäli aika on väärin, Bitcoin-ohjelma ei toimi oikein.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="89"/>
+        <location filename="../bitcoinstrings.cpp" line="102"/>
         <source>beta</source>
         <translation>beta</translation>
     </message>
