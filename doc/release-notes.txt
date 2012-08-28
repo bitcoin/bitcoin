@@ -57,8 +57,8 @@ P2P networking
   file containing peer address data.
 * Lower default send buffer from 10MB to 1MB
 * proxy: SOCKS5 by default
-* Support connecting by hostnames passed to proxy (-proxydns)
-* Add -seednode connections, and use this for -dnsseed + -proxydns
+* Support connecting by hostnames passed to proxy
+* Add -seednode connections, and use this instead of DNS seeds when proxied
 * Added -externalip and -discover
 * Add -onlynet to connect only to a given network (IPv4, IPv6, or Tor)
 * Separate listening sockets, -bind=<addr>
