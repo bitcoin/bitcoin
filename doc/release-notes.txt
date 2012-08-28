@@ -51,7 +51,7 @@ JSON-RPC API
 P2P networking
 --------------
 * IPv6 support
-* Tor/I2P hidden service support
+* Tor hidden service support
 * Attempts to fix "stuck blockchain download" problems
 * Replace BDB database "addr.dat" with internally-managed "peers.dat"
   file containing peer address data.
