@@ -207,10 +207,15 @@ void ThreadIRCSeed(void* parg)
 
 void ThreadIRCSeed2(void* parg)
 {
-    /* Don't advertise on IRC if we don't allow incoming connections */
-    if (mapArgs.count("-connect") || fNoListen)
+    // Don't connect to IRC if we won't use IPv4 connections.
+    if (IsLimited(NET_IPV4))
         return;
 
+    // ... or if we won't make outbound connections and won't accept inbound ones.
+    if (mapArgs.count("-connect") && fNoListen)
+        return;
+
+    // ... or if IRC is not enabled.
     if (!GetBoolArg("-irc", false))
         return;
 
@@ -251,7 +256,8 @@ void ThreadIRCSeed2(void* parg)
         CNetAddr addrIPv4("1.2.3.4"); // arbitrary IPv4 address to make GetLocal prefer IPv4 addresses
         CService addrLocal;
         string strMyName;
-        if (GetLocal(addrLocal, &addrIPv4))
+        // Don't use our IP as our nick if we're not listening
+        if (!fNoListen && GetLocal(addrLocal, &addrIPv4))
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
         if (strMyName == "")
             strMyName = strprintf("x%u", GetRand(1000000000));
@@ -283,7 +289,8 @@ void ThreadIRCSeed2(void* parg)
         if (GetIPFromIRC(hSocket, strMyName, addrFromIRC))
         {
             printf("GetIPFromIRC() returned %s\n", addrFromIRC.ToString().c_str());
-            if (addrFromIRC.IsRoutable())
+            // Don't use our IP as our nick if we're not listening
+            if (!fNoListen && addrFromIRC.IsRoutable())
             {
                 // IRC lets you to re-nick
                 AddLocal(addrFromIRC, LOCAL_IRC);
@@ -291,7 +298,7 @@ void ThreadIRCSeed2(void* parg)
                 Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
             }
         }
-        
+
         if (fTestNet) {
             Send(hSocket, "JOIN #bitcoinTEST3\r");
             Send(hSocket, "WHO #bitcoinTEST3\r");
