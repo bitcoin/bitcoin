@@ -1205,6 +1205,11 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 // ppcoin: create coin stake transaction
 bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTransaction& txNew)
 {
+    // The following split & combine thresholds are important to security
+    // Should not be adjusted if you don't understand the consequences
+    static unsigned int nStakeSplitAge = (60 * 60 * 24 * 90);
+    int64 nCombineThreshold = GetProofOfWorkReward(GetLastBlockIndex(pindexBest, false)->nBits) / 3;
+
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
 
@@ -1292,6 +1297,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTr
             nCredit += pcoin.first->vout[pcoin.second].nValue;
             vwtxPrev.push_back(pcoin.first);
             txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+            if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime)
+                txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake
             if (fDebug && GetBoolArg("-printcoinstake"))
                 printf("CreateCoinStake : added kernel type=%d\n", whichType);
             break;
@@ -1299,14 +1306,11 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTr
     }
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
-    // The following combine threshold is important to network security
-    // Should not be adjusted if you don't understand the consequences
-    int64 nCombineThreshold = GetProofOfWorkReward(GetLastBlockIndex(pindexBest, false)->nBits);
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         // Attempt to add more inputs
         // Only add coins of the same key/address as kernel
-        if ((pcoin.first->vout[pcoin.second].scriptPubKey == scriptPubKeyKernel || pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey)
+        if (txNew.vout.size() == 2 && ((pcoin.first->vout[pcoin.second].scriptPubKey == scriptPubKeyKernel || pcoin.first->vout[pcoin.second].scriptPubKey == txNew.vout[1].scriptPubKey))
             && pcoin.first->GetHash() != txNew.vin[0].prevout.hash)
         {
             // Stop adding more inputs if value is already pretty significant
@@ -1336,7 +1340,13 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTr
     loop
     {
         // Set output amount
-        txNew.vout[1].nValue = nCredit - nMinFee;
+        if (txNew.vout.size() == 3)
+        {
+            txNew.vout[1].nValue = ((nCredit - nMinFee) / 2 / CENT) * CENT;
+            txNew.vout[2].nValue = nCredit - nMinFee - txNew.vout[1].nValue;
+        }
+        else
+            txNew.vout[1].nValue = nCredit - nMinFee;
 
         // Sign
         int nIn = 0;
