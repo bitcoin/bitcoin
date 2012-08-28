@@ -492,6 +492,8 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation type="unfinished">
             <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -509,12 +511,16 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>%n second(s) ago</source>
         <translation type="unfinished">
             <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="520"/>
         <source>%n minute(s) ago</source>
         <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
     </message>
@@ -523,12 +529,16 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>%n hour(s) ago</source>
         <translation type="unfinished">
             <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="528"/>
         <source>%n day(s) ago</source>
         <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
     </message>
@@ -1071,13 +1081,13 @@ Address: %4
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="101"/>
-        <source>Are you sure you want to send %1?</source>
-        <translation type="unfinished"></translation>
+        <source> and </source>
+        <translation type="unfinished"> i </translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="101"/>
-        <source> and </source>
-        <translation type="unfinished"> i </translation>
+        <source>Are you sure you want to send %1?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="124"/>
@@ -1088,11 +1098,6 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="129"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>La quantitat a pagar ha de ser major que 0.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="134"/>
-        <source>The amount exceeds your balance.</source>
-        <translation>Import superi el saldo de la seva compte.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="139"/>
@@ -1113,6 +1118,11 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="134"/>
+        <source>The amount exceeds your balance.</source>
+        <translation>Import superi el saldo de la seva compte.</translation>
     </message>
 </context>
 <context>
@@ -1141,7 +1151,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Etiqueta:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
@@ -1360,6 +1370,8 @@ Address: %4
         <source>Open for %n block(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -1386,6 +1398,8 @@ Address: %4
         <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Mined balance will be available in %n more blocks</source>
         <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
     </message>

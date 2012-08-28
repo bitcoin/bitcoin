@@ -106,7 +106,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Избриши</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="278"/>
@@ -276,7 +276,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="161"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Лозинка за приступ новчанику је успешно промењена.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -376,7 +376,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;О %1-у</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="242"/>
@@ -386,12 +386,12 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="244"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>О &amp;Qt-у</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="245"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Прегледајте информације о Qt-у</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -600,7 +600,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Backup новчаника</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
@@ -696,7 +696,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Етикета</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
@@ -706,7 +706,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Адреса</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -902,7 +902,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="104"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Поставке</translation>
     </message>
 </context>
 <context>
@@ -950,7 +950,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">новчаник</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -988,7 +988,7 @@ Address: %4
     <message>
         <location filename="../forms/qrcodedialog.ui" line="121"/>
         <source>Label:</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Етикета</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="144"/>
@@ -1028,7 +1028,7 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="149"/>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Send Coins</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Слање новца</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1152,7 +1152,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Етикета</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
@@ -1647,7 +1647,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="8"/>
         <source>Bitcoin version</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin верзија</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
@@ -1672,7 +1672,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
         <source>Options:</source>
-        <translation type="unfinished"></translation>
+        <translation>Поставке</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="14"/>
