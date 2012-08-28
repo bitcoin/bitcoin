@@ -4,6 +4,7 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
+#include "alert.h"
 #include "main.h"
 #include "ui_interface.h"
 
