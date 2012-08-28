@@ -60,7 +60,7 @@ P2P networking
 * Support connecting by hostnames passed to proxy (-proxydns)
 * Add -seednode connections, and use this for -dnsseed + -proxydns
 * Added -externalip and -discover
-* Add -onlynet to prevent connections to a given network
+* Add -onlynet to connect only to a given network (IPv4, IPv6, or Tor)
 * Separate listening sockets, -bind=<addr>
 
 
