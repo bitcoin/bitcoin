@@ -2244,10 +2244,6 @@ bool LoadBlockIndex(bool fAllowNew)
     {
         hashGenesisBlock = hashGenesisBlockTestNet;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 28);
-        pchMessageStart[0] = 0x9b;
-        pchMessageStart[1] = 0xa1;
-        pchMessageStart[2] = 0xb2;
-        pchMessageStart[3] = 0xb6;
         nStakeMinAge = 60 * 60 * 24; // test net min age is 1 day
         nCoinbaseMaturity = 60;
         bnInitialHashTarget = CBigNum(~uint256(0) >> 29);
@@ -2587,12 +2583,6 @@ bool static AlreadyHave(CTxDB& txdb, const CInv& inv)
 }
 
 
-
-
-// The message start string is designed to be unlikely to occur in normal data.
-// The characters are rarely used upper ascii, not valid as UTF-8, and produce
-// a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
@@ -3224,6 +3214,17 @@ bool ProcessMessages(CNode* pfrom)
     //  (4) checksum
     //  (x) data
     //
+
+    unsigned char pchMessageStart[4];
+    GetMessageStart(pchMessageStart);
+    static int64 nTimeLastPrintMessageStart = 0;
+    if (fDebug && GetBoolArg("-printmessagestart") && nTimeLastPrintMessageStart + 30 < GetAdjustedTime())
+    {
+        string strMessageStart((const char *)pchMessageStart);
+        vector<unsigned char> vchMessageStart(strMessageStart.begin(), strMessageStart.end());
+        printf("ProcessMessages : AdjustedTime=%"PRI64d" MessageStart=%s\n", GetAdjustedTime(), HexStr(vchMessageStart).c_str());
+        nTimeLastPrintMessageStart = GetAdjustedTime();
+    }
 
     loop
     {
