@@ -21,13 +21,13 @@
 
 extern bool fTestNet;
 
+void GetMessageStart(unsigned char pchMessageStart[], bool fPersistent = false);
+
 static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 {
     return testnet ? TESTNET_PORT : PPCOIN_PORT;
 }
 
-
-extern unsigned char pchMessageStart[4];
 
 /** Message header.
  * (4) message start.
@@ -55,7 +55,7 @@ class CMessageHeader
     // TODO: make private (improves encapsulation)
     public:
         enum { COMMAND_SIZE=12 };
-        char pchMessageStart[sizeof(::pchMessageStart)];
+        unsigned char pchMessageStart[4];
         char pchCommand[COMMAND_SIZE];
         unsigned int nMessageSize;
         unsigned int nChecksum;

@@ -1037,6 +1037,8 @@ public:
             return error("CBlock::WriteToDisk() : AppendBlockFile failed");
 
         // Write index header
+        unsigned char pchMessageStart[4];
+        GetMessageStart(pchMessageStart, true);
         unsigned int nSize = fileout.GetSerializeSize(*this);
         fileout << FLATDATA(pchMessageStart) << nSize;
 
