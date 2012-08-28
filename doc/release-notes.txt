@@ -17,7 +17,7 @@ BIP 35 - 'mempool' message, extended 'getdata' message behavior
 
 Core bitcoin handling and blockchain database
 ---------------------------------------------
-* Reduced CPU usage, by eliminating some redundant hash calculations
+* Reduce CPU usage, by eliminating some redundant hash calculations
 * Cache signature verifications, to eliminate redundant signature checks
 * Transactions with zero-value outputs are considered non-standard
 * Mining: when creating new blocks, sort 'paid' area by fee-per-kb
@@ -36,10 +36,10 @@ JSON-RPC API
 * Support JSON-RPC 2.0 batches, to encapsulate multiple JSON-RPC requests
   within a single HTTP request.
 * IPv6 support
-* Added raw transaction API.  See https://gist.github.com/2839617
-* Added 'getrawmempool', to list contents of TX memory pool
-* Added 'getpeerinfo', to list data about each connected network peer
-* Added 'listaddressgroupings' for better coin control
+* Add raw transaction API.  See https://gist.github.com/2839617
+* Add 'getrawmempool', to list contents of TX memory pool
+* Add 'getpeerinfo', to list data about each connected network peer
+* Add 'listaddressgroupings' for better coin control
 * Rework gettransaction, getblock calls. 'gettransaction' responds for
   non-wallet TXs now.
 * Remove deprecated RPC 'getblocknumber'
@@ -52,15 +52,15 @@ P2P networking
 --------------
 * IPv6 support
 * Tor/I2P hidden service support
-* Attempts to fix "stuck blockchain download" problems
+* Attempt to fix "stuck blockchain download" problems
 * Replace BDB database "addr.dat" with internally-managed "peers.dat"
   file containing peer address data.
 * Lower default send buffer from 10MB to 1MB
 * proxy: SOCKS5 by default
 * Support connecting by hostnames passed to proxy (-proxydns)
 * Add -seednode connections, and use this for -dnsseed + -proxydns
-* Added -externalip and -discover
-* Add -onlynet to prevent connections to a given network
+* Add -externalip and -discover
+* Add -onlynet to connect only to a given network (IPv4, IPv6, Tor, or I2P)
 * Separate listening sockets, -bind=<addr>
 
 
@@ -81,7 +81,7 @@ Qt GUI
 * Persistently poll for balance change when number of blocks changed
 * Much better translations
 * Override progress bar design on platforms with segmented progress bars to assist with readability
-* Added 'immature balance' display on the overview page
+* Add 'immature balance' display on the overview page
 * (Windows only): enable ASLR and DEP for bitcoin-qt.exe
 * (Windows only): add meta-data to bitcoin-qt.exe (e.g. description)
 
