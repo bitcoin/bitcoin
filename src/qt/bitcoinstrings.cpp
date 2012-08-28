@@ -5,10 +5,39 @@
 #else
 #define UNUSED
 #endif
-static const char UNUSED *bitcoin_strings[] = {QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Unable to bind to port %d on this computer.  Bitcoin is probably already "
-"running."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Warning: Disk space is low  "),
+static const char UNUSED *bitcoin_strings[] = {QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet locked, unable to create transaction  "),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error: This transaction requires a transaction fee of at least %s because of "
+"its amount, complexity, or use of recently received funds  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed  "),
+QT_TRANSLATE_NOOP("bitcoin-core", "Sending..."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Error: The transaction was rejected.  This might happen if some of the coins "
+"in your wallet were already spent, such as if you used a copy of wallet.dat "
+"and coins were spent in the copy but not marked as spent here."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Warning: Disk space is low"),
+QT_TRANSLATE_NOOP("bitcoin-core", "To use the %s option"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"%s, you must set a rpcpassword in the configuration file:\n"
+" %s\n"
+"It is recommended you use the following random password:\n"
+"rpcuser=bitcoinrpc\n"
+"rpcpassword=%s\n"
+"(you do not need to remember this password)\n"
+"If the file does not exist, create it with owner-readable-only file "
+"permissions.\n"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error"),
+QT_TRANSLATE_NOOP("bitcoin-core", "An error occurred while setting up the RPC port %i for listening: %s"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"You must set rpcpassword=<password> in the configuration file:\n"
+"%s\n"
+"If the file does not exist, create it with owner-readable-only file "
+"permissions."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Warning: Please check that your computer's date and time are correct.  If "
+"your clock is wrong Bitcoin will not work properly."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Bitcoin version"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Usage:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Send command to -server or bitcoind"),
@@ -43,6 +72,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection receive buffer, <n>*10
 QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Use Universal Plug and Play to map the listening port (default: 1)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Use Universal Plug and Play to map the listening port (default: 0)"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Detach block and address databases. Increases shutdown time (default: 0)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Fee per KB to add to transactions you send"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept command line and JSON-RPC commands"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Run in the background as a daemon and accept commands"),
@@ -99,36 +130,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: -paytxfee is set very high.  This is the transaction fee you will "
 "pay if you send a transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: CreateThread(StartNode) failed"),
-QT_TRANSLATE_NOOP("bitcoin-core", "To use the %s option"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"%s, you must set a rpcpassword in the configuration file:\n"
-" %s\n"
-"It is recommended you use the following random password:\n"
-"rpcuser=bitcoinrpc\n"
-"rpcpassword=%s\n"
-"(you do not need to remember this password)\n"
-"If the file does not exist, create it with owner-readable-only file "
-"permissions.\n"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error"),
-QT_TRANSLATE_NOOP("bitcoin-core", "An error occured while setting up the RPC port %i for listening: %s"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"You must set rpcpassword=<password> in the configuration file:\n"
-"%s\n"
-"If the file does not exist, create it with owner-readable-only file "
-"permissions."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Warning: Please check that your computer's date and time are correct.  If "
-"your clock is wrong Bitcoin will not work properly."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Wallet locked, unable to create transaction  "),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: This transaction requires a transaction fee of at least %s because of "
-"its amount, complexity, or use of recently received funds  "),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Transaction creation failed  "),
-QT_TRANSLATE_NOOP("bitcoin-core", "Sending..."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: The transaction was rejected.  This might happen if some of the coins "
-"in your wallet were already spent, such as if you used a copy of wallet.dat "
-"and coins were spent in the copy but not marked as spent here."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
+"Unable to bind to port %d on this computer.  Bitcoin is probably already "
+"running."),
 };
