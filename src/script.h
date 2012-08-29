@@ -532,7 +532,7 @@ public:
         printf("CScript(%s)\n", HexStr(begin(), end(), true).c_str());
     }
 
-    std::string ToString() const
+    std::string ToString(bool fShort=false) const
     {
         std::string str;
         opcodetype opcode;
@@ -548,7 +548,7 @@ public:
                 return str;
             }
             if (0 <= opcode && opcode <= OP_PUSHDATA4)
-                str += ValueString(vch);
+                str += fShort? ValueString(vch).substr(0, 10) : ValueString(vch);
             else
                 str += GetOpName(opcode);
         }

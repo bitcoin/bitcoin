@@ -387,7 +387,7 @@ public:
 
     std::string ToStringShort() const
     {
-        return strprintf(" out amount %s", FormatMoney(nValue).c_str());
+        return strprintf(" out %s %s", FormatMoney(nValue).c_str(), scriptPubKey.ToString(true).c_str());
     }
 
     std::string ToString() const
@@ -395,7 +395,7 @@ public:
         if (IsEmpty()) return "CTxOut(empty)";
         if (scriptPubKey.size() < 6)
             return "CTxOut(error)";
-        return strprintf("CTxOut(nValue=%s, scriptPubKey=%s)", FormatMoney(nValue).c_str(), scriptPubKey.ToString().substr(0,30).c_str());
+        return strprintf("CTxOut(nValue=%s, scriptPubKey=%s)", FormatMoney(nValue).c_str(), scriptPubKey.ToString().c_str());
     }
 
     void print() const
