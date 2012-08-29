@@ -12,8 +12,8 @@
 
 class CBlockIndex;
 
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_writer_template.h"
+#include "json/json_spirit_reader.h"
+#include "json/json_spirit_writer.h"
 #include "json/json_spirit_utils.h"
 
 #include "util.h"

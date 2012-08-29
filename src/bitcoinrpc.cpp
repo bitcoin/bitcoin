@@ -10,6 +10,9 @@
 #include "base58.h"
 #include "bitcoinrpc.h"
 
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_writer_template.h"
+
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/asio/ip/v6_only.hpp>
