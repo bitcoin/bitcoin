@@ -233,8 +233,8 @@ bool AddLocal(const CService& addr, int nScore)
         bool fAlready = mapLocalHost.count(addr) > 0;
         LocalServiceInfo &info = mapLocalHost[addr];
         if (!fAlready || nScore >= info.nScore) {
-            info.nScore = nScore;
-            info.nPort = addr.GetPort() + (fAlready ? 1 : 0);
+            info.nScore = nScore + (fAlready ? 1 : 0);
+            info.nPort = addr.GetPort();
         }
         SetReachable(addr.GetNetwork());
     }
