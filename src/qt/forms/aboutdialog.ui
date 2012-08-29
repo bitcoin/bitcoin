@@ -65,9 +65,6 @@
          <property name="text">
           <string notr="true">0.3.666-beta</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::RichText</enum>
-         </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
@@ -89,13 +86,25 @@
       </layout>
      </item>
      <item>
+      <widget class="QLabel" name="copyrightLabel">
+       <property name="cursor">
+        <cursorShape>IBeamCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>Copyright © 2009-2012 The Bitcoin developers</string>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="label_2">
        <property name="cursor">
         <cursorShape>IBeamCursor</cursorShape>
        </property>
        <property name="text">
-        <string>Copyright © 2009-2012 Bitcoin Developers
-
+        <string>
 This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
