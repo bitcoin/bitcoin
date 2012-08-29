@@ -1727,7 +1727,7 @@ bool CTransaction::CheckProofOfStake(unsigned int nBits) const
         return false; // only count coins meeting min age requirement
 
     int64 nValueIn = txPrev.vout[txin.prevout.n].nValue;
-    CBigNum bnCoinDay = CBigNum(nValueIn) * (nTime-txPrev.nTime) / COIN / (24 * 60 * 60);
+    CBigNum bnCoinDay = CBigNum(nValueIn) * min(nTime-txPrev.nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
     ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << txPrev.nTime << txin.prevout.n << nTime;

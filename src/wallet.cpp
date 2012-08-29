@@ -1251,7 +1251,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTr
             continue; // only count coins meeting min age requirement
 
         int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
-        CBigNum bnCoinDay = CBigNum(nValueIn) * (txNew.nTime-pcoin.first->nTime) / COIN / (24 * 60 * 60);
+        CBigNum bnCoinDay = CBigNum(nValueIn) * min(txNew.nTime-pcoin.first->nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
         // Calculate hash
         CDataStream ss(SER_GETHASH, 0);
         ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin.first->nTime << pcoin.second << txNew.nTime;
