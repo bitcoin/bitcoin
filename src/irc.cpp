@@ -222,6 +222,7 @@ void ThreadIRCSeed2(void* parg)
     printf("ThreadIRCSeed started\n");
     int nErrorWait = 10;
     int nRetryWait = 10;
+    int nNameRetry = 0;
 
     while (!fShutdown)
     {
@@ -257,7 +258,8 @@ void ThreadIRCSeed2(void* parg)
         CService addrLocal;
         string strMyName;
         // Don't use our IP as our nick if we're not listening
-        if (!fNoListen && GetLocal(addrLocal, &addrIPv4))
+        // or if it keeps failing because the nick is already in use.
+        if (!fNoListen && GetLocal(addrLocal, &addrIPv4) && nNameRetry<3)
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
         if (strMyName == "")
             strMyName = strprintf("x%u", GetRand(1000000000));
@@ -273,6 +275,7 @@ void ThreadIRCSeed2(void* parg)
             if (nRet == 2)
             {
                 printf("IRC name already in use\n");
+                nNameRetry++;
                 Wait(10);
                 continue;
             }
@@ -282,6 +285,7 @@ void ThreadIRCSeed2(void* parg)
             else
                 return;
         }
+        nNameRetry = 0;
         Sleep(500);
 
         // Get our external IP from the IRC server and re-nick before joining the channel
