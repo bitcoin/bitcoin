@@ -152,7 +152,7 @@ void ipcInit(int argc, char *argv[])
         return;
     }
 
-    if (!CreateThread(ipcThread, mq))
+    if (!NewThread(ipcThread, mq))
     {
         delete mq;
         return;

@@ -1300,7 +1300,7 @@ void RenameThread(const char* name)
 #endif
 }
 
-bool CreateThread(void(*pfn)(void*), void* parg)
+bool NewThread(void(*pfn)(void*), void* parg)
 {
     try
     {
