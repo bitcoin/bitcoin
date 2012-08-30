@@ -1,8 +1,8 @@
 
-Bitcoin integration/staging tree
+PPCoin official development tree
 
-Development process
-===================
+Bitcoin development process
+===========================
 
 Developers work in their own trees, then submit pull requests when
 they think their feature or bug fix is ready.
