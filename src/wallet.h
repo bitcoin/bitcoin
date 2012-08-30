@@ -248,8 +248,6 @@ public:
 
     bool SetAddressBookName(const CTxDestination& address, const std::string& strName);
 
-    bool DelAddressBookName(const CTxDestination& address);
-
     void UpdatedTransaction(const uint256 &hashTx);
 
     void PrintWallet(const CBlock& block);
