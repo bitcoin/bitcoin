@@ -1,4 +1,4 @@
-PPCoin 0.1.0 BETA
+PPCoin 0.2.0 BETA
 
 Copyright (c) 2011-2012 PPCoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
@@ -30,6 +30,17 @@ enable Universal Plug and Play (UPnP) with your router/firewall
 or forward port 9901 (TCP) to your computer so you can receive
 incoming connections.  PPCoin works without incoming connections,
 but allowing incoming connections helps the PPCoin network.
+
+
+Upgrade
+-------
+All you existing coins/transactions should be intact with the upgrade.
+To upgrade from 0.1.0, first backup wallet
+ppcoind backupwallet <destination_backup_file>
+Then shutdown ppcoind by
+ppcoind stop
+Remove files inside wallet directory other than wallet.dat and ppcoin.conf
+Start up the new ppcoind (0.2.0). It would start re-downloading block chain.
 
 
 See the documentation/wiki at the ppcoin website:
