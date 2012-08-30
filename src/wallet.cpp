@@ -1400,16 +1400,6 @@ bool CWallet::SetAddressBookName(const CTxDestination& address, const string& st
     return CWalletDB(strWalletFile).WriteName(CBitcoinAddress(address).ToString(), strName);
 }
 
-bool CWallet::DelAddressBookName(const CTxDestination& address)
-{
-    mapAddressBook.erase(address);
-    NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address), CT_DELETED);
-    if (!fFileBacked)
-        return false;
-    return CWalletDB(strWalletFile).EraseName(CBitcoinAddress(address).ToString());
-}
-
-
 void CWallet::PrintWallet(const CBlock& block)
 {
     {
