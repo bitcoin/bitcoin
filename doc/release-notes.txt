@@ -43,6 +43,7 @@ JSON-RPC API
 * Rework gettransaction, getblock calls. 'gettransaction' responds for
   non-wallet TXs now.
 * Remove deprecated RPC 'getblocknumber'
+* Remove superceded RPC 'getmemorypool' (see BIP 22, above)
 * New blockchain checkpoint at block 193,000
 * listtransactions output now displays "smart" times for transactions,
   and 'blocktime' and 'timereceived' fields were added
