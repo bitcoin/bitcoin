@@ -246,7 +246,7 @@ bool static Socks5(string strDest, int port, SOCKET& hSocket)
     string strSocks5("\5\1");
     strSocks5 += '\000'; strSocks5 += '\003';
     strSocks5 += static_cast<char>(std::min((int)strDest.size(), 255));
-    strSocks5 += strDest; 
+    strSocks5 += strDest;
     strSocks5 += static_cast<char>((port >> 8) & 0xFF);
     strSocks5 += static_cast<char>((port >> 0) & 0xFF);
     ret = send(hSocket, strSocks5.c_str(), strSocks5.size(), MSG_NOSIGNAL);
@@ -478,7 +478,7 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
     // first connect to proxy server
     if (!ConnectSocketDirectly(proxy.first, hSocket, nTimeout))
         return false;
- 
+
     // do socks negotiation
     switch (proxy.second) {
     case 4:
@@ -527,6 +527,18 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 
     hSocketRet = hSocket;
     return true;
+}
+
+bool ConnectionTest(const CService &addrConnect, int nTimeout)
+{
+    SOCKET hSocket = INVALID_SOCKET;
+    // Try to establish a connection to addrConnect as connection-test
+    if (ConnectSocketDirectly(addrConnect, hSocket, nTimeout))
+    {
+        closesocket(hSocket);
+        return true;
+    }
+    return false;
 }
 
 void CNetAddr::Init()
@@ -617,8 +629,8 @@ bool CNetAddr::IsIPv6() const
 bool CNetAddr::IsRFC1918() const
 {
     return IsIPv4() && (
-        GetByte(3) == 10 || 
-        (GetByte(3) == 192 && GetByte(2) == 168) || 
+        GetByte(3) == 10 ||
+        (GetByte(3) == 192 && GetByte(2) == 168) ||
         (GetByte(3) == 172 && (GetByte(2) >= 16 && GetByte(2) <= 31)));
 }
 

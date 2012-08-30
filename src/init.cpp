@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "db.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
@@ -9,6 +10,8 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "netbase.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -513,6 +516,14 @@ bool AppInit2()
         addrProxy = CService(mapArgs["-proxy"], 9050);
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"].c_str()));
+
+        uiInterface.InitMessage(_("Proxy Connection-test..."));
+        // check proxy server connection (1sec timeout)
+        if (!ConnectionTest(addrProxy, 1000))
+        {
+            // allow the client to start, to fix a possibly non working proxy, if it was entered in the Qt network settings
+            InitWarning(strprintf(_("Warning: Connection-test to -proxy address '%s' failed, check network settings!"), mapArgs["-proxy"].c_str()));
+        }
 
         if (!IsLimited(NET_IPV4))
             SetProxy(NET_IPV4, addrProxy, nSocksVersion);
