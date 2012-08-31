@@ -153,7 +153,8 @@ void RPCExecutor::request(const QString &command)
     }
     if(args.empty())
         return; // Nothing to do
-    try {
+    try
+    {
         std::string strPrint;
         // Convert argument list to JSON objects in method-dependent way,
         // and pass it along with the method name to the dispatcher.
@@ -173,7 +174,17 @@ void RPCExecutor::request(const QString &command)
     }
     catch (json_spirit::Object& objError)
     {
-        emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(write_string(json_spirit::Value(objError), false)));
+        try // Nice formatting for standard-format error
+        {
+            int code = find_value(objError, "code").get_int();
+            std::string message = find_value(objError, "message").get_str();
+            emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+        }
+        catch(std::runtime_error &) // raised when converting to invalid type, i.e. missing code or message
+        {
+            // Show raw JSON object
+            emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(write_string(json_spirit::Value(objError), false)));
+        }
     }
     catch (std::exception& e)
     {
