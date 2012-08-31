@@ -1833,9 +1833,15 @@ bool CBlock::AcceptBlock()
         if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
             (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 51, 100)))
         {
-            CScript expect = CScript() << nHeight;
-            if (!std::equal(expect.begin(), expect.end(), vtx[0].vin[0].scriptSig.begin()))
-                return DoS(100, error("AcceptBlock() : block height mismatch in coinbase"));
+            CScript& scriptCBSig = vtx[0].vin[0].scriptSig;
+            CScript::iterator pc = scriptCBSig.begin();
+            enum opcodetype opcode;
+            std::vector<unsigned char> vch;
+            if (!(scriptCBSig.GetOp(pc, opcode, vch) && vch.size()))
+                return DoS(100, error("AcceptBlock() : block height missing in coinbase"));
+            int nSerHeight = CastToBigNum(vch).getint();
+            if (nHeight != nSerHeight)
+                return DoS(100, error("AcceptBlock() : block height mismatch in coinbase (correct=%d; serialized=%d)", nHeight, nSerHeight));
         }
     }
 
