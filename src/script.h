@@ -222,6 +222,7 @@ inline std::string StackString(const std::vector<std::vector<unsigned char> >& v
     return str;
 }
 
+extern CBigNum CastToBigNum(const std::vector<unsigned char>& vch);
 
 
 
