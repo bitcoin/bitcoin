@@ -781,10 +781,9 @@ void ThreadSocketHandler2(void* parg)
             return;
         if (nSelect == SOCKET_ERROR)
         {
-            int nErr = WSAGetLastError();
-            if (hSocketMax != INVALID_SOCKET)
+            if ((hSocketMax != INVALID_SOCKET) && (hSocketMax != (SOCKET)0))
             {
-                printf("socket select error %d\n", nErr);
+                printf("socket select error %d\n", WSAGetLastError());
                 for (unsigned int i = 0; i <= hSocketMax; i++)
                     FD_SET(i, &fdsetRecv);
             }
