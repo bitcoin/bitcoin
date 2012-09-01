@@ -987,7 +987,8 @@ Value listtransactions(const Array& params, bool fHelp)
 
     Array ret;
 
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(strAccount);
+    std::list<CAccountingEntry> acentries;
+    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, strAccount);
 
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
