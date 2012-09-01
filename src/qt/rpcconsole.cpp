@@ -55,14 +55,14 @@ void RPCExecutor::start()
 
 /**
  * Split shell command line into a list of arguments. Aims to emulate \c bash and friends.
- * 
+ *
  * - Arguments are delimited with whitespace
  * - Extra whitespace at the beginning and end and between arguments will be ignored
- * - Arguments can be "double" or 'single' quoted. Those are treated the same.
- * - The backslash '\' is used as escape character
+ * - Text can be "double" or 'single' quoted
+ * - The backslash \c \ is used as escape character
  *   - Outside quotes, any character can be escaped
- *   - Within double quotes, only escape double quotes with \" and backslashes with \\
- *   - Within single quotes, only escape single quotes with \' and backslashes with \\
+ *   - Within double quotes, only escape \c " and backslashes before a \c " or another backslash
+ *   - Within single quotes, no escaping is possible and no special interpretation takes place
  *
  * @param[out]   args        Parsed arguments will be appended to this list
  * @param[in]    strCommand  Command line to split
@@ -76,7 +76,6 @@ bool parseCommandLine(std::vector<std::string> &args, const std::string &strComm
         STATE_SINGLEQUOTED,
         STATE_DOUBLEQUOTED,
         STATE_ESCAPE_OUTER,
-        STATE_ESCAPE_SINGLEQUOTED,
         STATE_ESCAPE_DOUBLEQUOTED
     } state = STATE_EATING_SPACES;
     std::string curarg;
@@ -84,8 +83,8 @@ bool parseCommandLine(std::vector<std::string> &args, const std::string &strComm
     {
         switch(state)
         {
-        case STATE_ARGUMENT: // After argument
-        case STATE_EATING_SPACES: // Handle runs of spaces
+        case STATE_ARGUMENT: // In or after argument
+        case STATE_EATING_SPACES: // Handle runs of whitespace
             switch(ch)
             {
             case '"': state = STATE_DOUBLEQUOTED; break;
@@ -106,7 +105,6 @@ bool parseCommandLine(std::vector<std::string> &args, const std::string &strComm
             switch(ch)
             {
             case '\'': state = STATE_ARGUMENT; break;
-            case '\\': state = STATE_ESCAPE_SINGLEQUOTED; break;
             default: curarg += ch;
             }
             break;
@@ -121,12 +119,8 @@ bool parseCommandLine(std::vector<std::string> &args, const std::string &strComm
         case STATE_ESCAPE_OUTER: // '\' outside quotes
             curarg += ch; state = STATE_ARGUMENT;
             break;
-        case STATE_ESCAPE_SINGLEQUOTED: // '\' in single-quoted text
-            if(ch != '\'') curarg += '\\'; // keep '\' for everything but the quote
-            curarg += ch; state = STATE_SINGLEQUOTED;
-            break;
         case STATE_ESCAPE_DOUBLEQUOTED: // '\' in double-quoted text
-            if(ch != '"') curarg += '\\'; // keep '\' for everything but the quote
+            if(ch != '"' && ch != '\\') curarg += '\\'; // keep '\' for everything but the quote and '\' itself
             curarg += ch; state = STATE_DOUBLEQUOTED;
             break;
         }
@@ -181,8 +175,7 @@ void RPCExecutor::request(const QString &command)
             emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(message) + " (code " + QString::number(code) + ")");
         }
         catch(std::runtime_error &) // raised when converting to invalid type, i.e. missing code or message
-        {
-            // Show raw JSON object
+        {   // Show raw JSON object
             emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(write_string(json_spirit::Value(objError), false)));
         }
     }
