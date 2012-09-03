@@ -26,6 +26,13 @@ using namespace boost;
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
 
+// Used to pass flags to the Bind() function
+enum BindFlags {
+    BF_NONE = 0,
+    BF_EXPLICIT = 1,
+    BF_REPORT_ERROR = 2
+};
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -213,12 +220,12 @@ bool static InitWarning(const std::string &str)
 }
 
 
-bool static Bind(const CService &addr, bool fError = true) {
-    if (IsLimited(addr))
+bool static Bind(const CService &addr, int flags) {
+    if (!(flags & BF_EXPLICIT) && IsLimited(addr))
         return false;
     std::string strError;
     if (!BindListenPort(addr, strError)) {
-        if (fError)
+        if (flags & BF_REPORT_ERROR)
             return InitError(strError);
         return false;
     }
@@ -251,7 +258,7 @@ std::string HelpMessage()
         "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n" +
         "  -irc                   " + _("Find peers using internet relay chat (default: 0)") + "\n" +
         "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n" +
-        "  -bind=<addr>           " + _("Bind to given address. Use [host]:port notation for IPv6") + "\n" +
+        "  -bind=<addr>           " + _("Bind to given address and always listen on it. Use [host]:port notation for IPv6") + "\n" +
         "  -dnsseed               " + _("Find peers using DNS lookup (default: 1 unless -connect)") + "\n" +
         "  -banscore=<n>          " + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n" +
         "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
@@ -308,7 +315,6 @@ std::string HelpMessage()
 
     return strUsage;
 }
-
 
 struct CImportingNow
 {
@@ -677,32 +683,28 @@ bool AppInit2()
 #endif
 
     bool fBound = false;
-    if (!fNoListen)
-    {
-        std::string strError;
+    if (!fNoListen) {
         if (mapArgs.count("-bind")) {
             BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(strprintf(_("Cannot resolve -bind address: '%s'"), strBind.c_str()));
-                fBound |= Bind(addrBind);
+                fBound |= Bind(addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
             }
-        } else {
+        }
+        else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
 #ifdef USE_IPV6
-            if (!IsLimited(NET_IPV6))
-                fBound |= Bind(CService(in6addr_any, GetListenPort()), false);
+            fBound |= Bind(CService(in6addr_any, GetListenPort()), BF_NONE);
 #endif
-            if (!IsLimited(NET_IPV4))
-                fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound);
+            fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE);
         }
         if (!fBound)
             return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
     }
 
-    if (mapArgs.count("-externalip"))
-    {
+    if (mapArgs.count("-externalip")) {
         BOOST_FOREACH(string strAddr, mapMultiArgs["-externalip"]) {
             CService addrLocal(strAddr, GetListenPort(), fNameLookup);
             if (!addrLocal.IsValid())
