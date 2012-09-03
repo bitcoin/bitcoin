@@ -92,12 +92,15 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 
 contains(USE_LEVELDB, -) {
     message(Building without LevelDB)
+    SOURCES += src/txdb-bdb.cpp
+    HEADERS += src/txdb-bdb.h
 } else {
     message(Building with LevelDB)
     DEFINES += USE_LEVELDB
     INCLUDEPATH += src/leveldb/include src/leveldb/helpers
     LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
-    SOURCES += src/leveldb.cpp
+    SOURCES += src/leveldb.cpp src/txdb-leveldb.cpp
+    HEADERS += src/leveldb.h src/txdb-leveldb.h
     !windows {
         genleveldb.commands = cd $$PWD/src/leveldb ; $(MAKE) libleveldb.a libmemenv.a
     } else {
@@ -153,6 +156,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/net.h \
     src/key.h \
     src/db.h \
+    src/txdb.h \
     src/walletdb.h \
     src/script.h \
     src/init.h \

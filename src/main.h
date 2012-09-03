@@ -119,6 +119,7 @@ std::string GetWarnings(std::string strFor);
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 bool SetBestChain(CBlockIndex* pindexNew);
 bool ConnectBestBlock();
+CBlockIndex * InsertBlockIndex(uint256 hash);
 
 
 
