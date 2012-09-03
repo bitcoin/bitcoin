@@ -94,9 +94,10 @@ ifdef USE_LEVELDB
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
+OBJS += obj/leveldb.o
 leveldb/libleveldb.a:
     cd leveldb; make libleveldb.a libmemenv.a; cd ..
-obj/db.o: leveldb/libleveldb.lib
+obj/leveldb.o: leveldb/libleveldb.lib
 endif
 
 obj/%.o: %.cpp $(HEADERS)
