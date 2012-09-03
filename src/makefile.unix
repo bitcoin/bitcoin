@@ -143,10 +143,12 @@ ifdef USE_LEVELDB
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
-OBJS += obj/leveldb.o
+OBJS += obj/leveldb.o obj/txdb-leveldb.o
 leveldb/libleveldb.a:
 	@echo "Building LevelDB ..."; cd leveldb; make libleveldb.a libmemenv.a; cd ..;
 obj/leveldb.o: leveldb/libleveldb.a
+else
+OBJS += obj/txdb-bdb.o
 endif
 
 # auto-generated dependencies:
