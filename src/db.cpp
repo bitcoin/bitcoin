@@ -273,7 +273,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
 
 static bool IsChainFile(std::string strFile)
 {
-    if (strFile == "coins.dat" || strFile == "chain.dat")
+    if (strFile == "coins.dat" || strFile == "blktree.dat")
         return true;
 
     return false;
@@ -483,7 +483,7 @@ void CDBEnv::Flush(bool fShutdown)
 
 
 //
-// CChainDB and CCoinsDB
+// CBlockTreeDB and CCoinsDB
 //
 
 bool CCoinsDB::HaveCoins(uint256 hash) {
@@ -504,7 +504,7 @@ bool CCoinsDB::WriteCoins(uint256 hash, const CCoins &coins) {
         return Write(make_pair('c', hash), coins);
 }
 
-bool CChainDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
+bool CBlockTreeDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
 {
     return Write(make_pair('b', blockindex.GetBlockHash()), blockindex);
 }
@@ -519,29 +519,29 @@ bool CCoinsDB::WriteHashBestChain(uint256 hashBestChain)
     return Write('B', hashBestChain);
 }
 
-bool CChainDB::ReadBestInvalidWork(CBigNum& bnBestInvalidWork)
+bool CBlockTreeDB::ReadBestInvalidWork(CBigNum& bnBestInvalidWork)
 {
     return Read('I', bnBestInvalidWork);
 }
 
-bool CChainDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
+bool CBlockTreeDB::WriteBestInvalidWork(CBigNum bnBestInvalidWork)
 {
     return Write('I', bnBestInvalidWork);
 }
 
-bool CChainDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
+bool CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
     return Write(make_pair('f', nFile), info);
 }
 
-bool CChainDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
+bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
     return Read(make_pair('f', nFile), info);
 }
 
-bool CChainDB::WriteLastBlockFile(int nFile) {
+bool CBlockTreeDB::WriteLastBlockFile(int nFile) {
     return Write('l', nFile);
 }
 
-bool CChainDB::ReadLastBlockFile(int &nFile) {
+bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
     return Read('l', nFile);
 }
 
@@ -601,9 +601,9 @@ CBlockIndex static * InsertBlockIndex(uint256 hash)
     return pindexNew;
 }
 
-bool LoadBlockIndex(CChainDB &chaindb)
+bool LoadBlockIndexDB()
 {
-    if (!chaindb.LoadBlockIndexGuts())
+    if (!pblocktree->LoadBlockIndexGuts())
         return false;
 
     if (fRequestShutdown)
@@ -628,9 +628,9 @@ bool LoadBlockIndex(CChainDB &chaindb)
     }
 
     // Load block file info
-    chaindb.ReadLastBlockFile(nLastBlockFile);
+    pblocktree->ReadLastBlockFile(nLastBlockFile);
     printf("LoadBlockIndex(): last block file = %i\n", nLastBlockFile);
-    if (chaindb.ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile))
+    if (pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile))
         printf("LoadBlockIndex(): last block file: %s\n", infoLastBlockFile.ToString().c_str());
  
     // Load hashBestChain pointer to end of best chain
@@ -656,7 +656,7 @@ bool LoadBlockIndex(CChainDB &chaindb)
         DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
     // Load bnBestInvalidWork, OK if it doesn't exist
-    chaindb.ReadBestInvalidWork(bnBestInvalidWork);
+    pblocktree->ReadBestInvalidWork(bnBestInvalidWork);
 
     // Verify blocks in the best chain
     int nCheckLevel = GetArg("-checklevel", 1);
@@ -693,7 +693,7 @@ bool LoadBlockIndex(CChainDB &chaindb)
 
 
 
-bool CChainDB::LoadBlockIndexGuts()
+bool CBlockTreeDB::LoadBlockIndexGuts()
 {
     // Get database cursor
     Dbc* pcursor = GetCursor();
