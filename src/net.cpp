@@ -1020,9 +1020,7 @@ void ThreadMapPort2(void* parg)
 {
     printf("ThreadMapPort started\n");
 
-    char port[6];
-    sprintf(port, "%d", GetListenPort());
-
+    std::string port = strprintf("%d", GetListenPort());
     const char * multicastif = 0;
     const char * minissdpdpath = 0;
     struct UPNPDev * devlist = 0;
@@ -1065,23 +1063,23 @@ void ThreadMapPort2(void* parg)
 #ifndef UPNPDISCOVER_SUCCESS
         /* miniupnpc 1.5 */
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                            port, port, lanaddr, strDesc.c_str(), "TCP", 0);
+                            port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
 #else
         /* miniupnpc 1.6 */
         r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                            port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
+                            port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
 #endif
 
         if(r!=UPNPCOMMAND_SUCCESS)
             printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                port, port, lanaddr, r, strupnperror(r));
+                port.c_str(), port.c_str(), lanaddr, r, strupnperror(r));
         else
             printf("UPnP Port Mapping successful.\n");
         int i = 1;
         loop {
             if (fShutdown || !fUseUPnP)
             {
-                r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port, "TCP", 0);
+                r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
                 printf("UPNP_DeletePortMapping() returned : %d\n", r);
                 freeUPNPDevlist(devlist); devlist = 0;
                 FreeUPNPUrls(&urls);
@@ -1092,16 +1090,16 @@ void ThreadMapPort2(void* parg)
 #ifndef UPNPDISCOVER_SUCCESS
                 /* miniupnpc 1.5 */
                 r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                    port, port, lanaddr, strDesc.c_str(), "TCP", 0);
+                                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
 #else
                 /* miniupnpc 1.6 */
                 r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                    port, port, lanaddr, strDesc.c_str(), "TCP", 0, "0");
+                                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
 #endif
 
                 if(r!=UPNPCOMMAND_SUCCESS)
                     printf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                        port, port, lanaddr, r, strupnperror(r));
+                        port.c_str(), port.c_str(), lanaddr, r, strupnperror(r));
                 else
                     printf("UPnP Port Mapping successful.\n");;
             }
