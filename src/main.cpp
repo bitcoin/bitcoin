@@ -3277,7 +3277,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                         hashSalt = GetRandHash();
                     uint256 hashRand = inv.hash ^ hashSalt;
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((hashRand & 3) != 0);
+                    bool fTrickleWait = ((hashRand.Get64() & 3) != 0);
 
                     // always trickle our own transactions
                     if (!fTrickleWait)
