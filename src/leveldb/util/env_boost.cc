@@ -401,7 +401,7 @@ class PosixEnv : public Env {
 
       boost::interprocess::file_lock fl(fname.c_str());
       BoostFileLock * my_lock = new BoostFileLock();
-      my_lock->fl_ = std::move(fl);
+      fl.swap(my_lock->fl_);
       if (!my_lock->fl_.try_lock()) {
           return Status::IOError("database already in use: could not acquire exclusive lock");
       }

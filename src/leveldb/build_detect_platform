@@ -112,7 +112,7 @@ case "$TARGET_OS" in
     OS_WINDOWS_CROSSCOMPILE)
         PLATFORM=OS_WINDOWS
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS -DBOOST_THREAD_USE_LIB"
-        PLATFORM_CXXFLAGS="-std=c++0x"
+        PLATFORM_CXXFLAGS=""
         PLATFORM_LDFLAGS=""
         PLATFORM_SHARED_CFLAGS=""
         PLATFORM_SOURCES="port/port_win.cc util/env_boost.cc util/win_logger.cc"

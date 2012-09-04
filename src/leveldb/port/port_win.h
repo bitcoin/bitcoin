@@ -104,7 +104,7 @@ class AtomicPointer {
  private:
   void * rep_;
  public:
-  AtomicPointer() : rep_(nullptr) { }
+  AtomicPointer() : rep_(NULL) { }
   explicit AtomicPointer(void* v); 
   void* Acquire_Load() const;
 
