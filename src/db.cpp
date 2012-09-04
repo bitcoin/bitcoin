@@ -644,8 +644,13 @@ bool CTxDB::LoadBlockIndex()
                                     {
                                         bool fFound = false;
                                         BOOST_FOREACH(const CTxIn &txin, txSpend.vin)
+                                        {
                                             if (txin.prevout.hash == hashTx && txin.prevout.n == nOutput)
+                                            {
                                                 fFound = true;
+                                                break;
+                                            }
+                                        }
                                         if (!fFound)
                                         {
                                             printf("LoadBlockIndex(): *** spending transaction of %s:%i does not spend it\n", hashTx.ToString().c_str(), nOutput);

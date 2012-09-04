@@ -570,8 +570,13 @@ public:
         if (nMinFee < nBaseFee)
         {
             BOOST_FOREACH(const CTxOut& txout, vout)
+            {
                 if (txout.nValue < CENT)
+                {
                     nMinFee = nBaseFee;
+                    break;
+                }
+            }
         }
 
         // Raise the price as the block approaches full
