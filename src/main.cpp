@@ -2679,7 +2679,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 // In case we are on a very long side-chain, it is possible that we already have
                 // the last block in an inv bundle sent in response to getblocks. Try to detect
                 // this situation and push another getblocks to continue.
-                std::vector<CInv> vGetData(1,inv);
                 pfrom->PushGetBlocks(mapBlockIndex[inv.hash], uint256(0));
                 if (fDebug)
                     printf("force request: %s\n", inv.ToString().c_str());
