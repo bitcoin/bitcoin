@@ -5,6 +5,7 @@
 
 #include "checkpoints.h"
 #include "db.h"
+#include "txdb.h"
 #include "net.h"
 #include "init.h"
 #include "ui_interface.h"
@@ -54,10 +55,11 @@ const string strMessageMagic = "Bitcoin Signed Message:\n";
 double dHashesPerSec;
 int64 nHPSTimerStart;
 
+// Used during database migration.
+bool fDisableSignatureChecking = false;
+
 // Settings
 int64 nTransactionFee = 0;
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1098,7 +1100,9 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
             fFound = txdb.ReadTxIndex(prevout.hash, txindex);
         }
         if (!fFound && (fBlock || fMiner))
-            return fMiner ? false : error("FetchInputs() : %s prev tx %s index entry not found", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+            return fMiner ? false : error("FetchInputs() : %s prev tx %s index entry not found", 
+                GetHash().ToString().substr(0,10).c_str(),  
+                prevout.hash.ToString().substr(0,10).c_str());
 
         // Read txPrev
         CTransaction& txPrev = inputsRet[prevout.hash].second;
@@ -1236,7 +1240,7 @@ bool CTransaction::ConnectInputs(MapPrevTx inputs,
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
             // still computed and checked, and any change will be caught at the next checkpoint.
-            if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
+            if (!fDisableSignatureChecking && !(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate())))
             {
                 // Verify signature
                 if (!VerifySignature(txPrev, *this, i, fStrictPayToScriptHash, 0))
@@ -1726,8 +1730,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
         if (!SetBestChain(txdb, pindexNew))
             return false;
 
-    txdb.Close();
-
     if (pindexNew == pindexBest)
     {
         // Notify UI to display prev block's coinbase if it was ours
@@ -1887,6 +1889,7 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
 
 bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 {
+    int64 now = GetTimeMillis();
     // Check for duplicate
     uint256 hash = pblock->GetHash();
     if (mapBlockIndex.count(hash))
@@ -1962,7 +1965,11 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    printf("ProcessBlock: ACCEPTED\n");
+    int nTxCount = pblock->vtx.size();
+    int nElapsed = GetTimeMillis() - now;
+    double dTxPerSec = (double) nTxCount / ((double)nElapsed / 1000.0);
+    printf("ProcessBlock: ACCEPTED %d transactions in %ld msec (%.2f tx/sec)\n",
+           nTxCount, nElapsed, dTxPerSec);
     return true;
 }
 
@@ -1993,15 +2000,21 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
 
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode)
 {
-    if ((nFile < 1) || (nFile == (unsigned int) -1))
+    if ((nFile < 1) || (nFile == (unsigned int) -1)) {
+        printf("nFile is invalid: %d\n", nFile);
         return NULL;
-    FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
-    if (!file)
+    }
+    string filename = strprintf("blk%04d.dat", nFile);
+    FILE* file = fopen((GetDataDir() / filename).string().c_str(), pszMode);
+    if (!file) {
+        printf("Failed to open %s errno=%d\n", filename.c_str(), errno);
         return NULL;
+    }
     if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))
     {
         if (fseek(file, nBlockPos, SEEK_SET) != 0)
         {
+            printf("Failed to seek to %ud, errno=%d\n", nBlockPos, errno);
             fclose(file);
             return NULL;
         }
@@ -2032,7 +2045,7 @@ FILE* AppendBlockFile(unsigned int& nFileRet)
     }
 }
 
-bool LoadBlockIndex(bool fAllowNew)
+bool LoadBlockIndex()
 {
     if (fTestNet)
     {
@@ -2049,16 +2062,12 @@ bool LoadBlockIndex(bool fAllowNew)
     CTxDB txdb("cr");
     if (!txdb.LoadBlockIndex())
         return false;
-    txdb.Close();
 
     //
     // Init with genesis block
     //
     if (mapBlockIndex.empty())
     {
-        if (!fAllowNew)
-            return false;
-
         // Genesis Block:
         // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
         //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
@@ -2097,7 +2106,7 @@ bool LoadBlockIndex(bool fAllowNew)
         block.print();
         assert(block.GetHash() == hashGenesisBlock);
 
-        // Start new block file
+        // Start new block file.
         unsigned int nFile;
         unsigned int nBlockPos;
         if (!block.WriteToDisk(nFile, nBlockPos))
@@ -2183,7 +2192,7 @@ void PrintBlockTree()
     }
 }
 
-bool LoadExternalBlockFile(FILE* fileIn)
+bool LoadExternalBlockFile(FILE* fileIn, ExternalBlockFileProgress *progress)
 {
     int64 nStart = GetTimeMillis();
 
@@ -2232,6 +2241,8 @@ bool LoadExternalBlockFile(FILE* fileIn)
                         nPos += 4 + nSize;
                     }
                 }
+                if (progress)
+                    (*progress)(4 + nSize);
             }
         }
         catch (std::exception &e) {

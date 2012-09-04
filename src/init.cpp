@@ -2,7 +2,8 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "db.h"
+
+#include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
 #include "net.h"
@@ -72,6 +73,7 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         nTransactionsUpdated++;
+        CTxDB().Close();
         bitdb.Flush(false);
         StopNode();
         bitdb.Flush(true);
@@ -295,6 +297,30 @@ std::string HelpMessage()
         "  -rpcsslciphers=<ciphers>                 " + _("Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)") + "\n";
 
     return strUsage;
+}
+
+bool LoadBlockIndexFromDisk(std::ostringstream *errors) {
+    uiInterface.InitMessage(_("Loading block index..."));
+    printf("Loading block index...\n");
+    int64 nStart = GetTimeMillis();
+    if (!LoadBlockIndex())
+        *errors << _("Error loading block index database") << "\n";
+
+    // as LoadBlockIndex can take several minutes, it's possible the user
+    // requested to kill bitcoin-qt during the last operation. If so, exit.
+    // As the program has not fully started yet, Shutdown() is possibly overkill.
+    if (fRequestShutdown)
+    {
+        printf("Shutdown requested. Exiting.\n");
+        return false;
+    }
+    printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+    return true;
+}
+
+void UpdateUIWithLevelDBProgress(double percent) {
+    uiInterface.InitMessage(
+        strprintf(_("Migrating database\n%0.2f%% complete"), percent));
 }
 
 /** Initialize bitcoin.
@@ -595,21 +621,38 @@ bool AppInit2()
         return false;
     }
 
-    uiInterface.InitMessage(_("Loading block index..."));
-    printf("Loading block index...\n");
-    nStart = GetTimeMillis();
-    if (!LoadBlockIndex())
-        strErrors << _("Error loading blkindex.dat") << "\n";
-
-    // as LoadBlockIndex can take several minutes, it's possible the user
-    // requested to kill bitcoin-qt during the last operation. If so, exit.
-    // As the program has not fully started yet, Shutdown() is possibly overkill.
-    if (fRequestShutdown)
-    {
-        printf("Shutdown requested. Exiting.\n");
+#ifdef USE_LEVELDB
+    // We may need to migrate from the old Berkley DB to LevelDB.
+    // If there is already a blkindex.dat (and thus some block data files) this
+    // will temporarily disable signature checking and writing of blocks to disk
+    // and then begin re-scanning the blk data files into the database.
+    LevelDBMigrationProgress progress;
+    progress.connect(UpdateUIWithLevelDBProgress);
+    LevelDBMigrationResult result = MaybeMigrateToLevelDB(progress);
+    if (result == NONE_NEEDED) {
+        // Load as normal.
+        if (!LoadBlockIndexFromDisk(&strErrors)) {
+            return false;
+        }
+    } else if (result == INSUFFICIENT_DISK_SPACE) {
+        InitError(_("Insufficient disk space for a required database migration, "
+                    "you need at least 3 gigabytes free. Please free up some "
+                    "space and try again."));
+        return false;
+    } else if (result == OTHER_ERROR) {
+        InitError(_("Something went wrong during a database migration. Your "
+                    "wallet is unaffected. Please find the Bitcoin debug.log "
+                    "file and provide it to the developers at bitcoin.org"));
+        return false;
+    } else if (result == COMPLETED) {
+        // The work in LoadBlockIndex has already been done by the act of
+        // migrating the database, so nothing is needed here.
+    }
+#else
+    if (!LoadBlockIndexFromDisk(&strErrors)) {
         return false;
     }
-    printf(" block index %15"PRI64d"ms\n", GetTimeMillis() - nStart);
+#endif
 
     if (GetBoolArg("-printblockindex") || GetBoolArg("-printblocktree"))
     {
@@ -725,8 +768,9 @@ bool AppInit2()
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
         {
             FILE *file = fopen(strFile.c_str(), "rb");
-            if (file)
-                LoadExternalBlockFile(file);
+            if (file) {
+                LoadExternalBlockFile(file, NULL);
+            }
         }
     }
 
@@ -785,4 +829,3 @@ bool AppInit2()
 
     return true;
 }
-

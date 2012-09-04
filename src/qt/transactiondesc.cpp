@@ -5,7 +5,7 @@
 
 #include "main.h"
 #include "wallet.h"
-#include "db.h"
+#include "txdb.h"
 #include "ui_interface.h"
 #include "base58.h"
 

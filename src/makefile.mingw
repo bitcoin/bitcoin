@@ -4,6 +4,7 @@
 
 USE_UPNP:=0
 USE_IPV6:=1
+USE_LEVELDB:=1
 
 INCLUDEPATHS= \
  -I"C:\boost-1.50.0-mgw" \
@@ -58,7 +59,6 @@ OBJS= \
     obj/addrman.o \
     obj/crypter.o \
     obj/key.o \
-    obj/db.o \
     obj/init.o \
     obj/irc.o \
     obj/keystore.o \
@@ -81,6 +81,21 @@ OBJS= \
 
 
 all: bitcoind.exe
+
+#
+# LevelDB support
+#
+ifdef USE_LEVELDB
+LIBS += $(CURDIR)/leveldb-1.5.0/libleveldb.a $(CURDIR)/leveldb-1.5.0/libmemenv.a
+DEFS += $(addprefix -I,$(CURDIR)/leveldb-1.5.0/include) -DUSE_LEVELDB
+DEFS += $(addprefix -I,$(CURDIR)/leveldb-1.5.0/helpers)
+OBJS += obj/txdb-leveldb.o
+leveldb-1.5.0/libleveldb.a:
+	cd leveldb-1.5.0; make; cd ..
+obj/txdb-leveldb.o: leveldb-1.5.0/libleveldb.lib
+else
+OBJS += obj/txdb-bdb.o
+endif
 
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<

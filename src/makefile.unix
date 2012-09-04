@@ -4,6 +4,7 @@
 
 USE_UPNP:=0
 USE_IPV6:=1
+USE_LEVELDB:=1
 
 LINK:=$(CXX)
 
@@ -91,15 +92,6 @@ LIBS+= \
 
 DEBUGFLAGS=-g
 
-# CXXFLAGS can be specified on the make command line, so we use xCXXFLAGS that only
-# adds some defaults in front. Unfortunately, CXXFLAGS=... $(CXXFLAGS) does not work.
-xCXXFLAGS=-O2 -pthread -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
-    $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
-
-# LDFLAGS can be specified on the make command line, so we use xLDFLAGS that only
-# adds some defaults in front. Unfortunately, LDFLAGS=... $(LDFLAGS) does not work.
-xLDFLAGS=$(LDHARDENING) $(LDFLAGS)
-
 OBJS= \
     obj/version.o \
     obj/checkpoints.o \
@@ -128,8 +120,32 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o
 
-
 all: bitcoind
+
+#
+# LevelDB support
+#
+ifeq (${USE_LEVELDB}, 1)
+LIBS += $(CURDIR)/leveldb-1.5.0/libleveldb.a $(CURDIR)/leveldb-1.5.0/libmemenv.a
+DEFS += $(addprefix -I,$(CURDIR)/leveldb-1.5.0/include) -DUSE_LEVELDB
+DEFS += $(addprefix -I,$(CURDIR)/leveldb-1.5.0/helpers)
+OBJS += obj/txdb-leveldb.o
+leveldb-1.5.0/libleveldb.a:
+	@echo "Building LevelDB ..."; cd leveldb-1.5.0; make libleveldb.a libmemenv.a; cd ..;
+obj/txdb-leveldb.o: leveldb-1.5.0/libleveldb.a
+endif
+ifneq (${USE_LEVELDB}, 1)
+OBJS += obj/txdb-bdb.o
+endif
+
+# CXXFLAGS can be specified on the make command line, so we use xCXXFLAGS that only
+# adds some defaults in front. Unfortunately, CXXFLAGS=... $(CXXFLAGS) does not work.
+xCXXFLAGS=-O2 -pthread -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
+    $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
+
+# LDFLAGS can be specified on the make command line, so we use xLDFLAGS that only
+# adds some defaults in front. Unfortunately, LDFLAGS=... $(LDFLAGS) does not work.
+xLDFLAGS=$(LDHARDENING) $(LDFLAGS)
 
 # auto-generated dependencies:
 -include obj/*.P
@@ -169,5 +185,6 @@ clean:
 	-rm -f obj/*.P
 	-rm -f obj-test/*.P
 	-rm -f src/build.h
+	-cd leveldb-1.5.0; make clean; cd ..;
 
 FORCE:

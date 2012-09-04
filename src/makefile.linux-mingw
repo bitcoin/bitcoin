@@ -6,6 +6,7 @@ DEPSDIR:=/usr/i586-mingw32msvc
 
 USE_UPNP:=0
 USE_IPV6:=1
+USE_LEVELDB:=1
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
@@ -62,7 +63,6 @@ OBJS= \
     obj/addrman.o \
     obj/crypter.o \
     obj/key.o \
-    obj/db.o \
     obj/init.o \
     obj/irc.o \
     obj/keystore.o \
@@ -84,6 +84,21 @@ OBJS= \
     obj/noui.o
 
 all: bitcoind.exe
+
+#
+# LevelDB support
+#
+ifdef USE_LEVELDB
+LIBS += $(CURDIR)/leveldb-1.5.0/libleveldb.lib $(CURDIR)/leveldb-1.5.0/libmemenv.lib
+DEFS += -I"$(CURDIR)/leveldb-1.5.0/include" -DUSE_LEVELDB
+DEFS += -I"$(CURDIR)/leveldb-1.5.0/helpers"
+OBJS += obj/txdb-leveldb.o
+leveldb-1.5.0/libleveldb.lib:
+	@echo "Building LevelDB ..."; cd leveldb-1.5.0; TARGET_OS=OS_WINDOWS_CROSSCOMPILE make; cd ..
+obj/txdb-leveldb.o: leveldb-1.5.0/libleveldb.lib
+else
+OBJS += obj/txdb-bdb.o
+endif
 
 obj/build.h: FORCE
 	/bin/sh ../share/genbuild.sh obj/build.h
@@ -111,5 +126,6 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f test_bitcoin.exe
 	-rm -f src/build.h
+	-cd leveldb-1.5.0; make clean; cd ..
 
 FORCE:

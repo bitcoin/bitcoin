@@ -11,14 +11,20 @@ src/build.h
 *.o
 *.patch
 .bitcoin
-#compilation and Qt preprocessor part
+
+# Compilation and Qt preprocessor part
 *.qm
 Makefile
 bitcoin-qt
-#resources cpp
+
+# Resources cpp
 qrc_*.cpp
-#qt creator
+
+# Qt creator
 *.pro.user
-#mac specific
+
+# Mac specific
 .DS_Store
 build
+
+!src/leveldb-*/Makefile
