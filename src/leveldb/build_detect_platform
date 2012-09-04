@@ -156,17 +156,6 @@ EOF
         COMMON_FLAGS="$COMMON_FLAGS -DLEVELDB_PLATFORM_POSIX"
     fi
 
-    # Test whether Snappy library is installed
-    # http://code.google.com/p/snappy/
-    $CXX $CFLAGS -x c++ - -o /dev/null 2>/dev/null  <<EOF
-      #include <snappy.h>
-      int main() {}
-EOF
-    if [ "$?" = 0 ]; then
-        COMMON_FLAGS="$COMMON_FLAGS -DSNAPPY"
-        PLATFORM_LDFLAGS="$PLATFORM_LDFLAGS -lsnappy"
-    fi
-
     # Test whether tcmalloc is available
     $CXX $CFLAGS -x c++ - -o /dev/null -ltcmalloc 2>/dev/null  <<EOF
       int main() {}
