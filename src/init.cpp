@@ -652,7 +652,7 @@ bool AppInit2()
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
-    pblocktree = new CBlockTreeDB("cr+");
+    pblocktree = new CBlockTreeDB();
     pcoinsdbview = new CCoinsViewDB();
     pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
 

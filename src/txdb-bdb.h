@@ -11,7 +11,7 @@
 class CCoinsDB : public CDB
 {
 public:
-    CCoinsDB(const char* pszMode="r+") : CDB("coins.dat", pszMode) { }
+    CCoinsDB() : CDB("coins.dat", "cr+") { }
 private:
     CCoinsDB(const CCoinsDB&);
     void operator=(const CCoinsDB&);
@@ -43,7 +43,7 @@ public:
 class CBlockTreeDB : public CDB
 {
 public:
-    CBlockTreeDB(const char* pszMode="r+") : CDB("blktree.dat", pszMode) { }
+    CBlockTreeDB() : CDB("blktree.dat", "cr+") { }
 private:
     CBlockTreeDB(const CBlockTreeDB&);
     void operator=(const CBlockTreeDB&);
