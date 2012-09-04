@@ -14,7 +14,7 @@ class CCoinsViewDB : public CCoinsView
 protected:
     CLevelDB db;
 public:
-    CCoinsViewDB();
+    CCoinsViewDB(bool fMemory = false);
 
     bool GetCoins(uint256 txid, CCoins &coins);
     bool SetCoins(uint256 txid, const CCoins &coins);
@@ -28,7 +28,7 @@ public:
 class CBlockTreeDB : public CLevelDB
 {
 public:
-    CBlockTreeDB(const char* pszMode="r+") : CLevelDB(GetDataDir() / "blktree") { }
+    CBlockTreeDB(bool fMemory = false);
 private:
     CBlockTreeDB(const CBlockTreeDB&);
     void operator=(const CBlockTreeDB&);
