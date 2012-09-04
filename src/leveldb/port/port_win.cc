@@ -134,7 +134,7 @@ AtomicPointer::AtomicPointer(void* v) {
 }
 
 void* AtomicPointer::Acquire_Load() const {
-  void * p = nullptr;
+  void * p = NULL;
   InterlockedExchangePointer(&p, rep_);
   return p;
 }
@@ -160,7 +160,7 @@ enum InitializationState
 
 void InitOnce(OnceType* once, void (*initializer)()) {
 
-  static_assert(Uninitialized == LEVELDB_ONCE_INIT, "Invalid uninitialized state value");
+  assert(Uninitialized == LEVELDB_ONCE_INIT);
 
   InitializationState state = static_cast<InitializationState>(InterlockedCompareExchange(once, Running, Uninitialized));
 
