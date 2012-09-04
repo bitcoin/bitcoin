@@ -1473,7 +1473,7 @@ bool CWallet::NewKeyPool()
             return false;
 
         int64 nKeys = max(GetArg("-keypool", 100), (int64)0);
-        for (int i = 0; i < nKeys; i++)
+        for (int64 i = 0; i < nKeys; i++)
         {
             int64 nIndex = i+1;
             walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
@@ -1495,7 +1495,7 @@ bool CWallet::TopUpKeyPool()
         CWalletDB walletdb(strWalletFile);
 
         // Top up key pool
-        unsigned int nTargetSize = max(GetArg("-keypool", 100), 0LL);
+        int64 nTargetSize = max(GetArg("-keypool", 100), 0LL);
         while (setKeyPool.size() < (nTargetSize + 1))
         {
             int64 nEnd = 1;
