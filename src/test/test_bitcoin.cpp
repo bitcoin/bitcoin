@@ -2,6 +2,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "db.h"
+#include "txdb.h"
 #include "main.h"
 #include "wallet.h"
 
@@ -18,8 +19,13 @@ struct TestingSetup {
         fPrintToDebugger = true; // don't want to write to debug.log file
         noui_connect();
         bitdb.MakeMock();
-        pblocktree = new CBlockTreeDB("cr+");
+#ifdef USE_LEVELDB
+        pblocktree = new CBlockTreeDB(true);
+        pcoinsdbview = new CCoinsViewDB(true);
+#else
+        pblocktree = new CBlockTreeDB();
         pcoinsdbview = new CCoinsViewDB();
+#endif
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
         LoadBlockIndex(true);
         bool fFirstRun;

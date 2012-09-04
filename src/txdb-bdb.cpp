@@ -64,7 +64,7 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
     return Read('l', nFile);
 }
 
-CCoinsViewDB::CCoinsViewDB() : db("cr+") {}
+CCoinsViewDB::CCoinsViewDB() : db() {}
 bool CCoinsViewDB::GetCoins(uint256 txid, CCoins &coins) { return db.ReadCoins(txid, coins); }
 bool CCoinsViewDB::SetCoins(uint256 txid, const CCoins &coins) { return db.WriteCoins(txid, coins); }
 bool CCoinsViewDB::HaveCoins(uint256 txid) { return db.HaveCoins(txid); }
