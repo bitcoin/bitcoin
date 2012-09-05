@@ -224,6 +224,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/rpcwallet.cpp \
     src/rpcblockchain.cpp \
     src/rpcrawtransaction.cpp \
+    src/timer.cpp \
     src/qt/overviewpage.cpp \
     src/qt/csvmodelwriter.cpp \
     src/crypter.cpp \
