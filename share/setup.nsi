@@ -51,7 +51,7 @@ CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.7.0.0
+VIProductVersion 0.7.0.2
 VIAddVersionKey ProductName Bitcoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
