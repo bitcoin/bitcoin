@@ -814,8 +814,12 @@ public:
             if (std::string::npos != nSepPos)
             {
                 CDataStream ss(std::vector<char>(strComment.begin() + nSepPos + 1, strComment.end()), nType, nVersion);
-                ss >> me.mapValue;
-                me._ssExtra = std::vector<char>(ss.begin(), ss.end());
+		try {
+		  ss >> me.mapValue;
+		  me._ssExtra = std::vector<char>(ss.begin(), ss.end());
+		} catch (std::exception& e) {
+		  LogException(&e, "CAccountingEntry()");
+		}
             }
             ReadOrderPos(me.nOrderPos, me.mapValue);
         }

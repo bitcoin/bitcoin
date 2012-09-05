@@ -164,7 +164,14 @@ void static ResendWalletTransactions()
 bool AddOrphanTx(const CDataStream& vMsg)
 {
     CTransaction tx;
-    CDataStream(vMsg) >> tx;
+    try {
+      CDataStream(vMsg) >> tx;
+    } catch (std::exception& e) {
+      // This should never happen, when AddOrphanTx is called
+      // vMsg should have already been successfully deserialized.
+      LogException(&e, "AddOrphanTx()");
+      return false;
+    }
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
         return false;
@@ -200,7 +207,14 @@ void static EraseOrphanTx(uint256 hash)
         return;
     const CDataStream* pvMsg = mapOrphanTransactions[hash];
     CTransaction tx;
-    CDataStream(*pvMsg) >> tx;
+    try {
+      CDataStream(*pvMsg) >> tx;
+    } catch (std::exception& e) {
+      // This should never happen, only valid messages
+      // are put into mapOrphanTransactions:
+      LogException(&e, "EraseOrphanTx()");
+      return;
+    }
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         mapOrphanTransactionsByPrev[txin.prevout.hash].erase(hash);
