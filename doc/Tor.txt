@@ -28,10 +28,6 @@ outgoing connections be anonimized, but more is possible.
                 need to set this if it's the same as -proxy. You can use -notor
                 to explicitly disable access to hidden service.
 
--dnsseed        DNS seeds are not resolved directly when a SOCKS5 proxy server is
-                set. Rather, a short-lived proxy connection to the dns seed
-                hostname is attempted, and peer addresses are requested.
-
 -listen         When using -proxy, listening is disabled by default. If you want
                 to run a hidden service (see next section), you'll need to enable
                 it explicitly.
