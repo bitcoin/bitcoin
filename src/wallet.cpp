@@ -1762,15 +1762,15 @@ bool CWallet::CheckSpentCoins(int& nMismatchFound, int64& nBalanceInQuestion)
             continue;
         for (int n=0; n < pcoin->vout.size(); n++)
         {
-            if (pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))
+            if (IsMine(pcoin->vout[n]) && pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))
             {
-                printf("CheckSpentCoins found lost coin %sppc %s[%d]\n", FormatMoney(pcoin->GetCredit()).c_str(), pcoin->GetHash().ToString().c_str(), n);
+                printf("CheckSpentCoins found lost coin %sppc %s[%d]\n", FormatMoney(pcoin->vout[n].nValue).c_str(), pcoin->GetHash().ToString().c_str(), n);
                 nMismatchFound++;
                 nBalanceInQuestion += pcoin->vout[n].nValue;
             }
-            else if (!pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
+            else if (IsMine(pcoin->vout[n]) && !pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
             {
-                printf("CheckSpentCoins found spent coin %sppc %s[%d]\n", FormatMoney(pcoin->GetCredit()).c_str(), pcoin->GetHash().ToString().c_str(), n);
+                printf("CheckSpentCoins found spent coin %sppc %s[%d]\n", FormatMoney(pcoin->vout[n].nValue).c_str(), pcoin->GetHash().ToString().c_str(), n);
                 nMismatchFound++;
                 nBalanceInQuestion += pcoin->vout[n].nValue;
             }
@@ -1800,17 +1800,17 @@ void CWallet::FixSpentCoins(int& nMismatchFound, int64& nBalanceInQuestion)
             continue;
         for (int n=0; n < pcoin->vout.size(); n++)
         {
-            if (pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))
+            if (IsMine(pcoin->vout[n]) && pcoin->IsSpent(n) && (txindex.vSpent.size() <= n || txindex.vSpent[n].IsNull()))
             {
-                printf("FixSpentCoins found lost coin %sppc %s[%d]\n", FormatMoney(pcoin->GetCredit()).c_str(), pcoin->GetHash().ToString().c_str(), n);
+                printf("FixSpentCoins found lost coin %sppc %s[%d]\n", FormatMoney(pcoin->vout[n].nValue).c_str(), pcoin->GetHash().ToString().c_str(), n);
                 nMismatchFound++;
                 nBalanceInQuestion += pcoin->vout[n].nValue;
                 pcoin->MarkUnspent(n);
                 pcoin->WriteToDisk();
             }
-            else if (!pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
+            else if (IsMine(pcoin->vout[n]) && !pcoin->IsSpent(n) && (txindex.vSpent.size() > n && !txindex.vSpent[n].IsNull()))
             {
-                printf("FixSpentCoins found spent coin %sppc %s[%d]\n", FormatMoney(pcoin->GetCredit()).c_str(), pcoin->GetHash().ToString().c_str(), n);
+                printf("FixSpentCoins found spent coin %sppc %s[%d]\n", FormatMoney(pcoin->vout[n].nValue).c_str(), pcoin->GetHash().ToString().c_str(), n);
                 nMismatchFound++;
                 nBalanceInQuestion += pcoin->vout[n].nValue;
                 pcoin->MarkSpent(n);
