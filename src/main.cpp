@@ -1991,11 +1991,17 @@ bool CheckDiskSpace(uint64 nAdditionalBytes)
     return true;
 }
 
+static filesystem::path BlockFilePath(unsigned int nFile)
+{
+    string strBlockFn = strprintf("blk%04d.dat", nFile);
+    return GetDataDir() / strBlockFn;
+}
+
 FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode)
 {
     if ((nFile < 1) || (nFile == (unsigned int) -1))
         return NULL;
-    FILE* file = fopen((GetDataDir() / strprintf("blk%04d.dat", nFile)).string().c_str(), pszMode);
+    FILE* file = fopen(BlockFilePath(nFile).string().c_str(), pszMode);
     if (!file)
         return NULL;
     if (nBlockPos != 0 && !strchr(pszMode, 'a') && !strchr(pszMode, 'w'))
