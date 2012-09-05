@@ -2105,14 +2105,15 @@ Value checkwallet(const Array& params, bool fHelp)
 
     int nMismatchSpent;
     int64 nBalanceInQuestion;
-    if (!pwalletMain->CheckSpentCoins(nMismatchSpent, nBalanceInQuestion))
+    Object result;
+    if (pwalletMain->CheckSpentCoins(nMismatchSpent, nBalanceInQuestion))
+        result.push_back(Pair("wallet check passed", true));
+    else
     {
-        Object result;
         result.push_back(Pair("mismatched spent coins", nMismatchSpent));
         result.push_back(Pair("amount in question", ValueFromAmount(nBalanceInQuestion)));
-        return result;
     }
-    return Value::null;
+    return result;
 }
 
 
@@ -2129,9 +2130,7 @@ Value repairwallet(const Array& params, bool fHelp)
     pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion);
     Object result;
     if (nMismatchSpent == 0)
-    {
         result.push_back(Pair("wallet check passed", true));
-    }
     else
     {
         result.push_back(Pair("mismatched spent coins", nMismatchSpent));
