@@ -599,7 +599,7 @@ CNetAddr::CNetAddr(const std::string &strIp, bool fAllowLookup)
         *this = vIP[0];
 }
 
-int CNetAddr::GetByte(int n) const
+unsigned int CNetAddr::GetByte(int n) const
 {
     return ip[15-n];
 }
@@ -1135,7 +1135,7 @@ std::vector<unsigned char> CService::GetKey() const
 
 std::string CService::ToStringPort() const
 {
-    return strprintf("%i", port);
+    return strprintf("%u", port);
 }
 
 std::string CService::ToStringIPPort() const
