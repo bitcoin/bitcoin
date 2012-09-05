@@ -1367,7 +1367,7 @@ string CWallet::SendMoneyToDestination(const CTxDestination& address, int64 nVal
 int CWallet::LoadWallet(bool& fFirstRunRet)
 {
     if (!fFileBacked)
-        return false;
+        return DB_LOAD_OK;
     fFirstRunRet = false;
     int nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
     if (nLoadWalletRet == DB_NEED_REWRITE)
