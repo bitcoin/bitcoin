@@ -1,4 +1,3 @@
-
 (note: this is a temporary file, to be added-to by anybody, and deleted at
 release time)
 
@@ -6,7 +5,25 @@ Building this from
 
 	$ git shortlog --no-merges v0.6.3..
 
+How to Upgrade
+--------------
 
+If you are running an older version, shut it down. Wait
+until it has completely shut down (which might take a few minutes for older
+versions), then run the installer (on Windows) or just copy over
+/Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
+
+If you were running on Linux with a version that might have been compiled
+with a different version of Berkeley DB (for example, if you were using an
+Ubuntu PPA version), then run the old version again with the -detachdb
+argument and shut it down; if you do not, then the new version will not
+be able to read the database files and will exit with an error.
+
+Incompatible Changes
+--------------------
+* Replaced the 'getmemorypool' RPC command with 'getblocktemplate/submitblock'
+  and 'getrawmempool' commands.
+* Remove deprecated RPC 'getblocknumber'
 
 Bitcoin Improvement Proposals implemented
 -----------------------------------------
@@ -24,7 +41,8 @@ Core bitcoin handling and blockchain database
 * Database: better validation of on-disk stored data
 * Database: minor optimizations and reliability improvements
 * -loadblock=FILE will import an external block file
-* Additional DoS prevention measures
+* Additional DoS (denial-of-service) prevention measures
+* New blockchain checkpoint at block 193,000
 
 
 JSON-RPC API
@@ -44,7 +62,6 @@ JSON-RPC API
   non-wallet TXs now.
 * Remove deprecated RPC 'getblocknumber'
 * Remove superceded RPC 'getmemorypool' (see BIP 22, above)
-* New blockchain checkpoint at block 193,000
 * listtransactions output now displays "smart" times for transactions,
   and 'blocktime' and 'timereceived' fields were added
 
@@ -52,7 +69,7 @@ JSON-RPC API
 P2P networking
 --------------
 * IPv6 support
-* Tor hidden service support
+* Tor hidden service support (see doc/Tor.txt)
 * Attempts to fix "stuck blockchain download" problems
 * Replace BDB database "addr.dat" with internally-managed "peers.dat"
   file containing peer address data.
