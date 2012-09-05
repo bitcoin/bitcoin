@@ -44,7 +44,7 @@ bn      CBigNum
 Locking/mutex usage notes
 
 The code is multi-threaded, and uses mutexes and the
-CRITICAL_BLOCK/TRY_CRITICAL_BLOCK macros to protect data structures.
+LOCK/TRY_LOCK macros to protect data structures.
 
 Deadlocks due to inconsistent lock ordering (thread 1 locks cs_main
 and then cs_wallet, while thread 2 locks them in the opposite order:
