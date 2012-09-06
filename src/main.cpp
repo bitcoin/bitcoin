@@ -1498,6 +1498,23 @@ bool CBlock::DisconnectBlock(CBlockIndex *pindex, CCoinsViewCache &view)
     return true;
 }
 
+void static FlushBlockFile()
+{
+    LOCK(cs_LastBlockFile);
+
+    CDiskBlockPos posOld;
+    posOld.nFile = nLastBlockFile;
+    posOld.nPos = 0;
+
+    FILE *fileOld = OpenBlockFile(posOld);
+    FileCommit(fileOld);
+    fclose(fileOld);
+
+    fileOld = OpenUndoFile(posOld);
+    FileCommit(fileOld);
+    fclose(fileOld);
+}
+
 bool FindUndoPos(int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
 bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJustCheck)
@@ -1700,9 +1717,11 @@ bool SetBestChain(CBlockIndex* pindexNew)
 
     // Make sure it's successfully written to disk before changing memory structure
     bool fIsInitialDownload = IsInitialBlockDownload();
-    if (!fIsInitialDownload || view.GetCacheSize()>5000)
+    if (!fIsInitialDownload || view.GetCacheSize()>5000) {
+        FlushBlockFile();
         if (!view.Flush())
             return false;
+    }
 
     // At this point, all changes have been done to the database.
     // Proceed by updating the memory structures.
@@ -1823,7 +1842,6 @@ bool CBlock::AddToBlockIndex(const CDiskBlockPos &pos)
 }
 
 
-
 bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64 nTime)
 {
     bool fUpdatedLast = false;
@@ -1832,12 +1850,7 @@ bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeigh
 
     while (infoLastBlockFile.nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
         printf("Leaving block file %i: %s\n", nLastBlockFile, infoLastBlockFile.ToString().c_str());
-        FILE *file = OpenBlockFile(pos);
-        FileCommit(file);
-        fclose(file);
-        file = OpenUndoFile(pos);
-        FileCommit(file);
-        fclose(file);
+        FlushBlockFile();
         nLastBlockFile++;
         infoLastBlockFile.SetNull();
         pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile); // check whether data for the new file somehow already exist; can fail just fine
