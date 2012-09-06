@@ -70,9 +70,9 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Kопировать</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="96"/>
-        <source>Sign a message to prove you own this address</source>
-        <translation>Подпишите сообщение для доказательства </translation>
+        <location filename="../forms/addressbookpage.ui" line="99"/>
+        <source>&amp;Sign Message</source>
+        <translation>&amp;Подписать сообщение</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="110"/>
@@ -85,14 +85,14 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Удалить</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="99"/>
-        <source>&amp;Sign Message</source>
-        <translation>&amp;Подписать сообщение</translation>
-    </message>
-    <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Show &amp;QR Code</source>
         <translation>Показать &amp;QR код</translation>
+    </message>
+    <message>
+        <location filename="../forms/addressbookpage.ui" line="96"/>
+        <source>Sign a message to prove you own this address</source>
+        <translation>Подпишите сообщение для доказательства </translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="61"/>
@@ -110,16 +110,6 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Правка</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="292"/>
-        <source>Could not write to file %1.</source>
-        <translation>Невозможно записать в файл %1.</translation>
-    </message>
-    <message>
-        <location filename="../addressbookpage.cpp" line="292"/>
-        <source>Error exporting</source>
-        <translation>Ошибка экспорта</translation>
-    </message>
-    <message>
         <location filename="../addressbookpage.cpp" line="64"/>
         <source>Delete</source>
         <translation>Удалить</translation>
@@ -128,6 +118,16 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../addressbookpage.cpp" line="278"/>
         <source>Export Address Book Data</source>
         <translation>Экспортировать адресную книгу</translation>
+    </message>
+    <message>
+        <location filename="../addressbookpage.cpp" line="292"/>
+        <source>Could not write to file %1.</source>
+        <translation>Невозможно записать в файл %1.</translation>
+    </message>
+    <message>
+        <location filename="../addressbookpage.cpp" line="292"/>
+        <source>Error exporting</source>
+        <translation>Ошибка экспорта</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="279"/>
@@ -156,39 +156,14 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>AskPassphraseDialog</name>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
-        <source>Enter passphrase</source>
-        <translation>Введите пароль</translation>
-    </message>
-    <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
         <translation>Новый пароль</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="75"/>
-        <source>Repeat new passphrase</source>
-        <translation>Повторите новый пароль</translation>
-    </message>
-    <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
-        <source>TextLabel</source>
-        <translation>TextLabel</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="38"/>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
-        <source>Wallet passphrase was successfully changed.</source>
-        <translation>Пароль бумажника успешно изменён.</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="51"/>
-        <source>Decrypt wallet</source>
-        <translation>Расшифровать бумажник</translation>
+        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
+        <source>Enter passphrase</source>
+        <translation>Введите пароль</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
@@ -196,9 +171,27 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Dialog</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="35"/>
-        <source>Encrypt wallet</source>
-        <translation>Зашифровать бумажник</translation>
+        <location filename="../forms/askpassphrasedialog.ui" line="75"/>
+        <source>Repeat new passphrase</source>
+        <translation>Повторите новый пароль</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="46"/>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
+    </message>
+    <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
+        <source>TextLabel</source>
+        <translation>TextLabel</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="117"/>
+        <location filename="../askpassphrasedialog.cpp" line="124"/>
+        <location filename="../askpassphrasedialog.cpp" line="166"/>
+        <location filename="../askpassphrasedialog.cpp" line="172"/>
+        <source>Wallet encryption failed</source>
+        <translation>Не удалось зашифровать бумажник</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="55"/>
@@ -206,21 +199,30 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Введите старый и новый пароль для бумажника.</translation>
     </message>
     <message>
+        <location filename="../askpassphrasedialog.cpp" line="51"/>
+        <source>Decrypt wallet</source>
+        <translation>Расшифровать бумажник</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="54"/>
+        <source>Change passphrase</source>
+        <translation>Сменить пароль</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="35"/>
+        <source>Encrypt wallet</source>
+        <translation>Зашифровать бумажник</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="101"/>
+        <source>Confirm wallet encryption</source>
+        <translation>Подтвердите шифрование бумажника</translation>
+    </message>
+    <message>
         <location filename="../askpassphrasedialog.cpp" line="111"/>
         <location filename="../askpassphrasedialog.cpp" line="160"/>
         <source>Wallet encrypted</source>
         <translation>Бумажник зашифрован</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="118"/>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Шифрование бумажника не удалось из-за внутренней ошибки. Ваш бумажник не был зашифрован.</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="125"/>
-        <location filename="../askpassphrasedialog.cpp" line="173"/>
-        <source>The supplied passphrases do not match.</source>
-        <translation>Введённые пароли не совпадают.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="136"/>
@@ -235,35 +237,25 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Указанный пароль не подходит.</translation>
     </message>
     <message>
+        <location filename="../askpassphrasedialog.cpp" line="125"/>
+        <location filename="../askpassphrasedialog.cpp" line="173"/>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Введённые пароли не совпадают.</translation>
+    </message>
+    <message>
         <location filename="../askpassphrasedialog.cpp" line="147"/>
         <source>Wallet decryption failed</source>
         <translation>Расшифрование бумажника не удалось</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Сейчас программа закроется для завершения процесса шифрования. Помните, что шифрование вашего бумажника не может полностью защитить ваши биткоины от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
+        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Пароль бумажника успешно изменён.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation>ВНИМАНИЕ: Если вы зашифруете бумажник и потеряете свой ​​пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ БИТКОИНЫ!&lt;/b&gt;
-Вы действительно хотите зашифровать ваш бумажник?</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="117"/>
-        <location filename="../askpassphrasedialog.cpp" line="124"/>
-        <location filename="../askpassphrasedialog.cpp" line="166"/>
-        <location filename="../askpassphrasedialog.cpp" line="172"/>
-        <source>Wallet encryption failed</source>
-        <translation>Не удалось зашифровать бумажник</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="208"/>
-        <location filename="../askpassphrasedialog.cpp" line="232"/>
-        <source>Warning: The Caps Lock key is on.</source>
-        <translation>Внимание: Caps Lock включен.</translation>
+        <location filename="../askpassphrasedialog.cpp" line="38"/>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="34"/>
@@ -276,27 +268,35 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Разблокировать бумажник</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="46"/>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
+        <location filename="../askpassphrasedialog.cpp" line="102"/>
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
+Are you sure you wish to encrypt your wallet?</source>
+        <translation>ВНИМАНИЕ: Если вы зашифруете бумажник и потеряете свой ​​пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ БИТКОИНЫ!&lt;/b&gt;
+Вы действительно хотите зашифровать ваш бумажник?</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="54"/>
-        <source>Change passphrase</source>
-        <translation>Сменить пароль</translation>
+        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Сейчас программа закроется для завершения процесса шифрования. Помните, что шифрование вашего бумажника не может полностью защитить ваши биткоины от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="101"/>
-        <source>Confirm wallet encryption</source>
-        <translation>Подтвердите шифрование бумажника</translation>
+        <location filename="../askpassphrasedialog.cpp" line="118"/>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Шифрование бумажника не удалось из-за внутренней ошибки. Ваш бумажник не был зашифрован.</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="208"/>
+        <location filename="../askpassphrasedialog.cpp" line="232"/>
+        <source>Warning: The Caps Lock key is on.</source>
+        <translation>Внимание: Caps Lock включен.</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="193"/>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Транзакции</translation>
+        <location filename="../bitcoingui.cpp" line="252"/>
+        <source>&amp;Export...</source>
+        <translation>&amp;Экспорт...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="194"/>
@@ -309,95 +309,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>&amp;Адресная книга</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="205"/>
-        <source>&amp;Receive coins</source>
-        <translation>&amp;Получение монет</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="149"/>
-        <source>Block chain synchronization in progress</source>
-        <translation>Идёт синхронизация цепочки блоков</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="283"/>
-        <source>&amp;File</source>
-        <translation>&amp;Файл</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="200"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation>Изменить список сохранённых адресов и меток к ним</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="146"/>
-        <location filename="../bitcoingui.cpp" line="478"/>
-        <source>Synchronizing with network...</source>
-        <translation>Синхронизация с сетью...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="188"/>
-        <source>Show general overview of wallet</source>
-        <translation>Показать общий обзор действий с бумажником</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="206"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Показать список адресов для получения платежей</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="211"/>
-        <source>&amp;Send coins</source>
-        <translation>Отп&amp;равка монет</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
-        <source>E&amp;xit</source>
-        <translation>В&amp;ыход</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="238"/>
-        <source>Quit application</source>
-        <translation>Закрыть приложение</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
-        <source>Show information about Bitcoin</source>
-        <translation>Показать информацию о Bitcoin&apos;е</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="244"/>
-        <source>About &amp;Qt</source>
-        <translation>О &amp;Qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="245"/>
-        <source>Show information about Qt</source>
-        <translation>Показать информацию о Qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
-        <source>Open &amp;Bitcoin</source>
-        <translation>&amp;Показать бумажник</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="251"/>
-        <source>Show the Bitcoin window</source>
-        <translation>Показать окно бумажника</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="252"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Экспорт...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="253"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Экспортировать данные из вкладки в файл</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="254"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation>&amp;Зашифровать бумажник</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="255"/>
@@ -405,24 +319,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Зашифровать или расшифровать бумажник</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="257"/>
-        <source>&amp;Backup Wallet</source>
-        <translation>&amp;Сделать резервную копию бумажника</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="259"/>
-        <source>&amp;Change Passphrase</source>
-        <translation>&amp;Изменить пароль</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="260"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Изменить пароль шифрования бумажника</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="292"/>
-        <source>&amp;Settings</source>
-        <translation>&amp;Настройки</translation>
+        <location filename="../bitcoingui.cpp" line="241"/>
+        <source>&amp;About %1</source>
+        <translation>&amp;О %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="187"/>
@@ -430,34 +329,29 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>О&amp;бзор</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="298"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Помощь</translation>
+        <location filename="../bitcoingui.cpp" line="188"/>
+        <source>Show general overview of wallet</source>
+        <translation>Показать общий обзор действий с бумажником</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="305"/>
-        <source>Tabs toolbar</source>
-        <translation>Панель вкладок</translation>
+        <location filename="../bitcoingui.cpp" line="193"/>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Транзакции</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="316"/>
-        <source>Actions toolbar</source>
-        <translation>Панель действий</translation>
+        <location filename="../bitcoingui.cpp" line="205"/>
+        <source>&amp;Receive coins</source>
+        <translation>&amp;Получение монет</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="73"/>
-        <source>Bitcoin Wallet</source>
-        <translation>Bitcoin-бумажник</translation>
+        <location filename="../bitcoingui.cpp" line="237"/>
+        <source>E&amp;xit</source>
+        <translation>В&amp;ыход</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="329"/>
-        <source>[testnet]</source>
-        <translation>[тестовая сеть]</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="212"/>
-        <source>Send coins to a bitcoin address</source>
-        <translation>Отправить монеты на указанный адрес</translation>
+        <location filename="../bitcoingui.cpp" line="211"/>
+        <source>&amp;Send coins</source>
+        <translation>Отп&amp;равка монет</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="217"/>
@@ -465,14 +359,49 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Подписать &amp;сообщение</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="218"/>
-        <source>Prove you control an address</source>
-        <translation>Доказать, что вы владеете адресом</translation>
+        <location filename="../bitcoingui.cpp" line="238"/>
+        <source>Quit application</source>
+        <translation>Закрыть приложение</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
-        <source>&amp;About %1</source>
-        <translation>&amp;О %1</translation>
+        <location filename="../bitcoingui.cpp" line="253"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Экспортировать данные из вкладки в файл</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="247"/>
+        <source>&amp;Options...</source>
+        <translation>Оп&amp;ции...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="258"/>
+        <source>Backup wallet to another location</source>
+        <translation>Сделать резервную копию бумажника в другом месте</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="283"/>
+        <source>&amp;File</source>
+        <translation>&amp;Файл</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="298"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Помощь</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="809"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation>При попытке сохранения данных бумажника в новое место произошла ошибка.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="329"/>
+        <source>[testnet]</source>
+        <translation>[тестовая сеть]</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="292"/>
+        <source>&amp;Settings</source>
+        <translation>&amp;Настройки</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="463"/>
@@ -482,6 +411,11 @@ Are you sure you wish to encrypt your wallet?</source>
             <numerusform>%n активных соединений с сетью</numerusform>
             <numerusform>%n активных соединений с сетью</numerusform>
         </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="260"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Изменить пароль шифрования бумажника</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="501"/>
@@ -498,15 +432,6 @@ Are you sure you wish to encrypt your wallet?</source>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="520"/>
-        <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>%n минуту назад</numerusform>
-            <numerusform>%n минуты назад</numerusform>
-            <numerusform>%n минут назад</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="524"/>
         <source>%n hour(s) ago</source>
         <translation>
@@ -515,24 +440,31 @@ Are you sure you wish to encrypt your wallet?</source>
             <numerusform>%n часов назад</numerusform>
         </translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="528"/>
-        <source>%n day(s) ago</source>
-        <translation>
-            <numerusform>%n день назад</numerusform>
-            <numerusform>%n дня назад</numerusform>
-            <numerusform>%n дней назад</numerusform>
-        </translation>
+    <message>
+        <location filename="../bitcoingui.cpp" line="146"/>
+        <location filename="../bitcoingui.cpp" line="478"/>
+        <source>Synchronizing with network...</source>
+        <translation>Синхронизация с сетью...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="534"/>
-        <source>Up to date</source>
-        <translation>Синхронизированно</translation>
+        <location filename="../bitcoingui.cpp" line="73"/>
+        <source>Bitcoin Wallet</source>
+        <translation>Bitcoin-бумажник</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="539"/>
-        <source>Catching up...</source>
-        <translation>Синхронизируется...</translation>
+        <location filename="../bitcoingui.cpp" line="149"/>
+        <source>Block chain synchronization in progress</source>
+        <translation>Идёт синхронизация цепочки блоков</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="200"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation>Изменить список сохранённых адресов и меток к ним</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="212"/>
+        <source>Send coins to a bitcoin address</source>
+        <translation>Отправить монеты на указанный адрес</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="547"/>
@@ -543,11 +475,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../bitcoingui.cpp" line="616"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Данная транзакция превышает предельно допустимый размер.  Но Вы можете всё равно совершить её, добавив комиссию в %1, которая отправится тем узлам, которые обработают Вашу транзакцию, и поможет поддержать сеть.  Вы хотите добавить комиссию?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="247"/>
-        <source>&amp;Options...</source>
-        <translation>Оп&amp;ции...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="648"/>
@@ -573,11 +500,6 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="258"/>
-        <source>Backup wallet to another location</source>
-        <translation>Сделать резервную копию бумажника в другом месте</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="775"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Бумажник &lt;b&gt;зашифрован&lt;/b&gt; и в настоящее время &lt;b&gt;разблокирован&lt;/b&gt;</translation>
@@ -593,24 +515,34 @@ Address: %4
         <translation>Данные бумажника (*.dat)</translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="534"/>
+        <source>Up to date</source>
+        <translation>Синхронизированно</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="539"/>
+        <source>Catching up...</source>
+        <translation>Синхронизируется...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>Show information about Bitcoin</source>
+        <translation>Показать информацию о Bitcoin&apos;е</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="244"/>
+        <source>About &amp;Qt</source>
+        <translation>О &amp;Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="245"/>
+        <source>Show information about Qt</source>
+        <translation>Показать информацию о Qt</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Изменить настройки</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="421"/>
-        <source>bitcoin-qt</source>
-        <translation>bitcoin-qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="489"/>
-        <source>Downloaded %1 of %2 blocks of transaction history.</source>
-        <translation>Загружено %1 из %2 блоков истории транзакций.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="621"/>
-        <source>Sending...</source>
-        <translation>Отправка...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
@@ -623,14 +555,82 @@ Address: %4
         <translation>Резервное копирование не удалось</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="809"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>При попытке сохранения данных бумажника в новое место произошла ошибка.</translation>
+        <location filename="../bitcoingui.cpp" line="254"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation>&amp;Зашифровать бумажник</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="257"/>
+        <source>&amp;Backup Wallet</source>
+        <translation>&amp;Сделать резервную копию бумажника</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="259"/>
+        <source>&amp;Change Passphrase</source>
+        <translation>&amp;Изменить пароль</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="305"/>
+        <source>Tabs toolbar</source>
+        <translation>Панель вкладок</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="316"/>
+        <source>Actions toolbar</source>
+        <translation>Панель действий</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="421"/>
+        <source>bitcoin-qt</source>
+        <translation>bitcoin-qt</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="520"/>
+        <source>%n minute(s) ago</source>
+        <translation>
+            <numerusform>%n минуту назад</numerusform>
+            <numerusform>%n минуты назад</numerusform>
+            <numerusform>%n минут назад</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="528"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n день назад</numerusform>
+            <numerusform>%n дня назад</numerusform>
+            <numerusform>%n дней назад</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="144"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Произошла неисправимая ошибка. Bitcoin не может безопасно продолжать работу и будет закрыт.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="621"/>
+        <source>Sending...</source>
+        <translation>Отправка...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="250"/>
+        <source>Open &amp;Bitcoin</source>
+        <translation>&amp;Показать бумажник</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="218"/>
+        <source>Prove you control an address</source>
+        <translation>Доказать, что вы владеете адресом</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="251"/>
+        <source>Show the Bitcoin window</source>
+        <translation>Показать окно бумажника</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="489"/>
+        <source>Downloaded %1 of %2 blocks of transaction history.</source>
+        <translation>Загружено %1 из %2 блоков истории транзакций.</translation>
     </message>
 </context>
 <context>
@@ -684,11 +684,6 @@ Address: %4
         <translation>Адрес, связанный с данной записью.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="20"/>
-        <source>New receiving address</source>
-        <translation>Новый адрес для получения</translation>
-    </message>
-    <message>
         <location filename="../editaddressdialog.cpp" line="24"/>
         <source>New sending address</source>
         <translation>Новый адрес для отправки</translation>
@@ -704,9 +699,19 @@ Address: %4
         <translation>Изменение адреса для отправки</translation>
     </message>
     <message>
+        <location filename="../editaddressdialog.cpp" line="20"/>
+        <source>New receiving address</source>
+        <translation>Новый адрес для получения</translation>
+    </message>
+    <message>
         <location filename="../editaddressdialog.cpp" line="91"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
         <translation>Введённый адрес «%1» уже находится в адресной книге.</translation>
+    </message>
+    <message>
+        <location filename="../editaddressdialog.cpp" line="96"/>
+        <source>The entered address &quot;%1&quot; is not a valid bitcoin address.</source>
+        <translation>Введённый адрес «%1» не является правильным Bitcoin-адресом.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="101"/>
@@ -717,11 +722,6 @@ Address: %4
         <location filename="../editaddressdialog.cpp" line="106"/>
         <source>New key generation failed.</source>
         <translation>Генерация нового ключа не удалась.</translation>
-    </message>
-    <message>
-        <location filename="../editaddressdialog.cpp" line="96"/>
-        <source>The entered address &quot;%1&quot; is not a valid bitcoin address.</source>
-        <translation>Введённый адрес «%1» не является правильным Bitcoin-адресом.</translation>
     </message>
 </context>
 <context>
@@ -752,14 +752,14 @@ Address: %4
         <translation>Пробросить порт через &amp;UPnP</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Автоматически открыть порт для Bitcoin-клиента на роутере. Работает ТОЛЬКО если Ваш роутер поддерживает UPnP и данная функция включена.</translation>
-    </message>
-    <message>
         <location filename="../optionsdialog.cpp" line="185"/>
         <source>M&amp;inimize on close</source>
         <translation>С&amp;ворачивать вместо закрытия</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="181"/>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Автоматически открыть порт для Bitcoin-клиента на роутере. Работает ТОЛЬКО если Ваш роутер поддерживает UPnP и данная функция включена.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="186"/>
@@ -815,9 +815,9 @@ Address: %4
         <translation>Сообщение</translation>
     </message>
     <message>
-        <location filename="../forms/messagepage.ui" line="93"/>
-        <source>Enter the message you want to sign here</source>
-        <translation>Введите сообщение для подписи</translation>
+        <location filename="../forms/messagepage.ui" line="20"/>
+        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Вы можете подписывать сообщения своими адресами, чтобы доказать владение ими. Будьте осторожны, не подписывайте что-то неопределённое, так как фишинговые атаки могут обманным путём заставить вас подписать нежелательные сообщения. Подписывайте только те сообщения, с которыми вы согласны вплоть до мелочей.</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="117"/>
@@ -828,6 +828,46 @@ Address: %4
         <location filename="../forms/messagepage.ui" line="120"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Подписать сообщение</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="105"/>
+        <source>Click &quot;Sign Message&quot; to get signature</source>
+        <translation>Для создания подписи нажмите на &quot;Подписать сообщение&quot;</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="131"/>
+        <source>Copy the current signature to the system clipboard</source>
+        <translation>Скопировать текущую подпись в системный буфер обмена</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="38"/>
+        <source>The address to sign the message with  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Адрес, которым вы хотите подписать сообщение  (напр. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="48"/>
+        <source>Choose adress from address book</source>
+        <translation>Выбрать адрес из адресной книги</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="58"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="71"/>
+        <source>Paste address from clipboard</source>
+        <translation>Вставить адрес из буфера обмена</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="81"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="93"/>
+        <source>Enter the message you want to sign here</source>
+        <translation>Введите сообщение для подписи</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
@@ -856,46 +896,6 @@ Address: %4
         <source>Sign failed</source>
         <translation>Подписание не удалось.</translation>
     </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="20"/>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Вы можете подписывать сообщения своими адресами, чтобы доказать владение ими. Будьте осторожны, не подписывайте что-то неопределённое, так как фишинговые атаки могут обманным путём заставить вас подписать нежелательные сообщения. Подписывайте только те сообщения, с которыми вы согласны вплоть до мелочей.</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="38"/>
-        <source>The address to sign the message with  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Адрес, которым вы хотите подписать сообщение  (напр. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="48"/>
-        <source>Choose adress from address book</source>
-        <translation>Выбрать адрес из адресной книги</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="58"/>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="71"/>
-        <source>Paste address from clipboard</source>
-        <translation>Вставить адрес из буфера обмена</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="81"/>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="105"/>
-        <source>Click &quot;Sign Message&quot; to get signature</source>
-        <translation>Для создания подписи нажмите на &quot;Подписать сообщение&quot;</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="131"/>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation>Скопировать текущую подпись в системный буфер обмена</translation>
-    </message>
 </context>
 <context>
     <name>OptionsDialog</name>
@@ -918,11 +918,6 @@ Address: %4
 <context>
     <name>OverviewPage</name>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Последние транзакции&lt;/b&gt;</translation>
-    </message>
-    <message>
         <location filename="../overviewpage.cpp" line="103"/>
         <source>Your current balance</source>
         <translation>Ваш текущий баланс</translation>
@@ -933,24 +928,14 @@ Address: %4
         <translation>Общая сумма всех транзакций, которые до сих пор не подтверждены, и до сих пор не учитываются в текущем балансе</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="111"/>
-        <source>Total number of transactions in wallet</source>
-        <translation>Общее количество транзакций в Вашем бумажнике</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="68"/>
-        <source>Unconfirmed:</source>
-        <translation>Не подтверждено:</translation>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <source>Wallet</source>
+        <translation>Бумажник</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
         <translation>Форма</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="88"/>
-        <source>Wallet</source>
-        <translation>Бумажник</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="40"/>
@@ -967,48 +952,38 @@ Address: %4
         <source>0</source>
         <translation>0</translation>
     </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="68"/>
+        <source>Unconfirmed:</source>
+        <translation>Не подтверждено:</translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="124"/>
+        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Последние транзакции&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="111"/>
+        <source>Total number of transactions in wallet</source>
+        <translation>Общее количество транзакций в Вашем бумажнике</translation>
+    </message>
 </context>
 <context>
     <name>QRCodeDialog</name>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="121"/>
-        <source>Label:</source>
-        <translation>Метка:</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="186"/>
-        <source>&amp;Save As...</source>
-        <translation>&amp;Сохранить как...</translation>
-    </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="70"/>
         <source>Amount:</source>
         <translation>Количество:</translation>
     </message>
     <message>
-        <location filename="../forms/qrcodedialog.ui" line="105"/>
-        <source>BTC</source>
-        <translation>BTC</translation>
+        <location filename="../forms/qrcodedialog.ui" line="55"/>
+        <source>Request Payment</source>
+        <translation>Запросить платёж</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="144"/>
         <source>Message:</source>
         <translation>Сообщение:</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="14"/>
-        <source>Dialog</source>
-        <translation>Dialog</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="32"/>
-        <source>QR Code</source>
-        <translation>QR код</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="55"/>
-        <source>Request Payment</source>
-        <translation>Запросить платёж</translation>
     </message>
     <message>
         <location filename="../qrcodedialog.cpp" line="48"/>
@@ -1024,6 +999,31 @@ Address: %4
         <location filename="../qrcodedialog.cpp" line="113"/>
         <source>PNG Images (*.png)</source>
         <translation>PNG Изображения (*.png)</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="14"/>
+        <source>Dialog</source>
+        <translation>Dialog</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="32"/>
+        <source>QR Code</source>
+        <translation>QR код</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="121"/>
+        <source>Label:</source>
+        <translation>Метка:</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="105"/>
+        <source>BTC</source>
+        <translation>BTC</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="186"/>
+        <source>&amp;Save As...</source>
+        <translation>&amp;Сохранить как...</translation>
     </message>
 </context>
 <context>
@@ -1041,9 +1041,19 @@ Address: %4
         <translation>Отправка</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="64"/>
+        <source>Send to multiple recipients at once</source>
+        <translation>Отправить нескольким получателям одновременно</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="67"/>
         <source>&amp;Add recipient...</source>
         <translation>&amp;Добавить получателя...</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="84"/>
+        <source>Remove all transaction fields</source>
+        <translation>Удалить все поля транзакции</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="106"/>
@@ -1066,6 +1076,31 @@ Address: %4
         <translation>&lt;b&gt;%1&lt;/b&gt; адресату %2 (%3)</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="147"/>
+        <source>&amp;Send</source>
+        <translation>&amp;Отправить</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="101"/>
+        <source> and </source>
+        <translation> и </translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="134"/>
+        <source>The amount exceeds your balance.</source>
+        <translation>Количество отправляемых монет превышает Ваш баланс</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="139"/>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>Сумма превысит Ваш баланс, если комиссия в размере %1 будет добавлена к транзакции</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="87"/>
+        <source>Clear all</source>
+        <translation>Очистить всё</translation>
+    </message>
+    <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
         <source>Confirm send coins</source>
         <translation>Подтвердите отправку монет</translation>
@@ -1076,9 +1111,9 @@ Address: %4
         <translation>Вы уверены, что хотите отправить %1?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="101"/>
-        <source> and </source>
-        <translation> и </translation>
+        <location filename="../sendcoinsdialog.cpp" line="124"/>
+        <source>The recipient address is not valid, please recheck.</source>
+        <translation>Адрес получателя неверный, пожалуйста, перепроверьте.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="129"/>
@@ -1086,77 +1121,32 @@ Address: %4
         <translation>Количество монет для отправки должно быть больше 0.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="64"/>
-        <source>Send to multiple recipients at once</source>
-        <translation>Отправить нескольким получателям одновременно</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="87"/>
-        <source>Clear all</source>
-        <translation>Очистить всё</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="84"/>
-        <source>Remove all transaction fields</source>
-        <translation>Удалить все поля транзакции</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="147"/>
-        <source>&amp;Send</source>
-        <translation>&amp;Отправить</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="124"/>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Адрес получателя неверный, пожалуйста, перепроверьте.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="134"/>
-        <source>The amount exceeds your balance.</source>
-        <translation>Количество отправляемых монет превышает Ваш баланс</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="139"/>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Сумма превысит Ваш баланс, если комиссия в размере %1 будет добавлена к транзакции.</translation>
-    </message>
-    <message>
         <location filename="../sendcoinsdialog.cpp" line="145"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Обнаружен дублирующийся адрес. Отправка на один и тот же адрес возможна только один раз за одну операцию отправки</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="150"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>Ошибка: не удалось создать транзакцию.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Ошибка: В транзакции отказано.  Такое может произойти, если некоторые монеты уже были потрачены, например, если Вы используете одну копию файла wallet.dat, а монеты были потрачены из другой копии, но не были отмечены как потраченные в этой.</translation>
     </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="150"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation>Ошибка: не удалось создать транзакцию.</translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="137"/>
-        <source>Remove this recipient</source>
-        <translation>Удалить этого получателя</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="29"/>
-        <source>A&amp;mount:</source>
-        <translation>Ко&amp;личество:</translation>
-    </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="14"/>
         <source>Form</source>
         <translation>Форма</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="42"/>
-        <source>Pay &amp;To:</source>
-        <translation>Полу&amp;чатель:</translation>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Адрес получателя платежа (например 1LA5FtQhnnWnkK6zjFfutR7Stiit4wKd63)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
@@ -1170,11 +1160,6 @@ Address: %4
         <translation>&amp;Метка:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Адрес получателя платежа (например 1LA5FtQhnnWnkK6zjFfutR7Stiit4wKd63)</translation>
-    </message>
-    <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
         <source>Choose address from address book</source>
         <translation>Выберите адрес из адресной книги</translation>
@@ -1183,6 +1168,16 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="113"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="29"/>
+        <source>A&amp;mount:</source>
+        <translation>Ко&amp;личество:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="42"/>
+        <source>Pay &amp;To:</source>
+        <translation>Полу&amp;чатель:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="120"/>
@@ -1195,6 +1190,11 @@ Address: %4
         <translation>Alt+P</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="137"/>
+        <source>Remove this recipient</source>
+        <translation>Удалить этого получателя</translation>
+    </message>
+    <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Введите Bitcoin-адрес (например 1LA5FtQhnnWnkK6zjFfutR7Stiit4wKd63)</translation>
@@ -1203,19 +1203,14 @@ Address: %4
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="20"/>
-        <source>Open until %1</source>
-        <translation>Открыто до %1</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="30"/>
-        <source>%1 confirmations</source>
-        <translation>%1 подтверждений</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="18"/>
         <source>Open for %1 blocks</source>
         <translation>Открыто до получения %1 блоков</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="20"/>
+        <source>Open until %1</source>
+        <translation>Открыто до %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="26"/>
@@ -1226,6 +1221,11 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Статус:&lt;/b&gt; </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="52"/>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, ещё не было успешно разослано</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
@@ -1306,26 +1306,6 @@ Address: %4
         <translation>&lt;b&gt;Общая сумма:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="224"/>
-        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Сгенерированные монеты должны подождать 120 блоков прежде, чем они смогут быть отправлены.  Когда Вы сгенерировали этот блок он был отправлен в сеть, чтобы он был добавлен к цепочке блоков.  Если данная процедура не удастся, статус изменится на «не подтверждено» и монеты будут непередаваемыми.  Такое может случайно происходить в случае, если другой узел сгенерирует блок на несколько секунд раньше.</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="28"/>
-        <source>%1/unconfirmed</source>
-        <translation>%1/не подтверждено</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="52"/>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, ещё не было успешно разослано</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="90"/>
-        <source>unknown</source>
-        <translation>неизвестно</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="217"/>
         <source>Message:</source>
         <translation>Сообщение:</translation>
@@ -1339,6 +1319,26 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="221"/>
         <source>Transaction ID:</source>
         <translation>Идентификатор транзакции:</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="28"/>
+        <source>%1/unconfirmed</source>
+        <translation>%1/не подтверждено</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="30"/>
+        <source>%1 confirmations</source>
+        <translation>%1 подтверждений</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="90"/>
+        <source>unknown</source>
+        <translation>неизвестно</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="224"/>
+        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Сгенерированные монеты должны подождать 120 блоков прежде, чем они смогут быть отправлены.  Когда Вы сгенерировали этот блок он был отправлен в сеть, чтобы он был добавлен к цепочке блоков.  Если данная процедура не удастся, статус изменится на «не подтверждено» и монеты будут непередаваемыми.  Такое может случайно происходить в случае, если другой узел сгенерирует блок на несколько секунд раньше.</translation>
     </message>
 </context>
 <context>
@@ -1356,11 +1356,6 @@ Address: %4
 </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Type</source>
-        <translation>Тип</translation>
-    </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Address</source>
@@ -1396,19 +1391,9 @@ Address: %4
         <translation>Не подтверждено (%1 из %2 подтверждений)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="289"/>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Подтверждено (%1 подтверждений)</translation>
-    </message>
-    <message>
         <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Этот блок не был получен другими узлами и, возможно, не будет принят!</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="306"/>
-        <source>Generated but not accepted</source>
-        <translation>Сгенерированно, но не подтверждено</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="349"/>
@@ -1467,8 +1452,18 @@ Address: %4
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Type</source>
+        <translation>Тип</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Date</source>
         <translation>Дата</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="289"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Подтверждено (%1 подтверждений)</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="297"/>
@@ -1479,18 +1474,54 @@ Address: %4
             <numerusform>Добытыми монетами можно будет воспользоваться через %n блоков</numerusform>
         </translation>
     </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <source>Generated but not accepted</source>
+        <translation>Сгенерированно, но не подтверждено</translation>
+    </message>
 </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <location filename="../transactionview.cpp" line="90"/>
+        <source>Min amount</source>
+        <translation>Мин. сумма</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="270"/>
+        <source>Export Transaction Data</source>
+        <translation>Экспортировать данные транзакций</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="56"/>
+        <source>Today</source>
+        <translation>Сегодня</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="282"/>
+        <source>Label</source>
+        <translation>Метка</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="59"/>
+        <source>Last month</source>
+        <translation>За последний месяц</translation>
+    </message>
     <message>
         <location filename="../transactionview.cpp" line="60"/>
         <source>This year</source>
         <translation>В этом году</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="61"/>
-        <source>Range...</source>
-        <translation>Промежуток...</translation>
+        <location filename="../transactionview.cpp" line="289"/>
+        <source>Error exporting</source>
+        <translation>Ошибка экспорта</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="55"/>
+        <location filename="../transactionview.cpp" line="71"/>
+        <source>All</source>
+        <translation>Все</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="72"/>
@@ -1518,9 +1549,9 @@ Address: %4
         <translation>Другое</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
-        <source>Enter address or label to search</source>
-        <translation>Введите адрес или метку для поиска</translation>
+        <location filename="../transactionview.cpp" line="392"/>
+        <source>to</source>
+        <translation>до</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="125"/>
@@ -1533,19 +1564,9 @@ Address: %4
         <translation>Изменить метку</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="270"/>
-        <source>Export Transaction Data</source>
-        <translation>Экспортировать данные транзакций</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="279"/>
-        <source>Confirmed</source>
-        <translation>Подтверждено</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="126"/>
-        <source>Copy amount</source>
-        <translation>Скопировать сумму</translation>
+        <location filename="../transactionview.cpp" line="124"/>
+        <source>Copy address</source>
+        <translation>Копировать адрес</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="283"/>
@@ -1553,65 +1574,14 @@ Address: %4
         <translation>Адрес</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="284"/>
-        <source>Amount</source>
-        <translation>Количество</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="285"/>
-        <source>ID</source>
-        <translation>ID</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="289"/>
-        <source>Error exporting</source>
-        <translation>Ошибка экспорта</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="289"/>
-        <source>Could not write to file %1.</source>
-        <translation>Невозможно записать в файл %1.</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="55"/>
-        <location filename="../transactionview.cpp" line="71"/>
-        <source>All</source>
-        <translation>Все</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="384"/>
-        <source>Range:</source>
-        <translation>Промежуток от:</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="392"/>
-        <source>to</source>
-        <translation>до</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="58"/>
-        <source>This month</source>
-        <translation>В этом месяце</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="59"/>
-        <source>Last month</source>
-        <translation>За последний месяц</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="90"/>
-        <source>Min amount</source>
-        <translation>Мин. сумма</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="124"/>
-        <source>Copy address</source>
-        <translation>Копировать адрес</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="271"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Текст, разделённый запятыми (*.csv)</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="284"/>
+        <source>Amount</source>
+        <translation>Количество</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="280"/>
@@ -1619,19 +1589,24 @@ Address: %4
         <translation>Дата</translation>
     </message>
     <message>
+        <location filename="../transactionview.cpp" line="285"/>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
         <location filename="../transactionview.cpp" line="281"/>
         <source>Type</source>
         <translation>Тип</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="282"/>
-        <source>Label</source>
-        <translation>Метка</translation>
+        <location filename="../transactionview.cpp" line="289"/>
+        <source>Could not write to file %1.</source>
+        <translation>Невозможно записать в файл %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="56"/>
-        <source>Today</source>
-        <translation>Сегодня</translation>
+        <location filename="../transactionview.cpp" line="384"/>
+        <source>Range:</source>
+        <translation>Промежуток от:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="57"/>
@@ -1639,9 +1614,34 @@ Address: %4
         <translation>На этой неделе</translation>
     </message>
     <message>
+        <location filename="../transactionview.cpp" line="58"/>
+        <source>This month</source>
+        <translation>В этом месяце</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="61"/>
+        <source>Range...</source>
+        <translation>Промежуток...</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Enter address or label to search</source>
+        <translation>Введите адрес или метку для поиска</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="126"/>
+        <source>Copy amount</source>
+        <translation>Скопировать сумму</translation>
+    </message>
+    <message>
         <location filename="../transactionview.cpp" line="128"/>
         <source>Show details...</source>
         <translation>Показать детали...</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="279"/>
+        <source>Confirmed</source>
+        <translation>Подтверждено</translation>
     </message>
 </context>
 <context>
@@ -1655,24 +1655,79 @@ Address: %4
 <context>
     <name>bitcoin-core</name>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
+        <translation>Невозможно установить блокировку на рабочую директорию %s.  Возможно, бумажник уже запущен.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="87"/>
+        <source>Rescanning...</source>
+        <translation>Сканирование...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <source>Usage:</source>
+        <translation>Использование:</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Loading block index...</source>
         <translation>Загрузка индекса блоков...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="85"/>
-        <source>Cannot initialize keypool</source>
-        <translation>Не удаётся инициализировать массив ключей</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="86"/>
-        <source>Cannot write default address</source>
-        <translation>Не удаётся записать адрес по умолчанию</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="88"/>
         <source>Done loading</source>
         <translation>Загрузка завершена</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="82"/>
+        <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
+        <translation>Необходимо перезаписать бумажник, перезапустите Bitcoin для завершения операции.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
+        <translation>Ошибка загрузки wallet.dat: бумажник требует более новую версию Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="84"/>
+        <source>Cannot downgrade wallet</source>
+        <translation>Не удаётся понизить версию бумажника</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="13"/>
+        <source>Options:</source>
+        <translation>Опции:</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="91"/>
+        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>ВНИМАНИЕ: Установлена слишком большая комиссия (-paytxfee=).  Данный параметр отвечает за комиссию, которую Вы будете добавлять к сумме при осуществлении транзакций.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="94"/>
+        <source>Error: CreateThread(StartNode) failed</source>
+        <translation>Ошибка: Созданиние потока (запуск узла) не удался</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="96"/>
+        <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
+        <translation>Невозможно забиндить порт %d на данном компьютере.  Возможно, бумажник ужк запущен.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="90"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
+        <translation>Ошибка в сумме комиссии</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="99"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
+        <translation>ВНИМАНИЕ: Проверьте дату и время, установленные на Вашем компьютере. Если Ваши часы идут не правильно Bitcoin может наботать не корректно.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="89"/>
+        <source>Invalid -proxy address</source>
+        <translation>Ошибка в адресе прокси</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="15"/>
@@ -1690,19 +1745,14 @@ Address: %4
         <translation>Принимать входящие подключения на &lt;port&gt; (по умолчанию: 8333 или 18333 в тестовой сети)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="21"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>Установить размер кэша базы данных в мегабайтах (по умолчанию: 25)</translation>
+        <location filename="../bitcoinstrings.cpp" line="10"/>
+        <source>Send command to -server or bitcoind</source>
+        <translation>Отправить команду на -server или bitcoind</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="27"/>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Добавить узел для подключения и пытаться поддерживать соединение открытым</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Принимать командную строку и команды JSON-RPC</translation>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Get help for a command</source>
+        <translation>Получить помощь по команде</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
@@ -1710,69 +1760,14 @@ Address: %4
         <translation>Найти участников через IRC (по умолчанию: 0)</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="42"/>
+        <source>Accept command line and JSON-RPC commands</source>
+        <translation>Принимать командную строку и команды JSON-RPC</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запускаться в фоне как демон и принимать команды</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="94"/>
-        <source>Error: CreateThread(StartNode) failed</source>
-        <translation>Ошибка: Созданиние потока (запуск узла) не удался</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="96"/>
-        <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
-        <translation>Невозможно забиндить порт %d на данном компьютере.  Возможно, бумажник ужк запущен.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="48"/>
-        <source>Send trace/debug info to debugger</source>
-        <translation>Отправлять информацию трассировки/отладки в отладчик</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="102"/>
-        <source>beta</source>
-        <translation>бета</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="53"/>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>Посылать команды узлу, запущенному на &lt;ip&gt; (по умолчанию: 127.0.0.1)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Приватный ключ сервера (по умолчанию: server.pem)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="80"/>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Ошибка загрузки wallet.dat: Бумажник поврежден</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="82"/>
-        <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>Необходимо перезаписать бумажник, перезапустите Bitcoin для завершения операции.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="83"/>
-        <source>Error loading wallet.dat</source>
-        <translation>Ошибка при загрузке wallet.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="41"/>
-        <source>Fee per KB to add to transactions you send</source>
-        <translation>Комиссия на килобайт, добавляемая к вашим транзакциям</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="46"/>
-        <source>Prepend debug output with timestamp</source>
-        <translation>Дописывать отметки времени к отладочному выводу</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="54"/>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="49"/>
@@ -1785,24 +1780,14 @@ Address: %4
         <translation>Пароль для подключений JSON-RPC</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="76"/>
+        <source>Error loading addr.dat</source>
+        <translation>Ошибка загрузки addr.dat</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
         <translation>Ожидать подключения JSON-RPC на &lt;порт&gt; (по умолчанию: 8332)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="58"/>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Установить размер запаса ключей в &lt;n&gt; (по умолчанию: 100)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="59"/>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Перепроверить цепь блоков на предмет отсутствующих в бумажнике транзакций</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="65"/>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Использовать OpenSSL (https) для подключений JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
@@ -1810,157 +1795,14 @@ Address: %4
         <translation>Обновить бумажник до последнего формата</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="60"/>
-        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
-        <translation>Сколько блоков проверять при запуске (по умолчанию: 2500, 0 = все)</translation>
+        <location filename="../bitcoinstrings.cpp" line="44"/>
+        <source>Use the test network</source>
+        <translation>Использовать тестовую сеть</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="61"/>
-        <source>How thorough the block verification is (0-6, default: 1)</source>
-        <translation>Насколько тщательно проверять блоки (0-6, по умолчанию: 1)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Error loading blkindex.dat</source>
-        <translation>Ошибка чтения blkindex.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>Ошибка загрузки wallet.dat: бумажник требует более новую версию Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="84"/>
-        <source>Cannot downgrade wallet</source>
-        <translation>Не удаётся понизить версию бумажника</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="18"/>
-        <source>Start minimized</source>
-        <translation>Запускать свёрнутым</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="28"/>
-        <source>Connect only to the specified node</source>
-        <translation>Подключаться только к указанному узлу</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="37"/>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
-        <translation>Максимальный размер буфера приёма на соединение, &lt;n&gt;*1000 байт (по умолчанию: 10000)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="76"/>
-        <source>Error loading addr.dat</source>
-        <translation>Ошибка загрузки addr.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="62"/>
-        <source>
-SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>
-Параметры SSL: (см. Bitcoin Wiki для инструкций по настройке SSL)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Bitcoin version</source>
-        <translation>Версия</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="26"/>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Поддерживать не более &lt;n&gt; подключений к узлам (по умолчанию: 125)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="13"/>
-        <source>Options:</source>
-        <translation>Опции:</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Send command to -server or bitcoind</source>
-        <translation>Отправить команду на -server или bitcoind</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Указать конфигурационный файл (по умолчанию: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="22"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>Укажите таймаут соединения (в миллисекундах)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="20"/>
-        <source>Specify data directory</source>
-        <translation>Укажите каталог данных</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Порог для отключения неправильно ведущих себя узлов (по умолчанию: 100)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Usage:</source>
-        <translation>Использование:</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Невозможно установить блокировку на рабочую директорию %s.  Возможно, бумажник уже запущен.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="75"/>
-        <source>Loading addresses...</source>
-        <translation>Загрузка адресов...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="79"/>
-        <source>Loading wallet...</source>
-        <translation>Загрузка бумажника...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="87"/>
-        <source>Rescanning...</source>
-        <translation>Сканирование...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="99"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>ВНИМАНИЕ: Проверьте дату и время, установленные на Вашем компьютере. Если Ваши часы идут не правильно Bitcoin может наботать не корректно.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="11"/>
-        <source>List commands</source>
-        <translation>Список команд
-</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Get help for a command</source>
-        <translation>Получить помощь по команде</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="95"/>
-        <source>Warning: Disk space is low</source>
-        <translation>ВНИМАНИЕ: На диске заканчивается свободное пространство</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="90"/>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
-        <translation>Ошибка в сумме комиссии</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="91"/>
-        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>ВНИМАНИЕ: Установлена слишком большая комиссия (-paytxfee=).  Данный параметр отвечает за комиссию, которую Вы будете добавлять к сумме при осуществлении транзакций.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="17"/>
-        <source>Don&apos;t generate coins</source>
-        <translation>Не генерировать монеты</translation>
+        <location filename="../bitcoinstrings.cpp" line="52"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>Разрешить подключения JSON-RPC с указанного IP</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
@@ -1968,19 +1810,14 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Разрешённые алгоритмы (по умолчанию: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="19"/>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Показывать сплэш при запуске (по умолчанию: 1)</translation>
+        <location filename="../bitcoinstrings.cpp" line="66"/>
+        <source>Server certificate file (default: server.cert)</source>
+        <translation>Файл серверного сертификата (по умолчанию: server.cert)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="23"/>
-        <source>Connect through socks4 proxy</source>
-        <translation>Подключаться через socks4 прокси</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="24"/>
-        <source>Allow DNS lookups for addnode and connect</source>
-        <translation>Разрешить обращения к DNS для addnode и подключения</translation>
+        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <source>This help message</source>
+        <translation>Эта справка</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
@@ -1998,9 +1835,145 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Искать узлы с помощью DNS (по умолчанию: 1)</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="45"/>
+        <source>Output extra debugging information</source>
+        <translation>Выводить дополнительную отладочную информацию</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
+        <source>Loading addresses...</source>
+        <translation>Загрузка адресов...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="79"/>
+        <source>Loading wallet...</source>
+        <translation>Загрузка бумажника...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="102"/>
+        <source>beta</source>
+        <translation>бета</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="95"/>
+        <source>Warning: Disk space is low</source>
+        <translation>ВНИМАНИЕ: На диске заканчивается свободное пространство</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Bitcoin version</source>
+        <translation>Версия</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <source>Error loading blkindex.dat</source>
+        <translation>Ошибка чтения blkindex.dat</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="80"/>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation>Ошибка загрузки wallet.dat: Бумажник поврежден</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="83"/>
+        <source>Error loading wallet.dat</source>
+        <translation>Ошибка при загрузке wallet.dat</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <source>Cannot initialize keypool</source>
+        <translation>Не удаётся инициализировать массив ключей</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="86"/>
+        <source>Cannot write default address</source>
+        <translation>Не удаётся записать адрес по умолчанию</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="11"/>
+        <source>List commands</source>
+        <translation>Список команд
+</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <source>Specify configuration file (default: bitcoin.conf)</source>
+        <translation>Указать конфигурационный файл (по умолчанию: bitcoin.conf)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="17"/>
+        <source>Don&apos;t generate coins</source>
+        <translation>Не генерировать монеты</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="18"/>
+        <source>Start minimized</source>
+        <translation>Запускать свёрнутым</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="19"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Показывать сплэш при запуске (по умолчанию: 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="20"/>
+        <source>Specify data directory</source>
+        <translation>Укажите каталог данных</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>Установить размер кэша базы данных в мегабайтах (по умолчанию: 25)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="22"/>
+        <source>Specify connection timeout (in milliseconds)</source>
+        <translation>Укажите таймаут соединения (в миллисекундах)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="23"/>
+        <source>Connect through socks4 proxy</source>
+        <translation>Подключаться через socks4 прокси</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="24"/>
+        <source>Allow DNS lookups for addnode and connect</source>
+        <translation>Разрешить обращения к DNS для addnode и подключения</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="26"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation>Поддерживать не более &lt;n&gt; подключений к узлам (по умолчанию: 125)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="27"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>Добавить узел для подключения и пытаться поддерживать соединение открытым</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="28"/>
+        <source>Connect only to the specified node</source>
+        <translation>Подключаться только к указанному узлу</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation>Порог для отключения неправильно ведущих себя узлов (по умолчанию: 100)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="54"/>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Число секунд блокирования неправильно ведущих себя узлов (по умолчанию: 86400)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="37"/>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
+        <translation>Максимальный размер буфера приёма на соединение, &lt;n&gt;*1000 байт (по умолчанию: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
@@ -2018,14 +1991,14 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished">Использовать UPnP для проброса порта (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
-        <source>Use the test network</source>
-        <translation>Использовать тестовую сеть</translation>
+        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <source>Fee per KB to add to transactions you send</source>
+        <translation>Комиссия на килобайт, добавляемая к вашим транзакциям</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="45"/>
-        <source>Output extra debugging information</source>
-        <translation>Выводить дополнительную отладочную информацию</translation>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <source>Prepend debug output with timestamp</source>
+        <translation>Дописывать отметки времени к отладочному выводу</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
@@ -2033,24 +2006,51 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Выводить информацию трассировки/отладки на консоль вместо файла debug.log</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="52"/>
-        <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>Разрешить подключения JSON-RPC с указанного IP</translation>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
+        <source>Send trace/debug info to debugger</source>
+        <translation>Отправлять информацию трассировки/отладки в отладчик</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Файл серверного сертификата (по умолчанию: server.cert)</translation>
+        <location filename="../bitcoinstrings.cpp" line="53"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation>Посылать команды узлу, запущенному на &lt;ip&gt; (по умолчанию: 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
-        <source>This help message</source>
-        <translation>Эта справка</translation>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <translation>Установить размер запаса ключей в &lt;n&gt; (по умолчанию: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="89"/>
-        <source>Invalid -proxy address</source>
-        <translation>Ошибка в адресе прокси</translation>
+        <location filename="../bitcoinstrings.cpp" line="59"/>
+        <source>Rescan the block chain for missing wallet transactions</source>
+        <translation>Перепроверить цепь блоков на предмет отсутствующих в бумажнике транзакций</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="60"/>
+        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
+        <translation>Сколько блоков проверять при запуске (по умолчанию: 2500, 0 = все)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <source>How thorough the block verification is (0-6, default: 1)</source>
+        <translation>Насколько тщательно проверять блоки (0-6, по умолчанию: 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="62"/>
+        <source>
+SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>
+Параметры SSL: (см. Bitcoin Wiki для инструкций по настройке SSL)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="65"/>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
+        <translation>Использовать OpenSSL (https) для подключений JSON-RPC</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
+        <source>Server private key (default: server.pem)</source>
+        <translation>Приватный ключ сервера (по умолчанию: server.pem)</translation>
     </message>
 </context>
 </TS>

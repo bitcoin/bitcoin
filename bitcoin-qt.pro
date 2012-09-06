@@ -83,7 +83,7 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     # for extra security against potential buffer overflows
     QMAKE_CXXFLAGS += -fstack-protector
     QMAKE_LFLAGS += -fstack-protector
-    # do not enable this on windows, as it will result in a non-working executable!
+    # do not enable this on windows cross compile with mingw 4.2.x, as it will result in a non-working executable!
 }
 
 # disable quite some warnings because bitcoin core "sins" a lot
@@ -179,9 +179,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/checkpoints.cpp \
     src/addrman.cpp \
     src/db.cpp \
-    src/json/json_spirit_writer.cpp \
-    src/json/json_spirit_value.cpp \
-    src/json/json_spirit_reader.cpp \
     src/qt/clientmodel.cpp \
     src/qt/guiutil.cpp \
     src/qt/transactionrecord.cpp \
