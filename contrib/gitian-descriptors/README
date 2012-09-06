@@ -23,7 +23,7 @@ Once you've got the right hardware and software:
     mkdir gitian-builder/inputs
     cd gitian-builder/inputs
     # Inputs for Linux and Win32:
-    wget 'http://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-1.6.tar.gz'
+    wget -O miniupnpc-1.6.tar.gz 'http://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-1.6.tar.gz'
     wget 'http://fukuchi.org/works/qrencode/qrencode-3.2.0.tar.bz2'
     # Inputs for Win32: (Linux has packages for these)
     wget 'https://downloads.sourceforge.net/project/boost/boost/1.50.0/boost_1_50_0.tar.bz2'
@@ -46,7 +46,7 @@ Once you've got the right hardware and software:
     git pull
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/gitian.yml
 
-    # Build Win32 dependencies:
+    # Build Win32 dependencies: (only needs to be done once, or when dependency versions change)
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
     ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
