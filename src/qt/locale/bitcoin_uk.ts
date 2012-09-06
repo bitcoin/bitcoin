@@ -108,14 +108,14 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Назва</translation>
     </message>
     <message>
-        <location filename="../addresstablemodel.cpp" line="78"/>
-        <source>Address</source>
-        <translation>Адреса</translation>
-    </message>
-    <message>
         <location filename="../addresstablemodel.cpp" line="114"/>
         <source>(no label)</source>
         <translation>(немає назви)</translation>
+    </message>
+    <message>
+        <location filename="../addresstablemodel.cpp" line="78"/>
+        <source>Address</source>
+        <translation>Адреса</translation>
     </message>
 </context>
 <context>
@@ -126,24 +126,55 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Діалог</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
-        <source>TextLabel</source>
-        <translation>Текстова мітка</translation>
-    </message>
-    <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
-        <source>Enter passphrase</source>
-        <translation>Введіть пароль</translation>
-    </message>
-    <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
         <translation>Новий пароль</translation>
     </message>
     <message>
+        <location filename="../askpassphrasedialog.cpp" line="51"/>
+        <source>Decrypt wallet</source>
+        <translation>Дешифрувати гаманець</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="125"/>
+        <location filename="../askpassphrasedialog.cpp" line="173"/>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Введені паролі не співпадають.</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="136"/>
+        <source>Wallet unlock failed</source>
+        <translation>Не вдалося розблокувати гаманець</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Біткоін-клієнт буде закрито для завершення процесу шифрування. Пам’ятайте, що шифрування гаманця не може повністю захистити ваші біткоіни від кражі, у випадку якщо ваш комп’ютер буде інфіковано шкідливими програмами.</translation>
+    </message>
+    <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
         <translation>Повторіть пароль</translation>
+    </message>
+    <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
+        <source>TextLabel</source>
+        <translation>Текстова мітка</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="38"/>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Ця операція потребує пароль для розблокування гаманця.</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="46"/>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Ця операція потребує пароль для дешифрування гаманця.</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="55"/>
+        <source>Enter the old and new passphrase to the wallet.</source>
+        <translation>Ввести старий та новий паролі для гаманця.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="34"/>
@@ -156,24 +187,9 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Зашифрувати гаманець</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="38"/>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ця операція потребує пароль для розблокування гаманця.</translation>
-    </message>
-    <message>
         <location filename="../askpassphrasedialog.cpp" line="43"/>
         <source>Unlock wallet</source>
         <translation>Розблокувати гаманець</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="46"/>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ця операція потребує пароль для дешифрування гаманця.</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="51"/>
-        <source>Decrypt wallet</source>
-        <translation>Дешифрувати гаманець</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="54"/>
@@ -181,32 +197,9 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Змінити пароль</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="55"/>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ввести старий та новий паролі для гаманця.</translation>
-    </message>
-    <message>
         <location filename="../askpassphrasedialog.cpp" line="101"/>
         <source>Confirm wallet encryption</source>
         <translation>Підтвердити шифрування гаманця</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation>УВАГА: Якщо ви зашифруєте гаманець і забудете пароль, ви &lt;b&gt;ВТРАТИТЕ ВСІ СВОЇ БІТКОІНИ&lt;/b&gt;!
-Ви дійсно хочете зашифрувати свій гаманець?</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="111"/>
-        <location filename="../askpassphrasedialog.cpp" line="160"/>
-        <source>Wallet encrypted</source>
-        <translation>Гаманець зашифровано</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Біткоін-клієнт буде закрито для завершення процесу шифрування. Пам’ятайте, що шифрування гаманця не може повністю захистити ваші біткоіни від кражі, у випадку якщо ваш комп’ютер буде інфіковано шкідливими програмами.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
@@ -222,17 +215,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Виникла помилка під час шифрування гаманця. Ваш гаманець не було зашифровано.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="125"/>
-        <location filename="../askpassphrasedialog.cpp" line="173"/>
-        <source>The supplied passphrases do not match.</source>
-        <translation>Введені паролі не співпадають.</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="136"/>
-        <source>Wallet unlock failed</source>
-        <translation>Не вдалося розблокувати гаманець</translation>
-    </message>
-    <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
         <location filename="../askpassphrasedialog.cpp" line="148"/>
         <location filename="../askpassphrasedialog.cpp" line="167"/>
@@ -245,6 +227,19 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Не вдалося розшифрувати гаманець</translation>
     </message>
     <message>
+        <location filename="../askpassphrasedialog.cpp" line="102"/>
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
+Are you sure you wish to encrypt your wallet?</source>
+        <translation>УВАГА: Якщо ви зашифруєте гаманець і забудете пароль, ви &lt;b&gt;ВТРАТИТЕ ВСІ СВОЇ БІТКОІНИ&lt;/b&gt;!
+Ви дійсно хочете зашифрувати свій гаманець?</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="111"/>
+        <location filename="../askpassphrasedialog.cpp" line="160"/>
+        <source>Wallet encrypted</source>
+        <translation>Гаманець зашифровано</translation>
+    </message>
+    <message>
         <location filename="../askpassphrasedialog.cpp" line="161"/>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Пароль було успішно змінено.</translation>
@@ -255,18 +250,38 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Warning: The Caps Lock key is on.</source>
         <translation>Увага: Ввімкнено Caps Lock</translation>
     </message>
+    <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
+        <source>Enter passphrase</source>
+        <translation>Введіть пароль</translation>
+    </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="225"/>
-        <source>&amp;About %1</source>
-        <translation>П&amp;ро %1</translation>
+        <location filename="../bitcoingui.cpp" line="221"/>
+        <source>E&amp;xit</source>
+        <translation>&amp;Вихід</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="70"/>
-        <source>Bitcoin Wallet</source>
-        <translation>Гаманець</translation>
+        <location filename="../bitcoingui.cpp" line="239"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation>Зашифрувати чи розшифрувати гаманець</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="226"/>
+        <source>Show information about Bitcoin</source>
+        <translation>Показати інформацію про Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Змінити пароль, який використовується для шифрування гаманця</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="228"/>
+        <source>About &amp;Qt</source>
+        <translation>&amp;Про Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="139"/>
@@ -275,14 +290,14 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Синхронізація з мережею...</translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="70"/>
+        <source>Bitcoin Wallet</source>
+        <translation>Гаманець</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="142"/>
         <source>Block chain synchronization in progress</source>
         <translation>Відбувається синхронізація ланцюжка блоків...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="180"/>
-        <source>&amp;Overview</source>
-        <translation>&amp;Огляд</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="181"/>
@@ -315,11 +330,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>О&amp;тримати</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="199"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation>Показати список адрес для отримання платежів</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>&amp;Send coins</source>
         <translation>В&amp;ідправити</translation>
@@ -330,19 +340,14 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Відправити монети на вказану адресу</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="221"/>
-        <source>E&amp;xit</source>
-        <translation>&amp;Вихід</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="222"/>
         <source>Quit application</source>
         <translation>Вийти</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="226"/>
-        <source>Show information about Bitcoin</source>
-        <translation>Показати інформацію про Bitcoin</translation>
+        <location filename="../bitcoingui.cpp" line="225"/>
+        <source>&amp;About %1</source>
+        <translation>П&amp;ро %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
@@ -360,49 +365,14 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Показати &amp;гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="235"/>
-        <source>Show the Bitcoin window</source>
-        <translation>Показати вікно гаманця</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Експорт...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Export the current view to a file</source>
-        <translation>Експортувати в файл</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="238"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation>&amp;Шифрування гаманця</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Encrypt or decrypt wallet</source>
-        <translation>Зашифрувати чи розшифрувати гаманець</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
-        <source>&amp;Change Passphrase</source>
-        <translation>Змінити парол&amp;ь</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Змінити пароль, який використовується для шифрування гаманця</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="228"/>
-        <source>About &amp;Qt</source>
-        <translation>&amp;Про Qt</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="229"/>
         <source>Show information about Qt</source>
         <translation>Показати інформацію про Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="180"/>
+        <source>&amp;Overview</source>
+        <translation>&amp;Огляд</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="264"/>
@@ -415,9 +385,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>&amp;Налаштування</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="273"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Довідка</translation>
+        <location filename="../bitcoingui.cpp" line="199"/>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation>Показати список адрес для отримання платежів</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
@@ -425,9 +395,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Панель вкладок</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="288"/>
-        <source>Actions toolbar</source>
-        <translation>Панель дій</translation>
+        <location filename="../bitcoingui.cpp" line="236"/>
+        <source>&amp;Export...</source>
+        <translation>&amp;Експорт...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -435,9 +405,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>[тестова мережа]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="388"/>
-        <source>bitcoin-qt</source>
-        <translation>bitcoin-qt</translation>
+        <location filename="../bitcoingui.cpp" line="241"/>
+        <source>&amp;Change Passphrase</source>
+        <translation>Змінити парол&amp;ь</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="430"/>
@@ -449,14 +419,19 @@ Are you sure you wish to encrypt your wallet?</source>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="456"/>
-        <source>Downloaded %1 of %2 blocks of transaction history.</source>
-        <translation>Завантажено %1 з %2 блоків історії переказів.</translation>
+        <location filename="../bitcoingui.cpp" line="273"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Довідка</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="468"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Завантажено %1 блоків історії транзакцій.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="288"/>
+        <source>Actions toolbar</source>
+        <translation>Панель дій</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="483"/>
@@ -466,6 +441,31 @@ Are you sure you wish to encrypt your wallet?</source>
             <numerusform>%n секунди тому</numerusform>
             <numerusform>%n секунд тому</numerusform>
         </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="388"/>
+        <source>bitcoin-qt</source>
+        <translation>bitcoin-qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="235"/>
+        <source>Show the Bitcoin window</source>
+        <translation>Показати вікно гаманця</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="237"/>
+        <source>Export the current view to a file</source>
+        <translation>Експортувати в файл</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="238"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation>&amp;Шифрування гаманця</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="456"/>
+        <source>Downloaded %1 of %2 blocks of transaction history.</source>
+        <translation>Завантажено %1 з %2 блоків історії переказів.</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="487"/>
@@ -515,11 +515,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Цей переказ перевищує максимально допустимий розмір. Проте ви можете здійснити її, додавши комісію в %1, яка відправиться тим вузлам що оброблять ваш переказ, та допоможе підтримати мережу. Ви хочете додати комісію?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="588"/>
-        <source>Sending...</source>
-        <translation>Відправлення...</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="615"/>
         <source>Sent transaction</source>
         <translation>Надіслані перекази</translation>
@@ -551,6 +546,11 @@ Address: %4
         <location filename="../bitcoingui.cpp" line="719"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>&lt;b&gt;Зашифрований&lt;/b&gt; гаманець &lt;b&gt;заблоковано&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="588"/>
+        <source>Sending...</source>
+        <translation>Відправлення...</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="133"/>
@@ -604,16 +604,6 @@ Address: %4
         <translation>&amp;Адреса</translation>
     </message>
     <message>
-        <location filename="../forms/editaddressdialog.ui" line="52"/>
-        <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
-        <translation>Адреса, пов’язана з цим записом адресної книги.</translation>
-    </message>
-    <message>
-        <location filename="../editaddressdialog.cpp" line="20"/>
-        <source>New receiving address</source>
-        <translation>Нова адреса для отримання</translation>
-    </message>
-    <message>
         <location filename="../editaddressdialog.cpp" line="24"/>
         <source>New sending address</source>
         <translation>Нова адреса для відправлення</translation>
@@ -622,11 +612,6 @@ Address: %4
         <location filename="../editaddressdialog.cpp" line="27"/>
         <source>Edit receiving address</source>
         <translation>Редагувати адресу для отримання</translation>
-    </message>
-    <message>
-        <location filename="../editaddressdialog.cpp" line="31"/>
-        <source>Edit sending address</source>
-        <translation>Редагувати адресу для відправлення</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="91"/>
@@ -642,6 +627,21 @@ Address: %4
         <location filename="../editaddressdialog.cpp" line="106"/>
         <source>New key generation failed.</source>
         <translation>Не вдалося згенерувати нові ключі.</translation>
+    </message>
+    <message>
+        <location filename="../forms/editaddressdialog.ui" line="52"/>
+        <source>The address associated with this address book entry. This can only be modified for sending addresses.</source>
+        <translation>Адреса, пов’язана з цим записом адресної книги.</translation>
+    </message>
+    <message>
+        <location filename="../editaddressdialog.cpp" line="20"/>
+        <source>New receiving address</source>
+        <translation>Нова адреса для отримання</translation>
+    </message>
+    <message>
+        <location filename="../editaddressdialog.cpp" line="31"/>
+        <source>Edit sending address</source>
+        <translation>Редагувати адресу для відправлення</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="96"/>
@@ -677,14 +677,14 @@ Address: %4
         <translation>Відображення порту через &amp;UPnP</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Автоматично відкривати порт для клієнту біткоін на роутері. Працює лише якщо ваш роутер підтримує UPnP і ця функція увімкнена.</translation>
-    </message>
-    <message>
         <location filename="../optionsdialog.cpp" line="185"/>
         <source>M&amp;inimize on close</source>
         <translation>Згортати замість закритт&amp;я</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="181"/>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Автоматично відкривати порт для клієнту біткоін на роутері. Працює лише якщо ваш роутер підтримує UPnP і ця функція увімкнена.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="186"/>
@@ -702,6 +702,16 @@ Address: %4
         <translation>Підключатись до мережі Bitcoin через SOCKS4-проксі (наприклад при використанні Tor)</translation>
     </message>
     <message>
+        <location filename="../optionsdialog.cpp" line="196"/>
+        <source>Proxy &amp;IP: </source>
+        <translation>&amp;IP проксі: </translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="202"/>
+        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
+        <translation>IP-адреса проксі-сервера (наприклад 127.0.0.1)</translation>
+    </message>
+    <message>
         <location filename="../optionsdialog.cpp" line="205"/>
         <source>&amp;Port: </source>
         <translation>&amp;Порт: </translation>
@@ -714,22 +724,12 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation type="unfinished">Добровільна комісія за кожен Кб переказу, яка дозволяє бути впевненим у тому, що ваш переказ буде оброблено швидко. Розмір більшості переказів рівен 1 Кб. Рекомендована комісія: 0,01.</translation>
+        <translation>Добровільна комісія за кожен Кб переказу, яка дозволяє бути впевненим у тому, що ваш переказ буде оброблено швидко. Розмір більшості переказів рівен 1 Кб. Рекомендована комісія: 0,01.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished">Заплатити комісі&amp;ю</translation>
-    </message>
-    <message>
-        <location filename="../optionsdialog.cpp" line="196"/>
-        <source>Proxy &amp;IP: </source>
-        <translation>&amp;IP проксі: </translation>
-    </message>
-    <message>
-        <location filename="../optionsdialog.cpp" line="202"/>
-        <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>IP-адреса проксі-сервера (наприклад 127.0.0.1)</translation>
+        <translation>Заплатити комісі&amp;ю</translation>
     </message>
 </context>
 <context>
@@ -753,6 +753,16 @@ Address: %4
 <context>
     <name>OverviewPage</name>
     <message>
+        <location filename="../overviewpage.cpp" line="103"/>
+        <source>Your current balance</source>
+        <translation>Ваш поточний баланс</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="108"/>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
+        <translation>Загальна сума всіх переказів, які ще не підтверджені, та до сих пір не враховуються в загальному балансі</translation>
+    </message>
+    <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
         <translation>Форма</translation>
@@ -768,29 +778,14 @@ Address: %4
         <translation>Кількість переказів:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="88"/>
-        <source>Wallet</source>
-        <translation>Гаманець</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="68"/>
-        <source>Unconfirmed:</source>
-        <translation>Непідтверджені:</translation>
-    </message>
-    <message>
         <location filename="../forms/overviewpage.ui" line="61"/>
         <source>0</source>
         <translation>0</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="108"/>
-        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Загальна сума всіх переказів, які ще не підтверджені, та до сих пір не враховуються в загальному балансі</translation>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="111"/>
-        <source>Total number of transactions in wallet</source>
-        <translation>Загальна кількість переказів в гаманці</translation>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <source>Wallet</source>
+        <translation>Гаманець</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -798,9 +793,14 @@ Address: %4
         <translation>&lt;b&gt;Недавні перекази&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="103"/>
-        <source>Your current balance</source>
-        <translation>Ваш поточний баланс</translation>
+        <location filename="../forms/overviewpage.ui" line="68"/>
+        <source>Unconfirmed:</source>
+        <translation>Непідтверджені:</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="111"/>
+        <source>Total number of transactions in wallet</source>
+        <translation>Загальна кількість переказів в гаманці</translation>
     </message>
 </context>
 <context>
@@ -818,6 +818,11 @@ Address: %4
         <translation>Відправити</translation>
     </message>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="97"/>
+        <source> and </source>
+        <translation> і </translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
         <source>Send to multiple recipients at once</source>
         <translation>Відправити на декілька адрес</translation>
@@ -825,7 +830,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="67"/>
         <source>&amp;Add recipient...</source>
-        <translation>Дод&amp;ати одержувача...</translation>
+        <translation>Дод&amp;ати одержувача... </translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
@@ -873,11 +878,6 @@ Address: %4
         <translation>Ви впевнені що хочете відправити %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="97"/>
-        <source> and </source>
-        <translation> і </translation>
-    </message>
-    <message>
         <location filename="../sendcoinsdialog.cpp" line="118"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Адреса отримувача невірна, будьласка перепровірте.</translation>
@@ -921,6 +921,16 @@ Address: %4
         <translation>Форма</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="29"/>
+        <source>A&amp;mount:</source>
+        <translation>&amp;Кількість:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="42"/>
+        <source>Pay &amp;To:</source>
+        <translation>&amp;Отримувач:</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
         <location filename="../sendcoinsentry.cpp" line="26"/>
         <source>Enter a label for this address to add it to your address book</source>
@@ -932,34 +942,9 @@ Address: %4
         <translation>&amp;Мітка:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Адреса для отримувача платежу (наприклад, 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
         <source>Choose address from address book</source>
         <translation>Вибрати адресу з адресної книги</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="120"/>
-        <source>Paste address from clipboard</source>
-        <translation>Вставити адресу</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="137"/>
-        <source>Remove this recipient</source>
-        <translation>Видалити цього отримувача</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="29"/>
-        <source>A&amp;mount:</source>
-        <translation>&amp;Кількість:</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="42"/>
-        <source>Pay &amp;To:</source>
-        <translation>&amp;Отримувач:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="113"/>
@@ -967,9 +952,24 @@ Address: %4
         <translation>Alt+A</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="120"/>
+        <source>Paste address from clipboard</source>
+        <translation>Вставити адресу</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="130"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="137"/>
+        <source>Remove this recipient</source>
+        <translation>Видалити цього отримувача</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="93"/>
+        <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Адреса для отримувача платежу (наприклад, 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
@@ -980,24 +980,9 @@ Address: %4
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="46"/>
-        <source>%1 confirmations</source>
-        <translation>%1 підтверджень</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="68"/>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, ще не було успішно розіслано</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="34"/>
         <source>Open for %1 blocks</source>
         <translation>Відкрити для %1 блоків</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="36"/>
-        <source>Open until %1</source>
-        <translation>Відкрити до %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
@@ -1005,14 +990,14 @@ Address: %4
         <translation>%1/поза інтернетом?</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="44"/>
-        <source>%1/unconfirmed</source>
-        <translation>%1/не підтверджено</translation>
+        <location filename="../transactiondesc.cpp" line="46"/>
+        <source>%1 confirmations</source>
+        <translation>%1 підтверджень</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="63"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Статус:&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Статус:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
@@ -1027,7 +1012,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Дата:&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Дата:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="83"/>
@@ -1046,26 +1031,11 @@ Address: %4
         <translation>невідомий</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="235"/>
-        <source>Comment:</source>
-        <translation>Коментар:</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="238"/>
-        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Після генерації монет, потрібно зачекати 120 блоків, перш ніж їх можна буде використати.  Коли ви згенерували цей блок, його було відправлено в мережу для того, щоб він був доданий до ланцюжка блоків.  Якщо ця процедура не вдасться, статус буде змінено на «не підтверджено» і ви не зможете потратити згенеровані монету.  Таке може статись, якщо хтось інший згенерував блок на декілька секунд раніше.</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="107"/>
         <location filename="../transactiondesc.cpp" line="130"/>
         <location filename="../transactiondesc.cpp" line="189"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Одержувач:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="110"/>
-        <source> (yours, label: </source>
-        <translation> (Ваша, мітка: </translation>
+        <translation>&lt;b&gt;Одержувач:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="112"/>
@@ -1073,22 +1043,9 @@ Address: %4
         <translation> (ваша)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="147"/>
-        <location filename="../transactiondesc.cpp" line="161"/>
-        <location filename="../transactiondesc.cpp" line="206"/>
-        <location filename="../transactiondesc.cpp" line="223"/>
-        <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Кредит:&lt;/b&gt; </translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="149"/>
         <source>(%1 matures in %2 more blocks)</source>
         <translation>(%1 «дозріє» через %2 блоків)</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="153"/>
-        <source>(not accepted)</source>
-        <translation>(не прийнято)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="197"/>
@@ -1096,11 +1053,6 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="220"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Дебет:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="211"/>
-        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Комісія за переказ:&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="227"/>
@@ -1111,6 +1063,54 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="233"/>
         <source>Message:</source>
         <translation>Повідомлення:</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="235"/>
+        <source>Comment:</source>
+        <translation>Коментар:</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="238"/>
+        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Після генерації монет, потрібно зачекати 120 блоків, перш ніж їх можна буде використати.  Коли ви згенерували цей блок, його було відправлено в мережу для того, щоб він був доданий до ланцюжка блоків.  Якщо ця процедура не вдасться, статус буде змінено на «не підтверджено» і ви не зможете потратити згенеровані монету.  Таке може статись, якщо хтось інший згенерував блок на декілька секунд раніше.</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="68"/>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, ще не було успішно розіслано</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="36"/>
+        <source>Open until %1</source>
+        <translation>Відкрити до %1</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="44"/>
+        <source>%1/unconfirmed</source>
+        <translation>%1/не підтверджено</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="110"/>
+        <source> (yours, label: </source>
+        <translation> (Ваша, мітка: </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="147"/>
+        <location filename="../transactiondesc.cpp" line="161"/>
+        <location filename="../transactiondesc.cpp" line="206"/>
+        <location filename="../transactiondesc.cpp" line="223"/>
+        <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Кредит:&lt;/b&gt; </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="153"/>
+        <source>(not accepted)</source>
+        <translation>(не прийнято)</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="211"/>
+        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Комісія за переказ:&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -1177,15 +1177,6 @@ Address: %4
         <source>Confirmed (%1 confirmations)</source>
         <translation>Підтверджено (%1 підтверджень)</translation>
     </message>
-    <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="297"/>
-        <source>Mined balance will be available in %n more blocks</source>
-        <translation type="unfinished">
-            <numerusform>Добутими монетами можна буде скористатись через %n блок</numerusform>
-            <numerusform>Добутими монетами можна буде скористатись через %n блок</numerusform>
-            <numerusform>Добутими монетами можна буде скористатись через %n блоки</numerusform>
-        </translation>
-    </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
@@ -1251,33 +1242,68 @@ Address: %4
         <source>Amount removed from or added to balance.</source>
         <translation>Сума, додана чи знята з балансу.</translation>
     </message>
+    <message numerus="yes">
+        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <source>Mined balance will be available in %n more blocks</source>
+        <translation>
+            <numerusform>Добутими монетами можна буде скористатись через %n блок</numerusform>
+            <numerusform>Добутими монетами можна буде скористатись через %n блоки</numerusform>
+            <numerusform>Добутими монетами можна буде скористатись через %n блоків</numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="283"/>
-        <source>Type</source>
-        <translation>Тип</translation>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Enter address or label to search</source>
+        <translation>Введіть адресу чи мітку для пошуку</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="284"/>
-        <source>Label</source>
-        <translation>Мітка</translation>
+        <location filename="../transactionview.cpp" line="90"/>
+        <source>Min amount</source>
+        <translation>Мінімальна сума</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="285"/>
-        <source>Address</source>
-        <translation>Адреса</translation>
+        <location filename="../transactionview.cpp" line="126"/>
+        <source>Copy label</source>
+        <translation>Скопіювати мітку</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="286"/>
-        <source>Amount</source>
-        <translation>Кількість</translation>
+        <location filename="../transactionview.cpp" line="273"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Файли, розділені комою (*.csv)</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="282"/>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="401"/>
+        <source>to</source>
+        <translation>до</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="287"/>
         <source>ID</source>
         <translation>Ідентифікатор</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="55"/>
+        <location filename="../transactionview.cpp" line="71"/>
+        <source>All</source>
+        <translation>Всі</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="57"/>
+        <source>This week</source>
+        <translation>На цьому тижні</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="58"/>
+        <source>This month</source>
+        <translation>На цьому місяці</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="291"/>
@@ -1295,40 +1321,34 @@ Address: %4
         <translation>Діапазон від:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="55"/>
-        <location filename="../transactionview.cpp" line="71"/>
-        <source>All</source>
-        <translation>Всі</translation>
+        <location filename="../transactionview.cpp" line="128"/>
+        <source>Show details...</source>
+        <translation>Показати деталі...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="56"/>
-        <source>Today</source>
-        <translation>Сьогодні</translation>
+        <location filename="../transactionview.cpp" line="283"/>
+        <source>Type</source>
+        <translation>Тип</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="57"/>
-        <source>This week</source>
-        <translation>На цьому тижні</translation>
+        <location filename="../transactionview.cpp" line="285"/>
+        <source>Address</source>
+        <translation>Адреса</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="58"/>
-        <source>This month</source>
-        <translation>На цьому місяці</translation>
+        <location filename="../transactionview.cpp" line="77"/>
+        <source>Mined</source>
+        <translation>Добуті</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="59"/>
-        <source>Last month</source>
-        <translation>Минулого місяця</translation>
+        <location filename="../transactionview.cpp" line="286"/>
+        <source>Amount</source>
+        <translation>Кількість</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="60"/>
         <source>This year</source>
         <translation>Цього року</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="61"/>
-        <source>Range...</source>
-        <translation>Проміжок</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="72"/>
@@ -1341,39 +1361,9 @@ Address: %4
         <translation>Відправлені на</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="76"/>
-        <source>To yourself</source>
-        <translation>Відправлені собі</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="77"/>
-        <source>Mined</source>
-        <translation>Добуті</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="78"/>
-        <source>Other</source>
-        <translation>Інше</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="84"/>
-        <source>Enter address or label to search</source>
-        <translation>Введіть адресу чи мітку для пошуку</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="90"/>
-        <source>Min amount</source>
-        <translation>Мінімальна сума</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="125"/>
         <source>Copy address</source>
         <translation>Скопіювати адресу</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="126"/>
-        <source>Copy label</source>
-        <translation>Скопіювати мітку</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="127"/>
@@ -1386,29 +1376,39 @@ Address: %4
         <translation>Експортувати дані переказів</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="273"/>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Файли, розділені комою (*.csv)</translation>
+        <location filename="../transactionview.cpp" line="56"/>
+        <source>Today</source>
+        <translation>Сьогодні</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="59"/>
+        <source>Last month</source>
+        <translation>Минулого місяця</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="61"/>
+        <source>Range...</source>
+        <translation>Проміжок</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="284"/>
+        <source>Label</source>
+        <translation>Мітка</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="76"/>
+        <source>To yourself</source>
+        <translation>Відправлені собі</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="78"/>
+        <source>Other</source>
+        <translation>Інше</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="281"/>
         <source>Confirmed</source>
         <translation>Підтверджені</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="282"/>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="128"/>
-        <source>Show details...</source>
-        <translation>Показати деталі...</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="401"/>
-        <source>to</source>
-        <translation>до</translation>
     </message>
 </context>
 <context>
@@ -1427,6 +1427,12 @@ Address: %4
         <translation>Вкористання:</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="27"/>
+        <source>Don&apos;t find peers using internet relay chat
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Неможливо встановити блокування на робочий каталог %s.  Можливо, гаманець вже запущено.</translation>
@@ -1437,24 +1443,19 @@ Address: %4
         <translation>Завантаження адрес...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="69"/>
-        <source>Loading block index...</source>
-        <translation>Завантаження індексу блоків...</translation>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <source>Done loading</source>
+        <translation>Завантаження завершене</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Bitcoin version</source>
+        <translation>Версія</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>Loading wallet...</source>
         <translation>Завантаження гаманця...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
-        <source>Rescanning...</source>
-        <translation>Сканування...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Done loading</source>
-        <translation>Завантаження завершене</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="80"/>
@@ -1477,14 +1478,34 @@ Address: %4
         <translation>Увага: будь ласка, перевірте дату і час на свому комп’ютері.  Якщо ваш годинник йде неправильно, Bitcoin може працювати некоректно.</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="79"/>
+        <source>Invalid -proxy address</source>
+        <translation>Помилка в адресі проксі-сервера</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
+        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Увага: встановлено занадто велику комісію (-paytxfee).  Комісія зніматиметься кожен раз коли ви проводитимете перекази.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <source>Warning: Disk space is low</source>
+        <translation>Увага: На диску мало вільного місця</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <source>Rescanning...</source>
+        <translation>Сканування...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="69"/>
+        <source>Loading block index...</source>
+        <translation>Завантаження індексу блоків...</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="92"/>
         <source>beta</source>
         <translation>бета</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Bitcoin version</source>
-        <translation>Версія</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
@@ -1601,12 +1622,6 @@ Address: %4
         <translation>Підключитись лише до вказаного вузла</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="27"/>
-        <source>Don&apos;t find peers using internet relay chat
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>Don&apos;t accept connections from outside
 </source>
@@ -1696,21 +1711,6 @@ Address: %4
         <source>Wallet needed to be rewritten: restart Bitcoin to complete    
 </source>
         <translation>Потрібно перезаписати гаманець: перезапустіть Біткоін-клієнт для завершення</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="79"/>
-        <source>Invalid -proxy address</source>
-        <translation>Помилка в адресі проксі-сервера</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Увага: встановлено занадто велику комісію (-paytxfee).  Комісія зніматиметься кожен раз коли ви проводитимете перекази.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="85"/>
-        <source>Warning: Disk space is low</source>
-        <translation>Увага: На диску мало вільного місця</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="41"/>

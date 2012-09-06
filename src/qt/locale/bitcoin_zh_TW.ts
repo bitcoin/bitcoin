@@ -67,7 +67,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation type="unfinished">複製到剪貼簿</translation>
+        <translation>複製到剪貼簿</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
@@ -78,11 +78,6 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
         <translation>刪除</translation>
-    </message>
-    <message>
-        <location filename="../addressbookpage.cpp" line="208"/>
-        <source>Export Address Book Data</source>
-        <translation>匯出位址簿資料</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="209"/>
@@ -99,18 +94,23 @@ This product includes software developed by the OpenSSL Project for use in the O
         <source>Could not write to file %1.</source>
         <translation>無法寫入檔案 %1.</translation>
     </message>
+    <message>
+        <location filename="../addressbookpage.cpp" line="208"/>
+        <source>Export Address Book Data</source>
+        <translation>匯出位址簿資料</translation>
+    </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <location filename="../addresstablemodel.cpp" line="78"/>
-        <source>Label</source>
-        <translation>標記</translation>
+        <source>Address</source>
+        <translation>位址</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="78"/>
-        <source>Address</source>
-        <translation>位址</translation>
+        <source>Label</source>
+        <translation>標記</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="114"/>
@@ -121,14 +121,34 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="61"/>
+        <source>New passphrase</source>
+        <translation>新的密碼</translation>
+    </message>
+    <message>
+        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
+        <source>TextLabel</source>
+        <translation>文字標籤</translation>
+    </message>
+    <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
         <translation>輸入密碼</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="61"/>
-        <source>New passphrase</source>
-        <translation>新的密碼</translation>
+        <location filename="../askpassphrasedialog.cpp" line="43"/>
+        <source>Unlock wallet</source>
+        <translation>錢包解鎖</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="101"/>
+        <source>Confirm wallet encryption</source>
+        <translation>錢包加密確認</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="38"/>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>這個動作需要用你的錢包密碼來解鎖</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
@@ -146,44 +166,19 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>輸入錢包的新密碼.&lt;br/&gt;請用&lt;b&gt;10個以上的字元&lt;/b&gt;, 或是&lt;b&gt;8個以上的單字&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="94"/>
-        <source>TextLabel</source>
-        <translation>文字標籤</translation>
+        <location filename="../askpassphrasedialog.cpp" line="118"/>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>錢包加密因程式內部有誤而失敗. 你的錢包還是沒有加密.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="35"/>
-        <source>Encrypt wallet</source>
-        <translation>錢包加密</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="38"/>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>這個動作需要用你的錢包密碼來解鎖</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="43"/>
-        <source>Unlock wallet</source>
-        <translation>錢包解鎖</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="46"/>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>這個動作需要用你的錢包密碼來解密</translation>
+        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>位元幣現在要關閉以完成加密程序. 請記住, 加密錢包無法完全防止入侵電腦的惡意程式偷取你的位元幣.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="51"/>
         <source>Decrypt wallet</source>
         <translation>錢包解密</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="54"/>
-        <source>Change passphrase</source>
-        <translation>變更密碼</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="55"/>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>輸入錢包的新舊密碼.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="111"/>
@@ -192,9 +187,24 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>錢包已加密</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>位元幣現在要關閉以完成加密程序. 請記住, 加密錢包無法完全防止入侵電腦的惡意程式偷取你的位元幣.</translation>
+        <location filename="../askpassphrasedialog.cpp" line="147"/>
+        <source>Wallet decryption failed</source>
+        <translation>錢包解密失敗</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="46"/>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>這個動作需要用你的錢包密碼來解密</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>錢包密碼變更成功.</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="54"/>
+        <source>Change passphrase</source>
+        <translation>變更密碼</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
@@ -203,11 +213,6 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="172"/>
         <source>Wallet encryption failed</source>
         <translation>錢包加密失敗</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="118"/>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>錢包加密因程式內部有誤而失敗. 你的錢包還是沒有加密.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="125"/>
@@ -228,9 +233,10 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>用來解密錢包的密碼輸入錯誤.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="147"/>
-        <source>Wallet decryption failed</source>
-        <translation>錢包解密失敗</translation>
+        <location filename="../askpassphrasedialog.cpp" line="208"/>
+        <location filename="../askpassphrasedialog.cpp" line="232"/>
+        <source>Warning: The Caps Lock key is on.</source>
+        <translation>警告: 鍵盤輸入鎖定為大寫字母中.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
@@ -240,29 +246,18 @@ Are you sure you wish to encrypt your wallet?</source>
 你確定要將錢包加密嗎?</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
-        <source>Wallet passphrase was successfully changed.</source>
-        <translation>錢包密碼變更成功.</translation>
+        <location filename="../askpassphrasedialog.cpp" line="35"/>
+        <source>Encrypt wallet</source>
+        <translation>錢包加密</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="208"/>
-        <location filename="../askpassphrasedialog.cpp" line="232"/>
-        <source>Warning: The Caps Lock key is on.</source>
-        <translation>警告: 鍵盤輸入鎖定為大寫字母中.</translation>
-    </message>
-    <message>
-        <location filename="../askpassphrasedialog.cpp" line="101"/>
-        <source>Confirm wallet encryption</source>
-        <translation>錢包加密確認</translation>
+        <location filename="../askpassphrasedialog.cpp" line="55"/>
+        <source>Enter the old and new passphrase to the wallet.</source>
+        <translation>輸入錢包的新舊密碼.</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <location filename="../bitcoingui.cpp" line="70"/>
-        <source>Bitcoin Wallet</source>
-        <translation>位元幣錢包</translation>
-    </message>
     <message>
         <location filename="../bitcoingui.cpp" line="139"/>
         <location filename="../bitcoingui.cpp" line="445"/>
@@ -270,14 +265,54 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>網路同步中...</translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="180"/>
+        <source>&amp;Overview</source>
+        <translation>總覽</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="187"/>
+        <source>Browse transaction history</source>
+        <translation>瀏覽交易紀錄</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="221"/>
+        <source>E&amp;xit</source>
+        <translation>結束</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="229"/>
+        <source>Show information about Qt</source>
+        <translation>顯示有關於 Qt 的資訊</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="234"/>
+        <source>Open &amp;Bitcoin</source>
+        <translation>開啟位元幣</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="235"/>
+        <source>Show the Bitcoin window</source>
+        <translation>顯示位元幣主視窗</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="241"/>
+        <source>&amp;Change Passphrase</source>
+        <translation>變更密碼</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="588"/>
+        <source>Sending...</source>
+        <translation>付出中...</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="142"/>
         <source>Block chain synchronization in progress</source>
         <translation>正在進行區塊鎖鏈的同步中</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="180"/>
-        <source>&amp;Overview</source>
-        <translation>總覽</translation>
+        <location filename="../bitcoingui.cpp" line="70"/>
+        <source>Bitcoin Wallet</source>
+        <translation>位元幣錢包</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="181"/>
@@ -288,11 +323,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../bitcoingui.cpp" line="186"/>
         <source>&amp;Transactions</source>
         <translation>交易</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="187"/>
-        <source>Browse transaction history</source>
-        <translation>瀏覽交易紀錄</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="192"/>
@@ -315,24 +345,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>顯示收款位址的列表</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="204"/>
-        <source>&amp;Send coins</source>
-        <translation>付錢</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="205"/>
         <source>Send coins to a bitcoin address</source>
         <translation>付錢至某個位元幣位址</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="221"/>
-        <source>E&amp;xit</source>
-        <translation>結束</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="225"/>
-        <source>&amp;About %1</source>
-        <translation>關於%1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
@@ -340,34 +355,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>選項...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="235"/>
-        <source>Show the Bitcoin window</source>
-        <translation>顯示位元幣主視窗</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Export the current view to a file</source>
-        <translation>將目前版面匯出至檔案</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Encrypt or decrypt wallet</source>
-        <translation>將錢包加解密</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
-        <source>&amp;Change Passphrase</source>
-        <translation>變更密碼</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>變更錢包加密用的密碼</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="588"/>
-        <source>Sending...</source>
-        <translation type="unfinished">付出中...</translation>
+        <location filename="../bitcoingui.cpp" line="226"/>
+        <source>Show information about Bitcoin</source>
+        <translation>顯示位元幣相關資訊</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="228"/>
@@ -375,24 +365,19 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>關於 &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="229"/>
-        <source>Show information about Qt</source>
-        <translation>顯示有關於 Qt 的資訊</translation>
+        <location filename="../bitcoingui.cpp" line="236"/>
+        <source>&amp;Export...</source>
+        <translation>匯出...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="264"/>
-        <source>&amp;File</source>
-        <translation>檔案</translation>
+        <location filename="../bitcoingui.cpp" line="239"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation>將錢包加解密</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="267"/>
-        <source>&amp;Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="273"/>
-        <source>&amp;Help</source>
-        <translation>求助</translation>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>變更錢包加密用的密碼</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="222"/>
@@ -400,19 +385,14 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>結束應用程式</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="280"/>
-        <source>Tabs toolbar</source>
-        <translation>分頁工具列</translation>
+        <location filename="../bitcoingui.cpp" line="237"/>
+        <source>Export the current view to a file</source>
+        <translation>將目前版面匯出至檔案</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="226"/>
-        <source>Show information about Bitcoin</source>
-        <translation>顯示位元幣相關資訊</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="288"/>
-        <source>Actions toolbar</source>
-        <translation>動作工具列</translation>
+        <location filename="../bitcoingui.cpp" line="264"/>
+        <source>&amp;File</source>
+        <translation>檔案</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -420,19 +400,14 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="232"/>
-        <source>Modify configuration options for bitcoin</source>
-        <translation>修改位元幣的設定選項</translation>
+        <location filename="../bitcoingui.cpp" line="280"/>
+        <source>Tabs toolbar</source>
+        <translation>分頁工具列</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
-        <source>Open &amp;Bitcoin</source>
-        <translation>開啟位元幣</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="388"/>
-        <source>bitcoin-qt</source>
-        <translation type="unfinished"></translation>
+        <location filename="../bitcoingui.cpp" line="288"/>
+        <source>Actions toolbar</source>
+        <translation>動作工具列</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="430"/>
@@ -442,19 +417,14 @@ Are you sure you wish to encrypt your wallet?</source>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
-        <source>&amp;Export...</source>
-        <translation>匯出...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="238"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation>錢包加密</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="468"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>已下載了 %1 個交易紀錄的區塊.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="204"/>
+        <source>&amp;Send coins</source>
+        <translation>付錢</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="483"/>
@@ -500,9 +470,19 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>最近收到的區塊產生於 %1.</translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="225"/>
+        <source>&amp;About %1</source>
+        <translation>關於%1</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="583"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>這筆交易的資料大小超過限制了. 你還是可以付出 %1 的費用來傳送. 這筆費用會付給處理該筆交易的節點, 並幫助維持整個網路. 你願意支付這項費用嗎?</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="232"/>
+        <source>Modify configuration options for bitcoin</source>
+        <translation>修改位元幣的設定選項</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="615"/>
@@ -527,6 +507,11 @@ Address: %4
 位址: %4</translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="238"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation>錢包加密</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="711"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且正&lt;b&gt;解鎖中&lt;/b&gt;</translation>
@@ -537,14 +522,29 @@ Address: %4
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且正&lt;b&gt;上鎖中&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="456"/>
-        <source>Downloaded %1 of %2 blocks of transaction history.</source>
-        <translation>已下載了 %1/%2 個交易紀錄的區塊.</translation>
-    </message>
-    <message>
         <location filename="../bitcoin.cpp" line="133"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>發生了致命的錯誤. 位元幣程式無法再繼續安全執行, 只好結束.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="273"/>
+        <source>&amp;Help</source>
+        <translation>求助</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="267"/>
+        <source>&amp;Settings</source>
+        <translation>設定</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="388"/>
+        <source>bitcoin-qt</source>
+        <translation>bitcoin-qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="456"/>
+        <source>Downloaded %1 of %2 blocks of transaction history.</source>
+        <translation>已下載了 %1/%2 個交易紀錄的區塊.</translation>
     </message>
 </context>
 <context>
@@ -656,14 +656,14 @@ Address: %4
         <translation>最小化至通知區域而非工作列</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="176"/>
-        <source>Show only a tray icon after minimizing the window</source>
-        <translation>視窗最小化時只顯示圖示於通知區域</translation>
-    </message>
-    <message>
         <location filename="../optionsdialog.cpp" line="180"/>
         <source>Map port using &amp;UPnP</source>
         <translation>用 &amp;UPnP 設定通訊埠對應</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="185"/>
+        <source>M&amp;inimize on close</source>
+        <translation>關閉時最小化</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>
@@ -671,9 +671,9 @@ Address: %4
         <translation>自動在路由器上開啟位元幣的客戶端通訊埠. 只有在你的路由器支援 UPnP 且開啟時才有作用.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="185"/>
-        <source>M&amp;inimize on close</source>
-        <translation>關閉時最小化</translation>
+        <location filename="../optionsdialog.cpp" line="176"/>
+        <source>Show only a tray icon after minimizing the window</source>
+        <translation>視窗最小化時只顯示圖示於通知區域</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="186"/>
@@ -698,7 +698,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="202"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
-        <translation>代理伺服器的 IP 位址 (比如說 127.0.0.1)</translation>
+        <translation>代理伺服器的網際網路位址 (比如說 127.0.0.1)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="205"/>
@@ -718,16 +718,11 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished">付交易手續費</translation>
+        <translation>付交易手續費</translation>
     </message>
 </context>
 <context>
     <name>OptionsDialog</name>
-    <message>
-        <location filename="../optionsdialog.cpp" line="104"/>
-        <source>Options</source>
-        <translation>選項</translation>
-    </message>
     <message>
         <location filename="../optionsdialog.cpp" line="79"/>
         <source>Main</source>
@@ -738,23 +733,33 @@ Address: %4
         <source>Display</source>
         <translation>顯示</translation>
     </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="104"/>
+        <source>Options</source>
+        <translation>選項</translation>
+    </message>
 </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <location filename="../overviewpage.cpp" line="108"/>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
+        <translation>尚未確認之交易的總額, 不包含在目前餘額中</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="111"/>
+        <source>Total number of transactions in wallet</source>
+        <translation>錢包中紀錄的總交易次數</translation>
+    </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
         <translation>表單</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
-        <source>Balance:</source>
-        <translation>餘額:</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="54"/>
-        <source>Number of transactions:</source>
-        <translation>交易次數:</translation>
+        <location filename="../forms/overviewpage.ui" line="61"/>
+        <source>0</source>
+        <translation>0</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="68"/>
@@ -767,9 +772,9 @@ Address: %4
         <translation>錢包</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="61"/>
-        <source>0</source>
-        <translation>0</translation>
+        <location filename="../forms/overviewpage.ui" line="40"/>
+        <source>Balance:</source>
+        <translation>餘額:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="103"/>
@@ -777,28 +782,18 @@ Address: %4
         <translation>目前餘額</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="108"/>
-        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>尚未確認之交易的總額, 不包含在目前餘額中</translation>
+        <location filename="../forms/overviewpage.ui" line="54"/>
+        <source>Number of transactions:</source>
+        <translation>交易次數:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;最近交易&lt;/b&gt;</translation>
     </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="111"/>
-        <source>Total number of transactions in wallet</source>
-        <translation>錢包中紀錄的總交易次數</translation>
-    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="97"/>
-        <source> and </source>
-        <translation>和</translation>
-    </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
         <location filename="../sendcoinsdialog.cpp" line="117"/>
@@ -822,14 +817,9 @@ Address: %4
         <translation>移除所有交易欄位</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="67"/>
-        <source>&amp;Add recipient...</source>
-        <translation>加收款人...</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="106"/>
-        <source>Balance:</source>
-        <translation>餘額:</translation>
+        <location filename="../forms/sendcoinsdialog.ui" line="144"/>
+        <source>Confirm the send action</source>
+        <translation>確認付款動作</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="113"/>
@@ -837,24 +827,14 @@ Address: %4
         <translation>123.456 BTC</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="144"/>
-        <source>Confirm the send action</source>
-        <translation>確認付款動作</translation>
-    </message>
-    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="147"/>
         <source>&amp;Send</source>
         <translation>付出</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="87"/>
-        <source>Clear all</source>
-        <translation>全部清掉</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="93"/>
-        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation>&lt;b&gt;%1&lt;/b&gt; 給 %2 (%3)</translation>
+        <location filename="../sendcoinsdialog.cpp" line="97"/>
+        <source> and </source>
+        <translation>和</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="96"/>
@@ -867,6 +847,36 @@ Address: %4
         <translation>確定要付出 %1 嗎?</translation>
     </message>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="128"/>
+        <source>The amount exceeds your balance.</source>
+        <translation>金額超過了餘額</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="139"/>
+        <source>Duplicate address found, can only send to each address once per send operation.</source>
+        <translation>發現有重複的位址. 在一次付款動作中, 只能付給每個位址一次.</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="67"/>
+        <source>&amp;Add recipient...</source>
+        <translation>加收款人...</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="106"/>
+        <source>Balance:</source>
+        <translation>餘額:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="87"/>
+        <source>Clear all</source>
+        <translation>全部清掉</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="93"/>
+        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
+        <translation>&lt;b&gt;%1&lt;/b&gt; 給 %2 (%3)</translation>
+    </message>
+    <message>
         <location filename="../sendcoinsdialog.cpp" line="118"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>無效的收款位址, 請再檢查看看.</translation>
@@ -877,19 +887,9 @@ Address: %4
         <translation>付款金額必須大於 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="128"/>
-        <source>The amount exceeds your balance.</source>
-        <translation>金額超過了餘額</translation>
-    </message>
-    <message>
         <location filename="../sendcoinsdialog.cpp" line="133"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>包含 %1 的交易手續費後, 總金額超過了你的餘額</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="139"/>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>發現有重複的位址. 在一次付款動作中, 只能付給每個位址一次.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="144"/>
@@ -905,44 +905,14 @@ Address: %4
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="14"/>
-        <source>Form</source>
-        <translation>表單</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="42"/>
-        <source>Pay &amp;To:</source>
-        <translation>付給:</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="75"/>
-        <source>&amp;Label:</source>
-        <translation>標記:</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="103"/>
-        <source>Choose address from address book</source>
-        <translation>從位址簿中選一個位址</translation>
-    </message>
-    <message>
         <location filename="../forms/sendcoinsentry.ui" line="120"/>
         <source>Paste address from clipboard</source>
         <translation>從剪貼簿貼上位址</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="130"/>
-        <source>Alt+P</source>
-        <translation type="unfinished">Alt+P</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="137"/>
-        <source>Remove this recipient</source>
-        <translation>去掉這個收款人</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsentry.ui" line="29"/>
-        <source>A&amp;mount:</source>
-        <translation>金額:</translation>
+        <location filename="../forms/sendcoinsentry.ui" line="42"/>
+        <source>Pay &amp;To:</source>
+        <translation>付給:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
@@ -956,9 +926,39 @@ Address: %4
         <translation>付款的目標位址 (比如說 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsentry.ui" line="14"/>
+        <source>Form</source>
+        <translation>表單</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="29"/>
+        <source>A&amp;mount:</source>
+        <translation>金額:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="75"/>
+        <source>&amp;Label:</source>
+        <translation>標記:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="103"/>
+        <source>Choose address from address book</source>
+        <translation>從位址簿中選一個位址</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsentry.ui" line="113"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="130"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="137"/>
+        <source>Remove this recipient</source>
+        <translation>去掉這個收款人</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
@@ -969,21 +969,6 @@ Address: %4
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="46"/>
-        <source>%1 confirmations</source>
-        <translation>經確認 %1 次</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="68"/>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, 尚未成功公告出去</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="63"/>
-        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;狀態:&lt;/b&gt; </translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="34"/>
         <source>Open for %1 blocks</source>
         <translation>在 %1 個區塊內未定</translation>
@@ -992,6 +977,26 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="42"/>
         <source>%1/offline?</source>
         <translation>%1/離線中?</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="44"/>
+        <source>%1/unconfirmed</source>
+        <translation>%1/未確認</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="46"/>
+        <source>%1 confirmations</source>
+        <translation>經確認 %1 次</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="63"/>
+        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;狀態:&lt;/b&gt; </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="68"/>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, 尚未成功公告出去</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
@@ -1018,21 +1023,6 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="106"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
         <translation>&lt;b&gt;來自:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="106"/>
-        <source>unknown</source>
-        <translation>未知</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="36"/>
-        <source>Open until %1</source>
-        <translation>在 %1 前未定</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="44"/>
-        <source>%1/unconfirmed</source>
-        <translation>%1/未確認</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="107"/>
@@ -1068,6 +1058,16 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="153"/>
         <source>(not accepted)</source>
         <translation>(不被接受)</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="36"/>
+        <source>Open until %1</source>
+        <translation>在 %1 前未定</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="106"/>
+        <source>unknown</source>
+        <translation>未知</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="197"/>
@@ -1240,9 +1240,44 @@ Address: %4
 <context>
     <name>TransactionView</name>
     <message>
+        <location filename="../transactionview.cpp" line="283"/>
+        <source>Type</source>
+        <translation>種類</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="76"/>
+        <source>To yourself</source>
+        <translation>給自己</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="90"/>
+        <source>Min amount</source>
+        <translation>最小金額</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="125"/>
+        <source>Copy address</source>
+        <translation>複製位址</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="58"/>
+        <source>This month</source>
+        <translation>這個月</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="59"/>
+        <source>Last month</source>
+        <translation>上個月</translation>
+    </message>
+    <message>
         <location filename="../transactionview.cpp" line="127"/>
         <source>Edit label</source>
         <translation>編輯標記</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="128"/>
+        <source>Show details...</source>
+        <translation>顯示明細...</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="272"/>
@@ -1263,11 +1298,6 @@ Address: %4
         <location filename="../transactionview.cpp" line="282"/>
         <source>Date</source>
         <translation>日期</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="283"/>
-        <source>Type</source>
-        <translation>種類</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="284"/>
@@ -1310,11 +1340,6 @@ Address: %4
         <translation>至</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="128"/>
-        <source>Show details...</source>
-        <translation>顯示明細...</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="55"/>
         <location filename="../transactionview.cpp" line="71"/>
         <source>All</source>
@@ -1351,11 +1376,6 @@ Address: %4
         <translation>付出至</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="76"/>
-        <source>To yourself</source>
-        <translation>給自己</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Mined</source>
         <translation>開採所得</translation>
@@ -1366,34 +1386,14 @@ Address: %4
         <translation>其他</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
-        <source>Enter address or label to search</source>
-        <translation>輸入位址或標記來搜尋</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="90"/>
-        <source>Min amount</source>
-        <translation>最小金額</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="125"/>
-        <source>Copy address</source>
-        <translation>複製位址</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="126"/>
         <source>Copy label</source>
         <translation>複製標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="58"/>
-        <source>This month</source>
-        <translation>這個月</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="59"/>
-        <source>Last month</source>
-        <translation>上個月</translation>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Enter address or label to search</source>
+        <translation>輸入位址或標記來搜尋</translation>
     </message>
 </context>
 <context>
@@ -1406,11 +1406,6 @@ Address: %4
 </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Bitcoin version</source>
-        <translation>位元幣版本</translation>
-    </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Usage:</source>
@@ -1425,32 +1420,6 @@ Address: %4
         <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Loading addresses...</source>
         <translation>載入位址中...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="69"/>
-        <source>Loading block index...</source>
-        <translation>載入區塊索引中...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
-        <source>Loading wallet...</source>
-        <translation>載入錢包中...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="75"/>
-        <source>Wallet needed to be rewritten: restart Bitcoin to complete    
-</source>
-        <translation>錢包需要重寫: 請重啟位元幣來完成</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
-        <source>Rescanning...</source>
-        <translation>重新掃描中...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Done loading</source>
-        <translation>載入完成</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="79"/>
@@ -1468,6 +1437,41 @@ Address: %4
         <translation>警告: -paytxfee 設定得很高. 這是當你交易付款時所要支付的手續費.</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="89"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
+        <translation>警告: 請檢查電腦時間日期是否正確. 位元幣無法在時鐘不準的情況下正常運作.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <source>Warning: Disk space is low</source>
+        <translation>警告: 磁碟空間很少</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Bitcoin version</source>
+        <translation>位元幣版本</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="69"/>
+        <source>Loading block index...</source>
+        <translation>載入區塊索引中...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <source>Loading wallet...</source>
+        <translation>載入錢包中...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <source>Rescanning...</source>
+        <translation>重新掃描中...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <source>Done loading</source>
+        <translation>載入完成</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Error: CreateThread(StartNode) failed</source>
         <translation>錯誤: CreateThread(StartNode) 失敗</translation>
@@ -1478,9 +1482,10 @@ Address: %4
         <translation>無法與這台電腦上的通訊埠 %d 連結. 也許 Bitcoin 已經在執行了.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="89"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>警告: 請檢查電腦時間日期是否正確. 位元幣無法在時鐘不準的情況下正常運作.</translation>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
+        <source>Wallet needed to be rewritten: restart Bitcoin to complete    
+</source>
+        <translation>錢包需要重寫: 請重啟位元幣來完成</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="92"/>
@@ -1647,11 +1652,6 @@ Address: %4
 </source>
         <translation>不嘗試用 UPnP 來設定服務連接埠的對應
 </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="85"/>
-        <source>Warning: Disk space is low</source>
-        <translation>警告: 磁碟空間很少</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
