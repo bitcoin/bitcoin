@@ -43,6 +43,7 @@ Core bitcoin handling and blockchain database
 * -loadblock=FILE will import an external block file
 * Additional DoS (denial-of-service) prevention measures
 * New blockchain checkpoint at block 193,000
+* (Windows only): enable ASLR and DEP for bitcoind.exe
 
 
 JSON-RPC API
@@ -101,7 +102,7 @@ Qt GUI
 * Override progress bar design on platforms with segmented progress bars to assist with readability
 * Added 'immature balance' display on the overview page
 * (Windows only): enable ASLR and DEP for bitcoin-qt.exe
-* (Windows only): add meta-data to bitcoin-qt.exe (e.g. description)
+* (Windows only): add meta-data to bitcoin-qt.exe (e.g. description and version)
 
 Internal codebase
 -----------------
@@ -113,4 +114,4 @@ Miscellaneous
 -------------
 * Reopen debug.log upon SIGHUP
 * Bash programmable completion for bitcoind(1)
-* On supported OS's, each thread is given a useful name
+* On supported OSes, each thread is given a useful name
