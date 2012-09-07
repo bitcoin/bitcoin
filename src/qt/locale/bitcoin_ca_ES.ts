@@ -292,16 +292,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Sincronització amb la xarxa ...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="71"/>
-        <source>Bitcoin Wallet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="185"/>
-        <source>&amp;Overview</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="186"/>
         <source>Show general overview of wallet</source>
         <translation>Mostra panorama general de la cartera</translation>
@@ -317,11 +307,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Cerca a l&apos;historial de transaccions</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="197"/>
-        <source>&amp;Address Book</source>
-        <translation>llibreta d&apos;&amp;adreces</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="198"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Edita la llista d&apos;adreces emmagatzemada i etiquetes</translation>
@@ -334,11 +319,6 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>Show the list of addresses for receiving payments</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="209"/>
-        <source>&amp;Send coins</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -362,39 +342,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
-        <source>Quit application</source>
-        <translation>Sortir de l&apos;aplicació</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
-        <source>&amp;About %1</source>
-        <translation>&amp;Sobre %1</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show information about Bitcoin</source>
-        <translation>Mostra informació sobre Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
-        <source>About &amp;Qt</source>
-        <translation>Sobre &amp;Qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
-        <source>Show information about Qt</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="245"/>
         <source>&amp;Options...</source>
         <translation>&amp;Opcions ...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="246"/>
-        <source>Modify configuration options for bitcoin</source>
-        <translation>Modificar les opcions de configuració per bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
@@ -457,19 +407,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="296"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Ajuda</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>Tabs toolbar</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
-        <source>Actions toolbar</source>
-        <translation>Accions de la barra d&apos;eines</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="327"/>
@@ -485,15 +425,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../bitcoingui.cpp" line="418"/>
         <source>bitcoin-qt</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="482"/>
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="508"/>
@@ -561,26 +492,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Posar-se al dia ...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="577"/>
-        <source>Last received block was generated %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="633"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="638"/>
-        <source>Sending...</source>
-        <translation>L&apos;enviament de ...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
-        <source>Sent transaction</source>
-        <translation>Transacció enviada</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="666"/>
         <source>Incoming transaction</source>
         <translation type="unfinished"></translation>
@@ -623,6 +534,95 @@ Address: %4
         <location filename="../bitcoingui.cpp" line="826"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="209"/>
+        <source>&amp;Send coins</source>
+        <translation type="unfinished">&amp;Enviar monedes</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="71"/>
+        <source>Bitcoin Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="185"/>
+        <source>&amp;Overview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="236"/>
+        <source>Quit application</source>
+        <translation>Sortir de l&apos;aplicació</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="240"/>
+        <source>Show information about Bitcoin</source>
+        <translation>Mostra informació sobre Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="243"/>
+        <source>Show information about Qt</source>
+        <translation type="unfinished">Mostra informació sobre Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="296"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Ajuda</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="314"/>
+        <source>Actions toolbar</source>
+        <translation>Accions de la barra d&apos;eines</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="482"/>
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="577"/>
+        <source>Last received block was generated %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="633"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="665"/>
+        <source>Sent transaction</source>
+        <translation>Transacció enviada</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="197"/>
+        <source>&amp;Address Book</source>
+        <translation>llibreta d&apos;&amp;adreces</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="239"/>
+        <source>&amp;About %1</source>
+        <translation>&amp;Sobre %1</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>About &amp;Qt</source>
+        <translation>Sobre &amp;Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="246"/>
+        <source>Modify configuration options for bitcoin</source>
+        <translation>Modificar les opcions de configuració per bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="638"/>
+        <source>Sending...</source>
+        <translation>L&apos;enviament de ...</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
@@ -1000,7 +1000,7 @@ Address: %4
     <message>
         <location filename="../forms/qrcodedialog.ui" line="105"/>
         <source>BTC</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="121"/>
@@ -1041,6 +1041,16 @@ Address: %4
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="106"/>
+        <source>Balance:</source>
+        <translation>Balanç:</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="129"/>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation>La quantitat a pagar ha de ser major que 0.</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
         <location filename="../sendcoinsdialog.cpp" line="123"/>
         <location filename="../sendcoinsdialog.cpp" line="128"/>
@@ -1071,11 +1081,6 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
         <source>Clear all</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="106"/>
-        <source>Balance:</source>
-        <translation>Balanç:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="113"/>
@@ -1116,11 +1121,6 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="124"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="129"/>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>La quantitat a pagar ha de ser major que 0.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="134"/>
@@ -1174,7 +1174,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Etiqueta:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
@@ -1370,11 +1370,6 @@ Address: %4
     <name>TransactionTableModel</name>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Address</source>
-        <translation>Direcció</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Date</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1410,7 +1405,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="286"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Sense confirmar (%1 of %2 confirmations)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="289"/>
@@ -1490,6 +1485,11 @@ Address: %4
         <location filename="../transactiontablemodel.cpp" line="603"/>
         <source>Amount removed from or added to balance.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Address</source>
+        <translation>Direcció</translation>
     </message>
 </context>
 <context>
@@ -1748,7 +1748,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="41"/>
         <source>Bitcoin version</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Bitcoin versió</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
@@ -1773,7 +1773,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Options:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Opcions:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>

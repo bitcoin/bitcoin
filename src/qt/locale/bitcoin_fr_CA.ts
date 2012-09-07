@@ -106,7 +106,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="68"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Supprimer</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
@@ -133,12 +133,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <name>AddressTableModel</name>
     <message>
         <location filename="../addresstablemodel.cpp" line="78"/>
-        <source>Label</source>
-        <translation type="unfinished"></translation>
+        <source>Address</source>
+        <translation type="unfinished">Adresse</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="78"/>
-        <source>Address</source>
+        <source>Label</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -314,7 +314,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="197"/>
         <source>&amp;Address Book</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Carnet d&apos;&amp;adresses</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="198"/>
@@ -364,7 +364,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;A propos de %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -374,7 +374,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="242"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">A propos de &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="243"/>
@@ -494,14 +494,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Synchronizing with network...</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="508"/>
-        <source>~%n block(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
@@ -618,6 +610,14 @@ Address: %4
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="508"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -667,7 +667,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Adresse</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -1375,7 +1375,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Adresse</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
@@ -1615,7 +1615,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="283"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Adresse</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="284"/>
@@ -1740,7 +1740,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="41"/>
         <source>Bitcoin version</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Bitcoin  version</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>

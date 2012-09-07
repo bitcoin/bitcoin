@@ -222,13 +222,6 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Promjena lozinke</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
-Are you sure you wish to encrypt your wallet?</source>
-        <translation>UPOZORENJE: Ako šifrirate vaš novčanik i izgubite lozinku, &lt;b&gt;IZGUBIT ĆETE SVE SVOJE BITCOINSE!&lt;/b&gt;
-Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
-    </message>
-    <message>
         <location filename="../askpassphrasedialog.cpp" line="147"/>
         <source>Wallet decryption failed</source>
         <translation>Dešifriranje novčanika nije uspjelo</translation>
@@ -253,6 +246,13 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
         <location filename="../askpassphrasedialog.cpp" line="101"/>
         <source>Confirm wallet encryption</source>
         <translation>Potvrdi šifriranje novčanika</translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="102"/>
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!
+Are you sure you wish to encrypt your wallet?</source>
+        <translation>UPOZORENJE: Ako šifrirate vaš novčanik i izgubite lozinku, &lt;b&gt;IZGUBIT ĆETE SVE SVOJE BITCOINSE!&lt;/b&gt;
+Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="111"/>
@@ -288,6 +288,11 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <location filename="../bitcoingui.cpp" line="251"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Izvoz podataka iz trenutnog taba u datoteku</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="235"/>
         <source>E&amp;xit</source>
         <translation>&amp;Izlaz</translation>
@@ -298,124 +303,24 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
         <translation>Izlazak iz programa</translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="253"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation>Šifriranje ili dešifriranje novčanika</translation>
+    </message>
+    <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>Show information about Bitcoin</source>
         <translation>Prikaži informacije o Bitcoinu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="245"/>
-        <source>&amp;Options...</source>
-        <translation>&amp;Postavke</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
-        <source>Backup Wallet</source>
-        <translation>Backup novčanika</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Podaci novčanika (*.dat)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
-        <source>Backup Failed</source>
-        <translation>Backup nije uspio</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="191"/>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Transakcije</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="192"/>
-        <source>Browse transaction history</source>
-        <translation>Pretraži povijest transakcija</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="198"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation>Uređivanje popisa pohranjenih adresa i oznaka</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="204"/>
-        <source>Show the list of addresses for receiving payments</source>
-        <translation>Prikaži popis adresa za primanje isplate</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="209"/>
-        <source>&amp;Send coins</source>
-        <translation>&amp;Pošalji novac</translation>
+        <location filename="../bitcoingui.cpp" line="216"/>
+        <source>Prove you control an address</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
         <source>&amp;About %1</source>
         <translation>&amp;Više o %1</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="210"/>
-        <source>Send coins to a bitcoin address</source>
-        <translation>Slanje novca na bitcoin adresu</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="257"/>
-        <source>&amp;Change Passphrase</source>
-        <translation>&amp;Promijena lozinke</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="258"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Promijenite lozinku za šifriranje novčanika</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="281"/>
-        <source>&amp;File</source>
-        <translation>&amp;Datoteka</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="290"/>
-        <source>&amp;Settings</source>
-        <translation>&amp;Konfiguracija</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="296"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Pomoć</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
-        <source>Sent transaction</source>
-        <translation>Poslana transakcija</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="666"/>
-        <source>Incoming transaction</source>
-        <translation>Dolazna transakcija</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="792"/>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Novčanik je &lt;b&gt;šifriran&lt;/b&gt; i trenutno &lt;b&gt;otključan&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="800"/>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Novčanik je &lt;b&gt;šifriran&lt;/b&gt; i trenutno &lt;b&gt;zaključan&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="71"/>
-        <source>Bitcoin Wallet</source>
-        <translation>Bitcoin novčanik</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="215"/>
-        <source>Sign &amp;message</source>
-        <translation type="unfinished">&amp;Potpišite poruku</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="216"/>
-        <source>Prove you control an address</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="246"/>
@@ -428,19 +333,14 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
-        <source>Show or hide the Bitcoin window</source>
-        <translation type="unfinished">Prikaži Bitcoin prozor</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="252"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation>&amp;Šifriraj novčanik</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="255"/>
         <source>&amp;Backup Wallet</source>
         <translation type="unfinished">&amp;Backup novčanika</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="258"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Promijenite lozinku za šifriranje novčanika</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
@@ -448,23 +348,18 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="418"/>
-        <source>bitcoin-qt</source>
-        <translation>bitcoin-qt</translation>
+        <location filename="../bitcoingui.cpp" line="531"/>
+        <source>Downloaded %1 blocks of transaction history.</source>
+        <translation>Preuzeto %1 blokova povijesti transakcije.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="508"/>
-        <source>~%n block(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <location filename="../bitcoingui.cpp" line="546"/>
+        <source>%n second(s) ago</source>
+        <translation>
+            <numerusform>prije %n sekunde</numerusform>
+            <numerusform>prije %n sekunde</numerusform>
+            <numerusform>prije %n sekundi</numerusform>
         </translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="519"/>
-        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Preuzeto %1 od %2 blokova povijesti transakcije (%3% done).</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="550"/>
@@ -475,10 +370,29 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
             <numerusform>prije %n minuta</numerusform>
         </translation>
     </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="554"/>
+        <source>%n hour(s) ago</source>
+        <translation>
+            <numerusform>prije %n sata</numerusform>
+            <numerusform>prije %n sata</numerusform>
+            <numerusform>prije %n sati</numerusform>
+        </translation>
+    </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="564"/>
-        <source>Up to date</source>
-        <translation>Ažurno</translation>
+        <location filename="../bitcoingui.cpp" line="826"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation>Došlo je do pogreške kod spremanja podataka novčanika na novu lokaciju.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="823"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation>Podaci novčanika (*.dat)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="826"/>
+        <source>Backup Failed</source>
+        <translation>Backup nije uspio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="569"/>
@@ -491,9 +405,34 @@ Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
         <translation>Zadnji primljeni blok je generiran %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="633"/>
-        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Ova transakcija je preko ograničenja veličine. Možete ju ipak poslati za naknadu od %1, koja se daje čvorovima koji procesiraju vaše transakcije i tako podržavate mrežu. Želite li platiti naknadu?</translation>
+        <location filename="../bitcoingui.cpp" line="665"/>
+        <source>Sent transaction</source>
+        <translation>Poslana transakcija</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="666"/>
+        <source>Incoming transaction</source>
+        <translation>Dolazna transakcija</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="800"/>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Novčanik je &lt;b&gt;šifriran&lt;/b&gt; i trenutno &lt;b&gt;zaključan&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="249"/>
+        <source>Show or hide the Bitcoin window</source>
+        <translation type="unfinished">Prikaži Bitcoin prozor</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="252"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation>&amp;Šifriraj novčanik</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="256"/>
+        <source>Backup wallet to another location</source>
+        <translation>Napravite sigurnosnu kopiju novčanika na drugoj lokaciji</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="667"/>
@@ -508,91 +447,6 @@ Tip:%3
 Adresa:%4
 </translation>
     </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="638"/>
-        <source>Sending...</source>
-        <translation>Slanje...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="506"/>
-        <source>Synchronizing with network...</source>
-        <translation>Usklađivanje s mrežom ...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="185"/>
-        <source>&amp;Overview</source>
-        <translation>&amp;Pregled</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="253"/>
-        <source>Encrypt or decrypt wallet</source>
-        <translation>Šifriranje ili dešifriranje novčanika</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="203"/>
-        <source>&amp;Receive coins</source>
-        <translation>&amp;Primanje novca</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="531"/>
-        <source>Downloaded %1 blocks of transaction history.</source>
-        <translation>Preuzeto %1 blokova povijesti transakcije.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
-        <source>About &amp;Qt</source>
-        <translation>Više o &amp;Qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
-        <source>Show information about Qt</source>
-        <translation>Prikaži informacije o Qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation>Došlo je do pogreške kod spremanja podataka novčanika na novu lokaciju.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="186"/>
-        <source>Show general overview of wallet</source>
-        <translation>Prikaži opći pregled novčanika</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="197"/>
-        <source>&amp;Address Book</source>
-        <translation>&amp;Adresar</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Izvoz...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="251"/>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Izvoz podataka iz trenutnog taba u datoteku</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="256"/>
-        <source>Backup wallet to another location</source>
-        <translation>Napravite sigurnosnu kopiju novčanika na drugoj lokaciji</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="303"/>
-        <source>Tabs toolbar</source>
-        <translation>Traka kartica</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
-        <source>Actions toolbar</source>
-        <translation>Traka akcija</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="327"/>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="482"/>
         <source>%n active connection(s) to Bitcoin network</source>
@@ -603,22 +457,33 @@ Adresa:%4
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="546"/>
-        <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>prije %n sekunde</numerusform>
-            <numerusform>prije %n sekunde</numerusform>
-            <numerusform>prije %n sekundi</numerusform>
+        <location filename="../bitcoingui.cpp" line="508"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="554"/>
-        <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>prije %n sata</numerusform>
-            <numerusform>prije %n sata</numerusform>
-            <numerusform>prije %n sati</numerusform>
-        </translation>
+    <message>
+        <location filename="../bitcoingui.cpp" line="638"/>
+        <source>Sending...</source>
+        <translation>Slanje...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="519"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation type="unfinished">Preuzeto %1 od %2 blokova povijesti transakcije (%3% done).</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="823"/>
+        <source>Backup Wallet</source>
+        <translation>Backup novčanika</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="564"/>
+        <source>Up to date</source>
+        <translation>Ažurno</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="558"/>
@@ -628,6 +493,141 @@ Adresa:%4
             <numerusform>prije %n dana</numerusform>
             <numerusform>prije %n dana</numerusform>
         </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="186"/>
+        <source>Show general overview of wallet</source>
+        <translation>Prikaži opći pregled novčanika</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="192"/>
+        <source>Browse transaction history</source>
+        <translation>Pretraži povijest transakcija</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="197"/>
+        <source>&amp;Address Book</source>
+        <translation>&amp;Adresar</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="198"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation>Uređivanje popisa pohranjenih adresa i oznaka</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="204"/>
+        <source>Show the list of addresses for receiving payments</source>
+        <translation>Prikaži popis adresa za primanje isplate</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="71"/>
+        <source>Bitcoin Wallet</source>
+        <translation>Bitcoin novčanik</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="243"/>
+        <source>Show information about Qt</source>
+        <translation>Prikaži informacije o Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="245"/>
+        <source>&amp;Options...</source>
+        <translation>&amp;Postavke</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="215"/>
+        <source>Sign &amp;message</source>
+        <translation type="unfinished">&amp;Potpišite poruku</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="281"/>
+        <source>&amp;File</source>
+        <translation>&amp;Datoteka</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="792"/>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Novčanik je &lt;b&gt;šifriran&lt;/b&gt; i trenutno &lt;b&gt;otključan&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="633"/>
+        <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
+        <translation>Ova transakcija je preko ograničenja veličine. Možete ju ipak poslati za naknadu od %1, koja se daje čvorovima koji procesiraju vaše transakcije i tako podržavate mrežu. Želite li platiti naknadu?</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="303"/>
+        <source>Tabs toolbar</source>
+        <translation>Traka kartica</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="210"/>
+        <source>Send coins to a bitcoin address</source>
+        <translation>Slanje novca na bitcoin adresu</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>About &amp;Qt</source>
+        <translation>Više o &amp;Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="257"/>
+        <source>&amp;Change Passphrase</source>
+        <translation>&amp;Promijena lozinke</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="185"/>
+        <source>&amp;Overview</source>
+        <translation>&amp;Pregled</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="314"/>
+        <source>Actions toolbar</source>
+        <translation>Traka akcija</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="418"/>
+        <source>bitcoin-qt</source>
+        <translation>bitcoin-qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="250"/>
+        <source>&amp;Export...</source>
+        <translation>&amp;Izvoz...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="506"/>
+        <source>Synchronizing with network...</source>
+        <translation>Usklađivanje s mrežom ...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="191"/>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Transakcije</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="203"/>
+        <source>&amp;Receive coins</source>
+        <translation>&amp;Primanje novca</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="209"/>
+        <source>&amp;Send coins</source>
+        <translation>&amp;Slanje novca</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="290"/>
+        <source>&amp;Settings</source>
+        <translation>&amp;Konfiguracija</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="296"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Pomoć</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="327"/>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
@@ -754,9 +754,9 @@ Adresa:%4
         <translation>Mapiraj port koristeći &amp;UPnP</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="186"/>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatski otvori port Bitcoin klijenta na ruteru. To radi samo ako ruter podržava UPnP i ako je omogućen.</translation>
+        <location filename="../optionsdialog.cpp" line="181"/>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
+        <translation>Minimizirati umjesto izaći iz aplikacije kada je prozor zatvoren. Kada je ova opcija omogućena, aplikacija će biti zatvorena tek nakon odabira Izlaz u izborniku.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="180"/>
@@ -764,9 +764,9 @@ Adresa:%4
         <translation>M&amp;inimiziraj kod zatvaranja</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimizirati umjesto izaći iz aplikacije kada je prozor zatvoren. Kada je ova opcija omogućena, aplikacija će biti zatvorena tek nakon odabira Izlaz u izborniku.</translation>
+        <location filename="../optionsdialog.cpp" line="186"/>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatski otvori port Bitcoin klijenta na ruteru. To radi samo ako ruter podržava UPnP i ako je omogućen.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="189"/>
@@ -799,6 +799,11 @@ Adresa:%4
         <translation>Port od proxy-a (npr. 1234)</translation>
     </message>
     <message>
+        <location filename="../optionsdialog.cpp" line="216"/>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
+        <translation>Neobavezna naknada za transakciju po kB koja omogućuje da se vaša transakcija obavi brže. Većina transakcija ima 1 kB.  Preporučena naknada je 0.01.</translation>
+    </message>
+    <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Plati &amp;naknadu za transakciju</translation>
@@ -813,14 +818,24 @@ Adresa:%4
         <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../optionsdialog.cpp" line="216"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Neobavezna naknada za transakciju po kB koja omogućuje da se vaša transakcija obavi brže. Većina transakcija ima 1 kB.  Preporučena naknada je 0.01.</translation>
-    </message>
 </context>
 <context>
     <name>MessagePage</name>
+    <message>
+        <location filename="../forms/messagepage.ui" line="48"/>
+        <source>Choose adress from address book</source>
+        <translation>Odaberite adresu iz adresara</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="58"/>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <location filename="../forms/messagepage.ui" line="81"/>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
@@ -837,24 +852,9 @@ Adresa:%4
         <translation type="unfinished">Unesite Bitcoin adresu (npr. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <location filename="../forms/messagepage.ui" line="48"/>
-        <source>Choose adress from address book</source>
-        <translation>Odaberite adresu iz adresara</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="58"/>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
-    </message>
-    <message>
         <location filename="../forms/messagepage.ui" line="71"/>
         <source>Paste address from clipboard</source>
         <translation>Zalijepi adresu iz međuspremnika</translation>
-    </message>
-    <message>
-        <location filename="../forms/messagepage.ui" line="81"/>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="93"/>
@@ -888,15 +888,15 @@ Adresa:%4
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
+        <source>%1 is not a valid address.</source>
+        <translation type="unfinished">Upisana adresa &quot;%1&quot; nije valjana bitcoin adresa.</translation>
+    </message>
+    <message>
+        <location filename="../messagepage.cpp" line="74"/>
         <location filename="../messagepage.cpp" line="89"/>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Error signing</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../messagepage.cpp" line="74"/>
-        <source>%1 is not a valid address.</source>
-        <translation type="unfinished">Upisana adresa &quot;%1&quot; nije valjana bitcoin adresa.</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="89"/>
@@ -930,19 +930,14 @@ Adresa:%4
 <context>
     <name>OverviewPage</name>
     <message>
+        <location filename="../forms/overviewpage.ui" line="54"/>
+        <source>Number of transactions:</source>
+        <translation>Broj transakcija:</translation>
+    </message>
+    <message>
         <location filename="../forms/overviewpage.ui" line="68"/>
         <source>Unconfirmed:</source>
         <translation>Nepotvrđene:</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="88"/>
-        <source>Wallet</source>
-        <translation>Novčanik</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Nedavne transakcije&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
@@ -950,24 +945,14 @@ Adresa:%4
         <translation>Oblik</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
-        <source>Balance:</source>
-        <translation>Stanje:</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="54"/>
-        <source>Number of transactions:</source>
-        <translation>Broj transakcija:</translation>
+        <location filename="../forms/overviewpage.ui" line="61"/>
+        <source>0</source>
+        <translation>0</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="103"/>
         <source>Your current balance</source>
         <translation>Vaše trenutno stanje računa</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="61"/>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="108"/>
@@ -979,9 +964,64 @@ Adresa:%4
         <source>Total number of transactions in wallet</source>
         <translation>Ukupni broj tansakcija u novčaniku</translation>
     </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="40"/>
+        <source>Balance:</source>
+        <translation>Stanje:</translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <source>Wallet</source>
+        <translation>Novčanik</translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="124"/>
+        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Nedavne transakcije&lt;/b&gt;</translation>
+    </message>
 </context>
 <context>
     <name>QRCodeDialog</name>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="14"/>
+        <source>Dialog</source>
+        <translation>Dijalog</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="144"/>
+        <source>Message:</source>
+        <translation>Poruka:</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="55"/>
+        <source>Request Payment</source>
+        <translation>Zatraži plaćanje</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="32"/>
+        <source>QR Code</source>
+        <translation>QR Kôd</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="70"/>
+        <source>Amount:</source>
+        <translation>Iznos:</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="105"/>
+        <source>BTC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="121"/>
+        <source>Label:</source>
+        <translation>Oznaka</translation>
+    </message>
+    <message>
+        <location filename="../forms/qrcodedialog.ui" line="186"/>
+        <source>&amp;Save As...</source>
+        <translation>&amp;Spremi kao...</translation>
+    </message>
     <message>
         <location filename="../qrcodedialog.cpp" line="46"/>
         <source>Error encoding URI into QR Code.</source>
@@ -1002,49 +1042,14 @@ Adresa:%4
         <source>Save Image...</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="14"/>
-        <source>Dialog</source>
-        <translation>Dijalog</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="32"/>
-        <source>QR Code</source>
-        <translation>QR Kôd</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="55"/>
-        <source>Request Payment</source>
-        <translation>Zatraži plaćanje</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="70"/>
-        <source>Amount:</source>
-        <translation>Iznos:</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="105"/>
-        <source>BTC</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="121"/>
-        <source>Label:</source>
-        <translation>Oznaka</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="144"/>
-        <source>Message:</source>
-        <translation>Poruka:</translation>
-    </message>
-    <message>
-        <location filename="../forms/qrcodedialog.ui" line="186"/>
-        <source>&amp;Save As...</source>
-        <translation>&amp;Spremi kao...</translation>
-    </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="64"/>
+        <source>Send to multiple recipients at once</source>
+        <translation>Pošalji k nekoliko primatelja odjednom</translation>
+    </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="84"/>
         <source>Remove all transaction fields</source>
@@ -1066,6 +1071,11 @@ Adresa:%4
         <translation>Potvrdi akciju slanja</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="147"/>
+        <source>&amp;Send</source>
+        <translation>&amp;Pošalji</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
         <location filename="../sendcoinsdialog.cpp" line="123"/>
         <location filename="../sendcoinsdialog.cpp" line="128"/>
@@ -1078,11 +1088,6 @@ Adresa:%4
         <translation>Slanje novca</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="64"/>
-        <source>Send to multiple recipients at once</source>
-        <translation>Pošalji k nekoliko primatelja odjednom</translation>
-    </message>
-    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="67"/>
         <source>&amp;Add recipient...</source>
         <translation>&amp;Dodaj primatelja...</translation>
@@ -1091,11 +1096,6 @@ Adresa:%4
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
         <source>Clear all</source>
         <translation>Obriši sve</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="147"/>
-        <source>&amp;Send</source>
-        <translation>&amp;Pošalji</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="95"/>
@@ -1118,14 +1118,14 @@ Adresa:%4
         <translation>i</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="124"/>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Adresa primatelja je nevaljala, molimo provjerite je ponovo.</translation>
-    </message>
-    <message>
         <location filename="../sendcoinsdialog.cpp" line="129"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Iznos mora biti veći od 0.</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="124"/>
+        <source>The recipient address is not valid, please recheck.</source>
+        <translation>Adresa primatelja je nevaljala, molimo provjerite je ponovo.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="134"/>
@@ -1155,6 +1155,11 @@ Adresa:%4
 </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <location filename="../sendcoinsentry.cpp" line="25"/>
+        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Unesite Bitcoin adresu (npr. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+    </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="14"/>
         <source>Form</source>
@@ -1211,33 +1216,13 @@ Adresa:%4
         <source>Remove this recipient</source>
         <translation>Ukloni ovog primatelja</translation>
     </message>
-    <message>
-        <location filename="../sendcoinsentry.cpp" line="25"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Unesite Bitcoin adresu (npr. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="20"/>
-        <source>Open for %1 blocks</source>
-        <translation>Otvori za %1 blokova</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="22"/>
         <source>Open until %1</source>
         <translation>Otvoren do %1</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="32"/>
-        <source>%1 confirmations</source>
-        <translation>%1 potvrda</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="28"/>
-        <source>%1/offline?</source>
-        <translation>%1 nije dostupan?</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -1245,40 +1230,9 @@ Adresa:%4
         <translation>%1/nepotvrđeno</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="50"/>
-        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Status:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="55"/>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, još nije bio uspješno emitiran</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="57"/>
-        <source>, broadcast through %1 node</source>
-        <translation>, emitiran kroz nod %1 </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="59"/>
-        <source>, broadcast through %1 nodes</source>
-        <translation>, emitiran kroz nodove %1 </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="63"/>
-        <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Datum:&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="70"/>
-        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation>&lt;b&gt;Izvor:&lt;/b&gt; Generirano&lt;br&gt;</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="76"/>
-        <location filename="../transactiondesc.cpp" line="93"/>
-        <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Od:&lt;/b&gt;</translation>
+        <location filename="../transactiondesc.cpp" line="32"/>
+        <source>%1 confirmations</source>
+        <translation>%1 potvrda</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="93"/>
@@ -1311,23 +1265,6 @@ Adresa:%4
         <translation>&lt;b&gt;Uplaćeno:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="136"/>
-        <source>(%1 matures in %2 more blocks)</source>
-        <translation>(%1 stasava za %2 dodatna bloka)</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="140"/>
-        <source>(not accepted)</source>
-        <translation>(Nije prihvaćeno)</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="184"/>
-        <location filename="../transactiondesc.cpp" line="192"/>
-        <location filename="../transactiondesc.cpp" line="207"/>
-        <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Potrošeno:&lt;/b&gt; </translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="198"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Naknada za transakciju:&lt;/b&gt;</translation>
@@ -1357,6 +1294,69 @@ Adresa:%4
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Generirani novčići moraju pričekati nastanak 120 blokova prije nego što ih je moguće potrošiti. Kad ste generirali taj blok, on je bio emitiran u mrežu kako bi bio dodan postojećim lancima blokova. Ako ne uspije biti dodan, njegov status bit će promijenjen u &quot;nije prihvaćen&quot; i on neće biti potrošiv. S vremena na vrijeme tako nešto se može desiti ako neki drugi nod generira blok u približno isto vrijeme.</translation>
     </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="28"/>
+        <source>%1/offline?</source>
+        <translation>%1 nije dostupan?</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="76"/>
+        <location filename="../transactiondesc.cpp" line="93"/>
+        <source>&lt;b&gt;From:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Od:&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="20"/>
+        <source>Open for %1 blocks</source>
+        <translation>Otvori za %1 blokova</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="50"/>
+        <source>&lt;b&gt;Status:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Status:&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="55"/>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, još nije bio uspješno emitiran</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="57"/>
+        <source>, broadcast through %1 node</source>
+        <translation>, emitiran kroz nod %1 </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="59"/>
+        <source>, broadcast through %1 nodes</source>
+        <translation>, emitiran kroz nodove %1 </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="63"/>
+        <source>&lt;b&gt;Date:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Datum:&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="70"/>
+        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
+        <translation>&lt;b&gt;Izvor:&lt;/b&gt; Generirano&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="136"/>
+        <source>(%1 matures in %2 more blocks)</source>
+        <translation>(%1 stasava za %2 dodatna bloka)</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="140"/>
+        <source>(not accepted)</source>
+        <translation>(Nije prihvaćeno)</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="184"/>
+        <location filename="../transactiondesc.cpp" line="192"/>
+        <location filename="../transactiondesc.cpp" line="207"/>
+        <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Potrošeno:&lt;/b&gt; </translation>
+    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1374,72 +1374,14 @@ Adresa:%4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="603"/>
-        <source>Amount removed from or added to balance.</source>
-        <translation>Iznos odbijen od ili dodan k saldu.</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="289"/>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Potvrđen (%1 potvrda)</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Date</source>
-        <translation>Datum</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Type</source>
-        <translation>Tip</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Amount</source>
-        <translation>Iznos</translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="277"/>
-        <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="280"/>
-        <source>Open until %1</source>
-        <translation>Otvoren do %1</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="283"/>
-        <source>Offline (%1 confirmations)</source>
-        <translation>Nije na mreži (%1 potvrda)</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="286"/>
-        <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>Nepotvrđen (%1 od %2 potvrda)</translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="297"/>
-        <source>Mined balance will be available in %n more blocks</source>
-        <translation>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-    <message>
         <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Generirano - Upozorenje: ovaj blok nije bio primljen od strane bilo kojeg drugog noda i vjerojatno neće biti prihvaćen!</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="603"/>
+        <source>Amount removed from or added to balance.</source>
+        <translation>Iznos odbijen od ili dodan k saldu.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="306"/>
@@ -1452,34 +1394,9 @@ Adresa:%4
         <translation>Primljeno s</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="351"/>
-        <source>Received from</source>
-        <translation>Primljeno od</translation>
-    </message>
-    <message>
         <location filename="../transactiontablemodel.cpp" line="354"/>
         <source>Sent to</source>
         <translation>Poslano za</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
-        <source>Payment to yourself</source>
-        <translation>Plaćanje samom sebi</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
-        <source>Mined</source>
-        <translation>Rudareno</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="396"/>
-        <source>(n/a)</source>
-        <translation>(n/d)</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="595"/>
-        <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Status transakcije</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="597"/>
@@ -1496,38 +1413,96 @@ Adresa:%4
         <source>Destination address of transaction.</source>
         <translation>Odredište transakcije</translation>
     </message>
-</context>
-<context>
-    <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="270"/>
-        <source>Export Transaction Data</source>
-        <translation>Izvoz podataka transakcija</translation>
+        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <source>Payment to yourself</source>
+        <translation>Plaćanje samom sebi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="271"/>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Datoteka podataka odvojenih zarezima (*.csv)</translation>
+        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <source>Mined</source>
+        <translation>Rudareno</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="279"/>
-        <source>Confirmed</source>
-        <translation>Potvrđeno</translation>
+        <location filename="../transactiontablemodel.cpp" line="595"/>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation>Status transakcije</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
-        <source>Date</source>
-        <translation>Datum</translation>
+        <location filename="../transactiontablemodel.cpp" line="280"/>
+        <source>Open until %1</source>
+        <translation>Otvoren do %1</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="281"/>
+        <location filename="../transactiontablemodel.cpp" line="351"/>
+        <source>Received from</source>
+        <translation>Primljeno od</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Type</source>
         <translation>Tip</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="282"/>
-        <source>Label</source>
-        <translation>Oznaka</translation>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Date</source>
+        <translation>Datum</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Address</source>
+        <translation>Adresa</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Amount</source>
+        <translation>Iznos</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../transactiontablemodel.cpp" line="277"/>
+        <source>Open for %n block(s)</source>
+        <translation>
+            <numerusform>Otvoren za %n bloka</numerusform>
+            <numerusform>Otvoren za %n blokova</numerusform>
+            <numerusform>Otvoren za %n blokova</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="283"/>
+        <source>Offline (%1 confirmations)</source>
+        <translation>Nije na mreži (%1 potvrda)</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="286"/>
+        <source>Unconfirmed (%1 of %2 confirmations)</source>
+        <translation>Nepotvrđen (%1 od %2 potvrda)</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="289"/>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Potvrđen (%1 potvrda)</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <source>Mined balance will be available in %n more blocks</source>
+        <translation>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="396"/>
+        <source>(n/a)</source>
+        <translation>(n/d)</translation>
+    </message>
+</context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <location filename="../transactionview.cpp" line="284"/>
+        <source>Amount</source>
+        <translation>Iznos</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="283"/>
@@ -1535,29 +1510,39 @@ Adresa:%4
         <translation>Adresa</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="284"/>
-        <source>Amount</source>
-        <translation>Iznos</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="285"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="289"/>
-        <source>Error exporting</source>
-        <translation>Izvoz pogreške</translation>
+        <location filename="../transactionview.cpp" line="74"/>
+        <source>Sent to</source>
+        <translation>Poslano za</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="289"/>
-        <source>Could not write to file %1.</source>
-        <translation>Ne mogu pisati u datoteku %1.</translation>
+        <location filename="../transactionview.cpp" line="77"/>
+        <source>Mined</source>
+        <translation>Rudareno</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="384"/>
-        <source>Range:</source>
-        <translation>Raspon:</translation>
+        <location filename="../transactionview.cpp" line="57"/>
+        <source>This week</source>
+        <translation>Ovaj tjedan</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="126"/>
+        <source>Copy amount</source>
+        <translation>Kopiraj iznos</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="271"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Datoteka podataka odvojenih zarezima (*.csv)</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="270"/>
+        <source>Export Transaction Data</source>
+        <translation>Izvoz podataka transakcija</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="55"/>
@@ -1569,11 +1554,6 @@ Adresa:%4
         <location filename="../transactionview.cpp" line="56"/>
         <source>Today</source>
         <translation>Danas</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="57"/>
-        <source>This week</source>
-        <translation>Ovaj tjedan</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="58"/>
@@ -1601,19 +1581,9 @@ Adresa:%4
         <translation>Primljeno s</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="74"/>
-        <source>Sent to</source>
-        <translation>Poslano za</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="76"/>
         <source>To yourself</source>
         <translation>Tebi</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="77"/>
-        <source>Mined</source>
-        <translation>Rudareno</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="78"/>
@@ -1651,14 +1621,44 @@ Adresa:%4
         <translation>Prikazati detalje...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="126"/>
-        <source>Copy amount</source>
-        <translation>Kopiraj iznos</translation>
+        <location filename="../transactionview.cpp" line="279"/>
+        <source>Confirmed</source>
+        <translation>Potvrđeno</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="280"/>
+        <source>Date</source>
+        <translation>Datum</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="282"/>
+        <source>Label</source>
+        <translation>Oznaka</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="281"/>
+        <source>Type</source>
+        <translation>Tip</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="289"/>
+        <source>Error exporting</source>
+        <translation>Izvoz pogreške</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="384"/>
+        <source>Range:</source>
+        <translation>Raspon:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="392"/>
         <source>to</source>
         <translation>za</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="289"/>
+        <source>Could not write to file %1.</source>
+        <translation>Ne mogu pisati u datoteku %1.</translation>
     </message>
 </context>
 <context>
@@ -1671,21 +1671,6 @@ Adresa:%4
 </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="86"/>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Lozinka za JSON-RPC veze</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="94"/>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Podesi memorijski prostor za ključeve na &lt;n&gt; (ugrađeni izbor: 100)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="95"/>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Ponovno pretraži lanac blokova za transakcije koje nedostaju</translation>
-    </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
@@ -1702,74 +1687,14 @@ Adresa:%4
         <translation>Uslužnikov privatni ključ (ugrađeni izbor: server.pem)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="104"/>
-        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
-        <translation>Prihvaljivi načini šifriranja (ugrađeni izbor: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
+        <location filename="../bitcoinstrings.cpp" line="43"/>
+        <source>Send command to -server or bitcoind</source>
+        <translation>Pošalji komandu usluzi -server ili bitcoind</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="45"/>
-        <source>Get help for a command</source>
-        <translation>Potraži pomoć za komandu</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="56"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>Odredi vremenski prozor za spajanje na mrežu (u milisekundama)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Prihvati komande iz tekst moda i JSON-RPC</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="79"/>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Izvršavaj u pozadini kao uslužnik i prihvaćaj komande</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="80"/>
-        <source>Use the test network</source>
-        <translation>Koristi test mrežu</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="85"/>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Korisničko ime za JSON-RPC veze</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="87"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
-        <translation>Prihvaćaj JSON-RPC povezivanje na portu broj &lt;port&gt; (ugrađeni izbor: 8332)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="88"/>
-        <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>Dozvoli JSON-RPC povezivanje s određene IP adrese</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="89"/>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>Pošalji komande nodu na adresi &lt;ip&gt; (ugrađeni izbor: 127.0.0.1)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="107"/>
-        <source>This help message</source>
-        <translation>Ova poruka za pomoć</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="109"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Program ne može pristupiti direktoriju s datotekama %s. Bitcoin program je vjerojatno već pokrenut.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="113"/>
-        <source>Loading addresses...</source>
-        <translation>Učitavanje adresa...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="115"/>
-        <source>Loading block index...</source>
-        <translation>Učitavanje indeksa blokova...</translation>
+        <location filename="../bitcoinstrings.cpp" line="59"/>
+        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
+        <translation>Slušaj na &lt;port&gt;u (default: 8333 ili testnet: 18333)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="117"/>
@@ -1777,34 +1702,24 @@ Adresa:%4
         <translation>Učitavanje novčanika...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="125"/>
-        <source>Rescanning...</source>
-        <translation>Rescaniranje</translation>
+        <location filename="../bitcoinstrings.cpp" line="84"/>
+        <source>Send trace/debug info to debugger</source>
+        <translation>Pošalji trace/debug informacije u debugger</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="126"/>
-        <source>Done loading</source>
-        <translation>Učitavanje gotovo</translation>
+        <location filename="../bitcoinstrings.cpp" line="116"/>
+        <source>Error loading blkindex.dat</source>
+        <translation>Greška kod učitavanja blkindex.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="41"/>
-        <source>Bitcoin version</source>
-        <translation>Bitcoin verzija</translation>
+        <location filename="../bitcoinstrings.cpp" line="44"/>
+        <source>List commands</source>
+        <translation>Prikaži komande</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="8"/>
         <source>Error: Wallet locked, unable to create transaction  </source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Ova transakcija je preko ograničenja veličine. Možete ju ipak poslati za naknadu od %1, koja se daje čvorovima koji procesiraju vaše transakcije i tako podržavate mrežu. Želite li platiti naknadu?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="18"/>
-        <source>Invalid amount</source>
-        <translation type="unfinished">Nevaljali iznos za opciju</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="21"/>
@@ -1841,19 +1756,9 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
-        <source>Usage:</source>
-        <translation>Upotreba:</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="43"/>
-        <source>Send command to -server or bitcoind</source>
-        <translation>Pošalji komandu usluzi -server ili bitcoind</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
-        <source>List commands</source>
-        <translation>Prikaži komande</translation>
+        <location filename="../bitcoinstrings.cpp" line="45"/>
+        <source>Get help for a command</source>
+        <translation>Potraži pomoć za komandu</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
@@ -1881,19 +1786,9 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Ne generiraj novčiće</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="51"/>
-        <source>Start minimized</source>
-        <translation>Pokreni minimiziran</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="52"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="53"/>
-        <source>Specify data directory</source>
-        <translation>Odredi direktorij za datoteke</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
@@ -1904,21 +1799,6 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <location filename="../bitcoinstrings.cpp" line="55"/>
         <source>Set database disk log size in megabytes (default: 100)</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Connect through socks4 proxy</source>
-        <translation>Poveži se kroz socks4 proxy</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="58"/>
-        <source>Allow DNS lookups for addnode and connect</source>
-        <translation>Dozvoli DNS upite za dodavanje nodova i povezivanje</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="62"/>
-        <source>Connect only to the specified node</source>
-        <translation>Poveži se samo sa određenim nodom</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
@@ -1981,15 +1861,200 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="118"/>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <translation>Greška kod učitavanja wallet.dat: Novčanik pokvaren</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="119"/>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
+        <translation>Greška kod učitavanja wallet.dat: Novčanik zahtjeva noviju verziju Bitcoina</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="120"/>
+        <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
+        <translation>Novčanik je trebao prepravak: ponovo pokrenite Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="82"/>
+        <source>Prepend debug output with timestamp</source>
+        <translation>Dodaj izlaz debuga na početak sa vremenskom oznakom</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="121"/>
+        <source>Error loading wallet.dat</source>
+        <translation>Greška kod učitavanja wallet.dat</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Generirani novčići moraju pričekati nastanak 120 blokova prije nego što ih je moguće potrošiti. Kad ste generirali taj blok, on je bio emitiran u mrežu kako bi bio dodan postojećim lancima blokova. Ako ne uspije biti dodan, njegov status bit će promijenjen u &quot;nije prihvatljiv&quot; i on neće biti potrošiv. S vremena na vrijeme tako nešto se može desiti ako neki drugi nod približno istovremeno generira blok.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="13"/>
+        <source>Sending...</source>
+        <translation>Slanje...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="19"/>
+        <source>Insufficient funds</source>
+        <translation>Nedovoljna sredstva</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="53"/>
+        <source>Specify data directory</source>
+        <translation>Odredi direktorij za datoteke</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <source>Fee per KB to add to transactions you send</source>
+        <translation>Naknada posredniku po KB-u koja će biti dodana svakoj transakciji koju pošalješ</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation>Prag za odspajanje članova koji se čudno ponašaju (default: 100)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="112"/>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="83"/>
+        <source>Send trace/debug info to console instead of debug.log file</source>
+        <translation>Šalji trace/debug informacije na konzolu umjesto u debug.log datoteku</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="86"/>
+        <source>Password for JSON-RPC connections</source>
+        <translation>Lozinka za JSON-RPC veze</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="94"/>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <translation>Podesi memorijski prostor za ključeve na &lt;n&gt; (ugrađeni izbor: 100)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="95"/>
+        <source>Rescan the block chain for missing wallet transactions</source>
+        <translation>Ponovno pretraži lanac blokova za transakcije koje nedostaju</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="104"/>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
+        <translation>Prihvaljivi načini šifriranja (ugrađeni izbor: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="107"/>
+        <source>This help message</source>
+        <translation>Ova poruka za pomoć</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="109"/>
+        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
+        <translation>Program ne može pristupiti direktoriju s datotekama %s. Bitcoin program je vjerojatno već pokrenut.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="56"/>
+        <source>Specify connection timeout (in milliseconds)</source>
+        <translation>Odredi vremenski prozor za spajanje na mrežu (u milisekundama)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <source>Accept command line and JSON-RPC commands</source>
+        <translation>Prihvati komande iz tekst moda i JSON-RPC</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="115"/>
+        <source>Loading block index...</source>
+        <translation>Učitavanje indeksa blokova...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="126"/>
+        <source>Done loading</source>
+        <translation>Učitavanje gotovo</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="79"/>
+        <source>Run in the background as a daemon and accept commands</source>
+        <translation>Izvršavaj u pozadini kao uslužnik i prihvaćaj komande</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="125"/>
+        <source>Rescanning...</source>
+        <translation>Rescaniranje</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="80"/>
+        <source>Use the test network</source>
+        <translation>Koristi test mrežu</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <source>Username for JSON-RPC connections</source>
+        <translation>Korisničko ime za JSON-RPC veze</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="87"/>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
+        <translation>Prihvaćaj JSON-RPC povezivanje na portu broj &lt;port&gt; (ugrađeni izbor: 8332)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="88"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>Dozvoli JSON-RPC povezivanje s određene IP adrese</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="89"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation>Pošalji komande nodu na adresi &lt;ip&gt; (ugrađeni izbor: 127.0.0.1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="41"/>
+        <source>Bitcoin version</source>
+        <translation>Bitcoin verzija</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="42"/>
+        <source>Usage:</source>
+        <translation>Upotreba:</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
+        <translation>Broj sekundi koliko se članovima koji se čudno ponašaju neće dopustiti da se opet spoje (default: 86400)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="51"/>
+        <source>Start minimized</source>
+        <translation>Pokreni minimiziran</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <source>Connect through socks4 proxy</source>
+        <translation>Poveži se kroz socks4 proxy</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
+        <source>Allow DNS lookups for addnode and connect</source>
+        <translation>Dozvoli DNS upite za dodavanje nodova i povezivanje</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="62"/>
+        <source>Connect only to the specified node</source>
+        <translation>Poveži se samo sa određenim nodom</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="98"/>
         <source>
 SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL postavke: (za detalje o podešavanju SSL opcija vidi Bitcoin Wiki)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="108"/>
-        <source>Usage</source>
-        <translation>Upotreba</translation>
+        <location filename="../bitcoinstrings.cpp" line="114"/>
+        <source>Error loading addr.dat</source>
+        <translation>Greška kod učitavanja addr.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="122"/>
@@ -2012,126 +2077,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Nevaljala -proxy adresa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="128"/>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
-        <translation>Nevaljali iznos za opciju -paytxfee=&lt;amount&gt;</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="129"/>
-        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Upozorenje: -paytxfee je podešen na preveliki iznos.  To je iznos koji ćete platiti za obradu transakcije.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="132"/>
-        <source>Error: CreateThread(StartNode) failed</source>
-        <translation>Greška: CreateThread(StartNode) nije uspjela</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="133"/>
-        <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
-        <translation>Program ne može koristiti port %d na ovom računalu.  Bitcoin program je vjerojatno već pokrenut.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="38"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>Upozorenje: Molimo provjerite jesu li datum i vrijeme na vašem računalu točni. Ako vaš sat ide krivo, Bitcoin neće raditi ispravno.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="114"/>
-        <source>Error loading addr.dat</source>
-        <translation>Greška kod učitavanja addr.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Broj sekundi koliko se članovima koji se čudno ponašaju neće dopustiti da se opet spoje (default: 86400)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="59"/>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Slušaj na &lt;port&gt;u (default: 8333 ili testnet: 18333)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="60"/>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Održavaj najviše &lt;n&gt; veza sa članovima (default: 125)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="112"/>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="19"/>
-        <source>Insufficient funds</source>
-        <translation>Nedovoljna sredstva</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Generirani novčići moraju pričekati nastanak 120 blokova prije nego što ih je moguće potrošiti. Kad ste generirali taj blok, on je bio emitiran u mrežu kako bi bio dodan postojećim lancima blokova. Ako ne uspije biti dodan, njegov status bit će promijenjen u &quot;nije prihvatljiv&quot; i on neće biti potrošiv. S vremena na vrijeme tako nešto se može desiti ako neki drugi nod približno istovremeno generira blok.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="116"/>
-        <source>Error loading blkindex.dat</source>
-        <translation>Greška kod učitavanja blkindex.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
-        <source>Fee per KB to add to transactions you send</source>
-        <translation>Naknada posredniku po KB-u koja će biti dodana svakoj transakciji koju pošalješ</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="121"/>
-        <source>Error loading wallet.dat</source>
-        <translation>Greška kod učitavanja wallet.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="118"/>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Greška kod učitavanja wallet.dat: Novčanik pokvaren</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="119"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>Greška kod učitavanja wallet.dat: Novčanik zahtjeva noviju verziju Bitcoina</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Prag za odspajanje članova koji se čudno ponašaju (default: 100)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Greška: priprema transakcije nije uspjela</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="82"/>
-        <source>Prepend debug output with timestamp</source>
-        <translation>Dodaj izlaz debuga na početak sa vremenskom oznakom</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="83"/>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Šalji trace/debug informacije na konzolu umjesto u debug.log datoteku</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="84"/>
-        <source>Send trace/debug info to debugger</source>
-        <translation>Pošalji trace/debug informacije u debugger</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="120"/>
-        <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>Novčanik je trebao prepravak: ponovo pokrenite Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="13"/>
-        <source>Sending...</source>
-        <translation>Slanje...</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
         <source>Warning: Disk space is low</source>
         <translation>Upozorenje: Malo diskovnog prostora</translation>
@@ -2150,6 +2095,61 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <location filename="../bitcoinstrings.cpp" line="74"/>
         <source>Use Universal Plug and Play to map the listening port (default: 0)</source>
         <translation type="unfinished">Pokušaj koristiti UPnP da otvoriš port za uslugu (default: 0)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="132"/>
+        <source>Error: CreateThread(StartNode) failed</source>
+        <translation>Greška: CreateThread(StartNode) nije uspjela</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="133"/>
+        <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
+        <translation>Program ne može koristiti port %d na ovom računalu.  Bitcoin program je vjerojatno već pokrenut.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="38"/>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
+        <translation>Upozorenje: Molimo provjerite jesu li datum i vrijeme na vašem računalu točni. Ako vaš sat ide krivo, Bitcoin neće raditi ispravno.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation type="unfinished">Ova transakcija je preko ograničenja veličine. Možete ju ipak poslati za naknadu od %1, koja se daje čvorovima koji procesiraju vaše transakcije i tako podržavate mrežu. Želite li platiti naknadu?</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>Greška: priprema transakcije nije uspjela</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="18"/>
+        <source>Invalid amount</source>
+        <translation type="unfinished">Nevaljali iznos za opciju</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="128"/>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
+        <translation>Nevaljali iznos za opciju -paytxfee=&lt;amount&gt;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="129"/>
+        <source>Warning: -paytxfee is set very high.  This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Upozorenje: -paytxfee je podešen na preveliki iznos.  To je iznos koji ćete platiti za obradu transakcije.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="108"/>
+        <source>Usage</source>
+        <translation>Upotreba</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="113"/>
+        <source>Loading addresses...</source>
+        <translation>Učitavanje adresa...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="60"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation>Održavaj najviše &lt;n&gt; veza sa članovima (default: 125)</translation>
     </message>
 </context>
 </TS>

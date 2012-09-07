@@ -293,51 +293,6 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <translation>Portofel electronic Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="248"/>
-        <source>Show/Hide &amp;Bitcoin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
-        <source>Show or hide the Bitcoin window</source>
-        <translation type="unfinished">Afişează fereastra Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="506"/>
-        <source>Synchronizing with network...</source>
-        <translation>Se sincronizează cu reţeaua...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="185"/>
-        <source>&amp;Overview</source>
-        <translation>&amp;Detalii</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="186"/>
-        <source>Show general overview of wallet</source>
-        <translation>Afişează detalii despre portofelul electronic</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="191"/>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Tranzacţii</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="192"/>
-        <source>Browse transaction history</source>
-        <translation>Istoricul tranzacţiilor</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="197"/>
-        <source>&amp;Address Book</source>
-        <translation>&amp;Lista de adrese</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="198"/>
-        <source>Edit the list of stored addresses and labels</source>
-        <translation>Editaţi lista de adrese şi etichete.</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="203"/>
         <source>&amp;Receive coins</source>
         <translation>&amp;Primiţi Bitcoin</translation>
@@ -346,16 +301,6 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <location filename="../bitcoingui.cpp" line="204"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Lista de adrese pentru recepţionarea plăţilor</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="209"/>
-        <source>&amp;Send coins</source>
-        <translation>&amp;Trimiteţi Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="210"/>
-        <source>Send coins to a bitcoin address</source>
-        <translation>&amp;Trimiteţi Bitcoin către o anumită adresă</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="215"/>
@@ -373,98 +318,24 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="236"/>
-        <source>Quit application</source>
-        <translation>Părăsiţi aplicaţia</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="239"/>
-        <source>&amp;About %1</source>
-        <translation type="unfinished">&amp;Despre %1</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show information about Bitcoin</source>
-        <translation>Informaţii despre Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
-        <source>About &amp;Qt</source>
-        <translation>Despre &amp;Qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
-        <source>Show information about Qt</source>
-        <translation>Informaţii despre Qt</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="245"/>
-        <source>&amp;Options...</source>
-        <translation>&amp;Setări...</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="246"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>Modifică setările pentru Bitcoin</translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="508"/>
-        <source>~%n block(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="519"/>
-        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">S-au descărcat %1 din %2 blocuri din istoricul tranzaciilor (%3% done).</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
-        <source>Backup Wallet</source>
-        <translation type="unfinished">Backup portofelul electronic</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="823"/>
-        <source>Wallet Data (*.dat)</source>
+        <location filename="../bitcoingui.cpp" line="248"/>
+        <source>Show/Hide &amp;Bitcoin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
-        <source>Backup Failed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="826"/>
-        <source>There was an error trying to save the wallet data to the new location.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
-        <source>&amp;Export...</source>
-        <translation>&amp;Exportă...</translation>
+        <location filename="../bitcoingui.cpp" line="249"/>
+        <source>Show or hide the Bitcoin window</source>
+        <translation type="unfinished">Afişează fereastra Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="251"/>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="252"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation>Criptează portofelul electronic</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="253"/>
-        <source>Encrypt or decrypt wallet</source>
-        <translation>Criptează şi decriptează portofelul electronic</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="255"/>
-        <source>&amp;Backup Wallet</source>
-        <translation type="unfinished">&amp;Backup portofelul electronic</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="256"/>
@@ -477,41 +348,6 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <translation>&amp;Schimbă parola</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="258"/>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>&amp;Schimbă parola folosită pentru criptarea portofelului electronic</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="281"/>
-        <source>&amp;File</source>
-        <translation>&amp;Fişier</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="290"/>
-        <source>&amp;Settings</source>
-        <translation>&amp;Setări</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="296"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Ajutor</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="303"/>
-        <source>Tabs toolbar</source>
-        <translation>Bara de ferestre de lucru</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
-        <source>Actions toolbar</source>
-        <translation>Bara de acţiuni</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="327"/>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>Bitcoin client</source>
         <translation type="unfinished"></translation>
@@ -521,14 +357,10 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <source>bitcoin-qt</source>
         <translation>bitcoin-qt</translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="482"/>
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation>
-            <numerusform>%n active connections to Bitcoin network</numerusform>
-            <numerusform>%n active connections to Bitcoin network</numerusform>
-            <numerusform>%n active connections to Bitcoin network</numerusform>
-        </translation>
+    <message>
+        <location filename="../bitcoingui.cpp" line="519"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation type="unfinished">S-au descărcat %1 din %2 blocuri din istoricul tranzaciilor (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="531"/>
@@ -577,11 +409,6 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <translation>Actualizat</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="569"/>
-        <source>Catching up...</source>
-        <translation>Se actualizează...</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="577"/>
         <source>Last received block was generated %1.</source>
         <translation>Ultimul bloc primit a fost generat %1.</translation>
@@ -590,21 +417,6 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
         <location filename="../bitcoingui.cpp" line="633"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Această tranzacţie depăşeşte limita.  Puteţi iniţia tranzacţia platind un comision de %1, de care vor beneficia nodurile care procesează tranzacţia şi ajută la menţinerea reţelei.  Acceptaţi plata comisionului?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="638"/>
-        <source>Sending...</source>
-        <translation>Expediază...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
-        <source>Sent transaction</source>
-        <translation>Tranzacţie expediată</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="666"/>
-        <source>Incoming transaction</source>
-        <translation>Tranzacţie recepţionată</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="667"/>
@@ -624,6 +436,194 @@ Address: %4
         <location filename="../bitcoingui.cpp" line="800"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portofelul electronic este &lt;b&gt;criptat&lt;/b&gt; iar in momentul de faţă este &lt;b&gt;blocat&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="823"/>
+        <source>Wallet Data (*.dat)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="826"/>
+        <source>Backup Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="826"/>
+        <source>There was an error trying to save the wallet data to the new location.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="508"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="506"/>
+        <source>Synchronizing with network...</source>
+        <translation>Se sincronizează cu reţeaua...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="185"/>
+        <source>&amp;Overview</source>
+        <translation>&amp;Detalii</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="186"/>
+        <source>Show general overview of wallet</source>
+        <translation>Afişează detalii despre portofelul electronic</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="191"/>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Tranzacţii</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="192"/>
+        <source>Browse transaction history</source>
+        <translation>Istoricul tranzacţiilor</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="197"/>
+        <source>&amp;Address Book</source>
+        <translation>&amp;Lista de adrese</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="198"/>
+        <source>Edit the list of stored addresses and labels</source>
+        <translation>Editaţi lista de adrese şi etichete.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="250"/>
+        <source>&amp;Export...</source>
+        <translation>&amp;Exportă...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="253"/>
+        <source>Encrypt or decrypt wallet</source>
+        <translation>Criptează şi decriptează portofelul electronic</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="258"/>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>&amp;Schimbă parola folosită pentru criptarea portofelului electronic</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="209"/>
+        <source>&amp;Send coins</source>
+        <translation>&amp;Trimiteţi Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="665"/>
+        <source>Sent transaction</source>
+        <translation>Tranzacţie expediată</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="666"/>
+        <source>Incoming transaction</source>
+        <translation>Tranzacţie recepţionată</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="569"/>
+        <source>Catching up...</source>
+        <translation>Se actualizează...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="236"/>
+        <source>Quit application</source>
+        <translation>Părăsiţi aplicaţia</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="823"/>
+        <source>Backup Wallet</source>
+        <translation type="unfinished">Backup portofelul electronic</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="240"/>
+        <source>Show information about Bitcoin</source>
+        <translation>Informaţii despre Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="210"/>
+        <source>Send coins to a bitcoin address</source>
+        <translation>&amp;Trimiteţi Bitcoin către o anumită adresă</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="245"/>
+        <source>&amp;Options...</source>
+        <translation>&amp;Setări...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="239"/>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">&amp;Despre %1</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="242"/>
+        <source>About &amp;Qt</source>
+        <translation>Despre &amp;Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="243"/>
+        <source>Show information about Qt</source>
+        <translation>Informaţii despre Qt</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="281"/>
+        <source>&amp;File</source>
+        <translation>&amp;Fişier</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="252"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation>Criptează portofelul electronic</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="255"/>
+        <source>&amp;Backup Wallet</source>
+        <translation type="unfinished">&amp;Backup portofelul electronic</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="482"/>
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation>
+            <numerusform>%n active connections to Bitcoin network</numerusform>
+            <numerusform>%n active connections to Bitcoin network</numerusform>
+            <numerusform>%n active connections to Bitcoin network</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="290"/>
+        <source>&amp;Settings</source>
+        <translation>&amp;Setări</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="296"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Ajutor</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="638"/>
+        <source>Sending...</source>
+        <translation>Expediază...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="303"/>
+        <source>Tabs toolbar</source>
+        <translation>Bara de ferestre de lucru</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="314"/>
+        <source>Actions toolbar</source>
+        <translation>Bara de acţiuni</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="327"/>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
@@ -884,15 +884,15 @@ Address: %4
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
+        <source>%1 is not a valid address.</source>
+        <translation type="unfinished">Adresa introdusă &quot;%1&quot; nu este o adresă bitcoin valabilă.</translation>
+    </message>
+    <message>
+        <location filename="../messagepage.cpp" line="74"/>
         <location filename="../messagepage.cpp" line="89"/>
         <location filename="../messagepage.cpp" line="101"/>
         <source>Error signing</source>
         <translation type="unfinished">Eroare</translation>
-    </message>
-    <message>
-        <location filename="../messagepage.cpp" line="74"/>
-        <source>%1 is not a valid address.</source>
-        <translation type="unfinished">Adresa introdusă &quot;%1&quot; nu este o adresă bitcoin valabilă.</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="89"/>
@@ -908,9 +908,9 @@ Address: %4
 <context>
     <name>OptionsDialog</name>
     <message>
-        <location filename="../optionsdialog.cpp" line="80"/>
-        <source>Main</source>
-        <translation>Principal</translation>
+        <location filename="../optionsdialog.cpp" line="105"/>
+        <source>Options</source>
+        <translation>Setări</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="85"/>
@@ -918,37 +918,37 @@ Address: %4
         <translation>Afişare</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="105"/>
-        <source>Options</source>
-        <translation>Setări</translation>
+        <location filename="../optionsdialog.cpp" line="80"/>
+        <source>Main</source>
+        <translation>Principal</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="40"/>
+        <source>Balance:</source>
+        <translation>Balanţă:</translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="54"/>
+        <source>Number of transactions:</source>
+        <translation>Număr total de tranzacţii:</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="103"/>
+        <source>Your current balance</source>
+        <translation>Soldul contul</translation>
+    </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="108"/>
-        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Totalul tranzacţiilor care aşteaptă să fie confirmate şi care nu sunt încă luate în calcul la afişarea soldului contului.</translation>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="111"/>
-        <source>Total number of transactions in wallet</source>
-        <translation>Numărul total de tranzacţii din portofelul electronic</translation>
-    </message>
-    <message>
         <location filename="../forms/overviewpage.ui" line="61"/>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="68"/>
-        <source>Unconfirmed:</source>
-        <translation>Neconfirmat:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
@@ -961,19 +961,19 @@ Address: %4
         <translation>&lt;b&gt;Ultimele tranzacţii&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="103"/>
-        <source>Your current balance</source>
-        <translation>Soldul contul</translation>
+        <location filename="../overviewpage.cpp" line="111"/>
+        <source>Total number of transactions in wallet</source>
+        <translation>Numărul total de tranzacţii din portofelul electronic</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
-        <source>Balance:</source>
-        <translation>Balanţă:</translation>
+        <location filename="../forms/overviewpage.ui" line="68"/>
+        <source>Unconfirmed:</source>
+        <translation>Neconfirmat:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="54"/>
-        <source>Number of transactions:</source>
-        <translation>Număr total de tranzacţii:</translation>
+        <location filename="../overviewpage.cpp" line="108"/>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
+        <translation>Totalul tranzacţiilor care aşteaptă să fie confirmate şi care nu sunt încă luate în calcul la afişarea soldului contului.</translation>
     </message>
 </context>
 <context>
@@ -1042,6 +1042,11 @@ Address: %4
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="100"/>
+        <source>Confirm send coins</source>
+        <translation>Confirmaţi trimiterea de bitcoin</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="144"/>
         <source>Confirm the send action</source>
         <translation>Confirmă operaţiunea de trimitere</translation>
@@ -1050,6 +1055,51 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="147"/>
         <source>&amp;Send</source>
         <translation>&amp;S Trimite</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="95"/>
+        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
+        <translation>&lt;b&gt;%1&lt;/b&gt; la %2 (%3)</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="101"/>
+        <source>Are you sure you want to send %1?</source>
+        <translation>Sunteţi sigur că doriţi să trimiteţi %1?</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="101"/>
+        <source> and </source>
+        <translation> şi </translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="129"/>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation>Suma de plată trebuie să fie mai mare decât 0.</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="134"/>
+        <source>The amount exceeds your balance.</source>
+        <translation>Suma depăşeşte soldul contului.</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="139"/>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>Total depăşeşte soldul contului in cazul plăţii comisionului de %1.</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <source>Duplicate address found, can only send to each address once per send operation.</source>
+        <translation>S-a descoperit o adresă care figurează de două ori. Expedierea se poate realiza către fiecare adresă doar o singură dată pe operaţiune.</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="150"/>
+        <source>Error: Transaction creation failed.</source>
+        <translation>Eroare: Tranyacţia nu a putut fi iniţiată.</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="155"/>
+        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Eroare: Tranyacţia a fost respinsă.  Acesta poate fi rezultatul cheltuirii prealabile a unei sume de bitcoin din portofelul electronic, ca în cazul folosirii unei copii a fisierului wallet.dat, în care s-au efectuat tranzacţii neînregistrate în fisierul curent.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
@@ -1094,59 +1144,9 @@ Address: %4
         <translation>Şterge tot</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="95"/>
-        <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
-        <translation>&lt;b&gt;%1&lt;/b&gt; la %2 (%3)</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="101"/>
-        <source> and </source>
-        <translation> şi </translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="100"/>
-        <source>Confirm send coins</source>
-        <translation>Confirmaţi trimiterea de bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="101"/>
-        <source>Are you sure you want to send %1?</source>
-        <translation>Sunteţi sigur că doriţi să trimiteţi %1?</translation>
-    </message>
-    <message>
         <location filename="../sendcoinsdialog.cpp" line="124"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Adresa destinatarului nu este validă, vă rugăm să o verificaţi.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="129"/>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>Suma de plată trebuie să fie mai mare decât 0.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="134"/>
-        <source>The amount exceeds your balance.</source>
-        <translation>Suma depăşeşte soldul contului.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="139"/>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Total depăşeşte soldul contului in cazul plăţii comisionului de %1.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="145"/>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>S-a descoperit o adresă care figurează de două ori. Expedierea se poate realiza către fiecare adresă doar o singură dată pe operaţiune.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="150"/>
-        <source>Error: Transaction creation failed.</source>
-        <translation>Eroare: Tranyacţia nu a putut fi iniţiată.</translation>
-    </message>
-    <message>
-        <location filename="../sendcoinsdialog.cpp" line="155"/>
-        <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Eroare: Tranyacţia a fost respinsă.  Acesta poate fi rezultatul cheltuirii prealabile a unei sume de bitcoin din portofelul electronic, ca în cazul folosirii unei copii a fisierului wallet.dat, în care s-au efectuat tranzacţii neînregistrate în fisierul curent.</translation>
     </message>
 </context>
 <context>
@@ -1226,11 +1226,6 @@ Address: %4
         <translation>Deschis până la %1</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="32"/>
-        <source>%1 confirmations</source>
-        <translation>%1 confirmări</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>%1/offline?</source>
         <translation>%1/offline?</translation>
@@ -1239,6 +1234,52 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="30"/>
         <source>%1/unconfirmed</source>
         <translation>%1/neconfirmat</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="32"/>
+        <source>%1 confirmations</source>
+        <translation>%1 confirmări</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="70"/>
+        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
+        <translation>&lt;b&gt;Sursă:&lt;/b&gt; Generat&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="76"/>
+        <location filename="../transactiondesc.cpp" line="93"/>
+        <source>&lt;b&gt;From:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;De la:&lt;/b&gt; </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="93"/>
+        <source>unknown</source>
+        <translation>necunoscut</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="198"/>
+        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Comisionul tranzacţiei:&lt;/b&gt; </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="214"/>
+        <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
+        <translation>&lt;b&gt;Suma netă:&lt;/b&gt; </translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="220"/>
+        <source>Message:</source>
+        <translation>Mesaj:</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="224"/>
+        <source>Transaction ID:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="227"/>
+        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Monedele bitcoin generate se pot cheltui dupa parcurgerea a 120 de blocuri.  După ce a fost generat, s-a propagat în reţea, urmând să fie adăugat lanţului de blocuri.  Dacă nu poate fi inclus in lanţ, starea sa va deveni &quot;neacceptat&quot; si nu va putea fi folosit la tranzacţii.  Acest fenomen se întâmplă atunci cand un alt nod a generat un bloc la o diferenţa de câteva secunde.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="50"/>
@@ -1264,22 +1305,6 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="63"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Data:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="70"/>
-        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation>&lt;b&gt;Sursă:&lt;/b&gt; Generat&lt;br&gt;</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="76"/>
-        <location filename="../transactiondesc.cpp" line="93"/>
-        <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;De la:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="93"/>
-        <source>unknown</source>
-        <translation>necunoscut</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="94"/>
@@ -1324,34 +1349,9 @@ Address: %4
         <translation>&lt;b&gt;Debit:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="198"/>
-        <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Comisionul tranzacţiei:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="214"/>
-        <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
-        <translation>&lt;b&gt;Suma netă:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="220"/>
-        <source>Message:</source>
-        <translation>Mesaj:</translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="222"/>
         <source>Comment:</source>
         <translation>Comentarii:</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="224"/>
-        <source>Transaction ID:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="227"/>
-        <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Monedele bitcoin generate se pot cheltui dupa parcurgerea a 120 de blocuri.  După ce a fost generat, s-a propagat în reţea, urmând să fie adăugat lanţului de blocuri.  Dacă nu poate fi inclus in lanţ, starea sa va deveni &quot;neacceptat&quot; si nu va putea fi folosit la tranzacţii.  Acest fenomen se întâmplă atunci cand un alt nod a generat un bloc la o diferenţa de câteva secunde.</translation>
     </message>
 </context>
 <context>
@@ -1370,14 +1370,9 @@ Address: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="286"/>
-        <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation>Neconfirmat (%1 din %2 confirmări)</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Date</source>
-        <translation>Data</translation>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <source>Generated but not accepted</source>
+        <translation>Generat, dar neacceptat</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
@@ -1394,13 +1389,18 @@ Address: %4
         <source>Amount</source>
         <translation>Cantitate</translation>
     </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="277"/>
         <source>Open for %n block(s)</source>
         <translation>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Deschis pentru for %n bloc</numerusform>
+            <numerusform>Deschis pentru %n blocuri</numerusform>
+            <numerusform>Deschis pentru %n blocuri</numerusform>
         </translation>
     </message>
     <message>
@@ -1412,6 +1412,11 @@ Address: %4
         <location filename="../transactiontablemodel.cpp" line="283"/>
         <source>Offline (%1 confirmations)</source>
         <translation>Neconectat (%1 confirmări)</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="286"/>
+        <source>Unconfirmed (%1 of %2 confirmations)</source>
+        <translation>Neconfirmat (%1 din %2 confirmări)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="289"/>
@@ -1433,19 +1438,14 @@ Address: %4
         <translation>Blocul nu a fost recepţionat de niciun alt nod şi e probabil că nu va fi acceptat.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="306"/>
-        <source>Generated but not accepted</source>
-        <translation>Generat, dar neacceptat</translation>
-    </message>
-    <message>
         <location filename="../transactiontablemodel.cpp" line="349"/>
         <source>Received with</source>
         <translation>Recepţionat cu</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="351"/>
-        <source>Received from</source>
-        <translation type="unfinished"></translation>
+        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <source>Payment to yourself</source>
+        <translation>Plată către un cont propriu</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="354"/>
@@ -1453,9 +1453,9 @@ Address: %4
         <translation>Trimis către</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
-        <source>Payment to yourself</source>
-        <translation>Plată către un cont propriu</translation>
+        <location filename="../transactiontablemodel.cpp" line="351"/>
+        <source>Received from</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
@@ -1483,22 +1483,52 @@ Address: %4
         <translation>Tipul tranzacţiei.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="601"/>
-        <source>Destination address of transaction.</source>
-        <translation>Adresa de destinaţie a tranzacţiei.</translation>
-    </message>
-    <message>
         <location filename="../transactiontablemodel.cpp" line="603"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Suma extrasă sau adăugată la sold.</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="601"/>
+        <source>Destination address of transaction.</source>
+        <translation>Adresa de destinaţie a tranzacţiei.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="384"/>
-        <source>Range:</source>
-        <translation>Interval:</translation>
+        <location filename="../transactionview.cpp" line="283"/>
+        <source>Address</source>
+        <translation>Adresă</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="56"/>
+        <source>Today</source>
+        <translation>Astăzi</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="271"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fişier text cu valori separate prin virgulă (*.csv)</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="279"/>
+        <source>Confirmed</source>
+        <translation>Confirmat</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="280"/>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="57"/>
+        <source>This week</source>
+        <translation>Săptămâna aceasta</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="281"/>
+        <source>Type</source>
+        <translation>Tipul</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="282"/>
@@ -1526,25 +1556,20 @@ Address: %4
         <translation>Fisierul %1 nu a putut fi accesat pentru scriere.</translation>
     </message>
     <message>
+        <location filename="../transactionview.cpp" line="384"/>
+        <source>Range:</source>
+        <translation>Interval:</translation>
+    </message>
+    <message>
         <location filename="../transactionview.cpp" line="392"/>
         <source>to</source>
         <translation>către</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="57"/>
-        <source>This week</source>
-        <translation>Săptămâna aceasta</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="55"/>
         <location filename="../transactionview.cpp" line="71"/>
         <source>All</source>
         <translation>Toate</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="56"/>
-        <source>Today</source>
-        <translation>Astăzi</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="58"/>
@@ -1602,19 +1627,14 @@ Address: %4
         <translation>Cantitatea produsă</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="124"/>
-        <source>Copy address</source>
-        <translation>Copiază adresa</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="125"/>
-        <source>Copy label</source>
-        <translation>Copiază eticheta</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="126"/>
         <source>Copy amount</source>
         <translation type="unfinished">Copiază sumă</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="124"/>
+        <source>Copy address</source>
+        <translation>Copiază adresa</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="127"/>
@@ -1622,39 +1642,19 @@ Address: %4
         <translation>Editează eticheta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="270"/>
-        <source>Export Transaction Data</source>
-        <translation>Exportă tranzacţiile</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="271"/>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fişier text cu valori separate prin virgulă (*.csv)</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="279"/>
-        <source>Confirmed</source>
-        <translation>Confirmat</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="280"/>
-        <source>Date</source>
-        <translation>Data</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="281"/>
-        <source>Type</source>
-        <translation>Tipul</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="283"/>
-        <source>Address</source>
-        <translation>Adresă</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="128"/>
         <source>Show details...</source>
         <translation>Afişează detalii...</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="125"/>
+        <source>Copy label</source>
+        <translation>Copiază eticheta</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="270"/>
+        <source>Export Transaction Data</source>
+        <translation>Exportă tranzacţiile</translation>
     </message>
 </context>
 <context>
@@ -1738,11 +1738,6 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Această tranzacţie depăşeşte limita.  Puteţi iniţia tranzacţia platind un comision de %1, de care vor beneficia nodurile care procesează tranzacţia şi ajută la menţinerea reţelei.  Acceptaţi plata comisionului?</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
         <translation type="unfinished"></translation>
@@ -1772,7 +1767,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Eroare</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
@@ -2073,11 +2068,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="108"/>
-        <source>Usage</source>
-        <translation>Uz</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="109"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation type="unfinished"></translation>
@@ -2118,14 +2108,9 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Connect through socks4 proxy</source>
-        <translation>Conectează prin proxy SOCKS4</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="112"/>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>Eroare: Tranyacţia nu a putut fi iniţiată </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
@@ -2133,19 +2118,34 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Fonduri insuficiente</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="13"/>
+        <source>Sending...</source>
+        <translation>Transmitere...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="112"/>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="57"/>
+        <source>Connect through socks4 proxy</source>
+        <translation>Conectează prin proxy SOCKS4</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation type="unfinished">Această tranzacţie depăşeşte limita.  Puteţi iniţia tranzacţia platind un comision de %1, de care vor beneficia nodurile care procesează tranzacţia şi ajută la menţinerea reţelei.  Acceptaţi plata comisionului?</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="14"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Eroare: Tranyacţia a fost respinsă.  Acesta poate fi rezultatul cheltuirii prealabile a unei sume de bitcoin din portofelul electronic, ca în cazul folosirii unei copii a fisierului wallet.dat, în care s-au efectuat tranzacţii neînregistrate în fisierul curent.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Eroare: Tranyacţia nu a putut fi iniţiată </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="13"/>
-        <source>Sending...</source>
-        <translation>Transmitere...</translation>
+        <location filename="../bitcoinstrings.cpp" line="108"/>
+        <source>Usage</source>
+        <translation>Uz</translation>
     </message>
 </context>
 </TS>

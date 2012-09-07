@@ -494,14 +494,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Synchronizing with network...</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="508"/>
-        <source>~%n block(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
@@ -618,6 +610,14 @@ Address: %4
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="508"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -667,7 +667,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Aadress</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -813,7 +813,7 @@ Address: %4
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Sõnum</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
@@ -913,7 +913,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="105"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Valikud</translation>
     </message>
 </context>
 <context>
@@ -989,7 +989,7 @@ Address: %4
     <message>
         <location filename="../forms/qrcodedialog.ui" line="70"/>
         <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Kogus:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="105"/>
@@ -999,7 +999,7 @@ Address: %4
     <message>
         <location filename="../forms/qrcodedialog.ui" line="121"/>
         <source>Label:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Silt:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="144"/>
@@ -1152,7 +1152,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="29"/>
         <source>A&amp;mount:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Kogus</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
@@ -1168,7 +1168,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Si&amp;lt:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
@@ -1236,7 +1236,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="50"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&lt;b&gt;Staatus:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="55"/>
@@ -1256,7 +1256,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="63"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&lt;b&gt;Kuupäev:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
@@ -1487,6 +1487,26 @@ Address: %4
 <context>
     <name>TransactionView</name>
     <message>
+        <location filename="../transactionview.cpp" line="284"/>
+        <source>Amount</source>
+        <translation>Kogus</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="285"/>
+        <source>ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="289"/>
+        <source>Error exporting</source>
+        <translation>Viga eksportimisel</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="280"/>
+        <source>Date</source>
+        <translation>Kuupäev</translation>
+    </message>
+    <message>
         <location filename="../transactionview.cpp" line="55"/>
         <location filename="../transactionview.cpp" line="71"/>
         <source>All</source>
@@ -1598,11 +1618,6 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
-        <source>Date</source>
-        <translation>Kuupäev</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="281"/>
         <source>Type</source>
         <translation>Tüüp</translation>
@@ -1616,21 +1631,6 @@ Address: %4
         <location filename="../transactionview.cpp" line="283"/>
         <source>Address</source>
         <translation>Aadress</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="284"/>
-        <source>Amount</source>
-        <translation>Kogus</translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="285"/>
-        <source>ID</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="289"/>
-        <source>Error exporting</source>
-        <translation>Viga eksportimisel</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="289"/>
@@ -1765,7 +1765,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Options:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Valikud:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>

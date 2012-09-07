@@ -244,13 +244,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Bitcoin va à présent se fermer pour terminer la procédure de cryptage. N&apos;oubliez pas que le chiffrement de votre porte-monnaie ne peut pas fournir une protection totale contre le vol par des logiciels malveillants qui infecteraient votre ordinateur.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="137"/>
-        <location filename="../askpassphrasedialog.cpp" line="148"/>
-        <location filename="../askpassphrasedialog.cpp" line="167"/>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La phrase de passe entrée pour décrypter le porte-monnaie était incorrecte.</translation>
-    </message>
-    <message>
         <location filename="../askpassphrasedialog.cpp" line="147"/>
         <source>Wallet decryption failed</source>
         <translation>Le décryptage du porte-monnaie a échoué</translation>
@@ -290,6 +283,13 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Wallet unlock failed</source>
         <translation>Le déverrouillage du porte-monnaie a échoué</translation>
     </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="137"/>
+        <location filename="../askpassphrasedialog.cpp" line="148"/>
+        <location filename="../askpassphrasedialog.cpp" line="167"/>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>La phrase de passe entrée pour décrypter le porte-monnaie était incorrecte.</translation>
+    </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
@@ -297,16 +297,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../bitcoingui.cpp" line="71"/>
         <source>Bitcoin Wallet</source>
         <translation>Porte-monnaie Bitcoin</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="248"/>
-        <source>Show/Hide &amp;Bitcoin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
-        <source>Show or hide the Bitcoin window</source>
-        <translation type="unfinished">Afficher la fenêtre de Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="506"/>
@@ -413,18 +403,15 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Modify configuration options for bitcoin</source>
         <translation>Modifier les options de configuration pour bitcoin</translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="508"/>
-        <source>~%n block(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
+    <message>
+        <location filename="../bitcoingui.cpp" line="248"/>
+        <source>Show/Hide &amp;Bitcoin</source>
+        <translation>Afficher/Cacher &amp;Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="519"/>
-        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">%1 blocs de l&apos;historique des transactions téléchargés sur un total de %2 (%3% done).</translation>
+        <location filename="../bitcoingui.cpp" line="249"/>
+        <source>Show or hide the Bitcoin window</source>
+        <translation>Afficher ou cacher la fenêtre Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="250"/>
@@ -499,7 +486,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>Bitcoin client</source>
-        <translation type="unfinished"></translation>
+        <translation>Client Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="418"/>
@@ -513,6 +500,19 @@ Are you sure you wish to encrypt your wallet?</source>
             <numerusform>%n connexion active avec le réseau Bitcoin</numerusform>
             <numerusform>%n connexions actives avec le réseau Bitcoin</numerusform>
         </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="508"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="519"/>
+        <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
+        <translation>%1 blocs de l&apos;historique des transactions sur %2 téléchargés (%3% effectué).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="531"/>
@@ -632,7 +632,7 @@ Adresse : %4
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Une erreur fatale est survenue. Bitcoin ne peut plus continuer à fonctionner de façon sûre et va s&apos;arrêter.</translation>
     </message>
 </context>
 <context>
@@ -655,7 +655,7 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="285"/>
         <source>Whether to show Bitcoin addresses in the transaction list</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Détermine si les adresses Bitcoin seront affichées sur la liste des transactions.</translation>
     </message>
 </context>
 <context>
@@ -806,12 +806,12 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="232"/>
         <source>Detach databases at shutdown</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Détacher les bases de données lors de la fermeture</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="233"/>
         <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
-        <translation type="unfinished"></translation>
+        <translation>Détacher les bases de données de blocs et d&apos;adresses lors de la fermeture. Cela permet de les déplacer dans un autre répertoire de données mais ralentit la fermeture. Le porte-monnaie est toujours détaché.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="216"/>
@@ -879,7 +879,7 @@ Adresse : %4
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier la signature actuelle dans le presse-papiers</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
@@ -1025,12 +1025,12 @@ Adresse : %4
     <message>
         <location filename="../qrcodedialog.cpp" line="46"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur de l&apos;encodage de l&apos;URI dans le QR Code.</translation>
     </message>
     <message>
         <location filename="../qrcodedialog.cpp" line="64"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;URI résultant est trop long, essayez avec un texte d&apos;étiquette ou de message plus court.</translation>
     </message>
     <message>
         <location filename="../qrcodedialog.cpp" line="121"/>
@@ -1725,24 +1725,9 @@ Adresse : %4
         <translation>Démarrer sous forme minimisée</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="52"/>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="53"/>
         <source>Specify data directory</source>
         <translation>Spécifier le répertoire de données</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="54"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="55"/>
-        <source>Set database disk log size in megabytes (default: 100)</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="56"/>
@@ -1775,24 +1760,117 @@ Adresse : %4
         <translation>Ne se connecter qu&apos;au nœud spécifié</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="9"/>
+        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
+        <translation>Erreur : cette transaction nécessite des frais de transaction d&apos;au moins %s en raison de son montant, de sa complexité ou parce que des fonds reçus récemment sont utilisés  </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Error: Wallet locked, unable to create transaction  </source>
+        <translation>Erreur : le porte-monnaie est verrouillé, impossible de créer la transaction  </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Error: Transaction creation failed  </source>
+        <translation>Erreur : échec de la création de la transaction  </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="13"/>
+        <source>Sending...</source>
+        <translation>Envoi en cours...</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>Erreur : la transaction a été rejetée.  Cela peut arriver si certaines pièces de votre porte-monnaie ont déjà été dépensées, par exemple si vous avez utilisé une copie de wallet.dat et si des pièces ont été dépensées avec cette copie sans être marquées comme telles ici.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="18"/>
+        <source>Invalid amount</source>
+        <translation>Montant invalide</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="19"/>
+        <source>Insufficient funds</source>
+        <translation>Fonds insuffisants</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <source>To use the %s option</source>
+        <translation>Pour utiliser l&apos;option %s</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="22"/>
+        <source>%s, you must set a rpcpassword in the configuration file:
+ %s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+If the file does not exist, create it with owner-readable-only file permissions.
+</source>
+        <translation>%s, vous devez établir un mot de passe rpc dans le fichier de configuration :
+ %s
+Il est recommandé d&apos;utiliser le mot de passe aléatoire suivant :
+rcpuser=bitcoinrpc
+rpcpassword=%s
+(vous n&apos;avez pas besoin de mémoriser ce mot de passe)
+Si le fichier n&apos;existe pas, créez-le avec les droits de lecture accordés au propriétaire.
+</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="31"/>
+        <source>Error</source>
+        <translation>Erreur</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
+        <translation>Une erreur est survenue lors de la mise en place du port d&apos;écoute RPC %i : %s</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
+%s
+If the file does not exist, create it with owner-readable-only file permissions.</source>
+        <translation>Vous devez ajouter la ligne rpcpassword=&lt;mot-de-passe&gt; au fichier de configuration :
+%s
+Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule accordés au propriétaire.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="52"/>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Afficher l&apos;écran d&apos;accueil au démarrage (par défaut : 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="54"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>Définir la taille du tampon en mégaoctets (par défaut : 25)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="55"/>
+        <source>Set database disk log size in megabytes (default: 100)</source>
+        <translation>Définir la taille du journal de la base de données sur le disque en mégaoctets (par défaut : 100)</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Find peers using internet relay chat (default: 0)</source>
-        <translation type="unfinished"></translation>
+        <translation>Trouver des pairs en utilisant Internet Relay Chat (par défaut : 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Accept connections from outside (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Accepter les connexions entrantes (par défaut : 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"></translation>
+        <translation>Définir la langue, par exemple « de_DE » (par défaut : la langue du système)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Trouver des pairs en utilisant la recherche DNS (par défaut : 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
@@ -1817,7 +1895,7 @@ Adresse : %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Detach block and address databases. Increases shutdown time (default: 0)</source>
-        <translation type="unfinished"></translation>
+        <translation>Détacher les bases de données des blocs et des adresses. Augmente le délai de fermeture (par défaut : 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
@@ -1882,12 +1960,27 @@ Adresse : %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation type="unfinished"></translation>
+        <translation>Exécuter la commande lorsque le meilleur bloc change (%s est remplacé par le hachage du bloc dans cmd)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="93"/>
-        <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"></translation>
+        <location filename="../bitcoinstrings.cpp" line="96"/>
+        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
+        <translation>Nombre de blocs à tester au démarrage (par défaut : 2500, 0 = tous)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="97"/>
+        <source>How thorough the block verification is (0-6, default: 1)</source>
+        <translation>Profondeur de la vérification des blocs (0-6, par défaut : 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="107"/>
+        <source>This help message</source>
+        <translation>Ce message d&apos;aide</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="108"/>
+        <source>Usage</source>
+        <translation>Utilisation</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="94"/>
@@ -1900,14 +1993,9 @@ Adresse : %4
         <translation>Réanalyser la chaîne de blocs pour les transactions de porte-monnaie manquantes</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="96"/>
-        <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="97"/>
-        <source>How thorough the block verification is (0-6, default: 1)</source>
-        <translation type="unfinished"></translation>
+        <location filename="../bitcoinstrings.cpp" line="93"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation>Mettre à jour le format du porte-monnaie</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="98"/>
@@ -1937,16 +2025,6 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
         <translation>Clefs de chiffrement acceptables (par défaut : TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="107"/>
-        <source>This help message</source>
-        <translation>Ce message d&apos;aide</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="108"/>
-        <source>Usage</source>
-        <translation>Utilisation</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="109"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Impossible d&apos;obtenir un verrou sur le répertoire de données %s.  Bitcoin fonctionne probablement déjà.</translation>
@@ -1954,7 +2032,7 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="112"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="113"/>
@@ -1967,14 +2045,24 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
         <translation>Erreur lors du chargement de addr.dat</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="115"/>
+        <source>Loading block index...</source>
+        <translation>Chargement de l&apos;index des blocs...</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="116"/>
         <source>Error loading blkindex.dat</source>
         <translation>Erreur lors du chargement de blkindex.dat</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="117"/>
+        <source>Loading wallet...</source>
+        <translation>Chargement du porte-monnaie...</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="118"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Erreur lors du chargement de wallet.dat : porte-monnaie corrompu</translation>
+        <translation>Erreur lors du chargement de wallet.dat : porte-monnaie corrompu</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="119"/>
@@ -1992,98 +2080,19 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
         <translation>Erreur lors du chargement de wallet.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="115"/>
-        <source>Loading block index...</source>
-        <translation>Chargement de l&apos;index des blocs...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Error: Wallet locked, unable to create transaction  </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Cette transaction dépasse la limite de taille.  Vous pouvez quand-même l&apos;envoyer en vous acquittant de frais d&apos;un montant de %1, qui iront aux nœuds qui traitent la transaction et aideront à soutenir le réseau.  Voulez-vous payer les frais ?</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Error: Transaction creation failed  </source>
-        <translation>Erreur : échec de la création de la transaction  </translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="13"/>
-        <source>Sending...</source>
-        <translation>Envoi en cours...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Erreur : la transaction a été rejetée.  Cela peut arriver si certaines pièces de votre porte-monnaie ont déjà été dépensées, par exemple si vous avez utilisé une copie de wallet.dat et si des pièces ont été dépensées avec cette copie sans être marquées comme telles ici.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="18"/>
-        <source>Invalid amount</source>
-        <translation type="unfinished">Montant invalide</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="19"/>
-        <source>Insufficient funds</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="21"/>
-        <source>To use the %s option</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="22"/>
-        <source>%s, you must set a rpcpassword in the configuration file:
- %s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-If the file does not exist, create it with owner-readable-only file permissions.
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="31"/>
-        <source>Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
-        <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
-%s
-If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="117"/>
-        <source>Loading wallet...</source>
-        <translation>Chargement du porte-monnaie...</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="122"/>
         <source>Cannot downgrade wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de revenir à une version antérieure du porte-monnaie</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="123"/>
         <source>Cannot initialize keypool</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible d&apos;initialiser la plage des clefs</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="124"/>
         <source>Cannot write default address</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible d&apos;écrire l&apos;adresse par défaut</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="125"/>
@@ -2133,7 +2142,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Ajouter un nœud auquel se connecter and attempt to keep the connection open</translation>
+        <translation>Ajouter un nœud auquel se connecter et tenter de garder la connexion ouverte</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>

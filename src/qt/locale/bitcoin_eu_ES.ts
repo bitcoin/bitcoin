@@ -314,7 +314,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="197"/>
         <source>&amp;Address Book</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Helbide-liburu&amp;a</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="198"/>
@@ -494,14 +494,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <source>Synchronizing with network...</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="508"/>
-        <source>~%n block(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
@@ -618,6 +610,14 @@ Address: %4
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="508"/>
+        <source>~%n block(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -667,7 +667,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Helbide&amp;a</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -1364,11 +1364,6 @@ Address: %4
     <name>TransactionTableModel</name>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Address</source>
-        <translation>Helbidea</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Date</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1482,6 +1477,11 @@ Address: %4
         <location filename="../transactiontablemodel.cpp" line="603"/>
         <source>Amount removed from or added to balance.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Address</source>
+        <translation>Helbidea</translation>
     </message>
 </context>
 <context>
@@ -1740,7 +1740,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="41"/>
         <source>Bitcoin version</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Bitcoin Bertsio</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
