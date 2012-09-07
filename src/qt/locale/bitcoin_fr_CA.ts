@@ -106,7 +106,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Supprimer</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="278"/>
@@ -139,7 +139,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="78"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Adresse</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="114"/>
@@ -325,7 +325,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="199"/>
         <source>&amp;Address Book</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Carnet d&apos;&amp;adresses</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
@@ -375,7 +375,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>&amp;About %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;A propos de %1</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="242"/>
@@ -385,7 +385,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="244"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">A propos de &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="245"/>
@@ -660,7 +660,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Adresse</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -1353,7 +1353,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Adresse</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
@@ -1593,7 +1593,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="283"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Adresse</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="284"/>

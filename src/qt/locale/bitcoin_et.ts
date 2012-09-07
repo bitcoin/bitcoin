@@ -660,7 +660,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Aadress</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -796,7 +796,7 @@ Address: %4
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Sõnum</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>
@@ -896,7 +896,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="104"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Valikud</translation>
     </message>
 </context>
 <context>
@@ -972,7 +972,7 @@ Address: %4
     <message>
         <location filename="../forms/qrcodedialog.ui" line="70"/>
         <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Kogus:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="105"/>
@@ -982,7 +982,7 @@ Address: %4
     <message>
         <location filename="../forms/qrcodedialog.ui" line="121"/>
         <source>Label:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Silt:</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="144"/>
@@ -1130,7 +1130,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="29"/>
         <source>A&amp;mount:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Kogus</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
@@ -1146,7 +1146,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Si&amp;lt:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
@@ -1214,7 +1214,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>&lt;b&gt;Status:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&lt;b&gt;Staatus:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="52"/>
@@ -1234,7 +1234,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="60"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&lt;b&gt;Kuupäev:&lt;/b&gt; </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="67"/>
@@ -1388,14 +1388,6 @@ Address: %4
         <source>Confirmed (%1 confirmations)</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="297"/>
-        <source>Mined balance will be available in %n more blocks</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
@@ -1461,9 +1453,27 @@ Address: %4
         <source>Amount removed from or added to balance.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <source>Mined balance will be available in %n more blocks</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <location filename="../transactionview.cpp" line="289"/>
+        <source>Error exporting</source>
+        <translation>Viga eksportimisel</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="280"/>
+        <source>Date</source>
+        <translation>Kuupäev</translation>
+    </message>
     <message>
         <location filename="../transactionview.cpp" line="55"/>
         <location filename="../transactionview.cpp" line="71"/>
@@ -1576,11 +1586,6 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="280"/>
-        <source>Date</source>
-        <translation>Kuupäev</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="281"/>
         <source>Type</source>
         <translation>Tüüp</translation>
@@ -1604,11 +1609,6 @@ Address: %4
         <location filename="../transactionview.cpp" line="285"/>
         <source>ID</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../transactionview.cpp" line="289"/>
-        <source>Error exporting</source>
-        <translation>Viga eksportimisel</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="289"/>
@@ -1664,7 +1664,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
         <source>Options:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Valikud:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="14"/>

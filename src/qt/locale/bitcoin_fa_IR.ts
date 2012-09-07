@@ -101,7 +101,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="63"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">و ویرایش</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="64"/>
@@ -352,50 +352,15 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>رمز مربوط به رمزگذاریِ wallet را تغییر دهید</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="283"/>
-        <source>&amp;File</source>
-        <translation>و فایل</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="292"/>
-        <source>&amp;Settings</source>
-        <translation>و تنظیمات</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="298"/>
-        <source>&amp;Help</source>
-        <translation>و راهنما</translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="305"/>
         <source>Tabs toolbar</source>
         <translation>نوار ابزار</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="316"/>
-        <source>Actions toolbar</source>
-        <translation>نوار عملیات</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="329"/>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="146"/>
         <location filename="../bitcoingui.cpp" line="478"/>
         <source>Synchronizing with network...</source>
         <translation>به روز رسانی با شبکه...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="73"/>
-        <source>Bitcoin Wallet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="149"/>
-        <source>Block chain synchronization in progress</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="187"/>
@@ -406,11 +371,6 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../bitcoingui.cpp" line="188"/>
         <source>Show general overview of wallet</source>
         <translation>نمای کلی از wallet را نشان بده</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="193"/>
-        <source>&amp;Transactions</source>
-        <translation>و تراکنش</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="194"/>
@@ -428,9 +388,9 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>فهرست آدرسها را برای دریافت وجه نشان بده</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="212"/>
-        <source>Send coins to a bitcoin address</source>
-        <translation type="unfinished"></translation>
+        <location filename="../bitcoingui.cpp" line="193"/>
+        <source>&amp;Transactions</source>
+        <translation>و تراکنش</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="217"/>
@@ -438,39 +398,14 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation type="unfinished">امضا و پیام</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="218"/>
-        <source>Prove you control an address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
-        <source>&amp;About %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Modify configuration options for bitcoin</source>
         <translation>اصلاح انتخابها برای پیکربندی Bitcoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
-        <source>Open &amp;Bitcoin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="251"/>
-        <source>Show the Bitcoin window</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="254"/>
-        <source>&amp;Encrypt Wallet</source>
-        <translation type="unfinished">و رمزگذاری wallet</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="257"/>
-        <source>&amp;Backup Wallet</source>
-        <translation type="unfinished">گرفتن نسخه پیشتیبان از Wallet</translation>
+        <location filename="../bitcoingui.cpp" line="534"/>
+        <source>Up to date</source>
+        <translation>روزآمد</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="258"/>
@@ -483,21 +418,37 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation type="unfinished">تغییر رمز/پَس فرِیز</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="421"/>
-        <source>bitcoin-qt</source>
-        <translation type="unfinished"></translation>
+        <location filename="../bitcoingui.cpp" line="283"/>
+        <source>&amp;File</source>
+        <translation>و فایل</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="292"/>
+        <source>&amp;Settings</source>
+        <translation>و تنظیمات</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="298"/>
+        <source>&amp;Help</source>
+        <translation>و راهنما</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="316"/>
+        <source>Actions toolbar</source>
+        <translation>نوار عملیات</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="329"/>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="463"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation>
-            <numerusform></numerusform>
+            <numerusform>%n ارتباط فعال به شبکه Bitcoin
+%n ارتباط فعال به شبکه Bitcoin</numerusform>
         </translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="489"/>
-        <source>Downloaded %1 of %2 blocks of transaction history.</source>
-        <translation type="unfinished">دانلود %1 از %2  بلاک مربوط به تاریخچه تراکنش </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="501"/>
@@ -508,18 +459,15 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../bitcoingui.cpp" line="528"/>
         <source>%n day(s) ago</source>
         <translation>
-            <numerusform></numerusform>
+            <numerusform>%n روز قبل
+%n روز قبل
+</numerusform>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="534"/>
-        <source>Up to date</source>
-        <translation>روزآمد</translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="539"/>
-        <source>Catching up...</source>
-        <translation>در حال روزآمد سازی..</translation>
+        <location filename="../bitcoingui.cpp" line="489"/>
+        <source>Downloaded %1 of %2 blocks of transaction history.</source>
+        <translation type="unfinished">دانلود %1 از %2  بلاک مربوط به تاریخچه تراکنش </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="547"/>
@@ -530,6 +478,85 @@ Are you sure you wish to encrypt your wallet?</source>
         <location filename="../bitcoingui.cpp" line="616"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>تراکنش بیشتر از محدودیتهای شماست. شما می توانید همچنان با هزینه %1 آن را ارسال کنید که این هزینه به گره هایی که تراکنش را برایتان انجام می دهد تعلق می گیرد و به حمایت از شبکه کمک می کند. آیا شما می خواهید این هزینه را پرداخت کنید؟</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="516"/>
+        <source>%n second(s) ago</source>
+        <translation>
+            <numerusform>%n ثانیه قبل
+%n ثانیه قبل</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="73"/>
+        <source>Bitcoin Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="149"/>
+        <source>Block chain synchronization in progress</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="212"/>
+        <source>Send coins to a bitcoin address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="218"/>
+        <source>Prove you control an address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="241"/>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">درباره و %1</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="250"/>
+        <source>Open &amp;Bitcoin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="251"/>
+        <source>Show the Bitcoin window</source>
+        <translation type="unfinished">نمایش یا عدم نمایش در صفحه bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="254"/>
+        <source>&amp;Encrypt Wallet</source>
+        <translation type="unfinished">و رمزگذاری wallet</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="257"/>
+        <source>&amp;Backup Wallet</source>
+        <translation type="unfinished">گرفتن نسخه پیشتیبان از Wallet</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="421"/>
+        <source>bitcoin-qt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="520"/>
+        <source>%n minute(s) ago</source>
+        <translation>
+            <numerusform>%n دقیقه قبل
+%n دقیقه قبل</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="524"/>
+        <source>%n hour(s) ago</source>
+        <translation>
+            <numerusform>%n ساعت قبل
+%n ساعت قبل</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="539"/>
+        <source>Catching up...</source>
+        <translation>در حال روزآمد سازی..</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="621"/>
@@ -586,30 +613,6 @@ Address: %4
         <location filename="../bitcoingui.cpp" line="809"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>در هنگام ذخیره داده های wallet به نسخه جدید خطایی ایجاد شده است</translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="516"/>
-        <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>%n ثانیه قبل
-%n ثانیه قبل</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="520"/>
-        <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>%n دقیقه قبل
-%n دقیقه قبل</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="524"/>
-        <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>%n ساعت قبل
-%n ساعت قبل</numerusform>
-        </translation>
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="144"/>
@@ -1218,40 +1221,9 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="52"/>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>تا به حال با موفقیت انتشار نیافته است</translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="54"/>
-        <source>, broadcast through %1 node</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="56"/>
-        <source>, broadcast through %1 nodes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../transactiondesc.cpp" line="60"/>
         <source>&lt;b&gt;Date:&lt;/b&gt; </source>
         <translation type="unfinished">&lt;b&gt;تاریخ:&lt;/b&gt; </translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="67"/>
-        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="73"/>
-        <location filename="../transactiondesc.cpp" line="90"/>
-        <source>&lt;b&gt;From:&lt;/b&gt; </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../transactiondesc.cpp" line="90"/>
-        <source>unknown</source>
-        <translation>ناشناس</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="91"/>
@@ -1325,6 +1297,37 @@ Address: %4
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="52"/>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>تا به حال با موفقیت انتشار نیافته است</translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="54"/>
+        <source>, broadcast through %1 node</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="56"/>
+        <source>, broadcast through %1 nodes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="67"/>
+        <source>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="73"/>
+        <location filename="../transactiondesc.cpp" line="90"/>
+        <source>&lt;b&gt;From:&lt;/b&gt; </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="90"/>
+        <source>unknown</source>
+        <translation>ناشناس</translation>
+    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1352,6 +1355,11 @@ Address: %4
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
+        <source>Address</source>
+        <translation>آدرس</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Date</source>
         <translation>تاریخ</translation>
     </message>
@@ -1359,11 +1367,6 @@ Address: %4
         <location filename="../transactiontablemodel.cpp" line="214"/>
         <source>Type</source>
         <translation>نوع</translation>
-    </message>
-    <message>
-        <location filename="../transactiontablemodel.cpp" line="214"/>
-        <source>Address</source>
-        <translation>آدرس</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="214"/>
@@ -1376,14 +1379,14 @@ Address: %4
         <translation>باز کن تا %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="283"/>
-        <source>Offline (%1 confirmations)</source>
-        <translation>برون خطی (%1 تاییدها)</translation>
-    </message>
-    <message>
         <location filename="../transactiontablemodel.cpp" line="286"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
         <translation>تایید نشده (%1 از %2 تاییدها)</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="283"/>
+        <source>Offline (%1 confirmations)</source>
+        <translation>برون خطی (%1 تاییدها)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="289"/>
@@ -1465,6 +1468,11 @@ Address: %4
 </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <location filename="../transactionview.cpp" line="384"/>
+        <source>Range:</source>
+        <translation>دامنه:</translation>
+    </message>
     <message>
         <location filename="../transactionview.cpp" line="55"/>
         <location filename="../transactionview.cpp" line="71"/>
@@ -1617,11 +1625,6 @@ Address: %4
         <translation>قابل کپی به فایل نیست %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="384"/>
-        <source>Range:</source>
-        <translation>دامنه:</translation>
-    </message>
-    <message>
         <location filename="../transactionview.cpp" line="392"/>
         <source>to</source>
         <translation>به</translation>
@@ -1638,29 +1641,14 @@ Address: %4
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="8"/>
-        <source>Bitcoin version</source>
-        <translation>نسخه bitcoin</translation>
+        <location filename="../bitcoinstrings.cpp" line="22"/>
+        <source>Specify connection timeout (in milliseconds)</source>
+        <translation>تعیین مدت زمان وقفه (time out) به هزارم ثانیه</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="17"/>
-        <source>Don&apos;t generate coins</source>
-        <translation>سکه ها را تولید نکن</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="34"/>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>تعداد ثانیه ها برای اتصال دوباره قرینه های اشتباه (پیش فرض:86400)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="16"/>
-        <source>Generate coins</source>
-        <translation>سکه ها را تولید کن</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
-        <source>Get help for a command</source>
-        <translation>درخواست کمک برای یک دستور</translation>
+        <location filename="../bitcoinstrings.cpp" line="88"/>
+        <source>Done loading</source>
+        <translation>اتمام لود شدن</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
@@ -1668,49 +1656,39 @@ Address: %4
         <translation>دستور را وقتی بهترین بلاک تغییر کرد اجرا کن (%s در دستور توسط block hash جایگزین شده است)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="11"/>
-        <source>List commands</source>
-        <translation>فهرست دستورها</translation>
+        <location filename="../bitcoinstrings.cpp" line="53"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation>دستورات را به گره اجرا شده در&lt;ip&gt; ارسال کنید (پیش فرض:127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="25"/>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>ارتباطات را در &lt;PORT&gt; بشنوید (پیش فرض: 8333 or testnet: 18333)</translation>
+        <location filename="../bitcoinstrings.cpp" line="79"/>
+        <source>Loading wallet...</source>
+        <translation>wallet در حال لود شدن است...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="26"/>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>نگهداری &lt;N&gt; ارتباطات برای قرینه سازی  (پیش فرض:125)</translation>
+        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation>آستانه قطع برای قرینه سازی اشتباه (پیش فرض:100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="13"/>
-        <source>Options:</source>
-        <translation>انتخابها:</translation>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
+        <source>Server private key (default: server.pem)</source>
+        <translation>رمز اختصاصی سرور  (پیش فرض: server.pem)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>command line  و JSON-RPC commands را قبول کنید</translation>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <translation>حجم key pool  را به اندازه &lt;n&gt; تنظیم کنید (پیش فرض:100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Send command to -server or bitcoind</source>
-        <translation>ارسال دستور به سرور یا bitcoined</translation>
+        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <source>This help message</source>
+        <translation>این پیام راهنما</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="21"/>
-        <source>Set database cache size in megabytes (default: 25)</source>
-        <translation>حافظه بانک داده را به مگابایت تنظیم کنید (پیش فرض: 25)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="22"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>تعیین مدت زمان وقفه (time out) به هزارم ثانیه</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="20"/>
-        <source>Specify data directory</source>
-        <translation>دایرکتوری داده را مشخص کن</translation>
+        <location filename="../bitcoinstrings.cpp" line="65"/>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
+        <translation>برای ارتباطاتِ JSON-RPC  از OpenSSL (https) استفاده کنید</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
@@ -1778,30 +1756,25 @@ Address: %4
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="52"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>ارتباطاتِ JSON-RPC  را از آدرس آی.پی. مشخصی برقرار کنید.</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
         <source>
 SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="76"/>
-        <source>Error loading addr.dat</source>
-        <translation type="unfinished">خطا در هنگام لود شدن addr.dat</translation>
+        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
+        <translation>ciphers  قابل قبول (پیش فرض: default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Error loading blkindex.dat</source>
-        <translation>خطا در هنگام لود شدن فایل blkindex.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="83"/>
-        <source>Error loading wallet.dat</source>
-        <translation>خطا در هنگام لود شدن wallet.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="84"/>
-        <source>Cannot downgrade wallet</source>
-        <translation>قابلیت برگشت به نسخه قبلی برای wallet امکان پذیر نیست</translation>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
+        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
+        <translation>قفل دایرکتوری داده ها %s قابل دریافت نیست. احتمال این وجود دارد که Bitcoin در حال اجرا باشد</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="89"/>
@@ -1811,7 +1784,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">میزان اشتباه است for -paytxfee=&lt;amount&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="91"/>
@@ -1844,24 +1817,134 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="27"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>یک گره برای اتصال اضافه کنید و تلاش کنید تا اتصال را باز نگاه دارید</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="44"/>
+        <source>Use the test network</source>
+        <translation>از تستِ شبکه استفاده نمایید</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="47"/>
+        <source>Send trace/debug info to console instead of debug.log file</source>
+        <translation>ارسال اطلاعات پیگیری/خطایابی به کنسول به جای ارسال به فایل debug.log</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
+        <source>Send trace/debug info to debugger</source>
+        <translation>ارسال اطاعات خطایابی/پیگیری به سیستم خطایاب</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="14"/>
+        <source>Specify configuration file (default: bitcoin.conf)</source>
+        <translation>فایل پیکربندیِ را مشخص کنید (پیش فرض: bitcoin.conf)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="20"/>
+        <source>Specify data directory</source>
+        <translation>دایرکتوری داده را مشخص کن</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="15"/>
+        <source>Specify pid file (default: bitcoind.pid)</source>
+        <translation>فایل pid  را مشخص کنید (پیش فرض: bitcoind.pid)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <source>Prepend debug output with timestamp</source>
+        <translation>برونداد اشکال زدایی با timestamp</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="8"/>
+        <source>Bitcoin version</source>
+        <translation>نسخه bitcoin</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="17"/>
+        <source>Don&apos;t generate coins</source>
+        <translation>سکه ها را تولید نکن</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="34"/>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
+        <translation>تعداد ثانیه ها برای اتصال دوباره قرینه های اشتباه (پیش فرض:86400)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="16"/>
+        <source>Generate coins</source>
+        <translation>سکه ها را تولید کن</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <source>Get help for a command</source>
+        <translation>درخواست کمک برای یک دستور</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="11"/>
+        <source>List commands</source>
+        <translation>فهرست دستورها</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="25"/>
+        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
+        <translation>ارتباطات را در &lt;PORT&gt; بشنوید (پیش فرض: 8333 or testnet: 18333)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="26"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <translation>نگهداری &lt;N&gt; ارتباطات برای قرینه سازی  (پیش فرض:125)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="13"/>
+        <source>Options:</source>
+        <translation>انتخابها:</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="42"/>
+        <source>Accept command line and JSON-RPC commands</source>
+        <translation>command line  و JSON-RPC commands را قبول کنید</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="10"/>
+        <source>Send command to -server or bitcoind</source>
+        <translation>ارسال دستور به سرور یا bitcoined</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="21"/>
+        <source>Set database cache size in megabytes (default: 25)</source>
+        <translation>حافظه بانک داده را به مگابایت تنظیم کنید (پیش فرض: 25)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="76"/>
+        <source>Error loading addr.dat</source>
+        <translation type="unfinished">خطا در هنگام لود شدن addr.dat</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
+        <source>Error loading blkindex.dat</source>
+        <translation>خطا در هنگام لود شدن فایل blkindex.dat</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="83"/>
+        <source>Error loading wallet.dat</source>
+        <translation>خطا در هنگام لود شدن wallet.dat</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="84"/>
+        <source>Cannot downgrade wallet</source>
+        <translation>قابلیت برگشت به نسخه قبلی برای wallet امکان پذیر نیست</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="80"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>خطا در هنگام لود شدن wallet.dat: Wallet corrupted</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="85"/>
-        <source>Cannot initialize keypool</source>
-        <translation>initialize keypool امکان پذیر نیست</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
         <translation>خطا در هنگام لود شدن wallet.dat.  به نسخه جدید Bitocin برای wallet نیاز است.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="86"/>
-        <source>Cannot write default address</source>
-        <translation>آدرس پیش فرض قابل ذخیره نیست</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
@@ -1872,11 +1955,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>How thorough the block verification is (0-6, default: 1)</source>
         <translation>چگونگی تایید تمامی بلاکها (پیش فرض: 1 و 0-6)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="88"/>
-        <source>Done loading</source>
-        <translation>اتمام لود شدن</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
@@ -1894,16 +1972,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>هزینه بر اساس کیلو بایت برای اضافه شدن به تراکنشی که ارسال کرده اید</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="29"/>
-        <source>Find peers using internet relay chat (default: 0)</source>
-        <translation>یافتن همتا/دوست با استفاده از internet relay chat (پیش فرض:0)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="75"/>
-        <source>Loading addresses...</source>
-        <translation>لود شدن آدرسها..</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>به عنوان daemon بک گراند را اجرا کنید و دستورات را قبول نمایید</translation>
@@ -1919,19 +1987,24 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>زنجیره بلاک را برای تراکنش جا افتاده در WALLET دوباره اسکن کنید</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="53"/>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>دستورات را به گره اجرا شده در&lt;ip&gt; ارسال کنید (پیش فرض:127.0.0.1)</translation>
+        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <source>Cannot initialize keypool</source>
+        <translation>initialize keypool امکان پذیر نیست</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="79"/>
-        <source>Loading wallet...</source>
-        <translation>wallet در حال لود شدن است...</translation>
+        <location filename="../bitcoinstrings.cpp" line="86"/>
+        <source>Cannot write default address</source>
+        <translation>آدرس پیش فرض قابل ذخیره نیست</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>آستانه قطع برای قرینه سازی اشتباه (پیش فرض:100)</translation>
+        <location filename="../bitcoinstrings.cpp" line="29"/>
+        <source>Find peers using internet relay chat (default: 0)</source>
+        <translation>یافتن همتا/دوست با استفاده از internet relay chat (پیش فرض:0)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
+        <source>Loading addresses...</source>
+        <translation>لود شدن آدرسها..</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
@@ -1939,24 +2012,9 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>فایل certificate  سرور (پیش فرض server.cert)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Server private key (default: server.pem)</source>
-        <translation>رمز اختصاصی سرور  (پیش فرض: server.pem)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="58"/>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>حجم key pool  را به اندازه &lt;n&gt; تنظیم کنید (پیش فرض:100)</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="87"/>
         <source>Rescanning...</source>
         <translation>اسکنِ دوباره...</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
-        <source>This help message</source>
-        <translation>این پیام راهنما</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
@@ -1964,34 +2022,9 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>wallet را به جدیدترین نسخه روزآمد کنید</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="65"/>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>برای ارتباطاتِ JSON-RPC  از OpenSSL (https) استفاده کنید</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="52"/>
-        <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>ارتباطاتِ JSON-RPC  را از آدرس آی.پی. مشخصی برقرار کنید.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
-        <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
-        <translation>ciphers  قابل قبول (پیش فرض: default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="72"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>قفل دایرکتوری داده ها %s قابل دریافت نیست. احتمال این وجود دارد که Bitcoin در حال اجرا باشد</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="27"/>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>یک گره برای اتصال اضافه کنید و تلاش کنید تا اتصال را باز نگاه دارید</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
-        <source>Use the test network</source>
-        <translation>از تستِ شبکه استفاده نمایید</translation>
+        <location filename="../bitcoinstrings.cpp" line="49"/>
+        <source>Username for JSON-RPC connections</source>
+        <translation>شناسه کاربری برای ارتباطاتِ JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="82"/>
@@ -1999,39 +2032,9 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>wallet نیاز به بازنویسی دارد. Bitcoin را برای تکمیل عملیات دوباره اجرا کنید.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="47"/>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>ارسال اطلاعات پیگیری/خطایابی به کنسول به جای ارسال به فایل debug.log</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="48"/>
-        <source>Send trace/debug info to debugger</source>
-        <translation>ارسال اطاعات خطایابی/پیگیری به سیستم خطایاب</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="49"/>
-        <source>Username for JSON-RPC connections</source>
-        <translation>شناسه کاربری برای ارتباطاتِ JSON-RPC</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="14"/>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>فایل پیکربندیِ را مشخص کنید (پیش فرض: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="15"/>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>فایل pid  را مشخص کنید (پیش فرض: bitcoind.pid)</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Usage:</source>
         <translation>میزان استفاده:</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="46"/>
-        <source>Prepend debug output with timestamp</source>
-        <translation>برونداد اشکال زدایی با timestamp</translation>
     </message>
 </context>
 </TS>

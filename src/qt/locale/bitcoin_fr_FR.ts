@@ -625,7 +625,7 @@ Adresse : %4
     <message>
         <location filename="../bitcoin.cpp" line="144"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Une erreur fatale est survenue. Bitcoin ne peut plus continuer à fonctionner de façon sûre et va s&apos;arrêter.</translation>
     </message>
 </context>
 <context>
@@ -648,7 +648,7 @@ Adresse : %4
     <message>
         <location filename="../optionsdialog.cpp" line="281"/>
         <source>Whether to show Bitcoin addresses in the transaction list</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Détermine si les adresses Bitcoin seront affichées sur la liste des transactions.</translation>
     </message>
 </context>
 <context>
@@ -862,7 +862,7 @@ Adresse : %4
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier la signature actuelle dans le presse-papiers</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
@@ -1008,7 +1008,7 @@ Adresse : %4
     <message>
         <location filename="../qrcodedialog.cpp" line="48"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur de l&apos;encodage de l&apos;URI dans le QR Code.</translation>
     </message>
     <message>
         <location filename="../qrcodedialog.cpp" line="113"/>
@@ -1705,7 +1705,7 @@ Adresse : %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher l&apos;écran d&apos;accueil au démarrage (par défaut : 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="20"/>
@@ -1715,7 +1715,7 @@ Adresse : %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="21"/>
         <source>Set database cache size in megabytes (default: 25)</source>
-        <translation type="unfinished"></translation>
+        <translation>Définir la taille du tampon en mégaoctets (par défaut : 25)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="22"/>
@@ -1750,22 +1750,22 @@ Adresse : %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Find peers using internet relay chat (default: 0)</source>
-        <translation type="unfinished"></translation>
+        <translation>Trouver des pairs en utilisant Internet Relay Chat (par défaut : 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>Accept connections from outside (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Accepter les connexions entrantes (par défaut : 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"></translation>
+        <translation>Définir la langue, par exemple « de_DE » (par défaut : la langue du système)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Trouver des pairs en utilisant la recherche DNS (par défaut : 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
@@ -1850,12 +1850,12 @@ Adresse : %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation type="unfinished"></translation>
+        <translation>Exécuter la commande lorsque le meilleur bloc change (%s est remplacé par le hachage du bloc dans cmd)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"></translation>
+        <translation>Mettre à jour le format du porte-monnaie</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="58"/>
@@ -1870,12 +1870,12 @@ Adresse : %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
         <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nombre de blocs à tester au démarrage (par défaut : 2500, 0 = tous)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>How thorough the block verification is (0-6, default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Profondeur de la vérification des blocs (0-6, par défaut : 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -1962,17 +1962,17 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Cannot downgrade wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de revenir à une version antérieure du porte-monnaie</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="85"/>
         <source>Cannot initialize keypool</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible d&apos;initialiser la plage des clefs</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="86"/>
         <source>Cannot write default address</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible d&apos;écrire l&apos;adresse par défaut</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="87"/>
@@ -2015,11 +2015,6 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
         <translation>Attention : veuillez vérifier que l&apos;heure et la date de votre ordinateur sont corrects.  Si votre horloge n&apos;est pas à l&apos;heure, Bitcoin ne fonctionnera pas correctement.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="102"/>
-        <source>beta</source>
-        <translation>bêta</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="95"/>
         <source>Warning: Disk space is low</source>
         <translation>Attention : l&apos;espace disque est faible</translation>
@@ -2027,7 +2022,7 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Ajouter un nœud auquel se connecter and attempt to keep the connection open</translation>
+        <translation>Ajouter un nœud auquel se connecter et tenter de garder la connexion ouverte</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
@@ -2043,6 +2038,11 @@ Options SSL : (cf. le wiki Bitcoin pour les réglages SSL)</translation>
         <location filename="../bitcoinstrings.cpp" line="41"/>
         <source>Fee per KB to add to transactions you send</source>
         <translation>Frais par ko à ajouter aux transactions que vous enverrez</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="102"/>
+        <source>beta</source>
+        <translation>bêta</translation>
     </message>
 </context>
 </TS>

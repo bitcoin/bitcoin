@@ -325,7 +325,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="199"/>
         <source>&amp;Address Book</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Helbide-liburu&amp;a</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
@@ -660,7 +660,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Helbide&amp;a</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -1639,7 +1639,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="8"/>
         <source>Bitcoin version</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Bitcoin Bertsio</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
