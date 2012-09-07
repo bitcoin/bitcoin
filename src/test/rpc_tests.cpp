@@ -17,7 +17,7 @@ createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
     result.push_back(nRequired);
     Array addresses;
     if (address1) addresses.push_back(address1);
-    if (address2) addresses.push_back(address1);
+    if (address2) addresses.push_back(address2);
     result.push_back(addresses);
     return result;
 }
