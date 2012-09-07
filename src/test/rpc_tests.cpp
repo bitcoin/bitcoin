@@ -22,14 +22,7 @@ createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
     return result;
 }
 
-// This can be removed this when addmultisigaddress is enabled on main net:
-struct TestNetFixture
-{
-    TestNetFixture() { fTestNet = true; }
-    ~TestNetFixture() { fTestNet = false; }
-};
-
-BOOST_FIXTURE_TEST_CASE(rpc_addmultisig, TestNetFixture)
+BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 {
     rpcfn_type addmultisig = tableRPC["addmultisigaddress"]->actor;
 
