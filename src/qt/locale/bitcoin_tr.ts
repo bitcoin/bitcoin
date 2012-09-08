@@ -13,21 +13,24 @@
         <translation>&lt;b&gt;Bitcoin&lt;/b&gt; sürüm</translation>
     </message>
     <message>
-        <location line="+44"/>
-        <source>Copyright © 2009-2012 Bitcoin Developers
-
+        <location line="+41"/>
+        <source>Copyright © 2009-2012 The Bitcoin developers</source>
+        <translation>Telif hakkı © 2009-2012 Bitcoin geliştiricileri</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>
 This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>Telif hakkı © 2009-2012 Bitcoin geliştiricileri
+        <translation>
+ Bu yazılım deneme safhasındadır.
 
-Bu yazılım deneme safhasındadır.
+ MIT/X11 yazılım lisansı kapsamında yayınlanmıştır, COPYING dosyasına ya da http://www.opensource.org/licenses/mit-license.php sayfasına bakınız.
 
-MIT/X11 yazılım lisansı kapsamında yayınlanmıştır, COPYING dosyasına ya da http://www.opensource.org/licenses/mit-license.php sayfasına bakınız.
-
-Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl.org/) için geliştirilen yazılımlar, Eric Young (eay@cryptsoft.com) tarafından hazırlanmış şifreleme yazılımları ve Thomas Bernard tarafından programlanmış UPnP yazılımı içerir.</translation>
+ Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl.org/) için geliştirilen yazılımlar, Eric Young (eay@cryptsoft.com) tarafından hazırlanmış şifreleme yazılımları ve Thomas Bernard tarafından programlanmış UPnP yazılımı içerir.</translation>
     </message>
 </context>
 <context>
@@ -290,22 +293,17 @@ Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+218"/>
+        <location filename="../bitcoingui.cpp" line="+228"/>
         <source>Sign &amp;message...</source>
         <translation>&amp;Mesaj imzala...</translation>
     </message>
     <message>
-        <location line="+48"/>
-        <source>Show/Hide &amp;Bitcoin</source>
-        <translation>&amp;Bitcoin&apos;i Göster/Sakla</translation>
-    </message>
-    <message>
-        <location line="+248"/>
+        <location line="+295"/>
         <source>Synchronizing with network...</source>
         <translation>Şebeke ile senkronizasyon...</translation>
     </message>
     <message>
-        <location line="-326"/>
+        <location line="-325"/>
         <source>&amp;Overview</source>
         <translation>&amp;Genel bakış</translation>
     </message>
@@ -380,7 +378,7 @@ Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl
         <translation>&amp;Seçenekler...</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>Cüzdanı &amp;şifrele...</translation>
     </message>
@@ -410,7 +408,7 @@ Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl
         <translation>&amp;Dışa aktar...</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-54"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Bir Bitcoin adresine Bitcoin yolla</translation>
     </message>
@@ -435,12 +433,7 @@ Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl
         <translation>Bitcoin seçeneklerinin yapılandırmasını değiştir</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Show or hide the Bitcoin window</source>
-        <translation>Bitcoin penceresini göster ya da sakla</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Güncel sekmedeki verileri bir dosyaya aktar</translation>
     </message>
@@ -470,12 +463,12 @@ Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl
         <translation>Hata ayıklama ve teşhis penceresini aç</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-55"/>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Mesaj kontrol et...</translation>
+        <translation>Mesaj &amp;kontrol et...</translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-160"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -485,12 +478,17 @@ Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl
         <translation>Cüzdan</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+195"/>
         <source>&amp;About Bitcoin</source>
-        <translation>Bitcoin _Hakında</translation>
+        <translation>Bitcoin &amp;Hakkında</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+9"/>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Göster / Sakla</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>&amp;File</source>
         <translation>&amp;Dosya</translation>
     </message>
@@ -647,7 +645,7 @@ Adres: %4
         <translation>Cüzdan verilerinin başka bir konumda kaydedilmesi sırasında bir hata meydana geldi.</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+112"/>
+        <location filename="../bitcoin.cpp" line="+109"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ciddi bir hata oluştu. Bitcoin artık güvenli bir şekilde işlemeye devam edemez ve kapanacaktır.</translation>
     </message>
@@ -655,7 +653,7 @@ Adres: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+86"/>
+        <location filename="../clientmodel.cpp" line="+87"/>
         <source>Network Alert</source>
         <translation>Şebeke hakkında uyarı</translation>
     </message>
@@ -731,7 +729,7 @@ Adres: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+425"/>
+        <location filename="../guiutil.cpp" line="+419"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
@@ -950,7 +948,7 @@ Adres: %4
         <translation>varsayılan</translation>
     </message>
     <message>
-        <location line="+134"/>
+        <location line="+147"/>
         <location line="+9"/>
         <source>Warning</source>
         <translation>Uyarı</translation>
@@ -1112,7 +1110,7 @@ Adres: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+246"/>
+        <location filename="../rpcconsole.cpp" line="+328"/>
         <source>N/A</source>
         <translation>Mevcut değil</translation>
     </message>
@@ -1246,7 +1244,7 @@ Adres: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+123"/>
+        <location filename="../sendcoinsdialog.cpp" line="+124"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
@@ -1349,7 +1347,7 @@ Adres: %4
     <message>
         <location line="+5"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Hata: Muamele reddedildi.  Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
+        <translation>Hata: Muamele reddedildi. Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
     </message>
 </context>
 <context>
@@ -2081,7 +2079,7 @@ Adres: %4
         <translation>Bitcoin sürümü</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+82"/>
         <source>Usage:</source>
         <translation>Kullanım:</translation>
     </message>
@@ -2096,12 +2094,12 @@ Adres: %4
         <translation>Komutları listele</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Get help for a command</source>
         <translation>Bir komut için yardım al</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Options:</source>
         <translation>Seçenekler:</translation>
     </message>
@@ -2116,7 +2114,7 @@ Adres: %4
         <translation>Pid dosyası belirt (varsayılan: bitcoind.pid)</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-47"/>
         <source>Generate coins</source>
         <translation>Madenî para (Bitcoin) oluştur</translation>
     </message>
@@ -2126,7 +2124,7 @@ Adres: %4
         <translation>Bitcoin oluşturmasını devre dışı bırak</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Specify data directory</source>
         <translation>Veri dizinini belirt</translation>
     </message>
@@ -2141,12 +2139,7 @@ Adres: %4
         <translation>Diskteki veritabanı kütüğü boyutunu megabayt olarak belirt (varsayılan: 100)</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>Bağlantı zaman aşım süresini milisaniye olarak belirt</translation>
-    </message>
-    <message>
-        <location line="-32"/>
+        <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Bağlantılar için dinlenecek &lt;port&gt; (varsayılan: 8333 ya da testnet: 18333)</translation>
     </message>
@@ -2156,27 +2149,27 @@ Adres: %4
         <translation>Eşler ile en çok &lt;n&gt; adet bağlantı kur (varsayılan: 125)</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-33"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Eş adresleri elde etmek için bir düğüme bağlan ve ardından bağlantıyı kes</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Specify your own public address</source>
         <translation>Kendi genel adresinizi tanımlayın</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-75"/>
         <source>Bind to given address. Use [host]:port notation for IPv6</source>
         <translation>Belirtilen adresle ilişiklendir. IPv6 için [makine]:port simgelemini kullanınız</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Aksaklık gösteren eşlerle bağlantıyı kesme sınırı (varsayılan: 100)</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-105"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Aksaklık gösteren eşlerle yeni bağlantıları engelleme süresi, saniye olarak (varsayılan: 86400)</translation>
     </message>
@@ -2191,7 +2184,7 @@ Adres: %4
         <translation>Konut satırı ve JSON-RPC komutlarını kabul et</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Arka planda daemon (servis) olarak çalış ve komutları kabul et</translation>
     </message>
@@ -2201,7 +2194,7 @@ Adres: %4
         <translation>Deneme şebekesini kullan</translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-93"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Dışarıdan gelen bağlantıları kabul et (varsayılan: -proxy veya -connect yoksa 1)</translation>
     </message>
@@ -2256,7 +2249,12 @@ Adres: %4
         <translation>Eşleri DNS araması vasıtasıyla bul (varsayılan: 1, eğer -connect kullanılmadıysa)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
+        <source>Importing blocks...</source>
+        <translation>Bloklar içe aktarılıyor...</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Geçersiz -tor adresi: &apos;%s&apos;</translation>
     </message>
@@ -2326,7 +2324,12 @@ Adres: %4
         <translation>İstemci başlatıldığında debug.log dosyasını küçült (varsayılan: -debug bulunmadığında 1)</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+2"/>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <translation>Bağlantı zaman aşım süresini milisaniye olarak belirt (varsayılan: 5000)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Dinlenecek portu haritalamak için UPnP kullan (varsayılan: 0)</translation>
     </message>
@@ -2366,22 +2369,22 @@ Adres: %4
         <translation>JSON-RPC bağlantıları için dinlenecek &lt;port&gt; (varsayılan: 8332)</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-41"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Belirtilen İP adresinden JSON-RPC bağlantılarını kabul et</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Şu &lt;ip&gt; adresinde (varsayılan: 127.0.0.1) çalışan düğüme komut yolla</translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-90"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>En iyi blok değiştiğinde komutu çalıştır (komut için %s parametresi blok hash değeri ile değiştirilecektir)</translation>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Cüzdanı en yeni biçime güncelle</translation>
     </message>
@@ -2396,7 +2399,7 @@ Adres: %4
         <translation>Blok zincirini eksik cüzdan muameleleri için tekrar tara</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
         <translation>Başlangıçta ne kadar blokun denetleneceği (varsayılan: 2500, 0 = tümü)</translation>
     </message>
@@ -2406,7 +2409,7 @@ Adres: %4
         <translation>Blok kontrolünün derinliği (0 ilâ 6, varsayılan: 1)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Imports blocks from external blk000?.dat file</source>
         <translation>Harici blk000?.dat dosyasından blokları içe aktarır</translation>
     </message>
@@ -2426,17 +2429,17 @@ Adres: %4
         <translation>Sunucu özel anahtarı (varsayılan: server.pem)</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-110"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Kabul edilebilir şifreler (varsayılan: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+122"/>
         <source>This help message</source>
         <translation>Bu yardım mesajı</translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-119"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>%s veri dizininde kilit elde edilemedi.  Bitcoin muhtemelen hâlihazırda çalışmaktadır.</translation>
     </message>
@@ -2446,12 +2449,12 @@ Adres: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Bu bilgisayarda %s unsuruna bağlanılamadı. (bind şu hatayı iletti: %d, %s)</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-69"/>
         <source>Connect through socks proxy</source>
         <translation>Socks vekil sunucusu vasıtasıyla bağlan</translation>
     </message>
@@ -2461,12 +2464,12 @@ Adres: %4
         <translation>-addnode, -seednode ve -connect için DNS aramalarına izin ver</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Loading addresses...</source>
         <translation>Adresler yükleniyor...</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-26"/>
         <source>Error loading blkindex.dat</source>
         <translation>blkindex.dat dosyasının yüklenmesinde hata oluştu</translation>
     </message>
@@ -2481,17 +2484,17 @@ Adres: %4
         <translation>wallet.dat dosyasının yüklenmesinde hata oluştu: cüzdanın daha yeni bir Bitcoin sürümüne ihtiyacı var</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+72"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Cüzdanın tekrar yazılması gerekiyordu: işlemi tamamlamak için Bitcoin&apos;i yeniden başlatınız</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Error loading wallet.dat</source>
         <translation>wallet.dat dosyasının yüklenmesinde hata oluştu</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Geçersiz -proxy adresi: &apos;%s&apos;</translation>
     </message>
@@ -2506,7 +2509,7 @@ Adres: %4
         <translation>Bilinmeyen bir -socks vekil sürümü talep edildi: %i</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>-bind adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
@@ -2516,12 +2519,12 @@ Adres: %4
         <translation>-externalip adresi çözümlenemedi: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>-paytxfee=&lt;miktar&gt; için geçersiz miktar: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Error: could not start node</source>
         <translation>Hata: düğüm başlatılamadı</translation>
     </message>
@@ -2541,17 +2544,17 @@ Adres: %4
         <translation>Hata: Muamele oluşturması başarısız oldu  </translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+42"/>
         <source>Sending...</source>
         <translation>Gönderiliyor...</translation>
     </message>
     <message>
-        <location line="-99"/>
+        <location line="-100"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Hata: Muamele reddedildi.  Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Invalid amount</source>
         <translation>Geçersiz miktar</translation>
     </message>
@@ -2566,7 +2569,7 @@ Adres: %4
         <translation>Blok indeksi yükleniyor...</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Bağlanılacak düğüm ekle ve bağlantıyı zinde tutmaya çalış</translation>
     </message>
@@ -2586,12 +2589,12 @@ Adres: %4
         <translation>Yolladığınız muameleler için eklenecek KB başı ücret</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Cüzdan yükleniyor...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>Cüzdan eski biçime geri alınamaz</translation>
     </message>
@@ -2606,22 +2609,22 @@ Adres: %4
         <translation>Varsayılan adres yazılamadı</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Rescanning...</source>
         <translation>Yeniden tarama...</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-40"/>
         <source>Done loading</source>
         <translation>Yükleme tamamlandı</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>To use the %s option</source>
         <translation>%s seçeneğini kullanmak için</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-133"/>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:

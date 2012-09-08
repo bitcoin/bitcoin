@@ -13,17 +13,21 @@
         <translation>&lt;b&gt;Bitcoin&lt;/b&gt;-version</translation>
     </message>
     <message>
-        <location line="+44"/>
-        <source>Copyright © 2009-2012 Bitcoin Developers
-
+        <location line="+41"/>
+        <source>Copyright © 2009-2012 The Bitcoin developers</source>
+        <translation>Copyright © 2009-2012 Bitcoin-utvecklarna</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>
 This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>Copyright © 2009-2012 Bitcoin-utvecklarna
-
+        <translation>
 Detta är experimentell mjukvara.
+
 
 Distribuerad under mjukvarulicensen MIT/X11, se den medföljande filen COPYING eller http://www.opensource.org/licenses/mit-license.php.
 
@@ -290,22 +294,17 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+218"/>
+        <location filename="../bitcoingui.cpp" line="+228"/>
         <source>Sign &amp;message...</source>
         <translation>Signera &amp;meddelande...</translation>
     </message>
     <message>
-        <location line="+48"/>
-        <source>Show/Hide &amp;Bitcoin</source>
-        <translation>Visa/Göm &amp;Bitcoin</translation>
-    </message>
-    <message>
-        <location line="+248"/>
+        <location line="+295"/>
         <source>Synchronizing with network...</source>
         <translation>Synkroniserar med nätverk...</translation>
     </message>
     <message>
-        <location line="-326"/>
+        <location line="-325"/>
         <source>&amp;Overview</source>
         <translation>&amp;Översikt</translation>
     </message>
@@ -380,7 +379,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>&amp;Alternativ...</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Kryptera plånbok...</translation>
     </message>
@@ -410,7 +409,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>&amp;Exportera...</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-54"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Skicka mynt till en Bitcoin-adress</translation>
     </message>
@@ -435,12 +434,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Ändra konfigurationsalternativ för Bitcoin</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Show or hide the Bitcoin window</source>
-        <translation>Visa eller göm Bitcoin-fönstret</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportera informationen i den nuvarande fliken till en fil</translation>
     </message>
@@ -470,12 +464,12 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Öppna debug- och diagnostikkonsolen</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-55"/>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifiera meddelande...</translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-160"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -485,12 +479,17 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Plånbok</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+195"/>
         <source>&amp;About Bitcoin</source>
         <translation>&amp;Om Bitcoin</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+9"/>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Visa / Göm</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>&amp;File</source>
         <translation>&amp;Arkiv</translation>
     </message>
@@ -647,7 +646,7 @@ Adress: %4
         <translation>Det inträffade ett fel när plånboken skulle sparas till den nya platsen.</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+112"/>
+        <location filename="../bitcoin.cpp" line="+109"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Ett allvarligt fel har uppstått. Bitcoin kan inte längre köras säkert och kommer att avslutas.</translation>
     </message>
@@ -655,7 +654,7 @@ Adress: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+86"/>
+        <location filename="../clientmodel.cpp" line="+87"/>
         <source>Network Alert</source>
         <translation>Nätverkslarm</translation>
     </message>
@@ -731,7 +730,7 @@ Adress: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+425"/>
+        <location filename="../guiutil.cpp" line="+419"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation>Bitcoin-Qt</translation>
@@ -950,7 +949,7 @@ Adress: %4
         <translation>standard</translation>
     </message>
     <message>
-        <location line="+134"/>
+        <location line="+147"/>
         <location line="+9"/>
         <source>Warning</source>
         <translation>Varning</translation>
@@ -1112,7 +1111,7 @@ Adress: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+246"/>
+        <location filename="../rpcconsole.cpp" line="+328"/>
         <source>N/A</source>
         <translation>ej tillgänglig</translation>
     </message>
@@ -1246,7 +1245,7 @@ Adress: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+123"/>
+        <location filename="../sendcoinsdialog.cpp" line="+124"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
@@ -2081,7 +2080,7 @@ Adress: %4
         <translation>Bitcoin version</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+82"/>
         <source>Usage:</source>
         <translation>Användning:</translation>
     </message>
@@ -2096,12 +2095,12 @@ Adress: %4
         <translation>Lista kommandon</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Get help for a command</source>
         <translation>Få hjälp med ett kommando</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Options:</source>
         <translation>Inställningar:</translation>
     </message>
@@ -2116,7 +2115,7 @@ Adress: %4
         <translation>Ange pid fil (standard: bitcoind.pid)</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-47"/>
         <source>Generate coins</source>
         <translation>Generera mynt</translation>
     </message>
@@ -2126,7 +2125,7 @@ Adress: %4
         <translation>Generera inte mynt</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Specify data directory</source>
         <translation>Ange katalog för data</translation>
     </message>
@@ -2141,12 +2140,7 @@ Adress: %4
         <translation>Sätt databasens loggfil storlek i megabyte (standard: 100)</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>Ange timeout för uppkoppling (i millisekunder)</translation>
-    </message>
-    <message>
-        <location line="-32"/>
+        <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Lyssna efter anslutningar på &lt;port&gt; (förval: 8333 eller testnet: 18333)</translation>
     </message>
@@ -2156,27 +2150,27 @@ Adress: %4
         <translation>Ha som mest &lt;n&gt; anslutningar till andra klienter (förval: 125)</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-33"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Anslut till en nod för att hämta klientadresser, och koppla från</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Specify your own public address</source>
         <translation>Ange din egen publika adress</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-75"/>
         <source>Bind to given address. Use [host]:port notation for IPv6</source>
         <translation>Bind till given adress. Använd [värd]:port notation för IPv6</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Tröskelvärde för att koppla ifrån klienter som missköter sig (förval: 100)</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-105"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Antal sekunder att hindra klienter som missköter sig från att ansluta (förval: 86400)</translation>
     </message>
@@ -2191,7 +2185,7 @@ Adress: %4
         <translation>Tillåt kommandon från kommandotolken och JSON-RPC-kommandon</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Kör i bakgrunden som tjänst och acceptera kommandon</translation>
     </message>
@@ -2201,7 +2195,7 @@ Adress: %4
         <translation>Använd testnätverket</translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-93"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Acceptera anslutningar utifrån (standard: 1 om ingen -proxy eller -connect)</translation>
     </message>
@@ -2256,7 +2250,12 @@ Adress: %4
         <translation>Söl efter klienter med DNS sökningen (standard: 1 om inte -connect)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
+        <source>Importing blocks...</source>
+        <translation>Importerar block...</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Ogiltig -tor adress: &apos;%s&apos;</translation>
     </message>
@@ -2326,7 +2325,12 @@ Adress: %4
         <translation>Krymp debug.log filen vid klient start (standard: 1 vid ingen -debug)</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+2"/>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <translation>Ange timeout för uppkoppling i millisekunder (standard: 5000)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Använd UPnP för att mappa den lyssnande porten (standard: 0)</translation>
     </message>
@@ -2366,22 +2370,22 @@ Adress: %4
         <translation>Lyssna på JSON-RPC-anslutningar på &lt;port&gt; (förval: 8332)</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-41"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Tillåt JSON-RPC-anslutningar från specifika IP-adresser</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Skicka kommandon till klient på &lt;ip&gt; (förval: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-90"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Exekvera kommando när bästa blocket ändras (%s i cmd är utbytt av blockhash)</translation>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Uppgradera plånboken till senaste formatet</translation>
     </message>
@@ -2396,7 +2400,7 @@ Adress: %4
         <translation>Sök i block-kedjan efter saknade wallet transaktioner</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
         <translation>Hur många block att kontrollera vid uppstart (standardvärde: 2500, 0 = alla)</translation>
     </message>
@@ -2406,7 +2410,7 @@ Adress: %4
         <translation>Hur grundlig blockverifikationen är (0-6, standardvärde: 1)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Imports blocks from external blk000?.dat file</source>
         <translation>Inporterar block från extern blk000?.dat fil</translation>
     </message>
@@ -2426,17 +2430,17 @@ Adress: %4
         <translation>Serverns privata nyckel (förval: server.pem)</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-110"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Accepterade krypteringsalgoritmer (förval: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+122"/>
         <source>This help message</source>
         <translation>Det här hjälp medelandet</translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-119"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Kan inte låsa data-mappen %s.  Bitcoin körs förmodligen redan.</translation>
     </message>
@@ -2446,12 +2450,12 @@ Adress: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
         <translation>Det går inte att binda till %s på den här datorn (bind returnerade felmeddelande %d, %s)</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-69"/>
         <source>Connect through socks proxy</source>
         <translation>Anslut genom socks-proxy</translation>
     </message>
@@ -2461,12 +2465,12 @@ Adress: %4
         <translation>Tillåt DNS-sökningar för -addnode, -seednode och -connect</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Loading addresses...</source>
         <translation>Laddar adresser...</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-26"/>
         <source>Error loading blkindex.dat</source>
         <translation>Fel vid inläsning av blkindex.dat</translation>
     </message>
@@ -2481,17 +2485,17 @@ Adress: %4
         <translation>Fel vid inläsningen av wallet.dat: Plånboken kräver en senare version av Bitcoin</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+72"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Plånboken behöver skrivas om: Starta om Bitcoin för att färdigställa</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Error loading wallet.dat</source>
         <translation>Fel vid inläsning av plånboksfilen wallet.dat</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Ogiltig -proxy adress: &apos;%s&apos;</translation>
     </message>
@@ -2506,7 +2510,7 @@ Adress: %4
         <translation>Okänd -socks proxy version begärd: %i</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Kan inte matcha -bind adress: &apos;%s&apos;</translation>
     </message>
@@ -2516,12 +2520,12 @@ Adress: %4
         <translation>Kan inte matcha -externalip adress: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Ogiltigt belopp för -paytxfee=&lt;belopp&gt;:&apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Error: could not start node</source>
         <translation>Fel: kunde inte starta nod</translation>
     </message>
@@ -2541,17 +2545,17 @@ Adress: %4
         <translation>Fel: Transaktionen gick inte att skapa  </translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+42"/>
         <source>Sending...</source>
         <translation>Skickar...</translation>
     </message>
     <message>
-        <location line="-99"/>
+        <location line="-100"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Fel: Transaktionen avslogs.  Detta kan hända om några av mynten i plånboken redan spenderats, t.ex om du använt en kopia av wallet.dat och mynt spenderades i kopian men inte markerats som spenderas här.</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Invalid amount</source>
         <translation>Ogiltig mängd</translation>
     </message>
@@ -2566,7 +2570,7 @@ Adress: %4
         <translation>Laddar blockindex...</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Lägg till en nod att koppla upp mot och försök att hålla anslutningen öppen</translation>
     </message>
@@ -2586,12 +2590,12 @@ Adress: %4
         <translation>Avgift per KB att lägga till på transaktioner du skickar</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Laddar plånbok...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation>Kan inte nedgradera plånboken</translation>
     </message>
@@ -2606,22 +2610,22 @@ Adress: %4
         <translation>Kan inte skriva standardadress</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Rescanning...</source>
         <translation>Söker igen...</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-40"/>
         <source>Done loading</source>
         <translation>Klar med laddning</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>To use the %s option</source>
         <translation>Att använda %s alternativet</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-133"/>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:

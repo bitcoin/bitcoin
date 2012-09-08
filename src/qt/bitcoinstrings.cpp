@@ -133,7 +133,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Set maximum block size in bytes (default: 250
 QT_TRANSLATE_NOOP("bitcoin-core", "Set minimum block size in bytes (default: 0)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify configuration file (default: bitcoin.conf)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Specify connection timeout (in milliseconds)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Specify connection timeout in milliseconds (default: 5000)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify data directory"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify pid file (default: bitcoind.pid)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify your own public address"),
