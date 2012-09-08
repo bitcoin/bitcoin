@@ -98,6 +98,7 @@ public:
         fFileBacked = false;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
+        nOrderPosNext = 0;
     }
     CWallet(std::string strWalletFileIn)
     {
@@ -107,6 +108,7 @@ public:
         fFileBacked = true;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
+        nOrderPosNext = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -143,6 +145,11 @@ public:
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
+
+    /** Increment the next transaction order id
+        @return next transaction order id
+     */
+    int64 IncOrderPosNext();
 
     typedef std::pair<CWalletTx*, CAccountingEntry*> TxPair;
     typedef std::multimap<int64, TxPair > TxItems;

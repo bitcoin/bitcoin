@@ -392,6 +392,10 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                     return DB_CORRUPT;
                 }
             }
+            else if (strType == "orderposnext")
+            {
+                ssValue >> pwallet->nOrderPosNext;
+            }
         }
         pcursor->close();
     }
