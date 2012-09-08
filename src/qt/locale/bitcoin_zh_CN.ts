@@ -2340,7 +2340,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>设置连接超时时间(缺省：5000毫秒)</translation>
     </message>
     <message>
         <location line="+13"/>
