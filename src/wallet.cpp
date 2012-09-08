@@ -291,6 +291,13 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     return true;
 }
 
+int64 CWallet::IncOrderPosNext()
+{
+    int64 nRet = nOrderPosNext;
+    CWalletDB(strWalletFile).WriteOrderPosNext(++nOrderPosNext);
+    return nRet;
+}
+
 CWallet::TxItems CWallet::OrderedTxItems(std::list<CAccountingEntry>& acentries, std::string strAccount)
 {
     CWalletDB walletdb(strWalletFile);
@@ -362,7 +369,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         if (fInsertedNew)
         {
             wtx.nTimeReceived = GetAdjustedTime();
-            wtx.nOrderPos = nOrderPosNext++;
+            wtx.nOrderPos = IncOrderPosNext();
 
             wtx.nTimeSmart = wtx.nTimeReceived;
             if (wtxIn.hashBlock != 0)

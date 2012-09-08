@@ -544,7 +544,7 @@ Value movecmd(const Array& params, bool fHelp)
 
     // Debit
     CAccountingEntry debit;
-    debit.nOrderPos = pwalletMain->nOrderPosNext++;
+    debit.nOrderPos = pwalletMain->IncOrderPosNext();
     debit.strAccount = strFrom;
     debit.nCreditDebit = -nAmount;
     debit.nTime = nNow;
@@ -554,7 +554,7 @@ Value movecmd(const Array& params, bool fHelp)
 
     // Credit
     CAccountingEntry credit;
-    credit.nOrderPos = pwalletMain->nOrderPosNext++;
+    credit.nOrderPos = pwalletMain->IncOrderPosNext();
     credit.strAccount = strTo;
     credit.nCreditDebit = nAmount;
     credit.nTime = nNow;
