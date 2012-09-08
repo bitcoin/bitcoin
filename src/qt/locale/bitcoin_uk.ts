@@ -13,15 +13,24 @@
         <translation>Версія &lt;b&gt;Bitcoin&apos;a&lt;b&gt;</translation>
     </message>
     <message>
-        <location line="+44"/>
-        <source>Copyright © 2009-2012 Bitcoin Developers
-
+        <location line="+41"/>
+        <source>Copyright © 2009-2012 The Bitcoin developers</source>
+        <translation>Авторське право © 2009-2012 Розробники Bitcoin</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>
 This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>
+Це програмне забезпечення є експериментальним.
+
+Поширюється за ліцензією MIT/X11, додаткова інформація міститься у файлі COPYING, а також за адресою http://www.opensource.org/licenses/mit-license.php.
+
+Цей продукт включає в себе програмне забезпечення, розроблене в рамках проекту OpenSSL (http://www.openssl.org/), криптографічне програмне забезпечення, написане Еріком Янгом (eay@cryptsoft.com), та функції для роботи з UPnP, написані Томасом Бернардом.</translation>
     </message>
 </context>
 <context>
@@ -49,17 +58,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-11"/>
         <source>&amp;New Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Створити адресу</translation>
     </message>
     <message>
         <location line="-46"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation type="unfinished"/>
+        <translation>Це ваші адреси для отримання платежів. Ви можете давати різні адреси різним людям, таким чином маючи можливість відслідкувати хто конкретно і скільки вам заплатив. </translation>
     </message>
     <message>
         <location line="+60"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Скопіювати адресу</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -69,7 +78,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+11"/>
         <source>Sign a message to prove you own a Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Підпишіть повідомлення щоб довести, що ви є власником цієї адреси</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -99,12 +108,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="+65"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Скопіювати &amp;мітку</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Редагувати</translation>
     </message>
     <message>
         <location line="+250"/>
@@ -215,18 +224,18 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>УВАГА: Якщо ви зашифруєте гаманець і забудете пароль, ви &lt;b&gt;ВТРАТИТЕ ВСІ СВОЇ БІТКОІНИ&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Ви дійсно хочете зашифрувати свій гаманець?</translation>
     </message>
     <message>
         <location line="+106"/>
         <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Увага: Ввімкнено Caps Lock</translation>
     </message>
     <message>
         <location line="-121"/>
@@ -278,28 +287,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+14"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Пароль було успішно змінено.</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+218"/>
+        <location filename="../bitcoingui.cpp" line="+228"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Підписати повідомлення...</translation>
     </message>
     <message>
-        <location line="+48"/>
-        <source>Show/Hide &amp;Bitcoin</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+248"/>
+        <location line="+295"/>
         <source>Synchronizing with network...</source>
         <translation>Синхронізація з мережею...</translation>
     </message>
     <message>
-        <location line="-326"/>
+        <location line="-325"/>
         <source>&amp;Overview</source>
         <translation>&amp;Огляд</translation>
     </message>
@@ -374,19 +378,19 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Параметри...</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Шифрування гаманця...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Резервне копіювання гаманця...</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>Змінити парол&amp;ь...</translation>
     </message>
     <message numerus="yes">
         <location line="+241"/>
@@ -396,7 +400,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+6"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished"/>
+        <translation>Завантажено %1 з %2 блоків історії переказів (%3% done).</translation>
     </message>
     <message>
         <location line="-254"/>
@@ -404,14 +408,14 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Експорт...</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-54"/>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Відправити монети на вказану адресу</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Sign a message to prove you own a Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Підпишіть повідомлення щоб довести, що ви є власником цієї адреси</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -426,15 +430,10 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+37"/>
         <source>Modify configuration options for Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Редагувати параметри</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Show or hide the Bitcoin window</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Експортувати дані з поточної вкладки в файл</translation>
     </message>
@@ -464,27 +463,32 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-55"/>
         <source>&amp;Verify message...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-160"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Гаманець</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+195"/>
         <source>&amp;About Bitcoin</source>
+        <translation>&amp;Про Bitcoin</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>&amp;Show / Hide</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+34"/>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
@@ -641,7 +645,7 @@ Address: %4
         <translation>Виникла помилка при спробі зберегти гаманець в новому місці</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+112"/>
+        <location filename="../bitcoin.cpp" line="+109"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"/>
     </message>
@@ -649,7 +653,7 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+86"/>
+        <location filename="../clientmodel.cpp" line="+87"/>
         <source>Network Alert</source>
         <translation type="unfinished"/>
     </message>
@@ -709,7 +713,7 @@ Address: %4
     <message>
         <location line="+5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Введена адреса «%1» не є коректною адресою в мережі Bitcoin.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -725,7 +729,7 @@ Address: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+425"/>
+        <location filename="../guiutil.cpp" line="+419"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation type="unfinished"/>
@@ -777,7 +781,7 @@ Address: %4
     <message>
         <location line="+16"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Головні</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -792,12 +796,12 @@ Address: %4
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Автоматично запускати гаманець при вмиканні комп’ютера</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Start Bitcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Запускати гаманець при вході в систему</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -827,17 +831,17 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation type="unfinished"/>
+        <translation>Підключатись до мережі Bitcoin через SOCKS-проксі (наприклад при використанні Tor)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Connect through SOCKS proxy:</source>
-        <translation type="unfinished"/>
+        <translation>Підключатись через &amp;SOCKS-проксі:</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Proxy &amp;IP:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;IP проксі:</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -847,12 +851,12 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>&amp;Port:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Порт:</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished"/>
+        <translation>Порт проксі-сервера (наприклад 9050)</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -872,7 +876,7 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation type="unfinished"/>
+        <translation>Показувати лише іконку в треї після згортання вікна</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -887,12 +891,12 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>M&amp;inimize on close</source>
-        <translation type="unfinished"/>
+        <translation>Згортати замість закритт&amp;я</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>&amp;Display</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Відображення</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -907,12 +911,12 @@ Address: %4
     <message>
         <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation type="unfinished"/>
+        <translation>В&amp;имірювати монети в:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Виберіть одиницю вимірювання монет, яка буде відображатись в гаманці та при відправленні.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -922,7 +926,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Відображати адресу в списку переказів</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -945,10 +949,10 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+134"/>
+        <location line="+147"/>
         <location line="+9"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Увага</translation>
     </message>
     <message>
         <location line="-9"/>
@@ -993,7 +997,7 @@ Address: %4
     <message>
         <location line="-78"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Гаманець</translation>
     </message>
     <message>
         <location line="+124"/>
@@ -1107,7 +1111,7 @@ Address: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+246"/>
+        <location filename="../rpcconsole.cpp" line="+328"/>
         <source>N/A</source>
         <translation type="unfinished"/>
     </message>
@@ -1241,7 +1245,7 @@ Address: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+123"/>
+        <location filename="../sendcoinsdialog.cpp" line="+124"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
@@ -1259,7 +1263,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>&amp;Add Recipient</source>
-        <translation type="unfinished"/>
+        <translation>Дод&amp;ати одержувача</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1269,7 +1273,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Очистити &amp;все</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -1314,7 +1318,7 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation type="unfinished"/>
+        <translation>Адреса отримувача невірна, будьласка перепровірте.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1324,27 +1328,27 @@ Address: %4
     <message>
         <location line="+5"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>Кількість монет для відправлення перевищує ваш баланс.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>Сума перевищить ваш баланс, якщо комісія %1 буде додана до вашого переказу.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>Знайдено адресу що дублюється. Відправлення на кожну адресу дозволяється лише один раз на кожну операцію переказу.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error: Transaction creation failed.</source>
-        <translation type="unfinished"/>
+        <translation>Помилка: не вдалося створити переказ.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Помилка: переказ було відхилено.  Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця (wallet.dat), а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
     </message>
 </context>
 <context>
@@ -1432,19 +1436,19 @@ Address: %4
     <message>
         <location line="+18"/>
         <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>Введіть адресу Bitcoin (наприклад 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+203"/>
         <source>Choose an address from the address book</source>
-        <translation type="unfinished"/>
+        <translation>Вибрати адресу з адресної книги</translation>
     </message>
     <message>
         <location line="-193"/>
         <location line="+203"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="-193"/>
@@ -1454,7 +1458,7 @@ Address: %4
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1469,7 +1473,7 @@ Address: %4
     <message>
         <location line="+21"/>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Підпишіть повідомлення щоб довести, що ви є власником цієї адреси</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -1480,7 +1484,7 @@ Address: %4
         <location line="+3"/>
         <location line="+146"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Очистити &amp;все</translation>
     </message>
     <message>
         <location line="-87"/>
@@ -1496,7 +1500,7 @@ Address: %4
     <message>
         <location line="+21"/>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>Введіть адресу Bitcoin (наприклад 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -1517,7 +1521,7 @@ Address: %4
     <message>
         <location line="-2"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>Натисніть кнопку &quot;Підписати повідомлення&quot;, для отриманя підпису</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1606,7 +1610,7 @@ Address: %4
     <message>
         <location line="+8"/>
         <source>%1/offline</source>
-        <translation type="unfinished"/>
+        <translation>%1/поза інтернетом</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1647,7 +1651,7 @@ Address: %4
         <location line="+6"/>
         <location line="+17"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Відправник</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1665,7 +1669,7 @@ Address: %4
     <message>
         <location line="-2"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>Мітка</translation>
     </message>
     <message>
         <location line="+37"/>
@@ -1684,7 +1688,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>не прийнято</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -1697,12 +1701,12 @@ Address: %4
     <message>
         <location line="-39"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Комісія за переказ</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation type="unfinished"/>
+        <translation>Загальна сума</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1712,17 +1716,17 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Коментар</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>ID транзакції</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Generated coins must mature 120 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>Після генерації монет, потрібно зачекати 120 блоків, перш ніж їх можна буде використати.  Коли ви згенерували цей блок, його було відправлено в мережу для того, щоб він був доданий до ланцюжка блоків.  Якщо ця процедура не вдасться, статус буде змінено на «не підтверджено» і ви не зможете потратити згенеровані монету.  Таке може статись, якщо хтось інший згенерував блок на декілька секунд раніше.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2076,7 +2080,7 @@ Address: %4
         <translation>Версія</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+82"/>
         <source>Usage:</source>
         <translation>Вкористання:</translation>
     </message>
@@ -2093,13 +2097,13 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Get help for a command</source>
         <translation>Отримати довідку по команді
 </translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Options:</source>
         <translation>Параметри:
 </translation>
@@ -2117,7 +2121,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-47"/>
         <source>Generate coins</source>
         <translation>Генерувати монети
 </translation>
@@ -2129,7 +2133,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Specify data directory</source>
         <translation>Вкажіть робочий каталог
 </translation>
@@ -2145,13 +2149,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>Вкажіть таймаут з’єднання (в мілісекундах)
-</translation>
-    </message>
-    <message>
-        <location line="-32"/>
+        <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
         <translation>Чекати на з&apos;єднання на порту (по замовченню 8333 або тестова мережа 18333)</translation>
     </message>
@@ -2161,27 +2159,27 @@ Address: %4
         <translation>Підтримувати не більше &lt;n&gt; зв&apos;язків з колегами (за замовчуванням: 125)</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-33"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Specify your own public address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-75"/>
         <source>Bind to given address. Use [host]:port notation for IPv6</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Поріг відключення неправильно підєднаних пірів (за замовчуванням: 100)</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-105"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Максимальній розмір вхідного буферу на одне з&apos;єднання (за замовчуванням 86400)</translation>
     </message>
@@ -2197,7 +2195,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запустити в фоновому режимі (як демон) та приймати команди
 </translation>
@@ -2209,7 +2207,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-93"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation type="unfinished"/>
     </message>
@@ -2221,7 +2219,7 @@ Address: %4
     <message>
         <location line="+5"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Увага: встановлено занадто велику комісію (-paytxfee).  Комісія зніматиметься кожен раз коли ви проводитимете перекази.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2231,7 +2229,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Увага: будь ласка, перевірте дату і час на свому комп’ютері.  Якщо ваш годинник йде неправильно, Bitcoin може працювати некоректно.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2246,7 +2244,7 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Connect only to the specified node(s)</source>
-        <translation type="unfinished"/>
+        <translation>Підключитись лише до вказаного вузла</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2264,19 +2262,24 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
+        <source>Importing blocks...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+10"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>Максимальоий буфер , &lt;n&gt; * 1000 байт (за умовчанням: 5000)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation type="unfinished"/>
+        <translation>Максимальній розмір виіхідного буферу на одне з&apos;єднання (за замовчуванням 1000)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2286,7 +2289,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation type="unfinished"/>
+        <translation>Виводити більше налагоджувальної інформації. Implies all other -debug* options</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2301,7 +2304,7 @@ Address: %4
     <message>
         <location line="+4"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Параметри SSL: (див. Bitcoin Wiki)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2334,14 +2337,19 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+2"/>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <translation>Odredi vremenski prozor za spajanje na mrežu u milisekundama (ugrađeni izbor: 5000)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Намагатись використовувати UPnP для відображення порту що прослуховується на роутері (default: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>Намагатись використовувати UPnP для відображення порту що прослуховується на роутері (default: 1 when listening)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2357,7 +2365,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Warning: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Увага: На диску мало вільного місця</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2377,24 +2385,24 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-41"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Дозволити JSON-RPC-з’єднання з вказаної IP-адреси
 </translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Відправляти команди на вузол, запущений на &lt;ip&gt; (за промовчуванням: 127.0.0.1)
 </translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-90"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Upgrade wallet to latest format</source>
         <translation type="unfinished"/>
     </message>
@@ -2411,7 +2419,7 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
         <translation type="unfinished"/>
     </message>
@@ -2421,7 +2429,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Imports blocks from external blk000?.dat file</source>
         <translation type="unfinished"/>
     </message>
@@ -2444,19 +2452,19 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-110"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Допустимі шифри (за промовчуванням: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
 </translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+122"/>
         <source>This help message</source>
         <translation>Дана довідка
 </translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-119"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Неможливо встановити блокування на робочий каталог %s.  Можливо, гаманець вже запущено.</translation>
     </message>
@@ -2466,27 +2474,28 @@ Address: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation type="unfinished"/>
+        <translation>Неможливо прив’язати до порту %s на цьому комп’ютері (bind returned error %d, %s)</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-69"/>
         <source>Connect through socks proxy</source>
-        <translation type="unfinished"/>
+        <translation>Підключитись через SOCKS-проксі</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>Дозволити пошук в DNS для команд «addnode» і «connect»
+</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Loading addresses...</source>
         <translation>Завантаження адрес...</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-26"/>
         <source>Error loading blkindex.dat</source>
         <translation>Помилка при завантаженні blkindex.dat </translation>
     </message>
@@ -2501,19 +2510,19 @@ Address: %4
         <translation>Помилка при завантаженні wallet.dat: Гаманець потребує новішої версії Біткоін-клієнта</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+72"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation>Потрібно перезаписати гаманець: перезапустіть Біткоін-клієнт для завершення</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Error loading wallet.dat</source>
         <translation>Помилка при завантаженні wallet.dat</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Помилка в адресі проксі-сервера: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+47"/>
@@ -2526,7 +2535,7 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -2536,12 +2545,12 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Помилка у величині комісії: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Error: could not start node</source>
         <translation type="unfinished"/>
     </message>
@@ -2553,7 +2562,7 @@ Address: %4
     <message>
         <location line="-55"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished"/>
+        <translation>Цей переказ перевищує максимально допустимий розмір. Проте ви можете здійснити її, додавши комісію в %1, яка відправиться тим вузлам що оброблять ваш переказ, та допоможе підтримати мережу. Ви хочете додати комісію?</translation>
     </message>
     <message>
         <location line="+54"/>
@@ -2561,17 +2570,17 @@ Address: %4
         <translation>Помилка: не вдалося створити переказ  </translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+42"/>
         <source>Sending...</source>
         <translation>Відправлення...</translation>
     </message>
     <message>
-        <location line="-99"/>
+        <location line="-100"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Помилка: переказ було відхилено.  Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця (wallet.dat), а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Invalid amount</source>
         <translation type="unfinished"/>
     </message>
@@ -2586,14 +2595,14 @@ Address: %4
         <translation>Завантаження індексу блоків...</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>Додати вузол для підключення and attempt to keep the connection open</translation>
     </message>
     <message>
         <location line="-18"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Неможливо прив’язати до порту %s на цьому комп’ютері. Молживо гаманець вже запущено.</translation>
     </message>
     <message>
         <location line="+48"/>
@@ -2607,12 +2616,12 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Завантаження гаманця...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -2627,22 +2636,22 @@ Address: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Rescanning...</source>
         <translation>Сканування...</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-40"/>
         <source>Done loading</source>
         <translation>Завантаження завершене</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>To use the %s option</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-133"/>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:
