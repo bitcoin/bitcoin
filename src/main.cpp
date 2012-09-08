@@ -1251,7 +1251,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     }
 
     if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
-        return false;
+        return error("ConnectBlock() : coinbase pays too much (actual=%lld vs limit=%lld)", (long long)vtx[0].GetValueOut(), (long long)GetBlockValue(pindex->nHeight, nFees));
 
     // Update block index on disk without changing it in memory.
     // The memory index structure will be changed after the db commits.
