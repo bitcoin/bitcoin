@@ -13,15 +13,23 @@
         <translation>&lt;b&gt;Bitcoin&lt;/b&gt; verzió</translation>
     </message>
     <message>
-        <location line="+44"/>
-        <source>Copyright © 2009-2012 Bitcoin Developers
-
+        <location line="+41"/>
+        <source>Copyright © 2009-2012 The Bitcoin developers</source>
+        <translation>Szerzői jog © 2009-2012 Bitcoin Developers</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>
 This is experimental software.
 
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>
+Ez egy kísérleti program.
+MIT/X11 szoftverlicenc alatt kiadva, lásd a mellékelt fájlt COPYING vagy http://www.opensource.org/licenses/mit-license.php.
+
+Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (http://www.openssl.org/) és kriptográfiai szoftvertben való felhasználásra,  írta Eric Young (eay@cryptsoft.com) és UPnP szoftver, írta Thomas Bernard.</translation>
     </message>
 </context>
 <context>
@@ -49,17 +57,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-11"/>
         <source>&amp;New Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Új cím</translation>
     </message>
     <message>
         <location line="-46"/>
         <source>These are your Bitcoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation type="unfinished"/>
+        <translation>Ezekkel a Bitcoin-címekkel fogadhatod kifizetéseket. Érdemes lehet minden egyes kifizető számára külön címet létrehozni, hogy könnyebben nyomon követhesd, kitől kaptál már pénzt.</translation>
     </message>
     <message>
         <location line="+60"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Cím másolása</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -99,7 +107,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="+65"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Címke &amp;másolása</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -215,12 +223,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>Figyelem: Ha kódolod a tárcát, és elveszíted a jelszavad, akkor &lt;b&gt;AZ ÖSSZES BITCOINODAT IS EL FOGOD VESZÍTENI!&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location line="+106"/>
@@ -237,7 +245,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-48"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin will close now to finish the encryption process. Ne feledd, hogy a tárca titkosítása sem nyújt teljes védelmet az adathalász programok fertőzésével szemben.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -278,28 +286,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+14"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Jelszó megváltoztatva.</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+218"/>
+        <location filename="../bitcoingui.cpp" line="+228"/>
         <source>Sign &amp;message...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+48"/>
-        <source>Show/Hide &amp;Bitcoin</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+248"/>
+        <location line="+295"/>
         <source>Synchronizing with network...</source>
         <translation>Szinkronizálás a hálózattal...</translation>
     </message>
     <message>
-        <location line="-326"/>
+        <location line="-325"/>
         <source>&amp;Overview</source>
         <translation>&amp;Áttekintés</translation>
     </message>
@@ -361,12 +364,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>A &amp;Qt-ról</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Információk a Qt ról</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -374,9 +377,9 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Opciók...</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Tárca &amp;kódolása...</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -386,7 +389,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>Jelszó &amp;megváltoztatása...</translation>
     </message>
     <message numerus="yes">
         <location line="+241"/>
@@ -396,7 +399,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+6"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished"/>
+        <translation>%1 blokk letöltve a tranzakciótörténet %2 blokkjából (%3% done).</translation>
     </message>
     <message>
         <location line="-254"/>
@@ -404,9 +407,9 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Exportálás...</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-54"/>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Érmék küldése megadott címre</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -426,17 +429,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+37"/>
         <source>Modify configuration options for Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Bitcoin konfigurációs opciók</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Show or hide the Bitcoin window</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Jelenlegi nézet exportálása fájlba</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -464,27 +462,32 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-55"/>
         <source>&amp;Verify message...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-160"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Tárca</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+195"/>
         <source>&amp;About Bitcoin</source>
+        <translation>&amp;A Bitcoinról</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>&amp;Show / Hide</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+34"/>
         <source>&amp;File</source>
         <translation>&amp;Fájl</translation>
     </message>
@@ -641,7 +644,7 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+112"/>
+        <location filename="../bitcoin.cpp" line="+109"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"/>
     </message>
@@ -649,7 +652,7 @@ Cím: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+86"/>
+        <location filename="../clientmodel.cpp" line="+87"/>
         <source>Network Alert</source>
         <translation type="unfinished"/>
     </message>
@@ -709,7 +712,7 @@ Cím: %4
     <message>
         <location line="+5"/>
         <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>A megadott &quot;%1&quot; cím nem egy érvényes Bitcoin-cím.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -725,7 +728,7 @@ Cím: %4
 <context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+425"/>
+        <location filename="../guiutil.cpp" line="+419"/>
         <location line="+12"/>
         <source>Bitcoin-Qt</source>
         <translation type="unfinished"/>
@@ -733,7 +736,7 @@ Cím: %4
     <message>
         <location line="-12"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>verzió</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -748,7 +751,7 @@ Cím: %4
     <message>
         <location line="+4"/>
         <source>UI options</source>
-        <translation type="unfinished"/>
+        <translation>UI opciók</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -777,12 +780,12 @@ Cím: %4
     <message>
         <location line="+16"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Fő</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation type="unfinished"/>
+        <translation>Opcionális, kB-onkénti tranzakciós díj a tranzakcióid minél gyorsabb feldolgozásának elősegítésére.  A legtöbb tranzakció 1 kB-os.  0,01 BTC ajánlott.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -792,12 +795,12 @@ Cím: %4
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Induljon el a Bitcoin a számítógép bekapcsolásakor</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Start Bitcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Induljon el a számítógép bekapcsolásakor</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -827,12 +830,12 @@ Cím: %4
     <message>
         <location line="+7"/>
         <source>Connect to the Bitcoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation type="unfinished"/>
+        <translation>SOCKS proxyn keresztüli csatlakozás a Bitcoin hálózatához (pl. Tor-on keresztüli csatlakozás esetén)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Connect through SOCKS proxy:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Csatlakozás SOCKS proxyn keresztül:</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -852,7 +855,7 @@ Cím: %4
     <message>
         <location line="+19"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished"/>
+        <translation>Proxy portja (pl.: 9050)</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -872,7 +875,7 @@ Cím: %4
     <message>
         <location line="+6"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation type="unfinished"/>
+        <translation>Kicsinyítés után csak eszköztár-ikont mutass</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -887,12 +890,12 @@ Cím: %4
     <message>
         <location line="+3"/>
         <source>M&amp;inimize on close</source>
-        <translation type="unfinished"/>
+        <translation>K&amp;icsinyítés záráskor</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>&amp;Display</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Megjelenítés</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -907,12 +910,12 @@ Cím: %4
     <message>
         <location line="+11"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mértékegység:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Válaszd ki az interfészen és érmék küldésekor megjelenítendő alapértelmezett alegységet.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -922,7 +925,7 @@ Cím: %4
     <message>
         <location line="+3"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Címek megjelenítése a tranzakciólistában</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -945,10 +948,10 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+134"/>
+        <location line="+147"/>
         <location line="+9"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Figyelem</translation>
     </message>
     <message>
         <location line="-9"/>
@@ -993,7 +996,7 @@ Cím: %4
     <message>
         <location line="-78"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Tárca</translation>
     </message>
     <message>
         <location line="+124"/>
@@ -1047,12 +1050,12 @@ Cím: %4
     <message>
         <location line="+56"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Összeg:</translation>
     </message>
     <message>
         <location line="-44"/>
         <source>Label:</source>
-        <translation type="unfinished"/>
+        <translation>Címke:</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -1107,7 +1110,7 @@ Cím: %4
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+246"/>
+        <location filename="../rpcconsole.cpp" line="+328"/>
         <source>N/A</source>
         <translation type="unfinished"/>
     </message>
@@ -1241,7 +1244,7 @@ Cím: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+123"/>
+        <location filename="../sendcoinsdialog.cpp" line="+124"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
@@ -1259,7 +1262,7 @@ Cím: %4
     <message>
         <location line="+3"/>
         <source>&amp;Add Recipient</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Címzett hozzáadása</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1269,7 +1272,7 @@ Cím: %4
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Mindent &amp;töröl</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -1314,7 +1317,7 @@ Cím: %4
     <message>
         <location line="+23"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation type="unfinished"/>
+        <translation>A címzett címe érvénytelen, kérlek, ellenőrizd.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1324,27 +1327,27 @@ Cím: %4
     <message>
         <location line="+5"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>Nincs ennyi bitcoin az egyenlegeden.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>A küldeni kívánt összeg és a %1 tranzakciós díj együtt meghaladja az egyenlegeden rendelkezésedre álló összeget.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>Többször szerepel ugyanaz a cím. Egy küldési műveletben egy címre csak egyszer lehet küldeni.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error: Transaction creation failed.</source>
-        <translation type="unfinished"/>
+        <translation>Hiba: nem sikerült létrehozni a tranzakciót.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Hiba: a tranzakciót elutasították. Ezt az okozhatja, ha már elköltöttél valamennyi érmét a tárcádból például ha a wallet.dat-od egy másolatát használtad, és így az elköltés csak abban lett jelölve, de itt nem.</translation>
     </message>
 </context>
 <context>
@@ -1433,19 +1436,19 @@ Cím: %4
     <message>
         <location line="+18"/>
         <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>Adj meg egy Bitcoin-címet (pl.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L )</translation>
     </message>
     <message>
         <location line="+10"/>
         <location line="+203"/>
         <source>Choose an address from the address book</source>
-        <translation type="unfinished"/>
+        <translation>Válassz egy címet a címjegyzékből</translation>
     </message>
     <message>
         <location line="-193"/>
         <location line="+203"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location line="-193"/>
@@ -1455,7 +1458,7 @@ Cím: %4
     <message>
         <location line="+10"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1481,7 +1484,7 @@ Cím: %4
         <location line="+3"/>
         <location line="+146"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Mindent &amp;töröl</translation>
     </message>
     <message>
         <location line="-87"/>
@@ -1497,7 +1500,7 @@ Cím: %4
     <message>
         <location line="+21"/>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation type="unfinished"/>
+        <translation>Adj meg egy Bitcoin-címet (pl.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L )</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -1648,14 +1651,14 @@ Cím: %4
         <location line="+6"/>
         <location line="+17"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Űrlap</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+22"/>
         <location line="+58"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>Címzett</translation>
     </message>
     <message>
         <location line="-77"/>
@@ -1666,7 +1669,7 @@ Cím: %4
     <message>
         <location line="-2"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>címke</translation>
     </message>
     <message>
         <location line="+37"/>
@@ -1685,7 +1688,7 @@ Cím: %4
     <message>
         <location line="+2"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>elutasítva</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -1698,22 +1701,22 @@ Cím: %4
     <message>
         <location line="-39"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakciós díj</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Net amount</source>
-        <translation type="unfinished"/>
+        <translation>Nettó összeg</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Megjegyzés</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1723,7 +1726,7 @@ Cím: %4
     <message>
         <location line="+3"/>
         <source>Generated coins must mature 120 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>A frissen generált érméket csak 120 blokkal később tudod elkölteni.  Ez a blokk nyomban szétküldésre került a hálózatba, amint legeneráltad, hogy hozzáadhassák a blokklánchoz.  Ha nem kerül be a láncba, úgy az állapota &quot;elutasítva&quot;-ra módosul,  és nem költheted el az érméket. Ez akkor következhet be időnként, ha egy másik csomópont mindössze néhány másodperc különbséggel generált le egy blokkot a tiédhez képest.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1733,7 +1736,7 @@ Cím: %4
     <message>
         <location line="+8"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakció</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1849,7 +1852,7 @@ Cím: %4
     <message>
         <location line="+2"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Erről az</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2077,7 +2080,7 @@ Cím: %4
         <translation>Bitcoin verzió</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+82"/>
         <source>Usage:</source>
         <translation>Használat:</translation>
     </message>
@@ -2094,13 +2097,13 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-10"/>
         <source>Get help for a command</source>
         <translation>Segítség egy parancsról
 </translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Options:</source>
         <translation>Opciók
 </translation>
@@ -2118,7 +2121,7 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-47"/>
         <source>Generate coins</source>
         <translation>Érmék generálása
 </translation>
@@ -2130,7 +2133,7 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Specify data directory</source>
         <translation>Adatkönyvtár
 </translation>
@@ -2146,15 +2149,9 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Specify connection timeout (in milliseconds)</source>
-        <translation>Csatlakozás időkerete (milliszekundumban)
-</translation>
-    </message>
-    <message>
-        <location line="-32"/>
+        <location line="-26"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished"/>
+        <translation>Csatlakozásokhoz figyelendő &lt;port&gt; (alapértelmezett: 8333 or testnet: 18333)</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2162,27 +2159,27 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-33"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>Specify your own public address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-75"/>
         <source>Bind to given address. Use [host]:port notation for IPv6</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-105"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation type="unfinished"/>
     </message>
@@ -2198,7 +2195,7 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Háttérben futtatás daemonként és parancsok elfogadása
 </translation>
@@ -2210,7 +2207,7 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-93"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation type="unfinished"/>
     </message>
@@ -2222,7 +2219,7 @@ Cím: %4
     <message>
         <location line="+5"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Figyelem: a -paytxfee nagyon magas.  Ennyi tranzakciós díjat fogsz fizetni, ha elküldöd a tranzakciót.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2232,7 +2229,7 @@ Cím: %4
     <message>
         <location line="+3"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Figyelem: Ellenőrizd, hogy helyesen van-e beállítva a gépeden a dátum és az idő.  A Bitcoin nem fog megfelelően működni, ha rosszul van beállítvaaz órád.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2247,7 +2244,7 @@ Cím: %4
     <message>
         <location line="+6"/>
         <source>Connect only to the specified node(s)</source>
-        <translation type="unfinished"/>
+        <translation>Csatlakozás csak a megadott csomóponthoz</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2265,9 +2262,14 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+9"/>
-        <source>Invalid -tor address: &apos;%s&apos;</source>
+        <location line="+6"/>
+        <source>Importing blocks...</source>
         <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Invalid -tor address: &apos;%s&apos;</source>
+        <translation>Érvénytelen -tor cím: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2302,7 +2304,7 @@ Cím: %4
     <message>
         <location line="+4"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>SSL-opciók: (lásd a Bitcoin Wiki SSL-beállítási instrukcióit)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2335,14 +2337,19 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+2"/>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <translation>Csatlakozás időkerete milliszekundumban (alapértelmezett: 5000)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>UPnP-használat engedélyezése a figyelő port feltérképezésénél (default: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>UPnP-használat engedélyezése a figyelő port feltérképezésénél (default: 1 when listening)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2358,7 +2365,7 @@ Cím: %4
     <message>
         <location line="+2"/>
         <source>Warning: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Figyelem: kevés a hely a lemezen</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2378,24 +2385,24 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-41"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>JSON-RPC csatlakozások engedélyezése meghatározott IP-címről
 </translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+61"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Parancsok küldése &lt;ip&gt; címen működő csomóponthoz (alapértelmezett: 127.0.0.1)
 </translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-90"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+113"/>
         <source>Upgrade wallet to latest format</source>
         <translation type="unfinished"/>
     </message>
@@ -2412,7 +2419,7 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-24"/>
         <source>How many blocks to check at startup (default: 2500, 0 = all)</source>
         <translation type="unfinished"/>
     </message>
@@ -2422,7 +2429,7 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Imports blocks from external blk000?.dat file</source>
         <translation type="unfinished"/>
     </message>
@@ -2445,19 +2452,19 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-110"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Elfogadható rejtjelkulcsok (alapértelmezett: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH )
 </translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+122"/>
         <source>This help message</source>
         <translation>Ez a súgó-üzenet
 </translation>
     </message>
     <message>
-        <location line="-118"/>
+        <location line="-119"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Az %s adatkönyvtár nem zárható.  A Bitcoin valószínűleg fut már.</translation>
     </message>
@@ -2467,54 +2474,54 @@ Cím: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+77"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation type="unfinished"/>
+        <translation>A %s nem elérhető ezen a gépen (bind returned error %d, %s)</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-69"/>
         <source>Connect through socks proxy</source>
-        <translation type="unfinished"/>
+        <translation>Csatlakozás SOCKS proxyn keresztül</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>DNS-kikeresés engedélyezése az addnode-nál és a connect-nél</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+44"/>
         <source>Loading addresses...</source>
         <translation>Címek betöltése...</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-26"/>
         <source>Error loading blkindex.dat</source>
-        <translation type="unfinished"/>
+        <translation>Hiba az blkindex.dat betöltése közben</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>Hiba a wallet.dat betöltése közben: meghibásodott tárca</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation type="unfinished"/>
+        <translation>Hiba a wallet.dat betöltése közben: ehhez a tárcához újabb verziójú Bitcoin-kliens szükséges</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+72"/>
         <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Hiba az wallet.dat betöltése közben</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Érvénytelen -proxy cím: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+47"/>
@@ -2527,7 +2534,7 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
@@ -2537,12 +2544,12 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Étvénytelen -paytxfee=&lt;összeg&gt; összeg: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>Error: could not start node</source>
         <translation type="unfinished"/>
     </message>
@@ -2554,7 +2561,7 @@ Cím: %4
     <message>
         <location line="-55"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished"/>
+        <translation>Ez a tranzakció túllépi a mérethatárt,  de %1 tranzakciós díj ellenében így is elküldheted. Ezt a plusz összeget a tranzakcióidat feldolgozó csomópontok kapják,  így magát a hálózatot támogatod vele. Hajlandó vagy megfizetni a díjat?</translation>
     </message>
     <message>
         <location line="+54"/>
@@ -2562,19 +2569,19 @@ Cím: %4
         <translation>Hiba: nem sikerült létrehozni a tranzakciót  </translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+42"/>
         <source>Sending...</source>
         <translation>Küldés...</translation>
     </message>
     <message>
-        <location line="-99"/>
+        <location line="-100"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Hiba: a tranzakciót elutasították.  Ezt az okozhatja, ha már elköltöttél valamennyi érmét a tárcádból - például ha a wallet.dat-od egy másolatát használtad, és így az elköltés csak abban lett jelölve, de itt nem.</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>Étvénytelen összeg</translation>
     </message>
     <message>
         <location line="-4"/>
@@ -2587,14 +2594,14 @@ Cím: %4
         <translation>Blokkindex betöltése...</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-46"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>Elérendő csomópont megadása and attempt to keep the connection open</translation>
     </message>
     <message>
         <location line="-18"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>A %s nem elérhető ezen a gépen. A Bitcoin valószínűleg fut már.</translation>
     </message>
     <message>
         <location line="+48"/>
@@ -2604,15 +2611,15 @@ Cím: %4
     <message>
         <location line="-2"/>
         <source>Fee per KB to add to transactions you send</source>
-        <translation type="unfinished"/>
+        <translation>kB-onként felajánlandó díj az általad küldött tranzakciókhoz</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Loading wallet...</source>
         <translation>Tárca betöltése...</translation>
     </message>
     <message>
-        <location line="-38"/>
+        <location line="-39"/>
         <source>Cannot downgrade wallet</source>
         <translation type="unfinished"/>
     </message>
@@ -2627,22 +2634,22 @@ Cím: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Rescanning...</source>
         <translation>Újraszkennelés...</translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-40"/>
         <source>Done loading</source>
         <translation>Betöltés befejezve.</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+64"/>
         <source>To use the %s option</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-133"/>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:
@@ -2656,7 +2663,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location line="+74"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Hiba</translation>
     </message>
     <message>
         <location line="-30"/>
