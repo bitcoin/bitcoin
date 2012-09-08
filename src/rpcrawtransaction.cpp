@@ -18,6 +18,39 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
+//
+// Utilities: convert hex-encoded Values
+// (throws error if not hex).
+//
+uint256 ParseHashV(const Value& v, string strName)
+{
+    string strHex;
+    if (v.type() == str_type)
+        strHex = v.get_str();
+    if (!IsHex(strHex)) // Note: IsHex("") is false
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
+    uint256 result;
+    result.SetHex(strHex);
+    return result;
+}
+uint256 ParseHashO(const Object& o, string strKey)
+{
+    return ParseHashV(find_value(o, strKey), strKey);
+}
+vector<unsigned char> ParseHexV(const Value& v, string strName)
+{
+    string strHex;
+    if (v.type() == str_type)
+        strHex = v.get_str();
+    if (!IsHex(strHex))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
+    return ParseHex(strHex);
+}
+vector<unsigned char> ParseHexO(const Object& o, string strKey)
+{
+    return ParseHexV(find_value(o, strKey), strKey);
+}
+
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out)
 {
     txnouttype type;
@@ -109,8 +142,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
             "If verbose is non-zero, returns an Object\n"
             "with information about <txid>.");
 
-    uint256 hash;
-    hash.SetHex(params[0].get_str());
+    uint256 hash = ParseHashV(params[0], "parameter 1");
 
     bool fVerbose = false;
     if (params.size() > 1)
@@ -178,10 +210,10 @@ Value listunspent(const Array& params, bool fHelp)
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
             continue;
 
-        if(setAddress.size())
+        if (setAddress.size())
         {
             CTxDestination address;
-            if(!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
+            if (!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
                 continue;
 
             if (!setAddress.count(address))
@@ -221,16 +253,11 @@ Value createrawtransaction(const Array& params, bool fHelp)
 
     CTransaction rawTx;
 
-    BOOST_FOREACH(Value& input, inputs)
+    BOOST_FOREACH(const Value& input, inputs)
     {
         const Object& o = input.get_obj();
 
-        const Value& txid_v = find_value(o, "txid");
-        if (txid_v.type() != str_type)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing txid key");
-        string txid = txid_v.get_str();
-        if (!IsHex(txid))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex txid");
+        uint256 txid = ParseHashO(o, "txid");
 
         const Value& vout_v = find_value(o, "vout");
         if (vout_v.type() != int_type)
@@ -239,7 +266,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         if (nOutput < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 
-        CTxIn in(COutPoint(uint256(txid), nOutput));
+        CTxIn in(COutPoint(txid, nOutput));
         rawTx.vin.push_back(in);
     }
 
@@ -274,9 +301,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             "decoderawtransaction <hex string>\n"
             "Return a JSON object representing the serialized, hex-encoded transaction.");
 
-    RPCTypeCheck(params, list_of(str_type));
-
-    vector<unsigned char> txData(ParseHex(params[0].get_str()));
+    vector<unsigned char> txData(ParseHexV(params[0], "argument"));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
     try {
@@ -311,7 +336,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 
-    vector<unsigned char> txData(ParseHex(params[0].get_str()));
+    vector<unsigned char> txData(ParseHexV(params[0], "argument 1"));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     vector<CTransaction> txVariants;
     while (!ssData.empty())
@@ -365,20 +390,13 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
             RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type));
 
-            string txidHex = find_value(prevOut, "txid").get_str();
-            if (!IsHex(txidHex))
-                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "txid must be hexadecimal");
-            uint256 txid;
-            txid.SetHex(txidHex);
+            uint256 txid = ParseHashO(prevOut, "txid");
 
             int nOut = find_value(prevOut, "vout").get_int();
             if (nOut < 0)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "vout must be positive");
 
-            string pkHex = find_value(prevOut, "scriptPubKey").get_str();
-            if (!IsHex(pkHex))
-                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "scriptPubKey must be hexadecimal");
-            vector<unsigned char> pkData(ParseHex(pkHex));
+            vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
             CCoins coins;
@@ -484,10 +502,8 @@ Value sendrawtransaction(const Array& params, bool fHelp)
             "sendrawtransaction <hex string>\n"
             "Submits raw transaction (serialized, hex-encoded) to local node and network.");
 
-    RPCTypeCheck(params, list_of(str_type));
-
     // parse hex string from parameter
-    vector<unsigned char> txData(ParseHex(params[0].get_str()));
+    vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
 
