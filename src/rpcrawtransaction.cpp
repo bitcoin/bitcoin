@@ -226,6 +226,17 @@ Value listunspent(const Array& params, bool fHelp)
         entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
         entry.push_back(Pair("vout", out.i));
         entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
+        if (pk.IsPayToScriptHash())
+        {
+            CTxDestination address;
+            if (ExtractDestination(pk, address))
+            {
+                const CScriptID& hash = boost::get<const CScriptID&>(address);
+                CScript redeemScript;
+                if (pwalletMain->GetCScript(hash, redeemScript))
+                    entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+            }
+        }
         entry.push_back(Pair("amount",ValueFromAmount(nValue)));
         entry.push_back(Pair("confirmations",out.nDepth));
         results.push_back(entry);
@@ -321,7 +332,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 4)
         throw runtime_error(
-            "signrawtransaction <hex string> [{\"txid\":txid,\"vout\":n,\"scriptPubKey\":hex},...] [<privatekey1>,...] [sighashtype=\"ALL\"]\n"
+            "signrawtransaction <hex string> [{\"txid\":txid,\"vout\":n,\"scriptPubKey\":hex,\"redeemScript\":hex},...] [<privatekey1>,...] [sighashtype=\"ALL\"]\n"
             "Sign inputs for raw transaction (serialized, hex-encoded).\n"
             "Second optional argument (may be null) is an array of previous transaction outputs that\n"
             "this transaction depends on but may not yet be in the block chain.\n"
@@ -377,6 +388,28 @@ Value signrawtransaction(const Array& params, bool fHelp)
         view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
     }
 
+    bool fGivenKeys = false;
+    CBasicKeyStore tempKeystore;
+    if (params.size() > 2 && params[2].type() != null_type)
+    {
+        fGivenKeys = true;
+        Array keys = params[2].get_array();
+        BOOST_FOREACH(Value k, keys)
+        {
+            CBitcoinSecret vchSecret;
+            bool fGood = vchSecret.SetString(k.get_str());
+            if (!fGood)
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+            CKey key;
+            bool fCompressed;
+            CSecret secret = vchSecret.GetSecret(fCompressed);
+            key.SetSecret(secret, fCompressed);
+            tempKeystore.AddKey(key);
+        }
+    }
+    else
+        EnsureWalletIsUnlocked();
+
     // Add previous txouts given in the RPC call:
     if (params.size() > 1 && params[1].type() != null_type)
     {
@@ -388,7 +421,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
             Object prevOut = p.get_obj();
 
-            RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type));
+            RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type)("redeemScript",str_type));
 
             uint256 txid = ParseHashO(prevOut, "txid");
 
@@ -409,33 +442,23 @@ Value signrawtransaction(const Array& params, bool fHelp)
                 }
                 // what todo if txid is known, but the actual output isn't?
             }
+            if ((unsigned int)nOut >= coins.vout.size())
+                coins.vout.resize(nOut+1);
             coins.vout[nOut].scriptPubKey = scriptPubKey;
             coins.vout[nOut].nValue = 0; // we don't know the actual output value
             view.SetCoins(txid, coins);
-        }
-    }
 
-    bool fGivenKeys = false;
-    CBasicKeyStore tempKeystore;
-    if (params.size() > 2 && params[2].type() != null_type)
-    {
-        fGivenKeys = true;
-        Array keys = params[2].get_array();
-        BOOST_FOREACH(Value k, keys)
-        {
-            CBitcoinSecret vchSecret;
-            bool fGood = vchSecret.SetString(k.get_str());
-            if (!fGood)
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,"Invalid private key");
-            CKey key;
-            bool fCompressed;
-            CSecret secret = vchSecret.GetSecret(fCompressed);
-            key.SetSecret(secret, fCompressed);
-            tempKeystore.AddKey(key);
+            // if redeemScript given and not using the local wallet (private keys
+            // given), add redeemScript to the tempKeystore so it can be signed:
+            Value v = find_value(prevOut, "redeemScript");
+            if (fGivenKeys && scriptPubKey.IsPayToScriptHash() && !(v == Value::null))
+            {
+                vector<unsigned char> rsData(ParseHexV(v, "redeemScript"));
+                CScript redeemScript(rsData.begin(), rsData.end());
+                tempKeystore.AddCScript(redeemScript);
+            }
         }
     }
-    else
-        EnsureWalletIsUnlocked();
 
     const CKeyStore& keystore = (fGivenKeys ? tempKeystore : *pwalletMain);
 
