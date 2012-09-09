@@ -15,7 +15,7 @@
     <message>
         <location line="+41"/>
         <source>Copyright © 2009-2012 The Bitcoin developers</source>
-        <translation type="unfinished"/>
+        <translation>Copyright © 2009-2012  Bitcoin kehittäjät</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -25,7 +25,13 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>
+Tämä on kokeellinen ohjelmisto.
+
+Levitetään MIT/X11 ohjelmistolisenssin alaisuudessa. Tarkemmat tiedot löytyvät tiedostosta COPYING tai osoitteesta http://www.opensource.org/licenses/mit-license.php.
+
+Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.openssl.org/), Eric Youngin (eay@cryptsoft.com) kehittämän salausohjelmiston sekä Thomas Bernardin UPnP ohjelmiston.
+</translation>
     </message>
 </context>
 <context>
@@ -1598,7 +1604,7 @@ Osoite: %4</translation>
     <message numerus="yes">
         <location line="-2"/>
         <source>Open for %n block(s)</source>
-        <translation type="unfinished"><numerusform>Auki %n lohkolle</numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Auki %n lohkon ajan</numerusform><numerusform>Auki %n lohkon ajan</numerusform></translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1623,7 +1629,7 @@ Osoite: %4</translation>
     <message numerus="yes">
         <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform>lähetetty %n noodin läpi</numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>lähetetty %n noodin läpi</numerusform><numerusform>lähetetty %n noodin läpi</numerusform></translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1676,7 +1682,7 @@ Osoite: %4</translation>
     <message numerus="yes">
         <location line="-102"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform>kypsyy %n lohkon kuluttua</numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>kypsyy %n lohkon kuluttua</numerusform><numerusform>kypsyy %n lohkon kuluttua</numerusform></translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1825,7 +1831,7 @@ Osoite: %4</translation>
     <message numerus="yes">
         <location line="+8"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform>Louhittu saldo on käytettävissä kun se kypsyy %n lohkon päästä</numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Louhittu saldo on käytettävissä kun se kypsyy %n lohkon päästä</numerusform><numerusform>Louhittu saldo on käytettävissä kun se kypsyy %n lohkon päästä</numerusform></translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2145,7 +2151,7 @@ Osoite: %4</translation>
     <message>
         <location line="-33"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation type="unfinished"/>
+        <translation>Yhdistä noodiin hakeaksesi naapurien osoitteet ja katkaise yhteys</translation>
     </message>
     <message>
         <location line="+64"/>
@@ -2195,7 +2201,7 @@ Osoite: %4</translation>
     <message>
         <location line="-20"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
-        <translation type="unfinished"/>
+        <translation>Aseta suurin korkean prioriteetin / matalan palkkion siirron koko tavuissa (vakioasetus: 27000)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2230,7 +2236,7 @@ Osoite: %4</translation>
     <message>
         <location line="+3"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation>Hae oma IP osoite (vakioasetus: 1 kun kuuntelemassa ja ei -externalip)</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -2240,7 +2246,7 @@ Osoite: %4</translation>
     <message>
         <location line="+2"/>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Hae naapureita DNS hauilla (vakioasetus: 1 paitsi jos -connect)</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2255,12 +2261,12 @@ Osoite: %4</translation>
     <message>
         <location line="+10"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Maksimi verkkoyhteyden vastaanottopuskuri, &lt;n&gt;*1000 tavua (oletus: 5000)</translation>
+        <translation>Suurin vastaanottopuskuri yksittäiselle yhteydelle, &lt;n&gt;*1000 tavua (vakioasetus: 5000)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Maksimi verkkoyhteyden lähetyspuskuri, &lt;n&gt;*1000 tavua (oletus: 1000)</translation>
+        <translation>Suurin lähetyspuskuri yksittäiselle yhteydelle, &lt;n&gt;*1000 tavua (vakioasetus: 1000)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2270,12 +2276,12 @@ Osoite: %4</translation>
     <message>
         <location line="+2"/>
         <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation>Tulosta ylimääräistä debuggaustietoa. Implies all other -debug* options</translation>
+        <translation>Tulosta enemmän debug tietoa. Aktivoi kaikki -debug* asetukset</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Output extra network debugging information</source>
-        <translation type="unfinished"/>
+        <translation>Tulosta lisää verkkoyhteys debug tietoa</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2285,7 +2291,7 @@ Osoite: %4</translation>
     <message>
         <location line="+4"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>SSL-asetukset: (lisätietoja Bitcoin-Wikistä)</translation>
+        <translation>SSL asetukset (katso Bitcoin Wikistä tarkemmat SSL ohjeet)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2305,37 +2311,37 @@ Osoite: %4</translation>
     <message>
         <location line="+7"/>
         <source>Set maximum block size in bytes (default: 250000)</source>
-        <translation type="unfinished"/>
+        <translation>Aseta suurin lohkon koko tavuissa (vakioasetus: 250000)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Asetan pienin lohkon koko tavuissa (vakioasetus: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
+        <translation>Pienennä debug.log tiedosto käynnistyksen yhteydessä (vakioasetus: 1 kun ei -debug)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Määritä yhteyden aikakatkaisu millisekunneissa (oletus: 5000)</translation>
+        <translation>Määritä yhteyden aikakataisu millisekunneissa (vakioasetus: 5000)</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Yritä käyttää UPnP toimintoa kartoittamaan avointa porttia (oletus: 0)</translation>
+        <translation>Käytä UPnP:tä kuunneltavan portin avaamiseen (vakioasetus: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Yritä käyttää UPnP toimintoa kartoittamaan avointa porttia (oletus: 1 when listening)</translation>
+        <translation>Käytä UPnP:tä kuunneltavan portin avaamiseen (vakioasetus: 1 kun kuuntelemassa)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Käytä proxyä tor yhteyksien avaamiseen (vakioasetus: sama kuin -proxy)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2405,7 +2411,7 @@ Osoite: %4</translation>
     <message>
         <location line="+2"/>
         <source>Imports blocks from external blk000?.dat file</source>
-        <translation type="unfinished"/>
+        <translation>Tuo lohkoja ulkoisesta blk000?.dat tiedostosta</translation>
     </message>
     <message>
         <location line="+52"/>
@@ -2446,17 +2452,17 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     <message>
         <location line="+77"/>
         <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation>En pysty varaamaan %s tähän koneeseen (bind returned error %d, %s)</translation>
+        <translation>Kytkeytyminen %s tällä tietokonella ei onnistu (kytkeytyminen palautti virheen %d, %s)</translation>
     </message>
     <message>
         <location line="-69"/>
         <source>Connect through socks proxy</source>
-        <translation>Yhteys socks-proxyn kautta</translation>
+        <translation>Yhdistä socks proxyn läpi</translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Salli DNS haut lisäsolmulle ja yhdistä</translation>
+        <translation>Salli DNS kyselyt -addnode, -seednode ja -connect yhteydessä</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2491,32 +2497,32 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     <message>
         <location line="+18"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Virheellinen proxy-osoite: &apos;%s&apos;</translation>
+        <translation>Virheellinen proxy-osoite &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Tuntematon verkko -onlynet parametrina: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>Tuntematon -socks proxy versio pyydetty: %i</translation>
     </message>
     <message>
         <location line="-74"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>-bind osoitteen &apos;%s&apos; selvittäminen epäonnistui</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>-externalip osoitteen &apos;%s&apos; selvittäminen epäonnistui</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Virheellinen määrä -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>-paytxfee=&lt;amount&gt;: &apos;%s&apos; on virheellinen</translation>
     </message>
     <message>
         <location line="-14"/>
@@ -2571,7 +2577,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     <message>
         <location line="-18"/>
         <source>Unable to bind to %s on this computer. Bitcoin is probably already running.</source>
-        <translation>En pysty varaamaan %s tähän koneeseen. Ehkä Bitcoin on jo käynnissä.</translation>
+        <translation>Kytkeytyminen %s ei onnistu tällä tietokoneella. Bitcoin on todennäköisesti jo ajamassa.</translation>
     </message>
     <message>
         <location line="+48"/>
