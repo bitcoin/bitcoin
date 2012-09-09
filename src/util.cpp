@@ -1118,10 +1118,11 @@ void ShrinkDebugFile()
     // Scroll debug.log if it's getting too big
     boost::filesystem::path pathLog = GetDataDir() / "debug.log";
     FILE* file = fopen(pathLog.string().c_str(), "r");
-    if (file && GetFilesize(file) > 10 * 1000000)
+    // 10 MiB limit
+    if (file && GetFilesize(file) > 10 * 1048576)
     {
-        // Restart the file with some of the end
-        char pch[200000];
+        // Restart the file with 200 KiB of the end
+        char pch[204800];
         fseek(file, -sizeof(pch), SEEK_END);
         int nBytes = fread(pch, 1, sizeof(pch), file);
         fclose(file);
@@ -1135,12 +1136,14 @@ void ShrinkDebugFile()
     }
 }
 
+void RemoveDebugFile()
+{
+    namespace fs = boost::filesystem;
+    fs::path pathLog = GetDataDir() / "debug.log";
 
-
-
-
-
-
+    if (fs::exists(pathLog))
+        fs::remove(pathLog);
+}
 
 //
 // "Never go to sea with two chronometers; take one or three."
