@@ -41,7 +41,6 @@ static const int64 CENT = 1000000;
 #define UBEGIN(a)           ((unsigned char*)&(a))
 #define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
-#define printf              OutputDebugStringF
 
 #ifndef PRI64d
 #if defined(_MSC_VER) || defined(__MSVCRT__)
@@ -94,6 +93,15 @@ inline void Sleep(int64 n)
 }
 #endif
 
+/* This GNU C extension enables the compiler to check the format string against the parameters provided.
+ * X is the number of the "format string" parameter, and Y is the number of the first variadic parameter.
+ * Parameters count from 1.
+ */
+#ifdef __GNUC__
+#define ATTR_WARN_PRINTF(X,Y) __attribute__((format(printf,X,Y)))
+#else
+#define ATTR_WARN_PRINTF(X,Y)
+#endif
 
 
 
@@ -121,16 +129,32 @@ extern bool fReopenDebugLog;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
-int OutputDebugStringF(const char* pszFormat, ...);
+int ATTR_WARN_PRINTF(1,2) OutputDebugStringF(const char* pszFormat, ...);
 int my_snprintf(char* buffer, size_t limit, const char* format, ...);
 
-/* It is not allowed to use va_start with a pass-by-reference argument.
-   (C++ standard, 18.7, paragraph 3). Use a dummy argument to work around this, and use a
-   macro to keep similar semantics.
+/*
+  Rationale for the real_strprintf / strprintf construction:
+    It is not allowed to use va_start with a pass-by-reference argument.
+    (C++ standard, 18.7, paragraph 3). Use a dummy argument to work around this, and use a
+    macro to keep similar semantics.
 */
+
+/** Overload strprintf for char*, so that GCC format type warnings can be given */
+std::string ATTR_WARN_PRINTF(1,3) real_strprintf(const char *format, int dummy, ...);
+/** Overload strprintf for std::string, to be able to use it with _ (translation).
+ * This will not support GCC format type warnings (-Wformat) so be careful.
+ */
 std::string real_strprintf(const std::string &format, int dummy, ...);
 #define strprintf(format, ...) real_strprintf(format, 0, __VA_ARGS__)
-std::string vstrprintf(const std::string &format, va_list ap);
+std::string vstrprintf(const char *format, va_list ap);
+
+/* Redefine printf so that it directs output to debug.log
+ *
+ * Do this *after* defining the other printf-like functions, because otherwise the
+ * __attribute__((format(printf,X,Y))) gets expanded to __attribute__((format(OutputDebugStringF,X,Y)))
+ * which confuses gcc.
+ */
+#define printf OutputDebugStringF
 
 bool error(const char *format, ...);
 void LogException(std::exception* pex, const char* pszThread);
