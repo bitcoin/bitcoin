@@ -1798,7 +1798,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
     return true;
 }
 
-bool CBlock::AcceptBlock()
+bool CBlock::AcceptBlock(bool fStrictMiner)
 {
     // Check for duplicate
     uint256 hash = GetHash();
@@ -1842,7 +1842,8 @@ bool CBlock::AcceptBlock()
     if (nVersion >= 2)
     {
         // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-        if ((!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
+        if (fStrictMiner ||
+            (!fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000)) ||
             (fTestNet && CBlockIndex::IsSuperMajority(2, pindexPrev, 51, 100)))
         {
             CScript expect = CScript() << nHeight;
@@ -1886,7 +1887,7 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     return (nFound >= nRequired);
 }
 
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)
+bool ProcessBlock(CNode* pfrom, CBlock* pblock, bool fStrictMiner)
 {
     // Check for duplicate
     uint256 hash = pblock->GetHash();
@@ -1941,7 +1942,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     }
 
     // Store to disk
-    if (!pblock->AcceptBlock())
+    if (!pblock->AcceptBlock(fStrictMiner))
         return error("ProcessBlock() : AcceptBlock FAILED");
 
     // Recursively process any orphan blocks that depended on this one
@@ -3742,7 +3743,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         }
 
         // Process this block the same as if we had received it from another node
-        if (!ProcessBlock(NULL, pblock))
+        if (!ProcessBlock(NULL, pblock, true))
             return error("BitcoinMiner : ProcessBlock, block not accepted");
     }
 
