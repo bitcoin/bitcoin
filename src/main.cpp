@@ -2388,11 +2388,11 @@ void PrintBlockTree()
         // print item
         CBlock block;
         block.ReadFromDisk(pindex);
-        printf("%d (%u,%u) %s  %08lx  %s  mint %s  tx %d",
+        printf("%d (%u,%u) %s  %08lx  %s  mint %7s  tx %d",
             pindex->nHeight,
             pindex->nFile,
             pindex->nBlockPos,
-            block.GetHash().ToString().substr(0,20).c_str(),
+            block.GetHash().ToString().c_str(),
             block.nBits,
             DateTimeStrFormat(block.GetBlockTime()).c_str(),
             FormatMoney(pindex->nMint).c_str(),
