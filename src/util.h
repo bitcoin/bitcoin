@@ -256,9 +256,9 @@ inline int64 abs64(int64 n)
 template<typename T>
 std::string HexStr(const T itbegin, const T itend, bool fSpaces=false)
 {
-    std::vector<char> rv;
-    static char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
-                               '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    std::string rv;
+    static const char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     rv.reserve((itend-itbegin)*3);
     for(T it = itbegin; it < itend; ++it)
     {
@@ -269,7 +269,7 @@ std::string HexStr(const T itbegin, const T itend, bool fSpaces=false)
         rv.push_back(hexmap[val&15]);
     }
 
-    return std::string(rv.begin(), rv.end());
+    return rv;
 }
 
 inline std::string HexStr(const std::vector<unsigned char>& vch, bool fSpaces=false)
