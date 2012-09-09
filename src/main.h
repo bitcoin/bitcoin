@@ -579,6 +579,7 @@ public:
         return dPriority > COIN * 144 / 250;
     }
 
+    bool IsDataCarrier() const;
     int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const;
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
