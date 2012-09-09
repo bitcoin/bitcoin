@@ -105,6 +105,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
+    case TX_MULTISIG_DATA: return "multisig_data";
     }
     return NULL;
 }
@@ -244,6 +245,7 @@ const char* GetOpName(opcodetype opcode)
 
 
     // template matching params
+    case OP_SMALLDATA              : return "OP_SMALLDATA";
     case OP_PUBKEYHASH             : return "OP_PUBKEYHASH";
     case OP_PUBKEY                 : return "OP_PUBKEY";
 
@@ -1300,6 +1302,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+        mTemplates.insert(make_pair(TX_MULTISIG_DATA, CScript() << OP_SMALLDATA << OP_DROP << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
     }
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
@@ -1372,6 +1375,11 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 if (vch1.size() != sizeof(uint160))
                     break;
                 vSolutionsRet.push_back(vch1);
+            }
+            else if (opcode2 == OP_SMALLDATA)
+            {
+                if (vch1.size() > 80)
+                    break;
             }
             else if (opcode2 == OP_SMALLINTEGER)
             {   // Single-byte small integer pushed onto vSolutions
@@ -1465,6 +1473,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         return keystore.GetCScript(uint160(vSolutions[0]), scriptSigRet);
 
     case TX_MULTISIG:
+    case TX_MULTISIG_DATA:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, keystore, hash, nHashType, scriptSigRet));
     }
@@ -1482,6 +1491,7 @@ int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned c
     case TX_PUBKEYHASH:
         return 2;
     case TX_MULTISIG:
+    case TX_MULTISIG_DATA:
         if (vSolutions.size() < 1 || vSolutions[0].size() < 1)
             return -1;
         return vSolutions[0][0] + 1;
@@ -1568,6 +1578,7 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         return IsMine(keystore, subscript);
     }
     case TX_MULTISIG:
+    case TX_MULTISIG_DATA:
     {
         // Only consider transactions "mine" if we own ALL the
         // keys involved. multi-signature transactions that are
@@ -1830,6 +1841,7 @@ static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo,
             return result;
         }
     case TX_MULTISIG:
+    case TX_MULTISIG_DATA:
         return CombineMultisig(scriptPubKey, txTo, nIn, vSolutions, sigs1, sigs2);
     }
 
