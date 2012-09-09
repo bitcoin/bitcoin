@@ -79,11 +79,7 @@ T* alignup(T* p)
 #define S_IRUSR             0400
 #define S_IWUSR             0200
 #endif
-#define unlink              _unlink
 #else
-#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
-#define strlwr(psz)         to_lower(psz)
-#define _strlwr(psz)        to_lower(psz)
 #define MAX_PATH            1024
 inline void Sleep(int64 n)
 {
@@ -130,7 +126,6 @@ extern bool fReopenDebugLog;
 void RandAddSeed();
 void RandAddSeedPerfmon();
 int ATTR_WARN_PRINTF(1,2) OutputDebugStringF(const char* pszFormat, ...);
-int my_snprintf(char* buffer, size_t limit, const char* format, ...);
 
 /*
   Rationale for the real_strprintf / strprintf construction:
