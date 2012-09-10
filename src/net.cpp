@@ -580,10 +580,14 @@ void ThreadSocketHandler2(void* parg)
         FD_ZERO(&fdsetSend);
         FD_ZERO(&fdsetError);
         SOCKET hSocketMax = 0;
+        bool have_fds = false;
 
         if(hListenSocket != INVALID_SOCKET)
+        {
             FD_SET(hListenSocket, &fdsetRecv);
-        hSocketMax = max(hSocketMax, hListenSocket);
+            hSocketMax = max(hSocketMax, hListenSocket);
+            have_fds = true;
+        }
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
@@ -593,6 +597,7 @@ void ThreadSocketHandler2(void* parg)
                 FD_SET(pnode->hSocket, &fdsetRecv);
                 FD_SET(pnode->hSocket, &fdsetError);
                 hSocketMax = max(hSocketMax, pnode->hSocket);
+                have_fds = true;
                 {
                     TRY_LOCK(pnode->cs_vSend, lockSend);
                     if (lockSend && !pnode->vSend.empty())
@@ -602,15 +607,16 @@ void ThreadSocketHandler2(void* parg)
         }
 
         vnThreadsRunning[THREAD_SOCKETHANDLER]--;
-        int nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
+        int nSelect = select(have_fds ? hSocketMax + 1 : 0,
+                             &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
         vnThreadsRunning[THREAD_SOCKETHANDLER]++;
         if (fShutdown)
             return;
         if (nSelect == SOCKET_ERROR)
         {
-            int nErr = WSAGetLastError();
-            if (hSocketMax != INVALID_SOCKET)
+            if (have_fds)
             {
+                int nErr = WSAGetLastError();
                 printf("socket select error %d\n", nErr);
                 for (unsigned int i = 0; i <= hSocketMax; i++)
                     FD_SET(i, &fdsetRecv);
