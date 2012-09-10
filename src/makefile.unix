@@ -8,9 +8,11 @@ USE_IPV6:=1
 LINK:=$(CXX)
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE
+# This is needed for broken bdb48 includes that assume autotools on some platforms
+DEFS+=-DHAVE_CXX_STDHEADERS
 
 DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj $(BOOST_INCLUDE_PATH) $(BDB_INCLUDE_PATH) $(OPENSSL_INCLUDE_PATH))
-LIBS = $(addprefix -L,$(BOOST_LIB_PATH) $(BDB_LIB_PATH) $(OPENSSL_LIB_PATH))
+LIBS = $(addprefix -L,$(BDB_LIB_PATH) $(BOOST_LIB_PATH) $(OPENSSL_LIB_PATH))
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 
@@ -51,7 +53,6 @@ endif
 LIBS+= \
  -Wl,-B$(LMODE2) \
    -l z \
-   -l dl \
    -l pthread
 
 
@@ -169,6 +170,8 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P
 	-rm -f obj-test/*.P
-	-rm -f src/build.h
+	-rm -f obj/build.h
+	-rm -f obj/*.d
+	-rm -f obj-test/*.d
 
 FORCE:
