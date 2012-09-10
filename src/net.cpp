@@ -843,8 +843,10 @@ void ThreadSocketHandler2(void* parg)
         SOCKET hSocketMax = 0;
 
         if(hListenSocket != INVALID_SOCKET)
+        {
             FD_SET(hListenSocket, &fdsetRecv);
-        hSocketMax = max(hSocketMax, hListenSocket);
+            hSocketMax = max(hSocketMax, hListenSocket);
+        }
         CRITICAL_BLOCK(cs_vNodes)
         {
             BOOST_FOREACH(CNode* pnode, vNodes)
