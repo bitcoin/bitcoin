@@ -380,7 +380,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="193"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;amp;معاملات</translation>
+        <translation>&amp;معاملات</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="534"/>
@@ -477,7 +477,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="250"/>
         <source>Open &amp;Bitcoin</source>
-        <translation>باز کردن &amp;amp;بیتکویین </translation>
+        <translation>باز کردن &amp;بیتکویین </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="251"/>
@@ -789,7 +789,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>دستمزد&amp;amp;پر داخت معامله</translation>
+        <translation>دستمزد&amp;پر داخت معامله</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
@@ -1136,12 +1136,12 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="29"/>
         <source>A&amp;mount:</source>
-        <translation>A&amp;amp;مبلغ :</translation>
+        <translation>A&amp;مبلغ :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
         <source>Pay &amp;To:</source>
-        <translation>به&amp;amp;پر داخت :</translation>
+        <translation>به&amp;پر داخت :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>
@@ -1152,7 +1152,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation>&amp; بر چسب </translation>
+        <translation>&amp;بر چسب </translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>

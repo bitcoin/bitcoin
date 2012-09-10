@@ -749,7 +749,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="180"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Prievado struktūra  naudojant &amp; UPnP</translation>
+        <translation>Prievado struktūra  naudojant &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>

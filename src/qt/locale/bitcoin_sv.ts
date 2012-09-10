@@ -346,7 +346,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="250"/>
         <source>Open &amp;Bitcoin</source>
-        <translation>Öppna &amp;amp;Bitcoin</translation>
+        <translation>Öppna &amp;Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="251"/>
@@ -584,7 +584,7 @@ Adress: %4
     <message>
         <location filename="../bitcoingui.cpp" line="254"/>
         <source>&amp;Encrypt Wallet</source>
-        <translation>&amp;amp;Kryptera plånbok</translation>
+        <translation>&amp;Kryptera plånbok</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="73"/>
@@ -604,7 +604,7 @@ Adress: %4
     <message>
         <location filename="../bitcoingui.cpp" line="259"/>
         <source>&amp;Change Passphrase</source>
-        <translation>&amp;amp;Byt lösenfras</translation>
+        <translation>&amp;Byt lösenfras</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="257"/>
@@ -866,7 +866,7 @@ Adress: %4
     <message>
         <location filename="../forms/messagepage.ui" line="134"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation>&amp;amp; Kopiera till Urklipp</translation>
+        <translation>&amp;Kopiera till Urklipp</translation>
     </message>
     <message>
         <location filename="../messagepage.cpp" line="74"/>
@@ -1145,7 +1145,7 @@ Adress: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="42"/>
         <source>Pay &amp;To:</source>
-        <translation>Betala &amp; Till:</translation>
+        <translation>Betala &amp;Till:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="66"/>

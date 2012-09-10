@@ -881,7 +881,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="120"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp; Firmar Mensaje</translation>
+        <translation>&amp;Firmar Mensaje</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="131"/>
