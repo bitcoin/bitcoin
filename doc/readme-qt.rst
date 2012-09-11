@@ -1,4 +1,4 @@
-Bitcoin-qt: Qt4 GUI for Bitcoin
+Bitcoin-Qt: Qt4 GUI for Bitcoin
 ===============================
 
 Build instructions
@@ -27,21 +27,20 @@ Alternatively, install Qt Creator and open the `bitcoin-qt.pro` file.
 
 An executable named `bitcoin-qt` will be built.
 
-
 Windows
 --------
 
 Windows build instructions:
 
-- Download the `QT Windows SDK`_ and install it. You don't need the Symbian stuff, just the desktop Qt.
+- Download the `Qt Windows SDK`_ and install it. You don't need the Symbian stuff, just the desktop Qt.
 
 - Download and extract the `dependencies archive`_  [#]_, or compile openssl, boost and dbcxx yourself.
 
 - Copy the contents of the folder "deps" to "X:\\QtSDK\\mingw", replace X:\\ with the location where you installed the Qt SDK. Make sure that the contents of "deps\\include" end up in the current "include" directory.
 
-- Open the .pro file in QT creator and build as normal (ctrl-B)
+- Open the bitcoin-qt.pro file in Qt Creator and build as normal (ctrl-B)
 
-.. _`QT Windows SDK`: http://qt.nokia.com/downloads/sdk-windows-cpp
+.. _`Qt Windows SDK`: http://qt.nokia.com/downloads/sdk-windows-cpp
 .. _`dependencies archive`: https://download.visucore.com/bitcoin/qtgui_deps_1.zip
 .. [#] PGP signature: https://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
 .. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
@@ -61,7 +60,7 @@ Mac OS X
 	sudo port selfupdate
 	sudo port install boost db48 miniupnpc
 
-- Open the .pro file in Qt Creator and build as normal (cmd-B)
+- Open the bitcoin-qt.pro file in Qt Creator and build as normal (cmd-B)
 
 .. _`Qt Mac OS X SDK`: http://qt.nokia.com/downloads/sdk-mac-os-cpp
 .. _`MacPorts`: http://www.macports.org/install.php
@@ -70,7 +69,7 @@ Mac OS X
 Build configuration options
 ============================
 
-UPNnP port forwarding
+UPnP port forwarding
 ---------------------
 
 To use UPnP for port forwarding behind a NAT router (recommended, as more connections overall allow for a faster and more stable bitcoin experience), pass the following argument to qmake:
