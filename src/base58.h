@@ -32,14 +32,9 @@ inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char
     CBigNum bn58 = 58;
     CBigNum bn0 = 0;
 
-    // Convert big endian data to little endian
-    // Extra zero at the end make sure bignum will interpret as a positive number
-    std::vector<unsigned char> vchTmp(pend-pbegin+1, 0);
-    reverse_copy(pbegin, pend, vchTmp.begin());
-
-    // Convert little endian data to bignum
+    // Convert big endian data to bignum
     CBigNum bn;
-    bn.setvch(vchTmp);
+    BN_bin2bn(pbegin, pend - pbegin, &bn);
 
     // Convert bignum to std::string
     std::string str;
