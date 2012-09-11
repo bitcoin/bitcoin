@@ -799,7 +799,7 @@ Address: %4
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished">پیام</translation>
+        <translation>پیام</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="20"/>

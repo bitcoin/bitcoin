@@ -544,12 +544,12 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup piniginę</translation>
+        <translation>Backup piniginę</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"></translation>
+        <translation>Piniginės duomenys (*.dat)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="809"/>
@@ -1023,7 +1023,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../qrcodedialog.cpp" line="113"/>
         <source>PNG Images (*.png)</source>
-        <translation type="unfinished"></translation>
+        <translation>PNG paveikslėliai (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1877,7 +1877,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Pridėti mazgą prie sujungti su and attempt to keep the connection open</translation>
+        <translation>Pridėti mazgą prie sujungti su and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
@@ -1892,7 +1892,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nustatyti kalbą, pavyzdžiui &quot;lt_LT&quot; (numatyta: sistemos kalba)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>

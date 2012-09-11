@@ -267,7 +267,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="161"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished">סיסמת הארנק שונתה בהצלחה.</translation>
+        <translation>סיסמת הארנק שונתה בהצלחה.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -624,7 +624,7 @@ Address: %4
     <message>
         <location filename="../bitcoin.cpp" line="144"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>שגיאה סופנית אירעה. ביטקוין אינו יכול להמשיך לפעול בבטחה ולכן ייסגר.</translation>
     </message>
 </context>
 <context>
@@ -1097,7 +1097,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="124"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation type="unfinished">כתובת המקבל אינה תקינה, אנא בדוק שנית.</translation>
+        <translation>כתובת המקבל אינה תקינה, אנא בדוק שנית.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="129"/>
@@ -1889,7 +1889,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">מצא עמיתים ע&quot;י חיפוש DNS (ברירת מחדל: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>

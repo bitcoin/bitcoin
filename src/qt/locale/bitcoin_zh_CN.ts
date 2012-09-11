@@ -620,7 +620,7 @@ Address: %4
     <message>
         <location filename="../bitcoin.cpp" line="144"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>发生严重错误。</translation>
     </message>
 </context>
 <context>
@@ -1865,7 +1865,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation>通过DNS查找节点(缺省：1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>

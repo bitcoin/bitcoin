@@ -198,7 +198,7 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Bitcoin will close now to finish the encryption process. Husk, at kryptere din tegnebog vil ikke fuldt ud beskytte dine bitcoins mod at blive stjålet af malware på din computer.</translation>
+        <translation>Bitcoin will close now to finish the encryption process. Husk, at kryptere din tegnebog vil ikke fuldt ud beskytte dine bitcoins mod at blive stjålet af malware på din computer.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -473,7 +473,7 @@ Adresse: %4
     <message>
         <location filename="../bitcoingui.cpp" line="253"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Eksportér den aktuelle visning til en fil</translation>
+        <translation>Eksportér den aktuelle visning til en fil</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="783"/>
@@ -610,7 +610,7 @@ Adresse: %4
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup tegnebog</translation>
+        <translation>Backup tegnebog</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="244"/>
@@ -945,7 +945,7 @@ Adresse: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">tegnebog</translation>
+        <translation>tegnebog</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1849,7 +1849,7 @@ Adresse: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Tilføj en node til at forbinde til and attempt to keep the connection open</translation>
+        <translation>Tilføj en node til at forbinde til and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
@@ -1993,7 +1993,7 @@ SSL-indstillinger: (se Bitcoin Wiki for SSL opsætningsinstruktioner)</translati
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished">Lyt til forbindelser på &lt;port&gt; (standard: 8333 or testnet: 18333)</translation>
+        <translation>Lyt til forbindelser på &lt;port&gt; (standard: 8333 or testnet: 18333)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>

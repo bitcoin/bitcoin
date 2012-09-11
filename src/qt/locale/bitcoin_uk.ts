@@ -1929,7 +1929,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Додати вузол для підключення and attempt to keep the connection open</translation>
+        <translation>Додати вузол для підключення and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>

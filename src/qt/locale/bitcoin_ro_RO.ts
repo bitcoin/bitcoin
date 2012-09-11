@@ -481,7 +481,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup portofelul electronic</translation>
+        <translation>Backup portofelul electronic</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
@@ -935,7 +935,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">Portofelul</translation>
+        <translation>Portofelul</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1586,7 +1586,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="126"/>
         <source>Copy amount</source>
-        <translation type="unfinished">Copiază sumă</translation>
+        <translation>Copiază sumă</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="124"/>

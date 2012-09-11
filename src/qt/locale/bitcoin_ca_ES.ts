@@ -530,7 +530,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Opcions</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="305"/>
@@ -1335,7 +1335,7 @@ Address: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Transacció details</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
@@ -1387,7 +1387,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="286"/>
         <source>Unconfirmed (%1 of %2 confirmations)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Sense confirmar (%1 of %2 confirmations)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="289"/>

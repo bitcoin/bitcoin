@@ -1869,7 +1869,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Agrega un nodo para conectarse and attempt to keep the connection open</translation>
+        <translation>Agrega un nodo para conectarse and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
@@ -1890,7 +1890,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>Accept connections from outside (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Aceptar conexiones desde el exterior (predeterminado: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>

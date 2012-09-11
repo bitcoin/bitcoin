@@ -67,7 +67,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy to Clipboard</source>
-        <translation type="unfinished">&amp;Kopiera till Urklipp</translation>
+        <translation>&amp;Kopiera till Urklipp</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="96"/>

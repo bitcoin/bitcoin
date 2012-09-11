@@ -1436,7 +1436,7 @@ Adresa: %4</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="283"/>
         <source>Offline (%1 confirmations)</source>
-        <translation type="unfinished">Offline (%1 potvrdení)</translation>
+        <translation>Offline (%1 potvrdení)</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="277"/>
@@ -1865,7 +1865,7 @@ Adresa: %4</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="27"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Pridať nódu a pripojiť sa and attempt to keep the connection open</translation>
+        <translation>Pridať nódu a pripojiť sa and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>

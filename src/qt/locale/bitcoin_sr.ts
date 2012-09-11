@@ -477,7 +477,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup новчаника</translation>
+        <translation>Backup новчаника</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="806"/>
@@ -561,7 +561,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="245"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished">Прегледајте информације о Qt-у</translation>
+        <translation>Прегледајте информације о Qt-у</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -950,7 +950,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">новчаник</translation>
+        <translation>новчаник</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1028,7 +1028,7 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="149"/>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Send Coins</source>
-        <translation type="unfinished">Слање новца</translation>
+        <translation>Слање новца</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1152,7 +1152,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished">&amp;Етикета</translation>
+        <translation>&amp;Етикета</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
