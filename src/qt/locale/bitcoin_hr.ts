@@ -101,7 +101,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="67"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Izmjeniti</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="68"/>
@@ -473,7 +473,7 @@ Adresa:%4
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Preuzeto %1 od %2 blokova povijesti transakcije (%3% done).</translation>
+        <translation>Preuzeto %1 od %2 blokova povijesti transakcije (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="823"/>
@@ -2084,7 +2084,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Unesite nod s kojim se želite spojiti and attempt to keep the connection open</translation>
+        <translation>Unesite nod s kojim se želite spojiti and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
@@ -2114,7 +2114,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Ova transakcija je preko ograničenja veličine. Možete ju ipak poslati za naknadu od %1, koja se daje čvorovima koji procesiraju vaše transakcije i tako podržavate mrežu. Želite li platiti naknadu?</translation>
+        <translation>Ova transakcija je preko ograničenja veličine. Možete ju ipak poslati za naknadu od %1, koja se daje čvorovima koji procesiraju vaše transakcije i tako podržavate mrežu. Želite li platiti naknadu?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
@@ -2124,7 +2124,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
-        <translation type="unfinished">Nevaljali iznos za opciju</translation>
+        <translation>Nevaljali iznos za opciju</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="128"/>

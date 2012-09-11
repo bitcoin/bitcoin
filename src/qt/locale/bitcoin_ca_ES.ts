@@ -404,7 +404,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="290"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Opcions</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
@@ -1358,7 +1358,7 @@ Address: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Transacció details</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>

@@ -2073,7 +2073,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Questa transazione è superiore al limite di dimensione. È comunque possibile inviarla con una commissione di %1, che va ai nodi che processano la tua transazione e contribuisce a sostenere la rete. Vuoi pagare la commissione?</translation>
+        <translation>Questa transazione è superiore al limite di dimensione. È comunque possibile inviarla con una commissione di %1, che va ai nodi che processano la tua transazione e contribuisce a sostenere la rete. Vuoi pagare la commissione?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="44"/>
@@ -2084,7 +2084,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
-        <translation type="unfinished">Importo non valido</translation>
+        <translation>Importo non valido</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="59"/>
@@ -2094,7 +2094,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Elérendő csomópont megadása and attempt to keep the connection open</translation>
+        <translation>Elérendő csomópont megadása and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>

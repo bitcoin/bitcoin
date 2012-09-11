@@ -474,7 +474,7 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Stiahnutých %1 (of %2) blokov transakčnej histórie (%3% done).</translation>
+        <translation>Stiahnutých %1 (of %2) blokov transakčnej histórie (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="531"/>
@@ -1453,7 +1453,7 @@ Adresa: %4</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="283"/>
         <source>Offline (%1 confirmations)</source>
-        <translation type="unfinished">Offline (%1 potvrdení)</translation>
+        <translation>Offline (%1 potvrdení)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="286"/>
@@ -2032,7 +2032,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Pridať nódu a pripojiť sa and attempt to keep the connection open</translation>
+        <translation>Pridať nódu a pripojiť sa and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -2117,7 +2117,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Veľkosť tejto transakcie prekračuje limit. Stále ju však môžete odoslať za poplatok %1 ktorý bude pripísaný uzlu spracúvajúcemu vašu transakciu. Chcete zaplatiť poplatok?</translation>
+        <translation>Veľkosť tejto transakcie prekračuje limit. Stále ju však môžete odoslať za poplatok %1 ktorý bude pripísaný uzlu spracúvajúcemu vašu transakciu. Chcete zaplatiť poplatok?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
@@ -2127,12 +2127,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
-        <translation type="unfinished">Neplatná suma</translation>
+        <translation>Neplatná suma</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Error</source>
-        <translation type="unfinished">Chyba</translation>
+        <translation>Chyba</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="48"/>

@@ -452,7 +452,7 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>Bitcoin client</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin klientas</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="418"/>
@@ -547,7 +547,7 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="823"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"></translation>
+        <translation>Piniginės duomenys (*.dat)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="826"/>
@@ -603,12 +603,12 @@ Adresas: %4</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Atsisiuntė %1 iš %2 sandorių istorijos blokų (%3% done).</translation>
+        <translation>Atsisiuntė %1 iš %2 sandorių istorijos blokų (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="823"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup piniginę</translation>
+        <translation>Backup piniginę</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="246"/>
@@ -812,7 +812,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="232"/>
         <source>Detach databases at shutdown</source>
-        <translation type="unfinished"></translation>
+        <translation>Atjungti duombazes išsijungiant</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="233"/>
@@ -1046,7 +1046,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../qrcodedialog.cpp" line="121"/>
         <source>PNG Images (*.png)</source>
-        <translation type="unfinished"></translation>
+        <translation>PNG paveikslėliai (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1852,7 +1852,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Klaida</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
@@ -1894,7 +1894,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nustatyti kalbą, pavyzdžiui &quot;lt_LT&quot; (numatyta: sistemos kalba)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
@@ -2025,7 +2025,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="112"/>
         <source>Bitcoin</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
@@ -2110,7 +2110,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Šis sandoris viršija leistiną dydį.  Jūs galite įvykdyti jį papildomai sumokėję %1 mokesčių, kurie bus išsiųsti tais pačiais mazgais kuriais vyko sandoris ir padės palaikyti tinklą. Ar jūs norite apmokėti papildomą mokestį?</translation>
+        <translation>Šis sandoris viršija leistiną dydį.  Jūs galite įvykdyti jį papildomai sumokėję %1 mokesčių, kurie bus išsiųsti tais pačiais mazgais kuriais vyko sandoris ir padės palaikyti tinklą. Ar jūs norite apmokėti papildomą mokestį?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
@@ -2120,12 +2120,12 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
-        <translation type="unfinished">Neteisinga suma</translation>
+        <translation>Neteisinga suma</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Pridėti mazgą prie sujungti su and attempt to keep the connection open</translation>
+        <translation>Pridėti mazgą prie sujungti su and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="74"/>

@@ -2067,7 +2067,7 @@ opcje SSL: (sprawdź Bitcoin Wiki dla instrukcje konfiguracji SSL)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Dodaj węzeł do łączenia się and attempt to keep the connection open</translation>
+        <translation>Dodaj węzeł do łączenia się and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
@@ -2112,7 +2112,7 @@ opcje SSL: (sprawdź Bitcoin Wiki dla instrukcje konfiguracji SSL)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Transakcja przekracza limit. Możesz wysłać ją płacąc prowizję %1, która zostaje przekazana do węzłów, które ją prześlą i pomoże wspierać sieć Bitcoin. Czy chcesz zapłacić prowizję?</translation>
+        <translation>Transakcja przekracza limit. Możesz wysłać ją płacąc prowizję %1, która zostaje przekazana do węzłów, które ją prześlą i pomoże wspierać sieć Bitcoin. Czy chcesz zapłacić prowizję?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>

@@ -360,7 +360,7 @@ Sunteţi sigur că doriţi să criptaţi portofelul electronic?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">S-au descărcat %1 din %2 blocuri din istoricul tranzaciilor (%3% done).</translation>
+        <translation>S-au descărcat %1 din %2 blocuri din istoricul tranzaciilor (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="531"/>
@@ -539,7 +539,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="823"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup portofelul electronic</translation>
+        <translation>Backup portofelul electronic</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -953,7 +953,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">Portofelul</translation>
+        <translation>Portofelul</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1629,7 +1629,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="126"/>
         <source>Copy amount</source>
-        <translation type="unfinished">Copiază sumă</translation>
+        <translation>Copiază sumă</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="124"/>
@@ -1767,7 +1767,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Error</source>
-        <translation type="unfinished">Eroare</translation>
+        <translation>Eroare</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
@@ -2135,7 +2135,7 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Această tranzacţie depăşeşte limita.  Puteţi iniţia tranzacţia platind un comision de %1, de care vor beneficia nodurile care procesează tranzacţia şi ajută la menţinerea reţelei.  Acceptaţi plata comisionului?</translation>
+        <translation>Această tranzacţie depăşeşte limita.  Puteţi iniţia tranzacţia platind un comision de %1, de care vor beneficia nodurile care procesează tranzacţia şi ajută la menţinerea reţelei.  Acceptaţi plata comisionului?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="14"/>

@@ -590,7 +590,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Завантажено %1 з %2 блоків історії переказів (%3% done).</translation>
+        <translation>Завантажено %1 з %2 блоків історії переказів (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="665"/>
@@ -1770,7 +1770,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Цей переказ перевищує максимально допустимий розмір. Проте ви можете здійснити її, додавши комісію в %1, яка відправиться тим вузлам що оброблять ваш переказ, та допоможе підтримати мережу. Ви хочете додати комісію?</translation>
+        <translation>Цей переказ перевищує максимально допустимий розмір. Проте ви можете здійснити її, додавши комісію в %1, яка відправиться тим вузлам що оброблять ваш переказ, та допоможе підтримати мережу. Ви хочете додати комісію?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
@@ -1929,7 +1929,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Додати вузол для підключення and attempt to keep the connection open</translation>
+        <translation>Додати вузол для підключення and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>

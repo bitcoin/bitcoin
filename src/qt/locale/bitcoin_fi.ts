@@ -631,7 +631,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../bitcoin.cpp" line="127"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Peruuttamaton virhe on tapahtunut. Bitcoin ei voi enää jatkaa turvallisesti ja sammutetaan.</translation>
     </message>
 </context>
 <context>
@@ -654,7 +654,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="285"/>
         <source>Whether to show Bitcoin addresses in the transaction list</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Näytetäänkö Bitcoin-osoitteet rahansiirrot listassa vai ei.</translation>
     </message>
 </context>
 <context>
@@ -810,12 +810,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="232"/>
         <source>Detach databases at shutdown</source>
-        <translation type="unfinished"></translation>
+        <translation>Irroita tietokannat sammutuksen yhteydessä</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="233"/>
         <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
-        <translation type="unfinished"></translation>
+        <translation>Irroita lohko- ja osoite-tietokannat sammuttaessa. Tämä hidastaa sammutusta, mutta mahdollistaa tietokantojen kopioimisen toiselle koneelle. Lompakko irroitetaan aina.</translation>
     </message>
 </context>
 <context>
@@ -1955,7 +1955,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation type="unfinished"></translation>
+        <translation>Virhe valmisteltaessa RPC-portin %i avaamista kuunneltavaksi: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -1965,7 +1965,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Hae naapureita DNS hauilla (vakioasetus: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="72"/>
@@ -1975,7 +1975,7 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Detach block and address databases. Increases shutdown time (default: 0)</source>
-        <translation type="unfinished"></translation>
+        <translation>Irroita lohko ja osoite-tietokannat. Pidentää sammutus-aikaa (vakioasetus: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>

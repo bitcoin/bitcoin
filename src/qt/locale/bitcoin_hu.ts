@@ -282,7 +282,7 @@ Biztosan kódolni akarod a tárcát?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Bitcoin will close now to finish the encryption process. Ne feledd, hogy a tárca titkosítása sem nyújt teljes védelmet az adathalász programok fertőzésével szemben.</translation>
+        <translation>Bitcoin will close now to finish the encryption process. Ne feledd, hogy a tárca titkosítása sem nyújt teljes védelmet az adathalász programok fertőzésével szemben.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
@@ -481,7 +481,7 @@ Biztosan kódolni akarod a tárcát?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="251"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Jelenlegi nézet exportálása fájlba</translation>
+        <translation>Jelenlegi nézet exportálása fájlba</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="255"/>
@@ -567,7 +567,7 @@ Biztosan kódolni akarod a tárcát?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">%1 blokk letöltve a tranzakciótörténet %2 blokkjából (%3% done).</translation>
+        <translation>%1 blokk letöltve a tranzakciótörténet %2 blokkjából (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="665"/>
@@ -894,7 +894,7 @@ Cím: %4
     <message>
         <location filename="../forms/messagepage.ui" line="14"/>
         <source>Message</source>
-        <translation type="unfinished">Üzenet</translation>
+        <translation>Üzenet</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
@@ -955,7 +955,7 @@ Cím: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">Tárca</translation>
+        <translation>Tárca</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="103"/>
@@ -1484,7 +1484,7 @@ Cím: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="351"/>
         <source>Received from</source>
-        <translation type="unfinished">Erről az</translation>
+        <translation>Erről az</translation>
     </message>
 </context>
 <context>
@@ -1770,7 +1770,7 @@ Cím: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
-        <translation type="unfinished">Étvénytelen összeg</translation>
+        <translation>Étvénytelen összeg</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="21"/>
@@ -1792,7 +1792,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Error</source>
-        <translation type="unfinished">Hiba</translation>
+        <translation>Hiba</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
@@ -2093,7 +2093,7 @@ SSL-opciók: (lásd a Bitcoin Wiki SSL-beállítási instrukcióit)
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Ez a tranzakció túllépi a mérethatárt,  de %1 tranzakciós díj ellenében így is elküldheted. Ezt a plusz összeget a tranzakcióidat feldolgozó csomópontok kapják,  így magát a hálózatot támogatod vele. Hajlandó vagy megfizetni a díjat?</translation>
+        <translation>Ez a tranzakció túllépi a mérethatárt,  de %1 tranzakciós díj ellenében így is elküldheted. Ezt a plusz összeget a tranzakcióidat feldolgozó csomópontok kapják,  így magát a hálózatot támogatod vele. Hajlandó vagy megfizetni a díjat?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
@@ -2109,12 +2109,12 @@ SSL-opciók: (lásd a Bitcoin Wiki SSL-beállítási instrukcióit)
     <message>
         <location filename="../bitcoinstrings.cpp" line="59"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished">Csatlakozásokhoz figyelendő &lt;port&gt; (alapértelmezett: 8333 or testnet: 18333)</translation>
+        <translation>Csatlakozásokhoz figyelendő &lt;port&gt; (alapértelmezett: 8333 or testnet: 18333)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Elérendő csomópont megadása and attempt to keep the connection open</translation>
+        <translation>Elérendő csomópont megadása and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>

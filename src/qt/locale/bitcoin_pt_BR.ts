@@ -516,7 +516,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="508"/>
         <source>~%n block(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
@@ -524,7 +524,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Carregados %1 de %2 blocos do histórico de transações (%3% done).</translation>
+        <translation>Carregados %1 de %2 blocos do histórico de transações (%3% done).</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="554"/>

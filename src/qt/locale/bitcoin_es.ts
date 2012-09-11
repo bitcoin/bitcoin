@@ -657,7 +657,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="285"/>
         <source>Whether to show Bitcoin addresses in the transaction list</source>
-        <translation type="unfinished">Mostrar o no las direcciones Bitcoin en la lista de transacciones</translation>
+        <translation type="unfinished">Mostrar las direcciones Bitcoin en la lista de transacciones</translation>
     </message>
 </context>
 <context>

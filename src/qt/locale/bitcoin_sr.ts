@@ -410,7 +410,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Преузето је %1 од укупно %2 блокова историјата трансакција (%3% done).</translation>
+        <translation>Преузето је %1 од укупно %2 блокова историјата трансакција (%3% done).</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="531"/>
@@ -579,7 +579,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="823"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup новчаника</translation>
+        <translation>Backup новчаника</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="577"/>
@@ -618,7 +618,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="243"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished">Прегледајте информације о Qt-у</translation>
+        <translation>Прегледајте информације о Qt-у</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="252"/>
@@ -968,7 +968,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">новчаник</translation>
+        <translation>новчаник</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1051,7 +1051,7 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="149"/>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Send Coins</source>
-        <translation type="unfinished">Слање новца</translation>
+        <translation>Слање новца</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1175,7 +1175,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="75"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished">&amp;Етикета</translation>
+        <translation>&amp;Етикета</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>

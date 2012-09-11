@@ -283,7 +283,7 @@ Er du sikker på at du ønsker at kryptere din tegnebog?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Bitcoin will close now to finish the encryption process. Husk, at kryptere din tegnebog vil ikke fuldt ud beskytte dine bitcoins mod at blive stjålet af malware på din computer.</translation>
+        <translation>Bitcoin will close now to finish the encryption process. Husk, at kryptere din tegnebog vil ikke fuldt ud beskytte dine bitcoins mod at blive stjålet af malware på din computer.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="161"/>
@@ -495,7 +495,7 @@ Adresse: %4
     <message>
         <location filename="../bitcoingui.cpp" line="251"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Eksportér den aktuelle visning til en fil</translation>
+        <translation>Eksportér den aktuelle visning til en fil</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="257"/>
@@ -553,7 +553,7 @@ Adresse: %4
     <message>
         <location filename="../bitcoingui.cpp" line="519"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
-        <translation type="unfinished">Downloadet %1 af %2 blokke af transaktionshistorie (%3% done).</translation>
+        <translation>Downloadet %1 af %2 blokke af transaktionshistorie (%3% done).</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="550"/>
@@ -607,7 +607,7 @@ Adresse: %4
     <message>
         <location filename="../bitcoingui.cpp" line="823"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Backup tegnebog</translation>
+        <translation>Backup tegnebog</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="823"/>
@@ -962,7 +962,7 @@ Adresse: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">tegnebog</translation>
+        <translation>tegnebog</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1933,7 +1933,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished">Tilføj en node til at forbinde til and attempt to keep the connection open</translation>
+        <translation>Tilføj en node til at forbinde til and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -2091,7 +2091,7 @@ SSL-indstillinger: (se Bitcoin Wiki for SSL opsætningsinstruktioner)</translati
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished">Denne transaktion er over størrelsesbegrænsningen.  Du kan stadig sende den for et gebyr på %1 som går til de noder der behandler din transaktion, og som hjælper med at støtte netværket.  Ønsker du at betale gebyret?</translation>
+        <translation>Denne transaktion er over størrelsesbegrænsningen.  Du kan stadig sende den for et gebyr på %1 som går til de noder der behandler din transaktion, og som hjælper med at støtte netværket.  Ønsker du at betale gebyret?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="45"/>
@@ -2113,7 +2113,7 @@ SSL-indstillinger: (se Bitcoin Wiki for SSL opsætningsinstruktioner)</translati
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
         <source>Invalid amount</source>
-        <translation type="unfinished">Ugyldigt beløb</translation>
+        <translation>Ugyldigt beløb</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="56"/>
@@ -2124,7 +2124,7 @@ SSL-indstillinger: (se Bitcoin Wiki for SSL opsætningsinstruktioner)</translati
     <message>
         <location filename="../bitcoinstrings.cpp" line="59"/>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation type="unfinished">Lyt til forbindelser på &lt;port&gt; (standard: 8333 or testnet: 18333)</translation>
+        <translation>Lyt til forbindelser på &lt;port&gt; (standard: 8333 or testnet: 18333)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="80"/>
