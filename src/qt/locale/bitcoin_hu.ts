@@ -242,7 +242,7 @@ Biztosan kódolni akarod a tárcát?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Bitcoin will close now to finish the encryption process. Ne feledd, hogy a tárca titkosítása sem nyújt teljes védelmet az adathalász programok fertőzésével szemben.</translation>
+        <translation>Bitcoin will close now to finish the encryption process. Ne feledd, hogy a tárca titkosítása sem nyújt teljes védelmet az adathalász programok fertőzésével szemben.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="161"/>
@@ -769,7 +769,7 @@ Cím: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="88"/>
         <source>Wallet</source>
-        <translation type="unfinished">Tárca</translation>
+        <translation>Tárca</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1235,7 +1235,7 @@ Cím: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="351"/>
         <source>Received from</source>
-        <translation type="unfinished">Erről az</translation>
+        <translation>Erről az</translation>
     </message>
 </context>
 <context>

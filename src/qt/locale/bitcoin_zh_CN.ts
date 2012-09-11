@@ -545,7 +545,7 @@ Address: %4
     <message>
         <location filename="../bitcoin.cpp" line="133"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>发生严重错误。</translation>
     </message>
 </context>
 <context>
@@ -1416,25 +1416,28 @@ Address: %4
         <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)
 </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Threshold for disconnecting misbehaving peers (缺省: 100)
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)
 </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Number of seconds to keep misbehaving peers from reconnecting (缺省: 86400)
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)
 </source>
-        <translation type="unfinished"></translation>
+        <translation>每个连接的最大接收缓存，&lt;n&gt;*1000 字节(缺省：10000)
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)
 </source>
-        <translation type="unfinished"></translation>
+        <translation>每个连接的最大发送缓存，&lt;n&gt;*1000 字节(缺省：10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
