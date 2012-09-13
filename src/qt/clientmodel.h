@@ -33,6 +33,8 @@ public:
     bool isTestNet() const;
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;
+    //! Return true if core is importing blocks
+    bool isImporting() const;
     //! Return conservative estimate of total number of blocks, or 0 if unknown
     int getNumBlocksOfPeers() const;
     //! Return warnings to be displayed in status bar
