@@ -265,25 +265,41 @@ public:
     CBigNum& SetCompact(unsigned int nCompact)
     {
         unsigned int nSize = nCompact >> 24;
-        std::vector<unsigned char> vch(4 + nSize);
-        vch[3] = nSize;
-        if (nSize >= 1) vch[4] = (nCompact >> 16) & 0xff;
-        if (nSize >= 2) vch[5] = (nCompact >> 8) & 0xff;
-        if (nSize >= 3) vch[6] = (nCompact >> 0) & 0xff;
-        BN_mpi2bn(&vch[0], vch.size(), this);
+        unsigned int nWord = nCompact & 0xffffff;
+        if (nSize <= 3)
+        {
+            nWord >>= 8*(3-nSize);
+            BN_set_word(this, nWord);
+        }
+        else
+        {
+            BN_set_word(this, nWord);
+            BN_lshift(this, this, 8*(nSize-3));
+        }
         return *this;
     }
 
     unsigned int GetCompact() const
     {
-        unsigned int nSize = BN_bn2mpi(this, NULL);
-        std::vector<unsigned char> vch(nSize);
-        nSize -= 4;
-        BN_bn2mpi(this, &vch[0]);
-        unsigned int nCompact = nSize << 24;
-        if (nSize >= 1) nCompact |= (vch[4] << 16);
-        if (nSize >= 2) nCompact |= (vch[5] << 8);
-        if (nSize >= 3) nCompact |= (vch[6] << 0);
+        unsigned int nSize = BN_num_bytes(this);
+        unsigned int nCompact = 0;
+        if (nSize <= 3)
+            nCompact = BN_get_word(this) << 8*(3-nSize);
+        else
+        {
+            CBigNum bn;
+            BN_rshift(&bn, this, 8*(nSize-3));
+            nCompact = BN_get_word(&bn);
+        }
+        // Avoid compact representations with the 0x00800000 bit set.
+        // Some implementations decode them to negative numbers with
+        // the highest bit cleared.
+        if (nCompact & 0x00800000)
+        {
+            nCompact >>= 8;
+            nSize++;
+        }
+        nCompact |= nSize << 24;
         return nCompact;
     }
 
