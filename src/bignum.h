@@ -262,28 +262,68 @@ public:
         return vch;
     }
 
+    // The "compact" format is a representation of a whole
+    // number N using an unsigned 32bit number similar to a
+    // floating point format.
+    // The most significant 8 bits are the unsigned exponent of base 256.
+    // This exponent can be thought of as "number of bytes of N".
+    // The lower 23 bits are the mantissa.
+    // Bit number 24 (0x800000) represents the sign of N.
+    // N = (-1^sign) * mantissa * 256^(exponent-3)
+    //
+    // Satoshi's original implementation used BN_bn2mpi() and BN_mpi2bn().
+    // MPI uses the most significant bit of the first byte as sign.
+    // Thus 0x1234560000 is compact (0x05123456)
+    // and  0xc0de000000 is compact (0x0600c0de)
+    // (0x05c0de00) would be -0x40de000000
+    //
+    // Bitcoin only uses this "compact" format for encoding difficulty
+    // targets, which are unsigned 256bit quantities.  Thus, all the
+    // complexities of the sign bit and using base 256 are probably an
+    // implementation accident.
+    //
+    // This implementation directly uses shifts instead of going
+    // through an intermediate MPI representation.
     CBigNum& SetCompact(unsigned int nCompact)
     {
         unsigned int nSize = nCompact >> 24;
-        std::vector<unsigned char> vch(4 + nSize);
-        vch[3] = nSize;
-        if (nSize >= 1) vch[4] = (nCompact >> 16) & 0xff;
-        if (nSize >= 2) vch[5] = (nCompact >> 8) & 0xff;
-        if (nSize >= 3) vch[6] = (nCompact >> 0) & 0xff;
-        BN_mpi2bn(&vch[0], vch.size(), this);
+        bool fNegative     =(nCompact & 0x00800000) != 0;
+        unsigned int nWord = nCompact & 0x007fffff;
+        if (nSize <= 3)
+        {
+            nWord >>= 8*(3-nSize);
+            BN_set_word(this, nWord);
+        }
+        else
+        {
+            BN_set_word(this, nWord);
+            BN_lshift(this, this, 8*(nSize-3));
+        }
+        BN_set_negative(this, fNegative);
         return *this;
     }
 
     unsigned int GetCompact() const
     {
-        unsigned int nSize = BN_bn2mpi(this, NULL);
-        std::vector<unsigned char> vch(nSize);
-        nSize -= 4;
-        BN_bn2mpi(this, &vch[0]);
-        unsigned int nCompact = nSize << 24;
-        if (nSize >= 1) nCompact |= (vch[4] << 16);
-        if (nSize >= 2) nCompact |= (vch[5] << 8);
-        if (nSize >= 3) nCompact |= (vch[6] << 0);
+        unsigned int nSize = BN_num_bytes(this);
+        unsigned int nCompact = 0;
+        if (nSize <= 3)
+            nCompact = BN_get_word(this) << 8*(3-nSize);
+        else
+        {
+            CBigNum bn;
+            BN_rshift(&bn, this, 8*(nSize-3));
+            nCompact = BN_get_word(&bn);
+        }
+        // The 0x00800000 bit denotes the sign.
+        // Thus, if it is already set, divide the mantissa by 256 and increase the exponent.
+        if (nCompact & 0x00800000)
+        {
+            nCompact >>= 8;
+            nSize++;
+        }
+        nCompact |= nSize << 24;
+        nCompact |= (BN_is_negative(this) ? 0x00800000 : 0);
         return nCompact;
     }
 
