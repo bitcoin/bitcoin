@@ -159,6 +159,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
         if (fPrintTransactionDetail)
         {
             txinfo.push_back(tx.ToStringShort());
+            txinfo.push_back(DateTimeStrFormat(tx.nTime));
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 txinfo.push_back(txin.ToStringShort());
             BOOST_FOREACH(const CTxOut& txout, tx.vout)

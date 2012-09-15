@@ -1203,7 +1203,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& w
 }
 
 // ppcoin: create coin stake transaction
-bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTransaction& txNew)
+bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64 nSearchInterval, CTransaction& txNew)
 {
     // The following split & combine thresholds are important to security
     // Should not be adjusted if you don't understand the consequences
@@ -1252,57 +1252,66 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, CTr
 
         int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
         CBigNum bnCoinDay = CBigNum(nValueIn) * min(txNew.nTime-pcoin.first->nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
-        // Calculate hash
-        CDataStream ss(SER_GETHASH, 0);
-        ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin.first->nTime << pcoin.second << txNew.nTime;
-        if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
+
+        bool fKernelFound = false;
+        for (int n=0; n<5 && !fKernelFound; n++)
         {
-            // Found a kernel
-            if (fDebug && GetBoolArg("-printcoinstake"))
-                printf("CreateCoinStake : kernel found\n");
-            vector<valtype> vSolutions;
-            txnouttype whichType;
-            CScript scriptPubKeyOut;
-            scriptPubKeyKernel = pcoin.first->vout[pcoin.second].scriptPubKey;
-            if (!Solver(scriptPubKeyKernel, whichType, vSolutions))
+            // Randomly pick a timestamp from protocol allowed range
+            txNew.nTime = GetAdjustedTime() - GetRandInt(60 * 60 * 2 - 60);
+            // Calculate hash
+            CDataStream ss(SER_GETHASH, 0);
+            ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin.first->nTime << pcoin.second << txNew.nTime;
+            if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
             {
+                // Found a kernel
                 if (fDebug && GetBoolArg("-printcoinstake"))
-                    printf("CreateCoinStake : failed to parse kernel\n", whichType);
-                continue;
-            }
-            if (fDebug && GetBoolArg("-printcoinstake"))
-                printf("CreateCoinStake : parsed kernel type=%d\n", whichType);
-            if (whichType != TX_PUBKEY && whichType != TX_PUBKEYHASH)
-            {
-                if (fDebug && GetBoolArg("-printcoinstake"))
-                    printf("CreateCoinStake : no support for kernel type=%d\n", whichType);
-                continue;  // only support pay to public key and pay to address
-            }
-            if (whichType == TX_PUBKEYHASH) // pay to address type
-            {
-                // convert to pay to public key type
-                CKey key;
-                if (!keystore.GetKey(uint160(vSolutions[0]), key))
+                    printf("CreateCoinStake : kernel found\n");
+                vector<valtype> vSolutions;
+                txnouttype whichType;
+                CScript scriptPubKeyOut;
+                scriptPubKeyKernel = pcoin.first->vout[pcoin.second].scriptPubKey;
+                if (!Solver(scriptPubKeyKernel, whichType, vSolutions))
                 {
                     if (fDebug && GetBoolArg("-printcoinstake"))
-                        printf("CreateCoinStake : failed to get key for kernel type=%d\n", whichType);
-                    continue;  // unable to find corresponding public key
+                        printf("CreateCoinStake : failed to parse kernel\n", whichType);
+                    break;
                 }
-                scriptPubKeyOut << key.GetPubKey() << OP_CHECKSIG;
+                if (fDebug && GetBoolArg("-printcoinstake"))
+                    printf("CreateCoinStake : parsed kernel type=%d\n", whichType);
+                if (whichType != TX_PUBKEY && whichType != TX_PUBKEYHASH)
+                {
+                    if (fDebug && GetBoolArg("-printcoinstake"))
+                        printf("CreateCoinStake : no support for kernel type=%d\n", whichType);
+                    break;  // only support pay to public key and pay to address
+                }
+                if (whichType == TX_PUBKEYHASH) // pay to address type
+                {
+                    // convert to pay to public key type
+                    CKey key;
+                    if (!keystore.GetKey(uint160(vSolutions[0]), key))
+                    {
+                        if (fDebug && GetBoolArg("-printcoinstake"))
+                            printf("CreateCoinStake : failed to get key for kernel type=%d\n", whichType);
+                        break;  // unable to find corresponding public key
+                    }
+                    scriptPubKeyOut << key.GetPubKey() << OP_CHECKSIG;
+                }
+                else
+                    scriptPubKeyOut = scriptPubKeyKernel;
+    
+                txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
+                nCredit += pcoin.first->vout[pcoin.second].nValue;
+                vwtxPrev.push_back(pcoin.first);
+                txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+                if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime)
+                    txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake
+                if (fDebug && GetBoolArg("-printcoinstake"))
+                    printf("CreateCoinStake : added kernel type=%d\n", whichType);
+                fKernelFound = true;
             }
-            else
-                scriptPubKeyOut = scriptPubKeyKernel;
-
-            txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
-            nCredit += pcoin.first->vout[pcoin.second].nValue;
-            vwtxPrev.push_back(pcoin.first);
-            txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
-            if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime)
-                txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake
-            if (fDebug && GetBoolArg("-printcoinstake"))
-                printf("CreateCoinStake : added kernel type=%d\n", whichType);
-            break;
         }
+        if (fKernelFound)
+            break; // if kernel is found stop searching
     }
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
