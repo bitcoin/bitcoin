@@ -3621,32 +3621,20 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     pblock->vtx.push_back(txNew);
 
     // ppcoin: if coinstake available add coinstake tx
-    static unsigned int nLastCoinStakeCheckTime = GetAdjustedTime() - nMaxClockDrift / 2;  // only initialized at startup
+    static int64 nLastCoinStakeSearchTime = GetAdjustedTime();  // only initialized at startup
     CBlockIndex* pindexPrev = pindexBest;
 
     if (fProofOfStake)  // attemp to find a coinstake
     {
-        while (nLastCoinStakeCheckTime < GetAdjustedTime())
+        pblock->nBits = GetNextTargetRequired(pindexPrev, true);
+        CTransaction txCoinStake;
+        int64 nSearchTime = GetAdjustedTime();
+        if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake))
         {
-            pindexPrev = pindexBest;  // get best block again to avoid getting stale
-            pblock->nBits = GetNextTargetRequired(pindexPrev, true);
-            CTransaction txCoinStake;
-            {
-                static CCriticalSection cs;
-                LOCK(cs);
-                // mining may have been suspended for a while so 
-                // need to take max to satisfy the timestamp protocol
-                nLastCoinStakeCheckTime++;
-                nLastCoinStakeCheckTime = max(nLastCoinStakeCheckTime, (unsigned int) (GetAdjustedTime() - nMaxClockDrift / 2));
-                txCoinStake.nTime = nLastCoinStakeCheckTime;
-            }
-            if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, txCoinStake))
-            {
-                pblock->vtx.push_back(txCoinStake);
-                pblock->vtx[0].vout[0].SetEmpty();
-                break;
-            }
+            pblock->vtx.push_back(txCoinStake);
+            pblock->vtx[0].vout[0].SetEmpty();
         }
+        nLastCoinStakeSearchTime = nSearchTime;
     }
 
     pblock->nBits = GetNextTargetRequired(pindexPrev, pblock->IsProofOfStake());
@@ -3956,9 +3944,9 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
         IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
 
-        // ppcoin: if proof-of-stake block found then process block
         if (fProofOfStake)
         {
+            // ppcoin: if proof-of-stake block found then process block
             if (pblock->IsProofOfStake())
             {
                 if (!pblock->SignBlock(*pwalletMain))
