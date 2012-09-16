@@ -1254,7 +1254,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         CBigNum bnCoinDay = CBigNum(nValueIn) * min(txNew.nTime-pcoin.first->nTime, (unsigned int)STAKE_MAX_AGE) / COIN / (24 * 60 * 60);
 
         bool fKernelFound = false;
-        for (int n=0; n<5 && !fKernelFound; n++)
+        for (int n=0; n<min(nSearchInterval,(int64)5) && !fKernelFound && !fShutdown; n++)
         {
             // Randomly pick a timestamp from protocol allowed range
             txNew.nTime = GetAdjustedTime() - GetRandInt(60 * 60 * 2 - 60);
@@ -1310,7 +1310,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 fKernelFound = true;
             }
         }
-        if (fKernelFound)
+        if (fKernelFound || fShutdown)
             break; // if kernel is found stop searching
     }
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)

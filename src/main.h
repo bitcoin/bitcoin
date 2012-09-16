@@ -72,6 +72,7 @@ extern CBlockIndex* pindexBest;
 extern unsigned int nTransactionsUpdated;
 extern uint64 nLastBlockTx;
 extern uint64 nLastBlockSize;
+extern int64 nLastCoinStakeSearchInterval;
 extern const std::string strMessageMagic;
 extern double dHashesPerSec;
 extern int64 nHPSTimerStart;

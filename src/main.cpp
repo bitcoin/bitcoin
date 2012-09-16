@@ -3598,6 +3598,7 @@ public:
 
 uint64 nLastBlockTx = 0;
 uint64 nLastBlockSize = 0;
+int64 nLastCoinStakeSearchInterval = 0;
 
 // CreateNewBlock:
 //   fProofOfStake: try (best effort) to make a proof-of-stake block
@@ -3629,12 +3630,16 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
         pblock->nBits = GetNextTargetRequired(pindexPrev, true);
         CTransaction txCoinStake;
         int64 nSearchTime = GetAdjustedTime();
-        if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake))
+        if (nSearchTime > nLastCoinStakeSearchTime)
         {
-            pblock->vtx.push_back(txCoinStake);
-            pblock->vtx[0].vout[0].SetEmpty();
+            if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake))
+            {
+                pblock->vtx.push_back(txCoinStake);
+                pblock->vtx[0].vout[0].SetEmpty();
+            }
+            nLastCoinStakeSearchInterval = nSearchTime - nLastCoinStakeSearchTime;
+            nLastCoinStakeSearchTime = nSearchTime;
         }
-        nLastCoinStakeSearchTime = nSearchTime;
     }
 
     pblock->nBits = GetNextTargetRequired(pindexPrev, pblock->IsProofOfStake());
