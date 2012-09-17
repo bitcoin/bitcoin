@@ -1247,7 +1247,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         CBlock block;
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
             continue;
-        if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - (60 * 60 * 2))
+        if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxClockDrift)
             continue; // only count coins meeting min age requirement
 
         int64 nValueIn = pcoin.first->vout[pcoin.second].nValue;
@@ -1257,7 +1257,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         for (int n=0; n<min(nSearchInterval,(int64)5) && !fKernelFound && !fShutdown; n++)
         {
             // Randomly pick a timestamp from protocol allowed range
-            txNew.nTime = GetAdjustedTime() - GetRandInt(60 * 60 * 2 - 60);
+            txNew.nTime = GetAdjustedTime() - GetRandInt(nMaxClockDrift - 60);
             // Calculate hash
             CDataStream ss(SER_GETHASH, 0);
             ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin.first->nTime << pcoin.second << txNew.nTime;
