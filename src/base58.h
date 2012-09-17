@@ -37,6 +37,14 @@
 
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
+// We convert in chunks of BASE58_CHUNK_DIGITS base-58 digits.
+// BASE58_CHUNK_DIGITS is the maximum number of base-58 digits fitting into a BN_ULONG.
+// BASE58_CHUNK_MOD is pow(58, BASE58_CHUNK_DIGITS)
+enum {
+    BASE58_CHUNK_DIGITS = (sizeof(BN_ULONG) == 8 ? 10 : 5),
+    BASE58_CHUNK_MOD    = (sizeof(BN_ULONG) == 8 ? 0x5fa8624c7fba400ULL : 0x271f35a0ULL), // 58^10 : 58^5
+};
+
 // Encode a byte sequence as a base58-encoded string
 inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 {
@@ -57,12 +65,24 @@ inline std::string EncodeBase58(const unsigned char* pbegin, const unsigned char
     CBigNum bn;
     BN_bin2bn(p, pend - p, &bn);
 
-    while (!!bn)
+    BN_ULONG rem;
+    while (1)
     {
-        BN_ULONG rem = BN_div_word(&bn, 58);
+        rem = BN_div_word(&bn, BASE58_CHUNK_MOD);
         if (rem == (BN_ULONG) -1)
             throw bignum_error("EncodeBase58 : BN_div_word failed");
-        str += pszBase58[rem];
+        if (!bn)
+            break;		// Not a full chunk
+        for (int i = 0; i < BASE58_CHUNK_DIGITS; i++)
+        {
+            str += pszBase58[rem % 58];
+            rem /= 58;
+        }
+    }
+    while (rem != 0)
+    {
+        str += pszBase58[rem % 58];
+        rem /= 58;
     }
 
     // Convert little endian std::string after leading zeros to big endian
@@ -130,12 +150,33 @@ inline bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet)
         nLeadingZeros++;
 
     // Convert big endian string to bignum
+    // We accumulate digits in acc and count them
+    BN_ULONG acc = 0;
+    int nDigits = 0;
     int v;
     while ((v = rgi8RBase58[*p]) >= 0)
     {
-        bn *= 58;
-        bn += v;
+        acc *= 58;
+        acc += v;
+        nDigits++;
+        if (nDigits == BASE58_CHUNK_DIGITS)
+        {
+            // push accumulated digits into bn
+            bn *= BASE58_CHUNK_MOD;
+            bn += acc;
+            acc = 0;
+            nDigits = 0;
+        }
         p++;
+    }
+    // push remaining digits
+    if (nDigits > 0)
+    {
+        BN_ULONG mul = 58;
+        while (--nDigits > 0)
+            mul *= 58;
+        bn *= mul;
+        bn += acc;
     }
 
     // Skip whitespace after base58 string
