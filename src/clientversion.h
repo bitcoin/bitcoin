@@ -9,7 +9,7 @@
 #define CLIENT_VERSION_MAJOR       0
 #define CLIENT_VERSION_MINOR       7
 #define CLIENT_VERSION_REVISION    0
-#define CLIENT_VERSION_BUILD       3
+#define CLIENT_VERSION_BUILD       99
 
 // Converts the parameter X to a string after macro replacement on X has been performed.
 // Don't merge these into one macro!
