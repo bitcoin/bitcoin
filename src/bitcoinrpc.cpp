@@ -983,7 +983,7 @@ void ThreadRPCServer3(void* parg)
                 strReply = JSONRPCExecBatch(valRequest.get_array());
             else
                 throw JSONRPCError(-32700, "Top-level object parse error");
-                
+
             conn->stream() << HTTPReply(200, strReply, fRun) << std::flush;
         }
         catch (Object& objError)
