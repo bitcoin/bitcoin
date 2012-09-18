@@ -83,6 +83,9 @@ OBJS= \
 
 all: bitcoind.exe
 
+test check: test_bitcoin.exe FORCE
+	test_bitcoin.exe
+
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
@@ -102,3 +105,5 @@ clean:
 	-del /Q obj\*
 	-del /Q obj-test\*
 	-del /Q build.h
+
+FORCE:
