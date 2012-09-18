@@ -615,7 +615,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         int64 txMinFee = tx.GetMinFee(1000, true, GMF_RELAY);
         if (nFees < txMinFee)
             return error("CTxMemPool::accept() : not enough fees %s, %"PRI64d" < %"PRI64d,
-                         hash.ToString().substr(0,10).c_str(),
+                         hash.ToString().c_str(),
                          nFees, txMinFee);
 
         // Continuously rate-limit free transactions
