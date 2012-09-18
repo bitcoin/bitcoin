@@ -276,8 +276,7 @@ public:
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { return nWalletVersion; }
 
-    bool CheckSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion);
-    void FixSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion);
+    void FixSpentCoins(int& nMismatchSpent, int64& nBalanceInQuestion, bool fCheckOnly = false);
     void DisableTransaction(const CTransaction &tx);
 };
 
