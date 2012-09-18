@@ -2107,8 +2107,9 @@ Value checkwallet(const Array& params, bool fHelp)
 
     int nMismatchSpent;
     int64 nBalanceInQuestion;
+    pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion, true);
     Object result;
-    if (pwalletMain->CheckSpentCoins(nMismatchSpent, nBalanceInQuestion))
+    if (nMismatchSpent == 0)
         result.push_back(Pair("wallet check passed", true));
     else
     {
