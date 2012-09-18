@@ -66,6 +66,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             CTransaction tx;
             stream >> tx;
 
+                BOOST_CHECK_MESSAGE(tx.CheckTransaction(), strTest);
+
             for (unsigned int i = 0; i < tx.vin.size(); i++)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
@@ -131,7 +133,9 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             CTransaction tx;
             stream >> tx;
 
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
+            fValid = tx.CheckTransaction();
+
+            for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
                 {
@@ -139,8 +143,10 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     break;
                 }
 
-                BOOST_CHECK_MESSAGE(!VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout], tx, i, test[2].get_bool(), 0), strTest);
+                fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout], tx, i, test[2].get_bool(), 0);
             }
+
+            BOOST_CHECK_MESSAGE(!fValid, strTest);
         }
     }
 }
