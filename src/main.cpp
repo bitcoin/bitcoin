@@ -2414,6 +2414,8 @@ unsigned char pchMessageStart[4] = { 0xf9, 0xbe, 0xb4, 0xd9 };
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     static map<CService, CPubKey> mapReuseKey;
+    static int64 nTimeChainChanged;
+
     RandAddSeedPerfmon();
     if (fDebug)
         printf("received: %s (%d bytes)\n", strCommand.c_str(), vRecv.size());
@@ -2516,7 +2518,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             (pfrom->nStartingHeight > nBestHeight) &&
             (pfrom->nVersion < NOBLKS_VERSION_START ||
              pfrom->nVersion >= NOBLKS_VERSION_END) &&
-             (nAskedForBlocks < 1 || vNodes.size() <= 1))
+             (nAskedForBlocks < 1 || vNodes.size() <= 1 ||
+             ((GetTime() - nTimeChainChanged) > (60 * 60))))
         {
             nAskedForBlocks++;
             pfrom->PushGetBlocks(pindexBest, uint256(0));
@@ -2891,8 +2894,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CInv inv(MSG_BLOCK, block.GetHash());
         pfrom->AddInventoryKnown(inv);
 
+        uint256 hashTmpBest = hashBestChain;
         if (ProcessBlock(pfrom, &block))
             mapAlreadyAskedFor.erase(inv);
+
+        if (hashTmpBest != hashBestChain)
+            nTimeChainChanged = GetTime();
+
         if (block.nDoS) pfrom->Misbehaving(block.nDoS);
     }
 
