@@ -26,7 +26,7 @@ Libraries you need to download separately and build:
                 default path               download
 OpenSSL         \openssl-1.0.1c-mgw        http://www.openssl.org/source/
 Berkeley DB     \db-4.8.30.NC-mgw          http://www.oracle.com/technology/software/products/berkeley-db/index.html
-Boost           \boost-1.47.0-mgw          http://www.boost.org/users/download/
+Boost           \boost-1.5.0-mgw          http://www.boost.org/users/download/
 miniupnpc       \miniupnpc-1.6-mgw         http://miniupnp.tuxfamily.org/files/
 
 Their licenses:
@@ -38,7 +38,7 @@ miniupnpc      New (3-clause) BSD license
 Versions used in this release:
 OpenSSL      1.0.1c
 Berkeley DB  4.8.30.NC
-Boost        1.47.0
+Boost        1.5.0
 miniupnpc    1.6
 
 
@@ -63,7 +63,7 @@ Boost
 -----
 DOS prompt:
 downloaded boost jam 3.1.18
-cd \boost-1.47.0-mgw
+cd \boost-1.5.0-mgw
 bjam toolset=gcc --build-type=complete stage
 
 MiniUPnPc
