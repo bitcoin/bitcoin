@@ -17,7 +17,7 @@ remotes:
 files:
 - "qt-win32-4.7.4-gitian-r1.zip"
 - "boost-win32-1.50.0-gitian2.zip"
-- "bitcoin-deps-0.0.4.zip"
+- "bitcoin-deps-0.0.5.zip"
 script: |
   #
   mkdir $HOME/qt
@@ -39,7 +39,7 @@ script: |
   mv include/boost .
   cd ..
   #
-  unzip bitcoin-deps-0.0.4.zip
+  unzip bitcoin-deps-0.0.5.zip
   #
   find -type f | xargs touch --date="$REFERENCE_DATETIME"
   #
