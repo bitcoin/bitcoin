@@ -97,6 +97,6 @@ clean:
 	-rm -f bitcoind.exe
 	-rm -f obj-test/*.o
 	-rm -f test_bitcoin.exe
-	-rm -f src/build.h
+	-rm -f obj/build.h
 
 FORCE:

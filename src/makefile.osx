@@ -141,6 +141,6 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P
 	-rm -f obj-test/*.P
-	-rm -f src/build.h
+	-rm -f obj/build.h
 
 FORCE:
