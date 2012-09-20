@@ -9,18 +9,8 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
 {
     if (wtx.IsCoinBase())
     {
-        // Don't show generated coin until confirmed by at least one block after it
-        // so we don't get the user's hopes up until it looks like it's probably accepted.
-        //
-        // It is not an error when generated blocks are not accepted.  By design,
-        // some percentage of blocks, like 10% or more, will end up not accepted.
-        // This is the normal mechanism by which the network copes with latency.
-        //
-        // We display regular transactions right away before any confirmation
-        // because they can always get into some block eventually.  Generated coins
-        // are special because if their block is not accepted, they are not valid.
-        //
-        if (wtx.GetDepthInMainChain() < 2)
+        // Ensures we show generated coins / mined transactions at depth 1
+        if (!wtx.IsInMainChain())
         {
             return false;
         }
