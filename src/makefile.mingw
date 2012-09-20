@@ -104,6 +104,5 @@ clean:
 	-del /Q bitcoind test_bitcoin
 	-del /Q obj\*
 	-del /Q obj-test\*
-	-del /Q build.h
 
 FORCE:
