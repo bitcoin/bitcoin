@@ -1415,9 +1415,11 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
     }
 
-    // ppcoin: track money supply
+    // ppcoin: track money supply and mint amount info
     pindex->nMint = nValueOut - nValueIn + nFees;
     pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
+    if (!txdb.WriteBlockIndex(CDiskBlockIndex(pindex)))
+        return error("Connect() : WriteBlockIndex for pindex failed");
 
     // Write queued txindex changes
     for (map<uint256, CTxIndex>::iterator mi = mapQueuedChanges.begin(); mi != mapQueuedChanges.end(); ++mi)
@@ -1438,7 +1440,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         CDiskBlockIndex blockindexPrev(pindex->pprev);
         blockindexPrev.hashNext = pindex->GetBlockHash();
         if (!txdb.WriteBlockIndex(blockindexPrev))
-            return error("ConnectBlock() : WriteBlockIndex failed");
+            return error("ConnectBlock() : WriteBlockIndex for blockindexPrev failed");
     }
 
     // Watch for transactions paying to me
@@ -1842,13 +1844,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     if (pindexNew->bnChainTrust > bnBestChainTrust)
         if (!SetBestChain(txdb, pindexNew))
             return false;
-
-    // ppcoin: got mint/moneysupply info in block index, write to db
-    if (!txdb.TxnBegin())
-        return false;
-    txdb.WriteBlockIndex(CDiskBlockIndex(pindexNew));
-    if (!txdb.TxnCommit())
-        return false;
 
     txdb.Close();
 
