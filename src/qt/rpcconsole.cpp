@@ -199,6 +199,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
+    ui->messagesWidget->installEventFilter(this);
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
@@ -218,15 +219,34 @@ RPCConsole::~RPCConsole()
 
 bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
 {
-    if(obj == ui->lineEdit)
+    if(event->type() == QEvent::KeyPress) // Special key handling
     {
-        if(event->type() == QEvent::KeyPress)
+        QKeyEvent *keyevt = static_cast<QKeyEvent*>(event);
+        int key = keyevt->key();
+        Qt::KeyboardModifiers mod = keyevt->modifiers();
+        switch(key)
         {
-            QKeyEvent *key = static_cast<QKeyEvent*>(event);
-            switch(key->key())
+        case Qt::Key_Up: if(obj == ui->lineEdit) { browseHistory(-1); return true; } break;
+        case Qt::Key_Down: if(obj == ui->lineEdit) { browseHistory(1); return true; } break;
+        case Qt::Key_PageUp: /* pass paging keys to messages widget */
+        case Qt::Key_PageDown:
+            if(obj == ui->lineEdit)
             {
-            case Qt::Key_Up: browseHistory(-1); return true;
-            case Qt::Key_Down: browseHistory(1); return true;
+                QApplication::postEvent(ui->messagesWidget, new QKeyEvent(*keyevt));
+                return true;
+            }
+            break;
+        default:
+            // Typing in messages widget brings focus to line edit, and redirects key there
+            // Exclude most combinations and keys that emit no text, except paste shortcuts
+            if(obj == ui->messagesWidget && (
+                  (!mod && !keyevt->text().isEmpty() && key != Qt::Key_Tab) ||
+                  ((mod & Qt::ControlModifier) && key == Qt::Key_V) ||
+                  ((mod & Qt::ShiftModifier) && key == Qt::Key_Insert)))
+            {
+                ui->lineEdit->setFocus();
+                QApplication::postEvent(ui->lineEdit, new QKeyEvent(*keyevt));
+                return true;
             }
         }
     }
