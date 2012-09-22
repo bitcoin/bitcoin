@@ -47,7 +47,7 @@ Licenses of statically linked libraries:
 
 Versions used in this release:
  GCC           4.3.3
- OpenSSL       0.9.8g
+ OpenSSL       1.0.1c
  Berkeley DB   4.8.30.NC
  Boost         1.37
  miniupnpc     1.6
@@ -55,7 +55,7 @@ Versions used in this release:
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
- sudo apt-get install build-essential 
+ sudo apt-get install build-essential
  sudo apt-get install libssl-dev
 
 for Ubuntu 12.04:
@@ -68,7 +68,7 @@ for Ubuntu 12.04:
  but using these will break binary wallet compatibility, and is not recommended.
 
 for other Ubuntu & Debian:
- sudo apt-get install libdb4.8-dev 
+ sudo apt-get install libdb4.8-dev
  sudo apt-get install libdb4.8++-dev
  sudo apt-get install libboost1.37-dev
  (If using Boost 1.37, append -mt to the boost libraries in the makefile)
