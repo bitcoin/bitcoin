@@ -40,7 +40,7 @@ Windows build instructions:
 
 - Open the bitcoin-qt.pro file in Qt Creator and build as normal (ctrl-B)
 
-.. _`Qt Windows SDK`: http://qt.nokia.com/downloads/sdk-windows-cpp
+.. _`Qt Windows SDK`: http://qt-project.org/downloads/
 .. _`dependencies archive`: https://download.visucore.com/bitcoin/qtgui_deps_1.zip
 .. [#] PGP signature: https://download.visucore.com/bitcoin/qtgui_deps_1.zip.sig (signed with RSA key ID `610945D0`_)
 .. _`610945D0`: http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x610945D0
@@ -62,7 +62,7 @@ Mac OS X
 
 - Open the bitcoin-qt.pro file in Qt Creator and build as normal (cmd-B)
 
-.. _`Qt Mac OS X SDK`: http://qt.nokia.com/downloads/sdk-mac-os-cpp
+.. _`Qt Mac OS X SDK`: http://qt-project.org/downloads/
 .. _`MacPorts`: http://www.macports.org/install.php
 
 
@@ -106,8 +106,8 @@ FreeDesktop notification interface through DBUS using the following qmake option
 Generation of QR codes
 -----------------------
 
-libqrencode may be used to generate QRCode images for payment requests. 
-It can be downloaded from http://fukuchi.org/works/qrencode/index.html.en, or installed via your package manager. Pass the USE_QRCODE 
+libqrencode may be used to generate QRCode images for payment requests.
+It can be downloaded from http://fukuchi.org/works/qrencode/index.html.en, or installed via your package manager. Pass the USE_QRCODE
 flag to qmake to control this:
 
 +--------------+--------------------------------------------------------------------------+
