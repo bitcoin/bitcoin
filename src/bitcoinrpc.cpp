@@ -9,6 +9,7 @@
 #include "ui_interface.h"
 #include "base58.h"
 #include "bitcoinrpc.h"
+#include "db.h"
 
 #undef printf
 #include <boost/asio.hpp>
@@ -173,11 +174,14 @@ Value help(const Array& params, bool fHelp)
 
 Value stop(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "stop\n"
-            "Stop Bitcoin server.");
+            "stop <detach>\n"
+            "<detach> is true or false to detach the database or not for this stop only\n"
+            "Stop Bitcoin server (and possibly override the detachdb config value).");
     // Shutdown will take long enough that the response should get back
+    if (params.size() > 0)
+        bitdb.SetDetach(params[0].get_bool());
     StartShutdown();
     return "Bitcoin server stopping";
 }
@@ -1126,6 +1130,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     //
     // Special case non-string parameter types
     //
+    if (strMethod == "stop"                   && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
