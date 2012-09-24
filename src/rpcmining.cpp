@@ -372,7 +372,7 @@ Value submitblock(const Array& params, bool fHelp)
         throw JSONRPCError(-22, "Block decode failed");
     }
 
-    bool fAccepted = ProcessBlock(NULL, &block);
+    bool fAccepted = ProcessBlock(NULL, &block, true);
     if (!fAccepted)
         return "rejected";
 
