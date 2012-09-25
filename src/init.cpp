@@ -722,12 +722,25 @@ bool AppInit2()
 
     if (mapArgs.count("-loadblock"))
     {
-        uiInterface.InitMessage(_("Importing blocks..."));
+        uiInterface.InitMessage(_("Importing blockchain data file."));
+
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
         {
             FILE *file = fopen(strFile.c_str(), "rb");
             if (file)
                 LoadExternalBlockFile(file);
+        }
+    }
+
+    filesystem::path pathBootstrap = GetDataDir() / "bootstrap.dat";
+    if (filesystem::exists(pathBootstrap)) {
+        uiInterface.InitMessage(_("Importing bootstrap blockchain data file."));
+
+        FILE *file = fopen(pathBootstrap.string().c_str(), "rb");
+        if (file) {
+            filesystem::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
+            LoadExternalBlockFile(file);
+            RenameOver(pathBootstrap, pathBootstrapOld);
         }
     }
 
