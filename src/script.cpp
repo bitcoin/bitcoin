@@ -54,12 +54,29 @@ bool CastToBool(const valtype& vch)
     return false;
 }
 
+//
+// WARNING: This does not work as expected for signed integers; the sign-bit
+// is left in place as the integer is zero-extended. The correct behavior
+// would be to move the most significant bit of the last byte during the
+// resize process. MakeSameSize() is currently only used by the disabled
+// opcodes OP_AND, OP_OR, and OP_XOR.
+//
 void MakeSameSize(valtype& vch1, valtype& vch2)
 {
     // Lengthen the shorter one
     if (vch1.size() < vch2.size())
+        // PATCH:
+        // +unsigned char msb = vch1[vch1.size()-1];
+        // +vch1[vch1.size()-1] &= 0x7f;
+        //  vch1.resize(vch2.size(), 0);
+        // +vch1[vch1.size()-1] = msb;
         vch1.resize(vch2.size(), 0);
     if (vch2.size() < vch1.size())
+        // PATCH:
+        // +unsigned char msb = vch2[vch2.size()-1];
+        // +vch2[vch2.size()-1] &= 0x7f;
+        //  vch2.resize(vch1.size(), 0);
+        // +vch2[vch2.size()-1] = msb;
         vch2.resize(vch1.size(), 0);
 }
 
@@ -663,6 +680,11 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 }
                 break;
 
+                //
+                // WARNING: These disabled opcodes exhibit unexpected behavior
+                // when used on signed integers due to a bug in MakeSameSize()
+                // [see definition of MakeSameSize() above].
+                //
                 case OP_AND:
                 case OP_OR:
                 case OP_XOR:
@@ -672,7 +694,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         return false;
                     valtype& vch1 = stacktop(-2);
                     valtype& vch2 = stacktop(-1);
-                    MakeSameSize(vch1, vch2);
+                    MakeSameSize(vch1, vch2); // <-- NOT SAFE FOR SIGNED VALUES
                     if (opcode == OP_AND)
                     {
                         for (unsigned int i = 0; i < vch1.size(); i++)
