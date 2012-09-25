@@ -31,7 +31,7 @@ void static inline LeaveCritical() {}
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
 #endif
 
-/** Wrapper around boost::interprocess::scoped_lock */
+/** Wrapper around boost::unique_lock<Mutex> */
 template<typename Mutex>
 class CMutexLock
 {
