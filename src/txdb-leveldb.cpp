@@ -97,6 +97,41 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
     return Read('l', nFile);
 }
 
+bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
+    leveldb::Iterator *pcursor = db.NewIterator();
+    pcursor->SeekToFirst();
+
+    while (pcursor->Valid()) {
+        try {
+            leveldb::Slice slKey = pcursor->key();
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
+            char chType;
+            ssKey >> chType;
+            if (chType == 'c' && !fRequestShutdown) {
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
+                CCoins coins;
+                ssValue >> coins;
+                uint256 txhash;
+                ssKey >> txhash;
+
+                stats.nTransactions++;
+                BOOST_FOREACH(const CTxOut &out, coins.vout) {
+                    if (!out.IsNull())
+                        stats.nTransactionOutputs++;
+                }
+                stats.nSerializedSize += 32 + slValue.size();
+            }
+            pcursor->Next();
+        } catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    delete pcursor;
+    stats.nHeight = GetBestBlock()->nHeight;
+    return true;
+}
+
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
     leveldb::Iterator *pcursor = NewIterator();
