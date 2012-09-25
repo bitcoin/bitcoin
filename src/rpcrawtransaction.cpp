@@ -193,7 +193,9 @@ Value listunspent(const Array& params, bool fHelp)
         Object entry;
         entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
         entry.push_back(Pair("vout", out.i));
-        entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
+        Object o;
+        ScriptPubKeyToJSON(pk, o);
+        entry.push_back(Pair("scriptPubKey", o));
         entry.push_back(Pair("amount",ValueFromAmount(nValue)));
         entry.push_back(Pair("confirmations",out.nDepth));
         results.push_back(entry);
