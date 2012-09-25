@@ -1791,6 +1791,16 @@ public:
 
 extern CTxMemPool mempool;
 
+struct CCoinsStats
+{
+    int nHeight;
+    uint64 nTransactions;
+    uint64 nTransactionOutputs;
+    uint64 nSerializedSize;
+
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0) {}
+};
+
 /** Abstract view on the open txout dataset. */
 class CCoinsView
 {
@@ -1811,6 +1821,7 @@ public:
     // Modify the currently active block index
     virtual bool SetBestBlock(CBlockIndex *pindex);
     virtual bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
+    virtual bool GetStats(CCoinsStats &stats);
 };
 
 /** CCoinsView backed by another CCoinsView */
@@ -1828,6 +1839,7 @@ public:
     bool SetBestBlock(CBlockIndex *pindex);
     void SetBackend(CCoinsView &viewIn);
     bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
+    bool GetStats(CCoinsStats &stats);
 };
 
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
