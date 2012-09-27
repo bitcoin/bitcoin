@@ -168,6 +168,47 @@ public:
 };
 
 
+/** CBestChain - a network data structure describing the best chain */
+class CBestChain
+{
+public:
+    uint256 hash;
+    unsigned int nHeight;
+
+    CBestChain() { SetNull(); }
+    CBestChain(uint256 hashIn, unsigned int nIn) { hash = hashIn; nHeight = nIn; }
+    IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
+    void SetNull() { hash = 0; nHeight = (unsigned int) -1; }
+    bool IsNull() const { return (hash == 0 && nHeight == (unsigned int) -1); }
+
+    friend bool operator<(const CBestChain& a, const CBestChain& b)
+    {
+        return (a.hash < b.hash || (a.hash == b.hash && a.nHeight < b.nHeight));
+    }
+
+    friend bool operator==(const CBestChain& a, const CBestChain& b)
+    {
+        return (a.hash == b.hash && a.nHeight == b.nHeight);
+    }
+
+    friend bool operator!=(const CBestChain& a, const CBestChain& b)
+    {
+        return !(a == b);
+    }
+
+    std::string ToString() const
+    {
+        return strprintf("CBestChain(%s, %u)", hash.ToString().substr(0,10).c_str(), nHeight);
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
+
 
 /** An inpoint - a combination of a transaction and an index n into its vin */
 class CInPoint

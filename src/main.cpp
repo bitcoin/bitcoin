@@ -3021,6 +3021,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
+    else if (strCommand == "getbestchain")
+    {
+        CBestChain bc(hashBestChain, nBestHeight);
+        pfrom->PushMessage("bestchain", bc);
+    }
+
+
     else
     {
         // Ignore unknown commands for extensibility
