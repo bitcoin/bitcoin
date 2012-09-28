@@ -1112,7 +1112,11 @@ void FileCommit(FILE *fileout)
 #ifdef WIN32
     _commit(_fileno(fileout));
 #else
+    #if defined(__linux__) || defined(__NetBSD__)
+    fdatasync(fileno(fileout));
+    #else
     fsync(fileno(fileout));
+    #endif
 #endif
 }
 
