@@ -67,8 +67,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         else if (!wtx.mapValue["from"].empty())
         {
             // Online transaction
-            if (!wtx.mapValue["from"].empty())
-                strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(wtx.mapValue["from"]) + "<br>";
+            strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(wtx.mapValue["from"]) + "<br>";
         }
         else
         {
