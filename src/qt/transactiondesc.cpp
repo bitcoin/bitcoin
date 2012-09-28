@@ -82,11 +82,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         {
             strHTML += tr("<b>Source:</b> Generated<br>");
         }
-        else if (!wtx.mapValue["from"].empty())
+        else if (wtx.mapValue.count("from") && !wtx.mapValue["from"].empty())
         {
             // Online transaction
-            if (!wtx.mapValue["from"].empty())
-                strHTML += tr("<b>From:</b> ") + HtmlEscape(wtx.mapValue["from"]) + "<br>";
+            strHTML += tr("<b>From:</b> ") + HtmlEscape(wtx.mapValue["from"]) + "<br>";
         }
         else
         {
@@ -123,7 +122,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         // To
         //
         string strAddress;
-        if (!wtx.mapValue["to"].empty())
+        if (wtx.mapValue.count("to") && !wtx.mapValue["to"].empty())
         {
             // Online transaction
             strAddress = wtx.mapValue["to"];
@@ -180,7 +179,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                     if (wallet->IsMine(txout))
                         continue;
 
-                    if (wtx.mapValue["to"].empty())
+                    if (!wtx.mapValue.count("to") || wtx.mapValue["to"].empty())
                     {
                         // Offline transaction
                         CBitcoinAddress address;
@@ -229,9 +228,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         //
         // Message
         //
-        if (!wtx.mapValue["message"].empty())
+        if (wtx.mapValue.count("message") && !wtx.mapValue["message"].empty())
             strHTML += QString("<br><b>") + tr("Message:") + "</b><br>" + HtmlEscape(wtx.mapValue["message"], true) + "<br>";
-        if (!wtx.mapValue["comment"].empty())
+        if (wtx.mapValue.count("comment") && !wtx.mapValue["comment"].empty())
             strHTML += QString("<br><b>") + tr("Comment:") + "</b><br>" + HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
         if (wtx.IsCoinBase())
