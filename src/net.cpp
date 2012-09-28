@@ -10,6 +10,7 @@
 #include "strlcpy.h"
 #include "addrman.h"
 #include "ui_interface.h"
+#include "timer.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -66,6 +67,7 @@ map<CInv, CDataStream> mapRelay;
 deque<pair<int64, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 map<CInv, int64> mapAlreadyAskedFor;
+static CTimerList timerList;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -985,6 +987,8 @@ void ThreadSocketHandler2(void* parg)
                 pnode->Release();
         }
 
+        timerList.runTimers();
+
         Sleep(10);
     }
 }
@@ -1318,34 +1322,17 @@ void DumpAddresses()
            addrman.size(), GetTimeMillis() - nStart);
 }
 
-void ThreadDumpAddress2(void* parg)
+static void DumpAddressTimer(CTimer *t, void *p)
 {
-    vnThreadsRunning[THREAD_DUMPADDRESS]++;
-    while (!fShutdown)
-    {
-        DumpAddresses();
-        vnThreadsRunning[THREAD_DUMPADDRESS]--;
-        Sleep(100000);
-        vnThreadsRunning[THREAD_DUMPADDRESS]++;
-    }
-    vnThreadsRunning[THREAD_DUMPADDRESS]--;
+    DumpAddresses();
+
+    t->expire_time += 100000;
 }
 
-void ThreadDumpAddress(void* parg)
+static bool StartDumpAddressTimer()
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadDumpAddress(parg));
-
-    // Make this thread recognisable as the address dumping thread
-    RenameThread("bitcoin-adrdump");
-
-    try
-    {
-        ThreadDumpAddress2(parg);
-    }
-    catch (std::exception& e) {
-        PrintException(&e, "ThreadDumpAddress()");
-    }
-    printf("ThreadDumpAddress exited\n");
+    CTimer t = { NULL, GetTime() + 100000, DumpAddressTimer };
+    return timerList.addTimer(t);
 }
 
 void ThreadOpenConnections(void* parg)
@@ -1944,8 +1931,8 @@ void StartNode(void* parg)
         printf("Error: NewThread(ThreadMessageHandler) failed\n");
 
     // Dump network addresses
-    if (!NewThread(ThreadDumpAddress, NULL))
-        printf("Error; NewThread(ThreadDumpAddress) failed\n");
+    if (!StartDumpAddressTimer())
+        printf("Error; StartDumpAddressTimer() failed\n");
 
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
@@ -1982,7 +1969,6 @@ bool StopNode()
 #endif
     if (vnThreadsRunning[THREAD_DNSSEED] > 0) printf("ThreadDNSAddressSeed still running\n");
     if (vnThreadsRunning[THREAD_ADDEDCONNECTIONS] > 0) printf("ThreadOpenAddedConnections still running\n");
-    if (vnThreadsRunning[THREAD_DUMPADDRESS] > 0) printf("ThreadDumpAddresses still running\n");
     while (vnThreadsRunning[THREAD_MESSAGEHANDLER] > 0 || vnThreadsRunning[THREAD_RPCHANDLER] > 0)
         Sleep(20);
     Sleep(50);

@@ -122,6 +122,7 @@ OBJS= \
     obj/rpcwallet.o \
     obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
+    obj/timer.o \
     obj/script.o \
     obj/sync.o \
     obj/util.o \
