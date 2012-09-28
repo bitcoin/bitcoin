@@ -33,20 +33,9 @@ private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 public:
-    bool ReadName(const std::string& strAddress, std::string& strName)
-    {
-        strName = "";
-        return Read(std::make_pair(std::string("name"), strAddress), strName);
-    }
-
     bool WriteName(const std::string& strAddress, const std::string& strName);
 
     bool EraseName(const std::string& strAddress);
-
-    bool ReadTx(uint256 hash, CWalletTx& wtx)
-    {
-        return Read(std::make_pair(std::string("tx"), hash), wtx);
-    }
 
     bool WriteTx(uint256 hash, const CWalletTx& wtx)
     {
@@ -58,12 +47,6 @@ public:
     {
         nWalletDBUpdated++;
         return Erase(std::make_pair(std::string("tx"), hash));
-    }
-
-    bool ReadKey(const CPubKey& vchPubKey, CPrivKey& vchPrivKey)
-    {
-        vchPrivKey.clear();
-        return Read(std::make_pair(std::string("key"), vchPubKey.Raw()), vchPrivKey);
     }
 
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey)
@@ -91,13 +74,6 @@ public:
         return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
     }
 
-    // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
-    bool ReadCScript(const uint160 &hash, CScript& redeemScript)
-    {
-        redeemScript.clear();
-        return Read(std::make_pair(std::string("cscript"), hash), redeemScript);
-    }
-
     bool WriteCScript(const uint160& hash, const CScript& redeemScript)
     {
         nWalletDBUpdated++;
@@ -119,12 +95,6 @@ public:
     {
         nWalletDBUpdated++;
         return Write(std::string("orderposnext"), nOrderPosNext);
-    }
-
-    bool ReadDefaultKey(std::vector<unsigned char>& vchPubKey)
-    {
-        vchPubKey.clear();
-        return Read(std::string("defaultkey"), vchPubKey);
     }
 
     bool WriteDefaultKey(const CPubKey& vchPubKey)
