@@ -617,8 +617,6 @@ private:
 
 void ThreadRPCServer(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer(parg));
-
     // Make this thread recognisable as the RPC listener
     RenameThread("bitcoin-rpclist");
 
@@ -919,8 +917,6 @@ static CCriticalSection cs_THREAD_RPCHANDLER;
 
 void ThreadRPCServer3(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadRPCServer3(parg));
-
     // Make this thread recognisable as the RPC handler
     RenameThread("bitcoin-rpchand");
 
