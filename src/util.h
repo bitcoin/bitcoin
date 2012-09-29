@@ -396,20 +396,6 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
 
 
-// Randomize the stack to help protect against buffer overrun exploits
-#define IMPLEMENT_RANDOMIZE_STACK(ThreadFn)     \
-    {                                           \
-        static char nLoops;                     \
-        if (nLoops <= 0)                        \
-            nLoops = GetRand(20) + 1;           \
-        if (nLoops-- > 1)                       \
-        {                                       \
-            ThreadFn;                           \
-            return;                             \
-        }                                       \
-    }
-
-
 template<typename T1>
 inline uint256 Hash(const T1 pbegin, const T1 pend)
 {
