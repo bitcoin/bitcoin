@@ -4,7 +4,7 @@ suites:
 - "lucid"
 architectures:
 - "i386"
-packages: 
+packages:
 - "mingw32"
 - "git-core"
 - "zip"
@@ -13,7 +13,7 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "openssl-1.0.1b.tar.gz"
+- "openssl-1.0.1c.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
 - "zlib-1.2.6.tar.gz"
@@ -25,8 +25,8 @@ script: |
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   #
-  tar xzf openssl-1.0.1b.tar.gz
-  cd openssl-1.0.1b
+  tar xzf openssl-1.0.1c.tar.gz
+  cd openssl-1.0.1c
   ./Configure --cross-compile-prefix=i586-mingw32msvc- mingw
   make
   cd ..
@@ -62,7 +62,7 @@ script: |
   make $MAKEOPTS
   cd ..
   #
-  zip -r $OUTDIR/bitcoin-deps-0.0.4.zip \
+  zip -r $OUTDIR/bitcoin-deps-0.0.5.zip \
     $(ls qrencode-*/{qrencode.h,.libs/libqrencode.{,l}a} | sort) \
     $(ls db-*/build_unix/{libdb_cxx.a,db.h,db_cxx.h,libdb.a,.libs/libdb_cxx-?.?.a} | sort) \
     $(find openssl-* -name '*.a' -o -name '*.h' | sort) \
