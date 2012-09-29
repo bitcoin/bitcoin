@@ -639,8 +639,6 @@ void CNode::copyStats(CNodeStats &stats)
 
 void ThreadSocketHandler(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadSocketHandler(parg));
-
     // Make this thread recognisable as the networking thread
     RenameThread("bitcoin-net");
 
@@ -1000,8 +998,6 @@ void ThreadSocketHandler2(void* parg)
 #ifdef USE_UPNP
 void ThreadMapPort(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadMapPort(parg));
-
     // Make this thread recognisable as the UPnP thread
     RenameThread("bitcoin-UPnP");
 
@@ -1160,8 +1156,6 @@ static const char *strDNSSeed[][2] = {
 
 void ThreadDNSAddressSeed(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadDNSAddressSeed(parg));
-
     // Make this thread recognisable as the DNS seeding thread
     RenameThread("bitcoin-dnsseed");
 
@@ -1333,8 +1327,6 @@ void ThreadDumpAddress2(void* parg)
 
 void ThreadDumpAddress(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadDumpAddress(parg));
-
     // Make this thread recognisable as the address dumping thread
     RenameThread("bitcoin-adrdump");
 
@@ -1350,8 +1342,6 @@ void ThreadDumpAddress(void* parg)
 
 void ThreadOpenConnections(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadOpenConnections(parg));
-
     // Make this thread recognisable as the connection opening thread
     RenameThread("bitcoin-opencon");
 
@@ -1513,8 +1503,6 @@ void ThreadOpenConnections2(void* parg)
 
 void ThreadOpenAddedConnections(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadOpenAddedConnections(parg));
-
     // Make this thread recognisable as the connection opening thread
     RenameThread("bitcoin-opencon");
 
@@ -1646,8 +1634,6 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
 
 void ThreadMessageHandler(void* parg)
 {
-    IMPLEMENT_RANDOMIZE_STACK(ThreadMessageHandler(parg));
-
     // Make this thread recognisable as the message handling thread
     RenameThread("bitcoin-msghand");
 
