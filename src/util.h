@@ -56,13 +56,13 @@ static const int64 CENT = 1000000;
 
 /* Format characters for (s)size_t and ptrdiff_t */
 #if defined(_MSC_VER) || defined(__MSVCRT__)
-  #define PRIszx    "%Ix"
-  #define PRIszu    "%Iu"
-  #define PRIszd    "%Id"
+  #define PRIszx    "Ix"
+  #define PRIszu    "Iu"
+  #define PRIszd    "Id"
 #else
-  #define PRIszx    "%zx"
-  #define PRIszu    "%zu"
-  #define PRIszd    "%zd"
+  #define PRIszx    "zx"
+  #define PRIszu    "zu"
+  #define PRIszd    "zd"
 #endif
 
 // This is needed because the foreach macro can't get over the comma in pair<t1, t2>
