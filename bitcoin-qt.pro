@@ -125,7 +125,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/util.h \
     src/uint256.h \
     src/serialize.h \
-    src/strlcpy.h \
     src/main.h \
     src/net.h \
     src/key.h \
