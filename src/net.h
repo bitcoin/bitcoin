@@ -19,7 +19,6 @@
 #include "protocol.h"
 #include "addrman.h"
 
-class CRequestTracker;
 class CNode;
 class CBlockIndex;
 extern int nBestHeight;
@@ -73,25 +72,6 @@ enum
     MSG_TX = 1,
     MSG_BLOCK,
 };
-
-class CRequestTracker
-{
-public:
-    void (*fn)(void*, CDataStream&);
-    void* param1;
-
-    explicit CRequestTracker(void (*fnIn)(void*, CDataStream&)=NULL, void* param1In=NULL)
-    {
-        fn = fnIn;
-        param1 = param1In;
-    }
-
-    bool IsNull()
-    {
-        return fn == NULL;
-    }
-};
-
 
 /** Thread types */
 enum threadId
@@ -188,8 +168,6 @@ protected:
 
 public:
     int64 nReleaseTime;
-    std::map<uint256, CRequestTracker> mapRequests;
-    CCriticalSection cs_mapRequests;
     uint256 hashContinue;
     CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
@@ -562,53 +540,6 @@ public:
             throw;
         }
     }
-
-
-    void PushRequest(const char* pszCommand,
-                     void (*fn)(void*, CDataStream&), void* param1)
-    {
-        uint256 hashReply;
-        RAND_bytes((unsigned char*)&hashReply, sizeof(hashReply));
-
-        {
-            LOCK(cs_mapRequests);
-            mapRequests[hashReply] = CRequestTracker(fn, param1);
-        }
-
-        PushMessage(pszCommand, hashReply);
-    }
-
-    template<typename T1>
-    void PushRequest(const char* pszCommand, const T1& a1,
-                     void (*fn)(void*, CDataStream&), void* param1)
-    {
-        uint256 hashReply;
-        RAND_bytes((unsigned char*)&hashReply, sizeof(hashReply));
-
-        {
-            LOCK(cs_mapRequests);
-            mapRequests[hashReply] = CRequestTracker(fn, param1);
-        }
-
-        PushMessage(pszCommand, hashReply, a1);
-    }
-
-    template<typename T1, typename T2>
-    void PushRequest(const char* pszCommand, const T1& a1, const T2& a2,
-                     void (*fn)(void*, CDataStream&), void* param1)
-    {
-        uint256 hashReply;
-        RAND_bytes((unsigned char*)&hashReply, sizeof(hashReply));
-
-        {
-            LOCK(cs_mapRequests);
-            mapRequests[hashReply] = CRequestTracker(fn, param1);
-        }
-
-        PushMessage(pszCommand, hashReply, a1, a2);
-    }
-
-
 
     void PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd);
     bool IsSubscribed(unsigned int nChannel);
