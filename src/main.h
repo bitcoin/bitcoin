@@ -20,7 +20,6 @@ class CReserveKey;
 
 class CAddress;
 class CInv;
-class CRequestTracker;
 class CNode;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
