@@ -34,7 +34,9 @@ This directory contains all translations. Filenames must adhere to this format:
 source for all other translations. Whenever a string in the code is changed
 this file must be updated to reflect those changes. This can be accomplished
 by running `lupdate` (included in the Qt SDK). Also, a custom script is used
-to extract strings from the non-Qt parts:
+to extract strings from the non-Qt parts. This script makes use of `gettext`,
+so make sure that utility is installed (ie, `apt-get install gettext` on 
+Ubuntu/Debian):
 
     python share/qt/extract_strings_qt.py
     lupdate bitcoin-qt.pro -no-obsolete -locations relative -ts src/qt/locale/bitcoin_en.ts
