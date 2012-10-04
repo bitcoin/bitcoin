@@ -144,7 +144,7 @@ bool AppInit(int argc, char* argv[])
 
             strUsage += "\n" + HelpMessage();
 
-            fprintf(stderr, "%s", strUsage.c_str());
+            fprintf(stdout, "%s", strUsage.c_str());
             return false;
         }
 
