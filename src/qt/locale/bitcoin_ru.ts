@@ -2313,7 +2313,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Set maximum block size in bytes (default: 250000)</source>
-        <translation>Минимальный размер блока в байтах (по умолчанию: 250000)</translation>
+        <translation>Максимальный размер блока в байтах (по умолчанию: 250000)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2641,7 +2641,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
 rpcuser=bitcoinrpc
 rpcpassword=%s
 (вам не нужно запоминать этот пароль)
-Если файл не существует, создайте его и установите право доступа только для чтения только для владельца.
+Если файл не существует, создайте его и установите права доступа только для владельца.
 </translation>
     </message>
     <message>
@@ -2656,7 +2656,7 @@ rpcpassword=%s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
         <translation>Вы должны установить rpcpassword=&lt;password&gt; в конфигурационном файле:
 %s
-Если файл не существует, создайте его и установите право доступа только для чтения только для владельца.</translation>
+Если файл не существует, создайте его и установите права доступа только для владельца.</translation>
     </message>
 </context>
 </TS>

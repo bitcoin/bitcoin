@@ -444,7 +444,7 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
     <message>
         <location line="+3"/>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
+        <translation>Daryti piniginės atsarginę kopiją</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -604,7 +604,7 @@ Adresas: %4</translation>
         <location line="+120"/>
         <location line="+15"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>URI apdorojimas</translation>
     </message>
     <message>
         <location line="-15"/>
@@ -635,7 +635,7 @@ Adresas: %4</translation>
     <message>
         <location line="+3"/>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Nepavyko padaryti atsarginės kopijos</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -793,7 +793,7 @@ Adresas: %4</translation>
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automatiškai paleisti Bitkoin programą kai yra įjungiamas kompiuteris</translation>
+        <translation>Automatiškai paleisti Bitkoin programą įjungus sistemą.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -943,7 +943,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="+55"/>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>numatyta</translation>
     </message>
     <message>
         <location line="+147"/>
@@ -960,7 +960,7 @@ Adresas: %4</translation>
     <message>
         <location line="+29"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Nurodytas tarpinio serverio adresas negalioja.</translation>
     </message>
 </context>
 <context>
@@ -1068,7 +1068,7 @@ Adresas: %4</translation>
     <message>
         <location filename="../qrcodedialog.cpp" line="+62"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"/>
+        <translation>Klaida, koduojant URI į QR kodą.</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -1210,7 +1210,7 @@ Adresas: %4</translation>
     <message>
         <location line="+279"/>
         <source>Debug log file</source>
-        <translation type="unfinished"/>
+        <translation>Derinimo žurnalo failas</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1748,12 +1748,12 @@ Adresas: %4</translation>
     <message>
         <location line="+1"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>tiesa</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>netiesa</translation>
     </message>
     <message>
         <location line="-212"/>
@@ -1809,7 +1809,7 @@ Adresas: %4</translation>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation>Atidaryta kol %n</translation>
+        <translation>Atidaryta iki %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2274,12 +2274,12 @@ Adresas: %4</translation>
     <message>
         <location line="+2"/>
         <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation>Išėjimo papildomas derinimo informacija. Implies all other -debug* options</translation>
+        <translation>Išvesti papildomą derinimo informaciją. Numanomi visi kiti -debug* parametrai</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Output extra network debugging information</source>
-        <translation type="unfinished"/>
+        <translation>Išvesti papildomą tinklo derinimo informaciją</translation>
     </message>
     <message>
         <location line="+2"/>
