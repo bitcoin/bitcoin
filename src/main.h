@@ -743,7 +743,7 @@ public:
     bool CheckTransaction() const;
     bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
     bool GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const;  // ppcoin: get transaction coin age
-    bool CheckProofOfStake(unsigned int nBits) const;
+    bool CheckProofOfStake(unsigned int nBits, uint256& hashProofOfStake) const;
 
 protected:
     const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
@@ -956,6 +956,14 @@ public:
 
     void UpdateTime(const CBlockIndex* pindexPrev);
 
+    // ppcoin: entropy bit for stake modifier if chosen by modifier
+    unsigned int GetStakeEntropyBit() const
+    {
+        uint256 hash = Hash(BEGIN(vchBlockSig), END(vchBlockSig));
+        hash >>= 255;
+        return hash.Get64();
+    }
+
     // ppcoin: two types of block: proof-of-work or proof-of-stake
     bool IsProofOfStake() const
     {
@@ -1155,9 +1163,21 @@ public:
     int nHeight;
     int64 nMint;
     int64 nMoneySupply;
-    bool fProofOfStake; // ppcoin: is the block of proof-of-stake type
+
+    unsigned int nFlags;  // ppcoin: block index flags
+    enum  
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // computed stake modifier
+    };
+
+    uint64 nStakeModifier; // stake modifier for coins in this block
+
+    // proof-of-stake specific fields
     COutPoint prevoutStake;
     unsigned int nStakeTime;
+    uint256 hashProofOfStake;
 
     // block header
     int nVersion;
@@ -1178,7 +1198,9 @@ public:
         bnChainTrust = 0;
         nMint = 0;
         nMoneySupply = 0;
-        fProofOfStake = true;
+        nFlags = 0;
+        nStakeModifier = 0;
+        hashProofOfStake = 0;
         prevoutStake.SetNull();
         nStakeTime = 0;
 
@@ -1200,9 +1222,12 @@ public:
         bnChainTrust = 0;
         nMint = 0;
         nMoneySupply = 0;
-        fProofOfStake = block.IsProofOfStake();
-        if (fProofOfStake)
+        nFlags = 0;
+        nStakeModifier = 0;
+        hashProofOfStake = 0;
+        if (block.IsProofOfStake())
         {
+            SetProofOfStake();
             prevoutStake = block.vtx[1].vin[0].prevout;
             nStakeTime = block.vtx[1].nTime;
         }
@@ -1248,7 +1273,7 @@ public:
         bnTarget.SetCompact(nBits);
         if (bnTarget <= 0)
             return 0;
-        return (fProofOfStake? (CBigNum(1)<<256) / (bnTarget+1) : 1);
+        return (IsProofOfStake()? (CBigNum(1)<<256) / (bnTarget+1) : 1);
     }
 
     bool IsInMainChain() const
@@ -1306,20 +1331,57 @@ public:
 
     bool IsProofOfWork() const
     {
-        return !fProofOfStake;
+        return !(nFlags & BLOCK_PROOF_OF_STAKE);
     }
 
     bool IsProofOfStake() const
     {
-        return fProofOfStake;
+        return (nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    void SetProofOfStake()
+    {
+        nFlags |= BLOCK_PROOF_OF_STAKE;
+    }
+
+    unsigned int GetStakeEntropyBit() const
+    {
+        return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
+    }
+
+    bool SetStakeEntropyBit(unsigned int nEntropyBit)
+    {
+        if (nEntropyBit > 1)
+            return false;
+        nFlags |= (nEntropyBit << 1);
+        return true;
+    }
+
+    bool HasStakeModifier() const
+    {
+        return (nFlags & BLOCK_STAKE_MODIFIER);
+    }
+
+    bool GetStakeModifier(uint64& nModifier) const
+    {
+        nModifier = nStakeModifier;
+        return (nFlags & BLOCK_STAKE_MODIFIER);
+    }
+
+    void SetStakeModifier(uint64 nModifier)
+    {
+        nStakeModifier = nModifier;
+        nFlags |= BLOCK_STAKE_MODIFIER;
     }
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, fProofOfStake=%d prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%"PRI64x", hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nHeight,
             FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
-            fProofOfStake, prevoutStake.ToString().c_str(), nStakeTime,
+            HasStakeModifier() ? "MDFR" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
+            nStakeModifier, hashProofOfStake.ToString().c_str(),
+            prevoutStake.ToString().c_str(), nStakeTime,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
     }
@@ -1362,16 +1424,19 @@ public:
         READWRITE(nHeight);
         READWRITE(nMint);
         READWRITE(nMoneySupply);
-        READWRITE(fProofOfStake);
-        if (fProofOfStake)
+        READWRITE(nFlags);
+        READWRITE(nStakeModifier);
+        if (IsProofOfStake())
         {
             READWRITE(prevoutStake);
             READWRITE(nStakeTime);
+            READWRITE(hashProofOfStake);
         }
         else if (fRead)
         {
             const_cast<CDiskBlockIndex*>(this)->prevoutStake.SetNull();
             const_cast<CDiskBlockIndex*>(this)->nStakeTime = 0;
+            const_cast<CDiskBlockIndex*>(this)->hashProofOfStake = 0;
         }
 
         // block header

@@ -48,6 +48,7 @@ CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
 set<pair<COutPoint, unsigned int> > setStakeSeenOrphan;
+map<uint256, uint256> mapProofOfStake;
 
 map<uint256, CDataStream*> mapOrphanTransactions;
 map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
@@ -1695,7 +1696,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 //   quantities so as to generate blocks faster, degrading the system back into
 //   a proof-of-work situation.
 //
-bool CTransaction::CheckProofOfStake(unsigned int nBits) const
+bool CTransaction::CheckProofOfStake(unsigned int nBits, uint256& hashProofOfStake) const
 {
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -1732,7 +1733,8 @@ bool CTransaction::CheckProofOfStake(unsigned int nBits) const
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);
     ss << nBits << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << txPrev.nTime << txin.prevout.n << nTime;
-    if (CBigNum(Hash(ss.begin(), ss.end())) <= bnCoinDay * bnTargetPerCoinDay)
+    hashProofOfStake = Hash(ss.begin(), ss.end());
+    if (CBigNum(hashProofOfStake) <= bnCoinDay * bnTargetPerCoinDay)
         return true;
     else
         return DoS(100, error("CheckProofOfStake() : check target failed on coinstake %s", GetHash().ToString().c_str()));
@@ -1819,7 +1821,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     if (!pindexNew)
         return error("AddToBlockIndex() : new CBlockIndex failed");
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
-    if (pindexNew->fProofOfStake) 
+    if (pindexNew->IsProofOfStake()) 
         setStakeSeen.insert(make_pair(pindexNew->prevoutStake, pindexNew->nStakeTime));
 
     pindexNew->phashBlock = &((*mi).first);
@@ -1832,6 +1834,18 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     // ppcoin: compute chain trust score
     pindexNew->bnChainTrust = (pindexNew->pprev ? pindexNew->pprev->bnChainTrust : 0) + pindexNew->GetBlockTrust();
+
+    // ppcoin: compute stake entropy bit for stake modifier
+    if (!pindexNew->SetStakeEntropyBit(GetStakeEntropyBit()))
+        return error("AddToBlockIndex() : SetStakeEntropyBit() failed");
+
+    // ppcoin: record proof-of-stake hash value
+    if (pindexNew->IsProofOfStake())
+    {
+        if (!mapProofOfStake.count(hash))
+            return error("AddToBlockIndex() : hashProofOfStake not found in map");
+        pindexNew->hashProofOfStake = mapProofOfStake[hash];
+    }
 
     CTxDB txdb;
     if (!txdb.TxnBegin())
@@ -2029,10 +2043,16 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         return error("ProcessBlock() : CheckBlock FAILED");
 
     // ppcoin: verify hash target and signature of coinstake tx
-    if (pblock->IsProofOfStake() && !pblock->vtx[1].CheckProofOfStake(pblock->nBits))
+    if (pblock->IsProofOfStake())
     {
-        printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
-        return false; // do not error here as we expect this during initial block download
+        uint256 hashProofOfStake = 0;
+        if (!pblock->vtx[1].CheckProofOfStake(pblock->nBits, hashProofOfStake))
+        {
+            printf("WARNING: ProcessBlock(): check proof-of-stake failed for block %s\n", hash.ToString().c_str());
+            return false; // do not error here as we expect this during initial block download
+        }
+        if (!mapProofOfStake.count(hash)) // add to mapProofOfStake
+            mapProofOfStake.insert(make_pair(hash, hashProofOfStake));
     }
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
