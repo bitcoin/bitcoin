@@ -69,7 +69,7 @@ void RPCTypeCheck(const Array& params,
         {
             string err = strprintf("Expected type %s, got %s",
                                    Value_type_name[t], Value_type_name[v.type()]);
-            throw JSONRPCError(-3, err);
+            throw JSONRPCError(RPC_TYPE_ERROR, err);
         }
         i++;
     }
@@ -83,13 +83,13 @@ void RPCTypeCheck(const Object& o,
     {
         const Value& v = find_value(o, t.first);
         if (!fAllowNull && v.type() == null_type)
-            throw JSONRPCError(-3, strprintf("Missing %s", t.first.c_str()));
+            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first.c_str()));
 
         if (!((v.type() == t.second) || (fAllowNull && (v.type() == null_type))))
         {
             string err = strprintf("Expected type %s for %s, got %s",
                                    Value_type_name[t.second], t.first.c_str(), Value_type_name[v.type()]);
-            throw JSONRPCError(-3, err);
+            throw JSONRPCError(RPC_TYPE_ERROR, err);
         }
     }
 }
@@ -98,10 +98,10 @@ int64 AmountFromValue(const Value& value)
 {
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
-        throw JSONRPCError(-3, "Invalid amount");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     int64 nAmount = roundint64(dAmount * COIN);
     if (!MoneyRange(nAmount))
-        throw JSONRPCError(-3, "Invalid amount");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     return nAmount;
 }
 
@@ -486,8 +486,8 @@ void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
     // Send error reply from json-rpc error object
     int nStatus = 500;
     int code = find_value(objError, "code").get_int();
-    if (code == -32600) nStatus = 400;
-    else if (code == -32601) nStatus = 404;
+    if (code == RPC_INVALID_REQUEST) nStatus = 400;
+    else if (code == RPC_METHOD_NOT_FOUND) nStatus = 404;
     string strReply = JSONRPCReply(Value::null, objError, id);
     stream << HTTPReply(nStatus, strReply, false) << std::flush;
 }
@@ -854,7 +854,7 @@ void JSONRequest::parse(const Value& valRequest)
 {
     // Parse request
     if (valRequest.type() != obj_type)
-        throw JSONRPCError(-32600, "Invalid Request object");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
     const Object& request = valRequest.get_obj();
 
     // Parse id now so errors from here on will have the id
@@ -863,9 +863,9 @@ void JSONRequest::parse(const Value& valRequest)
     // Parse method
     Value valMethod = find_value(request, "method");
     if (valMethod.type() == null_type)
-        throw JSONRPCError(-32600, "Missing method");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
     if (valMethod.type() != str_type)
-        throw JSONRPCError(-32600, "Method must be a string");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
     if (strMethod != "getwork" && strMethod != "getblocktemplate")
         printf("ThreadRPCServer method=%s\n", strMethod.c_str());
@@ -877,7 +877,7 @@ void JSONRequest::parse(const Value& valRequest)
     else if (valParams.type() == null_type)
         params = Array();
     else
-        throw JSONRPCError(-32600, "Params must be an array");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array");
 }
 
 static Object JSONRPCExecOne(const Value& req)
@@ -898,7 +898,7 @@ static Object JSONRPCExecOne(const Value& req)
     catch (std::exception& e)
     {
         rpc_result = JSONRPCReplyObj(Value::null,
-                                     JSONRPCError(-32700, e.what()), jreq.id);
+                                     JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
     }
 
     return rpc_result;
@@ -970,7 +970,7 @@ void ThreadRPCServer3(void* parg)
             // Parse request
             Value valRequest;
             if (!read_string(strRequest, valRequest))
-                throw JSONRPCError(-32700, "Parse error");
+                throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
             string strReply;
 
@@ -987,7 +987,7 @@ void ThreadRPCServer3(void* parg)
             } else if (valRequest.type() == array_type)
                 strReply = JSONRPCExecBatch(valRequest.get_array());
             else
-                throw JSONRPCError(-32700, "Top-level object parse error");
+                throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
             conn->stream() << HTTPReply(200, strReply, fRun) << std::flush;
         }
@@ -998,7 +998,7 @@ void ThreadRPCServer3(void* parg)
         }
         catch (std::exception& e)
         {
-            ErrorReply(conn->stream(), JSONRPCError(-32700, e.what()), jreq.id);
+            ErrorReply(conn->stream(), JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
             break;
         }
     }
@@ -1015,13 +1015,13 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
     // Find method
     const CRPCCommand *pcmd = tableRPC[strMethod];
     if (!pcmd)
-        throw JSONRPCError(-32601, "Method not found");
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 
     // Observe safe mode
     string strWarning = GetWarnings("rpc");
     if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
         !pcmd->okSafeMode)
-        throw JSONRPCError(-2, string("Safe mode: ") + strWarning);
+        throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
     try
     {
@@ -1039,7 +1039,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
     }
     catch (std::exception& e)
     {
-        throw JSONRPCError(-1, e.what());
+        throw JSONRPCError(RPC_MISC_ERROR, e.what());
     }
 }
 
