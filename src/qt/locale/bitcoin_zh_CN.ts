@@ -527,7 +527,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location line="+71"/>
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>您连接到比特币网络的连接数量共有%n条</numerusform></translation>
+        <translation><numerusform>到比特币网络的连接共有%n条</numerusform></translation>
     </message>
     <message>
         <location line="+40"/>
