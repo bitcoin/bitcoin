@@ -2337,7 +2337,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>指定連線在幾毫秒後逾時 (預設: 5000)</translation>
     </message>
     <message>
         <location line="+13"/>

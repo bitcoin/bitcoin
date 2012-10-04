@@ -2251,7 +2251,7 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Importing blocks...</source>
-        <translation type="unfinished"/>
+        <translation>وارد کردن بلوک‌ها</translation>
     </message>
     <message>
         <location line="+4"/>
