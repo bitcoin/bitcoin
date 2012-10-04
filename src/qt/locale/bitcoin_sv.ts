@@ -796,7 +796,7 @@ Adress: %4
     <message>
         <location line="+31"/>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Starta Bitcoin automatiskt efter inloggning</translation>
+        <translation>Starta Bitcoin automatiskt efter inloggning.</translation>
     </message>
     <message>
         <location line="+3"/>
