@@ -232,7 +232,7 @@ bool AppInit2(int argc, char* argv[])
 #else
         // Remove tabs
         strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
-        fprintf(stderr, "%s", strUsage.c_str());
+        fprintf(stdout, "%s", strUsage.c_str());
 #endif
         return false;
     }
