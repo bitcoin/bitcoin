@@ -67,7 +67,8 @@ class CMessageHeader
 /** nServices flags */
 enum
 {
-    NODE_NETWORK = (1 << 0),
+    NODE_NETWORK = (1 << 0),           // has full blockchain
+    NODE_VALIDATION = (1 << 1),        // has full block headers + UTXO set
 };
 
 /** A CService with information about it as peer */
@@ -75,7 +76,7 @@ class CAddress : public CService
 {
     public:
         CAddress();
-        explicit CAddress(CService ipIn, uint64 nServicesIn=NODE_NETWORK);
+        explicit CAddress(CService ipIn, uint64 nServicesIn=NODE_NETWORK | NODE_VALIDATION);
 
         void Init();
 

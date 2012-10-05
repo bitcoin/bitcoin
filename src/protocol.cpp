@@ -88,7 +88,7 @@ CAddress::CAddress(CService ipIn, uint64 nServicesIn) : CService(ipIn)
 
 void CAddress::Init()
 {
-    nServices = NODE_NETWORK;
+    nServices = NODE_NETWORK | NODE_VALIDATION;
     nTime = 100000000;
     nLastTry = 0;
 }
