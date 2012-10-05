@@ -299,7 +299,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "signrawtransaction <hex string> [{\"txid\":txid,\"vout\":n,\"scriptPubKey\":hex},...] [<privatekey1>,...] [sighashtype=\"ALL\"]\n"
             "Sign inputs for raw transaction (serialized, hex-encoded).\n"
             "Second optional argument (may be null) is an array of previous transaction outputs that\n"
-            "this transaction depends on but may not yet be in the blockchain.\n"
+            "this transaction depends on but may not yet be in the block chain.\n"
             "Third optional argument (may be null) is an array of base58-encoded private\n"
             "keys that, if given, will be the only keys used to sign the transaction.\n"
             "Fourth optional argument is a string that is one of six values; ALL, NONE, SINGLE or\n"
