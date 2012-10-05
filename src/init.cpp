@@ -507,17 +507,20 @@ bool AppInit2()
             return false;
     }
 
-    CDBEnv::VerifyResult r = bitdb.Verify("wallet.dat", CWalletDB::Recover);
-    if (r == CDBEnv::RECOVER_OK)
+    if (filesystem::exists(GetDataDir() / "wallet.dat"))
     {
-        string msg = strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
-                                 " Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
-                                 " your balance or transactions are incorrect you should"
-                                 " restore from a backup."), pszDataDir);
-        uiInterface.ThreadSafeMessageBox(msg, _("Bitcoin"), CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        CDBEnv::VerifyResult r = bitdb.Verify("wallet.dat", CWalletDB::Recover);
+        if (r == CDBEnv::RECOVER_OK)
+        {
+            string msg = strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
+                                     " Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
+                                     " your balance or transactions are incorrect you should"
+                                     " restore from a backup."), pszDataDir);
+            uiInterface.ThreadSafeMessageBox(msg, _("Bitcoin"), CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION | CClientUIInterface::MODAL);
+        }
+        if (r == CDBEnv::RECOVER_FAIL)
+            return InitError(_("wallet.dat corrupt, salvage failed"));
     }
-    if (r == CDBEnv::RECOVER_FAIL)
-        return InitError(_("wallet.dat corrupt, salvage failed"));
 
     // ********************************************************* Step 6: network initialization
 
