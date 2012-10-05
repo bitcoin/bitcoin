@@ -150,7 +150,7 @@ Value getblock(const Array& params, bool fHelp)
     uint256 hash(strHash);
 
     if (mapBlockIndex.count(hash) == 0)
-        throw JSONRPCError(-5, "Block not found");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
