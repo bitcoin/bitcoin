@@ -25,7 +25,7 @@ std::string HelpRequiringPassphrase()
 void EnsureWalletIsUnlocked()
 {
     if (pwalletMain->IsLocked())
-        throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
 
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
@@ -51,7 +51,7 @@ string AccountFromValue(const Value& value)
 {
     string strAccount = value.get_str();
     if (strAccount == "*")
-        throw JSONRPCError(-11, "Invalid account name");
+        throw JSONRPCError(RPC_WALLET_INVALID_ACCOUNT_NAME, "Invalid account name");
     return strAccount;
 }
 
@@ -106,7 +106,7 @@ Value getnewaddress(const Array& params, bool fHelp)
     // Generate a new key that is added to wallet
     CPubKey newKey;
     if (!pwalletMain->GetKeyFromPool(newKey, false))
-        throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     CKeyID keyID = newKey.GetID();
 
     pwalletMain->SetAddressBookName(keyID, strAccount);
@@ -144,7 +144,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     if (!account.vchPubKey.IsValid() || bForceNew || bKeyUsed)
     {
         if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
-            throw JSONRPCError(-12, "Error: Keypool ran out, please call keypoolrefill first");
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
         pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), strAccount);
         walletdb.WriteAccount(strAccount, account);
@@ -181,7 +181,7 @@ Value setaccount(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(-5, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
 
     string strAccount;
@@ -211,7 +211,7 @@ Value getaccount(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(-5, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
     string strAccount;
     map<CTxDestination, string>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
@@ -252,7 +252,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(-5, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
     // Amount
     int64 nAmount = AmountFromValue(params[1]);
@@ -265,11 +265,11 @@ Value sendtoaddress(const Array& params, bool fHelp)
         wtx.mapValue["to"]      = params[3].get_str();
 
     if (pwalletMain->IsLocked())
-        throw JSONRPCError(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
     if (strError != "")
-        throw JSONRPCError(-4, strError);
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
     return wtx.GetHash().GetHex();
 }
@@ -319,15 +319,15 @@ Value signmessage(const Array& params, bool fHelp)
 
     CBitcoinAddress addr(strAddress);
     if (!addr.IsValid())
-        throw JSONRPCError(-3, "Invalid address");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
     CKeyID keyID;
     if (!addr.GetKeyID(keyID))
-        throw JSONRPCError(-3, "Address does not refer to key");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
     CKey key;
     if (!pwalletMain->GetKey(keyID, key))
-        throw JSONRPCError(-4, "Private key not available");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
 
     CDataStream ss(SER_GETHASH, 0);
     ss << strMessageMagic;
@@ -335,7 +335,7 @@ Value signmessage(const Array& params, bool fHelp)
 
     vector<unsigned char> vchSig;
     if (!key.SignCompact(Hash(ss.begin(), ss.end()), vchSig))
-        throw JSONRPCError(-5, "Sign failed");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
 
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
@@ -353,17 +353,17 @@ Value verifymessage(const Array& params, bool fHelp)
 
     CBitcoinAddress addr(strAddress);
     if (!addr.IsValid())
-        throw JSONRPCError(-3, "Invalid address");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
     CKeyID keyID;
     if (!addr.GetKeyID(keyID))
-        throw JSONRPCError(-3, "Address does not refer to key");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
     bool fInvalid = false;
     vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
 
     if (fInvalid)
-        throw JSONRPCError(-5, "Malformed base64 encoding");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
 
     CDataStream ss(SER_GETHASH, 0);
     ss << strMessageMagic;
@@ -388,7 +388,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
     CScript scriptPubKey;
     if (!address.IsValid())
-        throw JSONRPCError(-5, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     scriptPubKey.SetDestination(address.Get());
     if (!IsMine(*pwalletMain,scriptPubKey))
         return (double)0.0;
@@ -567,7 +567,7 @@ Value movecmd(const Array& params, bool fHelp)
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
     if (!walletdb.TxnBegin())
-        throw JSONRPCError(-20, "database error");
+        throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
 
     int64 nNow = GetAdjustedTime();
 
@@ -592,7 +592,7 @@ Value movecmd(const Array& params, bool fHelp)
     walletdb.WriteAccountingEntry(credit);
 
     if (!walletdb.TxnCommit())
-        throw JSONRPCError(-20, "database error");
+        throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
 
     return true;
 }
@@ -609,7 +609,7 @@ Value sendfrom(const Array& params, bool fHelp)
     string strAccount = AccountFromValue(params[0]);
     CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(-5, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     int64 nAmount = AmountFromValue(params[2]);
     int nMinDepth = 1;
     if (params.size() > 3)
@@ -627,12 +627,12 @@ Value sendfrom(const Array& params, bool fHelp)
     // Check funds
     int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
     if (nAmount > nBalance)
-        throw JSONRPCError(-6, "Account has insufficient funds");
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
     string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
     if (strError != "")
-        throw JSONRPCError(-4, strError);
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
     return wtx.GetHash().GetHex();
 }
@@ -665,10 +665,10 @@ Value sendmany(const Array& params, bool fHelp)
     {
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
-            throw JSONRPCError(-5, string("Invalid Bitcoin address: ")+s.name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+s.name_);
 
         if (setAddress.count(address))
-            throw JSONRPCError(-8, string("Invalid parameter, duplicated address: ")+s.name_);
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
         setAddress.insert(address);
 
         CScript scriptPubKey;
@@ -684,7 +684,7 @@ Value sendmany(const Array& params, bool fHelp)
     // Check funds
     int64 nBalance = GetAccountBalance(strAccount, nMinDepth);
     if (totalAmount > nBalance)
-        throw JSONRPCError(-6, "Account has insufficient funds");
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
     CReserveKey keyChange(pwalletMain);
@@ -693,11 +693,11 @@ Value sendmany(const Array& params, bool fHelp)
     if (!fCreated)
     {
         if (totalAmount + nFeeRequired > pwalletMain->GetBalance())
-            throw JSONRPCError(-6, "Insufficient funds");
-        throw JSONRPCError(-4, "Transaction creation failed");
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction creation failed");
     }
     if (!pwalletMain->CommitTransaction(wtx, keyChange))
-        throw JSONRPCError(-4, "Transaction commit failed");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
     return wtx.GetHash().GetHex();
 }
@@ -1000,9 +1000,9 @@ Value listtransactions(const Array& params, bool fHelp)
         nFrom = params[2].get_int();
 
     if (nCount < 0)
-        throw JSONRPCError(-8, "Negative count");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
-        throw JSONRPCError(-8, "Negative from");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
 
     Array ret;
 
@@ -1113,7 +1113,7 @@ Value listsinceblock(const Array& params, bool fHelp)
         target_confirms = params[1].get_int();
 
         if (target_confirms < 1)
-            throw JSONRPCError(-8, "Invalid parameter");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
     int depth = pindex ? (1 + nBestHeight - pindex->nHeight) : -1;
@@ -1165,7 +1165,7 @@ Value gettransaction(const Array& params, bool fHelp)
 
     Object entry;
     if (!pwalletMain->mapWallet.count(hash))
-        throw JSONRPCError(-5, "Invalid or non-wallet transaction id");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     const CWalletTx& wtx = pwalletMain->mapWallet[hash];
 
     int64 nCredit = wtx.GetCredit();
@@ -1214,7 +1214,7 @@ Value keypoolrefill(const Array& params, bool fHelp)
     pwalletMain->TopUpKeyPool();
 
     if (pwalletMain->GetKeyPoolSize() < GetArg("-keypool", 100))
-        throw JSONRPCError(-4, "Error refreshing keypool.");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
 
     return Value::null;
 }
@@ -1281,10 +1281,10 @@ Value walletpassphrase(const Array& params, bool fHelp)
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
-        throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
 
     if (!pwalletMain->IsLocked())
-        throw JSONRPCError(-17, "Error: Wallet is already unlocked.");
+        throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked.");
 
     // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
     SecureString strWalletPass;
@@ -1296,7 +1296,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
     if (strWalletPass.length() > 0)
     {
         if (!pwalletMain->Unlock(strWalletPass))
-            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
     }
     else
         throw runtime_error(
@@ -1320,7 +1320,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
-        throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
 
     // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
     // Alternately, find a way to make params[0] mlock()'d to begin with.
@@ -1338,7 +1338,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
             "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
 
     if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
-        throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
+        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
 
     return Value::null;
 }
@@ -1355,7 +1355,7 @@ Value walletlock(const Array& params, bool fHelp)
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
-        throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletlock was called.");
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
 
     {
         LOCK(cs_nWalletUnlockTime);
@@ -1376,7 +1376,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     if (fHelp)
         return true;
     if (pwalletMain->IsCrypted())
-        throw JSONRPCError(-15, "Error: running with an encrypted wallet, but encryptwallet was called.");
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
 
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
     // Alternately, find a way to make params[0] mlock()'d to begin with.
@@ -1390,7 +1390,7 @@ Value encryptwallet(const Array& params, bool fHelp)
             "Encrypts the wallet with <passphrase>.");
 
     if (!pwalletMain->EncryptWallet(strWalletPass))
-        throw JSONRPCError(-16, "Error: Failed to encrypt the wallet.");
+        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
 
     // BDB seems to have a bad habit of writing old data into
     // slack space in .dat files; that is bad if the old data is
