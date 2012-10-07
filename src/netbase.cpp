@@ -5,6 +5,7 @@
 
 #include "netbase.h"
 #include "util.h"
+#include "sync.h"
 
 #ifndef WIN32
 #include <sys/fcntl.h>
@@ -16,9 +17,9 @@
 using namespace std;
 
 // Settings
-typedef std::pair<CService, int> proxyType;
 static proxyType proxyInfo[NET_MAX];
 static proxyType nameproxyInfo;
+static CCriticalSection cs_proxyInfos;
 int nConnectTimeout = 5000;
 bool fNameLookup = false;
 
@@ -432,15 +433,17 @@ bool SetProxy(enum Network net, CService addrProxy, int nSocksVersion) {
         return false;
     if (nSocksVersion != 0 && !addrProxy.IsValid())
         return false;
+    LOCK(cs_proxyInfos);
     proxyInfo[net] = std::make_pair(addrProxy, nSocksVersion);
     return true;
 }
 
-bool GetProxy(enum Network net, CService &addrProxy) {
+bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     assert(net >= 0 && net < NET_MAX);
+    LOCK(cs_proxyInfos);
     if (!proxyInfo[net].second)
         return false;
-    addrProxy = proxyInfo[net].first;
+    proxyInfoOut = proxyInfo[net];
     return true;
 }
 
@@ -449,16 +452,27 @@ bool SetNameProxy(CService addrProxy, int nSocksVersion) {
         return false;
     if (nSocksVersion != 0 && !addrProxy.IsValid())
         return false;
+    LOCK(cs_proxyInfos);
     nameproxyInfo = std::make_pair(addrProxy, nSocksVersion);
     return true;
 }
 
-bool GetNameProxy() {
+bool GetNameProxy(proxyType &nameproxyInfoOut) {
+    LOCK(cs_proxyInfos);
+    if (!nameproxyInfo.second)
+        return false;
+    nameproxyInfoOut = nameproxyInfo;
+    return true;
+}
+
+bool HaveNameProxy() {
+    LOCK(cs_proxyInfos);
     return nameproxyInfo.second != 0;
 }
 
 bool IsProxy(const CNetAddr &addr) {
-    for (int i=0; i<NET_MAX; i++) {
+    LOCK(cs_proxyInfos);
+    for (int i = 0; i < NET_MAX; i++) {
         if (proxyInfo[i].second && (addr == (CNetAddr)proxyInfo[i].first))
             return true;
     }
@@ -467,10 +481,10 @@ bool IsProxy(const CNetAddr &addr) {
 
 bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)
 {
-    const proxyType &proxy = proxyInfo[addrDest.GetNetwork()];
+    proxyType proxy;
 
     // no proxy needed
-    if (!proxy.second)
+    if (!GetProxy(addrDest.GetNetwork(), proxy))
         return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout);
 
     SOCKET hSocket = INVALID_SOCKET;
@@ -504,19 +518,22 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     SplitHostPort(string(pszDest), port, strDest);
 
     SOCKET hSocket = INVALID_SOCKET;
-    CService addrResolved(CNetAddr(strDest, fNameLookup && !nameproxyInfo.second), port);
+
+    proxyType nameproxy;
+    GetNameProxy(nameproxy);
+
+    CService addrResolved(CNetAddr(strDest, fNameLookup && !nameproxy.second), port);
     if (addrResolved.IsValid()) {
         addr = addrResolved;
         return ConnectSocket(addr, hSocketRet, nTimeout);
     }
     addr = CService("0.0.0.0:0");
-    if (!nameproxyInfo.second)
+    if (!nameproxy.second)
         return false;
-    if (!ConnectSocketDirectly(nameproxyInfo.first, hSocket, nTimeout))
+    if (!ConnectSocketDirectly(nameproxy.first, hSocket, nTimeout))
         return false;
 
-    switch(nameproxyInfo.second)
-    {
+    switch(nameproxy.second) {
         default:
         case 4: return false;
         case 5:
