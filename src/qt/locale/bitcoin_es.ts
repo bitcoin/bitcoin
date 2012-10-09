@@ -144,8 +144,8 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
         <translation>Para desbloquear el monedero esta operación necesita de su contraseña.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="125"/>
-        <location filename="../askpassphrasedialog.cpp" line="173"/>
+        <location filename="../askpassphrasedialog.cpp" line="134"/>
+        <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>The supplied passphrases do not match.</source>
         <translation>Las contraseñas no coinciden.</translation>
     </message>
@@ -160,14 +160,14 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
         <translation>Cambiar contraseña:</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="137"/>
-        <location filename="../askpassphrasedialog.cpp" line="148"/>
-        <location filename="../askpassphrasedialog.cpp" line="167"/>
+        <location filename="../askpassphrasedialog.cpp" line="146"/>
+        <location filename="../askpassphrasedialog.cpp" line="157"/>
+        <location filename="../askpassphrasedialog.cpp" line="176"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>La contraseña introducida para descifrar el monedero es incorrecta.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="147"/>
+        <location filename="../askpassphrasedialog.cpp" line="156"/>
         <source>Wallet decryption failed</source>
         <translation>Ha fallado el descifrado del monedero</translation>
     </message>
@@ -203,15 +203,20 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="111"/>
-        <location filename="../askpassphrasedialog.cpp" line="160"/>
+        <location filename="../askpassphrasedialog.cpp" line="169"/>
         <source>Wallet encrypted</source>
         <translation>Monedero cifrado</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="208"/>
-        <location filename="../askpassphrasedialog.cpp" line="232"/>
-        <source>Warning: The Caps Lock key is on.</source>
+        <location filename="../askpassphrasedialog.cpp" line="117"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="217"/>
+        <location filename="../askpassphrasedialog.cpp" line="241"/>
+        <source>Warning: The Caps Lock key is on.</source>
+        <translation>Aviso: ¡La tecla de bloqueo de mayúsculas está activada!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="51"/>
@@ -224,12 +229,12 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
         <translation>Cambiar contraseña</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="118"/>
+        <location filename="../askpassphrasedialog.cpp" line="127"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
         <translation>Ha fallado el cifrado del monedero debido a un error interno. El monedero no ha sido cifrado.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <location filename="../askpassphrasedialog.cpp" line="170"/>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>La contraseña de cartera ha sido cambiada con exit.</translation>
     </message>
@@ -241,20 +246,20 @@ Are you sure you wish to encrypt your wallet?</source>
 ¿Seguro que quieres seguir encriptando la cartera?</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="136"/>
+        <location filename="../askpassphrasedialog.cpp" line="145"/>
         <source>Wallet unlock failed</source>
         <translation>Ha fallado el desbloqueo del monedero</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>Bitcoin se cerrará para finalizar el proceso de encriptación. Recuerda que encriptando tu cartera no garantiza mantener a salvo tus bitcoins en caso de tener viruses en el ordenador.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="117"/>
-        <location filename="../askpassphrasedialog.cpp" line="124"/>
-        <location filename="../askpassphrasedialog.cpp" line="166"/>
-        <location filename="../askpassphrasedialog.cpp" line="172"/>
+        <location filename="../askpassphrasedialog.cpp" line="126"/>
+        <location filename="../askpassphrasedialog.cpp" line="133"/>
+        <location filename="../askpassphrasedialog.cpp" line="175"/>
+        <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encryption failed</source>
         <translation>Ha fallado el cifrado del monedero</translation>
     </message>
@@ -552,7 +557,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../bitcoin.cpp" line="133"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ha ocurrido un error crítico. Bitcoin ya no puede continuar con seguridad y se cerrará.</translation>
     </message>
 </context>
 <context>
@@ -831,7 +836,7 @@ Dirección: %4</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="147"/>
-        <source>&amp;Send</source>
+        <source>S&amp;end</source>
         <translation>&amp;Envía</translation>
     </message>
     <message>
@@ -1027,40 +1032,40 @@ Dirección: %4</translation>
         <translation>&lt;b&gt;Fuente:&lt;/b&gt; Generado&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="89"/>
-        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="88"/>
+        <location filename="../transactiondesc.cpp" line="105"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
         <translation>&lt;b&gt;De:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="107"/>
-        <location filename="../transactiondesc.cpp" line="130"/>
-        <location filename="../transactiondesc.cpp" line="189"/>
+        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="129"/>
+        <location filename="../transactiondesc.cpp" line="188"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Para:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="110"/>
+        <location filename="../transactiondesc.cpp" line="109"/>
         <source> (yours, label: </source>
         <translation>(tuya, etiqueta: </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="112"/>
+        <location filename="../transactiondesc.cpp" line="111"/>
         <source> (yours)</source>
         <translation> (tuya)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="233"/>
+        <location filename="../transactiondesc.cpp" line="232"/>
         <source>Message:</source>
         <translation>Mensaje:</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="235"/>
+        <location filename="../transactiondesc.cpp" line="234"/>
         <source>Comment:</source>
         <translation>Comentario:</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="238"/>
+        <location filename="../transactiondesc.cpp" line="237"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Las monedas generadas deben esperar 120 bloques antes de ser gastadas. Cuando has generado este bloque se emitió a la red para ser agregado en la cadena de bloques. Si falla al incluirse en la cadena, cambiará a &quot;no aceptado&quot; y las monedas no se podrán gastar. Esto puede ocurrir ocasionalmente si otro nodo genera un bloque casi al mismo tiempo que el tuyo.</translation>
     </message>
@@ -1070,42 +1075,42 @@ Dirección: %4</translation>
         <translation>%1/no confirmado</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="105"/>
         <source>unknown</source>
         <translation>desconocido</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="147"/>
-        <location filename="../transactiondesc.cpp" line="161"/>
-        <location filename="../transactiondesc.cpp" line="206"/>
-        <location filename="../transactiondesc.cpp" line="223"/>
+        <location filename="../transactiondesc.cpp" line="146"/>
+        <location filename="../transactiondesc.cpp" line="160"/>
+        <location filename="../transactiondesc.cpp" line="205"/>
+        <location filename="../transactiondesc.cpp" line="222"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Crédito:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="149"/>
+        <location filename="../transactiondesc.cpp" line="148"/>
         <source>(%1 matures in %2 more blocks)</source>
         <translation>(%1 madura en %2 bloques mas)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="153"/>
+        <location filename="../transactiondesc.cpp" line="152"/>
         <source>(not accepted)</source>
         <translation>(no aceptada)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="197"/>
-        <location filename="../transactiondesc.cpp" line="205"/>
-        <location filename="../transactiondesc.cpp" line="220"/>
+        <location filename="../transactiondesc.cpp" line="196"/>
+        <location filename="../transactiondesc.cpp" line="204"/>
+        <location filename="../transactiondesc.cpp" line="219"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Débito:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="211"/>
+        <location filename="../transactiondesc.cpp" line="210"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Comisión transacción:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="227"/>
+        <location filename="../transactiondesc.cpp" line="226"/>
         <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Cantidad total:&lt;/b&gt; </translation>
     </message>
@@ -1488,13 +1493,13 @@ Dirección: %4</translation>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 10000)
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Búfer de recepción máximo por conexión, &lt;n&gt;*1000 bytes (predeterminado: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Búfer de recepción máximo por conexión, , &lt;n&gt;*1000 bytes (predeterminado: 10000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>

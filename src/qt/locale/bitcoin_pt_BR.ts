@@ -140,18 +140,18 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>TextoDoRótulo</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="118"/>
+        <location filename="../askpassphrasedialog.cpp" line="127"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
         <translation>A criptografia da carteira falhou devido a um erro interno. Sua carteira não estava criptografada.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="136"/>
+        <location filename="../askpassphrasedialog.cpp" line="145"/>
         <source>Wallet unlock failed</source>
         <translation>A abertura da carteira falhou</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="125"/>
-        <location filename="../askpassphrasedialog.cpp" line="173"/>
+        <location filename="../askpassphrasedialog.cpp" line="134"/>
+        <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>The supplied passphrases do not match.</source>
         <translation>A frase de segurança fornecida não confere.</translation>
     </message>
@@ -161,7 +161,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Esta operação precisa de sua frase de segurança para desbloquear a carteira.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>O Bitcoin irá fechar agora para finalizar o processo de encriptação. Lembre-se de que encriptar sua carteira não protege totalmente suas bitcoins de serem roubadas por malwares que tenham infectado o seu computador.</translation>
     </message>
@@ -181,14 +181,14 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Digite a nova frase de seguraça da sua carteira. &lt;br/&gt; Por favor, use uma frase de &lt;b&gt;10 ou mais caracteres aleatórios,&lt;/b&gt; ou &lt;b&gt;oito ou mais palavras.&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="147"/>
+        <location filename="../askpassphrasedialog.cpp" line="156"/>
         <source>Wallet decryption failed</source>
         <translation>A descriptografia da carteira falhou</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="137"/>
-        <location filename="../askpassphrasedialog.cpp" line="148"/>
-        <location filename="../askpassphrasedialog.cpp" line="167"/>
+        <location filename="../askpassphrasedialog.cpp" line="146"/>
+        <location filename="../askpassphrasedialog.cpp" line="157"/>
+        <location filename="../askpassphrasedialog.cpp" line="176"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>A frase de segurança digitada para a descriptografia da carteira estava incorreta.</translation>
     </message>
@@ -215,18 +215,23 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="111"/>
-        <location filename="../askpassphrasedialog.cpp" line="160"/>
+        <location filename="../askpassphrasedialog.cpp" line="169"/>
         <source>Wallet encrypted</source>
         <translation>Carteira criptografada</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <location filename="../askpassphrasedialog.cpp" line="117"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="170"/>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>A frase de segurança da carteira foi alterada com êxito.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="208"/>
-        <location filename="../askpassphrasedialog.cpp" line="232"/>
+        <location filename="../askpassphrasedialog.cpp" line="217"/>
+        <location filename="../askpassphrasedialog.cpp" line="241"/>
         <source>Warning: The Caps Lock key is on.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -241,10 +246,10 @@ Are you sure you wish to encrypt your wallet?</source>
         <translation>Desbloquear carteira</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="117"/>
-        <location filename="../askpassphrasedialog.cpp" line="124"/>
-        <location filename="../askpassphrasedialog.cpp" line="166"/>
-        <location filename="../askpassphrasedialog.cpp" line="172"/>
+        <location filename="../askpassphrasedialog.cpp" line="126"/>
+        <location filename="../askpassphrasedialog.cpp" line="133"/>
+        <location filename="../askpassphrasedialog.cpp" line="175"/>
+        <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encryption failed</source>
         <translation>A criptografia da carteira falhou</translation>
     </message>
@@ -836,8 +841,8 @@ Endereço: %4</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="147"/>
-        <source>&amp;Send</source>
-        <translation>&amp;Send</translation>
+        <source>S&amp;end</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="87"/>
@@ -967,7 +972,7 @@ Endereço: %4</translation>
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="105"/>
         <source>unknown</source>
         <translation>unknown</translation>
     </message>
@@ -1012,60 +1017,60 @@ Endereço: %4</translation>
         <translation>&lt;b&gt;Source:&lt;/b&gt; Generated&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="89"/>
-        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="88"/>
+        <location filename="../transactiondesc.cpp" line="105"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
         <translation>&lt;b&gt;From:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="107"/>
-        <location filename="../transactiondesc.cpp" line="130"/>
-        <location filename="../transactiondesc.cpp" line="189"/>
+        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="129"/>
+        <location filename="../transactiondesc.cpp" line="188"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
         <translation>&lt;b&gt;To:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="110"/>
+        <location filename="../transactiondesc.cpp" line="109"/>
         <source> (yours, label: </source>
         <translation> (yours, label: </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="112"/>
+        <location filename="../transactiondesc.cpp" line="111"/>
         <source> (yours)</source>
         <translation> (yours)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="147"/>
-        <location filename="../transactiondesc.cpp" line="161"/>
-        <location filename="../transactiondesc.cpp" line="206"/>
-        <location filename="../transactiondesc.cpp" line="223"/>
+        <location filename="../transactiondesc.cpp" line="146"/>
+        <location filename="../transactiondesc.cpp" line="160"/>
+        <location filename="../transactiondesc.cpp" line="205"/>
+        <location filename="../transactiondesc.cpp" line="222"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Credit:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="149"/>
+        <location filename="../transactiondesc.cpp" line="148"/>
         <source>(%1 matures in %2 more blocks)</source>
         <translation>(%1 matures in %2 more blocks)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="153"/>
+        <location filename="../transactiondesc.cpp" line="152"/>
         <source>(not accepted)</source>
         <translation>(not accepted)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="197"/>
-        <location filename="../transactiondesc.cpp" line="205"/>
-        <location filename="../transactiondesc.cpp" line="220"/>
+        <location filename="../transactiondesc.cpp" line="196"/>
+        <location filename="../transactiondesc.cpp" line="204"/>
+        <location filename="../transactiondesc.cpp" line="219"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Debit:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="211"/>
+        <location filename="../transactiondesc.cpp" line="210"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Transaction fee:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="227"/>
+        <location filename="../transactiondesc.cpp" line="226"/>
         <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Net amount:&lt;/b&gt; </translation>
     </message>
@@ -1080,17 +1085,17 @@ Endereço: %4</translation>
         <translation>%1 confirmations</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="233"/>
+        <location filename="../transactiondesc.cpp" line="232"/>
         <source>Message:</source>
         <translation>Message:</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="235"/>
+        <location filename="../transactiondesc.cpp" line="234"/>
         <source>Comment:</source>
         <translation>Comment:</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="238"/>
+        <location filename="../transactiondesc.cpp" line="237"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</translation>
     </message>

@@ -141,10 +141,10 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <translation>Inserisci la passphrase</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="117"/>
-        <location filename="../askpassphrasedialog.cpp" line="124"/>
-        <location filename="../askpassphrasedialog.cpp" line="166"/>
-        <location filename="../askpassphrasedialog.cpp" line="172"/>
+        <location filename="../askpassphrasedialog.cpp" line="126"/>
+        <location filename="../askpassphrasedialog.cpp" line="133"/>
+        <location filename="../askpassphrasedialog.cpp" line="175"/>
+        <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encryption failed</source>
         <translation>Cifratura del portamonete fallita</translation>
     </message>
@@ -154,15 +154,15 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <translation>Ripeti la passphrase</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="125"/>
-        <location filename="../askpassphrasedialog.cpp" line="173"/>
+        <location filename="../askpassphrasedialog.cpp" line="134"/>
+        <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>The supplied passphrases do not match.</source>
         <translation>Le passphrase inserite non corrispondono.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="137"/>
-        <location filename="../askpassphrasedialog.cpp" line="148"/>
-        <location filename="../askpassphrasedialog.cpp" line="167"/>
+        <location filename="../askpassphrasedialog.cpp" line="146"/>
+        <location filename="../askpassphrasedialog.cpp" line="157"/>
+        <location filename="../askpassphrasedialog.cpp" line="176"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>La passphrase inserita per la decifrazione del portamonete è errata.</translation>
     </message>
@@ -210,22 +210,27 @@ Si è sicuri di voler cifrare il portamonete?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="111"/>
-        <location filename="../askpassphrasedialog.cpp" line="160"/>
+        <location filename="../askpassphrasedialog.cpp" line="169"/>
         <source>Wallet encrypted</source>
         <translation>Portamonete cifrato</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>Bitcoin verrà ora chiuso per finire il processo di crittazione. Ricorda che criptare il tuo portamonete non può fornire una protezione totale contro furti causati da malware che dovessero infettare il tuo computer.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="118"/>
+        <location filename="../askpassphrasedialog.cpp" line="117"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="127"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
         <translation>Cifratura del portamonete fallita a causa di un errore interno. Il portamonete non è stato cifrato.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="136"/>
+        <location filename="../askpassphrasedialog.cpp" line="145"/>
         <source>Wallet unlock failed</source>
         <translation>Sblocco del portamonete fallito</translation>
     </message>
@@ -235,7 +240,7 @@ Si è sicuri di voler cifrare il portamonete?</translation>
         <translation>Cambia la passphrase</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="147"/>
+        <location filename="../askpassphrasedialog.cpp" line="156"/>
         <source>Wallet decryption failed</source>
         <translation>Decifrazione del portamonete fallita</translation>
     </message>
@@ -245,13 +250,13 @@ Si è sicuri di voler cifrare il portamonete?</translation>
         <translation>Conferma la cifratura del portamonete</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <location filename="../askpassphrasedialog.cpp" line="170"/>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Passphrase del portamonete modificata con successo.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="208"/>
-        <location filename="../askpassphrasedialog.cpp" line="232"/>
+        <location filename="../askpassphrasedialog.cpp" line="217"/>
+        <location filename="../askpassphrasedialog.cpp" line="241"/>
         <source>Warning: The Caps Lock key is on.</source>
         <translation>Attenzione: tasto Blocco maiuscole attivo.</translation>
     </message>
@@ -824,14 +829,14 @@ Indirizzo: %4
         <translation>Conferma la spedizione</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="147"/>
+        <source>S&amp;end</source>
+        <translation>&amp;Spedisci</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="113"/>
         <source>123.456 BTC</source>
         <translation>123,456 BTC</translation>
-    </message>
-    <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="147"/>
-        <source>&amp;Send</source>
-        <translation>&amp;Spedisci</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="93"/>
@@ -976,7 +981,7 @@ Indirizzo: %4
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="238"/>
+        <location filename="../transactiondesc.cpp" line="237"/>
         <source>Generated coins must wait 120 blocks before they can be spent.  When you generated this block, it was broadcast to the network to be added to the block chain.  If it fails to get into the chain, it will change to &quot;not accepted&quot; and not be spendable.  This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Bisogna attendere 120 blocchi prima di spendere I bitcoin generati. Quando è stato generato questo blocco, è stato trasmesso alla rete per aggiungerlo alla catena di blocchi. Se non riesce a entrare nella catena, verrà modificato in &quot;non accettato&quot; e non sarà spendibile. Questo può accadere a volte, se un altro nodo genera un blocco entro pochi secondi del tuo.</translation>
     </message>
@@ -1026,65 +1031,65 @@ Indirizzo: %4
         <translation>&lt;b&gt;Fonte:&lt;/b&gt; Generato&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="89"/>
-        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="88"/>
+        <location filename="../transactiondesc.cpp" line="105"/>
         <source>&lt;b&gt;From:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Da:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="107"/>
-        <location filename="../transactiondesc.cpp" line="130"/>
-        <location filename="../transactiondesc.cpp" line="189"/>
+        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="129"/>
+        <location filename="../transactiondesc.cpp" line="188"/>
         <source>&lt;b&gt;To:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Per:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="110"/>
+        <location filename="../transactiondesc.cpp" line="109"/>
         <source> (yours, label: </source>
         <translation> (vostro, etichetta: </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="112"/>
+        <location filename="../transactiondesc.cpp" line="111"/>
         <source> (yours)</source>
         <translation> (vostro)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="147"/>
-        <location filename="../transactiondesc.cpp" line="161"/>
-        <location filename="../transactiondesc.cpp" line="206"/>
-        <location filename="../transactiondesc.cpp" line="223"/>
+        <location filename="../transactiondesc.cpp" line="146"/>
+        <location filename="../transactiondesc.cpp" line="160"/>
+        <location filename="../transactiondesc.cpp" line="205"/>
+        <location filename="../transactiondesc.cpp" line="222"/>
         <source>&lt;b&gt;Credit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Credito:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="149"/>
+        <location filename="../transactiondesc.cpp" line="148"/>
         <source>(%1 matures in %2 more blocks)</source>
         <translation>(%1 matura in altri %2 blocchi)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="153"/>
+        <location filename="../transactiondesc.cpp" line="152"/>
         <source>(not accepted)</source>
         <translation>(non accettate)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="197"/>
-        <location filename="../transactiondesc.cpp" line="205"/>
-        <location filename="../transactiondesc.cpp" line="220"/>
+        <location filename="../transactiondesc.cpp" line="196"/>
+        <location filename="../transactiondesc.cpp" line="204"/>
+        <location filename="../transactiondesc.cpp" line="219"/>
         <source>&lt;b&gt;Debit:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Debito:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="211"/>
+        <location filename="../transactiondesc.cpp" line="210"/>
         <source>&lt;b&gt;Transaction fee:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Tranzakciós díj:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="227"/>
+        <location filename="../transactiondesc.cpp" line="226"/>
         <source>&lt;b&gt;Net amount:&lt;/b&gt; </source>
         <translation>&lt;b&gt;Importo netto:&lt;/b&gt; </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="233"/>
+        <location filename="../transactiondesc.cpp" line="232"/>
         <source>Message:</source>
         <translation>Messaggio:</translation>
     </message>
@@ -1099,12 +1104,12 @@ Indirizzo: %4
         <translation>%1 conferme</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="106"/>
+        <location filename="../transactiondesc.cpp" line="105"/>
         <source>unknown</source>
         <translation>sconosciuto</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="235"/>
+        <location filename="../transactiondesc.cpp" line="234"/>
         <source>Comment:</source>
         <translation>Commento:</translation>
     </message>
