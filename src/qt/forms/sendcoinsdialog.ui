@@ -144,7 +144,7 @@
         <string>Confirm the send action</string>
        </property>
        <property name="text">
-        <string>&amp;Send</string>
+        <string>S&amp;end</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
