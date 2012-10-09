@@ -17,6 +17,7 @@ enum DBErrors
 {
     DB_LOAD_OK,
     DB_CORRUPT,
+    DB_NONCRITICAL_ERROR,
     DB_TOO_NEW,
     DB_LOAD_FAIL,
     DB_NEED_REWRITE
@@ -153,8 +154,10 @@ public:
     int64 GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
-    int ReorderTransactions(CWallet*);
-    int LoadWallet(CWallet* pwallet);
+    DBErrors ReorderTransactions(CWallet*);
+    DBErrors LoadWallet(CWallet* pwallet);
+    static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
+    static bool Recover(CDBEnv& dbenv, std::string filename);
 };
 
 #endif // BITCOIN_WALLETDB_H
