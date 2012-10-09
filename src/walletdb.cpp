@@ -108,7 +108,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
 }
 
 
-int
+DBErrors
 CWalletDB::ReorderTransactions(CWallet* pwallet)
 {
     LOCK(pwallet->cs_wallet);
@@ -181,16 +181,221 @@ CWalletDB::ReorderTransactions(CWallet* pwallet)
 }
 
 
-int CWalletDB::LoadWallet(CWallet* pwallet)
+bool
+ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
+             int& nFileVersion, vector<uint256>& vWalletUpgrade,
+             bool& fIsEncrypted,  bool& fAnyUnordered, string& strType, string& strErr)
+{
+    try {
+        // Unserialize
+        // Taking advantage of the fact that pair serialization
+        // is just the two items serialized one after the other
+        ssKey >> strType;
+        if (strType == "name")
+        {
+            string strAddress;
+            ssKey >> strAddress;
+            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()];
+        }
+        else if (strType == "tx")
+        {
+            uint256 hash;
+            ssKey >> hash;
+            CWalletTx& wtx = pwallet->mapWallet[hash];
+            ssValue >> wtx;
+            if (wtx.CheckTransaction() && (wtx.GetHash() == hash))
+                wtx.BindWallet(pwallet);
+            else
+            {
+                pwallet->mapWallet.erase(hash);
+                return false;
+            }
+
+            // Undo serialize changes in 31600
+            if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
+            {
+                if (!ssValue.empty())
+                {
+                    char fTmp;
+                    char fUnused;
+                    ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
+                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d '%s' %s",
+                                       wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount.c_str(), hash.ToString().c_str());
+                    wtx.fTimeReceivedIsTxTime = fTmp;
+                }
+                else
+                {
+                    strErr = strprintf("LoadWallet() repairing tx ver=%d %s", wtx.fTimeReceivedIsTxTime, hash.ToString().c_str());
+                    wtx.fTimeReceivedIsTxTime = 0;
+                }
+                vWalletUpgrade.push_back(hash);
+            }
+
+            if (wtx.nOrderPos == -1)
+                fAnyUnordered = true;
+
+            //// debug print
+            //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
+            //printf(" %12"PRI64d"  %s  %s  %s\n",
+            //    wtx.vout[0].nValue,
+            //    DateTimeStrFormat("%x %H:%M:%S", wtx.GetBlockTime()).c_str(),
+            //    wtx.hashBlock.ToString().substr(0,20).c_str(),
+            //    wtx.mapValue["message"].c_str());
+        }
+        else if (strType == "acentry")
+        {
+            string strAccount;
+            ssKey >> strAccount;
+            uint64 nNumber;
+            ssKey >> nNumber;
+            if (nNumber > nAccountingEntryNumber)
+                nAccountingEntryNumber = nNumber;
+
+            if (!fAnyUnordered)
+            {
+                CAccountingEntry acentry;
+                ssValue >> acentry;
+                if (acentry.nOrderPos == -1)
+                    fAnyUnordered = true;
+            }
+        }
+        else if (strType == "key" || strType == "wkey")
+        {
+            vector<unsigned char> vchPubKey;
+            ssKey >> vchPubKey;
+            CKey key;
+            if (strType == "key")
+            {
+                CPrivKey pkey;
+                ssValue >> pkey;
+                key.SetPubKey(vchPubKey);
+                if (!key.SetPrivKey(pkey))
+                {
+                    strErr = "Error reading wallet database: CPrivKey corrupt";
+                    return false;
+                }
+                if (key.GetPubKey() != vchPubKey)
+                {
+                    strErr = "Error reading wallet database: CPrivKey pubkey inconsistency";
+                    return false;
+                }
+                if (!key.IsValid())
+                {
+                    strErr = "Error reading wallet database: invalid CPrivKey";
+                    return false;
+                }
+            }
+            else
+            {
+                CWalletKey wkey;
+                ssValue >> wkey;
+                key.SetPubKey(vchPubKey);
+                if (!key.SetPrivKey(wkey.vchPrivKey))
+                {
+                    strErr = "Error reading wallet database: CPrivKey corrupt";
+                    return false;
+                }
+                if (key.GetPubKey() != vchPubKey)
+                {
+                    strErr = "Error reading wallet database: CWalletKey pubkey inconsistency";
+                    return false;
+                }
+                if (!key.IsValid())
+                {
+                    strErr = "Error reading wallet database: invalid CWalletKey";
+                    return false;
+                }
+            }
+            if (!pwallet->LoadKey(key))
+            {
+                strErr = "Error reading wallet database: LoadKey failed";
+                return false;
+            }
+        }
+        else if (strType == "mkey")
+        {
+            unsigned int nID;
+            ssKey >> nID;
+            CMasterKey kMasterKey;
+            ssValue >> kMasterKey;
+            if(pwallet->mapMasterKeys.count(nID) != 0)
+            {
+                strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
+                return false;
+            }
+            pwallet->mapMasterKeys[nID] = kMasterKey;
+            if (pwallet->nMasterKeyMaxID < nID)
+                pwallet->nMasterKeyMaxID = nID;
+        }
+        else if (strType == "ckey")
+        {
+            vector<unsigned char> vchPubKey;
+            ssKey >> vchPubKey;
+            vector<unsigned char> vchPrivKey;
+            ssValue >> vchPrivKey;
+            if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
+            {
+                strErr = "Error reading wallet database: LoadCryptedKey failed";
+                return false;
+            }
+            fIsEncrypted = true;
+        }
+        else if (strType == "defaultkey")
+        {
+            ssValue >> pwallet->vchDefaultKey;
+        }
+        else if (strType == "pool")
+        {
+            int64 nIndex;
+            ssKey >> nIndex;
+            pwallet->setKeyPool.insert(nIndex);
+        }
+        else if (strType == "version")
+        {
+            ssValue >> nFileVersion;
+            if (nFileVersion == 10300)
+                nFileVersion = 300;
+        }
+        else if (strType == "cscript")
+        {
+            uint160 hash;
+            ssKey >> hash;
+            CScript script;
+            ssValue >> script;
+            if (!pwallet->LoadCScript(script))
+            {
+                strErr = "Error reading wallet database: LoadCScript failed";
+                return false;
+            }
+        }
+        else if (strType == "orderposnext")
+        {
+            ssValue >> pwallet->nOrderPosNext;
+        }
+    } catch (...)
+    {
+        return false;
+    }
+    return true;
+}
+
+static bool IsKeyType(string strType)
+{
+    return (strType== "key" || strType == "wkey" ||
+            strType == "mkey" || strType == "ckey");
+}
+
+DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 {
     pwallet->vchDefaultKey = CPubKey();
     int nFileVersion = 0;
     vector<uint256> vWalletUpgrade;
     bool fIsEncrypted = false;
     bool fAnyUnordered = false;
+    bool fNoncriticalErrors = false;
+    DBErrors result = DB_LOAD_OK;
 
-    //// todo: shouldn't we catch exceptions and try to recover and continue?
-    {
+    try {
         LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
@@ -222,189 +427,46 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
                 return DB_CORRUPT;
             }
 
-            // Unserialize
-            // Taking advantage of the fact that pair serialization
-            // is just the two items serialized one after the other
-            string strType;
-            ssKey >> strType;
-            if (strType == "name")
+            // Try to be tolerant of single corrupt records:
+            string strType, strErr;
+            if (!ReadKeyValue(pwallet, ssKey, ssValue, nFileVersion,
+                              vWalletUpgrade, fIsEncrypted, fAnyUnordered, strType, strErr))
             {
-                string strAddress;
-                ssKey >> strAddress;
-                ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()];
-            }
-            else if (strType == "tx")
-            {
-                uint256 hash;
-                ssKey >> hash;
-                CWalletTx& wtx = pwallet->mapWallet[hash];
-                ssValue >> wtx;
-                wtx.BindWallet(pwallet);
-
-                if (wtx.GetHash() != hash)
-                    printf("Error in wallet.dat, hash mismatch\n");
-
-                // Undo serialize changes in 31600
-                if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
-                {
-                    if (!ssValue.empty())
-                    {
-                        char fTmp;
-                        char fUnused;
-                        ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
-                        printf("LoadWallet() upgrading tx ver=%d %d '%s' %s\n", wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount.c_str(), hash.ToString().c_str());
-                        wtx.fTimeReceivedIsTxTime = fTmp;
-                    }
-                    else
-                    {
-                        printf("LoadWallet() repairing tx ver=%d %s\n", wtx.fTimeReceivedIsTxTime, hash.ToString().c_str());
-                        wtx.fTimeReceivedIsTxTime = 0;
-                    }
-                    vWalletUpgrade.push_back(hash);
-                }
-
-                if (wtx.nOrderPos == -1)
-                    fAnyUnordered = true;
-
-                //// debug print
-                //printf("LoadWallet  %s\n", wtx.GetHash().ToString().c_str());
-                //printf(" %12"PRI64d"  %s  %s  %s\n",
-                //    wtx.vout[0].nValue,
-                //    DateTimeStrFormat("%x %H:%M:%S", wtx.GetBlockTime()).c_str(),
-                //    wtx.hashBlock.ToString().substr(0,20).c_str(),
-                //    wtx.mapValue["message"].c_str());
-            }
-            else if (strType == "acentry")
-            {
-                string strAccount;
-                ssKey >> strAccount;
-                uint64 nNumber;
-                ssKey >> nNumber;
-                if (nNumber > nAccountingEntryNumber)
-                    nAccountingEntryNumber = nNumber;
-
-                if (!fAnyUnordered)
-                {
-                    CAccountingEntry acentry;
-                    ssValue >> acentry;
-                    if (acentry.nOrderPos == -1)
-                        fAnyUnordered = true;
-                }
-            }
-            else if (strType == "key" || strType == "wkey")
-            {
-                vector<unsigned char> vchPubKey;
-                ssKey >> vchPubKey;
-                CKey key;
-                if (strType == "key")
-                {
-                    CPrivKey pkey;
-                    ssValue >> pkey;
-                    key.SetPubKey(vchPubKey);
-                    key.SetPrivKey(pkey);
-                    if (key.GetPubKey() != vchPubKey)
-                    {
-                        printf("Error reading wallet database: CPrivKey pubkey inconsistency\n");
-                        return DB_CORRUPT;
-                    }
-                    if (!key.IsValid())
-                    {
-                        printf("Error reading wallet database: invalid CPrivKey\n");
-                        return DB_CORRUPT;
-                    }
-                }
+                // losing keys is considered a catastrophic error, anything else
+                // we assume the user can live with:
+                if (IsKeyType(strType))
+                    result = DB_CORRUPT;
                 else
                 {
-                    CWalletKey wkey;
-                    ssValue >> wkey;
-                    key.SetPubKey(vchPubKey);
-                    key.SetPrivKey(wkey.vchPrivKey);
-                    if (key.GetPubKey() != vchPubKey)
-                    {
-                        printf("Error reading wallet database: CWalletKey pubkey inconsistency\n");
-                        return DB_CORRUPT;
-                    }
-                    if (!key.IsValid())
-                    {
-                        printf("Error reading wallet database: invalid CWalletKey\n");
-                        return DB_CORRUPT;
-                    }
-                }
-                if (!pwallet->LoadKey(key))
-                {
-                    printf("Error reading wallet database: LoadKey failed\n");
-                    return DB_CORRUPT;
+                    // Leave other errors alone, if we try to fix them we might make things worse.
+                    fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
+                    if (strType == "tx")
+                        // Rescan if there is a bad transaction record:
+                        SoftSetBoolArg("-rescan", true);
                 }
             }
-            else if (strType == "mkey")
-            {
-                unsigned int nID;
-                ssKey >> nID;
-                CMasterKey kMasterKey;
-                ssValue >> kMasterKey;
-                if(pwallet->mapMasterKeys.count(nID) != 0)
-                {
-                    printf("Error reading wallet database: duplicate CMasterKey id %u\n", nID);
-                    return DB_CORRUPT;
-                }
-                pwallet->mapMasterKeys[nID] = kMasterKey;
-                if (pwallet->nMasterKeyMaxID < nID)
-                    pwallet->nMasterKeyMaxID = nID;
-            }
-            else if (strType == "ckey")
-            {
-                vector<unsigned char> vchPubKey;
-                ssKey >> vchPubKey;
-                vector<unsigned char> vchPrivKey;
-                ssValue >> vchPrivKey;
-                if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
-                {
-                    printf("Error reading wallet database: LoadCryptedKey failed\n");
-                    return DB_CORRUPT;
-                }
-                fIsEncrypted = true;
-            }
-            else if (strType == "defaultkey")
-            {
-                ssValue >> pwallet->vchDefaultKey;
-            }
-            else if (strType == "pool")
-            {
-                int64 nIndex;
-                ssKey >> nIndex;
-                pwallet->setKeyPool.insert(nIndex);
-            }
-            else if (strType == "version")
-            {
-                ssValue >> nFileVersion;
-                if (nFileVersion == 10300)
-                    nFileVersion = 300;
-            }
-            else if (strType == "cscript")
-            {
-                uint160 hash;
-                ssKey >> hash;
-                CScript script;
-                ssValue >> script;
-                if (!pwallet->LoadCScript(script))
-                {
-                    printf("Error reading wallet database: LoadCScript failed\n");
-                    return DB_CORRUPT;
-                }
-            }
-            else if (strType == "orderposnext")
-            {
-                ssValue >> pwallet->nOrderPosNext;
-            }
+            if (!strErr.empty())
+                printf("%s\n", strErr.c_str());
         }
         pcursor->close();
     }
+    catch (...)
+    {
+        result = DB_CORRUPT;
+    }
 
-    BOOST_FOREACH(uint256 hash, vWalletUpgrade)
-        WriteTx(hash, pwallet->mapWallet[hash]);
+    if (fNoncriticalErrors && result == DB_LOAD_OK)
+        result = DB_NONCRITICAL_ERROR;
+
+    // Any wallet corruption at all: skip any rewriting or
+    // upgrading, we don't want to make it worse.
+    if (result != DB_LOAD_OK)
+        return result;
 
     printf("nFileVersion = %d\n", nFileVersion);
 
+    BOOST_FOREACH(uint256 hash, vWalletUpgrade)
+        WriteTx(hash, pwallet->mapWallet[hash]);
 
     // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
     if (fIsEncrypted && (nFileVersion == 40000 || nFileVersion == 50000))
@@ -414,10 +476,9 @@ int CWalletDB::LoadWallet(CWallet* pwallet)
         WriteVersion(CLIENT_VERSION);
 
     if (fAnyUnordered)
-        return ReorderTransactions(pwallet);
+        result = ReorderTransactions(pwallet);
 
-    // If you add anything else here... be sure to do it if ReorderTransactions returns DB_LOAD_OK too!
-    return DB_LOAD_OK;
+    return result;
 }
 
 void ThreadFlushWalletDB(void* parg)
@@ -520,4 +581,95 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
         Sleep(100);
     }
     return false;
+}
+
+//
+// Try to (very carefully!) recover wallet.dat if there is a problem.
+//
+bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
+{
+    // Recovery procedure:
+    // move wallet.dat to wallet.timestamp.bak
+    // Call Salvage with fAggressive=true to
+    // get as much data as possible.
+    // Rewrite salvaged data to wallet.dat
+    // Set -rescan so any missing transactions will be
+    // found.
+    int64 now = GetTime();
+    std::string newFilename = strprintf("wallet.%"PRI64d".bak", now);
+
+    int result = dbenv.dbenv.dbrename(NULL, filename.c_str(), NULL,
+                                      newFilename.c_str(), DB_AUTO_COMMIT);
+    if (result == 0)
+        printf("Renamed %s to %s\n", filename.c_str(), newFilename.c_str());
+    else
+    {
+        printf("Failed to rename %s to %s\n", filename.c_str(), newFilename.c_str());
+        return false;
+    }
+
+    std::vector<CDBEnv::KeyValPair> salvagedData;
+    bool allOK = dbenv.Salvage(newFilename, true, salvagedData);
+    if (salvagedData.empty())
+    {
+        printf("Salvage(aggressive) found no records in %s.\n", newFilename.c_str());
+        return false;
+    }
+    printf("Salvage(aggressive) found %"PRIszu" records\n", salvagedData.size());
+
+    bool fSuccess = allOK;
+    Db* pdbCopy = new Db(&dbenv.dbenv, 0);
+    int ret = pdbCopy->open(NULL,                 // Txn pointer
+                            filename.c_str(),   // Filename
+                            "main",    // Logical db name
+                            DB_BTREE,  // Database type
+                            DB_CREATE,    // Flags
+                            0);
+    if (ret > 0)
+    {
+        printf("Cannot create database file %s\n", filename.c_str());
+        return false;
+    }
+    CWallet dummyWallet;
+    int nFileVersion = 0;
+    vector<uint256> vWalletUpgrade;
+    bool fIsEncrypted = false;
+    bool fAnyUnordered = false;
+
+    DbTxn* ptxn = dbenv.TxnBegin();
+    BOOST_FOREACH(CDBEnv::KeyValPair& row, salvagedData)
+    {
+        if (fOnlyKeys)
+        {
+            CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
+            string strType, strErr;
+            bool fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue,
+                                        nFileVersion, vWalletUpgrade,
+                                        fIsEncrypted, fAnyUnordered,
+                                        strType, strErr);
+            if (!IsKeyType(strType))
+                continue;
+            if (!fReadOK)
+            {
+                printf("WARNING: CWalletDB::Recover skipping %s: %s\n", strType.c_str(), strErr.c_str());
+                continue;
+            }
+        }
+        Dbt datKey(&row.first[0], row.first.size());
+        Dbt datValue(&row.second[0], row.second.size());
+        int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
+        if (ret2 > 0)
+            fSuccess = false;
+    }
+    ptxn->commit(0);
+    pdbCopy->close(0);
+    delete pdbCopy;
+
+    return fSuccess;
+}
+
+bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename)
+{
+    return CWalletDB::Recover(dbenv, filename, false);
 }
