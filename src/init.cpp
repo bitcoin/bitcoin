@@ -258,7 +258,7 @@ bool AppInit2(int argc, char* argv[])
         // On Windows, show a message box, as there is no stderr
         ThreadSafeMessageBox(strUsage, _("Usage"), wxOK | wxMODAL);
 #else
-        fprintf(stderr, "%s", strUsage.c_str());
+        fprintf(stdout, "%s", strUsage.c_str());
 #endif
         return false;
     }

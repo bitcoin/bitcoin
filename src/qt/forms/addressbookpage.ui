@@ -96,7 +96,7 @@
         <string>Sign a message to prove you own this address</string>
        </property>
        <property name="text">
-        <string>&amp;Sign Message</string>
+        <string>Sign &amp;Message</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
