@@ -447,7 +447,6 @@ bool AppInit2()
     FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
-    const char* pszDataDir = GetDataDir().string().c_str();
     if (!lock.try_lock())
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s.  Bitcoin is probably already running."), pszDataDir));
 
