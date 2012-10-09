@@ -259,7 +259,7 @@ bool AppInit2(int argc, char* argv[])
         // On Windows, show a message box, as there is no stderr
         wxMessageBox(strUsage, "Usage");
 #else
-        fprintf(stderr, "%s", strUsage.c_str());
+        fprintf(stdout, "%s", strUsage.c_str());
 #endif
         return false;
     }
