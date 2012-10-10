@@ -1853,7 +1853,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
     return true;
 }
 
-bool CBlock::AcceptBlock()
+bool CBlock::AcceptBlock(CDiskBlockPos *dbp)
 {
     // Check for duplicate
     uint256 hash = GetHash();
@@ -1909,10 +1909,17 @@ bool CBlock::AcceptBlock()
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
         return error("AcceptBlock() : out of disk space");
+
     unsigned int nFile = -1;
     unsigned int nBlockPos = 0;
-    if (!WriteToDisk(nFile, nBlockPos))
-        return error("AcceptBlock() : WriteToDisk failed");
+    if (dbp) {
+        nFile = dbp->nFile;
+        nBlockPos = dbp->nPos;
+    } else {
+        if (!WriteToDisk(nFile, nBlockPos))
+            return error("AcceptBlock() : WriteToDisk failed");
+    }
+
     if (!AddToBlockIndex(nFile, nBlockPos))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
@@ -1941,7 +1948,7 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     return (nFound >= nRequired);
 }
 
-bool ProcessBlock(CNode* pfrom, CBlock* pblock)
+bool ProcessBlock(CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
     // Check for duplicate
     uint256 hash = pblock->GetHash();
@@ -1996,7 +2003,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     }
 
     // Store to disk
-    if (!pblock->AcceptBlock())
+    if (!pblock->AcceptBlock(dbp))
         return error("ProcessBlock() : AcceptBlock FAILED");
 
     // Recursively process any orphan blocks that depended on this one
@@ -2245,7 +2252,7 @@ void PrintBlockTree()
     }
 }
 
-bool LoadExternalBlockFile(FILE* fileIn)
+bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
 {
     int64 nStart = GetTimeMillis();
 
@@ -2288,7 +2295,9 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 {
                     CBlock block;
                     blkdat >> block;
-                    if (ProcessBlock(NULL,&block))
+                    if (dbp)
+                        dbp->nPos = nPos + 4;
+                    if (ProcessBlock(NULL, &block, dbp))
                     {
                         nLoaded++;
                         nPos += 4 + nSize;
@@ -2303,6 +2312,29 @@ bool LoadExternalBlockFile(FILE* fileIn)
     }
     printf("Loaded %i blocks from external file in %"PRI64d"ms\n", nLoaded, GetTimeMillis() - nStart);
     return nLoaded > 0;
+}
+
+void ReindexBlockchain()
+{
+    int nFile = 1;
+    while (1) {
+        printf("Reindexing blk%04d.dat...\n", nFile);
+
+        filesystem::path pathBlockFile = BlockFilePath(nFile);
+        FILE *file = fopen(pathBlockFile.string().c_str(), "rb");
+        if (!file)
+            break;
+
+        CDiskBlockPos dbp(nFile);
+        LoadExternalBlockFile(file, &dbp);
+        nFile++;
+    }
+}
+
+void ReindexBlockchainPrep()
+{
+    printf("Removing blkindex.dat, in preparation for -reindex\n");
+    bitdb.RemoveDb("blkindex.dat");
 }
 
 
