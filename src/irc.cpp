@@ -5,8 +5,9 @@
 
 #include "irc.h"
 #include "net.h"
-#include "strlcpy.h"
 #include "base58.h"
+
+#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
 
 using namespace std;
 using namespace boost;
@@ -324,30 +325,27 @@ void ThreadIRCSeed2(void* parg)
             if (vWords.size() < 2)
                 continue;
 
-            char pszName[10000];
-            pszName[0] = '\0';
+            std::string strName;
 
             if (vWords[1] == "352" && vWords.size() >= 8)
             {
                 // index 7 is limited to 16 characters
                 // could get full length name at index 10, but would be different from join messages
-                strlcpy(pszName, vWords[7].c_str(), sizeof(pszName));
+                strName = vWords[7].c_str();
                 printf("IRC got who\n");
             }
 
             if (vWords[1] == "JOIN" && vWords[0].size() > 1)
             {
                 // :username!username@50000007.F000000B.90000002.IP JOIN :#channelname
-                strlcpy(pszName, vWords[0].c_str() + 1, sizeof(pszName));
-                if (strchr(pszName, '!'))
-                    *strchr(pszName, '!') = '\0';
+                strName = vWords[0].substr(1, vWords[0].find('!', 1) - 1);
                 printf("IRC got join\n");
             }
 
-            if (pszName[0] == 'u')
+            if (boost::algorithm::starts_with(strName, "u"))
             {
                 CAddress addr;
-                if (DecodeAddress(pszName, addr))
+                if (DecodeAddress(strName, addr))
                 {
                     addr.nTime = GetAdjustedTime();
                     if (addrman.Add(addr, addrConnect, 51 * 60))
