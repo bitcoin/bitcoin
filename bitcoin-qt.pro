@@ -38,6 +38,8 @@ QMAKE_LFLAGS *= -fstack-protector-all --param ssp-buffer-size=1
 # We need to exclude this for Windows cross compile with MinGW 4.2.x, as it will result in a non-working executable!
 # This can be enabled for Windows, when we switch to MinGW >= 4.4.x.
 }
+# for extra security (see: https://wiki.debian.org/Hardening)
+QMAKE_CXXFLAGS *= -D_FORTIFY_SOURCE=2 -Wl,-z,relro -Wl,-z,now
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
 win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
 
