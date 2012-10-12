@@ -73,7 +73,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location line="+11"/>
         <source>Show &amp;QR Code</source>
-        <translation>Mostrar &amp;Código QR</translation>
+        <translation>Mostrar Código &amp;QR</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -82,11 +82,16 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Sign Message</source>
-        <translation>&amp;Assinar Mensagem</translation>
+        <source>Sign &amp;Message</source>
+        <translation>Assinar &amp;Mensagem</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+25"/>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Apagar o endereço selecionado da lista</translation>
+    </message>
+    <message>
+        <location line="-14"/>
         <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
         <translation>Verifique a mensagem para assegurar que foi assinada com o endereço Bitcoin especificado</translation>
     </message>
@@ -96,14 +101,9 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>&amp;Verificar Mensagem</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>Delete the currently selected address from the list. Only sending addresses can be deleted.</source>
-        <translation>Eliminar o endereço selecionado da lista. Apenas endereços de envio podem ser eliminados.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+14"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Eliminar</translation>
+        <translation>E&amp;liminar</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+65"/>
@@ -118,7 +118,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location line="+250"/>
         <source>Export Address Book Data</source>
-        <translation>Exportar de dados do Livro de Endereços</translation>
+        <translation>Exportar dados do Livro de Endereços</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -133,7 +133,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>Could not write to file %1.</translation>
+        <translation>Não conseguiu escrever para o ficheiro %1.</translation>
     </message>
 </context>
 <context>
@@ -232,24 +232,29 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Tem a certeza que deseja encriptar a carteira?</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+15"/>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>IMPORTANTE: Qualquer cópia de segurança anterior da carteira deverá ser substituída com o novo, actualmente encriptado, ficheiro de carteira. Por razões de segurança, cópias de segurança não encriptadas efectuadas anteriormente do ficheiro da carteira tornar-se-ão inúteis assim que começar a usar a nova carteira encriptada.</translation>
+    </message>
+    <message>
+        <location line="+100"/>
         <location line="+24"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Atenção: A tecla Caps Lock está activa!</translation>
     </message>
     <message>
-        <location line="-121"/>
-        <location line="+49"/>
+        <location line="-130"/>
+        <location line="+58"/>
         <source>Wallet encrypted</source>
         <translation>Carteira encriptada</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-56"/>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>O cliente Bitcoin irá agora ser fechado para terminar o processo de encriptação. Recorde que a encriptação da sua carteira não protegerá totalmente os seus bitcoins de serem roubados por programas maliciosos que infectem o seu computador.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+13"/>
         <location line="+7"/>
         <location line="+42"/>
         <location line="+6"/>
@@ -293,19 +298,19 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+228"/>
+        <location filename="../bitcoingui.cpp" line="+257"/>
         <source>Sign &amp;message...</source>
         <translation>Assinar &amp;mensagem...</translation>
     </message>
     <message>
-        <location line="+295"/>
+        <location line="+237"/>
         <source>Synchronizing with network...</source>
         <translation>Sincronizando com a rede...</translation>
     </message>
     <message>
-        <location line="-325"/>
+        <location line="-299"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Visão geral</translation>
+        <translation>Visã&amp;o geral</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -313,7 +318,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Mostrar visão geral da carteira</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+17"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Transações</translation>
     </message>
@@ -325,7 +330,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location line="+5"/>
         <source>&amp;Address Book</source>
-        <translation>&amp;Livro de endereços</translation>
+        <translation>L&amp;ivro de endereços</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -333,7 +338,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Editar a lista de endereços e rótulos</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-13"/>
         <source>&amp;Receive coins</source>
         <translation>&amp;Receber moedas</translation>
     </message>
@@ -343,14 +348,14 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Mostrar a lista de endereços para receber pagamentos</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-7"/>
         <source>&amp;Send coins</source>
         <translation>&amp;Enviar moedas</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+35"/>
         <source>E&amp;xit</source>
-        <translation>S&amp;air</translation>
+        <translation>Fec&amp;har</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -378,9 +383,9 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>&amp;Opções...</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Encriptar Carteira...</translation>
+        <translation>E&amp;ncriptar Carteira...</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -390,7 +395,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location line="+2"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Mudar Palavra-passe...</translation>
+        <translation>Mudar &amp;Palavra-passe...</translation>
     </message>
     <message numerus="yes">
         <location line="+241"/>
@@ -403,42 +408,27 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Recuperados %1 de %2 blocos do histórico de transações (%3% completo)</translation>
     </message>
     <message>
-        <location line="-254"/>
+        <location line="-242"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportar...</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-58"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Enviar moedas para um endereço bitcoin</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Sign a message to prove you own a Bitcoin address</source>
-        <translation>Assine uma mensagem para provar que é dono de um endereço Bitcoin</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Verify a message to ensure it was signed with a specified Bitcoin address</source>
-        <translation>Verifique a mensagem para assegurar que foi assinada com o endereço Bitcoin especificado</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>S&amp;ignatures</source>
-        <translation>A&amp;ssinaturas</translation>
-    </message>
-    <message>
-        <location line="+37"/>
+        <location line="+45"/>
         <source>Modify configuration options for Bitcoin</source>
         <translation>Modificar opções de configuração para bitcoin</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+14"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar os dados no separador actual para um ficheiro</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-10"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Encriptar ou desencriptar carteira</translation>
     </message>
@@ -453,9 +443,9 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Mudar a frase de segurança utilizada na encriptação da carteira</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+6"/>
         <source>&amp;Debug window</source>
-        <translation>&amp;Janela de depuração</translation>
+        <translation>Janela de &amp;depuração</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -463,12 +453,12 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Abrir consola de diagnóstico e depuração</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-5"/>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verificar mensagem...</translation>
     </message>
     <message>
-        <location line="-160"/>
+        <location line="-186"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -478,29 +468,29 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Carteira</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+168"/>
         <source>&amp;About Bitcoin</source>
         <translation>&amp;Sobre o Bitcoin</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Mostrar / Ocultar</translation>
+        <translation>Mo&amp;strar / Ocultar</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+39"/>
         <source>&amp;File</source>
         <translation>&amp;Ficheiro</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+8"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Configurações</translation>
+        <translation>Con&amp;figurações</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>&amp;Help</source>
-        <translation>&amp;Ajuda</translation>
+        <translation>A&amp;juda</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -508,7 +498,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Barra de separadores</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
         <source>Actions toolbar</source>
         <translation>Barra de ações</translation>
     </message>
@@ -516,7 +506,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <location line="+13"/>
         <location line="+9"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation>[rede de testes]</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -525,7 +515,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <translation>Cliente Bitcoin</translation>
     </message>
     <message numerus="yes">
-        <location line="+71"/>
+        <location line="+69"/>
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n ligação ativa à rede Bitcoin</numerusform><numerusform>%n ligações ativas à rede Bitcoin</numerusform></translation>
     </message>
@@ -597,12 +587,13 @@ Type: %3
 Address: %4
 </source>
         <translation>Data: %1
-Quantidade: %2
+Quantia: %2
 Tipo: %3
-Endereço: %4</translation>
+Endereço: %4
+</translation>
     </message>
     <message>
-        <location line="+120"/>
+        <location line="+100"/>
         <location line="+15"/>
         <source>URI handling</source>
         <translation>Manuseamento URI</translation>
@@ -677,7 +668,7 @@ Endereço: %4</translation>
     <message>
         <location line="+7"/>
         <source>&amp;Address</source>
-        <translation>&amp;Endereço</translation>
+        <translation>E&amp;ndereço</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -697,7 +688,7 @@ Endereço: %4</translation>
     <message>
         <location line="+3"/>
         <source>Edit receiving address</source>
-        <translation>&amp;Ajuda</translation>
+        <translation>Editar endereço de entrada</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -784,7 +775,7 @@ Endereço: %4</translation>
     <message>
         <location line="+6"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Taxa de transação opcional por kB que ajuda a assegurar que as suas transações serão processadas rapidamente. A maioria das transações tem 1 kB. Taxa de 0.01 recomendada.</translation>
+        <translation>Taxa de transação opcional por KB que ajuda a assegurar que as suas transações serão processadas rapidamente. A maioria das transações tem 1 kB. Taxa de 0.01 recomendada.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -804,12 +795,12 @@ Endereço: %4</translation>
     <message>
         <location line="+7"/>
         <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
-        <translation type="unfinished"/>
+        <translation>Destaque as bases de dados de blocos e endereços ao fechar. Isto significa que elas poderão ser movidas para outra pasta de dados, mas tornará a operação de fechar mais lenta. A carteira é sempre destacada.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Detach databases at shutdown</source>
-        <translation>&amp;Separar bases de dados ao desligar</translation>
+        <translation>Separar bases de &amp;dados ao desligar</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -834,12 +825,12 @@ Endereço: %4</translation>
     <message>
         <location line="+3"/>
         <source>&amp;Connect through SOCKS proxy:</source>
-        <translation>&amp;Ligar através de proxy SOCKS:</translation>
+        <translation>Ligar através de proxy SO&amp;CKS:</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Proxy &amp;IP:</source>
-        <translation>IP do &amp;proxy:</translation>
+        <translation>&amp;IP do proxy:</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -859,7 +850,7 @@ Endereço: %4</translation>
     <message>
         <location line="+7"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>Versão &amp;SOCKS:</translation>
+        <translation>&amp;Versão SOCKS:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -894,12 +885,12 @@ Endereço: %4</translation>
     <message>
         <location line="+21"/>
         <source>&amp;Display</source>
-        <translation>&amp;Janela</translation>
+        <translation>&amp;Mostrar</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>User Interface &amp;language:</source>
-        <translation>Linguagem da interface de &amp;utilizador:</translation>
+        <translation>&amp;Linguagem da interface de utilizador:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -924,7 +915,7 @@ Endereço: %4</translation>
     <message>
         <location line="+3"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Mostrar endereços na lista de transações</translation>
+        <translation>Mostrar en&amp;dereços na lista de transações</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -975,7 +966,7 @@ Endereço: %4</translation>
         <location line="+33"/>
         <location line="+183"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>A informação mostrada poderá estar desatualizada. A sua carteira sincroniza automaticamente com a rede Bitcoin depois de estabelecer ligação, mas este processo ainda não está completo.</translation>
     </message>
     <message>
         <location line="-141"/>
@@ -1015,7 +1006,7 @@ Endereço: %4</translation>
     <message>
         <location line="-118"/>
         <source>Your current balance</source>
-        <translation>O seu saldo actual</translation>
+        <translation>O seu saldo atual</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1059,7 +1050,7 @@ Endereço: %4</translation>
     <message>
         <location line="+19"/>
         <source>Message:</source>
-        <translation>Message:</translation>
+        <translation>Mensagem:</translation>
     </message>
     <message>
         <location line="+71"/>
@@ -1109,7 +1100,7 @@ Endereço: %4</translation>
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+328"/>
+        <location filename="../rpcconsole.cpp" line="+348"/>
         <source>N/A</source>
         <translation>N/D</translation>
     </message>
@@ -1126,7 +1117,7 @@ Endereço: %4</translation>
     <message>
         <location line="+68"/>
         <source>Using OpenSSL version</source>
-        <translation>Usar versão OpenSSL</translation>
+        <translation>Usando versão OpenSSL</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -1186,7 +1177,7 @@ Endereço: %4</translation>
     <message>
         <location line="+3"/>
         <source>&amp;Show</source>
-        <translation>&amp;Mostrar</translation>
+        <translation>Mo&amp;strar</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1260,8 +1251,8 @@ Endereço: %4</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Add Recipient</source>
-        <translation>&amp;Adicionar Destinatário</translation>
+        <source>Add &amp;Recipient</source>
+        <translation>Adicionar &amp;Destinatário</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1271,7 +1262,7 @@ Endereço: %4</translation>
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>Limpar &amp;Tudo</translation>
+        <translation>&amp;Limpar Tudo</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -1290,7 +1281,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Send</source>
+        <source>S&amp;end</source>
         <translation>&amp;Enviar</translation>
     </message>
     <message>
@@ -1346,7 +1337,7 @@ Endereço: %4</translation>
     <message>
         <location line="+5"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Erro: A transação foi rejeitada.  Isso poderá acontecer se algumas das moedas na sua carteira já tiverem sido gastas, se por exemplo tiver usado uma cópia do ficheiro wallet.dat e as moedas foram gastas na cópia mas não foram marcadas como gastas aqui.</translation>
+        <translation>Erro: A transação foi rejeitada. Isso poderá acontecer se algumas das moedas na sua carteira já tiverem sido gastas, se por exemplo tiver usado uma cópia do ficheiro wallet.dat e as moedas foram gastas na cópia mas não foram marcadas como gastas aqui.</translation>
     </message>
 </context>
 <context>
@@ -1359,12 +1350,12 @@ Endereço: %4</translation>
     <message>
         <location line="+15"/>
         <source>A&amp;mount:</source>
-        <translation>Q&amp;uantia:</translation>
+        <translation>Qu&amp;antia:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Pay &amp;To:</source>
-        <translation>Pagar &amp;A:</translation>
+        <translation>&amp;Pagar A:</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1375,7 +1366,7 @@ Endereço: %4</translation>
     <message>
         <location line="+9"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Rótulo:</translation>
+        <translation>Rótu&amp;lo:</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1424,7 +1415,7 @@ Endereço: %4</translation>
         <location line="+13"/>
         <location line="+124"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Assinar Mensagem</translation>
+        <translation>A&amp;ssinar Mensagem</translation>
     </message>
     <message>
         <location line="-118"/>
@@ -1434,7 +1425,7 @@ Endereço: %4</translation>
     <message>
         <location line="+18"/>
         <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introduza um endereço Bitcoin (p.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>O endereço a utilizar para assinar a mensagem (p.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1451,7 +1442,7 @@ Endereço: %4</translation>
     <message>
         <location line="-193"/>
         <source>Paste address from clipboard</source>
-        <translation>Paste address from clipboard</translation>
+        <translation>Cole endereço da área de transferência</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1493,12 +1484,12 @@ Endereço: %4</translation>
     <message>
         <location line="-64"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>Introduza o endereço de assinatura, mensagem (assegure-se de copiar quebras de linha, espaços, tabuladores, etc. exactamente) e assinatura abaixo para verificar a mensagem. Tenha atenção para não ler mais na assinatura do que o que estiver na mensagem assinada, para evitar ser enganado por um atacante que se encontre entre si e quem assinou a mensagem.</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Introduza um endereço Bitcoin (p.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>O endereço utilizado para assinar a mensagem (p.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -1646,7 +1637,7 @@ Endereço: %4</translation>
         <translation>Gerado</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <location line="+17"/>
         <source>From</source>
         <translation>De</translation>
@@ -1757,12 +1748,12 @@ Endereço: %4</translation>
         <translation>falso</translation>
     </message>
     <message>
-        <location line="-212"/>
+        <location line="-211"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ainda não foi transmitida com sucesso</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+35"/>
         <source>unknown</source>
         <translation>desconhecido</translation>
     </message>
@@ -2073,7 +2064,7 @@ Endereço: %4</translation>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+65"/>
+        <location filename="../bitcoinstrings.cpp" line="+71"/>
         <source>Bitcoin version</source>
         <translation>Versão Bitcoin</translation>
     </message>
@@ -2088,12 +2079,12 @@ Endereço: %4</translation>
         <translation>Enviar comando para -server ou bitcoind</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-19"/>
         <source>List commands</source>
         <translation>Listar comandos</translation>
     </message>
     <message>
-        <location line="-10"/>
+        <location line="-11"/>
         <source>Get help for a command</source>
         <translation>Obter ajuda para um comando</translation>
     </message>
@@ -2168,22 +2159,47 @@ Endereço: %4</translation>
         <translation>Tolerância para desligar nós mal-formados (por defeito: 100)</translation>
     </message>
     <message>
-        <location line="-105"/>
+        <location line="-104"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Número de segundos a impedir que nós mal-formados se liguem de novo (por defeito: 86400)</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="-22"/>
+        <source>An error occurred while setting up the RPC port %i for listening on IPv6, falling back to IPv4: %s</source>
+        <translation>Ocorreu um erro ao definir a porta %i do serviço RPC a escutar em IPv6, a usar IPv4: %s</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
+        <translation>Ocorreu um erro ao definir a porta %u do serviço RPC a escutar em IPv4: %s</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Detach block and address databases. Increases shutdown time (default: 0)</source>
         <translation>Separar bases de dados de blocos e endereços. Aumenta o tempo necessário para desligar (por defeito: 0)</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+12"/>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
+        <translation>Escutar por ligações JSON-RPC em &lt;port&gt; (por defeito: 8332 ou rede de testes: 18332)</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Aceitar comandos da consola e JSON-RPC</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+36"/>
+        <source>Importing blockchain data file.</source>
+        <translation>Importar ficheiro de dados da cadeia de blocos.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Importing bootstrap blockchain data file.</source>
+        <translation>Importar ficheiro de início rápido da cadeia de blocos.</translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Correr o processo como um daemon e aceitar comandos</translation>
     </message>
@@ -2193,14 +2209,14 @@ Endereço: %4</translation>
         <translation>Utilizar a rede de testes - testnet</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-92"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Aceitar ligações externas (padrão: 1 sem -proxy ou -connect)</translation>
     </message>
     <message>
         <location line="-20"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
-        <translation type="unfinished"/>
+        <translation>Definir tamanho máximo de transações de alta-/baixa-prioridade em bytes (por defeito: 27000)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2210,7 +2226,7 @@ Endereço: %4</translation>
     <message>
         <location line="+3"/>
         <source>Warning: Displayed transactions may not be correct! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>Atenção: As transações mostradas poderão não estar correctas! Poderá ter que atualizar ou outros nós poderão ter que atualizar.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2218,12 +2234,7 @@ Endereço: %4</translation>
         <translation>Atenção: Por favor verifique que a data e hora do seu computador estão correctas! Se o seu relógio não estiver certo o Bitcoin não irá funcionar correctamente.</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Ocorreu um erro ao definir a porta de escuta %i do serviço RPC: %s</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+16"/>
         <source>Block creation options:</source>
         <translation>Opções de criação de Bloco:</translation>
     </message>
@@ -2248,17 +2259,12 @@ Endereço: %4</translation>
         <translation>Encontrar pares usando procura DNS (por defeito: 1 excepto -connect)</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Importing blocks...</source>
-        <translation>A importar blocos...</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+11"/>
         <source>Invalid -tor address: &apos;%s&apos;</source>
         <translation>Endereço -tor inválido: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation>Armazenamento intermédio de recepção por ligação, &lt;n&gt;*1000 bytes (por defeito: 5000)</translation>
     </message>
@@ -2275,7 +2281,7 @@ Endereço: %4</translation>
     <message>
         <location line="+2"/>
         <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation type="unfinished"/>
+        <translation>Produzir informação de depuração extra. Implica todas as outras opções -debug*</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2310,17 +2316,17 @@ Endereço: %4</translation>
     <message>
         <location line="+7"/>
         <source>Set maximum block size in bytes (default: 250000)</source>
-        <translation type="unfinished"/>
+        <translation>Definir tamanho máximo de um bloco em bytes (por defeito: 250000)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Definir tamanho minímo de um bloco em bytes (por defeito: 0)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
+        <translation>Encolher ficheiro debug.log ao iniciar o cliente (por defeito: 1 sem -debug definido)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2340,7 +2346,7 @@ Endereço: %4</translation>
     <message>
         <location line="+1"/>
         <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Utilizar proxy para aceder a serviços escondidos Tor (por defeito: mesmo que -proxy)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2363,27 +2369,22 @@ Endereço: %4</translation>
         <translation>Palavra-passe para ligações JSON-RPC</translation>
     </message>
     <message>
-        <location line="-12"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
-        <translation>Escutar por ligações JSON-RPC na porta &lt;port&gt; (por defeito: 8332)</translation>
-    </message>
-    <message>
-        <location line="-41"/>
+        <location line="-52"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
         <translation>Permitir ligações JSON-RPC do endereço IP especificado</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+60"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Enviar comandos para o nó a correr em &lt;ip&gt; (por defeito: 127.0.0.1)</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-91"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executar comando quando mudar o melhor bloco (na consola, %s é substituído pela hash do bloco)</translation>
     </message>
     <message>
-        <location line="+113"/>
+        <location line="+114"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Atualize a carteira para o formato mais recente</translation>
     </message>
@@ -2408,12 +2409,12 @@ Endereço: %4</translation>
         <translation>Minuciosidade da verificação de blocos é (0-6, por defeito: 1)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Imports blocks from external blk000?.dat file</source>
         <translation>Importar blocos de ficheiro blk000?.dat externo</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+51"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Usar OpenSSL (https) para ligações JSON-RPC</translation>
     </message>
@@ -2428,22 +2429,22 @@ Endereço: %4</translation>
         <translation>Chave privada do servidor (por defeito: server.pem)</translation>
     </message>
     <message>
-        <location line="-110"/>
+        <location line="-116"/>
         <source>Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</source>
         <translation>Cifras aceitáveis (por defeito: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location line="+122"/>
+        <location line="+128"/>
         <source>This help message</source>
         <translation>Esta mensagem de ajuda</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-120"/>
         <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
         <translation>Impossível trancar a pasta de dados %s.  Provavelmente o Bitcoin já está a ser executado.</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -2458,14 +2459,14 @@ Endereço: %4</translation>
         <translation>Ligar através de um proxy socks</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-12"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Permitir procuras DNS para -addnode, -seednode e -connect</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+43"/>
         <source>Loading addresses...</source>
-        <translation>A carregar endereços...</translation>
+        <translation>Carregar endereços...</translation>
     </message>
     <message>
         <location line="-26"/>
@@ -2493,12 +2494,12 @@ Endereço: %4</translation>
         <translation>Erro ao carregar wallet.dat</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Endereço -proxy inválido: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+46"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Rede desconhecida especificada em -onlynet: &apos;%s&apos;</translation>
     </message>
@@ -2518,12 +2519,12 @@ Endereço: %4</translation>
         <translation>Não conseguiu resolver endereço -externalip: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Quantia inválida para -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="-14"/>
+        <location line="-15"/>
         <source>Error: could not start node</source>
         <translation>Erro: não iniciou o nó</translation>
     </message>
@@ -2533,14 +2534,14 @@ Endereço: %4</translation>
         <translation>Erro: Carteira bloqueada, incapaz de criar transação  </translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-56"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
         <translation>Erro: Esta transação requer uma taxa de transação mínima de %s devido á sua quantia, complexidade, ou uso de fundos recebidos recentemente  </translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>Error: Transaction creation failed  </source>
-        <translation>Error: Transaction creation failed  </translation>
+        <translation>Erro: Criação da transação falhou</translation>
     </message>
     <message>
         <location line="+42"/>
@@ -2548,27 +2549,27 @@ Endereço: %4</translation>
         <translation>Enviando...</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-101"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</translation>
+        <translation>Erro: A transação foi rejeitada.  Isso poderá acontecer se algumas das moedas na sua carteira já tiverem sido gastas, se por exemplo tiver usado uma cópia do ficheiro wallet.dat e as moedas foram gastas na cópia mas não foram marcadas como gastas aqui.</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>Invalid amount</source>
         <translation>Quantia inválida</translation>
     </message>
     <message>
         <location line="-4"/>
         <source>Insufficient funds</source>
-        <translation>Insufficient funds</translation>
+        <translation>Fundos insuficientes</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Loading block index...</source>
-        <translation>A carregar índice de blocos...</translation>
+        <translation>Carregar índice de blocos...</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-45"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation>Adicione um nó ao qual se ligar e tentar manter a ligação aberta</translation>
     </message>
@@ -2578,19 +2579,19 @@ Endereço: %4</translation>
         <translation>Incapaz de vincular à porta %s neste computador.  Provavelmente o Bitcoin já está a funcionar.</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+47"/>
         <source>Find peers using internet relay chat (default: 0)</source>
         <translation>Encontrar pares usando IRC (por defeito: 0)</translation>
     </message>
     <message>
         <location line="-2"/>
         <source>Fee per KB to add to transactions you send</source>
-        <translation>Fee per KB to add to transactions you send</translation>
+        <translation>Taxa por KB a adicionar a transações enviadas</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Loading wallet...</source>
-        <translation>A carregar carteira...</translation>
+        <translation>Carregar carteira...</translation>
     </message>
     <message>
         <location line="-39"/>
@@ -2623,7 +2624,7 @@ Endereço: %4</translation>
         <translation>Para usar a opção %s</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-139"/>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:
@@ -2642,12 +2643,12 @@ Se o ficheiro não existir, crie-o com permissões de leitura apenas para o dono
 </translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+80"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-29"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>

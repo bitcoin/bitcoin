@@ -85,12 +85,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"></translation>
+        <translation>Sign &amp;Message</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete the currently selected address from the list</translation>
     </message>
     <message>
         <location line="-14"/>
@@ -236,7 +236,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+15"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</translation>
     </message>
     <message>
         <location line="+100"/>
@@ -1272,7 +1272,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"></translation>
+        <translation>Add &amp;Recipient</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1302,7 +1302,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"></translation>
+        <translation>S&amp;end</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-59"/>
@@ -2199,14 +2199,9 @@ Address: %4
         <translation>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <source>An error occurred while setting up the RPC port %i for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="-19"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"></translation>
+        <translation>An error occurred while setting up the RPC port %u for listening on IPv4: %s</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2216,7 +2211,7 @@ Address: %4
     <message>
         <location line="+12"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"></translation>
+        <translation>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -2226,12 +2221,12 @@ Address: %4
     <message>
         <location line="+36"/>
         <source>Importing blockchain data file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Importing blockchain data file.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Importing bootstrap blockchain data file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Importing bootstrap blockchain data file.</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -2249,7 +2244,12 @@ Address: %4
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-45"/>
+        <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
+        <translation>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</source>
         <translation>Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)</translation>
     </message>
