@@ -52,6 +52,7 @@ protected:
     void closeEvent(QCloseEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
+    bool eventFilter(QObject *object, QEvent *event);
 
 private:
     ClientModel *clientModel;
@@ -172,7 +173,7 @@ private slots:
 
     /** Show window if hidden, unminimize when minimized, rise when obscured or show if hidden and fToggleHidden is true */
     void showNormalIfMinimized(bool fToggleHidden = false);
-    /** simply calls showNormalIfMinimized(true) for use in SLOT() macro */
+    /** Simply calls showNormalIfMinimized(true) for use in SLOT() macro */
     void toggleHidden();
 };
 
