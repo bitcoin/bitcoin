@@ -3745,9 +3745,6 @@ public:
     }
 };
 
-const char* pszDummy = "\0\0";
-CScript scriptDummy(std::vector<unsigned char>(pszDummy, pszDummy + sizeof(pszDummy)));
-
 CBlock* CreateNewBlock(CReserveKey& reservekey)
 {
     CBlockIndex* pindexPrev = pindexBest;
@@ -3981,7 +3978,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
         pblock->UpdateTime(pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock.get());
         pblock->nNonce         = 0;
-        pblock->vtx[0].vin[0].scriptSig = scriptDummy;
+        pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
 
         CBlockIndex indexDummy(*pblock);
         indexDummy.pprev = pindexPrev;
