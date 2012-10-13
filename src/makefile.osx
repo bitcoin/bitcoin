@@ -98,6 +98,7 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/leveldb.o \
+    obj/sethash.o \
     obj/txdb.o
 
 ifndef USE_UPNP
