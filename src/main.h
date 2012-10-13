@@ -1797,8 +1797,9 @@ struct CCoinsStats
     uint64 nTransactions;
     uint64 nTransactionOutputs;
     uint64 nSerializedSize;
+    uint256 nHash;
 
-    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0) {}
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nHash(0) {}
 };
 
 /** Abstract view on the open txout dataset. */

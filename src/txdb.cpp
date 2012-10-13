@@ -5,6 +5,7 @@
 
 #include "txdb.h"
 #include "main.h"
+#include "sethash.h"
 
 using namespace std;
 
@@ -97,9 +98,29 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
     return Read('l', nFile);
 }
 
+class CPrunedOutputs
+{
+public:
+    uint256 nHash;
+    int nVersion;
+    int nHeight;
+    bool fCoinBase;
+    std::vector<CTxOut> vout;
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(nHash);
+        READWRITE(nVersion);
+        READWRITE(nHeight);
+        READWRITE(fCoinBase);
+        READWRITE(vout);
+    )
+};
+
 bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
+
+    CSetHash sethash;
 
     while (pcursor->Valid()) {
         try {
@@ -121,6 +142,16 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
                         stats.nTransactionOutputs++;
                 }
                 stats.nSerializedSize += 32 + slValue.size();
+
+                CPrunedOutputs outs;
+                outs.nHash = txhash;
+                outs.nVersion = coins.nVersion;
+                outs.nHeight = coins.nHeight;
+                outs.fCoinBase = coins.fCoinBase;
+                outs.vout = coins.vout;
+                while (outs.vout.size() > 0 && outs.vout.back().IsNull())
+                    outs.vout.pop_back();
+                sethash.add(outs);
             }
             pcursor->Next();
         } catch (std::exception &e) {
@@ -129,6 +160,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
     }
     delete pcursor;
     stats.nHeight = GetBestBlock()->nHeight;
+    stats.nHash = sethash.GetHash();
     return true;
 }
 

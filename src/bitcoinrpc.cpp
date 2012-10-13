@@ -257,6 +257,7 @@ static const CRPCCommand vRPCCommands[] =
     { "signrawtransaction",     &signrawtransaction,     false,  false },
     { "sendrawtransaction",     &sendrawtransaction,     false,  false },
     { "gettxoutsetinfo",        &gettxoutsetinfo,        true,   false },
+    { "gettxoutsethash",        &gettxoutsethash,        true,   false },
     { "gettxout",               &gettxout,               true,   false },
 };
 

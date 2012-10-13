@@ -178,6 +178,23 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
     return ret;
 }
 
+Value gettxoutsethash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "gettxoutsethash\n"
+            "Returns hash of the current unspent transaction output set.");
+
+    Object ret;
+
+    CCoinsStats stats;
+    if (pcoinsTip->GetStats(stats)) {
+        ret.push_back(Pair("bestblock", pcoinsTip->GetBestBlock()->GetBlockHash().GetHex()));
+        ret.push_back(Pair("txoutsethash", stats.nHash.GetHex()));
+    }
+    return ret;
+}
+
 Value gettxout(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
