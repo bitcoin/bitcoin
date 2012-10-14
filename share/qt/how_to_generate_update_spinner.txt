@@ -1,0 +1,39 @@
+How to generate the update_spinner.mng
+
+You will need ImageMagick in your path (the 'convert' executable at least)
+
+Go here: http://preloaders.net/en/circular
+
+Select the base image you want to use.
+
+Image type: APNG
+Transparent background: Yes
+Foreground color: F2A555 (or select a color)
+Animation speed: (default value)
+Preloader size: 16 x 16
+
+(no Advanced Options changed)
+
+Additional download options:
+
+Check Download as sprites
+
+Press Download now
+
+Rename the file to base.png
+
+convert -dispose 3 -delay 10 base.png -crop 16x16 +repage update_spinner.mng
+
+If you want to use the make_spinner.py (gives worse results):
+
+In http://preloaders.net/en/circular change
+
+Preloader size: 128 x 128
+
+Press Download now
+
+Rename the file to base.png
+
+convert base.png -crop 128x128+0+0 reload_scaled.png
+
+and use the make_spinner.py . Note that the results aren't very good.
