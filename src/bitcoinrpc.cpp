@@ -368,9 +368,9 @@ int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto)
     if (vWords.size() < 2)
         return HTTP_INTERNAL_SERVER_ERROR;
     proto = 0;
-    const char *ver = strstr(str.c_str(), "HTTP/1.");
-    if (ver != NULL)
-        proto = atoi(ver+7);
+    size_t verpos = str.find("HTTP/1.");
+    if (verpos != std::string::npos)
+        proto = atoi(&str.c_str()[verpos + 7]);
     return atoi(vWords[1].c_str());
 }
 
