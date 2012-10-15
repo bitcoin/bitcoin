@@ -273,10 +273,9 @@ public:
         return nCompact;
     }
 
-    void SetHex(const std::string& str)
+    void SetHex(const char* psz)
     {
         // skip 0x
-        const char* psz = str.c_str();
         while (isspace(*psz))
             psz++;
         bool fNegative = false;
@@ -301,6 +300,11 @@ public:
         }
         if (fNegative)
             *this = 0 - *this;
+    }
+
+    void SetHex(const std::string& str)
+    {
+        SetHex(str.c_str());
     }
 
     std::string ToString(int nBase=10) const
