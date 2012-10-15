@@ -246,7 +246,7 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>DŮLEŽITÉ: Všechny předchozí zálohy peněženky by měly být nahrazeny nově vygenerovanou, zašifrovanou peněženkou. Z bezpečnostních důvodů budou předchozí zálohy nešifrované peněženky nepoužitelné, jakmile zaneš používat novou zašifrovanou peněženku.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="126"/>

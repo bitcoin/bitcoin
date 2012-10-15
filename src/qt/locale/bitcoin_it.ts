@@ -1884,7 +1884,7 @@ Indirizzo: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"></translation>
+        <translation>Imposta lingua, ad esempio &quot;it_IT&quot; (predefinita: lingua di sistema)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
