@@ -1829,11 +1829,6 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture accordés 
         <translation>Erreur</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Une erreur est survenue lors de la mise en place du port d&apos;écoute RPC %i : %s</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
@@ -2001,6 +1996,11 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
         <location filename="../bitcoinstrings.cpp" line="93"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Mettre à jour le format du porte-monnaie</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>Une erreur est survenue lors de la mise en place du port d&apos;écoute RPC %u : %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="98"/>

@@ -242,7 +242,7 @@ Bent u er zeker van uw dat u uw portemonnee wilt versleutelen?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>BELANGRIJK: Elke eerder gemaakte backup van uw portemonneebestand dient u te vervangen door het nieuw gegenereerde, versleutelde portemonneebestand. Om veiligheidsredenen zullen eerdere backups van het niet-versleutelde portemonneebestand onbruikbaar worden zodra u uw nieuwe, versleutelde, portemonnee begint te gebruiken.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="127"/>
@@ -1993,11 +1993,6 @@ Als het bestand niet bestaat, maak het aan met een alleen-lezen-permissie.
         <translation>Fout</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Er is een fout opgetreden tijdens het opzetten van de inkomende RPC-poort %i: %s</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
@@ -2085,6 +2080,11 @@ Als het bestand niet bestaat, maak het dan aan, met een alleen-lezen-permissie.<
         <location filename="../bitcoinstrings.cpp" line="8"/>
         <source>Error: Wallet locked, unable to create transaction  </source>
         <translation>Fout: Portemonnee gesloten, transactie maken niet mogelijk </translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>Er is een fout opgetreden tijdens het opzetten van de inkomende RPC-poort %u: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="44"/>

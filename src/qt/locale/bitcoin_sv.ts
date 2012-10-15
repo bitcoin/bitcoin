@@ -245,7 +245,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>VIKTIGT: Alla tidigare säkerhetskopior du har gjort av plånbokens fil ska ersättas med den nya genererade, krypterade plånboks filen. Av säkerhetsskäl kommer tidigare säkerhetskopior av den okrypterade plånboks filen blir oanvändbara när du börjar använda en ny, krypterad plånbok.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="126"/>
@@ -1967,6 +1967,11 @@ Om filen inte existerar, skapa den med filrättigheten endast läsbar för ägar
         <translation>Tröskelvärde för att koppla ifrån klienter som missköter sig (förval: 100)</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>Ett fel uppstod vid upprättandet av RPC port %u för att lyssna: %s</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Usage:</source>
         <translation>Användning:</translation>
@@ -2087,11 +2092,6 @@ SSL-inställningar: (se Bitcoin-wikin för SSL-setup instruktioner)</translation
         <location filename="../bitcoinstrings.cpp" line="65"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
         <translation>Ändra språk, till exempel &quot;de_DE&quot; (standard: systemets språk)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Ett fel uppstod vid upprättandet av RPC port %i för att lyssna: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>

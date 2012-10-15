@@ -242,7 +242,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>ВАЖНО: все предыдущие резервные копии вашего кошелька должны быть заменены новым зашифрованным файлом. В целях безопасности предыдущие резервные копии нешифрованного кошелька станут бесполезны, как только вы начнёте использовать новый шифрованный кошелёк.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="127"/>
@@ -1942,11 +1942,6 @@ rpcpassword=%s
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Произошла ошибка при открытии RPC-порта %i для прослушивания: %s</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
@@ -2065,6 +2060,11 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Insufficient funds</source>
         <translation>Недостаточно монет</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>Произошла ошибка при открытии RPC-порта %u для прослушивания: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="53"/>

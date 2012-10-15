@@ -1958,11 +1958,6 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
         <translation>Salli DNS haut lisäsolmulle ja yhdistä</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Virhe valmisteltaessa RPC-portin %i avaamista kuunneltavaksi: %s</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
         <source>Connect only to the specified node</source>
         <translation>Ota yhteys vain tiettyyn solmuun</translation>
@@ -2077,6 +2072,11 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <location filename="../bitcoinstrings.cpp" line="19"/>
         <source>Insufficient funds</source>
         <translation>Lompakon saldo ei riitä</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>Virhe valmisteltaessa RPC-portin %u avaamista kuunneltavaksi: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>

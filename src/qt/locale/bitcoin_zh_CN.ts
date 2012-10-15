@@ -261,7 +261,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>重要提示：您以前备份的钱包文件应该替换成最新生成的加密钱包文件（重新备份）。从安全性上考虑，您以前备份的未加密的钱包文件，在您使用新的加密钱包后将无效，请重新备份。</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="126"/>
@@ -1761,11 +1761,6 @@ Address: %4
         <translation>警告：磁盘空间不足</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>设置RPC监听端口%i时发生错误: %s</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="49"/>
         <source>Generate coins</source>
         <translation>生成货币
@@ -2093,6 +2088,11 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 10000)</source>
         <translation>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (缺省: 10000)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>设置RPC监听端口%u时发生错误: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>

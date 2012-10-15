@@ -230,7 +230,7 @@ Jsi si jistý, že chceš peněženku zašifrovat?</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>DŮLEŽITÉ: Všechny předchozí zálohy peněženky by měly být nahrazeny nově vygenerovanou, zašifrovanou peněženkou. Z bezpečnostních důvodů budou předchozí zálohy nešifrované peněženky nepoužitelné, jakmile zaneš používat novou zašifrovanou peněženku.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="217"/>
@@ -1758,6 +1758,11 @@ Adresa: %4
         <translation>Generovat mince</translation>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>Při nastavování naslouchacího RPC portu %u nastala chyba: %s</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
         <source>Connect only to the specified node</source>
         <translation>Připojovat se pouze k udanému uzlu</translation>
@@ -1849,11 +1854,6 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Musíš nastavit rpcpassword=&lt;heslo&gt; v konfiguračním souboru:
 %s
 Pokud konfigurační soubor ještě neexistuje, vytvoř ho tak, aby ho mohl číst pouze vlastník.</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Při nastavování naslouchacího RPC portu %i nastala chyba: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="8"/>

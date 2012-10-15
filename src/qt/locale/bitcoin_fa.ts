@@ -1904,11 +1904,6 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>خطا</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>در زمان تنظیم درگاه RPX %i در فهرست کردن %s اشکالی رخ داده است</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>مدت زمان به ثانیه برای جلوگیری از همکاران بدرفتار برای اتصال دوباره (پیش‌فرض: 86400)</translation>
@@ -2042,6 +2037,11 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Start minimized</source>
         <translation>شروع حد اقل</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>در زمان تنظیم درگاه RPX %u در فهرست کردن %s اشکالی رخ داده است</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>

@@ -201,7 +201,7 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <location filename="../askpassphrasedialog.cpp" line="117"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>IMPORTANTE: Cualquier copia de seguridad que haya realizado previamente de su fichero de billetera debe reemplazarse con el fichero de billetera encriptado recientemente creado. Por razones de seguridad, las copias de seguridad previas del fichero de billetera que no estaban encriptadas pasarán a estar inservibles en cuanto comience a usar la nueva billetera encriptada.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="146"/>
@@ -1745,11 +1745,6 @@ Dirección: %4</translation>
         <translation>Tarifa por KB que añadir a las transacciones que envíe</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>Ha ocurrido un error al configurar el puerto RPC %i para escuchar: %s</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Find peers using DNS lookup (default: 1)</source>
         <translation>Encontrar pares mediante búsqueda de DNS (predeterminado: 1)</translation>
@@ -2060,6 +2055,11 @@ Si el archivo no existe, se crea con permisos de propietario de lectura de sólo
         <location filename="../bitcoinstrings.cpp" line="49"/>
         <source>Generate coins</source>
         <translation>Generar monedas</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>Ha ocurrido un error al configurar el puerto RPC %u para escucha: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>

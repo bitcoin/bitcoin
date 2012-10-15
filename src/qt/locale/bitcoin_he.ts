@@ -1982,11 +1982,6 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished">קבל חיבורים מבחוץ (ברירת מחדל: 1 ללא -proxy או -connect)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="32"/>
-        <source>An error occurred while setting up the RPC port %i for listening: %s</source>
-        <translation>שגיאה אירעה במהלך קביעת פורט RPC %i להאזנה: %s</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Options:</source>
         <translation>אפשרויות:</translation>
@@ -2065,6 +2060,11 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Send command to -server or bitcoind</source>
         <translation>שלח פקודה ל -server או bitcoind</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
+        <source>An error occurred while setting up the RPC port %u for listening: %s</source>
+        <translation>שגיאה אירעה במהלך קביעת פורט RPC %u להאזנה: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
