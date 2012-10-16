@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "txdb-leveldb.h"
+#include "txdb.h"
 #include "main.h"
 
 using namespace std;
