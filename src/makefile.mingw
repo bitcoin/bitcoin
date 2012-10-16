@@ -4,7 +4,6 @@
 
 USE_UPNP:=0
 USE_IPV6:=1
-USE_LEVELDB:=1
 
 INCLUDEPATHS= \
  -I"C:\boost-1.50.0-mgw" \
@@ -79,7 +78,9 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
-    obj/noui.o
+    obj/noui.o \
+    obj/leveldb.o \
+    obj/txdb.o
 
 
 all: bitcoind.exe
@@ -90,17 +91,12 @@ test check: test_bitcoin.exe FORCE
 #
 # LevelDB support
 #
-ifdef USE_LEVELDB
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
-DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
+DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
-OBJS += obj/leveldb.o obj/txdb-leveldb.o
 leveldb/libleveldb.a:
     cd leveldb; make libleveldb.a libmemenv.a; cd ..
 obj/leveldb.o: leveldb/libleveldb.lib
-else
-OBJS += obj/txdb-bdb.o
-endif
 
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
