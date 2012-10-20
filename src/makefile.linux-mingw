@@ -82,9 +82,18 @@ OBJS= \
     obj/util.o \
     obj/wallet.o \
     obj/walletdb.o \
-    obj/noui.o
+    obj/noui.o \
+    obj/leveldb.o \
+    obj/txdb.o
 
 all: bitcoind.exe
+
+LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
+DEFS += -I"$(CURDIR)/leveldb/include"
+DEFS += -I"$(CURDIR)/leveldb/helpers"
+leveldb/libleveldb.a:
+	@echo "Building LevelDB ..."; cd leveldb; TARGET_OS=OS_WINDOWS_CROSSCOMPILE CXXFLAGS="-I$(INCLUDEPATHS)" LDFLAGS="-L$(LIBPATHS)" make libleveldb.a libmemenv.a; cd ..
+obj/leveldb.o: leveldb/libleveldb.a
 
 obj/build.h: FORCE
 	/bin/sh ../share/genbuild.sh obj/build.h

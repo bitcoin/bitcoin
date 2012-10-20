@@ -2,7 +2,7 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "db.h"
+#include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
 #include "net.h"
@@ -50,6 +50,8 @@ void StartShutdown()
 #endif
 }
 
+static CCoinsViewDB *pcoinsdbview;
+
 void Shutdown(void* parg)
 {
     static CCriticalSection cs_Shutdown;
@@ -74,6 +76,14 @@ void Shutdown(void* parg)
         nTransactionsUpdated++;
         bitdb.Flush(false);
         StopNode();
+        {
+            LOCK(cs_main);
+            pcoinsTip->Flush();
+            pblocktree->Flush();
+            delete pcoinsTip;
+            delete pcoinsdbview;
+            delete pblocktree;
+        }
         bitdb.Flush(true);
         boost::filesystem::remove(GetPidFile());
         UnregisterWallet(pwalletMain);
@@ -297,6 +307,7 @@ std::string HelpMessage()
 
     return strUsage;
 }
+
 
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
@@ -638,17 +649,13 @@ bool AppInit2()
         return InitError(msg);
     }
 
-    if (GetBoolArg("-loadblockindextest"))
-    {
-        CTxDB txdb("r");
-        txdb.LoadBlockIndex();
-        PrintBlockTree();
-        return false;
-    }
-
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
+    pblocktree = new CBlockTreeDB();
+    pcoinsdbview = new CCoinsViewDB();
+    pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
+
     if (!LoadBlockIndex())
         return InitError(_("Error loading blkindex.dat"));
 
@@ -775,6 +782,11 @@ bool AppInit2()
     }
 
     // ********************************************************* Step 9: import blocks
+
+    // scan for better chains in the block chain database, that are not yet connected in the active best chain
+    uiInterface.InitMessage(_("Importing blocks from block database..."));
+    if (!ConnectBestBlock())
+        strErrors << "Failed to connect best block";
 
     std::vector<boost::filesystem::path> *vPath = new std::vector<boost::filesystem::path>();
     if (mapArgs.count("-loadblock"))
