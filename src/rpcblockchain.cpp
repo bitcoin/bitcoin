@@ -159,7 +159,86 @@ Value getblock(const Array& params, bool fHelp)
     return blockToJSON(block, pblockindex);
 }
 
+Value gettxoutsetinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "gettxoutsetinfo\n"
+            "Returns statistics about the unspent transaction output set.");
 
+    Object ret;
 
+    CCoinsStats stats;
+    if (pcoinsTip->GetStats(stats)) {
+        ret.push_back(Pair("bestblock", pcoinsTip->GetBestBlock()->GetBlockHash().GetHex()));
+        ret.push_back(Pair("transactions", (boost::int64_t)stats.nTransactions));
+        ret.push_back(Pair("txouts", (boost::int64_t)stats.nTransactionOutputs));
+        ret.push_back(Pair("bytes_serialized", (boost::int64_t)stats.nSerializedSize));
+    }
+    return ret;
+}
+
+Value gettxoutsethash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "gettxoutsethash\n"
+            "Returns hash of the current unspent transaction output set.");
+
+    Object ret;
+
+    CCoinsStats stats;
+    if (pcoinsTip->GetStats(stats)) {
+        ret.push_back(Pair("bestblock", pcoinsTip->GetBestBlock()->GetBlockHash().GetHex()));
+        ret.push_back(Pair("txoutsethash", stats.nHash.GetHex()));
+    }
+    return ret;
+}
+
+Value gettxout(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+            "gettxout <txid> <n> [includemempool=true]\n"
+            "Returns details about an unspent transaction output.");
+
+    Object ret;
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+    int n = params[1].get_int();
+    bool fMempool = true;
+    if (params.size() > 2)
+        fMempool = params[2].get_bool();
+
+    CCoins coins;
+    if (fMempool) {
+        LOCK(mempool.cs);
+        CCoinsViewMemPool view(*pcoinsTip, mempool);
+        if (!view.GetCoins(hash, coins))
+            return Value::null;
+        mempool.pruneSpent(hash, coins); // TODO: this should be done by the CCoinsViewMemPool
+    } else {
+        if (!pcoinsTip->GetCoins(hash, coins))
+            return Value::null;
+    }
+    if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
+        return Value::null;
+
+    ret.push_back(Pair("bestblock", pcoinsTip->GetBestBlock()->GetBlockHash().GetHex()));
+    if ((unsigned int)coins.nHeight == MEMPOOL_HEIGHT)
+        ret.push_back(Pair("confirmations", 0));
+    else
+        ret.push_back(Pair("confirmations", pcoinsTip->GetBestBlock()->nHeight - coins.nHeight + 1));
+    ret.push_back(Pair("amount", (boost::int64_t)coins.vout[n].nValue));
+    Object o;
+    o.push_back(Pair("asm", coins.vout[n].scriptPubKey.ToString()));
+    o.push_back(Pair("hex", HexStr(coins.vout[n].scriptPubKey.begin(), coins.vout[n].scriptPubKey.end())));
+    ret.push_back(Pair("scriptPubKey", o));
+    ret.push_back(Pair("version", coins.nVersion));
+    ret.push_back(Pair("coinbase", coins.fCoinBase));
+
+    return ret;
+}
 
 
