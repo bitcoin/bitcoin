@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     mst1 = boost::posix_time::microsec_clock::local_time();
     for (unsigned int i = 0; i < 5; i++)
         for (unsigned int j = 0; j < tx.vin.size(); j++)
-            BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, SIGHASH_ALL));
+            BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, true, SIGHASH_ALL));
     mst2 = boost::posix_time::microsec_clock::local_time();
     msdiff = mst2 - mst1;
     long nManyValidate = msdiff.total_milliseconds();
@@ -289,13 +289,13 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     // Empty a signature, validation should fail:
     CScript save = tx.vin[0].scriptSig;
     tx.vin[0].scriptSig = CScript();
-    BOOST_CHECK(!VerifySignature(orphans[0], tx, 0, true, SIGHASH_ALL));
+    BOOST_CHECK(!VerifySignature(orphans[0], tx, 0, true, true, SIGHASH_ALL));
     tx.vin[0].scriptSig = save;
 
     // Swap signatures, validation should fail:
     std::swap(tx.vin[0].scriptSig, tx.vin[1].scriptSig);
-    BOOST_CHECK(!VerifySignature(orphans[0], tx, 0, true, SIGHASH_ALL));
-    BOOST_CHECK(!VerifySignature(orphans[1], tx, 1, true, SIGHASH_ALL));
+    BOOST_CHECK(!VerifySignature(orphans[0], tx, 0, true, true, SIGHASH_ALL));
+    BOOST_CHECK(!VerifySignature(orphans[1], tx, 1, true, true, SIGHASH_ALL));
     std::swap(tx.vin[0].scriptSig, tx.vin[1].scriptSig);
 
     // Exercise -maxsigcachesize code:
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     BOOST_CHECK(SignSignature(keystore, orphans[0], tx, 0));
     BOOST_CHECK(tx.vin[0].scriptSig != oldSig);
     for (unsigned int j = 0; j < tx.vin.size(); j++)
-        BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, SIGHASH_ALL));
+        BOOST_CHECK(VerifySignature(orphans[j], tx, j, true, true, SIGHASH_ALL));
     mapArgs.erase("-maxsigcachesize");
 
     LimitOrphanTxSize(0);
