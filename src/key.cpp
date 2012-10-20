@@ -120,9 +120,9 @@ err:
     return ret;
 }
 
-void CKey::SetCompressedPubKey()
+void CKey::SetCompressedPubKey(bool fCompressed)
 {
-    EC_KEY_set_conv_form(pkey, POINT_CONVERSION_COMPRESSED);
+    EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
     fCompressedPubKey = true;
 }
 

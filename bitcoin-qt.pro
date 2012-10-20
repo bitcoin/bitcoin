@@ -90,6 +90,23 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
     QTPLUGIN += qcncodecs qjpcodecs qtwcodecs qkrcodecs qtaccessiblewidgets
 }
 
+INCLUDEPATH += src/leveldb/include src/leveldb/helpers
+LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
+!windows {
+    genleveldb.commands = cd $$PWD/src/leveldb ; $(MAKE) libleveldb.a libmemenv.a
+} else {
+    # make an educated guess about what the ranlib command is called
+    isEmpty(QMAKE_RANLIB) {
+        QMAKE_RANLIB = $$replace(QMAKE_STRIP, strip, ranlib)
+    }
+    genleveldb.commands = cd $$PWD/src/leveldb ; CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=OS_WINDOWS_CROSSCOMPILE CXXFLAGS="-I$$BOOST_INCLUDE_PATH" LDFLAGS="-L$$BOOST_LIB_PATH" $(MAKE) libleveldb.a libmemenv.a ; $$QMAKE_RANLIB $$PWD/src/leveldb/libleveldb.a ; $$QMAKE_RANLIB $$PWD/src/leveldb/libmemenv.a
+}
+genleveldb.target = $$PWD/src/leveldb/libleveldb.a
+genleveldb.depends = FORCE
+PRE_TARGETDEPS += $$PWD/src/leveldb/libleveldb.a
+QMAKE_EXTRA_TARGETS += genleveldb
+# Gross ugly hack that depends on qmake internals, unfortunately there's no other way to do it.
+QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) clean
 
 # regenerate src/build.h
 !windows|contains(USE_BUILD_INFO, 1) {
@@ -129,6 +146,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/net.h \
     src/key.h \
     src/db.h \
+    src/txdb.h \
     src/walletdb.h \
     src/script.h \
     src/init.h \
@@ -174,7 +192,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/rpcconsole.h \
     src/version.h \
     src/netbase.h \
-    src/clientversion.h
+    src/clientversion.h \
+    src/txdb.h \
+    src/leveldb.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -234,7 +254,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/notificator.cpp \
     src/qt/qtipcserver.cpp \
     src/qt/rpcconsole.cpp \
-    src/noui.cpp
+    src/noui.cpp \
+    src/leveldb.cpp \
+    src/txdb.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

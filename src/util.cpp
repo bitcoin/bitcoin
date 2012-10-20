@@ -1137,6 +1137,20 @@ int GetFilesize(FILE* file)
     return nFilesize;
 }
 
+// this function tries to make a particular range of a file allocated (corresponding to disk space)
+// it is advisory, and the range specified in the arguments will never contain live data
+void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
+    static const char buf[65536] = {};
+    fseek(file, offset, SEEK_SET);
+    while (length > 0) {
+        unsigned int now = 65536;
+        if (length < now)
+            now = length;
+        fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
+        length -= now;
+    }
+}
+
 void ShrinkDebugFile()
 {
     // Scroll debug.log if it's getting too big
