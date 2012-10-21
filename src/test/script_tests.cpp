@@ -79,7 +79,7 @@ ParseScript(string s)
         {
             BOOST_ERROR("Parse error: " << s);
             return CScript();
-        }                        
+        }
     }
 
     return result;
@@ -206,7 +206,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
     // NOTE: CHECKMULTISIG has an unfortunate bug; it requires
     // one extra item on the stack, before the signatures.
     // Putting OP_0 on the stack is the workaround;
-    // fixing the bug would mean splitting the blockchain (old
+    // fixing the bug would mean splitting the block chain (old
     // clients would not accept new CHECKMULTISIG transactions,
     // and vice-versa)
     //

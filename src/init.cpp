@@ -639,7 +639,7 @@ bool AppInit2()
     BOOST_FOREACH(string strDest, mapMultiArgs["-seednode"])
         AddOneShot(strDest);
 
-    // ********************************************************* Step 7: load blockchain
+    // ********************************************************* Step 7: load block chain
 
     if (!bitdb.Open(GetDataDir()))
     {
