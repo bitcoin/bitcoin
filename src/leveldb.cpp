@@ -21,7 +21,7 @@ static leveldb::Options GetOptions(size_t nCacheSize) {
     return options;
 }
 
-CLevelDB::CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory) {
+CLevelDB::CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe) {
     penv = NULL;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
@@ -33,6 +33,10 @@ CLevelDB::CLevelDB(const boost::filesystem::path &path, size_t nCacheSize, bool 
         penv = leveldb::NewMemEnv(leveldb::Env::Default());
         options.env = penv;
     } else {
+        if (fWipe) {
+            printf("Wiping LevelDB in %s\n", path.string().c_str());
+            leveldb::DestroyDB(path.string(), options);
+        }
         boost::filesystem::create_directory(path);
         printf("Opening LevelDB in %s\n", path.string().c_str());
     }
