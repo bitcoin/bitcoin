@@ -95,7 +95,7 @@ LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 leveldb/libleveldb.a:
-    cd leveldb; make libleveldb.a libmemenv.a; cd ..
+	cd leveldb; make libleveldb.a libmemenv.a; cd ..
 obj/leveldb.o: leveldb/libleveldb.lib
 
 obj/%.o: %.cpp $(HEADERS)
