@@ -88,6 +88,7 @@ extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
 extern bool fImporting;
+extern bool fReindex;
 extern unsigned int nCoinCacheSize;
 
 // Settings
@@ -109,12 +110,12 @@ class CCoinsViewCache;
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
 void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
-bool ProcessBlock(CNode* pfrom, CBlock* pblock);
+bool ProcessBlock(CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
 FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
-bool LoadExternalBlockFile(FILE* fileIn);
-bool LoadBlockIndex(bool fAllowNew=true);
+bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
+bool LoadBlockIndex();
 void PrintBlockTree();
 CBlockIndex* FindBlockByHeight(int nHeight);
 bool ProcessMessages(CNode* pfrom);
@@ -1262,7 +1263,8 @@ public:
     bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true) const;
 
     // Store block on disk
-    bool AcceptBlock();
+    // if dbp is provided, the file is known to already reside on disk
+    bool AcceptBlock(CDiskBlockPos *dbp = NULL);
 };
 
 

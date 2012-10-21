@@ -13,6 +13,13 @@ class QDateTime;
 class QTimer;
 QT_END_NAMESPACE
 
+enum BlockSource {
+    BLOCK_SOURCE_NONE,
+    BLOCK_SOURCE_NETWORK,
+    BLOCK_SOURCE_DISK,
+    BLOCK_SOURCE_REINDEX
+};
+
 /** Model for Bitcoin network client. */
 class ClientModel : public QObject
 {
@@ -34,7 +41,7 @@ public:
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;
     //! Return true if core is importing blocks
-    bool isImporting() const;
+    enum BlockSource getBlockSource() const;
     //! Return conservative estimate of total number of blocks, or 0 if unknown
     int getNumBlocksOfPeers() const;
     //! Return warnings to be displayed in status bar
