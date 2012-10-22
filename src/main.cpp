@@ -1597,6 +1597,9 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
             blockundo.vtxundo.push_back(txundo);
     }
 
+    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
+        return false;
+
     if (fJustCheck)
         return true;
 
