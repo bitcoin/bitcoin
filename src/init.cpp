@@ -310,6 +310,50 @@ std::string HelpMessage()
 }
 
 
+struct CImportingNow
+{
+    CImportingNow() {
+        assert(fImporting == false);
+        fImporting = true;
+    }
+
+    ~CImportingNow() {
+        assert(fImporting == true);
+        fImporting = false;
+    }
+};
+
+void ThreadImport(void *data) {
+    std::vector<boost::filesystem::path> *vFiles = reinterpret_cast<std::vector<boost::filesystem::path>*>(data);
+
+    RenameThread("bitcoin-loadblk");
+
+    CImportingNow imp;
+    vnThreadsRunning[THREAD_IMPORT]++;
+
+    // -loadblock=
+    BOOST_FOREACH(boost::filesystem::path &path, *vFiles) {
+        FILE *file = fopen(path.string().c_str(), "rb");
+        if (file)
+            LoadExternalBlockFile(file);
+    }
+
+    // hardcoded $DATADIR/bootstrap.dat
+    filesystem::path pathBootstrap = GetDataDir() / "bootstrap.dat";
+    if (filesystem::exists(pathBootstrap)) {
+        FILE *file = fopen(pathBootstrap.string().c_str(), "rb");
+        if (file) {
+            filesystem::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
+            LoadExternalBlockFile(file);
+            RenameOver(pathBootstrap, pathBootstrapOld);
+        }
+    }
+
+    delete vFiles;
+
+    vnThreadsRunning[THREAD_IMPORT]--;
+}
+
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
  */
