@@ -3830,7 +3830,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 int64 nValueIn = coins.vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
 
-                int nConf = pindexPrev->nHeight - coins.nHeight;
+                int nConf = pindexPrev->nHeight - coins.nHeight + 1;
 
                 dPriority += (double)nValueIn * nConf;
             }
