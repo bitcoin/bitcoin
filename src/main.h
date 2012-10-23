@@ -1820,7 +1820,11 @@ public:
 
     // Modify the currently active block index
     virtual bool SetBestBlock(CBlockIndex *pindex);
+
+    // Do a bulk modification (multiple SetCoins + one SetBestBlock)
     virtual bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
+
+    // Calculate statistics about the unspent transaction output set
     virtual bool GetStats(CCoinsStats &stats);
 };
 
@@ -1851,14 +1855,25 @@ protected:
 
 public:
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
+
+    // Standard CCoinsView methods
     bool GetCoins(uint256 txid, CCoins &coins);
     bool SetCoins(uint256 txid, const CCoins &coins);
     bool HaveCoins(uint256 txid);
-    CCoins &GetCoins(uint256 txid);
     CBlockIndex *GetBestBlock();
     bool SetBestBlock(CBlockIndex *pindex);
     bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
+
+    // Return a modifiable reference to a CCoins. Check HaveCoins first.
+    // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
+    // copying.
+    CCoins &GetCoins(uint256 txid);
+
+    // Push the modifications applied to this cache to its base.
+    // Failure to call this method before destruction will cause the changes to be forgotten.
     bool Flush();
+
+    // Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize();
 
 private:

@@ -691,13 +691,21 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
 
     if (fCheckInputs)
     {
-        CCoinsViewCache &view = *pcoinsTip;
+        CCoinsView dummy;
+        CCoinsViewCache view(dummy);
+
+        {
+        LOCK(cs);
+        CCoinsViewMemPool viewMemPool(*pcoinsTip, *this);
+        view.SetBackend(viewMemPool);
 
         // do we already have it?
         if (view.HaveCoins(hash))
             return false;
 
         // do all inputs exist?
+        // Note that this does not check for the presence of actual outputs (see the next check for that),
+        // only helps filling in pfMissingInputs (to determine missing vs spent).
         BOOST_FOREACH(const CTxIn txin, tx.vin) {
             if (!view.HaveCoins(txin.prevout.hash)) {
                 if (pfMissingInputs)
@@ -706,8 +714,16 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
             }
         }
 
+        // are the actual inputs available?
         if (!tx.HaveInputs(view))
             return error("CTxMemPool::accept() : inputs already spent");
+ 
+        // Bring the best block into scope
+        view.GetBestBlock();
+
+        // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
+        view.SetBackend(dummy);
+        }
 
         // Check for non-standard pay-to-script-hash in inputs
         if (!tx.AreInputsStandard(view) && !fTestNet)
@@ -738,7 +754,6 @@ bool CTxMemPool::accept(CTransaction &tx, bool fCheckInputs,
             int64 nNow = GetTime();
 
             {
-                LOCK(cs);
                 // Use an exponentially decaying ~10-minute window:
                 dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
                 nLastTime = nNow;
@@ -1319,7 +1334,9 @@ bool CTransaction::CheckInputs(CCoinsViewCache &inputs, enum CheckSig_mode csmod
         if (!HaveInputs(inputs))
             return error("CheckInputs() : %s inputs unavailable", GetHash().ToString().substr(0,10).c_str());
 
-        CBlockIndex *pindexBlock = inputs.GetBestBlock();
+        // While checking, GetBestBlock() refers to the parent block.
+        // This is also true for mempool checks.
+        int nSpendHeight = inputs.GetBestBlock()->nHeight + 1; 
         int64 nValueIn = 0;
         int64 nFees = 0;
         for (unsigned int i = 0; i < vin.size(); i++)
@@ -1329,8 +1346,8 @@ bool CTransaction::CheckInputs(CCoinsViewCache &inputs, enum CheckSig_mode csmod
 
             // If prev is coinbase, check that it's matured
             if (coins.IsCoinBase()) {
-                if (pindexBlock->nHeight - coins.nHeight < COINBASE_MATURITY)
-                    return error("CheckInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - coins.nHeight);
+                if (nSpendHeight - coins.nHeight < COINBASE_MATURITY)
+                    return error("CheckInputs() : tried to spend coinbase at depth %d", nSpendHeight - coins.nHeight);
             }
 
             // Check for negative or overflow input values
@@ -1594,6 +1611,9 @@ bool CBlock::ConnectBlock(CBlockIndex* pindex, CCoinsViewCache &view, bool fJust
         if (!tx.IsCoinBase())
             blockundo.vtxundo.push_back(txundo);
     }
+
+    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
+        return false;
 
     if (fJustCheck)
         return true;
@@ -1951,9 +1971,13 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot) const
         if (!tx.CheckTransaction())
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
+    // Build the merkle tree already. We need it anyway later, and it makes the
+    // block cache the transaction hashes, which means they don't need to be
+    // recalculated many times during this block's validation.
+    BuildMerkleTree();
+
     // Check for duplicate txids. This is caught by ConnectInputs(),
     // but catching it earlier avoids a potential DoS attack:
-    BuildMerkleTree();
     set<uint256> uniqueTx;
     for (unsigned int i=0; i<vtx.size(); i++) {
         uniqueTx.insert(GetTxHash(i));
@@ -3825,7 +3849,7 @@ CBlock* CreateNewBlock(CReserveKey& reservekey)
                 int64 nValueIn = coins.vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
 
-                int nConf = pindexPrev->nHeight - coins.nHeight;
+                int nConf = pindexPrev->nHeight - coins.nHeight + 1;
 
                 dPriority += (double)nValueIn * nConf;
             }
