@@ -153,6 +153,10 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
     if (blockindex->pnext)
         result.push_back(Pair("nextblockhash", blockindex->pnext->GetBlockHash().GetHex()));
+    result.push_back(Pair("flags", strprintf("%s%s", blockindex->IsProofOfStake()? "proof-of-stake" : "proof-of-work", blockindex->HasStakeModifier()? " stake-modifier": "")));
+    result.push_back(Pair("entropybit", (int)blockindex->GetStakeEntropyBit()));
+    //if (blockindex->HasStakeModifier())
+        result.push_back(Pair("modifier", strprintf("%016"PRI64x, blockindex->nStakeModifier)));
     Array txinfo;
     BOOST_FOREACH (const CTransaction& tx, block.vtx)
     {
