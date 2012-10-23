@@ -78,8 +78,10 @@ void Shutdown(void* parg)
         StopNode();
         {
             LOCK(cs_main);
-            pcoinsTip->Flush();
-            pblocktree->Flush();
+            if (pcoinsTip)
+                pcoinsTip->Flush();
+            if (pblocktree)
+                pblocktree->Flush();
             delete pcoinsTip;
             delete pcoinsdbview;
             delete pblocktree;
