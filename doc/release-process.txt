@@ -2,7 +2,7 @@
 
 * update (commit) version in sources
   bitcoin-qt.pro
-  src/clientversion.h
+  src/clientversion.h (change CLIENT_VERSION_IS_RELEASE to true)
   share/setup.nsi
   doc/README*
 
