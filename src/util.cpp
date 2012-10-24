@@ -1038,19 +1038,19 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 
     if (mapArgs.count("-datadir")) {
         path = fs::system_complete(mapArgs["-datadir"]);
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
-    } else {
-        path = GetDefaultDataDir();
+        if (!fs::is_directory(path))
+            path = GetDefaultDataDir();
     }
+    else
+        path = GetDefaultDataDir();
+
     if (fNetSpecific && GetBoolArg("-testnet", false))
         path /= "testnet3";
 
-    fs::create_directory(path);
+    if (!fs::exists(path))
+        fs::create_directory(path);
 
-    cachedPath[fNetSpecific]=true;
+    cachedPath[fNetSpecific] = true;
     return path;
 }
 
