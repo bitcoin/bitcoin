@@ -151,6 +151,8 @@ extern json_spirit::Value getaddressesbyaccount(const json_spirit::Array& params
 extern json_spirit::Value sendtoaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value signmessage(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value verifymessage(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value signfile(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value verifyfile(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getreceivedbyaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getreceivedbyaccount(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getbalance(const json_spirit::Array& params, bool fHelp);
