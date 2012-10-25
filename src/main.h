@@ -20,7 +20,6 @@ class CReserveKey;
 
 class CAddress;
 class CInv;
-class CRequestTracker;
 class CNode;
 
 class CBlockIndexWorkComparator;
