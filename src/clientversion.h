@@ -11,6 +11,9 @@
 #define CLIENT_VERSION_REVISION    99
 #define CLIENT_VERSION_BUILD       0
 
+// Set to true for release, false for prerelease or test build
+#define CLIENT_VERSION_IS_RELEASE  false
+
 // Converts the parameter X to a string after macro replacement on X has been performed.
 // Don't merge these into one macro!
 #define STRINGIZE(X) DO_STRINGIZE(X)
