@@ -94,6 +94,7 @@ test check: test_bitcoin.exe FORCE
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
+# TODO: If this fails, try adding a ranlib libleveldb.a && ranlib libmemenv.a
 leveldb/libleveldb.a:
 	cd leveldb && make libleveldb.a libmemenv.a && cd ..
 obj/leveldb.o: leveldb/libleveldb.lib
