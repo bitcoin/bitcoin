@@ -58,7 +58,8 @@ bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockI
     CLevelDBBatch batch;
     for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
         BatchWriteCoins(batch, it->first, it->second);
-    BatchWriteHashBestChain(batch, pindex->GetBlockHash());
+    if (pindex)
+        BatchWriteHashBestChain(batch, pindex->GetBlockHash());
 
     return db.WriteBatch(batch);
 }
