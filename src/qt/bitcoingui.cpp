@@ -176,6 +176,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Clicking on "Sign Message" in the receive coins page sends you to the sign message tab
     connect(receiveCoinsPage, SIGNAL(signMessage(QString)), this, SLOT(gotoSignMessageTab(QString)));
 
+    // When the client is about to quit show an exit notification
+    connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(showExitNotification()));
+
     gotoOverviewPage();
 }
 
@@ -859,4 +862,9 @@ void BitcoinGUI::showNormalIfMinimized(bool fToggleHidden)
 void BitcoinGUI::toggleHidden()
 {
     showNormalIfMinimized(true);
+}
+
+void BitcoinGUI::showExitNotification()
+{
+    notificator->notify(Notificator::Information, tr("Bitcoin"), tr("Exiting..."));
 }
