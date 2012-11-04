@@ -357,6 +357,29 @@ static string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
         strMsg.c_str());
 }
 
+static string HTTPReplyJSONFile(const string& strMsg, bool keepalive)
+{
+    int nStatus = HTTP_OK;
+    const char *cStatus = "OK";
+    return strprintf(
+            "HTTP/1.1 %d %s\r\n"
+            "Date: %s\r\n"
+            "Connection: %s\r\n"
+            "Content-Length: %"PRIszu"\r\n"
+            "Content-Type: application/json\r\n"
+            "Content-Disposition: attachment; filename=\"wallet-ckeys.json\"\r\n"
+            "Server: bitcoin-json-rpc/%s\r\n"
+            "\r\n"
+            "%s",
+        nStatus,
+        cStatus,
+        rfc1123Time().c_str(),
+        keepalive ? "keep-alive" : "close",
+        strMsg.size(),
+        FormatFullVersion().c_str(),
+        strMsg.c_str());
+}
+
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
                          string& http_method, string& http_uri)
 {
@@ -1001,6 +1024,18 @@ void ThreadRPCServer3(void* parg)
         }
         if (mapHeaders["connection"] == "close")
             fRun = false;
+
+        if (strMethod == "GET" && strURI == "/wallet-ckeys.json") {
+            Value v = GetWalletCKeyDump();
+            string strReply = write_string(Value(v), false) + "\n";
+            conn->stream() << HTTPReplyJSONFile(strReply, fRun) << std::flush;
+            break;
+        }
+
+        if (strURI != "/") {
+            conn->stream() << HTTPReply(HTTP_NOT_FOUND, "", false) << std::flush;
+            break;
+        }
 
         JSONRequest jreq;
         try

@@ -89,3 +89,29 @@ Value dumpprivkey(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     return CBitcoinSecret(vchSecret, fCompressed).ToString();
 }
+
+Value GetWalletCKeyDump(void)
+{
+    map<CKeyID, vector<unsigned char> > mapCKeyDump;
+
+    {
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+        pwalletMain->GetCryptedKeys(mapCKeyDump);
+    }
+
+    map<CKeyID, vector<unsigned char> >::iterator mi;
+    Object ret;
+
+    for (mi = mapCKeyDump.begin(); mi != mapCKeyDump.end(); mi++) {
+        string strKey = (*mi).first.GetHex();
+
+        vector<unsigned char>& vch = (*mi).second;
+        string strValue;
+        strValue.append((char *) &vch[0], vch.size());
+
+        ret.push_back(Pair(strKey, strValue));
+    }
+
+    return ret;
+}
+
