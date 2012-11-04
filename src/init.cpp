@@ -238,9 +238,10 @@ std::string HelpMessage()
         "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 25)") + "\n" +
         "  -dblogsize=<n>         " + _("Set database disk log size in megabytes (default: 100)") + "\n" +
         "  -timeout=<n>           " + _("Specify connection timeout in milliseconds (default: 5000)") + "\n" +
-        "  -proxy=<ip:port>       " + _("Connect through socks proxy") + "\n" +
-        "  -socks=<n>             " + _("Select the version of socks proxy to use (4-5, default: 5)") + "\n" +
-        "  -tor=<ip:port>         " + _("Use proxy to reach tor hidden services (default: same as -proxy)") + "\n"
+        "  -proxy=<ip:port>       " + _("Connect through SOCKS proxy") + "\n" +
+        "  -socks=<n>             " + _("Select SOCKS version for -proxy (4 or 5, default: 5)") + "\n" +
+        "  -proxy6=<ip:port>      " + _("Use separate SOCKS5 proxy to reach IPv6 peers (default: -proxy)") + "\n" +
+        "  -tor=<ip:port>         " + _("Use separate SOCKS5 proxy to reach Tor hidden services (default: -proxy)") + "\n"
         "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + "\n" +
         "  -port=<port>           " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n" +
         "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
@@ -309,7 +310,6 @@ std::string HelpMessage()
 
     return strUsage;
 }
-
 
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
@@ -538,7 +538,6 @@ bool AppInit2()
     // ********************************************************* Step 6: network initialization
 
     int nSocksVersion = GetArg("-socks", 5);
-
     if (nSocksVersion != 4 && nSocksVersion != 5)
         return InitError(strprintf(_("Unknown -socks proxy version requested: %i"), nSocksVersion));
 
@@ -564,35 +563,55 @@ bool AppInit2()
 #endif
 
     CService addrProxy;
-    bool fProxy = false;
-    if (mapArgs.count("-proxy")) {
-        addrProxy = CService(mapArgs["-proxy"], 9050);
-        if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"].c_str()));
+    bool fNetExplicit[NET_MAX] = {};
 
-        if (!IsLimited(NET_IPV4))
-            SetProxy(NET_IPV4, addrProxy, nSocksVersion);
-        if (nSocksVersion > 4) {
-#ifdef USE_IPV6
-            if (!IsLimited(NET_IPV6))
-                SetProxy(NET_IPV6, addrProxy, nSocksVersion);
-#endif
-            SetNameProxy(addrProxy, nSocksVersion);
+    // setup separate SOCKS5 proxy to reach Tor hidden services
+    // -tor overrides base proxy, -notor disables Tor proxy
+    if (!IsLimited(NET_TOR) && mapArgs.count("-tor") && !(mapArgs["-tor"] == "0")) {
+        addrProxy = CService(mapArgs["-tor"], 9050);
+        if (!(fNetExplicit[NET_TOR] = SetProxy(NET_TOR, addrProxy, 5)))
+            return InitError(strprintf(_("Invalid -tor address: '%s'"), mapArgs["-tor"].c_str()));
+        else
+            SetReachable(NET_TOR);
         }
-        fProxy = true;
     }
 
-    // -tor can override normal proxy, -notor disables tor entirely
-    if (!(mapArgs.count("-tor") && mapArgs["-tor"] == "0") && (fProxy || mapArgs.count("-tor"))) {
-        CService addrOnion;
-        if (!mapArgs.count("-tor"))
-            addrOnion = addrProxy;
-        else
-            addrOnion = CService(mapArgs["-tor"], 9050);
-        if (!addrOnion.IsValid())
-            return InitError(strprintf(_("Invalid -tor address: '%s'"), mapArgs["-tor"].c_str()));
-        SetProxy(NET_TOR, addrOnion, 5);
-        SetReachable(NET_TOR);
+#ifdef USE_IPV6
+    // setup separate SOCKS5 proxy to reach IPv6 peers
+    // -proxy6 overrides base proxy, -noproxy6 disables IPv6 proxy
+    if (!IsLimited(NET_IPV6) && mapArgs.count("-proxy6") && !(mapArgs["-proxy6"] == "0")) {
+        addrProxy = CService(mapArgs["-proxy6"], 9050);
+        if (!(fNetExplicit[NET_IPV6] = SetProxy(NET_IPV6, addrProxy, 5)))
+            return InitError(strprintf(_("Invalid -proxy6 address: '%s'"), mapArgs["-proxy6"].c_str()));
+    }
+#endif
+
+    // setup base SOCKS proxy
+    if (mapArgs.count("-proxy")) {
+        addrProxy = CService(mapArgs["-proxy"], 9050);
+        if (!IsLimited(NET_IPV4))
+            if (!SetProxy(NET_IPV4, addrProxy, nSocksVersion))
+                return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"].c_str()));
+
+        if (nSocksVersion == 4) {
+            // disable outgoing Tor / IPv6 connections if not explicitly enabled
+            if (!fNetExplicit[NET_TOR])
+                SetLimited(NET_TOR);
+            if (!fNetExplicit[NET_IPV6])
+                SetLimited(NET_IPV6);
+        }
+        else if (nSocksVersion == 5) {
+            // enable outgoing Tor / IPv6 connections if not already explicitly enabled or network limited
+            if (!fNetExplicit[NET_TOR] && !IsLimited(NET_TOR)) {
+                SetProxy(NET_TOR, addrProxy, nSocksVersion);  // Todo: Error check!
+                SetReachable(NET_TOR);
+            }
+#ifdef USE_IPV6
+            if (!fNetExplicit[NET_IPV6] && !IsLimited(NET_IPV6))
+                SetProxy(NET_IPV6, addrProxy, nSocksVersion);  // Todo: Error check!
+#endif
+            SetNameProxy(addrProxy, nSocksVersion);  // Todo: Error check!
+        }
     }
 
     // see Step 2: parameter interactions for more information about these
@@ -822,7 +841,7 @@ bool AppInit2()
 
     //// debug print
     printf("mapBlockIndex.size() = %"PRIszu"\n",   mapBlockIndex.size());
-    printf("nBestHeight = %d\n",            nBestHeight);
+    printf("nBestHeight = %d\n",                   nBestHeight);
     printf("setKeyPool.size() = %"PRIszu"\n",      pwalletMain->setKeyPool.size());
     printf("mapWallet.size() = %"PRIszu"\n",       pwalletMain->mapWallet.size());
     printf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain->mapAddressBook.size());
