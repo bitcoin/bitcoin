@@ -362,6 +362,41 @@ static string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
         strMsg.c_str());
 }
 
+bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
+                         string& http_method, string& http_uri)
+{
+    string str;
+    getline(stream, str);
+
+    // HTTP request line is space-delimited
+    vector<string> vWords;
+    boost::split(vWords, str, boost::is_any_of(" "));
+    if (vWords.size() < 2)
+        return false;
+
+    // HTTP methods permitted: GET, POST
+    http_method = vWords[0];
+    if (http_method != "GET" && http_method != "POST")
+        return false;
+
+    // HTTP URI must be an absolute path, relative to current host
+    http_uri = vWords[1];
+    if (http_uri.size() == 0 || http_uri[0] != '/')
+        return false;
+
+    // parse proto, if present
+    string strProto = "";
+    if (vWords.size() > 2)
+        strProto = vWords[2];
+
+    proto = 0;
+    const char *ver = strstr(strProto.c_str(), "HTTP/1.");
+    if (ver != NULL)
+        proto = atoi(ver+7);
+
+    return true;
+}
+
 int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto)
 {
     string str;
@@ -939,12 +974,14 @@ void ThreadRPCServer3(void* parg)
             }
             return;
         }
-        map<string, string> mapHeaders;
-        string strRequest;
 
-        // Read HTTP status (um, we mean, HTTP request line)
         int nProto = 0;
-        ReadHTTPStatus(conn->stream(), nProto);
+        map<string, string> mapHeaders;
+        string strRequest, strMethod, strURI;
+
+        // Read HTTP request line
+        if (!ReadHTTPRequestLine(conn->stream(), nProto, strMethod, strURI))
+            break;
 
         // Read HTTP message headers and body
         ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto);
