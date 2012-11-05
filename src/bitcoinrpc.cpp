@@ -748,7 +748,8 @@ void ThreadRPCServer2(void* parg)
     printf("ThreadRPCServer started\n");
 
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
-    if (mapArgs["-rpcpassword"] == "")
+    if ((mapArgs["-rpcpassword"] == "") ||
+        (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"]))
     {
         unsigned char rand_pwd[32];
         RAND_bytes(rand_pwd, 32);
@@ -763,6 +764,7 @@ void ThreadRPCServer2(void* parg)
               "rpcuser=bitcoinrpc\n"
               "rpcpassword=%s\n"
               "(you do not need to remember this password)\n"
+              "The username and password MUST NOT be the same.\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"),
                 strWhatAmI.c_str(),
                 GetConfigFile().string().c_str(),
