@@ -499,6 +499,17 @@ static uint256 BitcoinAuthHash(string &strKey, string& strUser,
     return BitcoinHMAC(strKey, strText);
 }
 
+static bool ValidAuthTimestamp(const string& strDate)
+{
+    int64 timestamp = (int64) atoll(strDate.c_str());
+    int64 now = GetTime();
+
+    if ((timestamp < (now - 60)) ||
+        (timestamp > (now + 60)))
+        return false;
+    return true;
+}
+
 static bool HTTPAuthBitcoin(string& strAuth, string& strRequest)
 {
     // Format: Bitcoin SP $Username SP $Timestamp SP $Nonce SP $HMAC_hash (hex)
@@ -515,6 +526,8 @@ static bool HTTPAuthBitcoin(string& strAuth, string& strRequest)
     if (strUser != mapArgs["-rpcuser"])
         return false;
     string strDate = vWords[2];
+    if (!ValidAuthTimestamp(strDate))
+        return false;
     string strNonce = vWords[3];
     string strHash = vWords[4];
     if (strHash.size() < (sizeof(uint256) * 2))
