@@ -24,6 +24,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/shared_ptr.hpp>
 #include <list>
+#include <openssl/hmac.h>
 
 using namespace std;
 using namespace boost;
@@ -465,14 +466,99 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
     return HTTP_OK;
 }
 
-bool HTTPAuthorized(map<string, string>& mapHeaders)
+static bool HTTPAuthBasic(string& strAuth)
 {
-    string strAuth = mapHeaders["authorization"];
-    if (strAuth.substr(0,6) != "Basic ")
-        return false;
     string strUserPass64 = strAuth.substr(6); boost::trim(strUserPass64);
     string strUserPass = DecodeBase64(strUserPass64);
     return strUserPass == strRPCUserColonPass;
+}
+
+static uint256 BitcoinHMAC(string& strKey, string& strText)
+{
+    uint256 hash;
+
+    // standard HMAC, using SHA256 as the hash
+    HMAC(EVP_sha256(), strKey.c_str(), strKey.size(),
+         (unsigned char *) strText.c_str(), strText.size(),
+         (unsigned char *)&hash, NULL);
+
+    return hash;
+}
+
+static uint256 BitcoinAuthHash(string &strKey, string& strUser,
+                               string &strDate, string& strNonce,
+                               const string &strBodyHash)
+{
+    // Format: username : timestamp : nonce : body double-hash (hex)
+    string strText = strprintf("%s:%s:%s:%s",
+                               strUser.c_str(),
+                               strDate.c_str(),
+                               strNonce.c_str(),
+                               strBodyHash.c_str());
+
+    return BitcoinHMAC(strKey, strText);
+}
+
+static bool HTTPAuthBitcoin(string& strAuth, string& strRequest)
+{
+    // Format: Bitcoin SP $Username SP $Timestamp SP $Nonce SP $HMAC_hash (hex)
+
+    vector<string> vWords;
+    boost::split(vWords, strAuth, boost::is_any_of(" "));
+    if (vWords.size() != 5)
+        return false;
+
+    // parse args
+    if (vWords[0] != "Bitcoin")
+        return false;
+    string strUser = vWords[1];
+    if (strUser != mapArgs["-rpcuser"])
+        return false;
+    string strDate = vWords[2];
+    string strNonce = vWords[3];
+    string strHash = vWords[4];
+    if (strHash.size() < (sizeof(uint256) * 2))
+        return false;
+    uint256 hash;
+    hash.SetHex(strHash.c_str());
+
+    // build text to hash
+    uint256 req_hash = Hash(strRequest.begin(), strRequest.end());
+    uint256 check_hash = BitcoinAuthHash(mapArgs["-rpcpassword"],
+                                         strUser, strDate, strNonce,
+                                         req_hash.GetHex());
+    return (check_hash == hash);
+}
+
+static string AuthBitcoinHeader(string &strRequest)
+{
+    string strDate = strprintf("%"PRI64d, GetTime());
+
+    unsigned char randbuf[16];
+    RAND_bytes(&randbuf[0], sizeof(randbuf));
+    string strNonce = EncodeBase64(randbuf, sizeof(randbuf));
+
+    uint256 req_hash = Hash(strRequest.begin(), strRequest.end());
+
+    uint256 check_hash = BitcoinAuthHash(mapArgs["-rpcpassword"],
+                                         mapArgs["-rpcuser"], strDate,
+                                         strNonce, req_hash.GetHex());
+
+    // Format: Bitcoin SP $Username SP $Timestamp SP $Nonce SP $HMAC_hash (hex)
+    return strprintf("Bitcoin %s %s %s %s",
+                     mapArgs["-rpcuser"].c_str(),
+                     strDate.c_str(),
+                     strNonce.c_str(),
+                     check_hash.GetHex().c_str());
+}
+
+bool HTTPAuthorized(map<string, string>& mapHeaders, string& strRequest)
+{
+    string strAuth = mapHeaders["authorization"];
+    if (strAuth.substr(0,6) == "Basic ")
+        return HTTPAuthBasic(strAuth);
+
+    return HTTPAuthBitcoin(strAuth, strRequest);
 }
 
 //
@@ -987,7 +1073,7 @@ void ThreadRPCServer3(void* parg)
             conn->stream() << HTTPReply(HTTP_UNAUTHORIZED, "", false) << std::flush;
             break;
         }
-        if (!HTTPAuthorized(mapHeaders))
+        if (!HTTPAuthorized(mapHeaders, strRequest))
         {
             printf("ThreadRPCServer incorrect password attempt from %s\n", conn->peer_address_to_string().c_str());
             /* Deter brute-forcing short passwords.
@@ -1101,13 +1187,14 @@ Object CallRPC(const string& strMethod, const Array& params)
     if (!d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(GetDefaultRPCPort()))))
         throw runtime_error("couldn't connect to server");
 
-    // HTTP basic authentication
-    string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
+    // Build request
+    string strRequest = JSONRPCRequest(strMethod, params, 1);
+
+    // HTTP "Bitcoin" authentication
     map<string, string> mapRequestHeaders;
-    mapRequestHeaders["Authorization"] = string("Basic ") + strUserPass64;
+    mapRequestHeaders["Authorization"] = AuthBitcoinHeader(strRequest);
 
     // Send request
-    string strRequest = JSONRPCRequest(strMethod, params, 1);
     string strPost = HTTPPost(strRequest, mapRequestHeaders);
     stream << strPost << std::flush;
 
@@ -1118,12 +1205,28 @@ Object CallRPC(const string& strMethod, const Array& params)
     // Receive HTTP reply message headers and body
     map<string, string> mapHeaders;
     string strReply;
-    ReadHTTPMessage(stream, mapHeaders, strReply, nProto);
+    int nStatus2 = ReadHTTPMessage(stream, mapHeaders, strReply, nProto);
+    if (nStatus == HTTP_UNAUTHORIZED) {
+        // retry with HTTP basic authentication
+        string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
+        mapRequestHeaders.clear();
+        mapRequestHeaders["Authorization"] = string("Basic ") + strUserPass64;
 
-    if (nStatus == HTTP_UNAUTHORIZED)
-        throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
-    else if (nStatus >= 400 && nStatus != HTTP_BAD_REQUEST && nStatus != HTTP_NOT_FOUND && nStatus != HTTP_INTERNAL_SERVER_ERROR)
+        // Send request
+        strPost = HTTPPost(strRequest, mapRequestHeaders);
+        stream << strPost << std::flush;
+
+        // Receive reply
+        mapHeaders.clear();
+        strReply.clear();
+        nStatus = ReadHTTPStatus(stream, nProto);
+        nStatus2 = ReadHTTPMessage(stream, mapHeaders, strReply, nProto);
+        if (nStatus == HTTP_UNAUTHORIZED)
+            throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
+    } else if (nStatus >= 400 && nStatus != HTTP_BAD_REQUEST && nStatus != HTTP_NOT_FOUND && nStatus != HTTP_INTERNAL_SERVER_ERROR)
         throw runtime_error(strprintf("server returned HTTP error %d", nStatus));
+    else if (nStatus2 != HTTP_OK)
+        throw runtime_error(strprintf("server returned HTTP error %d", nStatus2));
     else if (strReply.empty())
         throw runtime_error("no response from server");
 
