@@ -1242,8 +1242,16 @@ Value fixwalletdates(const Array& params, bool fHelp)
             "Reset wallet transactions date to that of the block they appear in.");
 
     std::string result;
-    bool ok = pwalletMain->ResetTransactionTime(result);
-    return result + (ok ? "ok\n" : "failed\n");
+    int changedCount = pwalletMain->ResetTransactionTime(result);
+    if (changedCount < 0) {
+        result += "failed.\n";
+    }
+    else {
+        char buf[128];
+        sprintf(buf, "%d transactions were updated.\n", changedCount);
+        result += buf;
+    }
+    return result;
 }
 
 
