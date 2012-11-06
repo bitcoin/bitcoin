@@ -764,6 +764,49 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
     return ret;
 }
 
+// Change the date of each transaction in the wallet to the
+// timestamp of the block the transactions appears in. The
+// time of TXs not yet appearing in a block remain unchanged.
+int CWallet::ResetTransactionTime(std::string &result)
+{
+    uint256 hash;
+    int changedCount = 0;
+    printf("ResetTransactionTime()\n");
+    {
+        LOCK(cs_wallet);
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
+            CWalletTx &tx = item.second;
+            if (tx.IsInMainChain()) {
+                CBlockIndex *index;
+                int depth = tx.GetDepthInMainChain(index);
+                if (0<depth) {
+                    int64 txTime = tx.GetTxTime();
+                    unsigned int blockTime = index->nTime;
+                    if (blockTime != (unsigned int)txTime) {
+                        tx.nTimeReceived = tx.nTimeSmart = blockTime;
+                        tx.MarkDirty();
+                        tx.WriteToDisk();
+                        ++changedCount;
+
+                        char buf[1024];
+                        hash = item.first;
+                        sprintf(
+                            buf,
+                            "TX=%s OLDTIME=%d NEWTIME=%d\n",
+                            hash.ToString().c_str(),
+                            (int)txTime,
+                            (int)blockTime
+                        );
+                        result += buf;
+                    }
+                }
+            }
+        }
+    }
+    if (0<changedCount) NotifyTransactionChanged(this, hash, CT_REBUILD_ALL);
+    return changedCount;
+}
+
 void CWallet::ReacceptWalletTransactions()
 {
     bool fRepeat = true;
@@ -876,8 +919,6 @@ void CWallet::ResendWalletTransactions()
         }
     }
 }
-
-
 
 
 

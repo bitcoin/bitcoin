@@ -68,15 +68,17 @@ public:
     void refreshWallet()
     {
         OutputDebugStringF("refreshWallet\n");
-        cachedWallet.clear();
-        {
-            LOCK(wallet->cs_wallet);
-            for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
+        parent->beginResetModel();
+            cachedWallet.clear();
             {
-                if(TransactionRecord::showTransaction(it->second))
-                    cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
+                LOCK(wallet->cs_wallet);
+                for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
+                {
+                    if(TransactionRecord::showTransaction(it->second))
+                        cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
+                }
             }
-        }
+        parent->endResetModel();
     }
 
     /* Update our model of the wallet incrementally, to synchronize our model of the wallet
@@ -86,6 +88,12 @@ public:
      */
     void updateWallet(const uint256 &hash, int status)
     {
+        if(CT_REBUILD_ALL == status)
+        {
+            refreshWallet();
+            return;
+        }
+
         OutputDebugStringF("updateWallet %s %i\n", hash.ToString().c_str(), status);
         {
             LOCK(wallet->cs_wallet);

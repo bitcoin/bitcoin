@@ -1234,6 +1234,27 @@ Value backupwallet(const Array& params, bool fHelp)
 }
 
 
+Value fixwalletdates(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "fixwalletdates\n"
+            "Reset wallet transactions date to that of the block they appear in.");
+
+    std::string result;
+    int changedCount = pwalletMain->ResetTransactionTime(result);
+    if (changedCount < 0) {
+        result += "failed.\n";
+    }
+    else {
+        char buf[128];
+        sprintf(buf, "%d transactions were updated.\n", changedCount);
+        result += buf;
+    }
+    return result;
+}
+
+
 Value keypoolrefill(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 0)
