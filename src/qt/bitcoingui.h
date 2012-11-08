@@ -157,4 +157,4 @@ private slots:
     void unlockWallet();
 };
 
-#endif
+#endif // BITCOINGUI_H

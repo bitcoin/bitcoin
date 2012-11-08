@@ -56,4 +56,4 @@ private slots:
     void selectionChanged();
 };
 
-#endif // ADDRESSBOOKDIALOG_H
+#endif // ADDRESSBOOKPAGE_H
