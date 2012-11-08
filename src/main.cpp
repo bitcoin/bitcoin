@@ -2242,17 +2242,27 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
 {
     header = block.GetBlockHeader();
-    vtx.reserve(block.vtx.size());
 
-    for(unsigned int i = 0; i < block.vtx.size(); i++)
+    vector<bool> vMatch;
+    vector<uint256> vHashes;
+
+    vMatch.reserve(block.vtx.size());
+    vHashes.reserve(block.vtx.size());
+
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
-        vector<uint256> branch = block.GetMerkleBranch(i);
         uint256 hash = block.vtx[i].GetHash();
         if (filter.IsRelevantAndUpdate(block.vtx[i], hash))
         {
-            vtx.push_back(make_tuple(i, hash, branch));
+            vMatch.push_back(true);
+            vMatchedTxn.push_back(make_pair(i, hash));
         }
+        else
+            vMatch.push_back(false);
+        vHashes.push_back(hash);
     }
+
+    txn = CPartialMerkleTree(vHashes, vMatch);
 }
 
 
@@ -3209,16 +3219,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         if (pfrom->pfilter)
                         {
                             CMerkleBlock merkleBlock(block, *pfrom->pfilter);
-                            typedef boost::tuple<unsigned int, uint256, std::vector<uint256> > TupleType;
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see 
                             // This avoids hurting performance by pointlessly requiring a round-trip
                             // Note that there is currently no way for a node to request any single transactions we didnt send here -
                             // they must either disconnect and retry or request the full block.
                             // Thus, the protocol spec specified allows for us to provide duplicate txn here,
                             // however we MUST always provide at least what the remote peer needs
-                            BOOST_FOREACH(TupleType& tuple, merkleBlock.vtx)
-                                if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, get<1>(tuple))))
-                                    pfrom->PushMessage("tx", block.vtx[get<0>(tuple)]);
+                            typedef std::pair<unsigned int, uint256> PairType;
+                            BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
+                                if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
+                                    pfrom->PushMessage("tx", block.vtx[pair.first]);
                             pfrom->PushMessage("merkleblock", merkleBlock);
                         }
                         // else

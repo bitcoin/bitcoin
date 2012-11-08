@@ -2140,12 +2140,14 @@ struct CBlockTemplate
 class CMerkleBlock
 {
 public:
+    // Public only for unit testing
     CBlockHeader header;
+    CPartialMerkleTree txn;
 
-    // We could optimize this a bit to deduplicate partial branches,
-    // but it's not worth much unless a node has a ton of txes in a single block
-    //                       tx index    , tx hash, merkle branch
-    std::vector<boost::tuple<unsigned int, uint256, std::vector<uint256> > > vtx;
+public:
+    // Public only for unit testing and relay testing
+    // (not relayed)
+    std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
 
     // Create from a CBlock, filtering transactions according to filter
     // Note that this will call IsRelevantAndUpdate on the filter for each transaction,
@@ -2155,7 +2157,7 @@ public:
     IMPLEMENT_SERIALIZE
     (
         READWRITE(header);
-        READWRITE(vtx);
+        READWRITE(txn);
     )
 };
 
