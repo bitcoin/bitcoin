@@ -17,21 +17,27 @@ bool CKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
 
 bool CBasicKeyStore::AddKey(const CKey& key)
 {
+    LOCK(cs_KeyStore);
+    return AddKeyUnlocked(key);
+}
+
+bool CBasicKeyStore::AddKeyUnlocked(const CKey& key)
+{
     bool fCompressed = false;
     CSecret secret = key.GetSecret(fCompressed);
-    {
-        LOCK(cs_KeyStore);
-        mapKeys[key.GetPubKey().GetID()] = make_pair(secret, fCompressed);
-    }
+    mapKeys[key.GetPubKey().GetID()] = make_pair(secret, fCompressed);
     return true;
 }
 
 bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
-    {
-        LOCK(cs_KeyStore);
-        mapScripts[redeemScript.GetID()] = redeemScript;
-    }
+    LOCK(cs_KeyStore);
+    return AddCScriptUnlocked(redeemScript);
+}
+
+bool CBasicKeyStore::AddCScriptUnlocked(const CScript& redeemScript)
+{
+    mapScripts[redeemScript.GetID()] = redeemScript;
     return true;
 }
 

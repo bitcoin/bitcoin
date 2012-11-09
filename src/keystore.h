@@ -32,7 +32,6 @@ public:
     virtual void GetKeys(std::set<CKeyID> &setAddress) const =0;
     virtual void GetKeysUnlocked(std::set<CKeyID> &setAddress) const =0;
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    virtual bool GetPubKeyUnlocked(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 
     // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
     virtual bool AddCScript(const CScript& redeemScript) LOCKS_EXCLUDED(cs_KeyStore) =0;
