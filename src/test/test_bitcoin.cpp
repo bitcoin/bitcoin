@@ -19,8 +19,8 @@ struct TestingSetup {
         fPrintToDebugger = true; // don't want to write to debug.log file
         noui_connect();
         bitdb.MakeMock();
-        pblocktree = new CBlockTreeDB(true);
-        pcoinsdbview = new CCoinsViewDB(true);
+        pblocktree = new CBlockTreeDB(1 << 20, true);
+        pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
         LoadBlockIndex();
         bool fFirstRun;
