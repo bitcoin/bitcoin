@@ -64,11 +64,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         {
             strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
         }
-        else if (!wtx.mapValue["from"].empty())
+        else if (wtx.mapValue.count("from") && !wtx.mapValue["from"].empty())
         {
             // Online transaction
-            if (!wtx.mapValue["from"].empty())
-                strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(wtx.mapValue["from"]) + "<br>";
+            strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(wtx.mapValue["from"]) + "<br>";
         }
         else
         {
@@ -104,7 +103,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         //
         // To
         //
-        if (!wtx.mapValue["to"].empty())
+        if (wtx.mapValue.count("to") && !wtx.mapValue["to"].empty())
         {
             // Online transaction
             std::string strAddress = wtx.mapValue["to"];
@@ -160,7 +159,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                     if (wallet->IsMine(txout))
                         continue;
 
-                    if (wtx.mapValue["to"].empty())
+                    if (!wtx.mapValue.count("to") || wtx.mapValue["to"].empty())
                     {
                         // Offline transaction
                         CTxDestination address;
@@ -209,9 +208,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
         //
         // Message
         //
-        if (!wtx.mapValue["message"].empty())
+        if (wtx.mapValue.count("message") && !wtx.mapValue["message"].empty())
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["message"], true) + "<br>";
-        if (!wtx.mapValue["comment"].empty())
+        if (wtx.mapValue.count("comment") && !wtx.mapValue["comment"].empty())
             strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
         strHTML += "<b>" + tr("Transaction ID") + ":</b> " + wtx.GetHash().ToString().c_str() + "<br>";
@@ -235,8 +234,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
             strHTML += "<br><b>" + tr("Transaction") + ":</b><br>";
             strHTML += GUIUtil::HtmlEscape(wtx.ToString(), true);
 
-            CTxDB txdb("r"); // To fetch source txouts
-
             strHTML += "<br><b>" + tr("Inputs") + ":</b>";
             strHTML += "<ul>";
 
@@ -246,8 +243,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                 {
                     COutPoint prevout = txin.prevout;
 
-                    CTransaction prev;
-                    if(txdb.ReadDiskTx(prevout.hash, prev))
+                    CCoins prev;
+                    if(pcoinsTip->GetCoins(prevout.hash, prev))
                     {
                         if (prevout.n < prev.vout.size())
                         {

@@ -1,7 +1,3 @@
-Code: src/strlcpy.h
-Author: Todd C. Miller <Todd.Miller@courtesan.com>
-License: ISC
-
 Icon: src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
       src/qt/res/src/*.svg
 Designer: Wladimir van der Laan
@@ -29,6 +25,7 @@ Designer: md2k7
 Site: https://bitcointalk.org/index.php?topic=15276.0
 License: You are free to do with these icons as you wish, including selling,
  copying, modifying etc.
+License: MIT
 
 Icon: src/qt/res/icons/configure.png, src/qt/res/icons/quit.png,
       src/qt/res/icons/editcopy.png, src/qt/res/icons/editpaste.png,

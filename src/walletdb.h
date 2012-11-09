@@ -17,6 +17,7 @@ enum DBErrors
 {
     DB_LOAD_OK,
     DB_CORRUPT,
+    DB_NONCRITICAL_ERROR,
     DB_TOO_NEW,
     DB_LOAD_FAIL,
     DB_NEED_REWRITE
@@ -33,20 +34,9 @@ private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 public:
-    bool ReadName(const std::string& strAddress, std::string& strName)
-    {
-        strName = "";
-        return Read(std::make_pair(std::string("name"), strAddress), strName);
-    }
-
     bool WriteName(const std::string& strAddress, const std::string& strName);
 
     bool EraseName(const std::string& strAddress);
-
-    bool ReadTx(uint256 hash, CWalletTx& wtx)
-    {
-        return Read(std::make_pair(std::string("tx"), hash), wtx);
-    }
 
     bool WriteTx(uint256 hash, const CWalletTx& wtx)
     {
@@ -58,12 +48,6 @@ public:
     {
         nWalletDBUpdated++;
         return Erase(std::make_pair(std::string("tx"), hash));
-    }
-
-    bool ReadKey(const CPubKey& vchPubKey, CPrivKey& vchPrivKey)
-    {
-        vchPrivKey.clear();
-        return Read(std::make_pair(std::string("key"), vchPubKey.Raw()), vchPrivKey);
     }
 
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey)
@@ -91,13 +75,6 @@ public:
         return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
     }
 
-    // Support for BIP 0013 : see https://en.bitcoin.it/wiki/BIP_0013
-    bool ReadCScript(const uint160 &hash, CScript& redeemScript)
-    {
-        redeemScript.clear();
-        return Read(std::make_pair(std::string("cscript"), hash), redeemScript);
-    }
-
     bool WriteCScript(const uint160& hash, const CScript& redeemScript)
     {
         nWalletDBUpdated++;
@@ -115,10 +92,10 @@ public:
         return Read(std::string("bestblock"), locator);
     }
 
-    bool ReadDefaultKey(std::vector<unsigned char>& vchPubKey)
+    bool WriteOrderPosNext(int64 nOrderPosNext)
     {
-        vchPubKey.clear();
-        return Read(std::string("defaultkey"), vchPubKey);
+        nWalletDBUpdated++;
+        return Write(std::string("orderposnext"), nOrderPosNext);
     }
 
     bool WriteDefaultKey(const CPubKey& vchPubKey)
@@ -170,11 +147,17 @@ public:
 
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
+private:
+    bool WriteAccountingEntry(const uint64 nAccEntryNum, const CAccountingEntry& acentry);
+public:
     bool WriteAccountingEntry(const CAccountingEntry& acentry);
     int64 GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
-    int LoadWallet(CWallet* pwallet);
+    DBErrors ReorderTransactions(CWallet*);
+    DBErrors LoadWallet(CWallet* pwallet);
+    static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
+    static bool Recover(CDBEnv& dbenv, std::string filename);
 };
 
 #endif // BITCOIN_WALLETDB_H

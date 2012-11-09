@@ -4,6 +4,7 @@
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 
+#include "alert.h"
 #include "main.h"
 #include "ui_interface.h"
 
@@ -87,9 +88,7 @@ void ClientModel::updateAlert(const QString &hash, int status)
         }
     }
 
-    // Emit a numBlocksChanged when the status message changes,
-    // so that the view recomputes and updates the status bar.
-    emit numBlocksChanged(getNumBlocks(), getNumBlocksOfPeers());
+    emit alertsChanged(getStatusBarWarnings());
 }
 
 bool ClientModel::isTestNet() const
@@ -100,6 +99,11 @@ bool ClientModel::isTestNet() const
 bool ClientModel::inInitialBlockDownload() const
 {
     return IsInitialBlockDownload();
+}
+
+bool ClientModel::isImporting() const
+{
+    return fImporting;
 }
 
 int ClientModel::getNumBlocksOfPeers() const
@@ -125,6 +129,11 @@ QString ClientModel::formatFullVersion() const
 QString ClientModel::formatBuildDate() const
 {
     return QString::fromStdString(CLIENT_DATE);
+}
+
+bool ClientModel::isReleaseVersion() const
+{
+    return CLIENT_VERSION_IS_RELEASE;
 }
 
 QString ClientModel::clientName() const

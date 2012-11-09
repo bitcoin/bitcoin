@@ -20,9 +20,6 @@
 #include <QSplashScreen>
 #include <QLibraryInfo>
 
-#include <boost/interprocess/ipc/message_queue.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
 #define __INSURE__
@@ -116,35 +113,8 @@ static void handleRunawayException(std::exception *e)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-// TODO: implement URI support on the Mac.
-#if !defined(MAC_OSX)
     // Do this early as we don't want to bother initializing if we are just calling IPC
-    for (int i = 1; i < argc; i++)
-    {
-        if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
-        {
-            const char *strURI = argv[i];
-            try {
-                boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
-                if (mq.try_send(strURI, strlen(strURI), 0))
-                    // if URI could be sent to the message queue exit here
-                    exit(0);
-                else
-                    // if URI could not be sent to the message queue do a normal Bitcoin-Qt startup
-                    break;
-            }
-            catch (boost::interprocess::interprocess_exception &ex) {
-                // don't log the "file not found" exception, because that's normal for
-                // the first start of the first instance
-                if (ex.get_error_code() != boost::interprocess::not_found_error)
-                {
-                    printf("main() - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
-                    break;
-                }
-            }
-        }
-    }
-#endif
+    ipcScanRelay(argc, argv);
 
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -162,7 +132,10 @@ int main(int argc, char *argv[])
     // ... then bitcoin.conf:
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        fprintf(stderr, "Error: Specified directory does not exist\n");
+        // This message can not be translated, as translation is not initialized yet
+        // (which not yet possible because lang=XX can be overridden in bitcoin.conf in the data directory)
+        QMessageBox::critical(0, "Bitcoin",
+                              QString("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
         return 1;
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
@@ -269,29 +242,10 @@ int main(int argc, char *argv[])
                 {
                     window.show();
                 }
-// TODO: implement URI support on the Mac.
-#if !defined(MAC_OSX)
 
                 // Place this here as guiref has to be defined if we don't want to lose URIs
-                ipcInit();
+                ipcInit(argc, argv);
 
-                // Check for URI in argv
-                for (int i = 1; i < argc; i++)
-                {
-                    if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
-                    {
-                        const char *strURI = argv[i];
-                        try {
-                            boost::interprocess::message_queue mq(boost::interprocess::open_only, BITCOINURI_QUEUE_NAME);
-                            mq.try_send(strURI, strlen(strURI), 0);
-                        }
-                        catch (boost::interprocess::interprocess_exception &ex) {
-                            printf("main() - boost interprocess exception #%d: %s\n", ex.get_error_code(), ex.what());
-                            break;
-                        }
-                    }
-                }
-#endif
                 app.exec();
 
                 window.hide();

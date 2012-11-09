@@ -20,19 +20,38 @@ class CReserveKey;
 
 class CAddress;
 class CInv;
-class CRequestTracker;
 class CNode;
 
+class CBlockIndexWorkComparator;
+
+/** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
+/** The maximum size for mined blocks */
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
+/** The maximum allowed number of signature check operations in a block (network rule) */
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
+/** The maximum number of orphan transactions kept in memory */
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
+/** The maximum number of entries in an 'inv' protocol message */
+static const unsigned int MAX_INV_SZ = 50000;
+/** The maximum size of a blk?????.dat file (since 0.8) */
+static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
+/** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
+static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
+/** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
+static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
+/** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
+static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
+/** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
 static const int64 MIN_TX_FEE = 50000;
+/** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
 static const int64 MIN_RELAY_TX_FEE = 10000;
+/** No amount larger than this (in satoshi) is valid */
 static const int64 MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+/** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
-// Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
+/** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
@@ -50,6 +69,7 @@ extern CScript COINBASE_FLAGS;
 
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex GUARDED_BY(cs_main);
+extern std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid GUARDED_BY(cs_main);
 extern uint256 hashGenesisBlock;
 extern CBlockIndex* pindexGenesisBlock;
 extern int nBestHeight;
@@ -67,6 +87,8 @@ extern int64 nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered GUARDED_BY(cs_setpwalletRegistered);
 extern unsigned char pchMessageStart[4];
+extern bool fImporting;
+extern unsigned int nCoinCacheSize;
 
 // Settings
 extern int64 nTransactionFee;
@@ -76,22 +98,27 @@ static const uint64 nMinDiskSpace = 52428800;
 
 
 class CReserveKey;
-class CTxDB;
-class CTxIndex;
+class CCoinsDB;
+class CBlockTreeDB;
+class CDiskBlockPos;
+class CCoins;
+class CTxUndo;
+class CCoinsView;
+class CCoinsViewCache;
 
 void RegisterWallet(CWallet* pwalletIn);
 void UnregisterWallet(CWallet* pwalletIn);
-void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
+void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock = NULL, bool fUpdate = false);
 bool ProcessBlock(CNode* pfrom, CBlock* pblock);
 bool CheckDiskSpace(uint64 nAdditionalBytes=0);
-FILE* OpenBlockFile(unsigned int nFile, unsigned int nBlockPos, const char* pszMode="rb");
-FILE* AppendBlockFile(unsigned int& nFileRet);
+FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
 CBlockIndex* FindBlockByHeight(int nHeight);
 bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
-bool LoadExternalBlockFile(FILE* fileIn);
+void ThreadImport(void *parg);
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
 CBlock* CreateNewBlock(CReserveKey& reservekey);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
@@ -102,7 +129,10 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
 std::string GetWarnings(std::string strFor);
-bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock);
+bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
+bool SetBestChain(CBlockIndex* pindexNew);
+bool ConnectBestBlock();
+CBlockIndex * InsertBlockIndex(uint256 hash);
 
 
 
@@ -116,55 +146,29 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock);
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
-/** Position on disk for a particular transaction. */
-class CDiskTxPos
+class CDiskBlockPos
 {
 public:
-    unsigned int nFile;
-    unsigned int nBlockPos;
-    unsigned int nTxPos;
+    int nFile;
+    unsigned int nPos;
 
-    CDiskTxPos()
-    {
-        SetNull();
+    IMPLEMENT_SERIALIZE(
+        READWRITE(VARINT(nFile));
+        READWRITE(VARINT(nPos));
+    )
+
+    friend bool operator==(const CDiskBlockPos &a, const CDiskBlockPos &b) {
+        return (a.nFile == b.nFile && a.nPos == b.nPos);
     }
 
-    CDiskTxPos(unsigned int nFileIn, unsigned int nBlockPosIn, unsigned int nTxPosIn)
-    {
-        nFile = nFileIn;
-        nBlockPos = nBlockPosIn;
-        nTxPos = nTxPosIn;
-    }
-
-    IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
-    void SetNull() { nFile = (unsigned int) -1; nBlockPos = 0; nTxPos = 0; }
-    bool IsNull() const { return (nFile == (unsigned int) -1); }
-
-    friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
-    {
-        return (a.nFile     == b.nFile &&
-                a.nBlockPos == b.nBlockPos &&
-                a.nTxPos    == b.nTxPos);
-    }
-
-    friend bool operator!=(const CDiskTxPos& a, const CDiskTxPos& b)
-    {
+    friend bool operator!=(const CDiskBlockPos &a, const CDiskBlockPos &b) {
         return !(a == b);
     }
 
-    std::string ToString() const
-    {
-        if (IsNull())
-            return "null";
-        else
-            return strprintf("(nFile=%d, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
-    }
-
-    void print() const
-    {
-        printf("%s", ToString().c_str());
-    }
+    void SetNull() { nFile = -1; nPos = 0; }
+    bool IsNull() const { return (nFile == -1); }
 };
+
 
 
 
@@ -213,7 +217,7 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("COutPoint(%s, %d)", hash.ToString().substr(0,10).c_str(), n);
+        return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10).c_str(), n);
     }
 
     void print() const
@@ -335,7 +339,7 @@ public:
         scriptPubKey.clear();
     }
 
-    bool IsNull()
+    bool IsNull() const
     {
         return (nValue == -1);
     }
@@ -379,7 +383,13 @@ enum GetMinFee_mode
     GMF_SEND,
 };
 
-typedef std::map<uint256, std::pair<CTxIndex, CTransaction> > MapPrevTx;
+// Modes for script/signature checking
+enum CheckSig_mode
+{
+    CS_NEVER,             // never validate scripts
+    CS_AFTER_CHECKPOINT,  // validate scripts after the last checkpoint
+    CS_ALWAYS             // always validate scripts
+};
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
@@ -491,7 +501,7 @@ public:
         @return True if all inputs (scriptSigs) use only standard transaction forms
         @see CTransaction::FetchInputs
     */
-    bool AreInputsStandard(const MapPrevTx& mapInputs) const;
+    bool AreInputsStandard(CCoinsViewCache& mapInputs) const;
 
     /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
         @return number of sigops this transaction's outputs will produce when spent
@@ -505,7 +515,7 @@ public:
         @return maximum number of sigops required to validate this transaction's inputs
         @see CTransaction::FetchInputs
      */
-    unsigned int GetP2SHSigOpCount(const MapPrevTx& mapInputs) const;
+    unsigned int GetP2SHSigOpCount(CCoinsViewCache& mapInputs) const;
 
     /** Amount of bitcoins spent by this transaction.
         @return sum of all outputs (note: does not include fees)
@@ -530,7 +540,7 @@ public:
         @return	Sum of value of all inputs (scriptSigs)
         @see CTransaction::FetchInputs
      */
-    int64 GetValueIn(const MapPrevTx& mapInputs) const;
+    int64 GetValueIn(CCoinsViewCache& mapInputs) const;
 
     static bool AllowFree(double dPriority)
     {
@@ -539,80 +549,7 @@ public:
         return dPriority > COIN * 144 / 250;
     }
 
-    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const
-    {
-        // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
-        int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
-
-        unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
-        unsigned int nNewBlockSize = nBlockSize + nBytes;
-        int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
-
-        if (fAllowFree)
-        {
-            if (nBlockSize == 1)
-            {
-                // Transactions under 10K are free
-                // (about 4500 BTC if made of 50 BTC inputs)
-                if (nBytes < 10000)
-                    nMinFee = 0;
-            }
-            else
-            {
-                // Free transaction area
-                if (nNewBlockSize < 27000)
-                    nMinFee = 0;
-            }
-        }
-
-        // To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if any output is less than 0.01
-        if (nMinFee < nBaseFee)
-        {
-            BOOST_FOREACH(const CTxOut& txout, vout)
-                if (txout.nValue < CENT)
-                    nMinFee = nBaseFee;
-        }
-
-        // Raise the price as the block approaches full
-        if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
-        {
-            if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
-                return MAX_MONEY;
-            nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
-        }
-
-        if (!MoneyRange(nMinFee))
-            nMinFee = MAX_MONEY;
-        return nMinFee;
-    }
-
-
-    bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
-    {
-        CAutoFile filein = CAutoFile(OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb"), SER_DISK, CLIENT_VERSION);
-        if (!filein)
-            return error("CTransaction::ReadFromDisk() : OpenBlockFile failed");
-
-        // Read transaction
-        if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
-            return error("CTransaction::ReadFromDisk() : fseek failed");
-
-        try {
-            filein >> *this;
-        }
-        catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
-        }
-
-        // Return file pointer
-        if (pfileRet)
-        {
-            if (fseek(filein, pos.nTxPos, SEEK_SET) != 0)
-                return error("CTransaction::ReadFromDisk() : second fseek failed");
-            *pfileRet = filein.release();
-        }
-        return true;
-    }
+    int64 GetMinFee(unsigned int nBlockSize=1, bool fAllowFree=true, enum GetMinFee_mode mode=GMF_BLOCK) const;
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
@@ -631,7 +568,7 @@ public:
     std::string ToString() const
     {
         std::string str;
-        str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n",
+        str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%"PRIszu", vout.size=%"PRIszu", nLockTime=%u)\n",
             GetHash().ToString().substr(0,10).c_str(),
             nVersion,
             vin.size(),
@@ -650,48 +587,388 @@ public:
     }
 
 
-    bool ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txindexRet);
-    bool ReadFromDisk(CTxDB& txdb, COutPoint prevout);
-    bool ReadFromDisk(COutPoint prevout);
-    bool DisconnectInputs(CTxDB& txdb);
+    // Do all possible client-mode checks
+    bool ClientCheckInputs() const;
 
-    /** Fetch from memory and/or disk. inputsRet keys are transaction hashes.
+    // Check whether all prevouts of this transaction are present in the UTXO set represented by view
+    bool HaveInputs(CCoinsViewCache &view) const;
 
-     @param[in] txdb	Transaction database
-     @param[in] mapTestPool	List of pending changes to the transaction index database
-     @param[in] fBlock	True if being called to add a new best-block to the chain
-     @param[in] fMiner	True if being called by CreateNewBlock
-     @param[out] inputsRet	Pointers to this transaction's inputs
-     @param[out] fInvalid	returns true if transaction is invalid
-     @return	Returns true if all inputs are in txdb or mapTestPool
-     */
-    bool FetchInputs(CTxDB& txdb, const std::map<uint256, CTxIndex>& mapTestPool,
-                     bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid);
+    // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
+    // This does not modify the UTXO set
+    bool CheckInputs(CCoinsViewCache &view, enum CheckSig_mode csmode, bool fStrictPayToScriptHash=true, bool fStrictEncodings=true) const;
 
-    /** Sanity check previous transactions, then, if all checks succeed,
-        mark them as spent by this transaction.
+    // Apply the effects of this transaction on the UTXO set represented by view
+    bool UpdateCoins(CCoinsViewCache &view, CTxUndo &txundo, int nHeight, const uint256 &txhash) const;
 
-        @param[in] inputs	Previous transactions (from FetchInputs)
-        @param[out] mapTestPool	Keeps track of inputs that need to be updated on disk
-        @param[in] posThisTx	Position of this transaction on disk
-        @param[in] pindexBlock
-        @param[in] fBlock	true if called from ConnectBlock
-        @param[in] fMiner	true if called from CreateNewBlock
-        @param[in] fStrictPayToScriptHash	true if fully validating p2sh transactions
-        @return Returns true if all checks succeed
-     */
-    bool ConnectInputs(MapPrevTx inputs,
-                       std::map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                       const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash=true);
-    bool ClientConnectInputs();
+    // Context-independent validity checks
     bool CheckTransaction() const;
-    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
+
+    // Try to accept this transaction into the memory pool
+    bool AcceptToMemoryPool(bool fCheckInputs=true, bool* pfMissingInputs=NULL);
 
 protected:
-    const CTxOut& GetOutputFor(const CTxIn& input, const MapPrevTx& inputs) const;
+    static const CTxOut &GetOutputFor(const CTxIn& input, CCoinsViewCache& mapInputs);
 };
 
+/** wrapper for CTxOut that provides a more compact serialization */
+class CTxOutCompressor
+{
+private:
+    CTxOut &txout;
 
+public:
+    static uint64 CompressAmount(uint64 nAmount);
+    static uint64 DecompressAmount(uint64 nAmount);
+
+    CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
+
+    IMPLEMENT_SERIALIZE(({
+        if (!fRead) {
+            uint64 nVal = CompressAmount(txout.nValue);
+            READWRITE(VARINT(nVal));
+        } else {
+            uint64 nVal = 0;
+            READWRITE(VARINT(nVal));
+            txout.nValue = DecompressAmount(nVal);
+        }
+        CScriptCompressor cscript(REF(txout.scriptPubKey));
+        READWRITE(cscript);
+    });)
+};
+
+/** Undo information for a CTxIn
+ *
+ *  Contains the prevout's CTxOut being spent, and if this was the
+ *  last output of the affected transaction, its metadata as well
+ *  (coinbase or not, height, transaction version)
+ */
+class CTxInUndo
+{
+public:
+    CTxOut txout;         // the txout data before being spent
+    bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
+    unsigned int nHeight; // if the outpoint was the last unspent: its height
+    int nVersion;         // if the outpoint was the last unspent: its version
+
+    CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
+    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+
+    unsigned int GetSerializeSize(int nType, int nVersion) const {
+        return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
+               (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion) : 0) +
+               ::GetSerializeSize(CTxOutCompressor(REF(txout)), nType, nVersion);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s, int nType, int nVersion) const {
+        ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion);
+        if (nHeight > 0)
+            ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
+        ::Serialize(s, CTxOutCompressor(REF(txout)), nType, nVersion);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s, int nType, int nVersion) {
+        unsigned int nCode = 0;
+        ::Unserialize(s, VARINT(nCode), nType, nVersion);
+        nHeight = nCode / 2;
+        fCoinBase = nCode & 1;
+        if (nHeight > 0)
+            ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
+        ::Unserialize(s, REF(CTxOutCompressor(REF(txout))), nType, nVersion);
+    }
+};
+
+/** Undo information for a CTransaction */
+class CTxUndo
+{
+public:
+    // undo information for all txins
+    std::vector<CTxInUndo> vprevout;
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(vprevout);
+    )
+};
+
+/** Undo information for a CBlock */
+class CBlockUndo
+{
+public:
+    std::vector<CTxUndo> vtxundo; // for all but the coinbase
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(vtxundo);
+    )
+
+    bool WriteToDisk(CDiskBlockPos &pos)
+    {
+
+        // Open history file to append
+        CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
+        if (!fileout)
+            return error("CBlockUndo::WriteToDisk() : OpenUndoFile failed");
+
+        // Write index header
+        unsigned int nSize = fileout.GetSerializeSize(*this);
+        fileout << FLATDATA(pchMessageStart) << nSize;
+
+        // Write undo data
+        long fileOutPos = ftell(fileout);
+        if (fileOutPos < 0)
+            return error("CBlock::WriteToDisk() : ftell failed");
+        pos.nPos = (unsigned int)fileOutPos;
+        fileout << *this;
+
+        // Flush stdio buffers and commit to disk before returning
+        fflush(fileout);
+        if (!IsInitialBlockDownload())
+            FileCommit(fileout);
+
+        return true;
+    }
+
+};
+
+/** pruned version of CTransaction: only retains metadata and unspent transaction outputs
+ *
+ * Serialized format:
+ * - VARINT(nVersion)
+ * - VARINT(nCode)
+ * - unspentness bitvector, for vout[2] and further; least significant byte first
+ * - the non-spent CTxOuts (via CTxOutCompressor)
+ * - VARINT(nHeight)
+ *
+ * The nCode value consists of:
+ * - bit 1: IsCoinBase()
+ * - bit 2: vout[0] is not spent
+ * - bit 4: vout[1] is not spent
+ * - The higher bits encode N, the number of non-zero bytes in the following bitvector.
+ *   - In case both bit 2 and bit 4 are unset, they encode N-1, as there must be at
+ *     least one non-spent output).
+ *
+ * Example: 0104835800816115944e077fe7c803cfa57f29b36bf87c1d358bb85e
+ *          <><><--------------------------------------------><---->
+ *          |  \                  |                             /
+ *    version   code             vout[1]                  height
+ *
+ *    - version = 1
+ *    - code = 4 (vout[1] is not spent, and 0 non-zero bytes of bitvector follow)
+ *    - unspentness bitvector: as 0 non-zero bytes follow, it has length 0
+ *    - vout[1]: 835800816115944e077fe7c803cfa57f29b36bf87c1d35
+ *               * 8358: compact amount representation for 60000000000 (600 BTC)
+ *               * 00: special txout type pay-to-pubkey-hash
+ *               * 816115944e077fe7c803cfa57f29b36bf87c1d35: address uint160
+ *    - height = 203998
+ *
+ *
+ * Example: 0109044086ef97d5790061b01caab50f1b8e9c50a5057eb43c2d9563a4eebbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa486af3b
+ *          <><><--><--------------------------------------------------><----------------------------------------------><---->
+ *         /  \   \                     |                                                           |                     /
+ *  version  code  unspentness       vout[4]                                                     vout[16]           height
+ *
+ *  - version = 1
+ *  - code = 9 (coinbase, neither vout[0] or vout[1] are unspent,
+ *                2 (1, +1 because both bit 2 and bit 4 are unset) non-zero bitvector bytes follow)
+ *  - unspentness bitvector: bits 2 (0x04) and 14 (0x4000) are set, so vout[2+2] and vout[14+2] are unspent
+ *  - vout[4]: 86ef97d5790061b01caab50f1b8e9c50a5057eb43c2d9563a4ee
+ *             * 86ef97d579: compact amount representation for 234925952 (2.35 BTC)
+ *             * 00: special txout type pay-to-pubkey-hash
+ *             * 61b01caab50f1b8e9c50a5057eb43c2d9563a4ee: address uint160
+ *  - vout[16]: bbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa4
+ *              * bbd123: compact amount representation for 110397 (0.001 BTC)
+ *              * 00: special txout type pay-to-pubkey-hash
+ *              * 8c988f1a4a4de2161e0f50aac7f17e7f9555caa4: address uint160
+ *  - height = 120891
+ */
+class CCoins
+{
+public:
+    // whether transaction is a coinbase
+    bool fCoinBase;
+
+    // unspent transaction outputs; spent outputs are .IsNull(); spent outputs at the end of the array are dropped
+    std::vector<CTxOut> vout;
+
+    // at which height this transaction was included in the active block chain
+    int nHeight;
+
+    // version of the CTransaction; accesses to this value should probably check for nHeight as well,
+    // as new tx version will probably only be introduced at certain heights
+    int nVersion;
+
+    // construct a CCoins from a CTransaction, at a given height
+    CCoins(const CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), vout(tx.vout), nHeight(nHeightIn), nVersion(tx.nVersion) { }
+
+    // empty constructor
+    CCoins() : fCoinBase(false), vout(0), nHeight(0), nVersion(0) { }
+
+    // remove spent outputs at the end of vout
+    void Cleanup() {
+        while (vout.size() > 0 && vout.back().IsNull())
+            vout.pop_back();
+    }
+
+    // equality test
+    friend bool operator==(const CCoins &a, const CCoins &b) {
+         return a.fCoinBase == b.fCoinBase &&
+                a.nHeight == b.nHeight &&
+                a.nVersion == b.nVersion &&
+                a.vout == b.vout;
+    }
+    friend bool operator!=(const CCoins &a, const CCoins &b) {
+        return !(a == b);
+    }
+
+    // calculate number of bytes for the bitmask, and its number of non-zero bytes
+    // each bit in the bitmask represents the availability of one output, but the
+    // availabilities of the first two outputs are encoded separately
+    void CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes) const {
+        unsigned int nLastUsedByte = 0;
+        for (unsigned int b = 0; 2+b*8 < vout.size(); b++) {
+            bool fZero = true;
+            for (unsigned int i = 0; i < 8 && 2+b*8+i < vout.size(); i++) {
+                if (!vout[2+b*8+i].IsNull()) {
+                    fZero = false;
+                    continue;
+                }
+            }
+            if (!fZero) {
+                nLastUsedByte = b + 1;
+                nNonzeroBytes++;
+            }
+        }
+        nBytes += nLastUsedByte;
+    }
+
+    bool IsCoinBase() const {
+        return fCoinBase;
+    }
+
+    unsigned int GetSerializeSize(int nType, int nVersion) const {
+        unsigned int nSize = 0;
+        unsigned int nMaskSize = 0, nMaskCode = 0;
+        CalcMaskSize(nMaskSize, nMaskCode);
+        bool fFirst = vout.size() > 0 && !vout[0].IsNull();
+        bool fSecond = vout.size() > 1 && !vout[1].IsNull();
+        assert(fFirst || fSecond || nMaskCode);
+        unsigned int nCode = 8*(nMaskCode - (fFirst || fSecond ? 0 : 1)) + (fCoinBase ? 1 : 0) + (fFirst ? 2 : 0) + (fSecond ? 4 : 0);
+        // version
+        nSize += ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion);
+        // size of header code
+        nSize += ::GetSerializeSize(VARINT(nCode), nType, nVersion);
+        // spentness bitmask
+        nSize += nMaskSize;
+        // txouts themself
+        for (unsigned int i = 0; i < vout.size(); i++)
+            if (!vout[i].IsNull())
+                nSize += ::GetSerializeSize(CTxOutCompressor(REF(vout[i])), nType, nVersion);
+        // height
+        nSize += ::GetSerializeSize(VARINT(nHeight), nType, nVersion);
+        return nSize;
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s, int nType, int nVersion) const {
+        unsigned int nMaskSize = 0, nMaskCode = 0;
+        CalcMaskSize(nMaskSize, nMaskCode);
+        bool fFirst = vout.size() > 0 && !vout[0].IsNull();
+        bool fSecond = vout.size() > 1 && !vout[1].IsNull();
+        assert(fFirst || fSecond || nMaskCode);
+        unsigned int nCode = 8*(nMaskCode - (fFirst || fSecond ? 0 : 1)) + (fCoinBase ? 1 : 0) + (fFirst ? 2 : 0) + (fSecond ? 4 : 0);
+        // version
+        ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
+        // header code
+        ::Serialize(s, VARINT(nCode), nType, nVersion);
+        // spentness bitmask
+        for (unsigned int b = 0; b<nMaskSize; b++) {
+            unsigned char chAvail = 0;
+            for (unsigned int i = 0; i < 8 && 2+b*8+i < vout.size(); i++)
+                if (!vout[2+b*8+i].IsNull())
+                    chAvail |= (1 << i);
+            ::Serialize(s, chAvail, nType, nVersion);
+        }
+        // txouts themself
+        for (unsigned int i = 0; i < vout.size(); i++) {
+            if (!vout[i].IsNull())
+                ::Serialize(s, CTxOutCompressor(REF(vout[i])), nType, nVersion);
+        }
+        // coinbase height
+        ::Serialize(s, VARINT(nHeight), nType, nVersion);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s, int nType, int nVersion) {
+        unsigned int nCode = 0;
+        // version
+        ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
+        // header code
+        ::Unserialize(s, VARINT(nCode), nType, nVersion);
+        fCoinBase = nCode & 1;
+        std::vector<bool> vAvail(2, false);
+        vAvail[0] = nCode & 2;
+        vAvail[1] = nCode & 4;
+        unsigned int nMaskCode = (nCode / 8) + ((nCode & 6) != 0 ? 0 : 1);
+        // spentness bitmask
+        while (nMaskCode > 0) {
+            unsigned char chAvail = 0;
+            ::Unserialize(s, chAvail, nType, nVersion);
+            for (unsigned int p = 0; p < 8; p++) {
+                bool f = (chAvail & (1 << p)) != 0;
+                vAvail.push_back(f);
+            }
+            if (chAvail != 0)
+                nMaskCode--;
+        }
+        // txouts themself
+        vout.assign(vAvail.size(), CTxOut());
+        for (unsigned int i = 0; i < vAvail.size(); i++) {
+            if (vAvail[i])
+                ::Unserialize(s, REF(CTxOutCompressor(vout[i])), nType, nVersion);
+        }
+        // coinbase height
+        ::Unserialize(s, VARINT(nHeight), nType, nVersion);
+        Cleanup();
+    }
+
+    // mark an outpoint spent, and construct undo information
+    bool Spend(const COutPoint &out, CTxInUndo &undo) {
+        if (out.n >= vout.size())
+            return false;
+        if (vout[out.n].IsNull())
+            return false;
+        undo = CTxInUndo(vout[out.n]);
+        vout[out.n].SetNull();
+        Cleanup();
+        if (vout.size() == 0) {
+            undo.nHeight = nHeight;
+            undo.fCoinBase = fCoinBase;
+            undo.nVersion = this->nVersion;
+        }
+        return true;
+    }
+
+    // mark a vout spent
+    bool Spend(int nPos) {
+        CTxInUndo undo;
+        COutPoint out(0, nPos);
+        return Spend(out, undo);
+    }
+
+    // check whether a particular output is still available
+    bool IsAvailable(unsigned int nPos) const {
+        return (nPos < vout.size() && !vout[nPos].IsNull());
+    }
+
+    // check whether the entire CCoins is spent
+    // note that only !IsPruned() CCoins can be serialized
+    bool IsPruned() const {
+        BOOST_FOREACH(const CTxOut &out, vout)
+            if (!out.IsNull())
+                return false;
+        return true;
+    }
+};
 
 
 
@@ -740,66 +1017,15 @@ public:
     int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
     int GetBlocksToMaturity() const;
-    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true);
-    bool AcceptToMemoryPool();
+    bool AcceptToMemoryPool(bool fCheckInputs=true);
 };
 
 
 
 
-/**  A txdb record that contains the disk location of a transaction and the
- * locations of transactions that spend its outputs.  vSpent is really only
- * used as a flag, but having the location is very helpful for debugging.
- */
-class CTxIndex
-{
-public:
-    CDiskTxPos pos;
-    std::vector<CDiskTxPos> vSpent;
 
-    CTxIndex()
-    {
-        SetNull();
-    }
 
-    CTxIndex(const CDiskTxPos& posIn, unsigned int nOutputs)
-    {
-        pos = posIn;
-        vSpent.resize(nOutputs);
-    }
 
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(pos);
-        READWRITE(vSpent);
-    )
-
-    void SetNull()
-    {
-        pos.SetNull();
-        vSpent.clear();
-    }
-
-    bool IsNull()
-    {
-        return pos.IsNull();
-    }
-
-    friend bool operator==(const CTxIndex& a, const CTxIndex& b)
-    {
-        return (a.pos    == b.pos &&
-                a.vSpent == b.vSpent);
-    }
-
-    friend bool operator!=(const CTxIndex& a, const CTxIndex& b)
-    {
-        return !(a == b);
-    }
-    int GetDepthInMainChain() const;
- 
-};
 
 
 
@@ -811,15 +1037,12 @@ public:
  * to everyone and the block is added to the block chain.  The first transaction
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
- *
- * Blocks are appended to blk0001.dat files on disk.  Their location on disk
- * is indexed by CBlockIndex objects in memory.
  */
 class CBlock
 {
 public:
     // header
-    static const int CURRENT_VERSION=1;
+    static const int CURRENT_VERSION=2;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -909,6 +1132,12 @@ public:
         return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
     }
 
+    const uint256 &GetTxHash(unsigned int nIndex) const {
+        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
+        assert(nIndex < vtx.size());
+        return vMerkleTree[nIndex];
+    }
+
     std::vector<uint256> GetMerkleBranch(int nIndex) const
     {
         if (vMerkleTree.empty())
@@ -941,12 +1170,12 @@ public:
     }
 
 
-    bool WriteToDisk(unsigned int& nFileRet, unsigned int& nBlockPosRet)
+    bool WriteToDisk(CDiskBlockPos &pos)
     {
         // Open history file to append
-        CAutoFile fileout = CAutoFile(AppendBlockFile(nFileRet), SER_DISK, CLIENT_VERSION);
+        CAutoFile fileout = CAutoFile(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
         if (!fileout)
-            return error("CBlock::WriteToDisk() : AppendBlockFile failed");
+            return error("CBlock::WriteToDisk() : OpenBlockFile failed");
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
@@ -956,23 +1185,23 @@ public:
         long fileOutPos = ftell(fileout);
         if (fileOutPos < 0)
             return error("CBlock::WriteToDisk() : ftell failed");
-        nBlockPosRet = fileOutPos;
+        pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
         // Flush stdio buffers and commit to disk before returning
         fflush(fileout);
-        if (!IsInitialBlockDownload() || (nBestHeight+1) % 500 == 0)
+        if (!IsInitialBlockDownload())
             FileCommit(fileout);
 
         return true;
     }
 
-    bool ReadFromDisk(unsigned int nFile, unsigned int nBlockPos, bool fReadTransactions=true)
+    bool ReadFromDisk(const CDiskBlockPos &pos, bool fReadTransactions = true)
     {
         SetNull();
 
         // Open history file to read
-        CAutoFile filein = CAutoFile(OpenBlockFile(nFile, nBlockPos, "rb"), SER_DISK, CLIENT_VERSION);
+        CAutoFile filein = CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
         if (!filein)
             return error("CBlock::ReadFromDisk() : OpenBlockFile failed");
         if (!fReadTransactions)
@@ -997,7 +1226,7 @@ public:
 
     void print() const
     {
-        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%d)\n",
+        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
             GetHash().ToString().substr(0,20).c_str(),
             nVersion,
             hashPrevBlock.ToString().substr(0,20).c_str(),
@@ -1016,22 +1245,103 @@ public:
     }
 
 
-    bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
-    bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck=false);
-    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
-    bool SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew);
-    bool AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos);
-    bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true) const;
-    bool AcceptBlock();
+    // Undo the effects of this block (with given index) on the UTXO set represented by coins
+    bool DisconnectBlock(CBlockIndex *pindex, CCoinsViewCache &coins);
 
-private:
-    bool SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew);
+    // Apply the effects of this block (with given index) on the UTXO set represented by coins
+    bool ConnectBlock(CBlockIndex *pindex, CCoinsViewCache &coins, bool fJustCheck=false);
+
+    // Read a block from disk
+    bool ReadFromDisk(const CBlockIndex* pindex, bool fReadTransactions=true);
+
+    // Add this block to the block index, and if necessary, switch the active block chain to this
+    bool AddToBlockIndex(const CDiskBlockPos &pos);
+
+    // Context-independent validity checks
+    bool CheckBlock(bool fCheckPOW=true, bool fCheckMerkleRoot=true) const;
+
+    // Store block on disk
+    bool AcceptBlock();
 };
 
 
 
 
 
+class CBlockFileInfo
+{
+public:
+    unsigned int nBlocks;      // number of blocks stored in file
+    unsigned int nSize;        // number of used bytes of block file
+    unsigned int nUndoSize;    // number of used bytes in the undo file
+    unsigned int nHeightFirst; // lowest height of block in file
+    unsigned int nHeightLast;  // highest height of block in file
+    uint64 nTimeFirst;         // earliest time of block in file
+    uint64 nTimeLast;          // latest time of block in file
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(VARINT(nBlocks));
+        READWRITE(VARINT(nSize));
+        READWRITE(VARINT(nUndoSize));
+        READWRITE(VARINT(nHeightFirst));
+        READWRITE(VARINT(nHeightLast));
+        READWRITE(VARINT(nTimeFirst));
+        READWRITE(VARINT(nTimeLast));
+     )
+
+     void SetNull() {
+         nBlocks = 0;
+         nSize = 0;
+         nUndoSize = 0;
+         nHeightFirst = 0;
+         nHeightLast = 0;
+         nTimeFirst = 0;
+         nTimeLast = 0;
+     }
+
+     CBlockFileInfo() {
+         SetNull();
+     }
+
+     std::string ToString() const {
+         return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u..%u, time=%s..%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst).c_str(), DateTimeStrFormat("%Y-%m-%d", nTimeLast).c_str());
+     }
+
+     // update statistics (does not update nSize)
+     void AddBlock(unsigned int nHeightIn, uint64 nTimeIn) {
+         if (nBlocks==0 || nHeightFirst > nHeightIn)
+             nHeightFirst = nHeightIn;
+         if (nBlocks==0 || nTimeFirst > nTimeIn)
+             nTimeFirst = nTimeIn;
+         nBlocks++;
+         if (nHeightIn > nHeightFirst)
+             nHeightLast = nHeightIn;
+         if (nTimeIn > nTimeLast)
+             nTimeLast = nTimeIn;
+     }
+};
+
+extern CCriticalSection cs_LastBlockFile;
+extern CBlockFileInfo infoLastBlockFile;
+extern int nLastBlockFile;
+
+enum BlockStatus {
+    BLOCK_VALID_UNKNOWN      =    0,
+    BLOCK_VALID_HEADER       =    1, // parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
+    BLOCK_VALID_TREE         =    2, // parent found, difficulty matches, timestamp >= median previous, checkpoint
+    BLOCK_VALID_TRANSACTIONS =    3, // only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids, sigops, size, merkle root
+    BLOCK_VALID_CHAIN        =    4, // outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30
+    BLOCK_VALID_SCRIPTS      =    5, // scripts/signatures ok
+    BLOCK_VALID_MASK         =    7,
+
+    BLOCK_HAVE_DATA          =    8, // full block available in blk*.dat
+    BLOCK_HAVE_UNDO          =   16, // undo data available in rev*.dat
+    BLOCK_HAVE_MASK          =   24,
+
+    BLOCK_FAILED_VALID       =   32, // stage after last reached validness failed
+    BLOCK_FAILED_CHILD       =   64, // descends from failed block
+    BLOCK_FAILED_MASK        =   96
+};
 
 /** The block chain is a tree shaped structure starting with the
  * genesis block at the root, with each block potentially having multiple
@@ -1043,13 +1353,39 @@ private:
 class CBlockIndex
 {
 public:
+    // pointer to the hash of the block, if any. memory is owned by this CBlockIndex
     const uint256* phashBlock;
+
+    // pointer to the index of the predecessor of this block
     CBlockIndex* pprev;
+
+    // (memory only) pointer to the index of the *active* successor of this block
     CBlockIndex* pnext;
-    unsigned int nFile;
-    unsigned int nBlockPos;
+
+    // height of the entry in the chain. The genesis block has height 0
     int nHeight;
+
+    // Which # file this block is stored in (blk?????.dat)
+    int nFile;
+
+    // Byte offset within blk?????.dat where this block's data is stored
+    unsigned int nDataPos;
+
+    // Byte offset within rev?????.dat where this block's undo data is stored
+    unsigned int nUndoPos;
+
+    // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     CBigNum bnChainWork;
+
+    // Number of transactions in this block.
+    // Note: in a potential headers-first mode, this number cannot be relied upon
+    unsigned int nTx;
+
+    // (memory only) Number of transactions in the chain up to and including this block
+    unsigned int nChainTx; // change to 64-bit type when necessary; won't happen before 2030
+
+    // Verification status of this block. See enum BlockStatus
+    unsigned int nStatus;
 
     // block header
     int nVersion;
@@ -1064,10 +1400,14 @@ public:
         phashBlock = NULL;
         pprev = NULL;
         pnext = NULL;
-        nFile = 0;
-        nBlockPos = 0;
         nHeight = 0;
+        nFile = 0;
+        nDataPos = 0;
+        nUndoPos = 0;
         bnChainWork = 0;
+        nTx = 0;
+        nChainTx = 0;
+        nStatus = 0;
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -1076,21 +1416,45 @@ public:
         nNonce         = 0;
     }
 
-    CBlockIndex(unsigned int nFileIn, unsigned int nBlockPosIn, CBlock& block)
+    CBlockIndex(CBlock& block)
     {
         phashBlock = NULL;
         pprev = NULL;
         pnext = NULL;
-        nFile = nFileIn;
-        nBlockPos = nBlockPosIn;
         nHeight = 0;
+        nFile = 0;
+        nDataPos = 0;
+        nUndoPos = 0;
         bnChainWork = 0;
+        nTx = 0;
+        nChainTx = 0;
+        nStatus = 0;
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+    }
+
+    CDiskBlockPos GetBlockPos() const {
+        CDiskBlockPos ret;
+        if (nStatus & BLOCK_HAVE_DATA) {
+            ret.nFile = nFile;
+            ret.nPos  = nDataPos;
+        } else
+            ret.SetNull();
+        return ret;
+    }
+
+    CDiskBlockPos GetUndoPos() const {
+        CDiskBlockPos ret;
+        if (nStatus & BLOCK_HAVE_UNDO) {
+            ret.nFile = nFile;
+            ret.nPos  = nUndoPos;
+        } else
+            ret.SetNull();
+        return ret;
     }
 
     CBlock GetBlockHeader() const
@@ -1163,12 +1527,17 @@ public:
         return pindex->GetMedianTimePast();
     }
 
-
+    /**
+     * Returns true if there are nRequired or more blocks of minVersion or above
+     * in the last nToCheck blocks, starting at pstart and going backwards.
+     */
+    static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
+                                unsigned int nRequired, unsigned int nToCheck);
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, pnext, nFile, nBlockPos, nHeight,
+        return strprintf("CBlockIndex(pprev=%p, pnext=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+            pprev, pnext, nHeight,
             hashMerkleRoot.ToString().substr(0,10).c_str(),
             GetBlockHash().ToString().substr(0,20).c_str());
     }
@@ -1179,6 +1548,19 @@ public:
     }
 };
 
+struct CBlockIndexWorkComparator
+{
+    bool operator()(CBlockIndex *pa, CBlockIndex *pb) {
+        if (pa->bnChainWork > pb->bnChainWork) return false;
+        if (pa->bnChainWork < pb->bnChainWork) return true;
+
+        if (pa->GetBlockHash() < pb->GetBlockHash()) return false;
+        if (pa->GetBlockHash() > pb->GetBlockHash()) return true;
+
+        return false; // identical blocks
+    }
+};
+
 
 
 /** Used to marshal pointers into hashes for db storage. */
@@ -1186,29 +1568,29 @@ class CDiskBlockIndex : public CBlockIndex
 {
 public:
     uint256 hashPrev;
-    uint256 hashNext;
 
-    CDiskBlockIndex()
-    {
+    CDiskBlockIndex() {
         hashPrev = 0;
-        hashNext = 0;
     }
 
-    explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex)
-    {
+    explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : 0);
-        hashNext = (pnext ? pnext->GetBlockHash() : 0);
     }
 
     IMPLEMENT_SERIALIZE
     (
         if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
+            READWRITE(VARINT(nVersion));
 
-        READWRITE(hashNext);
-        READWRITE(nFile);
-        READWRITE(nBlockPos);
-        READWRITE(nHeight);
+        READWRITE(VARINT(nHeight));
+        READWRITE(VARINT(nStatus));
+        READWRITE(VARINT(nTx));
+        if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
+            READWRITE(VARINT(nFile));
+        if (nStatus & BLOCK_HAVE_DATA)
+            READWRITE(VARINT(nDataPos));
+        if (nStatus & BLOCK_HAVE_UNDO)
+            READWRITE(VARINT(nUndoPos));
 
         // block header
         READWRITE(this->nVersion);
@@ -1236,10 +1618,9 @@ public:
     {
         std::string str = "CDiskBlockIndex(";
         str += CBlockIndex::ToString();
-        str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashNext=%s)",
+        str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
             GetBlockHash().ToString().c_str(),
-            hashPrev.ToString().substr(0,20).c_str(),
-            hashNext.ToString().substr(0,20).c_str());
+            hashPrev.ToString().substr(0,20).c_str());
         return str;
     }
 
@@ -1390,212 +1771,6 @@ public:
 
 
 
-
-/** Alerts are for notifying old versions if they become too obsolete and
- * need to upgrade.  The message is displayed in the status bar.
- * Alert messages are broadcast as a vector of signed data.  Unserializing may
- * not read the entire buffer if the alert is for a newer version, but older
- * versions can still relay the original data.
- */
-class CUnsignedAlert
-{
-public:
-    int nVersion;
-    int64 nRelayUntil;      // when newer nodes stop relaying to newer nodes
-    int64 nExpiration;
-    int nID;
-    int nCancel;
-    std::set<int> setCancel;
-    int nMinVer;            // lowest version inclusive
-    int nMaxVer;            // highest version inclusive
-    std::set<std::string> setSubVer;  // empty matches all
-    int nPriority;
-
-    // Actions
-    std::string strComment;
-    std::string strStatusBar;
-    std::string strReserved;
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(nRelayUntil);
-        READWRITE(nExpiration);
-        READWRITE(nID);
-        READWRITE(nCancel);
-        READWRITE(setCancel);
-        READWRITE(nMinVer);
-        READWRITE(nMaxVer);
-        READWRITE(setSubVer);
-        READWRITE(nPriority);
-
-        READWRITE(strComment);
-        READWRITE(strStatusBar);
-        READWRITE(strReserved);
-    )
-
-    void SetNull()
-    {
-        nVersion = 1;
-        nRelayUntil = 0;
-        nExpiration = 0;
-        nID = 0;
-        nCancel = 0;
-        setCancel.clear();
-        nMinVer = 0;
-        nMaxVer = 0;
-        setSubVer.clear();
-        nPriority = 0;
-
-        strComment.clear();
-        strStatusBar.clear();
-        strReserved.clear();
-    }
-
-    std::string ToString() const
-    {
-        std::string strSetCancel;
-        BOOST_FOREACH(int n, setCancel)
-            strSetCancel += strprintf("%d ", n);
-        std::string strSetSubVer;
-        BOOST_FOREACH(std::string str, setSubVer)
-            strSetSubVer += "\"" + str + "\" ";
-        return strprintf(
-                "CAlert(\n"
-                "    nVersion     = %d\n"
-                "    nRelayUntil  = %"PRI64d"\n"
-                "    nExpiration  = %"PRI64d"\n"
-                "    nID          = %d\n"
-                "    nCancel      = %d\n"
-                "    setCancel    = %s\n"
-                "    nMinVer      = %d\n"
-                "    nMaxVer      = %d\n"
-                "    setSubVer    = %s\n"
-                "    nPriority    = %d\n"
-                "    strComment   = \"%s\"\n"
-                "    strStatusBar = \"%s\"\n"
-                ")\n",
-            nVersion,
-            nRelayUntil,
-            nExpiration,
-            nID,
-            nCancel,
-            strSetCancel.c_str(),
-            nMinVer,
-            nMaxVer,
-            strSetSubVer.c_str(),
-            nPriority,
-            strComment.c_str(),
-            strStatusBar.c_str());
-    }
-
-    void print() const
-    {
-        printf("%s", ToString().c_str());
-    }
-};
-
-/** An alert is a combination of a serialized CUnsignedAlert and a signature. */
-class CAlert : public CUnsignedAlert
-{
-public:
-    std::vector<unsigned char> vchMsg;
-    std::vector<unsigned char> vchSig;
-
-    CAlert()
-    {
-        SetNull();
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(vchMsg);
-        READWRITE(vchSig);
-    )
-
-    void SetNull()
-    {
-        CUnsignedAlert::SetNull();
-        vchMsg.clear();
-        vchSig.clear();
-    }
-
-    bool IsNull() const
-    {
-        return (nExpiration == 0);
-    }
-
-    uint256 GetHash() const
-    {
-        return SerializeHash(*this);
-    }
-
-    bool IsInEffect() const
-    {
-        return (GetAdjustedTime() < nExpiration);
-    }
-
-    bool Cancels(const CAlert& alert) const
-    {
-        if (!IsInEffect())
-            return false; // this was a no-op before 31403
-        return (alert.nID <= nCancel || setCancel.count(alert.nID));
-    }
-
-    bool AppliesTo(int nVersion, std::string strSubVerIn) const
-    {
-        // TODO: rework for client-version-embedded-in-strSubVer ?
-        return (IsInEffect() &&
-                nMinVer <= nVersion && nVersion <= nMaxVer &&
-                (setSubVer.empty() || setSubVer.count(strSubVerIn)));
-    }
-
-    bool AppliesToMe() const
-    {
-        return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<std::string>()));
-    }
-
-    bool RelayTo(CNode* pnode) const
-    {
-        if (!IsInEffect())
-            return false;
-        // returns true if wasn't already contained in the set
-        if (pnode->setKnown.insert(GetHash()).second)
-        {
-            if (AppliesTo(pnode->nVersion, pnode->strSubVer) ||
-                AppliesToMe() ||
-                GetAdjustedTime() < nRelayUntil)
-            {
-                pnode->PushMessage("alert", *this);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool CheckSignature()
-    {
-        CKey key;
-        if (!key.SetPubKey(ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284")))
-            return error("CAlert::CheckSignature() : SetPubKey failed");
-        if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-            return error("CAlert::CheckSignature() : verify signature failed");
-
-        // Now unserialize the data
-        CDataStream sMsg(vchMsg, SER_NETWORK, PROTOCOL_VERSION);
-        sMsg >> *(CUnsignedAlert*)this;
-        return true;
-    }
-
-    bool ProcessAlert();
-
-    /*
-     * Get copy of (active) alert object by hash. Returns a null alert if it is not found.
-     */
-    static CAlert getAlertByHash(const uint256 &hash);
-};
-
 class CTxMemPool
 {
 public:
@@ -1603,12 +1778,12 @@ public:
     std::map<uint256, CTransaction> mapTx GUARDED_BY(cs);
     std::map<COutPoint, CInPoint> mapNextTx GUARDED_BY(cs);
 
-    bool accept(CTxDB& txdb, CTransaction &tx,
-                bool fCheckInputs, bool* pfMissingInputs);
+    bool accept(CTransaction &tx, bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(const uint256& hash, CTransaction &tx);
     bool remove(CTransaction &tx);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
+    void pruneSpent(const uint256& hash, CCoins &coins);
 
     unsigned long size()
     {
@@ -1628,5 +1803,116 @@ public:
 };
 
 extern CTxMemPool mempool;
+
+struct CCoinsStats
+{
+    int nHeight;
+    uint64 nTransactions;
+    uint64 nTransactionOutputs;
+    uint64 nSerializedSize;
+
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0) {}
+};
+
+/** Abstract view on the open txout dataset. */
+class CCoinsView
+{
+public:
+    // Retrieve the CCoins (unspent transaction outputs) for a given txid
+    virtual bool GetCoins(uint256 txid, CCoins &coins);
+
+    // Modify the CCoins for a given txid
+    virtual bool SetCoins(uint256 txid, const CCoins &coins);
+
+    // Just check whether we have data for a given txid.
+    // This may (but cannot always) return true for fully spent transactions
+    virtual bool HaveCoins(uint256 txid);
+
+    // Retrieve the block index whose state this CCoinsView currently represents
+    virtual CBlockIndex *GetBestBlock();
+
+    // Modify the currently active block index
+    virtual bool SetBestBlock(CBlockIndex *pindex);
+
+    // Do a bulk modification (multiple SetCoins + one SetBestBlock)
+    virtual bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
+
+    // Calculate statistics about the unspent transaction output set
+    virtual bool GetStats(CCoinsStats &stats);
+
+    // As we use CCoinsViews polymorphically, have a virtual destructor
+    virtual ~CCoinsView() {};
+};
+
+/** CCoinsView backed by another CCoinsView */
+class CCoinsViewBacked : public CCoinsView
+{
+protected:
+    CCoinsView *base;
+
+public:
+    CCoinsViewBacked(CCoinsView &viewIn);
+    bool GetCoins(uint256 txid, CCoins &coins);
+    bool SetCoins(uint256 txid, const CCoins &coins);
+    bool HaveCoins(uint256 txid);
+    CBlockIndex *GetBestBlock();
+    bool SetBestBlock(CBlockIndex *pindex);
+    void SetBackend(CCoinsView &viewIn);
+    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
+    bool GetStats(CCoinsStats &stats);
+};
+
+/** CCoinsView that adds a memory cache for transactions to another CCoinsView */
+class CCoinsViewCache : public CCoinsViewBacked
+{
+protected:
+    CBlockIndex *pindexTip;
+    std::map<uint256,CCoins> cacheCoins;
+
+public:
+    CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
+
+    // Standard CCoinsView methods
+    bool GetCoins(uint256 txid, CCoins &coins);
+    bool SetCoins(uint256 txid, const CCoins &coins);
+    bool HaveCoins(uint256 txid);
+    CBlockIndex *GetBestBlock();
+    bool SetBestBlock(CBlockIndex *pindex);
+    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, CBlockIndex *pindex);
+
+    // Return a modifiable reference to a CCoins. Check HaveCoins first.
+    // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
+    // copying.
+    CCoins &GetCoins(uint256 txid);
+
+    // Push the modifications applied to this cache to its base.
+    // Failure to call this method before destruction will cause the changes to be forgotten.
+    bool Flush();
+
+    // Calculate the size of the cache (in number of transactions)
+    unsigned int GetCacheSize();
+
+private:
+    std::map<uint256,CCoins>::iterator FetchCoins(uint256 txid);
+};
+
+/** CCoinsView that brings transactions from a memorypool into view.
+    It does not check for spendings by memory pool transactions. */
+class CCoinsViewMemPool : public CCoinsViewBacked
+{
+protected:
+    CTxMemPool &mempool;
+
+public:
+    CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn);
+    bool GetCoins(uint256 txid, CCoins &coins);
+    bool HaveCoins(uint256 txid);
+};
+
+/** Global variable that points to the active CCoinsView (protected by cs_main) */
+extern CCoinsViewCache *pcoinsTip;
+
+/** Global variable that points to the active block tree (protected by cs_main) */
+extern CBlockTreeDB *pblocktree;
 
 #endif

@@ -64,7 +64,7 @@
         <string>Send to multiple recipients at once</string>
        </property>
        <property name="text">
-        <string>&amp;Add Recipient</string>
+        <string>Add &amp;Recipient</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
@@ -153,7 +153,7 @@
         <string>Confirm the send action</string>
        </property>
        <property name="text">
-        <string>&amp;Send</string>
+        <string>S&amp;end</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">

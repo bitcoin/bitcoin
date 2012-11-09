@@ -61,7 +61,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
 
         ret.push_back(obj);
     }
-    
+
     return ret;
 }
 

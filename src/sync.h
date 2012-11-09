@@ -91,7 +91,7 @@ public:
     CMutexLockBase(Mutex& mutexIn) : lock(mutexIn, boost::defer_lock) {}
     ~CMutexLockBase() {}
     operator bool() const
-    {
+{
         return lock.owns_lock();
     }
 };

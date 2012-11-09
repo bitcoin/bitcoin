@@ -238,12 +238,77 @@ uint64 ReadCompactSize(Stream& is)
     return nSizeRet;
 }
 
+// Variable-length integers: bytes are a MSB base-128 encoding of the number.
+// The high bit in each byte signifies whether another digit follows. To make
+// the encoding is one-to-one, one is subtracted from all but the last digit.
+// Thus, the byte sequence a[] with length len, where all but the last byte
+// has bit 128 set, encodes the number:
+//
+//   (a[len-1] & 0x7F) + sum(i=1..len-1, 128^i*((a[len-i-1] & 0x7F)+1))
+//
+// Properties:
+// * Very small (0-127: 1 byte, 128-16511: 2 bytes, 16512-2113663: 3 bytes)
+// * Every integer has exactly one encoding
+// * Encoding does not depend on size of original integer type
+// * No redundancy: every (infinite) byte sequence corresponds to a list
+//   of encoded integers.
+//
+// 0:         [0x00]  256:        [0x81 0x00]
+// 1:         [0x01]  16383:      [0xFE 0x7F]
+// 127:       [0x7F]  16384:      [0xFF 0x00]
+// 128:  [0x80 0x00]  16511: [0x80 0xFF 0x7F]
+// 255:  [0x80 0x7F]  65535: [0x82 0xFD 0x7F]
+// 2^32:           [0x8E 0xFE 0xFE 0xFF 0x00]
 
+template<typename I>
+inline unsigned int GetSizeOfVarInt(I n)
+{
+    int nRet = 0;
+    while(true) {
+        nRet++;
+        if (n <= 0x7F)
+            break;
+        n = (n >> 7) - 1;
+    }
+    return nRet;
+}
 
-#define FLATDATA(obj)   REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
+template<typename Stream, typename I>
+void WriteVarInt(Stream& os, I n)
+{
+    unsigned char tmp[(sizeof(n)*8+6)/7];
+    int len=0;
+    while(true) {
+        tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
+        if (n <= 0x7F)
+            break;
+        n = (n >> 7) - 1;
+        len++;
+    }
+    do {
+        WRITEDATA(os, tmp[len]);
+    } while(len--);
+}
+
+template<typename Stream, typename I>
+I ReadVarInt(Stream& is)
+{
+    I n = 0;
+    while(true) {
+        unsigned char chData;
+        READDATA(is, chData);
+        n = (n << 7) | (chData & 0x7F);
+        if (chData & 0x80)
+            n++;
+        else
+            return n;
+    }
+}
+
+#define FLATDATA(obj)  REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
+#define VARINT(obj)    REF(WrapVarInt(REF(obj)))
 
 /** Wrapper for serializing arrays and POD.
- * There's a clever template way to make arrays serialize normally, but MSVC6 doesn't support it.
  */
 class CFlatData
 {
@@ -274,6 +339,32 @@ public:
         s.read(pbegin, pend - pbegin);
     }
 };
+
+template<typename I>
+class CVarInt
+{
+protected:
+    I &n;
+public:
+    CVarInt(I& nIn) : n(nIn) { }
+
+    unsigned int GetSerializeSize(int, int) const {
+        return GetSizeOfVarInt<I>(n);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s, int, int) const {
+        WriteVarInt<Stream,I>(s, n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int, int) {
+        n = ReadVarInt<Stream,I>(s);
+    }
+};
+
+template<typename I>
+CVarInt<I> WrapVarInt(I& n) { return CVarInt<I>(n); }
 
 //
 // Forward declarations
@@ -1009,57 +1100,6 @@ public:
         return (*this);
     }
 };
-
-#ifdef TESTCDATASTREAM
-// VC6sp6
-// CDataStream:
-// n=1000       0 seconds
-// n=2000       0 seconds
-// n=4000       0 seconds
-// n=8000       0 seconds
-// n=16000      0 seconds
-// n=32000      0 seconds
-// n=64000      1 seconds
-// n=128000     1 seconds
-// n=256000     2 seconds
-// n=512000     4 seconds
-// n=1024000    8 seconds
-// n=2048000    16 seconds
-// n=4096000    32 seconds
-// stringstream:
-// n=1000       1 seconds
-// n=2000       1 seconds
-// n=4000       13 seconds
-// n=8000       87 seconds
-// n=16000      400 seconds
-// n=32000      1660 seconds
-// n=64000      6749 seconds
-// n=128000     27241 seconds
-// n=256000     109804 seconds
-#include <iostream>
-int main(int argc, char *argv[])
-{
-    vector<unsigned char> vch(0xcc, 250);
-    printf("CDataStream:\n");
-    for (int n = 1000; n <= 4500000; n *= 2)
-    {
-        CDataStream ss;
-        time_t nStart = time(NULL);
-        for (int i = 0; i < n; i++)
-            ss.write((char*)&vch[0], vch.size());
-        printf("n=%-10d %d seconds\n", n, time(NULL) - nStart);
-    }
-    printf("stringstream:\n");
-    for (int n = 1000; n <= 4500000; n *= 2)
-    {
-        stringstream ss;
-        time_t nStart = time(NULL);
-        for (int i = 0; i < n; i++)
-            ss.write((char*)&vch[0], vch.size());
-        printf("n=%-10d %d seconds\n", n, time(NULL) - nStart);
-    }
-}
-#endif
 
 
 

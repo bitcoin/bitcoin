@@ -169,6 +169,9 @@ class DeploymentInfo(object):
         elif os.path.exists(os.path.join(parentDir, "share", "qt4", "translations")):
             # MacPorts layout, e.g. "/opt/local/share/qt4"
             self.qtPath = os.path.join(parentDir, "share", "qt4")
+        elif os.path.exists(os.path.join(os.path.dirname(parentDir), "share", "qt4", "translations")):
+            # Newer Macports layout
+            self.qtPath = os.path.join(os.path.dirname(parentDir), "share", "qt4")
         
         if self.qtPath is not None:
             pluginPath = os.path.join(self.qtPath, "plugins")
@@ -725,7 +728,7 @@ if config.dmg is not None:
         disk.close()
         if bg_path is not None:
             subprocess.call(["SetFile", "-a", "V", bg_path])
-        disk.update(registering_applications=False)
+#        disk.update(registering_applications=False)
         sleep(2)
         disk.eject()
         

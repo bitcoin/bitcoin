@@ -46,7 +46,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->proxyIp->installEventFilter(this);
 
     /* Window elements init */
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
     ui->tabWindow->setVisible(false);
 #endif
 
@@ -87,10 +87,10 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
 
-    /* enable save buttons when data modified */
-    connect(mapper, SIGNAL(viewModified()), this, SLOT(enableSaveButtons()));
-    /* disable save buttons when new data loaded */
-    connect(mapper, SIGNAL(currentIndexChanged(int)), this, SLOT(disableSaveButtons()));
+    /* enable apply button when data modified */
+    connect(mapper, SIGNAL(viewModified()), this, SLOT(enableApplyButton()));
+    /* disable apply button when new data loaded */
+    connect(mapper, SIGNAL(currentIndexChanged(int)), this, SLOT(disableApplyButton()));
     /* setup/change UI elements when proxy IP is invalid/valid */
     connect(this, SIGNAL(proxyIpValid(QValidatedLineEdit *, bool)), this, SLOT(handleProxyIpValid(QValidatedLineEdit *, bool)));
 }
@@ -116,8 +116,11 @@ void OptionsDialog::setModel(OptionsModel *model)
     /* update the display unit, to not use the default ("BTC") */
     updateDisplayUnit();
 
-    /* warn only when language selection changes (placed here so init of ui->lang via mapper doesn't trigger this) */
+    /* warn only when language selection changes by user action (placed here so init via mapper doesn't trigger this) */
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning_Lang()));
+
+    /* disable apply button after settings are loaded as there is nothing to save */
+    disableApplyButton();
 }
 
 void OptionsDialog::setMapper()
@@ -136,7 +139,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->socksVersion, OptionsModel::ProxySocksVersion);
 
     /* Window */
-#ifndef Q_WS_MAC
+#ifndef Q_OS_MAC
     mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
     mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
 #endif
@@ -145,6 +148,16 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->displayAddresses, OptionsModel::DisplayAddresses);
+}
+
+void OptionsDialog::enableApplyButton()
+{
+    ui->applyButton->setEnabled(true);
+}
+
+void OptionsDialog::disableApplyButton()
+{
+    ui->applyButton->setEnabled(false);
 }
 
 void OptionsDialog::enableSaveButtons()
@@ -179,7 +192,7 @@ void OptionsDialog::on_cancelButton_clicked()
 void OptionsDialog::on_applyButton_clicked()
 {
     mapper->submit();
-    ui->applyButton->setEnabled(false);
+    disableApplyButton();
 }
 
 void OptionsDialog::showRestartWarning_Proxy()

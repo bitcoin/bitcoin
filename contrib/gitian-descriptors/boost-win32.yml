@@ -11,28 +11,12 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "boost_1_49_0.tar.bz2"
+- "boost_1_50_0.tar.bz2"
 script: |
   TMPDIR="$HOME/tmpdir"
   mkdir -p $TMPDIR/bin/$GBUILD_BITS $TMPDIR/include
-  tar xjf boost_1_49_0.tar.bz2
-  cd boost_1_49_0
-  echo "--- tmp_dir_helpers.orig.hpp	2012-06-10 01:39:25.403268210 +0200
-+++ tmp_dir_helpers.hpp	2012-06-10 01:41:14.653823479 +0200
-@@ -19,9 +19,9 @@
- #include <string>
- 
- #if defined(BOOST_INTERPROCESS_WINDOWS)
--   //#define BOOST_INTERPROCESS_HAS_WINDOWS_KERNEL_BOOTTIME
--   //#define BOOST_INTERPROCESS_HAS_KERNEL_BOOTTIME
--   //#include <boost/interprocess/detail/win32_api.hpp>
-+   #define BOOST_INTERPROCESS_HAS_WINDOWS_KERNEL_BOOTTIME
-+   #define BOOST_INTERPROCESS_HAS_KERNEL_BOOTTIME
-+   #include <boost/interprocess/detail/win32_api.hpp>
- #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
-    //#include <sys/sysctl.h>
-    //#if defined(CTL_KERN) && defined (KERN_BOOTTIME)" > useboottime.patch
-  patch boost/interprocess/detail/tmp_dir_helpers.hpp useboottime.patch
+  tar xjf boost_1_50_0.tar.bz2
+  cd boost_1_50_0
   echo "using gcc : 4.4 : i586-mingw32msvc-g++
         :
         <rc>i586-mingw32msvc-windres
@@ -50,5 +34,5 @@ script: |
   cd $TMPDIR
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
-  zip -r boost-win32-1.49.0-gitian2.zip *
-  cp boost-win32-1.49.0-gitian2.zip $OUTDIR
+  zip -r boost-win32-1.50.0-gitian2.zip *
+  cp boost-win32-1.50.0-gitian2.zip $OUTDIR
