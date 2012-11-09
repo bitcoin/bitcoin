@@ -41,6 +41,7 @@ CBlockIndex* pindexBest = NULL;
 set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid; // may contain all CBlockIndex*'s that have validness >=BLOCK_VALID_TRANSACTIONS, and must contain those who aren't failed
 int64 nTimeBestReceived = 0;
 bool fImporting = false;
+unsigned int nCoinCacheSize = 5000;
 
 CMedianFilter<int> cPeerBlockCounts(5, 0); // Amount of blocks that other nodes claim to have
 
@@ -1735,7 +1736,7 @@ bool SetBestChain(CBlockIndex* pindexNew)
 
     // Make sure it's successfully written to disk before changing memory structure
     bool fIsInitialDownload = IsInitialBlockDownload();
-    if (!fIsInitialDownload || view.GetCacheSize()>5000) {
+    if (!fIsInitialDownload || view.GetCacheSize() > nCoinCacheSize) {
         FlushBlockFile();
         pblocktree->Sync();
         if (!view.Flush())
