@@ -293,6 +293,7 @@ std::string HelpMessage()
         "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-6, default: 1)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000?.dat file") + "\n" +
+        "  -reindex               " + _("Rebuild blockchain index from current blk000??.dat files") + "\n" +
 
         "\n" + _("Block creation options:") + "\n" +
         "  -blockminsize=<n>      "   + _("Set minimum block size in bytes (default: 0)") + "\n" +
@@ -308,6 +309,82 @@ std::string HelpMessage()
     return strUsage;
 }
 
+
+struct CImportingNow
+{
+    CImportingNow() {
+        assert(fImporting == false);
+        fImporting = true;
+    }
+
+    ~CImportingNow() {
+        assert(fImporting == true);
+        fImporting = false;
+    }
+};
+
+struct CImportData {
+    std::vector<boost::filesystem::path> vFiles;
+};
+
+void ThreadImport(void *data) {
+    CImportData *import = reinterpret_cast<CImportData*>(data);
+
+    RenameThread("bitcoin-loadblk");
+
+    vnThreadsRunning[THREAD_IMPORT]++;
+
+    // -reindex
+    if (fReindex) {
+        CImportingNow imp;
+        int nFile = 0;
+        while (!fShutdown) {
+            CDiskBlockPos pos;
+            pos.nFile = nFile;
+            pos.nPos = 0;
+            FILE *file = OpenBlockFile(pos, true);
+            if (!file)
+                break;
+            printf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
+            LoadExternalBlockFile(file, &pos);
+            nFile++;
+        }
+        if (!fShutdown) {
+            pblocktree->WriteReindexing(false);
+            fReindex = false;
+            printf("Reindexing finished\n");
+        }
+    }
+
+    // hardcoded $DATADIR/bootstrap.dat
+    filesystem::path pathBootstrap = GetDataDir() / "bootstrap.dat";
+    if (filesystem::exists(pathBootstrap) && !fShutdown) {
+        FILE *file = fopen(pathBootstrap.string().c_str(), "rb");
+        if (file) {
+            CImportingNow imp;
+            filesystem::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
+            printf("Importing bootstrap.dat...\n");
+            LoadExternalBlockFile(file);
+            RenameOver(pathBootstrap, pathBootstrapOld);
+        }
+    }
+
+    // -loadblock=
+    BOOST_FOREACH(boost::filesystem::path &path, import->vFiles) {
+        if (fShutdown)
+            break;
+        FILE *file = fopen(path.string().c_str(), "rb");
+        if (file) {
+            CImportingNow imp;
+            printf("Importing %s...\n", path.string().c_str());
+            LoadExternalBlockFile(file);
+        }
+    }
+
+    delete import;
+
+    vnThreadsRunning[THREAD_IMPORT]--;
+}
 
 /** Initialize bitcoin.
  *  @pre Parameters should be parsed and config file should be read.
@@ -639,6 +716,8 @@ bool AppInit2()
 
     // ********************************************************* Step 7: load block chain
 
+    fReindex = GetBoolArg("-reindex");
+
     if (!bitdb.Open(GetDataDir()))
     {
         string msg = strprintf(_("Error initializing database environment %s!"
@@ -662,9 +741,12 @@ bool AppInit2()
     uiInterface.InitMessage(_("Loading block index..."));
     printf("Loading block index...\n");
     nStart = GetTimeMillis();
-    pblocktree = new CBlockTreeDB(nBlockTreeDBCache);
-    pcoinsdbview = new CCoinsViewDB(nCoinDBCache);
+    pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
+    pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
     pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
+
+    if (fReindex)
+        pblocktree->WriteReindexing(true);
 
     if (!LoadBlockIndex())
         return InitError(_("Error loading blkindex.dat"));
@@ -798,13 +880,13 @@ bool AppInit2()
     if (!ConnectBestBlock())
         strErrors << "Failed to connect best block";
 
-    std::vector<boost::filesystem::path> *vPath = new std::vector<boost::filesystem::path>();
+    CImportData *pimport = new CImportData();
     if (mapArgs.count("-loadblock"))
     {
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
-            vPath->push_back(strFile);
+            pimport->vFiles.push_back(strFile);
     }
-    NewThread(ThreadImport, vPath);
+    NewThread(ThreadImport, pimport);
 
     // ********************************************************* Step 10: load peers
 
