@@ -489,7 +489,8 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     statusBar()->clearMessage();
 
     // don't show / hide progress bar and its label if we have no connection to the network
-    if (!clientModel || (clientModel->getNumConnections() == 0 && !clientModel->isImporting()))
+    enum BlockSource blockSource = clientModel ? clientModel->getBlockSource() : BLOCK_SOURCE_NONE;
+    if (blockSource == BLOCK_SOURCE_NONE || (blockSource == BLOCK_SOURCE_NETWORK && clientModel->getNumConnections() == 0))
     {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
@@ -499,26 +500,37 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
 
     QString tooltip;
 
+    QString importText;
+    switch (blockSource) {
+    case BLOCK_SOURCE_NONE:
+    case BLOCK_SOURCE_NETWORK:
+        importText = tr("Synchronizing with network...");
+    case BLOCK_SOURCE_DISK:
+        importText = tr("Importing blocks from disk...");
+    case BLOCK_SOURCE_REINDEX:
+        importText = tr("Reindexing blocks on disk...");
+    }
+
     if(count < nTotalBlocks)
     {
         int nRemainingBlocks = nTotalBlocks - count;
         float nPercentageDone = count / (nTotalBlocks * 0.01f);
 
-        progressBarLabel->setText(tr(clientModel->isImporting() ? "Importing blocks..." : "Synchronizing with network..."));
+        progressBarLabel->setText(importText);
         progressBarLabel->setVisible(true);
         progressBar->setFormat(tr("~%n block(s) remaining", "", nRemainingBlocks));
         progressBar->setMaximum(nTotalBlocks);
         progressBar->setValue(count);
         progressBar->setVisible(true);
 
-        tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
+        tooltip = tr("Processed %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
     }
     else
     {
         progressBarLabel->setVisible(false);
 
         progressBar->setVisible(false);
-        tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
+        tooltip = tr("Processed %1 blocks of transaction history.").arg(count);
     }
 
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
