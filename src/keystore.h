@@ -39,8 +39,6 @@ public:
     virtual bool AddCScriptUnlocked(const CScript& redeemScript)
       EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) =0;
     virtual bool HaveCScript(const CScriptID &hash) const LOCKS_EXCLUDED(cs_KeyStore) =0;
-    virtual bool HaveCScriptUnlocked(const CScriptID &hash)
-      const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore) =0;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
       const LOCKS_EXCLUDED(cs_KeyStore) =0;
     virtual bool GetCScriptUnlocked(const CScriptID &hash, CScript& redeemScriptOut)
