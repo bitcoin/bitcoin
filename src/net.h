@@ -131,7 +131,7 @@ class CNode
 public:
     // socket
     uint64 nServices;
-    SOCKET hSocket GUARDED_BY(cs_vRecv); // Evidence: CloseSocketDisconnect
+    SOCKET hSocket;   // Only accessed by network thread
     CDataStream vSend GUARDED_BY(cs_vSend);
     CDataStream vRecv GUARDED_BY(cs_vRecv);
     CCriticalSection cs_vSend ACQUIRED_BEFORE(cs_vRecv) ACQUIRED_AFTER(cs_vNodes);
@@ -542,7 +542,7 @@ public:
     bool IsSubscribed(unsigned int nChannel);
     void Subscribe(unsigned int nChannel, unsigned int nHops=0);
     void CancelSubscribe(unsigned int nChannel);
-    void CloseSocketDisconnect();
+    void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(cs_vRecv);
     void Cleanup();
 
 

@@ -132,7 +132,8 @@ public:
     // Generate a new key
     CPubKey GenerateNewKey() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     // Adds a key to the store, and saves it to disk.
-    bool AddKey(const CKey& key) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool AddKey(const CKey& key) LOCKS_EXCLUDED(cs_KeyStore);
+    bool AddKeyUnlocked(const CKey& key) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
 
@@ -155,7 +156,8 @@ public:
 
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
-    bool EncryptWallet(const SecureString& strWalletPassphrase);
+    bool EncryptWallet(const SecureString& strWalletPassphrase)
+      EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /** Increment the next transaction order id
         @return next transaction order id
@@ -188,7 +190,7 @@ public:
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
-    bool NewKeyPool() LOCKS_EXCLUDED(cs_wallet);
+    bool NewKeyPool() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool() LOCKS_EXCLUDED(cs_wallet);
     int64 AddReserveKey(const CKeyPool& keypool) LOCKS_EXCLUDED(cs_main, cs_wallet);
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool) LOCKS_EXCLUDED(cs_wallet);
@@ -302,7 +304,10 @@ public:
     bool SetMaxVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { return nWalletVersion; }
+    int GetVersion() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        return nWalletVersion;
+    }
 
     /** Address book entry changed.
      * @note called with lock cs_wallet held.

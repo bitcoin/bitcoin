@@ -39,7 +39,7 @@ CPubKey CWallet::GenerateNewKey()
     if (fCompressed)
         SetMinVersion(FEATURE_COMPRPUBKEY);
 
-    if (!AddKey(key))
+    if (!AddKeyUnlocked(key))
         throw std::runtime_error("CWallet::GenerateNewKey() : AddKey failed");
     return key.GetPubKey();
 }
@@ -47,6 +47,11 @@ CPubKey CWallet::GenerateNewKey()
 bool CWallet::AddKey(const CKey& key)
 {
     LOCK(cs_KeyStore);
+    return AddKeyUnlocked(key);
+}
+
+bool CWallet::AddKeyUnlocked(const CKey& key)
+{
     if (!CCryptoKeyStore::AddKeyUnlocked(key))
         return false;
     if (!fFileBacked)
@@ -1438,25 +1443,22 @@ bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)
 //
 bool CWallet::NewKeyPool()
 {
+    CWalletDB walletdb(strWalletFile);
+    BOOST_FOREACH(int64 nIndex, setKeyPool)
+        walletdb.ErasePool(nIndex);
+    setKeyPool.clear();
+
+    if (IsLocked())
+        return false;
+
+    int64 nKeys = max(GetArg("-keypool", 100), (int64)0);
+    for (int i = 0; i < nKeys; i++)
     {
-        LOCK(cs_wallet);
-        CWalletDB walletdb(strWalletFile);
-        BOOST_FOREACH(int64 nIndex, setKeyPool)
-            walletdb.ErasePool(nIndex);
-        setKeyPool.clear();
-
-        if (IsLocked())
-            return false;
-
-        int64 nKeys = max(GetArg("-keypool", 100), (int64)0);
-        for (int i = 0; i < nKeys; i++)
-        {
-            int64 nIndex = i+1;
-            walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
-            setKeyPool.insert(nIndex);
-        }
-        printf("CWallet::NewKeyPool wrote %"PRI64d" new keys\n", nKeys);
+        int64 nIndex = i+1;
+        walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
+        setKeyPool.insert(nIndex);
     }
+    printf("CWallet::NewKeyPool wrote %"PRI64d" new keys\n", nKeys);
     return true;
 }
 

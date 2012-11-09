@@ -106,7 +106,7 @@ protected:
     bool fReadOnly;
 
     explicit CDB(const char* pszFile, const char* pszMode="r+")
-      LOCKS_EXCLUDED(bitdb.cs_db);
+      EXCLUSIVE_LOCKS_REQUIRED(bitdb.cs_db);
     ~CDB() { Close(); }
 public:
     void Flush();

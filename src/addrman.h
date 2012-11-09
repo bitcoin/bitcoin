@@ -202,7 +202,7 @@ protected:
 
     // find an entry, creating it if necessary.
     // nTime and nServices of found node is updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL);
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Swap two elements in vRandom.
     void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
@@ -213,24 +213,25 @@ protected:
     // Remove an element from a "new" bucket.
     // This is the only place where actual deletes occur.
     // They are never deleted while in the "tried" table, only possibly evicted back to the "new" table.
-    int ShrinkNew(int nUBucket);
+    int ShrinkNew(int nUBucket) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Move an entry from the "new" table(s) to the "tried" table
     // @pre vvUnkown[nOrigin].count(nId) != 0
-    void MakeTried(CAddrInfo& info, int nId, int nOrigin);
+    void MakeTried(CAddrInfo& info, int nId, int nOrigin) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Mark an entry "good", possibly moving it from "new" to "tried".
-    void Good_(const CService &addr, int64 nTime);
+    void Good_(const CService &addr, int64 nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Add an entry to the "new" table.
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePenalty);
+    bool Add_(const CAddress &addr, const CNetAddr& source, int64 nTimePenalty)
+      EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Mark an entry as attempted to connect.
-    void Attempt_(const CService &addr, int64 nTime);
+    void Attempt_(const CService &addr, int64 nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     // Select an address to connect to.
     // nUnkBias determines how much to favor new addresses over tried ones (min=0, max=100)
-    CAddress Select_(int nUnkBias);
+    CAddress Select_(int nUnkBias) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 #ifdef DEBUG_ADDRMAN
     // Perform consistency check. Returns an error code or zero.

@@ -74,18 +74,14 @@ int64 nTransactionFee = 0;
 
 void RegisterWallet(CWallet* pwalletIn) LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
-    {
-        LOCK(cs_setpwalletRegistered);
-        setpwalletRegistered.insert(pwalletIn);
-    }
+    LOCK(cs_setpwalletRegistered);
+    setpwalletRegistered.insert(pwalletIn);
 }
 
 void UnregisterWallet(CWallet* pwalletIn)  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
-    {
-        LOCK(cs_setpwalletRegistered);
-        setpwalletRegistered.erase(pwalletIn);
-    }
+    LOCK(cs_setpwalletRegistered);
+    setpwalletRegistered.erase(pwalletIn);
 }
 
 // check whether the passed transaction is from us
@@ -107,56 +103,63 @@ bool static GetTransaction(const uint256& hashTx, CWalletTx& wtx)  EXCLUSIVE_LOC
 }
 
 // erases transaction with the given hash from all wallets
-void static EraseFromWallets(uint256 hash)  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
+void static EraseFromWallets(uint256 hash)  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
+    LOCK(cs_setpwalletRegistered);
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->EraseFromWallet(hash);
 }
 
 // make sure all wallets know about the given transaction, in the given block
 void SyncWithWallets(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate)
-   EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
+   LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
+    LOCK(cs_setpwalletRegistered);
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->AddToWalletIfInvolvingMe(hash, tx, pblock, fUpdate);
 }
 
 // notify wallets about a new best chain
 void static SetBestChain(const CBlockLocator& loc)
-  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
+  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
+    LOCK(cs_setpwalletRegistered);
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->SetBestChain(loc);
 }
 
 // notify wallets about an updated transaction
 void static UpdatedTransaction(const uint256& hashTx)
-  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
+  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
+    LOCK(cs_setpwalletRegistered);
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->UpdatedTransaction(hashTx);
 }
 
 // dump all wallets
 void static PrintWallets(const CBlock& block)
-  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
+  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
+    LOCK(cs_setpwalletRegistered);
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->PrintWallet(block);
 }
 
 // notify wallets about an incoming inventory (for request counts)
 void static Inventory(const uint256& hash)
-  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
+  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
+    LOCK(cs_setpwalletRegistered);
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->Inventory(hash);
 }
 
 // ask wallets to resend their transactions
 void static ResendWalletTransactions()
-  EXCLUSIVE_LOCKS_REQUIRED(cs_setpwalletRegistered)
+  LOCKS_EXCLUDED(cs_setpwalletRegistered)
 {
+    LOCK(cs_setpwalletRegistered);
     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
         pwallet->ResendWalletTransactions();
 }
